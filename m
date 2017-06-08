@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33678 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO6G (ORCPT
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:36389 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751533AbdFHKD0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:58:06 -0400
-Received: by mail-pg0-f67.google.com with SMTP id u62so1019132pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:06 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
+        Thu, 8 Jun 2017 06:03:26 -0400
+Received: by mail-pg0-f52.google.com with SMTP id a70so14544155pge.3
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jun 2017 03:03:26 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Rajendra <rnayak@codeaurora.org>,
+        Mark Brown <broonie@kernel.org>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 10/20] rsi: set immediate wakeup bit
-Date: Fri, 16 Jun 2017 20:24:31 +0530
-Message-Id: <1497624881-2315-11-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_170119_774763_BE7CDD0B)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] mwifiex: Replace semaphore async_sem with mutex
+Date: Thu,  8 Jun 2017 15:33:03 +0530
+Message-Id: <1496916183-4097-1-git-send-email-binoy.jayan@linaro.org> (sfid-20170608_120400_277310_4D67AFC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+The semaphore 'async_sem' is used as a simple mutex, so
+it should be written as one. Semaphores are going away in the future.
 
-immediate wakeup bit is set while sending internal management
-frame to the firmware.
-
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_hal.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index c230359..7c9224f 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -149,6 +149,7 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 	extnd_size = ((uintptr_t)skb->data & 0x3);
+This patch is part of a bigger effort to eliminate unwanted
+semaphores from the linux kernel.
+
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
+ drivers/net/wireless/marvell/mwifiex/main.h     | 2 +-
+ drivers/net/wireless/marvell/mwifiex/scan.c     | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 7ec06bf..9e0d638 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3059,7 +3059,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	INIT_DELAYED_WORK(&priv->dfs_chan_sw_work,
+ 			  mwifiex_dfs_chan_sw_work_queue);
  
- 	if (tx_params->flags & INTERNAL_MGMT_PKT) {
-+		skb->data[1] |= BIT(7); /* Immediate Wakeup bit*/
- 		if ((extnd_size) > skb_headroom(skb)) {
- 			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
- 			dev_kfree_skb(skb);
+-	sema_init(&priv->async_sem, 1);
++	mutex_init(&priv->async_mutex);
+ 
+ 	mwifiex_dbg(adapter, INFO,
+ 		    "info: %s: Marvell 802.11 Adapter\n", dev->name);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index bb2a467..9c2cb33 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -628,7 +628,7 @@ struct mwifiex_private {
+ 	struct dentry *dfs_dev_dir;
+ #endif
+ 	u16 current_key_index;
+-	struct semaphore async_sem;
++	struct mutex async_mutex;
+ 	struct cfg80211_scan_request *scan_request;
+ 	u8 cfg_bssid[6];
+ 	struct wps wps;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index ce6936d..ae9630b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2809,7 +2809,7 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
+ {
+ 	int ret;
+ 
+-	if (down_interruptible(&priv->async_sem)) {
++	if (mutex_lock_interruptible(&priv->async_mutex)) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "%s: acquire semaphore fail\n",
+ 			    __func__);
+@@ -2825,7 +2825,7 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
+ 		/* Normal scan */
+ 		ret = mwifiex_scan_networks(priv, NULL);
+ 
+-	up(&priv->async_sem);
++	mutex_unlock(&priv->async_mutex);
+ 
+ 	return ret;
+ }
 -- 
-2.7.4
+Binoy Jayan
