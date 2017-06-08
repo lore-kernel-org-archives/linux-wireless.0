@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frisell.zx2c4.com ([192.95.5.64]:52679 "EHLO frisell.zx2c4.com"
+Received: from mga09.intel.com ([134.134.136.24]:56923 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751861AbdFJC7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 22:59:38 -0400
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
-To: linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com
-Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH 6/6] mac80211/wpa: use constant time memory comparison for MACs
-Date: Sat, 10 Jun 2017 04:59:12 +0200
-Message-Id: <20170610025912.6499-7-Jason@zx2c4.com> (sfid-20170610_050021_127191_A590FEFC)
-In-Reply-To: <20170610025912.6499-1-Jason@zx2c4.com>
-References: <20170610025912.6499-1-Jason@zx2c4.com>
+        id S1751470AbdFHIbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 04:31:09 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Seraphime Kirkovski <kirkseraph@gmail.com>
+CC: "luca@coelho.fi" <luca@coelho.fi>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [linuxwifi] [PATCH] net: wireless: intel: iwlwifi: dvm: fix tid
+ mask
+Date: Thu, 8 Jun 2017 08:31:02 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3E55212B0@hasmsx107.ger.corp.intel.com> (sfid-20170608_103142_643328_52E308B6)
+References: <20170607223354.22399-1-kirkseraph@gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3E5520A41@hasmsx107.ger.corp.intel.com>
+ <20170608074954.qihkavvqdtwn4zmp@macchiaveli>
+In-Reply-To: <20170608074954.qihkavvqdtwn4zmp@macchiaveli>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise, we enable all sorts of forgeries via timing attack.
+> 
+> On Thu, Jun 08, 2017 at 06:31:01AM +0000, Grumbach, Emmanuel wrote:
+> > Hi,
+> 
+> Hi,
+> 
+> > True, OTOH we need tid to be 8 sometimes. We *just* need to make sure
+> > that we don't index tid_data with this. Hence I think the proper fix is:
+> >
+> > diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> > b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> > index 06ac3f1..16a8646 100644
+> > --- a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> > @@ -1190,11 +1190,11 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv,
+> struct iwl_rx_cmd_buffer *rxb)
+> >                                 next_reclaimed;
+> >                         IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
+> >                                                   next_reclaimed);
+> > +                       iwlagn_check_ratid_empty(priv, sta_id, tid);
+> >                 }
+> >
+> >                 iwl_trans_reclaim(priv->trans, txq_id, ssn, &skbs);
+> >
+> > -               iwlagn_check_ratid_empty(priv, sta_id, tid);
+> >                 freed = 0;
+> >
+> >                 /* process frames */
+> 
+> I can confirm it works. You can add my Tested-By.
 
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: stable@vger.kernel.org
----
- net/mac80211/wpa.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index c1ef22df865f..cc19614ff4e6 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -17,6 +17,7 @@
- #include <asm/unaligned.h>
- #include <net/mac80211.h>
- #include <crypto/aes.h>
-+#include <crypto/algapi.h>
- 
- #include "ieee80211_i.h"
- #include "michael.h"
-@@ -153,7 +154,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
- 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
- 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
- 	michael_mic(key, hdr, data, data_len, mic);
--	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-+	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
- 		goto mic_fail;
- 
- 	/* remove Michael MIC from payload */
-@@ -1048,7 +1049,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
- 				   skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
-@@ -1098,7 +1099,7 @@ ieee80211_crypto_aes_cmac_256_decrypt(struct ieee80211_rx_data *rx)
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac_256(key->u.aes_cmac.tfm, aad,
- 				       skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
-@@ -1202,7 +1203,7 @@ ieee80211_crypto_aes_gmac_decrypt(struct ieee80211_rx_data *rx)
- 		if (ieee80211_aes_gmac(key->u.aes_gmac.tfm, aad, nonce,
- 				       skb->data + 24, skb->len - 24,
- 				       mic) < 0 ||
--		    memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		    crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_gmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
--- 
-2.13.1
+Patch in review in our internal tree. It'll be upstreamed through the regular process.
+Thanks for your report and debug work.
