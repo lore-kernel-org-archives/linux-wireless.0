@@ -1,59 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:36871 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753975AbdFSKJR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:09:17 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 00/13] NFC: clean up for ACPI GPIO usage
-Date: Mon, 19 Jun 2017 13:08:45 +0300
-Message-Id: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com> (sfid-20170619_120945_488071_FE298D38)
+Received: from mail2.candelatech.com ([208.74.158.173]:55902 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752014AbdFHPVI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 11:21:08 -0400
+Subject: Re: Wifi-Event for when initial 4-way completes?
+To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+References: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
+ <f1334e7f-1d86-00fd-cfba-7ce56b8a9f81@neratec.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <bbf39c69-66a5-1e23-77df-1945d0036719@candelatech.com> (sfid-20170608_172143_158098_D60DEC58)
+Date: Thu, 8 Jun 2017 08:21:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <f1334e7f-1d86-00fd-cfba-7ce56b8a9f81@neratec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This clean up series to NFC drivers that are using GPIOs on ACPI enabled
-platforms. Since GPIO ACPI library goes stricter about requesting
-resources we need to amend drivers for that. Here we are for NFC
-subsystem.
+On 06/07/2017 12:25 AM, Wojciech Dubowik wrote:
+> Hello Ben,
+>
+> I have been using this part of wpa_supplicant to notify that 4-Way handshake is completed.
+>
+> around line 868 in wpa_supplicant.c
+>
+> #if defined(CONFIG_CTRL_IFACE) || !defined(CONFIG_NO_STDOUT_DEBUG)
+>                 wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_CONNECTED "- Connection to "
+>                         MACSTR " completed [id=%d id_str=%s%s]",
+>                         MAC2STR(wpa_s->bssid),
+>                         ssid ? ssid->id : -1,
+>                         ssid && ssid->id_str ? ssid->id_str : "",
+>                         fils_hlp_sent ? " FILS_HLP_SENT" : "");
+> #endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
+>
+> You can pack whatever notification message inside the if statement.
 
-While doing above, get rid of legacy and unused platform data as well as
-some artificial IDs.
+I'm not sure that actually is correct?  For instance, I see this in a case where
+WPA-2 was not succesfully negotiated (note the reason-2 disconnect)
 
-Changelog v3:
-- incorporate Samuel's fixes
-- fix the bug kbuild bot complains about
-- add MAINTAINERS patch
+IFNAME=sta9 <3>SME: Trying to authenticate with 00:0e:8e:f8:73:96 (SSID='ota-9k-2 space' freq=5180 MHz)
+IFNAME=sta9 <3>Trying to associate with 00:0e:8e:f8:73:96 (SSID='ota-9k-2 space' freq=5180 MHz)
+IFNAME=sta9 <3>Associated with 00:0e:8e:f8:73:96
+IFNAME=sta9 <3>CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
+IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+IFNAME=sta9 <3>CTRL-EVENT-CONNECTED - Connection to 00:0e:8e:f8:73:96 completed [id=0 id_str=]
+IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+IFNAME=sta9 <3>CTRL-EVENT-DISCONNECTED bssid=00:0e:8e:f8:73:96 reason=2
 
-Changelog v2:
-- add patches 1,4-12
 
-Andy Shevchenko (13):
-  NFC: pn544: Switch to devm_acpi_dev_add_driver_gpios()
-  NFC: st21nfca: Add GPIO ACPI mapping table
-  NFC: st21nfca: Get rid of code duplication in ->probe()
-  NFC: fdp: Convert I2C driver to ->probe_new()
-  NFC: fdp: Convert to use devres API
-  NFC: fdp: Add GPIO ACPI mapping table
-  NFC: st-nci: Get rid of platform data
-  NFC: st-nci: Get rid of "interesting" use of interrupt polarity
-  NFC: st-nci: Covert to use GPIO descriptor
-  NFC: st-nci: Use unified device properties API meaningfully
-  NFC: st-nci: Add GPIO ACPI mapping table
-  NFC: st-nci: Get rid of code duplication in ->probe()
-  MAINTAINERS: Remove non-existing NFC platform data files
+Looks like I might need to add another message about EAPOL 4-way completing?
 
- MAINTAINERS                          |   3 -
- drivers/nfc/fdp/fdp.c                |  15 +---
- drivers/nfc/fdp/i2c.c                |  38 ++++----
- drivers/nfc/pn544/i2c.c              |   3 +-
- drivers/nfc/st-nci/i2c.c             | 164 ++++++-----------------------------
- drivers/nfc/st-nci/spi.c             | 162 ++++++----------------------------
- drivers/nfc/st21nfca/i2c.c           |  62 ++++---------
- include/linux/platform_data/st-nci.h |  31 -------
- 8 files changed, 90 insertions(+), 388 deletions(-)
- delete mode 100644 include/linux/platform_data/st-nci.h
+Thanks,
+Ben
+
+
+>
+> Br,
+>
+> Wojtek
+>
+>
+> On 07/06/17 02:46, Ben Greear wrote:
+>> I have been tracking down a nasty EAPOL related bug in ath10k, and found something that may be peripheral, or maybe
+>> it is significant.
+>>
+>> My logic is basically to kick supplicant, watch 'iw events', and then when I see something
+>> like "sta62 (phy #5): connected to 00:0e:8e:f8:73:96", I consider it connected and start
+>> dhcpd.
+>>
+>> But, it appears that the 'connected' message comes out before the EAPOL 4-way completes, so
+>> I am starting dhclient before the encryption is really set up properly.  At best, this slows
+>> things down and makes dhclient have to retry.
+>>
+>> Is there some existing event or state I can probe to determine when the initial 4-way is complete?
+>>
+>> In case there is not, maybe that event would be worth adding?
+>>
+>> Or, should I hack on supplicant instead and grab the info out of it somehow?
+>>
+>> Thanks,
+>> Ben
+>>
+>
+
 
 -- 
-2.11.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
