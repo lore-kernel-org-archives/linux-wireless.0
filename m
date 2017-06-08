@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:34296 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751758AbdFMQob (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43856 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751382AbdFHXnY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 12:44:31 -0400
-Received: by mail-wr0-f170.google.com with SMTP id 77so4226356wrb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 09:44:31 -0700 (PDT)
-From: Mateusz Jurczyk <mjurczyk@google.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] nfc: Add sockaddr length checks before accessing sa_family in bind handlers
-Date: Tue, 13 Jun 2017 18:44:28 +0200
-Message-Id: <20170613164428.3643-1-mjurczyk@google.com> (sfid-20170613_184449_723582_7E25B10D)
+        Thu, 8 Jun 2017 19:43:24 -0400
+Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
+To: Denis Kenzior <denkenz@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+ <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com> (sfid-20170609_014328_357309_E3D29C55)
+Date: Thu, 8 Jun 2017 16:43:23 -0700
+MIME-Version: 1.0
+In-Reply-To: <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Verify that the caller-provided sockaddr structure is large enough to
-contain the sa_family field, before accessing it in bind() handlers of the
-AF_NFC socket. Since the syscall doesn't enforce a minimum size of the
-corresponding memory region, very short sockaddrs (zero or one byte long)
-result in operating on uninitialized memory while referencing .sa_family.
+On 06/08/2017 04:36 PM, Denis Kenzior wrote:
+> Hi Ben,
+>
+>> The problem I see is that sometimes (and quite often when I am using lots
+>> of vdevs and thus the NIC is busy), the keys are set before the EAPOL 4/4
+>> hits the air.  When the key is set, the NIC will no longer transmit the
+>> frame because of key-length issues in the tx-descriptor (ath10k wave-2
+>> in this case).
+>
+> We have encountered something similar.  In our case we were seeing PAE packets (e.g. 4WayHandshake packet 1 of 4) before seeing the connect events on nl80211.
+>
+>> I suspect that there is a fundamental race between the EAPOL packet-tx
+>> logic and the key-set logic, but supplicant appears to act as though
+>> they are natually synchronized.
+>
+> Fundamentally there is a race between the genl/nl80211 socket to the kernel and the PAE socket that handles the authentication aspects.  I think the only way to
+> fix this is to make sure that PAE flows over the genl/nl80211 socket to preserve the proper order of events.  However there are lots of dragons in the kernel
+> side of this and we haven't been brave enough to venture into the depths yet :)
 
-Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
----
- net/nfc/llcp_sock.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+I think that would just push the problem lower.  Probably a real fix would be to somehow propagate
+the tx-status for the specific packet back to the supplicant and only then it would know that the
+key could be set.
 
-diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
-index 2ffb18e73df6..80cf35ed320a 100644
---- a/net/nfc/llcp_sock.c
-+++ b/net/nfc/llcp_sock.c
-@@ -77,7 +77,8 @@ static int llcp_sock_bind(struct socket *sock, struct sockaddr *addr, int alen)
- 	struct sockaddr_nfc_llcp llcp_addr;
- 	int len, ret = 0;
- 
--	if (!addr || addr->sa_family != AF_NFC)
-+	if (!addr || alen < offsetofend(struct sockaddr, sa_family) ||
-+	    addr->sa_family != AF_NFC)
- 		return -EINVAL;
- 
- 	pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
-@@ -151,7 +152,8 @@ static int llcp_raw_sock_bind(struct socket *sock, struct sockaddr *addr,
- 	struct sockaddr_nfc_llcp llcp_addr;
- 	int len, ret = 0;
- 
--	if (!addr || addr->sa_family != AF_NFC)
-+	if (!addr || alen < offsetofend(struct sockaddr, sa_family) ||
-+	    addr->sa_family != AF_NFC)
- 		return -EINVAL;
- 
- 	pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
+Thanks,
+Ben
+
 -- 
-2.13.1.508.gb3defc5cc-goog
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
