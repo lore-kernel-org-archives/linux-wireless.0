@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37002 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752647AbdFPNOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 09:14:55 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        Jelle van der Waa <jelle@vdwaa.nl>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of the brcm43430 chip
-Date: Fri, 16 Jun 2017 15:14:49 +0200
-Message-Id: <20170616131449.12108-2-hdegoede@redhat.com> (sfid-20170616_151457_638926_31240129)
-In-Reply-To: <20170616131449.12108-1-hdegoede@redhat.com>
-References: <20170616131449.12108-1-hdegoede@redhat.com>
+Received: from mail-ot0-f171.google.com ([74.125.82.171]:35371 "EHLO
+        mail-ot0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751428AbdFHXgJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 19:36:09 -0400
+Received: by mail-ot0-f171.google.com with SMTP id a2so31264085oth.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jun 2017 16:36:09 -0700 (PDT)
+Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com> (sfid-20170609_013613_564917_A66F267C)
+Date: Thu, 8 Jun 2017 18:36:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcm43430 chip needs different firmware files for chip revision 0
-and 1. The file currently in linux-firmware is for revision 1 only.
+Hi Ben,
 
-This commit makes brcmfmac request brcmfmac43430a0-sdio.bin instead
-of brcmfmac43430-sdio.bin for revision 0 chips.
+> The problem I see is that sometimes (and quite often when I am using lots
+> of vdevs and thus the NIC is busy), the keys are set before the EAPOL 4/4
+> hits the air.  When the key is set, the NIC will no longer transmit the
+> frame because of key-length issues in the tx-descriptor (ath10k wave-2
+> in this case).
 
-Note that the behavior for revision 1 chips is not changed, ideally those
-would load brcmfmac43430a1-sdio.bin, but that will break existing setups.
+We have encountered something similar.  In our case we were seeing PAE 
+packets (e.g. 4WayHandshake packet 1 of 4) before seeing the connect 
+events on nl80211.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> I suspect that there is a fundamental race between the EAPOL packet-tx
+> logic and the key-set logic, but supplicant appears to act as though
+> they are natually synchronized.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 4ed40c94bda9..5125aeeb5310 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -612,7 +612,9 @@ BRCMF_FW_NVRAM_DEF(43340, "brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
- BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt");
- BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.txt");
- BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
-+BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin", "brcmfmac43430a0-sdio.txt");
-+/* Note the names are not postfixed with a1 for backward compatibility */
-+BRCMF_FW_NVRAM_DEF(43430A1, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
- BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
- BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
- BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
-@@ -630,7 +632,8 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
-+	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
-+	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
--- 
-2.13.0
+Fundamentally there is a race between the genl/nl80211 socket to the 
+kernel and the PAE socket that handles the authentication aspects.  I 
+think the only way to fix this is to make sure that PAE flows over the 
+genl/nl80211 socket to preserve the proper order of events.  However 
+there are lots of dragons in the kernel side of this and we haven't been 
+brave enough to venture into the depths yet :)
+
+Regards,
+-Denis
