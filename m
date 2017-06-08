@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57082 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751954AbdFLNsV (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:35812 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751673AbdFHUBA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 09:48:21 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, "Peter S. Housel" <housel@acm.org>
-Subject: Re: [PATCH V3] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-References: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com>
-        <78a8b9d2-4688-051b-26ce-df447530fa30@broadcom.com>
-Date: Mon, 12 Jun 2017 16:47:55 +0300
-In-Reply-To: <78a8b9d2-4688-051b-26ce-df447530fa30@broadcom.com> (Arend van
-        Spriel's message of "Mon, 12 Jun 2017 13:32:52 +0200")
-Message-ID: <87h8zl8ghg.fsf@kamboji.qca.qualcomm.com> (sfid-20170612_154824_726206_1F1384F3)
+        Thu, 8 Jun 2017 16:01:00 -0400
+Received: by mail-pg0-f43.google.com with SMTP id k71so19301983pgd.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jun 2017 13:01:00 -0700 (PDT)
+Date: Thu, 8 Jun 2017 13:00:56 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: "Chadzynski, MikolajX" <mikolajx.chadzynski@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
+        "nishants@marvell.com" <nishants@marvell.com>,
+        "gbhat@marvell.com" <gbhat@marvell.com>,
+        "huxm@marvell.com" <huxm@marvell.com>
+Subject: Re: porting 'mwifiex: resolve races between async FW init (failure)
+ and device removal' to kernel 4.1.x
+Message-ID: <20170608200055.GA109284@google.com> (sfid-20170608_220109_764559_88124464)
+References: <382E97DBE488D844B7F3CE8D1D2355C83717C8B6@IRSMSX104.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <382E97DBE488D844B7F3CE8D1D2355C83717C8B6@IRSMSX104.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+On Thu, Jun 08, 2017 at 01:11:28PM +0000, Chadzynski, MikolajX wrote:
+> Races between async firmware initialization and device removal appears on kernel 4.1.x.
+> Whole scenario leading to the error together with logs is in https://bugzilla.kernel.org/show_bug.cgi?id=196003
+> Mapping the patch from kernel 4.11.x "mwifiex: resolve races between async FW init (failure) and device removal" solved the problem.
 
-> On 6/12/2017 12:46 PM, Arend van Spriel wrote:
->> From: "Peter S. Housel" <housel@acm.org>
->>
->> An earlier change to this function (3bdae810721b) fixed a leak in the
->> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
->> glom_skb buffer, used for emulating a scattering read, is never used
->> or referenced after its contents are copied into the destination
->> buffers, and therefore always needs to be freed by the end of the
->> function.
->>
->
-> Kalle,
->
-> Can you add stable tag:
->
-> Cc: stable@vger.kernel.org # 4.9.x-
+FWIW, that patch was also in v4.10.
 
-Yes, will do.
+> In Bugzilla I've also attached patch which I've tested for pcie interface and it works.
 
--- 
-Kalle Valo
+What are you asking for? An official backport to the 4.1.x stable
+series? I'm not super interested in trying to do that. And IIUC, your
+patch is a no-go, as it will break the SDIO and USB driver builds.
+
+If you do try to go forward with this, do try to note any follow-up
+patches. I don't recall how many other related bugs there might have
+been. I tried to mark things correctly with Fixes tags, but I may have
+missed something, especially if such bugfixes also made it into 4.10.
+
+Brian
