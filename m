@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57830 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752742AbdFPHTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 03:19:42 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-06-16
-Date: Fri, 16 Jun 2017 09:19:35 +0200
-Message-Id: <20170616071936.4515-1-johannes@sipsolutions.net> (sfid-20170616_091954_610403_3FA3FF48)
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33358 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751454AbdFHHt7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 03:49:59 -0400
+Date: Thu, 8 Jun 2017 09:49:54 +0200
+From: Seraphime Kirkovski <kirkseraph@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "luca@coelho.fi" <luca@coelho.fi>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [linuxwifi] [PATCH] net: wireless: intel: iwlwifi: dvm: fix tid
+ mask
+Message-ID: <20170608074954.qihkavvqdtwn4zmp@macchiaveli> (sfid-20170608_095022_342538_FFAE8E41)
+References: <20170607223354.22399-1-kirkseraph@gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3E5520A41@hasmsx107.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3E5520A41@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Thu, Jun 08, 2017 at 06:31:01AM +0000, Grumbach, Emmanuel wrote:
+> Hi,
 
-Here I just have the cleanups with the fix for that ancient bug
-I sent the RFC patches for.
+Hi,
 
-Please pull and let me know if there's any problem.
+> True, OTOH we need tid to be 8 sometimes. We *just* need to make sure
+> that we don't index tid_data with this. Hence I think the proper fix is:
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> index 06ac3f1..16a8646 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
+> @@ -1190,11 +1190,11 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb)
+>                                 next_reclaimed;
+>                         IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
+>                                                   next_reclaimed);
+> +                       iwlagn_check_ratid_empty(priv, sta_id, tid);
+>                 }
+> 
+>                 iwl_trans_reclaim(priv->trans, txq_id, ssn, &skbs);
+> 
+> -               iwlagn_check_ratid_empty(priv, sta_id, tid);
+>                 freed = 0;
+> 
+>                 /* process frames */
+
+I can confirm it works. You can add my Tested-By.
 
 Thanks,
-johannes
-
-
-
-The following changes since commit c5549ee40112f2511a794c9aad7eb6ac5f18b0eb:
-
-  Merge tag 'mac80211-for-davem-2017-06-13' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-06-13 13:34:13 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-06-16
-
-for you to fetch changes up to 68dd02d19c811ca8ea60220a9d73e13b4bdad73a:
-
-  dev_ioctl: copy only the smaller struct iwreq for wext (2017-06-14 13:52:44 +0200)
-
-----------------------------------------------------------------
-Here's just the fix for that ancient bug:
- * remove wext calling ndo_do_ioctl, since nobody needs
-   that now and it makes the type change easier
- * use struct iwreq instead of struct ifreq almost everywhere
-   in wireless extensions code
- * copy only struct iwreq from userspace in dev_ioctl for the
-   wireless extensions, since it's smaller than struct ifreq
-
-----------------------------------------------------------------
-Johannes Berg (3):
-      wireless: wext: remove ndo_do_ioctl fallback
-      wireless: wext: use struct iwreq earlier in the call chain
-      dev_ioctl: copy only the smaller struct iwreq for wext
-
- include/net/wext.h       |  4 ++--
- net/core/dev_ioctl.c     | 19 ++++++++++++++++---
- net/wireless/wext-core.c | 22 +++++++++-------------
- 3 files changed, 27 insertions(+), 18 deletions(-)
+Seraph
