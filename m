@@ -1,53 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:49467 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751796AbdFLL4i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 07:56:38 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.12] brcmfmac: fix brcmf_fws_add_interface() for USB devices
-Date: Mon, 12 Jun 2017 12:56:35 +0100
-Message-Id: <1497268595-4836-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170612_135642_102468_390D1555)
+Received: from mga01.intel.com ([192.55.52.88]:29441 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750822AbdFHGbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 02:31:06 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Seraphime Kirkovski <kirkseraph@gmail.com>,
+        "luca@coelho.fi" <luca@coelho.fi>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [linuxwifi] [PATCH] net: wireless: intel: iwlwifi: dvm: fix tid
+ mask
+Date: Thu, 8 Jun 2017 06:31:01 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3E5520A41@hasmsx107.ger.corp.intel.com> (sfid-20170608_083148_369595_89DA92B2)
+References: <20170607223354.22399-1-kirkseraph@gmail.com>
+In-Reply-To: <20170607223354.22399-1-kirkseraph@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-USB devices rely on queuing functionality provided by the fwsignal
-module regardless the mode fwsignal is operating in. For this some
-data structure needs to be reserved which is tied to the interface,
-which is done by brcmf_fws_add_interface(). However, it checks the
-mode. Replace that by checking result from brcmf_fws_queue_skbs().
-
-Fixes: fc0471e3e884 ("brcmfmac: ignore interfaces when fwsignal is disabled")
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Hi Kalle,
-
-This patch fixes a regression that was introduced upstream in
-4.12-rc1. It applies to the master branch of the wireless-drivers
-repository.
-
-Regards,
-Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 72373e5..f59642b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -2145,7 +2145,7 @@ void brcmf_fws_add_interface(struct brcmf_if *ifp)
- 	struct brcmf_fws_info *fws = drvr_to_fws(ifp->drvr);
- 	struct brcmf_fws_mac_descriptor *entry;
- 
--	if (!ifp->ndev || fws->fcmode == BRCMF_FWS_FCMODE_NONE)
-+	if (!ifp->ndev || !brcmf_fws_queue_skbs(fws))
- 		return;
- 
- 	entry = &fws->desc.iface[ifp->ifidx];
--- 
-1.9.1
+SGksDQoNCj4gU3ViamVjdDogW2xpbnV4d2lmaV0gW1BBVENIXSBuZXQ6IHdpcmVsZXNzOiBpbnRl
+bDogaXdsd2lmaTogZHZtOiBmaXggdGlkIG1hc2sNCj4gDQo+IEN1cnJlbnRseSB0aGUgdGlkIG1h
+c2sgY292ZXJzIHRoZSBmaXJzdCA0IGJpdHMgb2YgaXdsYWduX3R4X3Jlc3A6OnJhX3RpZCwNCj4g
+d2hpY2ggZ2l2ZXMgMTYgcG9zc2libGUgdmFsdWVzIGZvciB0aWQuDQo+IFRoaXMgaXMgcHJvYmxl
+bWF0aWMgYmVjYXVzZSBJV0xfTUFYX1RJRF9DT1VOVCBpcyA4LCBzbyBpbmRleGluZw0KPiBpd2xf
+cHJpdjo6dGlkX2RhdGEgY2FuIGdvIHZlcnkgd3JvbmcuDQoNClRydWUsIE9UT0ggd2UgbmVlZCB0
+aWQgdG8gYmUgOCBzb21ldGltZXMuIFdlICpqdXN0KiBuZWVkIHRvIG1ha2Ugc3VyZQ0KdGhhdCB3
+ZSBkb24ndCBpbmRleCB0aWRfZGF0YSB3aXRoIHRoaXMuIEhlbmNlIEkgdGhpbmsgdGhlIHByb3Bl
+ciBmaXggaXM6DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3
+aWZpL2R2bS90eC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9kdm0vdHgu
+Yw0KaW5kZXggMDZhYzNmMS4uMTZhODY0NiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2ludGVsL2l3bHdpZmkvZHZtL3R4LmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2lu
+dGVsL2l3bHdpZmkvZHZtL3R4LmMNCkBAIC0xMTkwLDExICsxMTkwLDExIEBAIHZvaWQgaXdsYWdu
+X3J4X3JlcGx5X3R4KHN0cnVjdCBpd2xfcHJpdiAqcHJpdiwgc3RydWN0IGl3bF9yeF9jbWRfYnVm
+ZmVyICpyeGIpDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5leHRfcmVjbGFpbWVk
+Ow0KICAgICAgICAgICAgICAgICAgICAgICAgSVdMX0RFQlVHX1RYX1JFUExZKHByaXYsICJOZXh0
+IHJlY2xhaW1lZCBwYWNrZXQ6JWRcbiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIG5leHRfcmVjbGFpbWVkKTsNCisgICAgICAgICAgICAgICAgICAg
+ICAgIGl3bGFnbl9jaGVja19yYXRpZF9lbXB0eShwcml2LCBzdGFfaWQsIHRpZCk7DQogICAgICAg
+ICAgICAgICAgfQ0KDQogICAgICAgICAgICAgICAgaXdsX3RyYW5zX3JlY2xhaW0ocHJpdi0+dHJh
+bnMsIHR4cV9pZCwgc3NuLCAmc2ticyk7DQoNCi0gICAgICAgICAgICAgICBpd2xhZ25fY2hlY2tf
+cmF0aWRfZW1wdHkocHJpdiwgc3RhX2lkLCB0aWQpOw0KICAgICAgICAgICAgICAgIGZyZWVkID0g
+MDsNCg0KICAgICAgICAgICAgICAgIC8qIHByb2Nlc3MgZnJhbWVzICovDQoNCg0KQ2xlYXJseSBj
+YWxsaW5nIGl3bGFnbl9jaGVja19yYXRpZF9lbXB0eSB3aXRoIHRpZCA9IElXTF9USURfTk9OX1FP
+UyBpcyBhIGJhZCBpZGVhLg0KDQo+IA0KPiBXaXRoIFVCU0FOIEkgY2FuIGl0IGhhcHBlbmluZyB3
+aGlsZSBlc3RhYmxpc2hpbmcgdGhlIGZpcnN0IGNvbm5lY3Rpb24NCj4gYWZ0ZXIgbW9kdWxlIGxv
+YWQuDQo+IA0KPiBbICAyNzIuMTQzNDQwXSBVQlNBTjogVW5kZWZpbmVkIGJlaGF2aW91ciBpbg0K
+PiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2R2bS90eC5jOjc3NzozMg0KPiBb
+ICAyNzIuMTQzNDQ3XSBpbmRleCA4IGlzIG91dCBvZiByYW5nZSBmb3IgdHlwZSAnaXdsX3RpZF9k
+YXRhIFs4XScNCj4gWyAgMjcyLjE0MzQ1N10gQ1BVOiAwIFBJRDogNDYwNSBDb21tOiBpcnEvMzIt
+aXdsd2lmaSBOb3QgdGFpbnRlZCA0LjEyLjAtZGlydHkNCj4gIzINCj4gWyAgMjcyLjE0MzQ2MF0g
+SGFyZHdhcmUgbmFtZTogSGV3bGV0dC1QYWNrYXJkIEhQIEVsaXRlQm9vayAyNTYwcC8xNjJCLA0K
+PiBCSU9TIDY4U1NVIFZlci4gRi4wMiAwNy8yNi8yMDExDQo+IFsgIDI3Mi4xNDM0NjJdIENhbGwg
+VHJhY2U6DQo+IFsgIDI3Mi4xNDM0NzJdICBkdW1wX3N0YWNrKzB4OWMvMHgxMGINCj4gWyAgMjcy
+LjE0MzQ3N10gID8gX2F0b21pY19kZWNfYW5kX2xvY2srMHgyODUvMHgyODUNCj4gWyAgMjcyLjE0
+MzQ4Nl0gIHVic2FuX2VwaWxvZ3VlKzB4ZC8weDRlDQo+IFsgIDI3Mi4xNDM0OTNdICBfX3Vic2Fu
+X2hhbmRsZV9vdXRfb2ZfYm91bmRzKzB4ZWYvMHgxMTgNCj4gWyAgMjcyLjE0MzQ5OF0gID8gX191
+YnNhbl9oYW5kbGVfc2hpZnRfb3V0X29mX2JvdW5kcysweDIyMS8weDIyMQ0KPiBbICAyNzIuMTQz
+NTE5XSAgPyBpd2xfdHJhbnNfcGNpZV9yZWNsYWltKzB4MTUzLzB4YzkwIFtpd2x3aWZpXQ0KPiBb
+ICAyNzIuMTQzNTM5XSAgaXdsYWduX2NoZWNrX3JhdGlkX2VtcHR5KzB4MzM3LzB4NDEwIFtpd2xk
+dm1dDQo+IFsgIDI3Mi4xNDM1NTZdICA/IGl3bF9oY21kX25hbWVzX2NtcCsweDJmLzB4NjAgW2l3
+bHdpZmldDQo+IFsgIDI3Mi4xNDM1NzFdICBpd2xhZ25fcnhfcmVwbHlfdHgrMHg4YTQvMHgxODIw
+IFtpd2xkdm1dDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBTZXJhcGhpbWUgS2lya292c2tpIDxraXJr
+c2VyYXBoQGdtYWlsLmNvbT4NCj4gLS0tDQo+ICAgIEknbSBjdXJyZW50bHkgcnVubmluZyB0aGlz
+IHBhdGNoIG9uIG15IG1hY2hpbmVzIGFuZCBJIGhhdmUgd2lmaS4NCj4gICAgVGhlIHBhdGNoIHBy
+ZXN1bWVzINCwIGNsZWFudXAgcGF0Y2gsIEkgc2VudCB5ZXN0ZXJkYXk6DQo+ICAgICAgIGh0dHBz
+Oi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2tlcm5lbC9tc2cyNTI2MzE0Lmh0bWwNCj4gDQo+ICBk
+cml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2R2bS9jb21tYW5kcy5oIHwgMiArLQ0K
+PiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9kdm0vY29tbWFu
+ZHMuaA0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvZHZtL2NvbW1hbmRz
+LmgNCj4gaW5kZXggMzdkMmJhNWFlODUyLi5lNTk5NGRmOWVhNGMgMTAwNjQ0DQo+IC0tLSBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvZHZtL2NvbW1hbmRzLmgNCj4gKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9kdm0vY29tbWFuZHMuaA0KPiBAQCAt
+MTQ0OCw3ICsxNDQ4LDcgQEAgc3RydWN0IGFnZ190eF9zdGF0dXMgew0KPiAgICovDQo+ICAvKiBy
+ZWZlciB0byByYV90aWQgKi8NCj4gICNkZWZpbmUgSVdMQUdOX1RYX1JFU19USURfUE9TCTANCj4g
+LSNkZWZpbmUgSVdMQUdOX1RYX1JFU19USURfTVNLCTB4MGYNCj4gKyNkZWZpbmUgSVdMQUdOX1RY
+X1JFU19USURfTVNLCTB4MDcNCj4gICNkZWZpbmUgSVdMQUdOX1RYX1JFU19SQV9QT1MJNA0KPiAg
+I2RlZmluZSBJV0xBR05fVFhfUkVTX1JBX01TSwkweGYwDQo+IA0KPiAtLQ0KPiAyLjExLjANCj4g
+DQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gbGludXh3aWZpQGVj
+bGlzdHMuaW50ZWwuY29tDQo+IGh0dHBzOi8vZWNsaXN0cy5pbnRlbC5jb20vc3ltcGEvaW5mby9s
+aW51eHdpZmkNCj4gVW5zdWJzY3JpYmUgYnkgc2VuZGluZyBlbWFpbCB0byBzeW1wYUBlY2xpc3Rz
+LmludGVsLmNvbSB3aXRoIHN1YmplY3QNCj4gIlVuc3Vic2NyaWJlIGxpbnV4d2lmaSINCg==
