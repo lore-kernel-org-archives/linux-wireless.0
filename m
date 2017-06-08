@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53231 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751097AbdFADqe (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:51077 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751860AbdFHUuQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 23:46:34 -0400
-Date: Thu, 1 Jun 2017 12:46:30 +0900
-From: Greg KH <greg@kroah.com>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: linux-wireless@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
-        Tycho Andersen <tycho@tycho.ws>,
-        driverdev-devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC 3/3] MAINTAINERS: add maintainer entry for ks7010
-Message-ID: <20170601034630.GB7468@kroah.com> (sfid-20170601_054706_016297_CCE00353)
-References: <1496287628-16787-1-git-send-email-me@tobin.cc>
- <1496287628-16787-4-git-send-email-me@tobin.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496287628-16787-4-git-send-email-me@tobin.cc>
+        Thu, 8 Jun 2017 16:50:16 -0400
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+Subject: [PATCHv5] wlcore: add wl1285 compatible
+Date: Thu,  8 Jun 2017 22:50:00 +0200
+Message-Id: <20170608205000.3268-1-sebastian.reichel@collabora.co.uk> (sfid-20170608_225115_017873_8CCF201A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 01:27:08PM +1000, Tobin C. Harding wrote:
-> Driver ks7010 does not currently have a maintainer.
-> 
-> Add maintainers entry for ks7010.
-> 
-> Signed-off-by: Tobin C. Harding <me@tobin.cc>
-> ---
->  MAINTAINERS | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 9e98464..75250ee 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7429,6 +7429,13 @@ F:	Documentation/auxdisplay/ks0108
->  F:	drivers/auxdisplay/ks0108.c
->  F:	include/linux/ks0108.h
->  
-> +KS7010 KEYSTREAM DRIVER
-> +M:      Tobin Harding <me@tobin.cc>
-> +L:      driverdev-devel@linuxdriverproject.org
-> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
-> +S:      Maintained
-> +F:      drivers/staging/ks7010/
+Motorola Droid 4 uses a WL 1285C. With differences between
+chips not being public let's add explicit binding for wl1285
+instead of relying on wl1283 being very similar.
 
-All tabs please :)
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+Acked-by: Tony Lindgren <tony@atomide.com>
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+---
+Changes since PATCHv4:
+ - Dropped droid4.dts change, patch can go in normally now
+Changes since PATCHv3:
+ - add netdev@vger.kernel.org to cc
+ - add Acked-By from Tony & Kalle
+Changes since PATCHv2:
+ - merge patch for DTS and driver
+ - add Acked-By from Rob
+Changes since PATCHv1:
+ - patches did not exist in patchv1
+---
+ Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt | 1 +
+ drivers/net/wireless/ti/wlcore/sdio.c                        | 1 +
+ drivers/net/wireless/ti/wlcore/spi.c                         | 1 +
+ 3 files changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+index 2a3d90de18ee..7b2cbb14113e 100644
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+@@ -10,6 +10,7 @@ Required properties:
+     * "ti,wl1273"
+     * "ti,wl1281"
+     * "ti,wl1283"
++    * "ti,wl1285"
+     * "ti,wl1801"
+     * "ti,wl1805"
+     * "ti,wl1807"
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 287023ef4a78..2fb38717346f 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -237,6 +237,7 @@ static const struct of_device_id wlcore_sdio_of_match_table[] = {
+ 	{ .compatible = "ti,wl1273", .data = &wl127x_data },
+ 	{ .compatible = "ti,wl1281", .data = &wl128x_data },
+ 	{ .compatible = "ti,wl1283", .data = &wl128x_data },
++	{ .compatible = "ti,wl1285", .data = &wl128x_data },
+ 	{ .compatible = "ti,wl1801", .data = &wl18xx_data },
+ 	{ .compatible = "ti,wl1805", .data = &wl18xx_data },
+ 	{ .compatible = "ti,wl1807", .data = &wl18xx_data },
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index f949ad2bd898..1f5d9ebb0925 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -433,6 +433,7 @@ static const struct of_device_id wlcore_spi_of_match_table[] = {
+ 	{ .compatible = "ti,wl1273", .data = &wl127x_data},
+ 	{ .compatible = "ti,wl1281", .data = &wl128x_data},
+ 	{ .compatible = "ti,wl1283", .data = &wl128x_data},
++	{ .compatible = "ti,wl1285", .data = &wl128x_data},
+ 	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
+ 	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
+ 	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
+-- 
+2.11.0
