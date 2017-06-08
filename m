@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36344 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753422AbdF2Sbu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:31:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:27 +0300
-Message-Id: <20170629183027.15408-16-luca@coelho.fi> (sfid-20170629_203159_007182_1C64CB2D)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 15/15] iwlwifi: bump MAX API for 8000/9000/A000 to 33
+Received: from ozlabs.org ([103.22.144.67]:50083 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750788AbdFHMr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 08:47:29 -0400
+Date: Thu, 8 Jun 2017 22:47:25 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: linux-next: build failure after merge of the
+ wireless-drivers-next tree
+Message-ID: <20170608224725.6cd98500@canb.auug.org.au> (sfid-20170608_144809_299304_785370DE)
+In-Reply-To: <87lgp24ra3.fsf@codeaurora.org>
+References: <20170608122759.7ffda0c3@canb.auug.org.au>
+        <3594bd0d-e2b4-a380-ba06-8dedbbcbe11f@quantenna.com>
+        <20170608125737.1e09c36d@canb.auug.org.au>
+        <87lgp24ra3.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Hi Kalle,
 
-Bump the maximum API supported by these device families to 33.
+On Thu, 08 Jun 2017 15:07:00 +0300 Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+> 
+> > On Wed, 7 Jun 2017 19:43:18 -0700 Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:  
+> >>
+> >> thanks. As I understand, you've applied this patch during a merge and no 
+> >> further actions are required, correct?  
+> >
+> > Dave Miller will need to apply that patch (or something similar) when
+> > he merges the wireless-drivers-next tree into the net-next tree.  I
+> > will keep applying the patch each day until then.  
+> 
+> Thanks, I'll remind Dave about this when i submit the pull request (very
+> soon now).
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+It occurred to me just after I wrote the previous message that it would
+only be true after he merges the current net tree into the net-next tree.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-index 766bb2037b94..5081720608af 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-@@ -70,8 +70,8 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL8000_UCODE_API_MAX	31
--#define IWL8265_UCODE_API_MAX	31
-+#define IWL8000_UCODE_API_MAX	33
-+#define IWL8265_UCODE_API_MAX	33
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	22
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 42daaddfa740..b4ecd1fe1374 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL9000_UCODE_API_MAX	31
-+#define IWL9000_UCODE_API_MAX	33
- 
- /* Lowest firmware API version supported */
- #define IWL9000_UCODE_API_MIN	30
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-index 2940c0a6c3d6..98f24cd1b44f 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL_A000_UCODE_API_MAX	31
-+#define IWL_A000_UCODE_API_MAX	33
- 
- /* Lowest firmware API version supported */
- #define IWL_A000_UCODE_API_MIN	24
 -- 
-2.11.0
+Cheers,
+Stephen Rothwell
