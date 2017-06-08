@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f174.google.com ([209.85.216.174]:34719 "EHLO
-        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750716AbdFZEAP (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:36163 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751412AbdFHO6N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 00:00:15 -0400
-Received: by mail-qt0-f174.google.com with SMTP id 32so15990773qtv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 21:00:14 -0700 (PDT)
+        Thu, 8 Jun 2017 10:58:13 -0400
 MIME-Version: 1.0
-From: Vasiliy Safronov <vvsprog@gmail.com>
-Date: Mon, 26 Jun 2017 10:00:13 +0600
-Message-ID: <CALfe80gmDFDnvT=MvN8891wudBEAmeQpH1X1_wNzQpkhbLSOVQ@mail.gmail.com> (sfid-20170626_060020_694649_C5C4B198)
-Subject: Update regulatory rules for Kazakhstan (KZ) on 5GHz
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+In-Reply-To: <1496916183-4097-1-git-send-email-binoy.jayan@linaro.org>
+References: <1496916183-4097-1-git-send-email-binoy.jayan@linaro.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 8 Jun 2017 16:58:12 +0200
+Message-ID: <CAK8P3a2kJbXX8ROBgqyQDpwpKZPm_rNWW_oOAjOJyM7C-DZTiw@mail.gmail.com> (sfid-20170608_165842_535943_508B0AB4)
+Subject: Re: [PATCH] mwifiex: Replace semaphore async_sem with mutex
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Rajendra <rnayak@codeaurora.org>,
+        Mark Brown <broonie@kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please add support 5ghz for Kazakhstan.
-In Kazakhstan there are no restrictions up to 100mW
-country KZ: DFS-ETSI
- (2402 - 2482 @ 40), (20)
- (5170 - 5250 @ 80), (20), AUTO-BW
- (5250 - 5330 @ 80), (20), DFS, AUTO-BW
- (5650 - 5730 @ 80), (30), DFS
- (5735 - 5835 @ 80), (30)
+On Thu, Jun 8, 2017 at 12:03 PM, Binoy Jayan <binoy.jayan@linaro.org> wrote:
+> The semaphore 'async_sem' is used as a simple mutex, so
+> it should be written as one. Semaphores are going away in the future.
+>
+> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+> ---
+>
+> This patch is part of a bigger effort to eliminate unwanted
+> semaphores from the linux kernel.
 
-http://adilet.zan.kz/rus/docs/P000001379_
-S 5.282 etc
+Looks good,
+
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
