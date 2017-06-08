@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33040 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751716AbdF0R1l (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 13:27:41 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
+Received: from ozlabs.org ([103.22.144.67]:36101 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751433AbdFHC2C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Jun 2017 22:28:02 -0400
+Date: Thu, 8 Jun 2017 12:27:59 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
         Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 8/8] qtnfmac: implement scan timeout
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-        <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com>
-Date: Tue, 27 Jun 2017 20:27:37 +0300
-In-Reply-To: <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Tue, 20 Jun 2017 22:55:17 +0300")
-Message-ID: <87o9t949yu.fsf@purkki.adurom.net> (sfid-20170627_192744_949694_792D5982)
+Subject: linux-next: build failure after merge of the wireless-drivers-next
+ tree
+Message-ID: <20170608122759.7ffda0c3@canb.auug.org.au> (sfid-20170608_042832_734780_9B5ABE20)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Hi all,
 
-> Userspace tools may hang on scan in the case when scan completion event
-> is not returned by firmware. This patch implements the scan timeout
-> to avoid such situation.
->
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+After merging the wireless-drivers-next tree, today's linux-next build
+(x86_64 allmodconfig) failed like this:
 
-[...]
+drivers/net/wireless/quantenna/qtnfmac/core.c: In function 'qtnf_core_net_attach':
+drivers/net/wireless/quantenna/qtnfmac/core.c:319:5: error: 'struct net_device' has no member named 'destructor'
+  dev->destructor = free_netdev;
+     ^
 
-> +static __always_inline void qtnf_wmac_lock(struct qtnf_wmac *mac)
-> +{
-> +	mutex_lock(&mac->mac_lock);
-> +}
-> +
-> +static __always_inline void qtnf_wmac_unlock(struct qtnf_wmac *mac)
-> +{
-> +	mutex_unlock(&mac->mac_lock);
-> +}
+Caused by commit
 
-Why? These look pointless to me.
+  98f44cb0655c ("qtnfmac: introduce new FullMAC driver for Quantenna chipsets")
+
+interacting with commit
+
+  cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+
+from the net tree.
+
+I applied this merge fix patch for today.
+
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Thu, 8 Jun 2017 12:24:08 +1000
+Subject: [PATCH] qtnfmac: fix up for "net: Fix inconsistent teardown and
+ release of private netdev state."
+
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ drivers/net/wireless/quantenna/qtnfmac/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index c5ac252464f4..f053532c0e87 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -316,7 +316,7 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	vif->netdev = dev;
+ 
+ 	dev->netdev_ops = &qtnf_netdev_ops;
+-	dev->destructor = free_netdev;
++	dev->needs_free_netdev = true;
+ 	dev_net_set(dev, wiphy_net(wiphy));
+ 	dev->ieee80211_ptr = &vif->wdev;
+ 	dev->ieee80211_ptr->iftype = iftype;
+-- 
+2.11.0
 
 -- 
-Kalle Valo
+Cheers,
+Stephen Rothwell
