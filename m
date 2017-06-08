@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36364 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751936AbdF2S7Z (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56818 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751595AbdFHPlB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:59:25 -0400
-Message-ID: <1498762757.22048.145.camel@coelho.fi> (sfid-20170629_205929_144363_9E6CA868)
-From: Luca Coelho <luca@coelho.fi>
-To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Thu, 29 Jun 2017 21:59:17 +0300
-In-Reply-To: <1498682585.8633.6.camel@perches.com>
-References: <20170628201330.9432-1-luca@coelho.fi>
-         <20170628201330.9432-20-luca@coelho.fi>
-         <1498682585.8633.6.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 19/31] iwlwifi: pcie: improve debug in
- iwl_pcie_rx_handle_rb()
+        Thu, 8 Jun 2017 11:41:01 -0400
+Subject: Re: Wifi-Event for when initial 4-way completes?
+To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+References: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
+ <f1334e7f-1d86-00fd-cfba-7ce56b8a9f81@neratec.com>
+ <bbf39c69-66a5-1e23-77df-1945d0036719@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <f46b90e9-5281-b9d5-d335-3ec4eb4c5c22@candelatech.com> (sfid-20170608_174104_567698_87011660)
+Date: Thu, 8 Jun 2017 08:41:00 -0700
+MIME-Version: 1.0
+In-Reply-To: <bbf39c69-66a5-1e23-77df-1945d0036719@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+On 06/08/2017 08:21 AM, Ben Greear wrote:
+> On 06/07/2017 12:25 AM, Wojciech Dubowik wrote:
+>> Hello Ben,
+>>
+>> I have been using this part of wpa_supplicant to notify that 4-Way handshake is completed.
+>>
+>> around line 868 in wpa_supplicant.c
+>>
+>> #if defined(CONFIG_CTRL_IFACE) || !defined(CONFIG_NO_STDOUT_DEBUG)
+>>                 wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_CONNECTED "- Connection to "
+>>                         MACSTR " completed [id=%d id_str=%s%s]",
+>>                         MAC2STR(wpa_s->bssid),
+>>                         ssid ? ssid->id : -1,
+>>                         ssid && ssid->id_str ? ssid->id_str : "",
+>>                         fils_hlp_sent ? " FILS_HLP_SENT" : "");
+>> #endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
+>>
+>> You can pack whatever notification message inside the if statement.
+>
+> I'm not sure that actually is correct?  For instance, I see this in a case where
+> WPA-2 was not succesfully negotiated (note the reason-2 disconnect)
+>
+> IFNAME=sta9 <3>SME: Trying to authenticate with 00:0e:8e:f8:73:96 (SSID='ota-9k-2 space' freq=5180 MHz)
+> IFNAME=sta9 <3>Trying to associate with 00:0e:8e:f8:73:96 (SSID='ota-9k-2 space' freq=5180 MHz)
+> IFNAME=sta9 <3>Associated with 00:0e:8e:f8:73:96
+> IFNAME=sta9 <3>CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
+> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+> IFNAME=sta9 <3>CTRL-EVENT-CONNECTED - Connection to 00:0e:8e:f8:73:96 completed [id=0 id_str=]
+> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
+> IFNAME=sta9 <3>CTRL-EVENT-DISCONNECTED bssid=00:0e:8e:f8:73:96 reason=2
+>
+>
+> Looks like I might need to add another message about EAPOL 4-way completing?
 
-On Wed, 2017-06-28 at 13:43 -0700, Joe Perches wrote:
-> On Wed, 2017-06-28 at 23:13 +0300, Luca Coelho wrote:
-> > Print the queue for the existing debug message and add a new
-> > debug message indicating where the RB ended.
-> 
-> trivia:
-> 
-> > diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> 
-> []
-> > @@ -1137,8 +1141,8 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
-> >  			FH_RSCSR_RXQ_POS);
-> >  
-> >  		IWL_DEBUG_RX(trans,
-> > -			     "cmd at offset %d: %s (%.2x.%2x, seq 0x%x)\n",
-> > -			     rxcb._offset,
-> > +			     "Q %d: cmd at offset %d: %s (%.2x.%2x, seq 0x%x)\n",
-> > +			     rxq->id, offset,
-> >  			     iwl_get_cmd_string(trans,
-> >  						iwl_cmd_id(pkt->hdr.cmd,
-> >  							   pkt->hdr.group_id,
-> 
-> Perhaps %02x.%02x instead of %.2x.%2x
-> 
-> Most uses are %.2x.%.2x, but %02x.%02x seems clearer
-> at least to me.
+Based on a sniff, it seems that the 3/4 was sent in this case, but the 4/4 was not
+received from the AP.  Maybe the 3/4 is (re)sent incorrectly sometimes....I have run into similar
+bugs in the past.
 
-Sure, I tend to agree, but in this sort of debugging, people usually go
-down into the code to see exactly what it means anyway...  So we'll keep
-it in mind for the next time, but we won't change this one right now.
+Thanks,
+Ben
 
-Thanks!
 
---
-Cheers,
-Luca.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
