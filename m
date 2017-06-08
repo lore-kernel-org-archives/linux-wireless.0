@@ -1,95 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36042 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751583AbdF1UQE (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:36303 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751392AbdFHRKL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:16:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:29 +0300
-Message-Id: <20170628201330.9432-31-luca@coelho.fi> (sfid-20170628_221627_566650_20667E7D)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 30/31] iwlwifi: move configuration into sub-directory
+        Thu, 8 Jun 2017 13:10:11 -0400
+Received: by mail-lf0-f65.google.com with SMTP id x81so3535375lfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jun 2017 10:10:10 -0700 (PDT)
+Subject: Re: [PATCH 1/1] mac80211: ieee80211_rx_napi: remove warning
+To: Johannes Berg <johannes@sipsolutions.net>, kvalo@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <1496581915-4412-1-git-send-email-erik.stromdahl@gmail.com>
+ <1496581915-4412-2-git-send-email-erik.stromdahl@gmail.com>
+ <1496872642.3291.4.camel@sipsolutions.net>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <9a570231-00c2-e234-8ac8-fbee66bd07af@gmail.com> (sfid-20170608_191015_136468_7878B94E)
+Date: Thu, 8 Jun 2017 19:10:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <1496872642.3291.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Since we now support 8 device families, move their configuration
-files into a new subdirectory "cfg".
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/Makefile                   | 4 ++--
- drivers/net/wireless/intel/iwlwifi/{iwl-1000.c => cfg/1000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-2000.c => cfg/2000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-5000.c => cfg/5000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-6000.c => cfg/6000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-7000.c => cfg/7000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-8000.c => cfg/8000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-9000.c => cfg/9000.c} | 0
- drivers/net/wireless/intel/iwlwifi/{iwl-a000.c => cfg/a000.c} | 0
- 9 files changed, 2 insertions(+), 2 deletions(-)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-1000.c => cfg/1000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-2000.c => cfg/2000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-5000.c => cfg/5000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-6000.c => cfg/6000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-7000.c => cfg/7000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-8000.c => cfg/8000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-9000.c => cfg/9000.c} (100%)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-a000.c => cfg/a000.c} (100%)
+On 2017-06-07 23:57, Johannes Berg wrote:
+> On Sun, 2017-06-04 at 15:11 +0200, Erik Stromdahl wrote:
+>> The softirq count is not always incremented during driver
+>> operation. This is the case for usb and sdio network
+>> drivers.
+> 
+> I'm pretty sure the warning is correct, and we do rely on having
+> local_bh_disable(), otherwise we may end up taking a soft-IRQ and I
+> believe there are some things that could get messed up in that case.
+> 
+Ok, I will make sure to increment the softirq counter before calling
+ieee80211_rx then.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index 7733fc41ce98..20bd261223af 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -7,8 +7,8 @@ iwlwifi-objs		+= iwl-eeprom-read.o iwl-eeprom-parse.o
- iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
- iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
- iwlwifi-objs		+= pcie/ctxt-info.o pcie/trans-gen2.o pcie/tx-gen2.o
--iwlwifi-$(CONFIG_IWLDVM) += iwl-1000.o iwl-2000.o iwl-5000.o iwl-6000.o
--iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o iwl-9000.o iwl-a000.o
-+iwlwifi-$(CONFIG_IWLDVM) += cfg/1000.o cfg/2000.o cfg/5000.o cfg/6000.o
-+iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
- iwlwifi-objs		+= iwl-trans.o
- iwlwifi-objs		+= fw/notif-wait.o
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-1000.c b/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-1000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/1000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-2000.c b/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-2000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/2000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-5000.c b/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-5000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/5000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/7000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-similarity index 100%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-rename to drivers/net/wireless/intel/iwlwifi/cfg/a000.c
--- 
-2.11.0
+> So - I think the warning is there for a reason, and drivers should just
+> local_bh_disable() before calling into that. What's wrong with that?
+I guess there is nothing wrong with that, it's just that ath10k does not
+call local_bh_disable anywhere in the code.
+I guess it is relying on lower layers (pcie?) to do that.
+When introducing sdio and usb support these calls will have to be added
+explicitly in ath10k.
+
+> 
+> johannes
+> 
