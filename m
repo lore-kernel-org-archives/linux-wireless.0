@@ -1,60 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f172.google.com ([74.125.82.172]:36465 "EHLO
-        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750774AbdFOGSx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 02:18:53 -0400
-Received: by mail-ot0-f172.google.com with SMTP id s7so3288432otb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2017 23:18:52 -0700 (PDT)
+Received: from mga07.intel.com ([134.134.136.100]:46223 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751132AbdFHNLe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Jun 2017 09:11:34 -0400
+From: "Chadzynski, MikolajX" <mikolajx.chadzynski@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
+        "nishants@marvell.com" <nishants@marvell.com>,
+        "gbhat@marvell.com" <gbhat@marvell.com>,
+        "huxm@marvell.com" <huxm@marvell.com>
+Subject: porting 'mwifiex: resolve races between async FW init (failure) and
+ device removal' to kernel 4.1.x
+Date: Thu, 8 Jun 2017 13:11:28 +0000
+Message-ID: <382E97DBE488D844B7F3CE8D1D2355C83717C8B6@IRSMSX104.ger.corp.intel.com> (sfid-20170608_151138_332042_E8B635B8)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <10e690bb-b201-13e2-8c4d-1708bab37106@candelatech.com>
-References: <10e690bb-b201-13e2-8c4d-1708bab37106@candelatech.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Thu, 15 Jun 2017 09:18:51 +0300
-Message-ID: <CANUX_P2LrrNzLWRtOERnSyu0q=C4u26V+iJbpxqUssYb80PzEg@mail.gmail.com> (sfid-20170615_081901_060549_24AC91D4)
-Subject: Re: Question on flushing and deauth frames
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> ath10k is a bit weird about flushing frames, and at least my variant of the wave-2
-> firmware does not always put the deauth frame on the air when deleting stations.
->
-> It will likely not be much fun to fix this.  I was wondering if the code below
-> from ieee80211_set_disassoc() could (easily?) be made to wait for a tx-status of the deauth frame
-> instead of trying to force a flush?
-
-That's exactly what it does:
-
->
->        /*
->          * drop any frame before deauth/disassoc, this can be data or
->          * management frame. Since we are disconnecting, we should not
->          * insist sending these frames which can take time and delay
->          * the disconnection and possible the roaming.
->          */
->         if (tx)
->                 ieee80211_flush_queues(local, sdata, true);
-
-Remove all the pending data frames from the queues to clear the way
-for the deauth.
-Note the drop=true
-
->
->         /* deauthenticate/disassociate now */
->         if (tx || frame_buf)
->                 ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
->                                                reason, tx, frame_buf);
->
-
-Send the deauth.
-
->         /* flush out frame - make sure the deauth was actually sent */
->         if (tx)
->                 ieee80211_flush_queues(local, sdata, false);
->
-
-Wait for the deauth (drop=false).
-The question here is how ath10k implements the flush(, drop=false)
+Races between async firmware initialization and device removal appears on kernel 4.1.x.
+Whole scenario leading to the error together with logs is in https://bugzilla.kernel.org/show_bug.cgi?id=196003
+Mapping the patch from kernel 4.11.x "mwifiex: resolve races between async FW init (failure) and device removal" solved the problem.
+In Bugzilla I've also attached patch which I've tested for pcie interface and it works.
+Intel Deutschland GmbH
+Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+Tel: +49 89 99 8853-0, www.intel.de
+Managing Directors: Christin Eisenschmid, Christian Lamprechter
+Chairperson of the Supervisory Board: Nicole Lau
+Registered Office: Munich
+Commercial Register: Amtsgericht Muenchen HRB 186928
