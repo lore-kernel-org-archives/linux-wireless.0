@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36002 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751701AbdF1UPf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43732 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750914AbdFHMHG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:15:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:15 +0300
-Message-Id: <20170628201330.9432-17-luca@coelho.fi> (sfid-20170628_224510_660137_157019A2)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 16/31] iwlwifi: mvm: use proper CDB check in PHY context modify
+        Thu, 8 Jun 2017 08:07:06 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
+References: <20170608122759.7ffda0c3@canb.auug.org.au>
+        <3594bd0d-e2b4-a380-ba06-8dedbbcbe11f@quantenna.com>
+        <20170608125737.1e09c36d@canb.auug.org.au>
+Date: Thu, 08 Jun 2017 15:07:00 +0300
+In-Reply-To: <20170608125737.1e09c36d@canb.auug.org.au> (Stephen Rothwell's
+        message of "Thu, 8 Jun 2017 12:57:37 +1000")
+Message-ID: <87lgp24ra3.fsf@codeaurora.org> (sfid-20170608_140800_848204_D96688C0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-When the firmware supports CDB, PHY contexts cannot be modified to
-change their band, but need to be added/remove instead. Instead of
-relying on iwl_mvm_has_new_tx_api(), check the right FW capa flag
-IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT and remove the comment.
+> Hi Igor,
+>
+> On Wed, 7 Jun 2017 19:43:18 -0700 Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
+>>
+>> thanks. As I understand, you've applied this patch during a merge and no 
+>> further actions are required, correct?
+>
+> Dave Miller will need to apply that patch (or something similar) when
+> he merges the wireless-drivers-next tree into the net-next tree.  I
+> will keep applying the patch each day until then.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks, I'll remind Dave about this when i submit the pull request (very
+soon now).
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-index d59efe804356..fb9eaf003ea5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-@@ -255,8 +255,8 @@ int iwl_mvm_phy_ctxt_changed(struct iwl_mvm *mvm, struct iwl_mvm_phy_ctxt *ctxt,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	/* In CDB mode we cannot modify PHY context between bands so... */
--	if (iwl_mvm_has_new_tx_api(mvm) &&
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT) &&
- 	    ctxt->channel->band != chandef->chan->band) {
- 		int ret;
- 
 -- 
-2.11.0
+Kalle Valo
