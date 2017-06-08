@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33989 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750749AbdFOSZ2 (ORCPT
+Received: from slow1-d.mail.gandi.net ([217.70.178.86]:40657 "EHLO
+        slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751393AbdFHIGw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:28 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 20/23] nfctype5: Discard extra byte in RMB response data
-Date: Thu, 15 Jun 2017 11:25:13 -0700
-Message-Id: <20170615182516.4508-21-mgreer@animalcreek.com> (sfid-20170615_202638_876213_8102BEC8)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+        Thu, 8 Jun 2017 04:06:52 -0400
+Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
+        by slow1-d.mail.gandi.net (Postfix) with ESMTP id 912DC49603F
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2017 10:01:52 +0200 (CEST)
+Date: Thu, 8 Jun 2017 10:01:41 +0200
+From: Martin Michlmayr <tbm@cyrius.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH] cfg80211: Fix grammar issue in error message
+Message-ID: <20170608080141.rswb2czupjeblqzq@jirafa.cyrius.com> (sfid-20170608_100655_695544_7F406A35)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes there can be an extra byte in the response data for Read
-Multiple Blocks (RMB) commands so discard it whenever that happens.
+Fix grammar issue in error message about ISO3166.
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- plugins/nfctype5.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
 
-diff --git a/plugins/nfctype5.c b/plugins/nfctype5.c
-index a91d8f5..d6eec3c 100644
---- a/plugins/nfctype5.c
-+++ b/plugins/nfctype5.c
-@@ -654,7 +654,7 @@ static int t5_read_multiple_blocks_resp(uint8_t *resp, int length, void *data)
- 	uint8_t blk_size = near_tag_get_blk_size(tag);
- 	size_t data_length;
- 	GList *records;
--	int err;
-+	int err, expected_len;
- 
- 	DBG("");
- 
-@@ -665,9 +665,16 @@ static int t5_read_multiple_blocks_resp(uint8_t *resp, int length, void *data)
- 		goto out_done;
- 
- 	length -= NFC_HEADER_SIZE;
-+	expected_len = sizeof(*t5_resp) +
-+		       cookie->nb_requested_blocks * blk_size;
- 
--	if (length != (int)(sizeof(*t5_resp) +
--			    (cookie->nb_requested_blocks * blk_size))) {
-+	/*
-+	 * Sometimes an extra byte is returned in RMB response data.
-+	 * Discard the extra byte whenever that happens.
-+	 */
-+	if (length == (expected_len + 1)) {
-+		length--;
-+	} else if (length != expected_len) {
- 		err = -EIO;
- 		goto out_done;
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index cd1d6730eab7..c1ad81f34658 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6767,7 +6767,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+ 	/* ignore non-ISO3166 country codes */
+ 	for (i = 0; i < sizeof(req->alpha2); i++)
+ 		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
+-			brcmf_err("not a ISO3166 code (0x%02x 0x%02x)\n",
++			brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
+ 				  req->alpha2[0], req->alpha2[1]);
+ 			return;
+ 		}
+
 -- 
-2.13.0
+Martin Michlmayr
+http://www.cyrius.com/
