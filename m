@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frisell.zx2c4.com ([192.95.5.64]:55573 "EHLO frisell.zx2c4.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751014AbdFRTTJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 15:19:09 -0400
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
-To: gregkh@linuxfoundation.org
-Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211/wpa: use constant time memory comparison for MACs
-Date: Sun, 18 Jun 2017 21:18:54 +0200
-Message-Id: <20170618191854.17767-1-Jason@zx2c4.com> (sfid-20170618_211919_340429_89855755)
-In-Reply-To: <1497720871224217@kroah.com>
-References: <1497720871224217@kroah.com>
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42942 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751672AbdFIMJC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 08:09:02 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V3 5/9] nl80211: remove desciption about request from NL80211_CMD_ROAM
+Date: Fri,  9 Jun 2017 13:08:46 +0100
+Message-Id: <1497010130-16186-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140925_045423_71A6834B)
+In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise, we enable all sorts of forgeries via timing attack.
+The description of NL80211_CMD_ROAM indicated possibility for a
+request to roam issued by user-space. However, it also states that
+as not being implemented right now. This has been so since commit
+b23aa676ab9d ("cfg80211: connect/disconnect API") added in 2009.
+So it seems safe to assume it will not be added any time soon and
+thus remove it.
 
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-Here's the backport for 3.18.
+ include/uapi/linux/nl80211.h | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
- net/mac80211/wpa.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 983527a4c1ab..49592c7e4199 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -16,6 +16,7 @@
- #include <asm/unaligned.h>
- #include <net/mac80211.h>
- #include <crypto/aes.h>
-+#include <crypto/algapi.h>
- 
- #include "ieee80211_i.h"
- #include "michael.h"
-@@ -150,7 +151,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
- 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
- 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
- 	michael_mic(key, hdr, data, data_len, mic);
--	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-+	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
- 		goto mic_fail;
- 
- 	/* remove Michael MIC from payload */
-@@ -520,7 +521,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 
- 	queue = rx->security_idx;
- 
--	if (memcmp(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <= 0) {
-+	if (crypto_memneq(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <= 0) {
- 		key->u.ccmp.replays++;
- 		return RX_DROP_UNUSABLE;
- 	}
-@@ -771,7 +772,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
- 				   skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c792234..c931263 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -569,14 +569,13 @@
+  *	authentication/association or not receiving a response from the AP.
+  *	Non-zero %NL80211_ATTR_STATUS_CODE value is indicated in that case as
+  *	well to remain backwards compatible.
+- * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
+- *	sent as an event when the card/driver roamed by itself.
+- *	When used as an event, and the driver roamed in a network that requires
+- *	802.1X authentication, %NL80211_ATTR_PORT_AUTHORIZED should be set
+- *	if the 802.1X authentication was done by the driver or if roaming was
+- *	done using Fast Transition protocol (in which case 802.1X authentication
+- *	is not needed). If %NL80211_ATTR_PORT_AUTHORIZED is not set, user space
+- *	is responsible for the 802.1X authentication.
++ * @NL80211_CMD_ROAM: notifcation indicating the card/driver roamed by itself.
++ *	When the driver roamed in a network that requires 802.1X authentication,
++ *	%NL80211_ATTR_PORT_AUTHORIZED should be set if the 802.1X authentication
++ *	was done by the driver or if roaming was done using Fast Transition
++ *	protocol (in which case 802.1X authentication is not needed). If
++ *	%NL80211_ATTR_PORT_AUTHORIZED is not set, user space is responsible for
++ *	the 802.1X authentication.
+  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
+  *	userspace that a connection was dropped by the AP or due to other
+  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
 -- 
-2.13.1
+1.9.1
