@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59238 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751258AbdFEUmd (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:38064 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751584AbdFITkh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:42:33 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Jun 2017 23:41:54 +0300
-Message-Id: <20170605204218.30151-2-luca@coelho.fi> (sfid-20170605_224237_453073_094F0579)
-In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
-References: <20170605204218.30151-1-luca@coelho.fi>
-Subject: [PATCH 01/25] iwlwifi: mvm: add AMSDU flag to offload assist
+        Fri, 9 Jun 2017 15:40:37 -0400
+Date: Fri, 09 Jun 2017 15:40:36 -0400 (EDT)
+Message-Id: <20170609.154036.1650264279344295227.davem@davemloft.net> (sfid-20170609_214043_106203_49F86D15)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        johannes.berg@intel.com
+Subject: Re: [PATCH net] mac80211: free netdev on dev_alloc_name() error
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170609193309.14972-1-johannes@sipsolutions.net>
+References: <20170609193309.14972-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri,  9 Jun 2017 21:33:09 +0200
 
-Enable offload assist for AMSDU when the AMSDU present flag is set.
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The change to remove free_netdev() from ieee80211_if_free()
+> erroneously didn't add the necessary free_netdev() for when
+> ieee80211_if_free() is called directly in one place, rather
+> than as the priv_destructor. Add the missing call.
+> 
+> Fixes: cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Fixes: a830baba9c2e ("iwlwifi: mvm: support new TX API")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 64ca8b92f8d2..4d0d23b224c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -480,8 +480,14 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
- 		u16 offload_assist = iwl_mvm_tx_csum(mvm, skb, hdr, info);
- 
-+		if (ieee80211_is_data_qos(hdr->frame_control)) {
-+			u8 *qc = ieee80211_get_qos_ctl(hdr);
-+
-+			if (*qc & IEEE80211_QOS_CTL_A_MSDU_PRESENT)
-+				offload_assist |= BIT(TX_CMD_OFFLD_AMSDU);
-+		}
-+
- 		/* padding is inserted later in transport */
--		/* FIXME - check for AMSDU may need to be removed */
- 		if (ieee80211_hdrlen(hdr->frame_control) % 4 &&
- 		    !(offload_assist & BIT(TX_CMD_OFFLD_AMSDU)))
- 			offload_assist |= BIT(TX_CMD_OFFLD_PAD);
--- 
-2.11.0
+Applied, thanks Johannes.
