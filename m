@@ -1,126 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:58573 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751956AbdFOSZc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:32 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 16/23] nfctype5: Rework code that identifies ST Micro Type 5 tags
-Date: Thu, 15 Jun 2017 11:25:09 -0700
-Message-Id: <20170615182516.4508-17-mgreer@animalcreek.com> (sfid-20170615_202556_312508_7938CAA9)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53944 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751606AbdFIJIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 05:08:17 -0400
+Message-ID: <1496999284.2424.7.camel@sipsolutions.net> (sfid-20170609_111133_698990_9B968F7F)
+Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
+ offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+Date: Fri, 09 Jun 2017 11:08:04 +0200
+In-Reply-To: <d41f58e9-b12e-9e52-a0fb-b674d278353b@broadcom.com> (sfid-20170603_100839_987129_9FE5CC46)
+References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1495030794.2442.21.camel@sipsolutions.net>
+         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
+         <1495099355.2553.1.camel@sipsolutions.net>
+         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
+         <1495104012.2553.3.camel@sipsolutions.net>
+         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
+         <1495189263.3274.4.camel@sipsolutions.net>
+         <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
+         <1495448886.2653.12.camel@sipsolutions.net>
+         <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
+         <1496050303.2467.3.camel@sipsolutions.net>
+         <d41f58e9-b12e-9e52-a0fb-b674d278353b@broadcom.com>
+         (sfid-20170603_100839_987129_9FE5CC46)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rework the code that identifies ST Micro Type 5 tags to make it
-conform better to established coding style in the file and to
-make it easier to add check for tags from other manufacturers.
+Hi Arend,
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- plugins/nfctype5.c | 51 +++++++++++++++++++++++++++------------------------
- 1 file changed, 27 insertions(+), 24 deletions(-)
+Sorry about the delay.
 
-diff --git a/plugins/nfctype5.c b/plugins/nfctype5.c
-index 9d09bf8..689dec3 100644
---- a/plugins/nfctype5.c
-+++ b/plugins/nfctype5.c
-@@ -116,7 +116,7 @@
- #define GET_SYS_INFO_FLAG_16B_NB_BLOCK	0x10
- 
- #define TYPE5_UID_MANUFAC_IDX		0x06
--#define TYPE5_UID_STMICRO_MANUFAC_ID	0x02
-+#define TYPE5_UID_MANUFAC_ID_STMICRO	0x02
- 
- struct type5_cmd_hdr {
- 	uint8_t			flags;
-@@ -194,6 +194,29 @@ struct t5_cookie {
- 	uint8_t			nb_requested_blocks;
- };
- 
-+static bool t5_manufacturer_is(struct near_tag *tag, uint8_t manufacturer_id)
-+{
-+	uint8_t *uid;
-+	bool match;
-+
-+	uid = near_tag_get_iso15693_uid(near_tag_get_adapter_idx(tag),
-+					near_tag_get_target_idx(tag));
-+	if (!uid) {
-+		near_error("No type 5 UID");
-+		return false;
-+	}
-+
-+	match = (uid[TYPE5_UID_MANUFAC_IDX] == manufacturer_id);
-+
-+	g_free(uid);
-+	return match;
-+}
-+
-+static bool t5_manufacturer_is_stmicro(struct near_tag *tag)
-+{
-+	return t5_manufacturer_is(tag, TYPE5_UID_MANUFAC_ID_STMICRO);
-+}
-+
- static int t5_cmd_hdr_init(struct near_tag *tag, struct type5_cmd_hdr *cmd_hdr,
- 		int cmd)
- {
-@@ -392,26 +415,6 @@ static int t5_read(struct near_tag *tag, uint8_t offset, uint8_t *buf,
- 			cookie, t5_cookie_release_local);
- }
- 
--static bool t5_manufacturer_stmicro(struct near_tag *tag)
--{
--        uint8_t *uid;
--
--        uid = near_tag_get_iso15693_uid(near_tag_get_adapter_idx(tag),
--                                        near_tag_get_target_idx(tag));
--        if (!uid) {
--                near_error("No type 5 UID");
--                return false;
--        }
--
--        if (uid[TYPE5_UID_MANUFAC_IDX] != TYPE5_UID_STMICRO_MANUFAC_ID) {
--                g_free(uid);
--                return false;
--        }
--
--        g_free(uid);
--        return true;
--}
--
- static int t5_write_resp(uint8_t *resp, int length, void *data)
- {
- 	struct type5_write_single_block_resp *t5_resp =
-@@ -456,7 +459,7 @@ static int t5_write_resp(uint8_t *resp, int length, void *data)
- 		goto out_done;
- 
- 	/* CMD_FLAG_OPTION should be set for non ST tags */
--	if (!t5_manufacturer_stmicro(tag))
-+	if (!t5_manufacturer_is_stmicro(tag))
- 		t5_cmd->hdr.flags |= CMD_FLAG_OPTION;
- 
- 	t5_cmd->blk_no = cookie->blk;
-@@ -515,7 +518,7 @@ static int t5_write(struct near_tag *tag, uint8_t offset, uint8_t *buf,
- 	 * does not work with ST Type5 tags.
- 	 * So, implemeting OPTION flag set only for non ST tags.
- 	 */
--	if (!t5_manufacturer_stmicro(tag))
-+	if (!t5_manufacturer_is_stmicro(tag))
- 		t5_cmd->hdr.flags |= CMD_FLAG_OPTION;
- 
- 	t5_cmd->blk_no = offset / blk_size;
-@@ -1046,7 +1049,7 @@ static int t5_format_read_multiple_blocks_resp(uint8_t *resp, int length,
- 	 * lying in different sectors. So, doing multi block read
- 	 * support setting only for non ST tags.
- 	 */
--	if (!t5_manufacturer_stmicro(tag)) {
-+	if (!t5_manufacturer_is_stmicro(tag)) {
- 		if (read_multiple_supported)
- 			t5_cc.cc3 |= TYPE5_CC3_MBREAD_FLAG;
- 	}
--- 
-2.13.0
+> > Then you have to support NEW_KEY (AP case) and then using NEW_KEY
+> > to
+> > detect whether or not a wpa_s configuration option to not use
+> > offloaded
+> > 4-way-HS can be used will not work correctly.
+> > 
+> > I don't really see that this is a sensible configuration, but I
+> > could
+> > imagine it existing if somebody "bolted on" AP functionality for a
+> > client-side chipset or something like that.
+
+> So I want to get back to this as to assure we have the same
+> understanding. First off, the proposed offloads are STA-only. 
+
+Right. But we at least also want to have them for AP mode, which
+answers your below question.
+
+> So if a
+> driver supports STA and AP mode and the 4-way-HS offload, we could
+> already have the case you describe here. So not really a "bolted on"
+> scenario I would say.
+
+But if you say you don't have it in AP mode, or you didn't even think
+about it in AP mode yet, then I think you're right and the "bolted on"
+part doesn't really apply (*).
+
+However, this does mean that checking for NEW_KEY support _isn't_
+sufficient to understand whether or not the device also supports doing
+the 4-way-HS in the host, because the device might _not_ support that
+in client mode, yet implement NEW_KEY for AP mode, right?
+
+In any case - I don't think this changes much my opinion. I think that
+newer wpa_s should always use the offload where available, and if
+there's a debug option to turn that off, and that debug option causes
+failures because the driver rejects the NEW_KEY command, rather than
+causing an up-front configuration failure because wpa_s knows that the
+NEW_KEY wouldn't be supported, then I don't think for a debug option
+that makes a big difference. For something that higher layers might
+need to set, it would make a difference - but that's not at stake here.
+
+johannes
+
+(*) my line of thinking was that if you have the necessary state
+machine for client in the firmware, then it's not a huge step to also
+have it for AP, since you have the crypto primitives for it
