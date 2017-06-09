@@ -1,139 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36768 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO5t (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42894 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751657AbdFIMJA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:57:49 -0400
-Received: by mail-pf0-f196.google.com with SMTP id y7so6919661pfd.3
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:49 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Fri, 9 Jun 2017 08:09:00 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 05/20] rsi: card reset for USB interface
-Date: Fri, 16 Jun 2017 20:24:26 +0530
-Message-Id: <1497624881-2315-6-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165752_427179_5A2FAAD4)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V3 0/9] nl80211: add support for PTK/GTK handshake offload
+Date: Fri,  9 Jun 2017 13:08:41 +0100
+Message-Id: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140946_903205_C1120D48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
 
-We need to reset the chip in teardown path so that it can work
-next time when driver is loaded. This patch adds support for this
-reset configuration for USB.
+This patch series add support for offloading the PTK/GTK handshakes for
+WPA/WPA2-Personal and 802.1X in nl80211. The nl80211 patches have been
+posted as RFC. Compared to that RFC this series also adds a new flag
+ATTR_PORT_AUTHORIZED used in both CONNECT and ROAM notifications to
+indicate the driver has completed the offloads successfully and the
+encryption keys for the connection are applied. Another change is the
+addition of the flag ATTR_WANT_1X_4WAY_HS that user-space has to pass
+in CONNECT request. Some drivers may need to be aware before the PMK
+is programmed through SET_PMK request.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 72 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_usb.h     |  1 +
- 2 files changed, 73 insertions(+)
+This series also comes with driver implementation in brcmfmac although
+it does not use the authorized flag in the ROAM event (yet).
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index bcd7f45..1d7bb9d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -558,6 +558,77 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
- 	return status;
- }
- 
-+static int usb_ulp_read_write(struct rsi_hw *adapter, u16 addr, u32 data,
-+			      u16 len_in_bits)
-+{
-+	int ret;
-+
-+	ret = rsi_usb_master_reg_write
-+			(adapter, RSI_GSPI_DATA_REG1,
-+			 ((addr << 6) | ((data >> 16) & 0xffff)), 2);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = rsi_usb_master_reg_write(adapter, RSI_GSPI_DATA_REG0,
-+				       (data & 0xffff), 2);
-+	if (ret < 0)
-+		return ret;
-+
-+	/* Initializing GSPI for ULP read/writes */
-+	rsi_usb_master_reg_write(adapter, RSI_GSPI_CTRL_REG0,
-+				 RSI_GSPI_CTRL_REG0_VALUE, 2);
-+
-+	ret = rsi_usb_master_reg_write(adapter, RSI_GSPI_CTRL_REG1,
-+				       ((len_in_bits - 1) | RSI_GSPI_TRIG), 2);
-+	if (ret < 0)
-+		return ret;
-+
-+	msleep(20);
-+
-+	return 0;
-+}
-+
-+static int rsi_reset_card(struct rsi_hw *adapter)
-+{
-+	int ret;
-+
-+	rsi_dbg(INFO_ZONE, "Resetting Card...\n");
-+	rsi_usb_master_reg_write(adapter, RSI_TA_HOLD_REG, 0xE, 4);
-+
-+	/* This msleep will ensure Thread-Arch processor to go to hold
-+	 * and any pending dma transfers to rf in device to finish.
-+	 */
-+	msleep(100);
-+
-+	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1,
-+				 RSI_ULP_WRITE_2, 32);
-+	if (ret < 0)
-+		goto fail;
-+	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2,
-+				 RSI_ULP_WRITE_0, 32);
-+	if (ret < 0)
-+		goto fail;
-+	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1,
-+				 RSI_ULP_WRITE_50, 32);
-+	if (ret < 0)
-+		goto fail;
-+	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2,
-+				 RSI_ULP_WRITE_0, 32);
-+	if (ret < 0)
-+		goto fail;
-+	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
-+				 RSI_ULP_TIMER_ENABLE, 32);
-+	if (ret < 0)
-+		goto fail;
-+
-+	rsi_dbg(INFO_ZONE, "Reset card done\n");
-+	return ret;
-+
-+fail:
-+	rsi_dbg(ERR_ZONE, "Reset card failed\n");
-+	return ret;
-+}
-+
- /**
-  * rsi_probe() - This function is called by kernel when the driver provided
-  *		 Vendor and device IDs are matched. All the initialization
-@@ -641,6 +712,7 @@ static void rsi_disconnect(struct usb_interface *pfunction)
- 		return;
- 
- 	rsi_mac80211_detach(adapter);
-+	rsi_reset_card(adapter);
- 	rsi_deinit_usb_interface(adapter);
- 	rsi_91x_deinit(adapter);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 59513ac..2c5c0e7 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -25,6 +25,7 @@
- #define USB_INTERNAL_REG_1           0x25000
- #define RSI_USB_READY_MAGIC_NUM      0xab
- #define FW_STATUS_REG                0x41050012
-+#define RSI_TA_HOLD_REG              0x22000844
- 
- #define USB_VENDOR_REGISTER_READ     0x15
- #define USB_VENDOR_REGISTER_WRITE    0x16
+The series applies to the master branch of the mac80211-next repository.
+
+V2:
+ - changed patch 2/9 addressing comments from Johannes.
+V3:
+ - added documentation section in nl80211.h.
+
+Arend van Spriel (6):
+  nl80211: add authorized flag to CONNECT event
+  nl80211: remove desciption about request from NL80211_CMD_ROAM
+  brcmfmac: support 4-way handshake offloading for WPA/WPA2-PSK
+  brcmfmac: support 4-way handshake offloading for 802.1X
+  brcmfmac: switch to using cfg80211_connect_done()
+  brcmfmac: provide port authorized state in CONNECT event
+
+Avraham Stern (2):
+  cfg80211: support 4-way handshake offloading for 802.1X
+  nl80211: add authorized flag to ROAM event
+
+Eliad Peller (1):
+  cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 159 +++++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  15 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    |  30 ++++
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |   1 +
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  16 +++
+ include/linux/ieee80211.h                          |   4 +
+ include/net/cfg80211.h                             |  41 ++++++
+ include/uapi/linux/nl80211.h                       |  73 +++++++++-
+ net/wireless/core.c                                |   5 +
+ net/wireless/nl80211.c                             | 120 +++++++++++++++-
+ net/wireless/rdev-ops.h                            |  25 ++++
+ net/wireless/sme.c                                 |   2 +
+ net/wireless/trace.h                               |  60 ++++++++
+ 15 files changed, 533 insertions(+), 23 deletions(-)
+
 -- 
-2.7.4
+1.9.1
