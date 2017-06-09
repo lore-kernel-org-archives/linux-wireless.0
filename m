@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43892 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751988AbdFVBY5 (ORCPT
+Received: from mail-ot0-f181.google.com ([74.125.82.181]:33634 "EHLO
+        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751392AbdFIAHR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 21:24:57 -0400
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        sssa@qti.qualcomm.com, giulio.genovese@gmail.com,
-        Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 1/3] ath9k: fixed an invalid pointer dereference
-Date: Thu, 22 Jun 2017 09:24:27 +0800
-Message-Id: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org> (sfid-20170622_032501_291087_F67A9172)
+        Thu, 8 Jun 2017 20:07:17 -0400
+Received: by mail-ot0-f181.google.com with SMTP id k4so31514379otd.0
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jun 2017 17:07:16 -0700 (PDT)
+Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+ <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+ <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com> (sfid-20170609_020723_334469_4A93564B)
+Date: Thu, 8 Jun 2017 19:07:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Hi Ben,
 
-The bug was triggered when do suspend/resuming continuously
-on Dell XPS L322X/0PJHXN version 9333 (2013) with kernel
-4.12.0-041200rc4-generic. But can't reproduce on DELL
-E5440 + AR9300 PCIE chips.
+On 06/08/2017 06:43 PM, Ben Greear wrote:
+> On 06/08/2017 04:36 PM, Denis Kenzior wrote:
+>> Hi Ben,
+>>
+>>> The problem I see is that sometimes (and quite often when I am using
+>>> lots
+>>> of vdevs and thus the NIC is busy), the keys are set before the EAPOL
+>>> 4/4
+>>> hits the air.  When the key is set, the NIC will no longer transmit the
+>>> frame because of key-length issues in the tx-descriptor (ath10k wave-2
+>>> in this case).
+>>
+>> We have encountered something similar.  In our case we were seeing PAE
+>> packets (e.g. 4WayHandshake packet 1 of 4) before seeing the connect
+>> events on nl80211.
+>>
+>>> I suspect that there is a fundamental race between the EAPOL packet-tx
+>>> logic and the key-set logic, but supplicant appears to act as though
+>>> they are natually synchronized.
+>>
+>> Fundamentally there is a race between the genl/nl80211 socket to the
+>> kernel and the PAE socket that handles the authentication aspects.  I
+>> think the only way to
+>> fix this is to make sure that PAE flows over the genl/nl80211 socket
+>> to preserve the proper order of events.  However there are lots of
+>> dragons in the kernel
+>> side of this and we haven't been brave enough to venture into the
+>> depths yet :)
+>
+> I think that would just push the problem lower.  Probably a real fix
+> would be to somehow propagate
+> the tx-status for the specific packet back to the supplicant and only
+> then it would know that the
+> key could be set.
+>
 
-The warning is caused by accessing invalid pointer sc->rng_task.
-sc->rng_task is not be cleared after kthread_stop(sc->rng_task)
-be called in ath9k_rng_stop(). Because the kthread is stopped
-before ath9k_rng_kthread() be scheduled.
+Having userspace track individual packets in the kernel sounds  wrong to 
+me.  This also won't help with the packets being received out-of-order. 
+It would be nice if both the RX and TX ordering was preserved.  Hence my 
+thinking about running PAE over NL80211.  It would then be up to the 
+kernel / drivers to guarantee that the various packets are ordered 
+appropriately.
 
-So set sc->rng_task to null after kthread_stop(sc->rng_task) to
-resolve this issue.
+Regardless of the solution, we're happy to help in order to get this fixed.
 
-WARNING: CPU: 0 PID: 984 at linux/kernel/kthread.c:71 kthread_stop+0xf1/0x100
-CPU: 0 PID: 984 Comm: NetworkManager Not tainted 4.12.0-041200rc4-generic #201706042031
-Hardware name: Dell Inc.          Dell System XPS L322X/0PJHXN, BIOS A09 05/15/2013
-task: ffff950170fdda00 task.stack: ffffa22c01538000
-RIP: 0010:kthread_stop+0xf1/0x100
-RSP: 0018:ffffa22c0153b5b0 EFLAGS: 00010246
-RAX: ffffffffa6257800 RBX: ffff950171b79560 RCX: 0000000000000000
-RDX: 0000000080000000 RSI: 000000007fffffff RDI: ffff9500ac9a9680
-RBP: ffffa22c0153b5c8 R08: 0000000000000000 R09: 0000000000000000
-R10: ffffa22c0153b648 R11: ffff9501768004b8 R12: ffff9500ac9a9680
-R13: ffff950171b79f70 R14: ffff950171b78780 R15: ffff9501749dc018
-FS:  00007f0d6bfd5540(0000) GS:ffff95017f200000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fc190161a08 CR3: 0000000232906000 CR4: 00000000001406f0
-Call Trace:
-  ath9k_rng_stop+0x1a/0x20 [ath9k]
-  ath9k_stop+0x3b/0x1d0 [ath9k]
-  drv_stop+0x33/0xf0 [mac80211]
-  ieee80211_stop_device+0x43/0x50 [mac80211]
-  ieee80211_do_stop+0x4f2/0x810 [mac80211]
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=196043
-Reported-by: Giulio Genovese <giulio.genovese@gmail.com>
-Tested-by: Giulio Genovese <giulio.genovese@gmail.com>
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/rng.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-index 568b1c6..73f46fb 100644
---- a/drivers/net/wireless/ath/ath9k/rng.c
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -120,6 +120,8 @@ void ath9k_rng_start(struct ath_softc *sc)
- 
- void ath9k_rng_stop(struct ath_softc *sc)
- {
--	if (sc->rng_task)
-+	if (sc->rng_task) {
- 		kthread_stop(sc->rng_task);
-+		sc->rng_task = NULL;
-+	}
- }
--- 
-1.9.1
+Regards,
+-Denis
