@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60610 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751150AbdFBJfl (ORCPT
+Received: from webmail.newmedia-net.de ([185.84.6.166]:56571 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751534AbdFIOaD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 05:35:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 12:35:12 +0300
-Message-Id: <20170602093516.16369-7-luca@coelho.fi> (sfid-20170602_113546_906631_BFBD4AD2)
-In-Reply-To: <20170602093516.16369-1-luca@coelho.fi>
-References: <20170602093516.16369-1-luca@coelho.fi>
-Subject: [PATCH 06/10] iwlwifi: pcie: only use d0i3 in suspend/resume if system_pm is set to d0i3
+        Fri, 9 Jun 2017 10:30:03 -0400
+Subject: Re: [PATCH v2 1/3] ath10k: Use complete VHT chan width for 160MHz
+ workaround
+To: Ben Greear <greearb@candelatech.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
+ <c91d2578-d491-c813-cbfb-f742d04f9417@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <f01b07e5-bc11-68ac-0c37-e0d859ebfb4e@dd-wrt.com> (sfid-20170609_163007_340362_EEFD2267)
+Date: Fri, 9 Jun 2017 16:09:01 +0200
+MIME-Version: 1.0
+In-Reply-To: <c91d2578-d491-c813-cbfb-f742d04f9417@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Am 09.06.2017 um 15:50 schrieb Ben Greear:
+>
+>
+> On 06/09/2017 04:07 AM, Sven Eckelmann wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> The ath10k firmware doesn't announce its VHT channel width 
+>> capabilities in
+>> the vht_cap information from the "service ready event" arguments. The
+>> driver must therefore check whether the 160MHz short GI bit is set and
+>> whether the driver still doesn't set the bits for the 160/80+80 MHz
+>> capabilities.
+>>
+>> The two bits for the channel width are a two bit integer and not two
+>> separate bits which cannot be parsed without the knowledge of the other
+>> bit. Using IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ (b10..) 
+>> as a
+>> mask for this task doesn't make any sense. The correct mask for the VHT
+>> channel width should be used instead to make this check more readable.
+>
+> I didn't test them, but a quick review looks good.  Thanks for picking 
+> this up!
+mmh except that it wont change anything. this patch is a workaround for 
+older firmwares. these older firmwares have this flag zeroed
+newer firmwares have 80p80 set. thats all. for sure we can now check if 
+the mask is 0 or not 0. but it wont change anything at the end
+>
+> --Ben
+>
+>
 
-We only need to handle d0i3 entry and exit during suspend resume if
-system_pm is set to IWL_PLAT_PM_MODE_D0I3, otherwise d0i3 entry
-failures will cause suspend to fail.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=194791
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 70acf850a9f1..93cbc7a69bcd 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2803,7 +2803,8 @@ static struct iwl_trans_dump_data
- #ifdef CONFIG_PM_SLEEP
- static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
- {
--	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3)
-+	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3 &&
-+	    (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3))
- 		return iwl_pci_fw_enter_d0i3(trans);
- 
- 	return 0;
-@@ -2811,7 +2812,8 @@ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
- 
- static void iwl_trans_pcie_resume(struct iwl_trans *trans)
- {
--	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3)
-+	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3 &&
-+	    (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3))
- 		iwl_pci_fw_exit_d0i3(trans);
- }
- #endif /* CONFIG_PM_SLEEP */
 -- 
-2.11.0
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
