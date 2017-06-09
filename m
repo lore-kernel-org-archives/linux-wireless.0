@@ -1,279 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:63461 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752441AbdFNVVv (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42893 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751650AbdFIMJA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 17:21:51 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: kasan-dev@googlegroups.com, Dmitry Vyukov <dvyukov@google.com>,
-        Alexander Potapenko <glider@google.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v2 09/11] brcmsmac: split up wlc_phy_workarounds_nphy
-Date: Wed, 14 Jun 2017 23:15:44 +0200
-Message-Id: <20170614211556.2062728-10-arnd@arndb.de> (sfid-20170614_232239_315170_93487459)
-In-Reply-To: <20170614211556.2062728-1-arnd@arndb.de>
-References: <20170614211556.2062728-1-arnd@arndb.de>
+        Fri, 9 Jun 2017 08:09:00 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+        Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+        Eliad Peller <eliadx.peller@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V3 1/9] cfg80211: support 4-way handshake offloading for WPA/WPA2-PSK
+Date: Fri,  9 Jun 2017 13:08:42 +0100
+Message-Id: <1497010130-16186-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140931_627930_5C931789)
+In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The stack consumption in this driver is still relatively high, with one
-remaining warning if the warning level is lowered to 1536 bytes:
+From: Eliad Peller <eliad@wizery.com>
 
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: error: the frame size of 1880 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+Let drivers advertise support for station-mode 4-way handshake
+offloading with a new NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK flag.
 
-The affected function is actually a collection of three separate implementations,
-and each of them is fairly large by itself. Splitting them up is done easily
-and improves readability at the same time.
+Extend use of NL80211_ATTR_PMK attribute indicating it might be passed
+as part of NL80211_CMD_CONNECT command, and contain the PSK (which is
+the PMK, hence the name.)
 
-I'm leaving the original indentation to make the review easier.
+The driver/device is assumed to handle the 4-way handshake by
+itself in this case (including key derivations, etc.), instead
+of relying on the supplicant.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+This patch is somewhat based on this one (by Vladimir Kondratiev):
+https://patchwork.kernel.org/patch/1309561/.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[arend.vanspriel@broadcom.com rebase dealing with existing ATTR_PMK]
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        | 178 ++++++++++++---------
- 1 file changed, 104 insertions(+), 74 deletions(-)
+ V3:
+  - added documentation about EAPOL handshake offload for WPA-PSK.
+---
+ include/linux/ieee80211.h    |  1 +
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h | 22 ++++++++++++++++++++--
+ net/wireless/nl80211.c       |  9 +++++++++
+ 4 files changed, 32 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-index ef685465f80a..ed409a80f3d2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-@@ -16061,52 +16061,8 @@ static void wlc_phy_workarounds_nphy_gainctrl(struct brcms_phy *pi)
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 6903335..e97ca3a 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2401,6 +2401,7 @@ enum ieee80211_sa_query_action {
+ #define WLAN_MAX_KEY_LEN		32
+ 
+ #define WLAN_PMKID_LEN			16
++#define WLAN_PMK_LEN			32
+ 
+ #define WLAN_OUI_WFA			0x506f9a
+ #define WLAN_OUI_TYPE_WFA_P2P		9
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fa25fbb..1b288ba 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -649,6 +649,7 @@ struct survey_info {
+  * @wep_keys: static WEP keys, if not NULL points to an array of
+  *	CFG80211_MAX_WEP_KEYS WEP keys
+  * @wep_tx_key: key index (0..3) of the default TX static WEP key
++ * @psk: PSK (for devices supporting 4-way-handshake offload)
+  */
+ struct cfg80211_crypto_settings {
+ 	u32 wpa_versions;
+@@ -662,6 +663,7 @@ struct cfg80211_crypto_settings {
+ 	bool control_port_no_encrypt;
+ 	struct key_params *wep_keys;
+ 	int wep_tx_key;
++	const u8 *psk;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b8c44b9..fc244c3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -173,6 +173,18 @@
+  */
+ 
+ /**
++ * DOC: WPA/WPA2 EAPOL handshake offload
++ *
++ * By setting @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK flag drivers
++ * can indicate they support offloading EAPOL handshakes for WPA/WPA2
++ * preshared key authentication. In %NL80211_CMD_CONNECT the preshared
++ * key should be specified using %NL80211_ATTR_PMK. Drivers supporting
++ * this offload may reject the %NL80211_CMD_CONNECT when no preshared
++ * key material is provided, for example when that driver does not
++ * support setting the temporal keys through %CMD_NEW_KEY.
++ */
++
++/**
+  * DOC: FILS shared key authentication offload
+  *
+  * FILS shared key authentication offload can be advertized by drivers by
+@@ -2080,8 +2092,10 @@ enum nl80211_commands {
+  *	identifying the scope of PMKSAs. This is used with
+  *	@NL80211_CMD_SET_PMKSA and @NL80211_CMD_DEL_PMKSA.
+  *
+- * @NL80211_ATTR_PMK: PMK for the PMKSA identified by %NL80211_ATTR_PMKID.
+- *	This is used with @NL80211_CMD_SET_PMKSA.
++ * @NL80211_ATTR_PMK: attribute for passing PMK key material. Used with
++ *	%NL80211_CMD_SET_PMKSA for the PMKSA identified by %NL80211_ATTR_PMKID.
++ *	For %NL80211_CMD_CONNECT it is used to provide PSK for offloading 4-way
++ *	handshake for WPA/WPA2-PSK networks.
+  *
+  * @NL80211_ATTR_SCHED_SCAN_MULTI: flag attribute which user-space shall use to
+  *	indicate that it supports multiple active scheduled scan requests.
+@@ -4852,6 +4866,9 @@ enum nl80211_feature_flags {
+  *	RSSI threshold values to monitor rather than exactly one threshold.
+  * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS shared key
+  *	authentication with %NL80211_CMD_CONNECT.
++ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK: Device supports doing 4-way
++ *	handshake with PSK in station mode (PSK is passed as part of the connect
++ *	and associate commands).
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4872,6 +4889,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
+ 	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
+ 	NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
++	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9eb5919..2c6863a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8168,6 +8168,15 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 		memcpy(settings->akm_suites, data, len);
  	}
+ 
++	if (info->attrs[NL80211_ATTR_PMK]) {
++		if (nla_len(info->attrs[NL80211_ATTR_PMK]) != WLAN_PMK_LEN)
++			return -EINVAL;
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK))
++			return -EINVAL;
++		settings->psk = nla_data(info->attrs[NL80211_ATTR_PMK]);
++	}
++
+ 	return 0;
  }
  
--static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
-+static void wlc_phy_workarounds_nphy_rev7(struct brcms_phy *pi)
- {
--	static const u8 rfseq_rx2tx_events[] = {
--		NPHY_RFSEQ_CMD_NOP,
--		NPHY_RFSEQ_CMD_RXG_FBW,
--		NPHY_RFSEQ_CMD_TR_SWITCH,
--		NPHY_RFSEQ_CMD_CLR_HIQ_DIS,
--		NPHY_RFSEQ_CMD_RXPD_TXPD,
--		NPHY_RFSEQ_CMD_TX_GAIN,
--		NPHY_RFSEQ_CMD_EXT_PA
--	};
--	u8 rfseq_rx2tx_dlys[] = { 8, 6, 6, 2, 4, 60, 1 };
--	static const u8 rfseq_tx2rx_events[] = {
--		NPHY_RFSEQ_CMD_NOP,
--		NPHY_RFSEQ_CMD_EXT_PA,
--		NPHY_RFSEQ_CMD_TX_GAIN,
--		NPHY_RFSEQ_CMD_RXPD_TXPD,
--		NPHY_RFSEQ_CMD_TR_SWITCH,
--		NPHY_RFSEQ_CMD_RXG_FBW,
--		NPHY_RFSEQ_CMD_CLR_HIQ_DIS
--	};
--	static const u8 rfseq_tx2rx_dlys[] = { 8, 6, 2, 4, 4, 6, 1 };
--	static const u8 rfseq_tx2rx_events_rev3[] = {
--		NPHY_REV3_RFSEQ_CMD_EXT_PA,
--		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
--		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
--		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
--		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
--		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
--		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
--		NPHY_REV3_RFSEQ_CMD_END
--	};
--	static const u8 rfseq_tx2rx_dlys_rev3[] = { 8, 4, 2, 2, 4, 4, 6, 1 };
--	u8 rfseq_rx2tx_events_rev3[] = {
--		NPHY_REV3_RFSEQ_CMD_NOP,
--		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
--		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
--		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
--		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
--		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
--		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
--		NPHY_REV3_RFSEQ_CMD_EXT_PA,
--		NPHY_REV3_RFSEQ_CMD_END
--	};
--	u8 rfseq_rx2tx_dlys_rev3[] = { 8, 6, 6, 4, 4, 18, 42, 1, 1 };
--
- 	static const u8 rfseq_rx2tx_events_rev3_ipa[] = {
- 		NPHY_REV3_RFSEQ_CMD_NOP,
- 		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-@@ -16120,29 +16076,15 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 	};
- 	static const u8 rfseq_rx2tx_dlys_rev3_ipa[] = { 8, 6, 6, 4, 4, 16, 43, 1, 1 };
- 	static const u16 rfseq_rx2tx_dacbufpu_rev7[] = { 0x10f, 0x10f };
--
--	s16 alpha0, alpha1, alpha2;
--	s16 beta0, beta1, beta2;
--	u32 leg_data_weights, ht_data_weights, nss1_data_weights,
--	    stbc_data_weights;
-+	u32 leg_data_weights;
- 	u8 chan_freq_range = 0;
- 	static const u16 dac_control = 0x0002;
- 	u16 aux_adc_vmid_rev7_core0[] = { 0x8e, 0x96, 0x96, 0x96 };
- 	u16 aux_adc_vmid_rev7_core1[] = { 0x8f, 0x9f, 0x9f, 0x96 };
--	u16 aux_adc_vmid_rev4[] = { 0xa2, 0xb4, 0xb4, 0x89 };
--	u16 aux_adc_vmid_rev3[] = { 0xa2, 0xb4, 0xb4, 0x89 };
--	u16 *aux_adc_vmid;
- 	u16 aux_adc_gain_rev7[] = { 0x02, 0x02, 0x02, 0x02 };
--	u16 aux_adc_gain_rev4[] = { 0x02, 0x02, 0x02, 0x00 };
--	u16 aux_adc_gain_rev3[] = { 0x02, 0x02, 0x02, 0x00 };
--	u16 *aux_adc_gain;
--	static const u16 sk_adc_vmid[] = { 0xb4, 0xb4, 0xb4, 0x24 };
--	static const u16 sk_adc_gain[] = { 0x02, 0x02, 0x02, 0x02 };
- 	s32 min_nvar_val = 0x18d;
- 	s32 min_nvar_offset_6mbps = 20;
- 	u8 pdetrange;
--	u8 triso;
--	u16 regval;
- 	u16 afectrl_adc_ctrl1_rev7 = 0x20;
- 	u16 afectrl_adc_ctrl2_rev7 = 0x0;
- 	u16 rfseq_rx2tx_lpf_h_hpc_rev7 = 0x77;
-@@ -16171,17 +16113,6 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 	u16 freq;
- 	int coreNum;
- 
--	if (CHSPEC_IS5G(pi->radio_chanspec))
--		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 0);
--	else
--		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 1);
--
--	if (pi->phyhang_avoid)
--		wlc_phy_stay_in_carriersearch_nphy(pi, true);
--
--	or_phy_reg(pi, 0xb1, NPHY_IQFlip_ADC1 | NPHY_IQFlip_ADC2);
--
--	if (NREV_GE(pi->pubpi.phy_rev, 7)) {
- 
- 		if (NREV_IS(pi->pubpi.phy_rev, 7)) {
- 			mod_phy_reg(pi, 0x221, (0x1 << 4), (1 << 4));
-@@ -16703,8 +16634,62 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 					 &aux_adc_gain_rev7);
- 		wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_AFECTRL, 4, 0x1c, 16,
- 					 &aux_adc_gain_rev7);
-+}
- 
--	} else if (NREV_GE(pi->pubpi.phy_rev, 3)) {
-+static void wlc_phy_workarounds_nphy_rev3(struct brcms_phy *pi)
-+{
-+	static const u8 rfseq_tx2rx_events_rev3[] = {
-+		NPHY_REV3_RFSEQ_CMD_EXT_PA,
-+		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-+		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-+		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-+		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-+		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-+		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-+		NPHY_REV3_RFSEQ_CMD_END
-+	};
-+	static const u8 rfseq_tx2rx_dlys_rev3[] = { 8, 4, 2, 2, 4, 4, 6, 1 };
-+	u8 rfseq_rx2tx_events_rev3[] = {
-+		NPHY_REV3_RFSEQ_CMD_NOP,
-+		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-+		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-+		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-+		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-+		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-+		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-+		NPHY_REV3_RFSEQ_CMD_EXT_PA,
-+		NPHY_REV3_RFSEQ_CMD_END
-+	};
-+	u8 rfseq_rx2tx_dlys_rev3[] = { 8, 6, 6, 4, 4, 18, 42, 1, 1 };
-+	static const u8 rfseq_rx2tx_events_rev3_ipa[] = {
-+		NPHY_REV3_RFSEQ_CMD_NOP,
-+		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
-+		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
-+		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
-+		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
-+		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
-+		NPHY_REV3_RFSEQ_CMD_CLR_RXRX_BIAS,
-+		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
-+		NPHY_REV3_RFSEQ_CMD_END
-+	};
-+	static const u8 rfseq_rx2tx_dlys_rev3_ipa[] = { 8, 6, 6, 4, 4, 16, 43, 1, 1 };
-+	s16 alpha0, alpha1, alpha2;
-+	s16 beta0, beta1, beta2;
-+	u32 leg_data_weights, ht_data_weights, nss1_data_weights,
-+	    stbc_data_weights;
-+	u8 chan_freq_range = 0;
-+	static const u16 dac_control = 0x0002;
-+	u16 aux_adc_vmid_rev4[] = { 0xa2, 0xb4, 0xb4, 0x89 };
-+	u16 aux_adc_vmid_rev3[] = { 0xa2, 0xb4, 0xb4, 0x89 };
-+	u16 *aux_adc_vmid;
-+	u16 aux_adc_gain_rev4[] = { 0x02, 0x02, 0x02, 0x00 };
-+	u16 aux_adc_gain_rev3[] = { 0x02, 0x02, 0x02, 0x00 };
-+	u16 *aux_adc_gain;
-+	static const u16 sk_adc_vmid[] = { 0xb4, 0xb4, 0xb4, 0x24 };
-+	static const u16 sk_adc_gain[] = { 0x02, 0x02, 0x02, 0x02 };
-+	s32 min_nvar_val = 0x18d;
-+	u8 pdetrange;
-+	u8 triso;
- 
- 		write_phy_reg(pi, 0x23f, 0x1f8);
- 		write_phy_reg(pi, 0x240, 0x1f8);
-@@ -17030,7 +17015,33 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 					      MHF4_BPHY_TXCORE0,
- 					      MHF4_BPHY_TXCORE0, BRCM_BAND_ALL);
- 		}
--	} else {
-+}
-+
-+void wlc_phy_workarounds_nphy_rev1(struct brcms_phy *pi)
-+{
-+	static const u8 rfseq_rx2tx_events[] = {
-+		NPHY_RFSEQ_CMD_NOP,
-+		NPHY_RFSEQ_CMD_RXG_FBW,
-+		NPHY_RFSEQ_CMD_TR_SWITCH,
-+		NPHY_RFSEQ_CMD_CLR_HIQ_DIS,
-+		NPHY_RFSEQ_CMD_RXPD_TXPD,
-+		NPHY_RFSEQ_CMD_TX_GAIN,
-+		NPHY_RFSEQ_CMD_EXT_PA
-+	};
-+	u8 rfseq_rx2tx_dlys[] = { 8, 6, 6, 2, 4, 60, 1 };
-+	static const u8 rfseq_tx2rx_events[] = {
-+		NPHY_RFSEQ_CMD_NOP,
-+		NPHY_RFSEQ_CMD_EXT_PA,
-+		NPHY_RFSEQ_CMD_TX_GAIN,
-+		NPHY_RFSEQ_CMD_RXPD_TXPD,
-+		NPHY_RFSEQ_CMD_TR_SWITCH,
-+		NPHY_RFSEQ_CMD_RXG_FBW,
-+		NPHY_RFSEQ_CMD_CLR_HIQ_DIS
-+	};
-+	static const u8 rfseq_tx2rx_dlys[] = { 8, 6, 2, 4, 4, 6, 1 };
-+	s16 alpha0, alpha1, alpha2;
-+	s16 beta0, beta1, beta2;
-+	u16 regval;
- 
- 		if (pi->sh->boardflags2 & BFL2_SKWRKFEM_BRD ||
- 		    (pi->sh->boardtype == 0x8b)) {
-@@ -17128,7 +17139,26 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 			mod_phy_reg(pi, 0x221,
- 				    NPHY_FORCESIG_DECODEGATEDCLKS,
- 				    NPHY_FORCESIG_DECODEGATEDCLKS);
--	}
-+}
-+
-+static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
-+{
-+	if (CHSPEC_IS5G(pi->radio_chanspec))
-+		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 0);
-+	else
-+		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 1);
-+
-+	if (pi->phyhang_avoid)
-+		wlc_phy_stay_in_carriersearch_nphy(pi, true);
-+
-+	or_phy_reg(pi, 0xb1, NPHY_IQFlip_ADC1 | NPHY_IQFlip_ADC2);
-+
-+	if (NREV_GE(pi->pubpi.phy_rev, 7))
-+		wlc_phy_workarounds_nphy_rev7(pi);
-+	else if (NREV_GE(pi->pubpi.phy_rev, 3))
-+		wlc_phy_workarounds_nphy_rev3(pi);
-+	else
-+		wlc_phy_workarounds_nphy_rev1(pi);
- 
- 	if (pi->phyhang_avoid)
- 		wlc_phy_stay_in_carriersearch_nphy(pi, false);
 -- 
-2.9.0
+1.9.1
