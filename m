@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34017 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751149AbdFCPgf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Jun 2017 11:36:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <1496442569-11307-1-git-send-email-housel@acm.org>
-References: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
- <1496442569-11307-1-git-send-email-housel@acm.org>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sat, 3 Jun 2017 18:36:34 +0300
-Message-ID: <CAHp75VcfK5V42vzsh=L+CnX2ZnF=8UORbOf+f2WfmcNH1DbAsw@mail.gmail.com> (sfid-20170603_173703_870064_B5562757)
-Subject: Re: [PATCH v2] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-To: "Peter S. Housel" <housel@acm.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Florian Westphal <fw@strlen.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53858 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751536AbdFII7R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 04:59:17 -0400
+Message-ID: <1496998749.2424.3.camel@sipsolutions.net> (sfid-20170609_105929_175674_B0BD75B9)
+Subject: Re: [linux-wireless] [mac80211] Does IEEE80211_IBSS_MAX_STA_ENTRIES
+ (in net/mac80211/ibss.c) work?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Xuebing Wang <xbing6@gmail.com>, linux-wireless@vger.kernel.org
+Date: Fri, 09 Jun 2017 10:59:09 +0200
+In-Reply-To: <0d40c0dc-4476-0567-6cb9-149a3fcc83e4@gmail.com> (sfid-20170608_065026_486259_DBDF5F58)
+References: <0d40c0dc-4476-0567-6cb9-149a3fcc83e4@gmail.com>
+         (sfid-20170608_065026_486259_DBDF5F58)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 3, 2017 at 1:29 AM, Peter S. Housel <housel@acm.org> wrote:
-> An earlier change to this function (3bdae810721b) fixed a leak in the
-> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
-> glom_skb buffer, used for emulating a scattering read, is never used
-> or referenced after its contents are copied into the destination
-> buffers, and therefore always needs to be freed by the end of the
-> function.
+On Thu, 2017-06-08 at 12:50 +0800, Xuebing Wang wrote:
+> Hi community,
+> 
+> Does IEEE80211_IBSS_MAX_STA_ENTRIES (in net/mac80211/ibss.c) work?
 
->                 err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
->                                          glom_skb);
-> -               if (err) {
-> -                       brcmu_pkt_buf_free_skb(glom_skb);
-> -                       goto done;
-> -               }
-> -
-> -               skb_queue_walk(pktq, skb) {
-> -                       memcpy(skb->data, glom_skb->data, skb->len);
-> -                       skb_pull(glom_skb, skb->len);
+Yes, as far as it's supposed to :)
 
-> +               if (!err) {
+> I hard-code it to be 2 (from original 128), and update kernel for
+> one node, and start IBSS network with 5 nodes. In the node with hard-
+> coded IBSS_MAX_STA_ENTRIES = 2, I still can see and ping all other 4
+> nodes. I am using kernel v3.18.29, does IBSS_MAX_STA_ENTRIES work
+> with latest kernel source code?
+> 
+> My purpose is to limit the max number of peers (for all nodes in
+> IBSS network) to be 12 or 20.
 
-This is not so often in use type of pattern.
+This isn't really the point of this setting, and that's why it's also
+not configurable.
 
-> +                       skb_queue_walk(pktq, skb) {
-> +                               memcpy(skb->data, glom_skb->data, skb->len);
-> +                               skb_pull(glom_skb, skb->len);
-> +                       }
->                 }
+This setting is really just intended to catch the case of a rogue
+network/transmitter or similar overflowing the amount of memory we
+keep.
 
-> +               brcmu_pkt_buf_free_skb(glom_skb);
+This setting has no impact on who we can *communicate* with - although
+we can only communicate with peers that we don't have a station entry
+for on very few low rates, so you won't get good performance beyond
+that point.
 
-Can we just add this one line instead or I'm missing something?
+If you wanted to actually limit the IBSS network to a certain number of
+peers, you'd have to
 
->         } else
->                 err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, false, addr,
->                                             pktq);
+ * make that setting configurable (with a sane upper bound)
+ * write some additional code to restrict IBSS communication to when a
+   station entry exists
 
+You could also do some higher layer filtering (iptables) I guess.
 
-
--- 
-With Best Regards,
-Andy Shevchenko
+johannes
