@@ -1,48 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45300 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752320AbdFMHCO (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43278 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751694AbdFIJD6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 03:02:14 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [wireless-next] qtnfmac: check band before allocating cmd_skb to
- avoid resource leak
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170602154045.28948-1-colin.king@canonical.com>
-References: <20170602154045.28948-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20170613070213.64C55606DC@smtp.codeaurora.org> (sfid-20170613_090335_641278_57F89923)
-Date: Tue, 13 Jun 2017 07:02:13 +0000 (UTC)
+        Fri, 9 Jun 2017 05:03:58 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 07/11] wireless: ipw2x00: convert to use DRIVER_ATTR_RW
+Date: Fri,  9 Jun 2017 11:03:10 +0200
+Message-Id: <20170609090314.13991-7-gregkh@linuxfoundation.org> (sfid-20170609_110743_136723_1A291C51)
+In-Reply-To: <20170609090314.13991-1-gregkh@linuxfoundation.org>
+References: <20170609090314.13991-1-gregkh@linuxfoundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+We are trying to get rid of DRIVER_ATTR(), and the ipw2x00 driver's
+attributes can be trivially changed to use DRIVER_ATTR_RW().
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The current code allocates cmd_skb and then will leak this if band->band
-> is an illegal value. It is simpler to sanity check the band first before
-> allocating cmd_skb so that we don't have to free cmd_skb if an invalid
-> band occurs.
-> 
-> Detected by CoverityScan, CID#1437561 ("Resource Leak")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Reviewed-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <netdev@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 8 +++-----
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++-----
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-bc0384eedb66 qtnfmac: check band before allocating cmd_skb to avoid resource leak
-
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index f922859acf40..aaaca4d08e2b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -4160,12 +4160,12 @@ static ssize_t show_bssinfo(struct device *d, struct device_attribute *attr,
+ static DEVICE_ATTR(bssinfo, S_IRUGO, show_bssinfo, NULL);
+ 
+ #ifdef CONFIG_IPW2100_DEBUG
+-static ssize_t show_debug_level(struct device_driver *d, char *buf)
++static ssize_t debug_level_show(struct device_driver *d, char *buf)
+ {
+ 	return sprintf(buf, "0x%08X\n", ipw2100_debug_level);
+ }
+ 
+-static ssize_t store_debug_level(struct device_driver *d,
++static ssize_t debug_level_store(struct device_driver *d,
+ 				 const char *buf, size_t count)
+ {
+ 	u32 val;
+@@ -4179,9 +4179,7 @@ static ssize_t store_debug_level(struct device_driver *d,
+ 
+ 	return strnlen(buf, count);
+ }
+-
+-static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO, show_debug_level,
+-		   store_debug_level);
++static DRIVER_ATTR_RW(debug_level);
+ #endif				/* CONFIG_IPW2100_DEBUG */
+ 
+ static ssize_t show_fatal_error(struct device *d,
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index bbc579b647b6..5b79e2ec3a16 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -1195,12 +1195,12 @@ static void ipw_led_shutdown(struct ipw_priv *priv)
+  *
+  * See the level definitions in ipw for details.
+  */
+-static ssize_t show_debug_level(struct device_driver *d, char *buf)
++static ssize_t debug_level_show(struct device_driver *d, char *buf)
+ {
+ 	return sprintf(buf, "0x%08X\n", ipw_debug_level);
+ }
+ 
+-static ssize_t store_debug_level(struct device_driver *d, const char *buf,
++static ssize_t debug_level_store(struct device_driver *d, const char *buf,
+ 				 size_t count)
+ {
+ 	char *p = (char *)buf;
+@@ -1221,9 +1221,7 @@ static ssize_t store_debug_level(struct device_driver *d, const char *buf,
+ 
+ 	return strnlen(buf, count);
+ }
+-
+-static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
+-		   show_debug_level, store_debug_level);
++static DRIVER_ATTR_RW(debug_level);
+ 
+ static inline u32 ipw_get_event_log_len(struct ipw_priv *priv)
+ {
 -- 
-https://patchwork.kernel.org/patch/9762863/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.1
