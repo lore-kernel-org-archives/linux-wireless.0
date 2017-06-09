@@ -1,59 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:32990 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751729AbdFKNg3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Jun 2017 09:36:29 -0400
-Received: by mail-io0-f170.google.com with SMTP id t87so26801382ioe.0
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jun 2017 06:36:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <878tkzq6wi.fsf@purkki.adurom.net>
-References: <20170610025912.6499-1-Jason@zx2c4.com> <878tkzq6wi.fsf@purkki.adurom.net>
-From: Kees Cook <keescook@chromium.org>
-Date: Sun, 11 Jun 2017 06:36:27 -0700
-Message-ID: <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com> (sfid-20170611_153708_782431_306D284E)
-Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "kernel-hardening@lists.openwall.com"
-        <kernel-hardening@lists.openwall.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        David Howells <dhowells@redhat.com>,
-        David Safford <safford@us.ibm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Gilad Ben-Yossef <gilad@benyossef.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59624 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751621AbdFIUBX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 16:01:23 -0400
+Message-ID: <1497038480.12088.6.camel@sipsolutions.net> (sfid-20170609_220125_834262_A5CFB964)
+Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        Denis Kenzior <denkenz@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+Date: Fri, 09 Jun 2017 22:01:20 +0200
+In-Reply-To: <de7611e7-c34d-26e2-4083-b7e01b657426@candelatech.com>
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+         <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+         <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+         <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
+         <1496993334.2424.1.camel@sipsolutions.net>
+         <de7611e7-c34d-26e2-4083-b7e01b657426@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 11, 2017 at 1:13 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> "Jason A. Donenfeld" <Jason@zx2c4.com> writes:
->
->> Whenever you're comparing two MACs, it's important to do this using
->> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
->> which could then be used to iteratively forge a MAC.
->
-> Do you have any pointers where I could learn more about this?
+On Fri, 2017-06-09 at 06:46 -0700, Ben Greear wrote:
 
-While not using C specifically, this talks about the problem generally:
-https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
+> > However, the solution is far simpler! Once you have nl80211 PAE
+> > transport, you can easily even set the key before transmitting the
+> > packet and simply indicate that this particular packet should _not_
+> > be encrypted regardless of key presence.
+> 
+> My ath10k firmware cannot deal with a case like this:
+> 
+> pkt is enqueued before key is set
+> key is set
+> pkt is transmitted (incorrectly)
+> 
+> This is because of how the tid's header-length variables are set up
+> and modified when the keys are set, and I don't see any good way to
+> fix this.
 
--Kees
+That seems awful, and anyway will not work with the mentioned non-IEEE
+protocols that require not encrypting the rekeying frames even when
+keys have been set up.
 
--- 
-Kees Cook
-Pixel Security
+I don't know what to tell you here, I think it'd be best if you fix
+that. 
+
+> Stock ath10k firmware goes to great lengths to parse EAPOL frames and
+> try to work around it in that manner, but that breaks .11r (or used
+> to, I haven't tried stock firmware lately) and adds more complexity
+> to the code.
+
+It just has to be a single flag saying "don't encrypt this frame" -
+nothing super complicated about that?
+
+In ath10k it looks like HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT gets set for
+this, seems easy enough?
+
+>  From a patch someone sent to hostapd list last night, it seems we
+> could get the tx-status for the EAPOL 4/4, and in that case, we
+> *know* the pkt has been transmitted, so we can then set the key
+> safely it would seem?
+
+I think so, and I don't remember why we dismissed this solution. Could
+be that we just decided solving the bridging issue at the same time,
+while not introducing more latency, was better.
+
+Also, the other way can possibly solve some PTK rekeying issues, so
+overall the solution to go all the way seems better.
+
+johannes
