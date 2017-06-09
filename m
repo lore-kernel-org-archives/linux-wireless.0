@@ -1,73 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:36641 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752643AbdFTAc2 (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:36193 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbdFILIE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 20:32:28 -0400
-Received: by mail-ot0-f196.google.com with SMTP id r67so13317892ota.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:28 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/10] rtlwifi: Modify power mode parameters of 8723be and 8821ae.
-Date: Mon, 19 Jun 2017 19:32:11 -0500
-Message-Id: <20170620003218.17010-4-Larry.Finger@lwfinger.net> (sfid-20170620_023245_324665_C203C753)
-In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
-References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+        Fri, 9 Jun 2017 07:08:04 -0400
+Received: by mail-wr0-f182.google.com with SMTP id v111so29103860wrc.3
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jun 2017 04:08:03 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH v2 2/3] ath10k: Configure rxnss_override for 10.4 firmware.
+Date: Fri,  9 Jun 2017 13:07:49 +0200
+Message-Id: <20170609110750.14950-2-sven.eckelmann@openmesh.com> (sfid-20170609_130807_297793_81F525C4)
+In-Reply-To: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
+References: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Change the parameters suggested by FW.
-awake int: 2
-smart_ps: 2 or 0
-ps_mode: 2 (MAX -- every DTIM)
+QCA9984 hardware can do 4x4 at 80Mhz, but only 2x2 at 160Mhz.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+First, report this to user-space by setting the max-tx-speed
+and max-rx-speed vht capabilities.
+
+Second, if the peer rx-speed is configured, and if we
+are in 160 or 80+80 mode, and the peer rx-speed matches
+the max speed for 2x2 or 1x1 at 160Mhz (long guard interval),
+then use that info to set the peer_bw_rxnss_override appropriately.
+
+Without this, a 9984 firmware will not use 2x2 ratesets when
+transmitting to peer (it will be stuck at 1x1), because
+the firmware would not have configured the rxnss_override.
+
+This could use some testing....
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+[sven.eckelmann@openmesh.com: rebase, cleanup, drop 160Mhz workaround cleanup]
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+v2:
+ - rebased patch
+ - minor cleanups
+ - removal of the 160 MHz workaround (see patch 1)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index 8c0ac96b5430..f9d10f1e7cf8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -155,8 +155,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 		 rtlpriv->cfg->mod_params->disable_watchdog;
- 	if (rtlpriv->cfg->mod_params->disable_watchdog)
- 		pr_info("watchdog disabled\n");
--	rtlpriv->psc.reg_fwctrl_lps = 3;
--	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
-+	rtlpriv->psc.reg_fwctrl_lps = 2;
-+	rtlpriv->psc.reg_max_lps_awakeintvl = 2;
- 	/* for ASPM, you can close aspm through
- 	 * set const_support_pciaspm = 0
- 	 */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index abaf34cb1433..d71d2776ca03 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -172,8 +172,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 		rtlpriv->cfg->mod_params->disable_watchdog;
- 	if (rtlpriv->cfg->mod_params->disable_watchdog)
- 		pr_info("watchdog disabled\n");
--	rtlpriv->psc.reg_fwctrl_lps = 3;
--	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
-+	rtlpriv->psc.reg_fwctrl_lps = 2;
-+	rtlpriv->psc.reg_max_lps_awakeintvl = 2;
+ drivers/net/wireless/ath/ath10k/mac.c | 31 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c |  7 ++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h |  2 ++
+ 3 files changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8087b6be5484..0752cf351b4a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2519,6 +2519,20 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
  
- 	/* for ASPM, you can close aspm through
- 	 * set const_support_pciaspm = 0
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+ 		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
++
++	if (arg->peer_vht_rates.rx_max_rate &&
++	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
++		switch (arg->peer_vht_rates.rx_max_rate) {
++		case 1560:
++			/* Must be 2x2 at 160Mhz is all it can do. */
++			arg->peer_bw_rxnss_override = 2;
++			break;
++		case 780:
++			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
++			arg->peer_bw_rxnss_override = 1;
++			break;
++		}
++	}
+ }
+ 
+ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+@@ -4408,6 +4422,23 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ 	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
+ 	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
+ 
++	/* If we are supporting 160Mhz or 80+80, then the NIC may be able to do
++	 * a restricted NSS for 160 or 80+80 vs what it can do for 80Mhz.  Give
++	 * user-space a clue if that is the case.
++	 */
++	if (vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
++		switch (ar->dev_id) {
++		case QCA9984_1_0_DEVICE_ID:
++			/* Can do only 2x2 VHT160 or 80+80.
++			 * 1560Mbps is 4x4 80Mhz or 2x2 160Mhz,
++			 * long-guard-interval
++			 */
++			vht_cap.vht_mcs.rx_highest = 1560;
++			vht_cap.vht_mcs.tx_highest = 1560;
++			break;
++		}
++	}
++
+ 	return vht_cap;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6afc8d27f0d5..2c3b0214ba5f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -6757,7 +6757,12 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
+ 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
+ 
+ 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+-	cmd->peer_bw_rxnss_override = 0;
++	if (arg->peer_bw_rxnss_override)
++		cmd->peer_bw_rxnss_override =
++			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
++				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
++	else
++		cmd->peer_bw_rxnss_override = 0;
+ }
+ 
+ static int
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 1b4865a55595..dd6cac150749 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6028,6 +6028,7 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+ 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+ } __packed;
+ 
++#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
+ struct wmi_10_4_peer_assoc_complete_cmd {
+ 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
+ 	__le32 peer_bw_rxnss_override;
+@@ -6051,6 +6052,7 @@ struct wmi_peer_assoc_complete_arg {
+ 	u32 peer_vht_caps;
+ 	enum wmi_phy_mode peer_phymode;
+ 	struct wmi_vht_rate_set_arg peer_vht_rates;
++	u32 peer_bw_rxnss_override;
+ };
+ 
+ struct wmi_peer_add_wds_entry_cmd {
 -- 
-2.12.3
+2.11.0
