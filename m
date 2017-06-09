@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35016 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751134AbdFYLNJ (ORCPT
+Received: from gateway20.websitewelcome.com ([192.185.44.20]:18651 "EHLO
+        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751483AbdFIDrR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:56 +0300
-Message-Id: <20170625111158.1792-25-luca@coelho.fi> (sfid-20170625_131314_090445_3F1010E3)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 24/26] iwlwifi: mvm: fix typo in CTDP_CMD_OPERATION_REPORT description
+        Thu, 8 Jun 2017 23:47:17 -0400
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway20.websitewelcome.com (Postfix) with ESMTP id 53DBE400C6CB8
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2017 22:24:32 -0500 (CDT)
+Date: Thu, 8 Jun 2017 22:24:30 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] wireless: wlcore: spi: remove unnecessary variable
+Message-ID: <20170609032430.GA7432@embeddedgus> (sfid-20170609_055049_876313_5A6804BB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Remove unnecessary variable and refactor the code.
 
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Addresses-Coverity-ID: 1365000
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/spi.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 224d10b1b076..b84e8ddbbbc9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -2130,7 +2130,7 @@ struct ct_kill_notif {
- * enum ctdp_cmd_operation - CTDP command operations
- * @CTDP_CMD_OPERATION_START: update the current budget
- * @CTDP_CMD_OPERATION_STOP: stop ctdp
--* @CTDP_CMD_OPERATION_REPORT: get the avgerage budget
-+* @CTDP_CMD_OPERATION_REPORT: get the average budget
- */
- enum iwl_mvm_ctdp_cmd_operation {
- 	CTDP_CMD_OPERATION_START	= 0x1,
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index fa3547e..d2d899a 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -366,17 +366,14 @@ static int __wl12xx_spi_raw_write(struct device *child, int addr,
+ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 					     void *buf, size_t len, bool fixed)
+ {
+-	int ret;
+-
+ 	/* The ELP wakeup write may fail the first time due to internal
+ 	 * hardware latency. It is safer to send the wakeup command twice to
+ 	 * avoid unexpected failures.
+ 	 */
+ 	if (addr == HW_ACCESS_ELP_CTRL_REG)
+-		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
+-	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++		__wl12xx_spi_raw_write(child, addr, buf, len, fixed);
+ 
+-	return ret;
++	return __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
+ }
+ 
+ /**
 -- 
-2.11.0
+2.5.0
