@@ -1,72 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52348 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752665AbdFTBOB (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59153 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751536AbdFILTc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 21:14:01 -0400
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        sssa@qti.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 1/2] ath9k: fix tx99 use after free
-Date: Tue, 20 Jun 2017 09:13:39 +0800
-Message-Id: <1497921220-12940-1-git-send-email-miaoqing@codeaurora.org> (sfid-20170620_031405_221565_04A0AA0D)
+        Fri, 9 Jun 2017 07:19:32 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V5 2/3] brcmfmac: add mutex to protect pno requests
+Date: Fri,  9 Jun 2017 12:19:21 +0100
+Message-Id: <1497007162-13013-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_131937_834274_A0C6A2C7)
+In-Reply-To: <1497007162-13013-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497007162-13013-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-One scenario that could lead to UAF is two threads writing
-simultaneously to the "tx99" debug file. One of them would
-set the "start" value to true and follow to ath9k_tx99_init().
-Inside the function it would set the sc->tx99_state to true
-after allocating sc->tx99skb. Then, the other thread would
-execute write_file_tx99() and call ath9k_tx99_deinit().
-sc->tx99_state would be freed. After that, the first thread
-would continue inside ath9k_tx99_init() and call
-r = ath9k_tx99_send(sc, sc->tx99_skb, &txctl);
-that would make use of the freed sc->tx99_skb memory.
+The request references kept in pno are accessed in user-space context
+and in firmware event handler context. As such we need to protect it
+with a lock. As both context allow sleep a mutex seems appropriate.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/tx99.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index a866cbd..49ed1af 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -189,22 +189,27 @@ static ssize_t write_file_tx99(struct file *file, const char __user *user_buf,
- 	if (strtobool(buf, &start))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index a420775..e488beb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -43,6 +43,7 @@
+ struct brcmf_pno_info {
+ 	int n_reqs;
+ 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
++	struct mutex req_lock;
+ };
  
-+	mutex_lock(&sc->mutex);
-+
- 	if (start == sc->tx99_state) {
- 		if (!start)
--			return count;
-+			goto out;
- 		ath_dbg(common, XMIT, "Resetting TX99\n");
- 		ath9k_tx99_deinit(sc);
- 	}
+ #define ifp_to_pno(_ifp)	((_ifp)->drvr->config->pno)
+@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
+ 		return -ENOSPC;
  
- 	if (!start) {
- 		ath9k_tx99_deinit(sc);
--		return count;
-+		goto out;
- 	}
- 
- 	r = ath9k_tx99_init(sc);
--	if (r)
-+	if (r) {
-+		mutex_unlock(&sc->mutex);
- 		return r;
--
-+	}
-+out:
-+	mutex_unlock(&sc->mutex);
- 	return count;
+ 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
++	mutex_lock(&pi->req_lock);
+ 	pi->reqs[pi->n_reqs++] = req;
++	mutex_unlock(&pi->req_lock);
+ 	return 0;
  }
  
+ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ {
+-	int i;
++	int i, err = 0;
++
++	mutex_lock(&pi->req_lock);
+ 
+ 	/* find request */
+ 	for (i = 0; i < pi->n_reqs; i++) {
+@@ -70,7 +75,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ 	}
+ 	/* request not found */
+ 	if (WARN(i == pi->n_reqs, "reqid not found\n")) {
+-		return -ENOENT;
++		err = -ENOENT;
++		goto done;
+ 	}
+ 
+ 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
+@@ -78,14 +84,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
+ 
+ 	/* if last we are done */
+ 	if (!pi->n_reqs || i == pi->n_reqs)
+-		return 0;
++		goto done;
+ 
+ 	/* fill the gap with remaining requests */
+ 	while (i <= pi->n_reqs - 1) {
+ 		pi->reqs[i] = pi->reqs[i + 1];
+ 		i++;
+ 	}
+-	return 0;
++
++done:
++	mutex_unlock(&pi->req_lock);
++	return err;
+ }
+ 
+ static int brcmf_pno_channel_config(struct brcmf_if *ifp,
+@@ -488,6 +497,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
+ 		return -ENOMEM;
+ 
+ 	cfg->pno = pi;
++	mutex_init(&pi->req_lock);
+ 	return 0;
+ }
+ 
+@@ -500,6 +510,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
+ 	cfg->pno = NULL;
+ 
+ 	WARN_ON(pi->n_reqs);
++	mutex_destroy(&pi->req_lock);
+ 	kfree(pi);
+ }
+ 
+@@ -515,11 +526,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
+ 
+ u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
+ {
+-	/* bucket appears to be gone */
+-	if (bucket >= pi->n_reqs)
+-		return 0;
++	u64 reqid = 0;
++
++	mutex_lock(&pi->req_lock);
++
++	if (bucket < pi->n_reqs)
++		reqid = pi->reqs[bucket]->reqid;
+ 
+-	return pi->reqs[bucket]->reqid;
++	mutex_unlock(&pi->req_lock);
++	return reqid;
+ }
+ 
+ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+@@ -530,6 +545,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 	u32 bucket_map = 0;
+ 	int i, j;
+ 
++	mutex_lock(&pi->req_lock);
+ 	for (i = 0; i < pi->n_reqs; i++) {
+ 		req = pi->reqs[i];
+ 
+@@ -544,5 +560,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
+ 			}
+ 		}
+ 	}
++	mutex_unlock(&pi->req_lock);
+ 	return bucket_map;
+ }
 -- 
 1.9.1
