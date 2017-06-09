@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41617 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751489AbdF1QuK (ORCPT
+Received: from mail-ot0-f170.google.com ([74.125.82.170]:35211 "EHLO
+        mail-ot0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751548AbdFIVmF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 12:50:10 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 9 Jun 2017 17:42:05 -0400
+Received: by mail-ot0-f170.google.com with SMTP id a2so45000749oth.2
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jun 2017 14:42:05 -0700 (PDT)
+Subject: LINKMODE & OPERSTATE thoughts
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+ <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+ <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+ <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
+ <1496993334.2424.1.camel@sipsolutions.net>
+ <08fb9e64-a01e-54ea-7627-a0664d350710@gmail.com>
+ <1497038197.12088.4.camel@sipsolutions.net>
+Cc: j@w1.fi
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <ad95b6e5-9220-3eca-bf93-8ba1d89bde3b@gmail.com> (sfid-20170609_234209_112071_67F4575C)
+Date: Fri, 9 Jun 2017 16:42:03 -0500
 MIME-Version: 1.0
-Subject: Re: [1/3] ath9k: fixed an invalid pointer dereference
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
-References: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
-To: miaoqing pan <miaoqing@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-        <sssa@qti.qualcomm.com>, <giulio.genovese@gmail.com>,
-        Miaoqing Pan <miaoqing@codeaurora.org>
-Message-ID: <d8b3531d198b444db4735965f1dba877@euamsexm01a.eu.qualcomm.com> (sfid-20170628_185014_070507_2B736EB0)
-Date: Wed, 28 Jun 2017 18:49:53 +0200
+In-Reply-To: <1497038197.12088.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-miaoqing pan <miaoqing@codeaurora.org> wrote:
+Hi Johannes,
 
-> The bug was triggered when do suspend/resuming continuously
-> on Dell XPS L322X/0PJHXN version 9333 (2013) with kernel
-> 4.12.0-041200rc4-generic. But can't reproduce on DELL
-> E5440 + AR9300 PCIE chips.
-> 
-> The warning is caused by accessing invalid pointer sc->rng_task.
-> sc->rng_task is not be cleared after kthread_stop(sc->rng_task)
-> be called in ath9k_rng_stop(). Because the kthread is stopped
-> before ath9k_rng_kthread() be scheduled.
-> 
-> So set sc->rng_task to null after kthread_stop(sc->rng_task) to
-> resolve this issue.
-> 
-> WARNING: CPU: 0 PID: 984 at linux/kernel/kthread.c:71 kthread_stop+0xf1/0x100
-> CPU: 0 PID: 984 Comm: NetworkManager Not tainted 4.12.0-041200rc4-generic #201706042031
-> Hardware name: Dell Inc.          Dell System XPS L322X/0PJHXN, BIOS A09 05/15/2013
-> task: ffff950170fdda00 task.stack: ffffa22c01538000
-> RIP: 0010:kthread_stop+0xf1/0x100
-> RSP: 0018:ffffa22c0153b5b0 EFLAGS: 00010246
-> RAX: ffffffffa6257800 RBX: ffff950171b79560 RCX: 0000000000000000
-> RDX: 0000000080000000 RSI: 000000007fffffff RDI: ffff9500ac9a9680
-> RBP: ffffa22c0153b5c8 R08: 0000000000000000 R09: 0000000000000000
-> R10: ffffa22c0153b648 R11: ffff9501768004b8 R12: ffff9500ac9a9680
-> R13: ffff950171b79f70 R14: ffff950171b78780 R15: ffff9501749dc018
-> FS:  00007f0d6bfd5540(0000) GS:ffff95017f200000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007fc190161a08 CR3: 0000000232906000 CR4: 00000000001406f0
-> Call Trace:
->   ath9k_rng_stop+0x1a/0x20 [ath9k]
->   ath9k_stop+0x3b/0x1d0 [ath9k]
->   drv_stop+0x33/0xf0 [mac80211]
->   ieee80211_stop_device+0x43/0x50 [mac80211]
->   ieee80211_do_stop+0x4f2/0x810 [mac80211]
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=196043
-> Reported-by: Giulio Genovese <giulio.genovese@gmail.com>
-> Tested-by: Giulio Genovese <giulio.genovese@gmail.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Let me start a separate thread on this:
 
-I Cced stable and improved the title a bit.
+>> Also, while we're on this subject.  Should the kernel auto-manage
+>> the LINKMODE and OPERSTATE flags?  It would seem that it already has
+>> the information to do so, and having userspace manage this just
+>> introduces another source of latency / possibility of race
+>> conditions, etc.
+>
+> I'm not convinced that it does have that information in all cases, and
+> I don't see how that causes race conditions or much latency, since for
+> client mode userspace would probably just set that together with the
+> NL80211_STA_FLAG_AUTHORIZED flag?
 
--- 
-https://patchwork.kernel.org/patch/9803211/
+Well right there is a race condition.  You have 2 sockets and both 
+conveying the same information?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+If we can optimize away an extra kernel trap, isn't that worthwhile 
+thing to do?
+
+The most common case is issuing Dormant + UP after setting keys & 
+issuing the set_station command.  Isn't setting STA_FLAG_AUTHORIZED and 
+operstate to IF_OPER_UP in effect equivalent?
+
+Oh, by the way, some drivers don't implement set_station for normal 
+links (e.g. setting STA_FLAG_AUTHORIZED returns an error), should they?
+
+The only other cases where we mess with setting linkmode I can think of are:
+
+1. After connecting to an open network
+2. After a fast transition
+
+For 1, it would seem that the kernel can easily infer that the 
+IF_OPER_UP flag should be tweaked.
+For 2, this needs to be done after the new TK is installed.  Can we 
+combine these steps somehow?
+
+Regards,
+-Denis
