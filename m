@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:35732 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbdFZL3R (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 07:29:17 -0400
-Received: by mail-qt0-f194.google.com with SMTP id w12so12867629qta.2
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jun 2017 04:29:17 -0700 (PDT)
-From: "Guillermo O. Freschi" <kedrot@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        linux-wireless@vger.kernel.org
-Cc: "Guillermo O. Freschi" <kedrot@gmail.com>
-Subject: [PATCH v2] drivers: staging: wilc1000/host_interface.c Fix sparse warning: right shift by bigger than source value
-Date: Mon, 26 Jun 2017 08:29:01 -0300
-Message-Id: <20170626112901.2885-1-kedrot@gmail.com> (sfid-20170626_133127_577860_A992ACA4)
-In-Reply-To: <20170625144051.28873-1-kedrot@gmail.com>
-References: <20170625144051.28873-1-kedrot@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59156 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751554AbdFITdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 15:33:13 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH net] mac80211: free netdev on dev_alloc_name() error
+Date: Fri,  9 Jun 2017 21:33:09 +0200
+Message-Id: <20170609193309.14972-1-johannes@sipsolutions.net> (sfid-20170609_213326_396947_2586F2AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shifting by equal to or bigger than the width of a type results in
-undefined behavior. By using a wide enough temporary variable the issue
-can be avoided.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Guillermo O. Freschi <kedrot@gmail.com>
+The change to remove free_netdev() from ieee80211_if_free()
+erroneously didn't add the necessary free_netdev() for when
+ieee80211_if_free() is called directly in one place, rather
+than as the priv_destructor. Add the missing call.
+
+Fixes: cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ net/mac80211/iface.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f7c22d7b28d1..ed614698c22c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2416,10 +2416,12 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
- 		goto ERRORHANDLER;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 915d7e1b4545..f5f50150ba1c 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1816,6 +1816,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		ret = dev_alloc_name(ndev, ndev->name);
+ 		if (ret < 0) {
+ 			ieee80211_if_free(ndev);
++			free_netdev(ndev);
+ 			return ret;
+ 		}
  
- 	pu8CurrByte = wid.val;
--	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-+
-+	u32 enabled = strHostIfSetMulti->enabled;
-+	*pu8CurrByte++ = (enabled & 0xFF);
-+	*pu8CurrByte++ = ((enabled >> 8) & 0xFF);
-+	*pu8CurrByte++ = ((enabled >> 16) & 0xFF);
-+	*pu8CurrByte++ = ((enabled >> 24) & 0xFF);
- 
- 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
- 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
 -- 
 2.11.0
