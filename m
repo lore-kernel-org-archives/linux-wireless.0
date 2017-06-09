@@ -1,72 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:55597 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753184AbdFOSZa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:30 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 06/23] ndef: Validate text data in WKT Text records
-Date: Thu, 15 Jun 2017 11:24:59 -0700
-Message-Id: <20170615182516.4508-7-mgreer@animalcreek.com> (sfid-20170615_202636_694950_D09E6360)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53888 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751526AbdFIJDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 05:03:44 -0400
+Message-ID: <1496999018.2424.5.camel@sipsolutions.net> (sfid-20170609_112032_148095_AE25BFE4)
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 09 Jun 2017 11:03:38 +0200
+In-Reply-To: <87inka77md.fsf@codeaurora.org>
+References: <20170525001119.64791-1-briannorris@chromium.org>
+         <20170525001119.64791-5-briannorris@chromium.org>
+         <87fufk2hmm.fsf@purkki.adurom.net> <20170601173954.GA138807@google.com>
+         <87inka77md.fsf@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that the text encodings in WKT Text records are valid.
+On Mon, 2017-06-05 at 18:54 +0300, Kalle Valo wrote:
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- src/ndef.c | 26 ++++++++++++++++++++++----
- 1 file changed, 22 insertions(+), 4 deletions(-)
+> > BTW, since you're taking an interest in this code now, can I
+> > trouble you with a question? Looking at mwifiex_uninit_sw() (after
+> > this patchset), you can see a loop like this:
+> > 
+> >         /* Stop data */
+> >         for (i = 0; i < adapter->priv_num; i++) {
+> >                 priv = adapter->priv[i];
+> >                 if (priv && priv->netdev) {
+> >                         mwifiex_stop_net_dev_queue(priv->netdev,
+> > adapter);
+> >                         if (netif_carrier_ok(priv->netdev))
+> >                                 netif_carrier_off(priv->netdev);
+> >                         netif_device_detach(priv->netdev);
+> >                 }
+> >         }
+> > 
+> > That seems to be the only attempt to prevent user space from
+> > talking to the device while we proceed to shut down
+> > (mwifiex_shutdown_drv()). AIUI, that's wholly insufficient, and we
+> > need to actually stop all the virtual interfaces (and possibly the
+> > wiphy as well) first. I'm looking at trying to move the
+> > mwifiex_del_virtual_intf() loop up much further in this function
+> > (but there are other bugs preventing me from doing that yet).
+> > 
+> > Does that sound like the right approach to you? I'm kinda figuring
+> > this should better mimic the mac80211 ieee80211_remove_interfaces()
+> > structure.
+> 
+> Johannes is much better person to answer this (CCed).
 
-diff --git a/src/ndef.c b/src/ndef.c
-index 38dcf72..fb17be9 100644
---- a/src/ndef.c
-+++ b/src/ndef.c
-@@ -1149,8 +1149,9 @@ static struct near_ndef_text_payload *
- parse_text_payload(uint8_t *payload, uint32_t length)
- {
- 	struct near_ndef_text_payload *text_payload = NULL;
--	uint8_t status, lang_length;
-+	uint8_t status, lang_length, len, *txt, *g_str;
- 	uint32_t offset;
-+	gboolean valid;
- 
- 	DBG("");
- 
-@@ -1185,9 +1186,26 @@ parse_text_payload(uint8_t *payload, uint32_t length)
- 
- 	offset += lang_length;
- 
--	if ((length - lang_length - 1) > 0) {
--		text_payload->data = g_strndup((char *)(payload + offset),
--					length - lang_length - 1);
-+	len = length - lang_length - 1;
-+
-+	if (len > 0) {
-+		txt = payload + offset;
-+
-+		if (status)
-+			g_str = g_utf16_to_utf8((gunichar2 *)txt, len, NULL,
-+						NULL, NULL);
-+		else
-+			g_str = txt;
-+
-+		valid = g_utf8_validate(g_str, len, NULL);
-+
-+		if (status)
-+			g_free(g_str);
-+
-+		if (!valid)
-+			goto fail;
-+
-+		text_payload->data = g_strndup(txt, len);
- 	} else {
- 		text_payload->data = NULL;
- 	}
--- 
-2.13.0
+
+Wait, what? You're throwing me into pretty deep water ;-)
+
+I'm not sure what you mean by "we need to atually stop all the virtual
+interfaces ([...]) first".
+
+There are essentially only two/three ways to reach this - data path,
+which is getting stopped here, and control path (both nl80211 and
+perhaps ndo ops like start/stop).
+
+Without checking the code now, it seems entirely plausible that this is
+holding some lock that would lock out the control path entirely, for
+the duration until the wiphy is actually unregistered?
+
+Actually, you can't unregister with the relevant locks held (without
+causing deadlocks), so perhaps it's marking the wiphy as unavailable so
+that all operations fail?
+
+johannes
