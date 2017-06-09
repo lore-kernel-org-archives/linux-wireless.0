@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35828 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751661AbdF1UN6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:13:58 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:09 +0300
-Message-Id: <20170628201330.9432-11-luca@coelho.fi> (sfid-20170628_221414_072082_540895DE)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 10/31] iwlwifi: pcie: only apply retention workaround on 9000-series A-step
+Received: from s3.sipsolutions.net ([5.9.151.49]:53010 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751505AbdFIH25 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Jun 2017 03:28:57 -0400
+Message-ID: <1496993334.2424.1.camel@sipsolutions.net> (sfid-20170609_092901_382816_3171012E)
+Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+Date: Fri, 09 Jun 2017 09:28:54 +0200
+In-Reply-To: <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com> (sfid-20170609_020723_334469_4A93564B)
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+         <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+         <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+         <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
+         (sfid-20170609_020723_334469_4A93564B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2017-06-08 at 19:07 -0500, Denis Kenzior wrote:
 
-Due to a hardware issue, certain power saving had to be
-disabled. However, this issue was fixed in B-step, so the
-workaround only needs to apply to A-step.
+> > > Fundamentally there is a race between the genl/nl80211 socket to
+> > > the
+> > > kernel and the PAE socket that handles the authentication
+> > > aspects.  I
+> > > think the only way to
+> > > fix this is to make sure that PAE flows over the genl/nl80211
+> > > socket
+> > > to preserve the proper order of events.  
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+Correct.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index a5c0f69423d2..cd109740632d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -761,6 +761,15 @@ static void iwl_pcie_rx_hw_init(struct iwl_trans *trans, struct iwl_rxq *rxq)
- 
- void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable)
- {
-+	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_9000)
-+		return;
-+
-+	if (CSR_HW_REV_STEP(trans->hw_rev) != SILICON_A_STEP)
-+		return;
-+
-+	if (!trans->cfg->integrated)
-+		return;
-+
- 	/*
- 	 * Turn on the chicken-bits that cause MAC wakeup for RX-related
- 	 * values.
-@@ -768,12 +777,10 @@ void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable)
- 	 * bug where shadow registers are not in the retention list and their
- 	 * value is lost when NIC powers down
- 	 */
--	if (trans->cfg->integrated) {
--		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
--			    CSR_MAC_SHADOW_REG_CTRL_RX_WAKE);
--		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTL2,
--			    CSR_MAC_SHADOW_REG_CTL2_RX_WAKE);
--	}
-+	iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
-+		    CSR_MAC_SHADOW_REG_CTRL_RX_WAKE);
-+	iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTL2,
-+		    CSR_MAC_SHADOW_REG_CTL2_RX_WAKE);
- }
- 
- static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
--- 
-2.11.0
+> > > However there are lots of
+> > > dragons in the kernel
+> > > side of this and we haven't been brave enough to venture into the
+> > > depths yet :)
+
+We've actually discussed doing precisely this, for - among other things
+- this reason. Just nobody stepped up yet to propose the necessary APIs
+and do the remaining work to use it etc.
+
+> > I think that would just push the problem lower.  Probably a real
+> > fix
+> > would be to somehow propagate
+> > the tx-status for the specific packet back to the supplicant and
+> > only
+> > then it would know that the
+> > key could be set.
+
+That's actually possible today, with the wifi-ack sockopt. It's not
+really a full solution though I think, there are other issues to solve.
+We also discussed this at the last workshop, IIRC.
+
+> Having userspace track individual packets in the kernel sounds  wrong
+> to  me.  This also won't help with the packets being received out-of-
+> order.  It would be nice if both the RX and TX ordering was
+> preserved.  Hence my thinking about running PAE over NL80211.  It
+> would then be up to the kernel / drivers to guarantee that the
+> various packets are ordered appropriately.
+
+That's actually not possible, since ordering set_key operations vs.
+transmitted packets isn't something that's easily done by drivers.
+
+However, the solution is far simpler! Once you have nl80211 PAE
+transport, you can easily even set the key before transmitting the
+packet and simply indicate that this particular packet should _not_ be
+encrypted regardless of key presence.
+
+johannes
