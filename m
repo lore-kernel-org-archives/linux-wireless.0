@@ -1,131 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33938 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751999AbdFWOKf (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34477 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751699AbdFILkU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:35 -0400
-Received: by mail-pf0-f193.google.com with SMTP id d5so7547770pfe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:35 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 06/17] rsi: Update aggregation parameters command frame
-Date: Fri, 23 Jun 2017 19:37:25 +0530
-Message-Id: <1498226856-6305-7-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161040_352252_77C06F3C)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Fri, 9 Jun 2017 07:40:20 -0400
+From: Caesar Wang <wxt@rock-chips.com>
+To: amitkarwar@gmail.com, huxm@marvell.com
+Cc: nishants@marvell.com, gbhat@marvell.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, briannorris@chromium.org,
+        jeffy.chen@rock-chips.com, Caesar Wang <wxt@rock-chips.com>
+Subject: [PATCH] mwifiex: fixes the trivial print
+Date: Fri,  9 Jun 2017 19:40:11 +0800
+Message-Id: <1497008411-15223-1-git-send-email-wxt@rock-chips.com> (sfid-20170609_134047_142249_5F1601A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+We have always met the unused log be printed as following.
 
-AMPDU aggregation parameters frame configured to device is
-modified to use common descriptor structure.
+...
+[23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+cannot find cfp by band 2    & channel=13 freq=0
+[23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+cannot find cfp by band 2    & channel=13 freq=0
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Maybe that's related to wifi regdom, since wifi default area
+was US and didn't support 12~14 channels.
+
+As Frequencies:
+* 2412 MHz [1] (30.0 dBm)
+* 2417 MHz [2] (30.0 dBm)
+* 2422 MHz [3] (30.0 dBm)
+* 2427 MHz [4] (30.0 dBm)
+* 2432 MHz [5] (30.0 dBm)
+* 2437 MHz [6] (30.0 dBm)
+* 2442 MHz [7] (30.0 dBm)
+* 2447 MHz [8] (30.0 dBm)
+* 2452 MHz [9] (30.0 dBm)
+* 2457 MHz [10] (30.0 dBm)
+* 2462 MHz [11] (30.0 dBm)
+* 2467 MHz [12] (disabled)
+* 2472 MHz [13] (disabled)
+* 2484 MHz [14] (disabled)
+
+Signed-off-by: Caesar Wang <wxt@rock-chips.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 41 ++++++++++++++-------------------
- drivers/net/wireless/rsi/rsi_mgmt.h     | 14 +++++++++++
- 2 files changed, 31 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index b1a90b5..c2f814b 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -532,10 +532,11 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
- 				      u8 event)
- {
- 	struct sk_buff *skb = NULL;
--	struct rsi_mac_frame *mgmt_frame;
-+	struct rsi_aggr_params *aggr_params;
- 	u8 peer_id = 0;
-+	u16 frame_len = sizeof(struct rsi_aggr_params);
- 
--	skb = dev_alloc_skb(FRAME_DESC_SZ);
-+	skb = dev_alloc_skb(frame_len);
- 
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
-@@ -543,37 +544,29 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
- 		return -ENOMEM;
+ drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
+index 1ff2205..6e29943 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfp.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
+@@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
+ 		}
  	}
- 
--	memset(skb->data, 0, FRAME_DESC_SZ);
--	mgmt_frame = (struct rsi_mac_frame *)skb->data;
-+	memset(skb->data, 0, frame_len);
-+	aggr_params = (struct rsi_aggr_params *)skb->data;
- 
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending AMPDU indication frame\n", __func__);
- 
--	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
--	mgmt_frame->desc_word[1] = cpu_to_le16(AMPDU_IND);
-+	rsi_set_len_qno(&aggr_params->desc_dword0.len_qno, 0, RSI_WIFI_MGMT_Q);
-+	aggr_params->desc_dword0.frame_type = AMPDU_IND;
- 
-+	aggr_params->aggr_params = tid & RSI_AGGR_PARAMS_TID_MASK;
-+	aggr_params->peer_id = peer_id;
- 	if (event == STA_TX_ADDBA_DONE) {
--		mgmt_frame->desc_word[4] = cpu_to_le16(ssn);
--		mgmt_frame->desc_word[5] = cpu_to_le16(buf_size);
--		mgmt_frame->desc_word[7] =
--		cpu_to_le16((tid | (START_AMPDU_AGGR << 4) | (peer_id << 8)));
-+		aggr_params->seq_start = cpu_to_le16(ssn);
-+		aggr_params->baw_size = cpu_to_le16(buf_size);
-+		aggr_params->aggr_params |= RSI_AGGR_PARAMS_START;
- 	} else if (event == STA_RX_ADDBA_DONE) {
--		mgmt_frame->desc_word[4] = cpu_to_le16(ssn);
--		mgmt_frame->desc_word[7] = cpu_to_le16(tid |
--						       (START_AMPDU_AGGR << 4) |
--						       (RX_BA_INDICATION << 5) |
--						       (peer_id << 8));
--	} else if (event == STA_TX_DELBA) {
--		mgmt_frame->desc_word[7] = cpu_to_le16(tid |
--						       (STOP_AMPDU_AGGR << 4) |
--						       (peer_id << 8));
-+		aggr_params->seq_start = cpu_to_le16(ssn);
-+		aggr_params->aggr_params |= (RSI_AGGR_PARAMS_START |
-+					     RSI_AGGR_PARAMS_RX_AGGR);
- 	} else if (event == STA_RX_DELBA) {
--		mgmt_frame->desc_word[7] = cpu_to_le16(tid |
--						       (STOP_AMPDU_AGGR << 4) |
--						       (RX_BA_INDICATION << 5) |
--						       (peer_id << 8));
-+		aggr_params->aggr_params |= RSI_AGGR_PARAMS_RX_AGGR;
- 	}
- 
--	skb_put(skb, FRAME_DESC_SZ);
-+	skb_put(skb, frame_len);
- 
- 	return rsi_send_internal_mgmt_frame(common, skb);
- }
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index d2fe9ee..68863c8 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -280,6 +280,20 @@ struct rsi_peer_notify {
- 	__le32 sta_flags;
- } __packed;
- 
-+/* Aggregation params flags */
-+#define RSI_AGGR_PARAMS_TID_MASK	0xf
-+#define RSI_AGGR_PARAMS_START		BIT(4)
-+#define RSI_AGGR_PARAMS_RX_AGGR		BIT(5)
-+struct rsi_aggr_params {
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	struct rsi_cmd_desc_dword0 desc_dword1;
-+	__le16 seq_start;
-+	__le16 baw_size;
-+	__le16 token;
-+	u8 aggr_params;
-+	u8 peer_id;
-+} __packed;
-+
- struct rsi_vap_caps {
- 	__le16 desc_word[8];
- 	u8 mac_addr[6];
+ 	if (i == sband->n_channels) {
+-		mwifiex_dbg(priv->adapter, ERROR,
++		mwifiex_dbg(priv->adapter, WARN,
+ 			    "%s: cannot find cfp by band %d\t"
+ 			    "& channel=%d freq=%d\n",
+ 			    __func__, band, channel, freq);
 -- 
 2.7.4
