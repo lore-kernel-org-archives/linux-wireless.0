@@ -1,239 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:34922 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751195AbdFYPnw (ORCPT
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:35547 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbdFJMKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 11:43:52 -0400
-Received: by mail-ot0-f195.google.com with SMTP id z48so9322565otz.2
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:51 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 02/10] rtlwifi: Add BT_MP_INFO to c2h handler.
-Date: Sun, 25 Jun 2017 10:43:36 -0500
-Message-Id: <20170625154344.19213-3-Larry.Finger@lwfinger.net> (sfid-20170625_174357_271745_58006A7D)
-In-Reply-To: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
-References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+        Sat, 10 Jun 2017 08:10:14 -0400
+Received: by mail-wr0-f171.google.com with SMTP id q97so55523321wrb.2
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2017 05:10:13 -0700 (PDT)
+Received: from [192.168.178.39] (f140230.upc-f.chello.nl. [80.56.140.230])
+        by smtp.gmail.com with ESMTPSA id b53sm2402737eda.50.2017.06.10.05.10.11
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 10 Jun 2017 05:10:12 -0700 (PDT)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [ANN] py80211-v2.0 released
+Message-ID: <30732635-a6d1-df69-2248-398a417f8d1c@broadcom.com> (sfid-20170610_142323_046499_9C69786C)
+Date: Sat, 10 Jun 2017 14:10:11 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+It has been long since v1.0 was released. Little over two years to be
+specific. The project seems to capture my attention mostly when working
+on new nl80211 api primitives. Anyway, decided to move to version 2.0
+immediately. Mostly due to the addition of remote execution using Pyro4.
 
-We use H2C to ask BT's status, and C2H will return the status.
+The release can be downloaded from github [1]. The repository on github
+contains 3 different branches:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+master		- files generated from latest stable kernel
+mac-next	- files generated from mac80211-next repository
+wl-testing	- files generated from wireless-testing repository
+
+Development is done on the master branch. The other branches are rebased
+on the master branch. The releases are also coming from the master branch.
+
+changes:
+--------
+ * extend parsing of wiphy attributes.
+ * improve policy handling introducing annotations.
+ * improve extract utility.
+ * introduce support for scheduled scan.
+ * support nl80211 split wiphy dump feature.
+ * fix translating .len in kernel policy to libnl policy.
+ * support signed types in kernel policy.
+ * fix os.strerror() use in CommandFailedError exception.
+ * introduce support of remote execution using Pyro4
+ * allow policy overrides to use by extract utility.
+
+important note:
+---------------
+The extract utility can fail on the following line in nl80211.c:
+
+        [NL80211_ATTR_MNTR_FLAGS] = { /* NLA_NESTED can't be empty */ },
+
+This is due to the pycparser version used. This issue has been fixed
+in pycparser version 2.13 [2].
+
+[1] https://github.com/arend/py80211/releases/tag/py80211-v2.0
+[2] https://github.com/eliben/pycparser/blob/master/CHANGES#L39
 ---
-v2 - no changes
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 17 ++++++++++++-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 28 ++++++++++++++++++++++
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  1 +
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |  9 +++++--
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |  9 +++++--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 13 +++++++---
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  2 ++
- 7 files changed, 71 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index e6024b013ca5..c1eacd8352a2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -327,7 +327,22 @@ static void halbtc_aggregation_check(struct btc_coexist *btcoexist)
- 
- static u32 halbtc_get_bt_patch_version(struct btc_coexist *btcoexist)
- {
--	return 0;
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	u8 cmd_buffer[4] = {0};
-+	u8 oper_ver = 0;
-+	u8 req_num = 0x0E;
-+
-+	if (btcoexist->bt_info.bt_real_fw_ver)
-+		goto label_done;
-+
-+	cmd_buffer[0] |= (oper_ver & 0x0f);	/* Set OperVer */
-+	cmd_buffer[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
-+	cmd_buffer[1] = 0; /* BT_OP_GET_BT_VERSION = 0 */
-+	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, 4,
-+					&cmd_buffer[0]);
-+
-+label_done:
-+	return btcoexist->bt_info.bt_real_fw_ver;
- }
- 
- u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 4366c9817e1e..7d296a401b6f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -41,6 +41,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_periodical = rtl_btc_periodical,
- 	.btc_halt_notify = rtl_btc_halt_notify,
- 	.btc_btinfo_notify = rtl_btc_btinfo_notify,
-+	.btc_btmpinfo_notify = rtl_btc_btmpinfo_notify,
- 	.btc_is_limited_dig = rtl_btc_is_limited_dig,
- 	.btc_is_disable_edca_turbo = rtl_btc_is_disable_edca_turbo,
- 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
-@@ -165,6 +166,33 @@ void rtl_btc_btinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
- 	exhalbtc_bt_info_notify(&gl_bt_coexist, tmp_buf, length);
- }
- 
-+void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
-+{
-+	u8 extid, seq, len;
-+	u16 bt_real_fw_ver;
-+	u8 bt_fw_ver;
-+
-+	if ((length < 4) || (!tmp_buf))
-+		return;
-+
-+	extid = tmp_buf[0];
-+	/* not response from BT FW then exit*/
-+	if (extid != 1) /* C2H_TRIG_BY_BT_FW = 1 */
-+		return;
-+
-+	len = tmp_buf[1] >> 4;
-+	seq = tmp_buf[2] >> 4;
-+
-+	/* BT Firmware version response */
-+	if (seq == 0x0E) {
-+		bt_real_fw_ver = tmp_buf[3] | (tmp_buf[4] << 8);
-+		bt_fw_ver = tmp_buf[5];
-+
-+		gl_bt_coexist.bt_info.bt_real_fw_ver = bt_real_fw_ver;
-+		gl_bt_coexist.bt_info.bt_fw_ver = bt_fw_ver;
-+	}
-+}
-+
- bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv)
- {
- 	return gl_bt_coexist.bt_info.limited_dig;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index 6fe521cbe7f0..ac1253c46f44 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -39,6 +39,7 @@ void rtl_btc_mediastatus_notify(struct rtl_priv *rtlpriv,
- void rtl_btc_periodical(struct rtl_priv *rtlpriv);
- void rtl_btc_halt_notify(void);
- void rtl_btc_btinfo_notify(struct rtl_priv *rtlpriv, u8 *tmpbuf, u8 length);
-+void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length);
- bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index f4ee7906eb20..31a391e9b830 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -888,6 +888,7 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 				 u8 c2h_cmd_len, u8 *tmp_buf)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
- 	case C2H_8192E_DBG:
-@@ -906,12 +907,16 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 	case C2H_8192E_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_INFO!!\n");
--		rtlpriv->btcoexist.btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
--							      c2h_cmd_len);
-+		if (rtlpriv->cfg->ops->get_btc_status())
-+			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
-+						   c2h_cmd_len);
- 		break;
- 	case C2H_8192E_BT_MP:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_MP!!\n");
-+		if (rtlpriv->cfg->ops->get_btc_status())
-+			btc_ops->btc_btmpinfo_notify(rtlpriv, tmp_buf,
-+						     c2h_cmd_len);
- 		break;
- 	case C2H_8192E_RA_RPT:
- 		_rtl92ee_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-index 95b2e9a87d20..624edfd22e43 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-@@ -710,6 +710,7 @@ void rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
- 				   u8 c2h_cmd_len, u8 *tmp_buf)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
- 	case C2H_8723B_DBG:
-@@ -724,12 +725,16 @@ void rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
- 	case C2H_8723B_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_INFO!!\n");
--		rtlpriv->btcoexist.btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
--							      c2h_cmd_len);
-+		if (rtlpriv->cfg->ops->get_btc_status())
-+			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
-+						   c2h_cmd_len);
- 		break;
- 	case C2H_8723B_BT_MP:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_MP!!\n");
-+		if (rtlpriv->cfg->ops->get_btc_status())
-+			btc_ops->btc_btmpinfo_notify(rtlpriv, tmp_buf,
-+						     c2h_cmd_len);
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index 97401aa4dacb..8b1a8bc12301 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -1925,6 +1925,7 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 				   u8 *tmp_buf)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
- 	case C2H_8812_DBG:
-@@ -1940,9 +1941,15 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
- 			 "[C2H], C2H_8812_BT_INFO!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
--			rtlpriv->btcoexist.btc_ops->btc_btinfo_notify(rtlpriv,
--								      tmp_buf,
--								      c2h_cmd_len);
-+			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
-+						   c2h_cmd_len);
-+		break;
-+	case C2H_8812_BT_MP:
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-+			 "[C2H], C2H_8812_BT_MP!!\n");
-+		if (rtlpriv->cfg->ops->get_btc_status())
-+			btc_ops->btc_btmpinfo_notify(rtlpriv, tmp_buf,
-+						     c2h_cmd_len);
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 7ec0d502a0d9..77c3b186900e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2562,6 +2562,8 @@ struct rtl_btc_ops {
- 	void (*btc_halt_notify) (void);
- 	void (*btc_btinfo_notify) (struct rtl_priv *rtlpriv,
- 				   u8 *tmp_buf, u8 length);
-+	void (*btc_btmpinfo_notify)(struct rtl_priv *rtlpriv,
-+				    u8 *tmp_buf, u8 length);
- 	bool (*btc_is_limited_dig) (struct rtl_priv *rtlpriv);
- 	bool (*btc_is_disable_edca_turbo) (struct rtl_priv *rtlpriv);
- 	bool (*btc_is_bt_disabled) (struct rtl_priv *rtlpriv);
--- 
-2.12.3
+complete commit list since py80211-v1.0-alpha:
+----------------------------------------------
+d8441f9 py80211: wiphy: define policy for some attributes
+87d5619 py80211: wiphy: add some object classes for nested wiphy attributes
+d84be2e py80211: wiphy: add object class for interface limits
+a020f70 py80211: wiphy: add policy for several basic type attributes
+2a01f33 py80211: allow custom processing of netlink attributes
+6635def py80211: base: use 'map' policy attribute to mark 2-level nested
+list
+ea519ac py80211: scan: add missing policy for BSS_PRESP_DATA attribute
+a6ef2bb py80211: examples: remove unused function
+b22753d py80211: base: get rid of nl80211_object::get_nlattr() method
+ae78f88 py80211: util: deal with difference in policy definition in
+extract script
+b6f4979 py80211: util: fix extract script dealing with c_ast.BinaryOp
+instance
+f9c7ae3 py80211: base: cleanup import statements
+3384c20 py80211: wiphy: use post_store_attrs() method to decode cipher
+suites
+3a4638f py80211: station: use post_store_attrs() method for station flags
+f0e68e1 py80211: factory: introduce concept of factory for creating objects
+24c39df py80211: factory: introduce factory for creating remote objects
+bcc78bf py80211: introduce client-server configuration
+c45e7f7 py80211: factory: define interface class for factory classes
+09966bf py80211: scan: spin base scan classes off scan_request
+f0fadaf py80211: scan: add sched_scan start class
+2674b5c py80211: add sched_scan stop class
+e4f4ee3 py80211: scan: add matchsets support for scheduled scans
+ceea777 Merge pull request #2 from arend/patch-queue
+395cdac py80211: scan: fix call to _add_scan_attrs() in the
+sched_scan_start class
+62ea048 py80211: generated files from 4.1 kernel
+ed3c03d util: add __s8 type definition to extract.h
+15bc332 py80211: generated files from 4.8.8 kernel
+b406d57 generated: fix typo in policy.py
+d714574 base: add new nl80211_cmd_base class
+d859568 scan: rework scan classes using the new nl80211_cmd_base class
+a4eb60c examples: add example for scheduled scan
+2117240 py80211: util: use 'git describe' to obtain revinfo
+fcb1c55 examples: trivial cleanup in scheduled scan example
+4ea657d lib: add method to get netlink message from nl80211_cmd_base
+c2cb015 lib: fix indentation issue in sched_scan_start::handle
+b1daccc lib: add SPLIT_WIPHY_DUMP attribute obtaining wiphy information
+0435cda lib: generated: update definitions to kernel v4.10.1
+574c026 base.py: pass received error code using exception
+38a7000 examples: cleanup scheduled scan example
+5c8eaa5 policy: support signed types in policy
+36f7d5d util: preprocess nl80211.c before passing it through the pycparser
+9e3c226 util: include predefined definitions during extraction
+465ac20 lib: generated: update definitions to kernel v4.11.3
+cea00f2 lib: base: fix definitions of NLA_S{8,16,32,64}
+2af2b70 util: translate length according kerneldoc for struct nla_policy
+5db2e02 lib: generated: regenerate definitions for kernel 4.11.3
+33fa85e lib: wiphy: fix wowlan trigger support policy
+bf473ed lib: base: fix handling split wiphy dump messages
+bb848ac lib: base: change access80211::send() to raise error
+877d56d lib: scan: properly handle exceptions raised by access80211 object
+06c6305 lib: detect and check split wiphy dump protocol feature support
