@@ -1,99 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35080 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:60204 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751128AbdFYLNt (ORCPT
+        with ESMTP id S1751941AbdFJKwz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:49 -0400
+        Sat, 10 Jun 2017 06:52:55 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:43 +0300
-Message-Id: <20170625111158.1792-12-luca@coelho.fi> (sfid-20170625_131351_410613_7F11D444)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 11/26] iwlwifi: mvm: fix the recovery flow while connecting
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Sat, 10 Jun 2017 13:52:43 +0300
+Message-Id: <20170610105246.26455-2-luca@coelho.fi> (sfid-20170610_125401_075960_21A34947)
+In-Reply-To: <20170610105246.26455-1-luca@coelho.fi>
+References: <20170610105246.26455-1-luca@coelho.fi>
+Subject: [PATCH 1/4] mac80211: set bss_info data before configuring the channel
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In BSS mode in the disconnection flow, mac80211 removes
-the AP station before the vif is set to unassociated.
-Our firmware wants it the other way around: first set
-the vif as unassociated, and then remove the AP station.
+When mac80211 changes the channel, it also calls into the driver's
+bss_info_changed() callback, e.g. with BSS_CHANGED_IDLE. The driver
+may, like iwlwifi does, access more data from bss_info in that case
+and iwlwifi accesses the basic_rates bitmap, but if changing from a
+band with more (basic) rates to one with fewer, an out-of-bounds
+access of the rate array may result.
 
-In order to bridge between those two different behaviors,
-iwlmvm doesn't remove the station from the firmware when
-mac80211 removes it, but only after the vif is set to
-unassociated. The implementation is in
-iwl_mvm_bss_info_changed_station:
+While we can't avoid having invalid data at some point in time, we
+can avoid having it while we call the driver - so set up all the
+data before configuring the channel, and then apply it afterwards.
 
-if (assoc state was modified && mvmvif->ap_sta_id is VALID
-    && assoc state is now UNASSC)
-	remove_the_station_from_the_firmware()
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=195677
 
-During the recovery flow, mac80211 re-adds the AP station
-and then reconfigures the vif. Since the vif is not
-associated, and then, we enter the if above (which was
-intended to be taken in the disconnection flow only) and
-remove the station we just added. This defeats the
-recovery flow.
-
-Fix this by not removing the AP station in this flow if
-we are in recovery flow.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reported-by: Johannes Hirte <johannes.hirte@datenkhaos.de>
+Tested-by: Johannes Hirte <johannes.hirte@datenkhaos.de>
+Debugged-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 32 ++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 7 deletions(-)
+ net/mac80211/mlme.c | 38 ++++++++++++++++++++++++++++----------
+ 1 file changed, 28 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d608ce8305c7..d04a88c6c593 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1988,14 +1988,32 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 			WARN_ONCE(iwl_mvm_sf_update(mvm, vif, false),
- 				  "Failed to update SF upon disassociation\n");
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1ae9be090309..570d9ab61950 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4397,15 +4397,19 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 			return -ENOMEM;
+ 	}
  
--			/* remove AP station now that the MAC is unassoc */
--			ret = iwl_mvm_rm_sta_id(mvm, vif, mvmvif->ap_sta_id);
--			if (ret)
--				IWL_ERR(mvm, "failed to remove AP station\n");
-+			/*
-+			 * If we get an assert during the connection (after the
-+			 * station has been added, but before the vif is set
-+			 * to associated), mac80211 will re-add the station and
-+			 * then configure the vif. Since the vif is not
-+			 * associated, we would remove the station here and
-+			 * this would fail the recovery.
-+			 */
-+			if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART,
-+				      &mvm->status)) {
-+				/*
-+				 * Remove AP station now that
-+				 * the MAC is unassoc
-+				 */
-+				ret = iwl_mvm_rm_sta_id(mvm, vif,
-+							mvmvif->ap_sta_id);
-+				if (ret)
-+					IWL_ERR(mvm,
-+						"failed to remove AP station\n");
+-	if (new_sta || override) {
+-		err = ieee80211_prep_channel(sdata, cbss);
+-		if (err) {
+-			if (new_sta)
+-				sta_info_free(local, new_sta);
+-			return -EINVAL;
+-		}
+-	}
+-
++	/*
++	 * Set up the information for the new channel before setting the
++	 * new channel. We can't - completely race-free - change the basic
++	 * rates bitmap and the channel (sband) that it refers to, but if
++	 * we set it up before we at least avoid calling into the driver's
++	 * bss_info_changed() method with invalid information (since we do
++	 * call that from changing the channel - only for IDLE and perhaps
++	 * some others, but ...).
++	 *
++	 * So to avoid that, just set up all the new information before the
++	 * channel, but tell the driver to apply it only afterwards, since
++	 * it might need the new channel for that.
++	 */
+ 	if (new_sta) {
+ 		u32 rates = 0, basic_rates = 0;
+ 		bool have_higher_than_11mbit;
+@@ -4488,8 +4492,22 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 			sdata->vif.bss_conf.sync_dtim_count = 0;
+ 		}
+ 		rcu_read_unlock();
++	}
+ 
+-		/* tell driver about BSSID, basic rates and timing */
++	if (new_sta || override) {
++		err = ieee80211_prep_channel(sdata, cbss);
++		if (err) {
++			if (new_sta)
++				sta_info_free(local, new_sta);
++			return -EINVAL;
++		}
++	}
 +
-+				if (mvm->d0i3_ap_sta_id == mvmvif->ap_sta_id)
-+					mvm->d0i3_ap_sta_id =
-+						IWL_MVM_INVALID_STA;
-+				mvmvif->ap_sta_id = IWL_MVM_INVALID_STA;
-+			}
- 
--			if (mvm->d0i3_ap_sta_id == mvmvif->ap_sta_id)
--				mvm->d0i3_ap_sta_id = IWL_MVM_INVALID_STA;
--			mvmvif->ap_sta_id = IWL_MVM_INVALID_STA;
- 			/* remove quota for this interface */
- 			ret = iwl_mvm_update_quotas(mvm, false, NULL);
- 			if (ret)
++	if (new_sta) {
++		/*
++		 * tell driver about BSSID, basic rates and timing
++		 * this was set up above, before setting the channel
++		 */
+ 		ieee80211_bss_info_change_notify(sdata,
+ 			BSS_CHANGED_BSSID | BSS_CHANGED_BASIC_RATES |
+ 			BSS_CHANGED_BEACON_INT);
 -- 
 2.11.0
