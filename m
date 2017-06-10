@@ -1,46 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59814 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751387AbdFZLAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 07:00:30 -0400
-Message-ID: <1498474826.3318.4.camel@sipsolutions.net> (sfid-20170626_130032_820041_677B4537)
-Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:36743 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751555AbdFJTNT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Jun 2017 15:13:19 -0400
+Received: by mail-wr0-f173.google.com with SMTP id v111so60829539wrc.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2017 12:13:18 -0700 (PDT)
+Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
 To: Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Date: Mon, 26 Jun 2017 13:00:26 +0200
-In-Reply-To: <89353e7a-5c61-eba3-fe34-0e7eadf7588e@candelatech.com>
-References: <20170621235022.25362-1-johannes@sipsolutions.net>
-         <20170621235022.25362-3-johannes@sipsolutions.net>
-         <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
-         <1498112650.2246.1.camel@sipsolutions.net>
-         <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
-         <1498209700.2595.2.camel@sipsolutions.net>
-         <89353e7a-5c61-eba3-fe34-0e7eadf7588e@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Johannes Berg <johannes@sipsolutions.net>,
+        Denis Kenzior <denkenz@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+ <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+ <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+ <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
+ <1496993334.2424.1.camel@sipsolutions.net>
+ <de7611e7-c34d-26e2-4083-b7e01b657426@candelatech.com>
+ <1497038480.12088.6.camel@sipsolutions.net>
+ <e617e9f9-0a83-cfef-9bb3-127a06ba33e0@candelatech.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ce93099-deeb-4d0c-e20e-3f0e5ac8bc48@broadcom.com> (sfid-20170610_211322_615023_FE818721)
+Date: Sat, 10 Jun 2017 21:13:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <e617e9f9-0a83-cfef-9bb3-127a06ba33e0@candelatech.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-23 at 05:27 -0700, Ben Greear wrote:
+On 09-06-17 22:18, Ben Greear wrote:
+> On 06/09/2017 01:01 PM, Johannes Berg wrote:
+>> On Fri, 2017-06-09 at 06:46 -0700, Ben Greear wrote:
+>>
+>>>> However, the solution is far simpler! Once you have nl80211 PAE
+>>>> transport, you can easily even set the key before transmitting the
+>>>> packet and simply indicate that this particular packet should _not_
+>>>> be encrypted regardless of key presence.
+>>>
+>>> My ath10k firmware cannot deal with a case like this:
+>>>
+>>> pkt is enqueued before key is set
+>>> key is set
+>>> pkt is transmitted (incorrectly)
+>>>
+>>> This is because of how the tid's header-length variables are set up
+>>> and modified when the keys are set, and I don't see any good way to
+>>> fix this.
+>>
+>> That seems awful, and anyway will not work with the mentioned non-IEEE
+>> protocols that require not encrypting the rekeying frames even when
+>> keys have been set up.
+>>
+>> I don't know what to tell you here, I think it'd be best if you fix
+>> that.
+> 
+> The case that fails is basically any packet that is currently
+> enqueued in the firmware when the key is set is transmitted incorrectly
+> or not at all.
+> And, maybe this is only for DATA tids.
+> 
+> Otherwise, the no-encrypt logic should work fine.  So, it is just the race
+> with the EAPOL 4/4 and set-key that causes issues as far as I can tell.
+> 
+> It looks like the EAPOL 4/4 and set-key race is fixable without too much
+> effort,
+> so I think I will focus on that for now instead of further hacking special
+> case logic into the firmware.
+> 
+>>> Stock ath10k firmware goes to great lengths to parse EAPOL frames and
+>>> try to work around it in that manner, but that breaks .11r (or used
+>>> to, I haven't tried stock firmware lately) and adds more complexity
+>>> to the code.
+>>
+>> It just has to be a single flag saying "don't encrypt this frame" -
+>> nothing super complicated about that?
+>>
+>> In ath10k it looks like HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT gets set for
+>> this, seems easy enough?
+>>
+>>>  From a patch someone sent to hostapd list last night, it seems we
+>>> could get the tx-status for the EAPOL 4/4, and in that case, we
+>>> *know* the pkt has been transmitted, so we can then set the key
+>>> safely it would seem?
+>>
+>> I think so, and I don't remember why we dismissed this solution. Could
+>> be that we just decided solving the bridging issue at the same time,
+>> while not introducing more latency, was better.
+>>
+>> Also, the other way can possibly solve some PTK rekeying issues, so
+>> overall the solution to go all the way seems better.
+> 
+> I guess I don't fully understand the PAE thing, but if you all like it,
+> then sounds good to me.
+> 
+> For kernels not supporting this new feature, it seems that having
+> supplicant
+> wait for tx-status would be a good interim fix?
 
-> I don't understand the code well enough to know if this matters or
-> not, but the ath10k wave-2 stuff has some txq prefetch logic in the
-> firmware (and support in the driver).  But, it doesn't prefetch for
-> the mgt tid as far as I can tell.  It somehow all mostly works
-> anyway, but possibly this would have some effect on your
-> changes.  wave-1 (QCA 9880, etc) doesn't do txq prefetch at all.  Any
-> tricky changes to this logic would need to test with both chipsets.
+For what it is worth. In brcmfmac we block setting the PTK when EAPOL
+frame is in transit exactly for this long-standing issue. So in short
+this is what we do: in .start_xmit() we (atomically) increase pend_1x
+count when ether proto is PAE and decrease it when transmit completes
+(through brcmf_tx_finalize()). As long as pend_1x count is non-zero we
+block setting the PTK.
 
-I don't think this matters. The issue at hand is that the driver still
-relies on mac80211 buffering.
-
-This *can* be solved, even in this piece of code I inserted here, but
-it'd have to keep state about the queues and then insert some hooks
-elsewhere. I'm pretty sure I can solve that, but don't have the time
-(or even hardware) to test this (easily, I have ath10k in a few
-routers, but ...).
-
-johannes
+Regards,
+Arend
