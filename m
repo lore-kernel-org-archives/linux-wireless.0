@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53010 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:2949 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751505AbdFIH25 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 03:28:57 -0400
-Message-ID: <1496993334.2424.1.camel@sipsolutions.net> (sfid-20170609_092901_382816_3171012E)
-Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Fri, 09 Jun 2017 09:28:54 +0200
-In-Reply-To: <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com> (sfid-20170609_020723_334469_4A93564B)
-References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
-         <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
-         <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
-         <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
-         (sfid-20170609_020723_334469_4A93564B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751563AbdFJTLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Jun 2017 15:11:38 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] net: rfkill: gpio: Switch to devm_acpi_dev_add_driver_gpios()
+Date: Sat, 10 Jun 2017 22:10:34 +0300
+Message-Id: <20170610191034.53635-1-andriy.shevchenko@linux.intel.com> (sfid-20170610_211148_932065_2C43143D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-06-08 at 19:07 -0500, Denis Kenzior wrote:
+Switch to use managed variant of acpi_dev_add_driver_gpios() to simplify
+error path and fix potentially wrong assingment if ->probe() fails.
 
-> > > Fundamentally there is a race between the genl/nl80211 socket to
-> > > the
-> > > kernel and the PAE socket that handles the authentication
-> > > aspects.  I
-> > > think the only way to
-> > > fix this is to make sure that PAE flows over the genl/nl80211
-> > > socket
-> > > to preserve the proper order of events.  
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Correct.
-
-> > > However there are lots of
-> > > dragons in the kernel
-> > > side of this and we haven't been brave enough to venture into the
-> > > depths yet :)
-
-We've actually discussed doing precisely this, for - among other things
-- this reason. Just nobody stepped up yet to propose the necessary APIs
-and do the remaining work to use it etc.
-
-> > I think that would just push the problem lower.  Probably a real
-> > fix
-> > would be to somehow propagate
-> > the tx-status for the specific packet back to the supplicant and
-> > only
-> > then it would know that the
-> > key could be set.
-
-That's actually possible today, with the wifi-ack sockopt. It's not
-really a full solution though I think, there are other issues to solve.
-We also discussed this at the last workshop, IIRC.
-
-> Having userspace track individual packets in the kernel sounds  wrong
-> to  me.  This also won't help with the packets being received out-of-
-> order.  It would be nice if both the RX and TX ordering was
-> preserved.  Hence my thinking about running PAE over NL80211.  It
-> would then be up to the kernel / drivers to guarantee that the
-> various packets are ordered appropriately.
-
-That's actually not possible, since ordering set_key operations vs.
-transmitted packets isn't something that's easily done by drivers.
-
-However, the solution is far simpler! Once you have nl80211 PAE
-transport, you can easily even set the key before transmitting the
-packet and simply indicate that this particular packet should _not_ be
-encrypted regardless of key presence.
-
-johannes
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 76c01cbd56e3..41bd496531d4 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -81,8 +81,7 @@ static int rfkill_gpio_acpi_probe(struct device *dev,
+ 
+ 	rfkill->type = (unsigned)id->driver_data;
+ 
+-	return acpi_dev_add_driver_gpios(ACPI_COMPANION(dev),
+-					 acpi_rfkill_default_gpios);
++	return devm_acpi_dev_add_driver_gpios(dev, acpi_rfkill_default_gpios);
+ }
+ 
+ static int rfkill_gpio_probe(struct platform_device *pdev)
+@@ -154,8 +153,6 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 	rfkill_unregister(rfkill->rfkill_dev);
+ 	rfkill_destroy(rfkill->rfkill_dev);
+ 
+-	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&pdev->dev));
+-
+ 	return 0;
+ }
+ 
+-- 
+2.11.0
