@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64300 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751195AbdFEUUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:20:16 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 06/12] NFC: fdp: Add GPIO ACPI mapping table
-Date: Mon,  5 Jun 2017 23:20:03 +0300
-Message-Id: <20170605202009.78561-7-andriy.shevchenko@linux.intel.com> (sfid-20170605_222025_310518_24B97782)
-In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
-References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:35826 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751870AbdFJJds (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Jun 2017 05:33:48 -0400
+Received: by mail-wr0-f170.google.com with SMTP id q97so53412018wrb.2
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2017 02:33:47 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: iso cfg80211: Fix grammar issue in error
+ message
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20170608080141.rswb2czupjeblqzq@jirafa.cyrius.com>
+ <3bf898aa-c890-32ec-aa83-c7a1e7f56729@broadcom.com>
+ <20170610092247.2gz6sydytp5pomq6@jirafa.cyrius.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a79b0fa3-2f7d-e704-371d-c2eec383afaf@broadcom.com> (sfid-20170610_113737_756944_F8C5ED3A)
+Date: Sat, 10 Jun 2017 11:33:45 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170610092247.2gz6sydytp5pomq6@jirafa.cyrius.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+Hah. That is (unintended?) fun. I actually meant to change the subject
+from "cfg80211: Fix grammar issue in error message" into "brcmfmac: Fix
+grammar issue in error message". Using the abbreviation "iso" in this
+context was maybe a bit misleading of me.
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+One more purely educational note: when sending a reworked patch it is
+good practice to use "[PATCH V2]" in the subject and add a changelog
+between the signature tags and the diff separated by "---" so people now
+what changed, ie.:
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/nfc/fdp/i2c.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ changes:
+  V2:
+   - updated subject prefix.
+---
 
-diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-index 250cbaddb5a9..9f79f2c53525 100644
---- a/drivers/nfc/fdp/i2c.c
-+++ b/drivers/nfc/fdp/i2c.c
-@@ -27,7 +27,6 @@
- 
- #define FDP_I2C_DRIVER_NAME	"fdp_nci_i2c"
- 
--#define FDP_DP_POWER_GPIO_NAME	"power"
- #define FDP_DP_CLOCK_TYPE_NAME	"clock-type"
- #define FDP_DP_CLOCK_FREQ_NAME	"clock-freq"
- #define FDP_DP_FW_VSC_CFG_NAME	"fw-vsc-cfg"
-@@ -281,6 +280,13 @@ static void fdp_nci_i2c_read_device_properties(struct device *dev,
- 		*clock_type, *clock_freq, *fw_vsc_cfg != NULL ? "yes" : "no");
- }
- 
-+static const struct acpi_gpio_params power_gpios = { 0, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_fdp_gpios[] = {
-+	{ "power-gpios", &power_gpios, 1 },
-+	{},
-+};
-+
- static int fdp_nci_i2c_probe(struct i2c_client *client)
- {
- 	struct fdp_i2c_phy *phy;
-@@ -321,10 +327,12 @@ static int fdp_nci_i2c_probe(struct i2c_client *client)
- 		return r;
- 	}
- 
--	/* Requesting the power gpio */
--	phy->power_gpio = devm_gpiod_get(dev, FDP_DP_POWER_GPIO_NAME,
--					 GPIOD_OUT_LOW);
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_fdp_gpios);
-+	if (r)
-+		dev_dbg(dev, "Unable to add GPIO mapping table\n");
- 
-+	/* Requesting the power gpio */
-+	phy->power_gpio = devm_gpiod_get(dev, "power", GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->power_gpio)) {
- 		nfc_err(dev, "Power GPIO request failed\n");
- 		return PTR_ERR(phy->power_gpio);
--- 
-2.11.0
+Thanks,
+Arend
+
+On 10-06-17 11:22, Martin Michlmayr wrote:
+> Fix grammar issue in error message about ISO3166.
+> 
+> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index cd1d6730eab7..c1ad81f34658 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6767,7 +6767,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+>  	/* ignore non-ISO3166 country codes */
+>  	for (i = 0; i < sizeof(req->alpha2); i++)
+>  		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
+> -			brcmf_err("not a ISO3166 code (0x%02x 0x%02x)\n",
+> +			brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
+>  				  req->alpha2[0], req->alpha2[1]);
+>  			return;
+>  		}
+> 
