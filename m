@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:18642 "EHLO mga04.intel.com"
+Received: from frisell.zx2c4.com ([192.95.5.64]:47113 "EHLO frisell.zx2c4.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754614AbdFLPgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 11:36:15 -0400
-Message-ID: <1497281772.22624.124.camel@linux.intel.com> (sfid-20170612_183700_786638_B2CF63CC)
-Subject: Re: [PATCH v2 00/12] NFC: clean up for ACPI GPIO usage
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 12 Jun 2017 18:36:12 +0300
-In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
-References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+        id S1751878AbdFKVWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Jun 2017 17:22:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <20235732.W6WmnKk6cl@tauon.chronox.de>
+References: <20170610025912.6499-1-Jason@zx2c4.com> <20235732.W6WmnKk6cl@tauon.chronox.de>
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Date: Sun, 11 Jun 2017 23:21:55 +0200
+Message-ID: <CAHmME9rgVXkRfxEhJDu+LmAG64PT=NsJH3se_0ffPPXF=a8q+g@mail.gmail.com> (sfid-20170611_232239_215882_4F024CE8)
+Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
+To: =?UTF-8?Q?Stephan_M=C3=BCller?= <smueller@chronox.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-hardening@lists.openwall.com,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        David Howells <dhowells@redhat.com>,
+        David Safford <safford@us.ibm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Gilad Ben-Yossef <gilad@benyossef.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-06-05 at 23:19 +0300, Andy Shevchenko wrote:
-> This clean up series to NFC drivers that are using GPIOs on ACPI
-> enabled
-> platforms. Since GPIO ACPI library goes stricter about requesting
-> resources we need to amend drivers for that. Here we are for NFC
-> subsystem.
-> 
-> While doing above, get rid of legacy and unused platform data as well
-> as
-> some artificial IDs.
+Hi Stephan,
 
-Samuel, anything to comment?
+On Sun, Jun 11, 2017 at 11:06 PM, Stephan M=C3=BCller <smueller@chronox.de>=
+ wrote:
+> Are you planning to send an update to your patch set? If yes, there is an=
+other
+> one which should be converted too: crypto/rsa-pkcs1pad.c.
 
-> 
-> Changelog v2:
-> - add patches 1,4-12
-> 
-> Andy Shevchenko (12):
->   NFC: pn544: Switch to devm_acpi_dev_add_driver_gpios()
->   NFC: st21nfca: Add GPIO ACPI mapping table
->   NFC: st21nfca: Get rid of code duplication in ->probe()
->   NFC: fdp: Convert I2C driver to ->probe_new()
->   NFC: fdp: Convert to use devres API
->   NFC: fdp: Add GPIO ACPI mapping table
->   NFC: st-nci: Get rid of platform data
->   NFC: st-nci: Get rid of "interesting" use of interrupt polarity
->   NFC: st-nci: Covert to use GPIO descriptor
->   NFC: st-nci: Use unified device property API meaningfully
->   NFC: st-nci: Add GPIO ACPI mapping table
->   NFC: st-nci: Get rid of code duplication in ->probe()
-> 
->  drivers/nfc/fdp/fdp.c                |  15 +---
->  drivers/nfc/fdp/i2c.c                |  38 ++++----
->  drivers/nfc/pn544/i2c.c              |   3 +-
->  drivers/nfc/st-nci/i2c.c             | 164 ++++++------------------
-> ----------
->  drivers/nfc/st-nci/spi.c             | 165 ++++++------------------
-> -----------
->  drivers/nfc/st21nfca/i2c.c           |  62 ++++---------
->  include/linux/platform_data/st-nci.h |  31 -------
->  7 files changed, 91 insertions(+), 387 deletions(-)
->  delete mode 100644 include/linux/platform_data/st-nci.h
-> 
+I just sent an update to this thread patching that, per your
+suggestion. Since these issues are expected to be cherry picked by
+their respective committer, I figure we can just pile on the patches
+here, listing the 0/6 intro email as each patch's parent.
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+Jason
