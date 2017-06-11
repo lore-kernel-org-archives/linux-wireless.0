@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:20708 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751477AbdFZLo5 (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:32990 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751729AbdFKNg3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 07:44:57 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH v2 7/8] staging: wilc1000: Change ac based on acm status
-Date: Mon, 26 Jun 2017 17:13:29 +0530
-Message-ID: <1498477410-19518-8-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_134506_927736_79CC1DD4)
-In-Reply-To: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
+        Sun, 11 Jun 2017 09:36:29 -0400
+Received: by mail-io0-f170.google.com with SMTP id t87so26801382ioe.0
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jun 2017 06:36:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <878tkzq6wi.fsf@purkki.adurom.net>
+References: <20170610025912.6499-1-Jason@zx2c4.com> <878tkzq6wi.fsf@purkki.adurom.net>
+From: Kees Cook <keescook@chromium.org>
+Date: Sun, 11 Jun 2017 06:36:27 -0700
+Message-ID: <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com> (sfid-20170611_153708_782431_306D284E)
+Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "kernel-hardening@lists.openwall.com"
+        <kernel-hardening@lists.openwall.com>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        David Howells <dhowells@redhat.com>,
+        David Safford <safford@us.ibm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Gilad Ben-Yossef <gilad@benyossef.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new function to check and alter the ac if needed
-based on the acm status for a particular queue.
+On Sun, Jun 11, 2017 at 1:13 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> "Jason A. Donenfeld" <Jason@zx2c4.com> writes:
+>
+>> Whenever you're comparing two MACs, it's important to do this using
+>> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
+>> which could then be used to iteratively forge a MAC.
+>
+> Do you have any pointers where I could learn more about this?
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+While not using C specifically, this talks about the problem generally:
+https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index b3e1136..e323fd4 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -451,6 +451,16 @@ static inline void ac_pkt_count(u32 reg, u8 *pkt_count)
- 	pkt_count[AC_VO_Q] = (reg & 0xfe000000) >> VO_AC_COUNT_POS;
- }
- 
-+static inline u8 ac_change(struct wilc *wilc, u8 *ac)
-+{
-+	do {
-+		if (wilc->txq[*ac].acm == 0)
-+			return 0;
-+		(*ac)++;
-+	} while (*ac < NQUEUES);
-+	return 1;
-+}
-+
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
- {
+-Kees
+
 -- 
-2.7.4
+Kees Cook
+Pixel Security
