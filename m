@@ -1,83 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdFZHEh (ORCPT
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:34584 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751725AbdFKIIu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:04:37 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH 2/7] staging: wilc1000: Add function to calculate ac queue limit
-Date: Mon, 26 Jun 2017 12:33:33 +0530
-Message-ID: <1498460618-22187-3-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090440_583558_B203F647)
-In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
+        Sun, 11 Jun 2017 04:08:50 -0400
+Received: by mail-wr0-f180.google.com with SMTP id g76so67535053wrd.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jun 2017 01:08:50 -0700 (PDT)
+Subject: Re: [PATCH v2] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
+To: Peter Housel <housel@acm.org>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Christian Daudt <csd@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Florian Westphal <fw@strlen.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
+ <1496442569-11307-1-git-send-email-housel@acm.org>
+ <CAHp75VcfK5V42vzsh=L+CnX2ZnF=8UORbOf+f2WfmcNH1DbAsw@mail.gmail.com>
+ <801f5209-f5a0-7414-f8f4-1500178a680b@broadcom.com>
+ <705684CB-D155-45DC-8146-157A536F9FBA@acm.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c4eeec0f-720d-76de-b6d9-68c882450f6f@broadcom.com> (sfid-20170611_100939_255346_837CD8AE)
+Date: Sun, 11 Jun 2017 10:08:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <705684CB-D155-45DC-8146-157A536F9FBA@acm.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a function which calculates the queue limit
-for a given access category queue.
+On 11-06-17 02:18, Peter Housel wrote:
+> 
+>> On Jun 10, 2017, at 12:27 PM, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>
+>> On 03-06-17 17:36, Andy Shevchenko wrote:
+>>> On Sat, Jun 3, 2017 at 1:29 AM, Peter S. Housel <housel@acm.org> wrote:
+>>>> An earlier change to this function (3bdae810721b) fixed a leak in the
+>>>> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
+>>>> glom_skb buffer, used for emulating a scattering read, is never used
+>>>> or referenced after its contents are copied into the destination
+>>>> buffers, and therefore always needs to be freed by the end of the
+>>>> function.
+>>
+>> [snip]
+>>
+>>>> +                       skb_queue_walk(pktq, skb) {
+>>>> +                               memcpy(skb->data, glom_skb->data, skb->len);
+>>>> +                               skb_pull(glom_skb, skb->len);
+>>>> +                       }
+>>>>                }
+>>>
+>>>> +               brcmu_pkt_buf_free_skb(glom_skb);
+>>>
+>>> Can we just add this one line instead or I'm missing something?
+>>
+>> I guess. We don't want to walk the packet queue if glom_skb is not
+>> carrying data due to brcmf_sdiod_buffrw() failure.
+>>
+>> So I would go with the patch below as brcmu_pkt_buf_free_skb() simply
+>> ignores null pointer.
+> 
+> I’m fine with this, or indeed most of the other proposed solutions. The important thing is that the leak is fixed; in the driver's current state I was able to run our wearable device out of memory in just over 20 seconds running iperf.
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 42 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+Sure. The reason behind the suggestion from Franky was to get rid of the
+label inside branch and I agree with that. To address Andy's comment I
+think my proposal should tackle that.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 9addef1..8c997ba 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -333,6 +333,48 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
- 	return 1;
- }
- 
-+static inline void ac_q_limit(u8 ac, u16 *q_limit)
-+{
-+	static bool initialized;
-+	static u8 buffer[AC_BUFFER_SIZE];
-+	static u16 cnt[NQUEUES];
-+	u8 factors[NQUEUES] = {1, 1, 1, 1};
-+	static u16 sum;
-+	u16 i;
-+	static u16 end_index;
-+
-+	if (!initialized) {
-+		for (i = 0; i < AC_BUFFER_SIZE; i++)
-+			buffer[i] = i % NQUEUES;
-+
-+		for (i = 0; i < NQUEUES; i++) {
-+			cnt[i] = AC_BUFFER_SIZE * factors[i] / NQUEUES;
-+			sum += cnt[i];
-+		}
-+		end_index = AC_BUFFER_SIZE - 1;
-+		initialized = 1;
-+	}
-+	if (end_index > AC_BUFFER_SIZE - 1)
-+		end_index = AC_BUFFER_SIZE - 1;
-+
-+	cnt[buffer[end_index]] -= factors[buffer[end_index]];
-+	cnt[ac] += factors[ac];
-+	sum += (factors[ac] - factors[buffer[end_index]]);
-+
-+	buffer[end_index] = ac;
-+	if (end_index > 0)
-+		end_index--;
-+	else
-+		end_index = AC_BUFFER_SIZE - 1;
-+
-+	for (i = 0; i < NQUEUES; i++)
-+		if (!sum)
-+			q_limit[i] = 1;
-+		else
-+			q_limit[i] = (cnt[i] * FLOW_CONTROL_UPPER_THRESHOLD /
-+				      sum) + 1;
-+}
-+
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
- {
--- 
-2.7.4
+Just out of curiosity, we added the broken-sg-support thing for OMAP
+platform. So what platform/mmc-host are you using. I try to keep an
+overview where this workaround is needed.
+
+Regards,
+Arend
