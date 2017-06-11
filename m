@@ -1,77 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35072 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO5a (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:32922 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751916AbdFKNtw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:57:30 -0400
-Received: by mail-pg0-f66.google.com with SMTP id f127so6640081pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:30 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 00/20] rsi driver enhancements
-Date: Fri, 16 Jun 2017 20:24:21 +0530
-Message-Id: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165734_503109_0968AD1B)
+        Sun, 11 Jun 2017 09:49:52 -0400
+MIME-Version: 1.0
+In-Reply-To: <801f5209-f5a0-7414-f8f4-1500178a680b@broadcom.com>
+References: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
+ <1496442569-11307-1-git-send-email-housel@acm.org> <CAHp75VcfK5V42vzsh=L+CnX2ZnF=8UORbOf+f2WfmcNH1DbAsw@mail.gmail.com>
+ <801f5209-f5a0-7414-f8f4-1500178a680b@broadcom.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Sun, 11 Jun 2017 16:49:50 +0300
+Message-ID: <CAHp75VfSagtTco5qnMLyNRcmWMcf7h3RAAa9wmgKGCfB3ees_Q@mail.gmail.com> (sfid-20170611_155036_822273_9AA899C4)
+Subject: Re: [PATCH v2] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: "Peter S. Housel" <housel@acm.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Christian Daudt <csd@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Florian Westphal <fw@strlen.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes some fixes and enhancements in Tx and Rx
-data paths. Connection in open security and data traffic has been
-verified with SDIO and USB variants of 9113 chipset.
+On Sat, Jun 10, 2017 at 10:27 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 03-06-17 17:36, Andy Shevchenko wrote:
+>> On Sat, Jun 3, 2017 at 1:29 AM, Peter S. Housel <housel@acm.org> wrote:
 
-Changes in v2 series:
-1/20: Get rid of __LITTLE_ENDIAN flag usage
-11/20: Get rid of __LITTLE_ENDIAN flag usage
-12/20: Changes to match modified 11/20
-13/20: Get rid of __LITTLE_ENDIAN flag usage
-14/20: Changes to match modified 13/20
-15/20: Changes to match modified 13/20
-19/20: mutex_init was missed for rx_lock in v1
+The following looks good to me.
+Feel free to add
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-Amitkumar Karwar (1):
-  rsi: correct the logic of deriving queue number
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -705,7 +705,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev
+> *sdiodev, struct sk_buff *pkt)
+>  int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+>                            struct sk_buff_head *pktq, uint totlen)
+>  {
+> -       struct sk_buff *glom_skb;
+> +       struct sk_buff *glom_skb = NULL;
+>         struct sk_buff *skb;
+>         u32 addr = sdiodev->sbwad;
+>         int err = 0;
+> @@ -726,10 +726,8 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev
+> *sdiodev,
+>                         return -ENOMEM;
+>                 err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
+>                                          glom_skb);
+> -               if (err) {
+> -                       brcmu_pkt_buf_free_skb(glom_skb);
+> +               if (err)
+>                         goto done;
+> -               }
+>
+>                 skb_queue_walk(pktq, skb) {
+>                         memcpy(skb->data, glom_skb->data, skb->len);
+> @@ -740,6 +738,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev
+> *sdiodev,
+>                                             pktq);
+>
+>  done:
+> +       brcmu_pkt_buf_free_skb(glom_skb);
+>         return err;
+>  }
+>
 
-Karun Eagalapati (13):
-  rsi: fix sdio card reset problem
-  rsi: chip reset for SDIO interface
-  rsi: correct SDIO disconnect path handling
-  rsi: card reset for USB interface
-  rsi: USB tx headroom cleanup
-  rsi: rename USB endpoint macros
-  rsi: choose correct endpoint based on queue.
-  rsi: set immediate wakeup bit
-  rsi: rename variable in_sdio_litefi_irq
-  rsi: Optimise sdio claim and release host
-  rsi: SDIO Rx packet processing enhancement
-  rsi: use separate mutex lock for receive thread
-  rsi: Rename mutex tx_rxlock to the tx_lock.
 
-Prameela Rani Garnepudi (2):
-  rsi: changes in eeprom read frame
-  rsi: separate function for management packet descriptor
-
-pavani.muthyala (4):
-  rsi: management frame descriptor preparation cleanup
-  rsi: data packet descriptor code cleanup
-  rsi: data packet descriptor enhancements
-  rsi: separate function for data packet descriptor
-
- drivers/net/wireless/rsi/rsi_91x_core.c     |  10 +-
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 270 ++++++++++++++++++----------
- drivers/net/wireless/rsi/rsi_91x_main.c     |   3 +-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  90 +++++++---
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 154 ++++++++++++----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  44 +++--
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 118 +++++++++---
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |   6 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  64 +++++++
- drivers/net/wireless/rsi/rsi_main.h         |  30 +++-
- drivers/net/wireless/rsi/rsi_mgmt.h         |  26 ++-
- drivers/net/wireless/rsi/rsi_sdio.h         |   4 +-
- drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
- 13 files changed, 617 insertions(+), 207 deletions(-)
 
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
