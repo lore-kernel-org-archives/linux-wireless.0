@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39450 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751277AbdFAJyh (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33947 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751794AbdFKUsi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:54:37 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sun, 11 Jun 2017 16:48:38 -0400
 MIME-Version: 1.0
-Subject: Re: [v2,
- 2/7] rtlwifi: btcoex: fix compiler warnings for unused functions
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170526184147.31239-3-Larry.Finger@lwfinger.net>
-References: <20170526184147.31239-3-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170601095436.2D94E60720@smtp.codeaurora.org> (sfid-20170601_115440_645875_7F0761D1)
-Date: Thu,  1 Jun 2017 09:54:36 +0000 (UTC)
+In-Reply-To: <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com>
+References: <20170610025912.6499-1-Jason@zx2c4.com> <878tkzq6wi.fsf@purkki.adurom.net>
+ <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Sun, 11 Jun 2017 23:48:36 +0300
+Message-ID: <CANUX_P2b0Bx+-E_OBQ0reGW0=d6819qc=r83K0kTv0xMo8mtLQ@mail.gmail.com> (sfid-20170611_224922_624993_00BA0090)
+Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
+To: Kees Cook <keescook@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "kernel-hardening@lists.openwall.com"
+        <kernel-hardening@lists.openwall.com>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        David Howells <dhowells@redhat.com>,
+        David Safford <safford@us.ibm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Gilad Ben-Yossef <gilad@benyossef.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Sun, Jun 11, 2017 at 4:36 PM, Kees Cook <keescook@chromium.org> wrote:
+>
+> On Sun, Jun 11, 2017 at 1:13 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> > "Jason A. Donenfeld" <Jason@zx2c4.com> writes:
+> >
+> >> Whenever you're comparing two MACs, it's important to do this using
+> >> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
+> >> which could then be used to iteratively forge a MAC.
+> >
+> > Do you have any pointers where I could learn more about this?
+>
+> While not using C specifically, this talks about the problem generally:
+> https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
+>
 
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> Delete unused is_wifi_status_changed for 21a 1 ant
-> 
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
-
-Failed to apply without patch 1 so need to drop these as well.
-
-fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h).
-error: could not build fake ancestor
-Applying: rtlwifi: btcoex: bind bt to the adapter when initialization
-Patch failed at 0001 rtlwifi: btcoex: bind bt to the adapter when initialization
-The copy of the patch that failed is found in: .git/rebase-apply/patch
-
-6 patches set to Changes Requested.
-
-9750975 [v2,2/7] rtlwifi: btcoex: fix compiler warnings for unused functions
-9750983 [v2,3/7] rtlwifi: btcoex: bind bt to the adapter when initialization
-9750979 [v2,4/7] rtlwifi: btcoex: Remove duplicate test in if statement
-9750981 [v2,5/7] rtlwifi: btcoex: Fix Sparse messages for undeclared symbols
-9750985 [v2,6/7] rtlwifi: btcoex: Fix logic error in 21a 1ant
-9750987 [v2,7/7] rtlwifi: btcoex: Fix another edit mistake in 21a 1ant
-
--- 
-https://patchwork.kernel.org/patch/9750975/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Sorry for the stupid question, but the MAC address is in plaintext in
+the air anyway or easily accessible via user space tools. I fail to
+see what it is so secret about a MAC address in that code where that
+same MAC address is accessible via myriads of ways.
