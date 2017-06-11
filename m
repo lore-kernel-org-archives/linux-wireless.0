@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35072 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751128AbdFYLNo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60210 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751743AbdFKISn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:42 +0300
-Message-Id: <20170625111158.1792-11-luca@coelho.fi> (sfid-20170625_131347_783484_B53E496F)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 10/26] iwlwifi: mvm: fix nvm_data leak
+        Sun, 11 Jun 2017 04:18:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Kevin Lo <kevlo@kevlo.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: fix REG_USTIME_TSF register definition
+References: <20170519150240.GA47825@ns.kevlo.org>
+        <CA+R5OdtxiN4XBZg3k-Suamj5r4+=jDY-10HdUCHuqb=Nt-baqg@mail.gmail.com>
+        <20170610142316.GA9284@ns.kevlo.org>
+Date: Sun, 11 Jun 2017 11:18:38 +0300
+In-Reply-To: <20170610142316.GA9284@ns.kevlo.org> (Kevin Lo's message of "Sat,
+        10 Jun 2017 22:23:16 +0800")
+Message-ID: <87y3szos2p.fsf@purkki.adurom.net> (sfid-20170611_101848_413419_D3020241)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Kevin Lo <kevlo@kevlo.org> writes:
 
-We allocate nvm_data in iwl_mvm_nvm_get_from_fw().  If something goes
-wrong after the allocation (i.e. if no valid MAC address is valid), we
-should free nvm_data before returning an error.
+> Sorry for the top post.  This patch has an Acked-by Yan-Hsuan Chuang.
+>
+> On Wed, Jun 07, 2017 at 09:43:21AM +0800, =E8=8E=8A=E5=BD=A5=E5=AE=A3 wro=
+te:
+>> Yes, the register 0x55c is for REG_USTIME_TSF.
+>> And 0x551 is for BCN_CTRL1.
+>>=20
+>>=20
+>> Acked-by: Yan-Hsuan, Chuang <yhchuang@realtek.com>
+>>=20
+>> 2017-05-19 23:02 GMT+08:00 Kevin Lo <kevlo@kevlo.org>:
+>>=20
+>> > The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
+>> > should be 0x55C.
+>> >
+>> > Signed-off-by: Kevin Lo <kevlo@kevlo.org>
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+I don't see Yan-Hsuan's ack on the mailing list (maybe it was dropped
+because of HTML?) and hence neither in patchwork:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index ad8bd90deed2..efdcffbaac6f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -596,7 +596,7 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
- 	if (!is_valid_ether_addr(mvm->nvm_data->hw_addr)) {
- 		IWL_ERR(trans, "no valid mac address was found\n");
- 		ret = -EINVAL;
--		goto out;
-+		goto err_free;
- 	}
- 
- 	/* Initialize general data */
-@@ -628,7 +628,11 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
- 			mvm->nvm_data->valid_rx_ant & mvm->fw->valid_rx_ant,
- 			rsp->regulatory.lar_enabled && lar_fw_supported);
- 
--	ret = 0;
-+	iwl_free_resp(&hcmd);
-+	return 0;
-+
-+err_free:
-+	kfree(mvm->nvm_data);
- out:
- 	iwl_free_resp(&hcmd);
- 	return ret;
--- 
-2.11.0
+https://patchwork.kernel.org/patch/9737421/
+
+Yan-Hsuan or Larry, can you please resend the ack so that patchwork sees
+it?
+
+--=20
+Kalle Valo
