@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35962 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751557AbdF1UPM (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:33712 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752238AbdFLFDf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:15:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:17 +0300
-Message-Id: <20170628201330.9432-19-luca@coelho.fi> (sfid-20170628_221554_511564_87DF0323)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 18/31] iwlwifi: mvm: support aggs of 64 frames in A000 family
+        Mon, 12 Jun 2017 01:03:35 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAO1O6see6yDr-hDVNPi9Kv9wO6p-98w7YhsnnwnVOVCSEGVksw@mail.gmail.com>
+References: <20170610025912.6499-1-Jason@zx2c4.com> <878tkzq6wi.fsf@purkki.adurom.net>
+ <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com>
+ <CANUX_P2b0Bx+-E_OBQ0reGW0=d6819qc=r83K0kTv0xMo8mtLQ@mail.gmail.com> <CAO1O6see6yDr-hDVNPi9Kv9wO6p-98w7YhsnnwnVOVCSEGVksw@mail.gmail.com>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Mon, 12 Jun 2017 08:03:33 +0300
+Message-ID: <CANUX_P1n0=rK+biS7M0-vxP5Uhk5rU+qj4_9jtdRF9Yh219PVA@mail.gmail.com> (sfid-20170612_070413_412094_3FFB8BBF)
+Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
+To: Emil Lenngren <emil.lenngren@gmail.com>
+Cc: Kees Cook <keescook@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "kernel-hardening@lists.openwall.com"
+        <kernel-hardening@lists.openwall.com>,
+        Anna Schumaker <anna.schumaker@netapp.com>,
+        David Howells <dhowells@redhat.com>,
+        David Safford <safford@us.ibm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Gilad Ben-Yossef <gilad@benyossef.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Jeff Layton <jlayton@poochiereds.net>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Trond Myklebust <trond.myklebust@primarydata.com>,
+        keyrings@vger.kernel.org,
+        Bluez mailing list <linux-bluetooth@vger.kernel.org>,
+        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Mon, Jun 12, 2017 at 12:30 AM, Emil Lenngren <emil.lenngren@gmail.com> wrote:
+> 2017-06-11 22:48 GMT+02:00 Emmanuel Grumbach <egrumbach@gmail.com>:
+>> On Sun, Jun 11, 2017 at 4:36 PM, Kees Cook <keescook@chromium.org> wrote:
+>>>
+>>> On Sun, Jun 11, 2017 at 1:13 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> > "Jason A. Donenfeld" <Jason@zx2c4.com> writes:
+>>> >
+>>> >> Whenever you're comparing two MACs, it's important to do this using
+>>> >> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
+>>> >> which could then be used to iteratively forge a MAC.
+>>> >
+>>> > Do you have any pointers where I could learn more about this?
+>>>
+>>> While not using C specifically, this talks about the problem generally:
+>>> https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
+>>>
+>>
+>> Sorry for the stupid question, but the MAC address is in plaintext in
+>> the air anyway or easily accessible via user space tools. I fail to
+>> see what it is so secret about a MAC address in that code where that
+>> same MAC address is accessible via myriads of ways.
+>
+> I think you're mixing up Media Access Control (MAC) addresses with
+> Message Authentication Code (MAC). The second one is a cryptographic
+> signature of a message.
 
-A SCD bug was fixed in the A000 family, allowing to
-support aggregations of 64 frames (rather than 63).
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c  |  6 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h  |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 11 +++++++++--
- 3 files changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index a02dda8d9ea3..65beca3a457a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -3233,7 +3233,11 @@ static void rs_build_rates_table_from_fixed(struct iwl_mvm *mvm,
- 	if (num_of_ant(ant) == 1)
- 		lq_cmd->single_stream_ant_msk = ant;
- 
--	lq_cmd->agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-+	if (!mvm->trans->cfg->gen2)
-+		lq_cmd->agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-+	else
-+		lq_cmd->agg_frame_cnt_limit =
-+			LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF;
- }
- #endif /* CONFIG_MAC80211_DEBUGFS */
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-index 3abde1cb0303..32b4d66debea 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-@@ -145,6 +145,8 @@ enum {
- 
- #define LINK_QUAL_AGG_FRAME_LIMIT_DEF	(63)
- #define LINK_QUAL_AGG_FRAME_LIMIT_MAX	(63)
-+#define LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF	(64)
-+#define LINK_QUAL_AGG_FRAME_LIMIT_GEN2_MAX	(64)
- #define LINK_QUAL_AGG_FRAME_LIMIT_MIN	(0)
- 
- #define LQ_SIZE		2	/* 2 mode tables:  "Active" and "Search" */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 9ec427966533..ee7c978fe5ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1354,7 +1354,10 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 	mvm_sta->mac_id_n_color = FW_CMD_ID_AND_COLOR(mvmvif->id,
- 						      mvmvif->color);
- 	mvm_sta->vif = vif;
--	mvm_sta->max_agg_bufsize = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-+	if (!mvm->trans->cfg->gen2)
-+		mvm_sta->max_agg_bufsize = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-+	else
-+		mvm_sta->max_agg_bufsize = LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF;
- 	mvm_sta->tx_protection = 0;
- 	mvm_sta->tt_tx_protection = false;
- 	mvm_sta->sta_type = sta->tdls ? IWL_STA_TDLS_LINK : IWL_STA_LINK;
-@@ -2677,7 +2680,11 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	BUILD_BUG_ON((sizeof(mvmsta->agg_tids) * BITS_PER_BYTE)
- 		     != IWL_MAX_TID_COUNT);
- 
--	buf_size = min_t(int, buf_size, LINK_QUAL_AGG_FRAME_LIMIT_DEF);
-+	if (!mvm->trans->cfg->gen2)
-+		buf_size = min_t(int, buf_size, LINK_QUAL_AGG_FRAME_LIMIT_DEF);
-+	else
-+		buf_size = min_t(int, buf_size,
-+				 LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF);
- 
- 	spin_lock_bh(&mvmsta->lock);
- 	ssn = tid_data->ssn;
--- 
-2.11.0
+Obviously... Sorry for the noise.
