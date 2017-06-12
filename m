@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frisell.zx2c4.com ([192.95.5.64]:58813 "EHLO frisell.zx2c4.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750828AbdFSQqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 12:46:39 -0400
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
-To: gregkh@linuxfoundation.org
-Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3.18-stable] mac80211/wpa: use constant time memory comparison for MACs
-Date: Mon, 19 Jun 2017 18:44:06 +0200
-Message-Id: <20170619164406.23738-1-Jason@zx2c4.com> (sfid-20170619_184642_601041_5EEDA816)
-In-Reply-To: <1497818656.2259.1.camel@sipsolutions.net>
-References: <1497818656.2259.1.camel@sipsolutions.net>
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:47527 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752623AbdFLLrw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Jun 2017 07:47:52 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.12 2/3] brcmfmac: use firmware callback upon failure to load
+Date: Mon, 12 Jun 2017 12:47:33 +0100
+Message-Id: <1497268054-4507-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170612_134756_624228_3AA6EAC5)
+In-Reply-To: <1497268054-4507-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497268054-4507-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise, we enable all sorts of forgeries via timing attack.
+When firmware loading failed the code used to unbind the device provided
+by the calling code. However, for the sdio driver two devices are bound
+and both need to be released upon failure. The callback has been extended
+with parameter to pass error code so add that in this commit upon firmware
+loading failure.
 
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: stable@vger.kernel.org # 4.9.x-
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-This is for 3.18. Tested this, and it works as intended.
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 27 +++++++++++-----------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
- net/mac80211/wpa.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 983527a4c1ab..bf87de469c03 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -16,6 +16,7 @@
- #include <asm/unaligned.h>
- #include <net/mac80211.h>
- #include <crypto/aes.h>
-+#include <crypto/algapi.h>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index ae61a24..d231042 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -484,39 +484,38 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+ 	release_firmware(fwctx->code);
+-	device_release_driver(fwctx->dev);
++	fwctx->done(fwctx->dev, -ENOENT, NULL, NULL, 0);
+ 	kfree(fwctx);
+ }
  
- #include "ieee80211_i.h"
- #include "michael.h"
-@@ -150,7 +151,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
- 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
- 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
- 	michael_mic(key, hdr, data, data_len, mic);
--	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-+	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
- 		goto mic_fail;
+ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
+-	int ret;
++	int ret = 0;
  
- 	/* remove Michael MIC from payload */
-@@ -771,7 +772,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
- 				   skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+-	if (!fw)
++	if (!fw) {
++		ret = -ENOENT;
+ 		goto fail;
+-
+-	/* only requested code so done here */
+-	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM)) {
+-		fwctx->done(fwctx->dev, 0, fw, NULL, 0);
+-		kfree(fwctx);
+-		return;
+ 	}
++	/* only requested code so done here */
++	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM))
++		goto done;
++
+ 	fwctx->code = fw;
+ 	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+ 				      fwctx->dev, GFP_KERNEL, fwctx,
+ 				      brcmf_fw_request_nvram_done);
+ 
+-	if (!ret)
+-		return;
+-
+-	brcmf_fw_request_nvram_done(NULL, fwctx);
++	/* pass NULL to nvram callback for bcm47xx fallback */
++	if (ret)
++		brcmf_fw_request_nvram_done(NULL, fwctx);
+ 	return;
+ 
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+-	device_release_driver(fwctx->dev);
++done:
++	fwctx->done(fwctx->dev, ret, fw, NULL, 0);
+ 	kfree(fwctx);
+ }
+ 
 -- 
-2.13.1
+1.9.1
