@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34477 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751699AbdFILkU (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12178 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754972AbdFLPiF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 07:40:20 -0400
-From: Caesar Wang <wxt@rock-chips.com>
-To: amitkarwar@gmail.com, huxm@marvell.com
-Cc: nishants@marvell.com, gbhat@marvell.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, briannorris@chromium.org,
-        jeffy.chen@rock-chips.com, Caesar Wang <wxt@rock-chips.com>
-Subject: [PATCH] mwifiex: fixes the trivial print
-Date: Fri,  9 Jun 2017 19:40:11 +0800
-Message-Id: <1497008411-15223-1-git-send-email-wxt@rock-chips.com> (sfid-20170609_134047_142249_5F1601A9)
+        Mon, 12 Jun 2017 11:38:05 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/1] Add per chain RSSI reporting.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <CAAV6Hgmjq9DDpcUUTZtDwodUjKrkzjnKSNZ+sK8U=M_AQgr-iQ@mail.gmail.com>
+References: <CAAV6Hgmjq9DDpcUUTZtDwodUjKrkzjnKSNZ+sK8U=M_AQgr-iQ@mail.gmail.com>
+To: Norik Dzhandzhapanyan <norikd@gmail.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <866823ed4ac64b8dae61f791aeb7e6f9@eusanexr01a.eu.qualcomm.com> (sfid-20170612_173816_249892_AE70A7AC)
+Date: Mon, 12 Jun 2017 08:37:56 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have always met the unused log be printed as following.
+Norik Dzhandzhapanyan <norikd@gmail.com> wrote:
 
-...
-[23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-cannot find cfp by band 2    & channel=13 freq=0
-[23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-cannot find cfp by band 2    & channel=13 freq=0
+> Report per chain RSSI to mac80211.
+> 
+> Signed-off-by: Norik Dzhandzhapanyan <norikd@gmail.com>
+> [kvalo@qca.qualcomm.com: fix conflicts and style]
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Maybe that's related to wifi regdom, since wifi default area
-was US and didn't support 12~14 channels.
+This failed to apply and had quite a few checkpatch warnings. So I recreted the
+patch manually:
 
-As Frequencies:
-* 2412 MHz [1] (30.0 dBm)
-* 2417 MHz [2] (30.0 dBm)
-* 2422 MHz [3] (30.0 dBm)
-* 2427 MHz [4] (30.0 dBm)
-* 2432 MHz [5] (30.0 dBm)
-* 2437 MHz [6] (30.0 dBm)
-* 2442 MHz [7] (30.0 dBm)
-* 2447 MHz [8] (30.0 dBm)
-* 2452 MHz [9] (30.0 dBm)
-* 2457 MHz [10] (30.0 dBm)
-* 2462 MHz [11] (30.0 dBm)
-* 2467 MHz [12] (disabled)
-* 2472 MHz [13] (disabled)
-* 2484 MHz [14] (disabled)
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=5df110e3a093771f23001be2012ab6fa4d87089b
 
-Signed-off-by: Caesar Wang <wxt@rock-chips.com>
----
-
- drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-index 1ff2205..6e29943 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-@@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
- 		}
- 	}
- 	if (i == sband->n_channels) {
--		mwifiex_dbg(priv->adapter, ERROR,
-+		mwifiex_dbg(priv->adapter, WARN,
- 			    "%s: cannot find cfp by band %d\t"
- 			    "& channel=%d freq=%d\n",
- 			    __func__, band, channel, freq);
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9760887/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
