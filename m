@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59358 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751311AbdFEUm5 (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33220 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752500AbdFLPD2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:42:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Jun 2017 23:42:17 +0300
-Message-Id: <20170605204218.30151-25-luca@coelho.fi> (sfid-20170605_224325_684655_75D4D972)
-In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
-References: <20170605204218.30151-1-luca@coelho.fi>
-Subject: [PATCH 24/25] iwlwifi: bump max FW API to 31
+        Mon, 12 Jun 2017 11:03:28 -0400
+Received: by mail-lf0-f67.google.com with SMTP id u62so9692293lfg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 08:03:27 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 08/10] ath10k: add QCA9377 usb hw_param item
+Date: Mon, 12 Jun 2017 17:03:09 +0200
+Message-Id: <1497279791-9598-9-git-send-email-erik.stromdahl@gmail.com> (sfid-20170612_170333_639426_23316EF7)
+In-Reply-To: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Hardware parameters for QCA9377 usb devices.
 
-Bump the maximum accepted firmware API number for devices in the 8000,
-9000 and A000 families.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index 5d446740383a..707f282b5afd 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -70,8 +70,8 @@
- #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c20b97b..dc8ea5e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -299,6 +299,29 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.spectral_bin_discard = 0,
+ 	},
+ 	{
++		.id = QCA9377_HW_1_1_DEV_VERSION,
++		.dev_id = QCA9377_1_0_DEVICE_ID,
++		.name = "qca9377 hw1.1 usb",
++		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
++		.uart_pin = 6,
++		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
++		.cal_data_len = 8124,
++		.fw = {
++			.dir = QCA9377_HW_1_0_FW_DIR,
++			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_USB,
++			.board_size = QCA9377_BOARD_DATA_SZ,
++			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
++		},
++		.hw_ops = &qca988x_ops,
++		.decap_align_bytes = 4,
++		.max_num_peers = TARGET_QCA9377_HL_NUM_PEERS,
++		.is_high_latency = true,
++		.bus = ATH10K_BUS_USB,
++		.start_once = true,
++	},
++	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+ 		.dev_id = 0,
+ 		.name = "qca4019 hw1.0",
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f733e73..cc3d0eb 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -127,6 +127,7 @@ enum qca9377_chip_id_rev {
+ /* QCA9377 1.0 definitions */
+ #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
+ #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
++#define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
+ #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
  
- /* Highest firmware API version supported */
--#define IWL8000_UCODE_API_MAX	30
--#define IWL8265_UCODE_API_MAX	30
-+#define IWL8000_UCODE_API_MAX	31
-+#define IWL8265_UCODE_API_MAX	31
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	17
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index 0f520d138414..42daaddfa740 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL9000_UCODE_API_MAX	30
-+#define IWL9000_UCODE_API_MAX	31
- 
- /* Lowest firmware API version supported */
- #define IWL9000_UCODE_API_MIN	30
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-index 32ba70190d3d..63a4183c0de7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL_A000_UCODE_API_MAX	30
-+#define IWL_A000_UCODE_API_MAX	31
- 
- /* Lowest firmware API version supported */
- #define IWL_A000_UCODE_API_MIN	24
+ /* QCA4019 1.0 definitions */
 -- 
-2.11.0
+2.7.4
