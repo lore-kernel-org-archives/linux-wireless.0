@@ -1,28 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52372 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751834AbdFMJIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 05:08:40 -0400
-Message-ID: <1497344915.6068.8.camel@sipsolutions.net> (sfid-20170613_110846_738263_24E2153A)
-Subject: Re: [PATCH v1] net: rfkill: gpio: Switch to
- devm_acpi_dev_add_driver_gpios()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Date: Tue, 13 Jun 2017 11:08:35 +0200
-In-Reply-To: <20170610191034.53635-1-andriy.shevchenko@linux.intel.com>
-References: <20170610191034.53635-1-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:57082 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751954AbdFLNsV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Jun 2017 09:48:21 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, "Peter S. Housel" <housel@acm.org>
+Subject: Re: [PATCH V3] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
+References: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com>
+        <78a8b9d2-4688-051b-26ce-df447530fa30@broadcom.com>
+Date: Mon, 12 Jun 2017 16:47:55 +0300
+In-Reply-To: <78a8b9d2-4688-051b-26ce-df447530fa30@broadcom.com> (Arend van
+        Spriel's message of "Mon, 12 Jun 2017 13:32:52 +0200")
+Message-ID: <87h8zl8ghg.fsf@kamboji.qca.qualcomm.com> (sfid-20170612_154824_726206_1F1384F3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-06-10 at 22:10 +0300, Andy Shevchenko wrote:
-> Switch to use managed variant of acpi_dev_add_driver_gpios() to
-> simplify
-> error path and fix potentially wrong assingment if ->probe() fails.
-> 
-Looks fine, applied.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-johannes
+> On 6/12/2017 12:46 PM, Arend van Spriel wrote:
+>> From: "Peter S. Housel" <housel@acm.org>
+>>
+>> An earlier change to this function (3bdae810721b) fixed a leak in the
+>> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
+>> glom_skb buffer, used for emulating a scattering read, is never used
+>> or referenced after its contents are copied into the destination
+>> buffers, and therefore always needs to be freed by the end of the
+>> function.
+>>
+>
+> Kalle,
+>
+> Can you add stable tag:
+>
+> Cc: stable@vger.kernel.org # 4.9.x-
+
+Yes, will do.
+
+-- 
+Kalle Valo
