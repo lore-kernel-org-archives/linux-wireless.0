@@ -1,46 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33833 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753706AbdFMOvx (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56790 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752310AbdFLOPk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:51:53 -0400
-Received: by mail-pg0-f67.google.com with SMTP id v14so19228036pgn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:51:53 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 07/20] rsi: correct the logic of deriving queue number
-Date: Tue, 13 Jun 2017 20:18:55 +0530
-Message-Id: <1497365348-2305-8-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165156_313384_98CBDB41)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Mon, 12 Jun 2017 10:15:40 -0400
+Subject: patch "wireless: ipw2x00: convert to use DRIVER_ATTR_RW" added to driver-core-testing
+To: gregkh@linuxfoundation.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        stas.yakovlev@gmail.com
+From: <gregkh@linuxfoundation.org>
+Date: Mon, 12 Jun 2017 16:15:26 +0200
+Message-ID: <1497276926190176@kroah.com> (sfid-20170612_161555_387296_18C3C1FC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ANSI_X3.4-1968
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Maximum valid queue number is 0x5. So anding with 0x7 should be
-ok here.
+This is a note to let you know that I've just added the patch titled
 
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+    wireless: ipw2x00: convert to use DRIVER_ATTR_RW
+
+to my driver-core git tree which can be found at
+    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git
+in the driver-core-testing branch.
+
+The patch will show up in the next release of the linux-next tree
+(usually sometime within the next 24 hours during the week.)
+
+The patch will be merged to the driver-core-next branch sometime soon,
+after it passes testing, and the merge window is open.
+
+If you have any questions about this process, please let me know.
+
+
+>From 0457e1ae0f4b88676b0cea30ef6acff24febbbc0 Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Fri, 9 Jun 2017 11:03:10 +0200
+Subject: wireless: ipw2x00: convert to use DRIVER_ATTR_RW
+
+We are trying to get rid of DRIVER_ATTR(), and the ipw2x00 driver's
+attributes can be trivially changed to use DRIVER_ATTR_RW().
+
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <netdev@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 8 +++-----
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++-----
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 25f6195..dc0a0b2 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -381,7 +381,7 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
- 				       u8 *pkt,
- 				       u32 len)
- {
--	u32 queueno = ((pkt[1] >> 4) & 0xf);
-+	u32 queueno = ((pkt[1] >> 4) & 0x7);
- 	u8 endpoint;
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index f922859acf40..aaaca4d08e2b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -4160,12 +4160,12 @@ static ssize_t show_bssinfo(struct device *d, struct device_attribute *attr,
+ static DEVICE_ATTR(bssinfo, S_IRUGO, show_bssinfo, NULL);
  
- 	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? MGMT_EP : DATA_EP);
+ #ifdef CONFIG_IPW2100_DEBUG
+-static ssize_t show_debug_level(struct device_driver *d, char *buf)
++static ssize_t debug_level_show(struct device_driver *d, char *buf)
+ {
+ 	return sprintf(buf, "0x%08X\n", ipw2100_debug_level);
+ }
+ 
+-static ssize_t store_debug_level(struct device_driver *d,
++static ssize_t debug_level_store(struct device_driver *d,
+ 				 const char *buf, size_t count)
+ {
+ 	u32 val;
+@@ -4179,9 +4179,7 @@ static ssize_t store_debug_level(struct device_driver *d,
+ 
+ 	return strnlen(buf, count);
+ }
+-
+-static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO, show_debug_level,
+-		   store_debug_level);
++static DRIVER_ATTR_RW(debug_level);
+ #endif				/* CONFIG_IPW2100_DEBUG */
+ 
+ static ssize_t show_fatal_error(struct device *d,
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index bbc579b647b6..5b79e2ec3a16 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -1195,12 +1195,12 @@ static void ipw_led_shutdown(struct ipw_priv *priv)
+  *
+  * See the level definitions in ipw for details.
+  */
+-static ssize_t show_debug_level(struct device_driver *d, char *buf)
++static ssize_t debug_level_show(struct device_driver *d, char *buf)
+ {
+ 	return sprintf(buf, "0x%08X\n", ipw_debug_level);
+ }
+ 
+-static ssize_t store_debug_level(struct device_driver *d, const char *buf,
++static ssize_t debug_level_store(struct device_driver *d, const char *buf,
+ 				 size_t count)
+ {
+ 	char *p = (char *)buf;
+@@ -1221,9 +1221,7 @@ static ssize_t store_debug_level(struct device_driver *d, const char *buf,
+ 
+ 	return strnlen(buf, count);
+ }
+-
+-static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
+-		   show_debug_level, store_debug_level);
++static DRIVER_ATTR_RW(debug_level);
+ 
+ static inline u32 ipw_get_event_log_len(struct ipw_priv *priv)
+ {
 -- 
-2.7.4
+2.13.1
