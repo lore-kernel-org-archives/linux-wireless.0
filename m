@@ -1,66 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34250 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753765AbdFVVVQ (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36166 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751974AbdFLPD1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:21:16 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:41 +0300
-Message-Id: <20170622212101.16422-6-luca@coelho.fi> (sfid-20170622_232121_413831_24B8530F)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 05/25] iwlwifi: mvm: avoid unnecessary cache trashing in Tx path
+        Mon, 12 Jun 2017 11:03:27 -0400
+Received: by mail-lf0-f67.google.com with SMTP id x81so9673592lfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 08:03:26 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 07/10] ath10k: dma fixes for high latency devices
+Date: Mon, 12 Jun 2017 17:03:08 +0200
+Message-Id: <1497279791-9598-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20170612_170346_577114_AD68CAEF)
+In-Reply-To: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Several DMA related functions (such as the dma_map_xxx functions)
+are not used with high latency devices and don't need to be invoked
+in this case.
 
-When sending a Tx Command with a Tx packet, we allocate the
-Tx command separately from the payload of the packet.
-The WiFi MAC header is then copied into the buffer that was
-allocated for the Tx Command. This means that this buffer
-needs to be big enough to contain both. This is why it is
-allocated with iwl_trans_alloc_tx_cmd which returns a
-pointer to a newly allocated not zeroed struct
-iwl_device_cmd.
-
-The Tx command has a few bit fields and hence it needs to
-be zeroed, but all the rest of the buffer doesn't need to
-be zeroed since it will either be memcopy'ed with the MAC
-header, or not even sent to the device.
-This means that we don't need to zero all the
-iwl_device_cmd structure, but rather only the size of
-the iwl_tx_cmd structure.
-
-Since sizeof(iwl_tx_cmd) - sizeof(iwl_tx_cmd) is about
-260 bytes, this can avoid touching 4 cache lines for each
-packet.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htc.c    | 13 ++++++++-----
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  3 ++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +++
+ drivers/net/wireless/ath/ath10k/txrx.c   |  5 +++--
+ 4 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index aa3a3f336929..63b938028144 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -473,7 +473,10 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	if (unlikely(!dev_cmd))
- 		return NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index e5c80f5..232740c 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -137,11 +137,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 	ath10k_htc_prepare_tx_skb(ep, skb);
  
--	memset(dev_cmd, 0, sizeof(*dev_cmd));
-+	/* Make sure we zero enough of dev_cmd */
-+	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) > sizeof(*tx_cmd));
+ 	skb_cb->eid = eid;
+-	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
+-	ret = dma_mapping_error(dev, skb_cb->paddr);
+-	if (ret) {
+-		ret = -EIO;
+-		goto err_credits;
++	if (!ar->is_high_latency) {
++		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
++					       DMA_TO_DEVICE);
++		ret = dma_mapping_error(dev, skb_cb->paddr);
++		if (ret) {
++			ret = -EIO;
++			goto err_credits;
++		}
+ 	}
+ 
+ 	sg_item.transfer_id = ep->eid;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 5833c08..972c21c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2492,7 +2492,8 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
+-		ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
++		if (!ar->is_high_latency)
++			ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_SEC_IND: {
+ 		struct ath10k *ar = htt->ar;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index e3b820d..27bbc3e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -409,6 +409,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
+ 	if (htt->tx_mem_allocated)
+ 		return 0;
+ 
++	if (ar->is_high_latency)
++		return 0;
 +
-+	memset(dev_cmd, 0, sizeof(dev_cmd->hdr) + sizeof(*tx_cmd));
- 	dev_cmd->hdr.cmd = TX_CMD;
+ 	ret = ath10k_htt_tx_alloc_buf(htt);
+ 	if (ret)
+ 		goto free_idr_pending_tx;
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index d4986f6..fae143e 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -90,11 +90,12 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
  
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+ 	ath10k_htt_tx_dec_pending(htt);
+-	if (htt->num_pending_tx == 0)
++	if (!ar->is_high_latency && (htt->num_pending_tx == 0))
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+-	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
++	if (!ar->is_high_latency)
++		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
+ 
 -- 
-2.11.0
+2.7.4
