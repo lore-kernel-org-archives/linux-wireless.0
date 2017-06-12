@@ -1,94 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42929 "EHLO
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:49467 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751598AbdFIMJC (ORCPT
+        by vger.kernel.org with ESMTP id S1751796AbdFLL4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 08:09:02 -0400
+        Mon, 12 Jun 2017 07:56:38 -0400
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 9/9] brcmfmac: provide port authorized state in CONNECT event
-Date: Fri,  9 Jun 2017 13:08:50 +0100
-Message-Id: <1497010130-16186-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140922_041039_D14F33AF)
-In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.12] brcmfmac: fix brcmf_fws_add_interface() for USB devices
+Date: Mon, 12 Jun 2017 12:56:35 +0100
+Message-Id: <1497268595-4836-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170612_135642_102468_390D1555)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fill struct cfg80211_connection_params::authorized field according
-the supplicant state received from the device.
+USB devices rely on queuing functionality provided by the fwsignal
+module regardless the mode fwsignal is operating in. For this some
+data structure needs to be reserved which is tied to the interface,
+which is done by brcmf_fws_add_interface(). However, it checks the
+mode. Replace that by checking result from brcmf_fws_queue_skbs().
 
+Fixes: fc0471e3e884 ("brcmfmac: ignore interfaces when fwsignal is disabled")
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 27 +++++++++++++---------
- 1 file changed, 16 insertions(+), 11 deletions(-)
+Hi Kalle,
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 9d345c7..0e45993 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5327,10 +5327,12 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
- 	u32 event = e->event_code;
- 	u32 status = e->status;
+This patch fixes a regression that was introduced upstream in
+4.12-rc1. It applies to the master branch of the wireless-drivers
+repository.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index 72373e5..f59642b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2145,7 +2145,7 @@ void brcmf_fws_add_interface(struct brcmf_if *ifp)
+ 	struct brcmf_fws_info *fws = drvr_to_fws(ifp->drvr);
+ 	struct brcmf_fws_mac_descriptor *entry;
  
--	if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK &&
--	    event == BRCMF_E_PSK_SUP &&
--	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
-+	if (event == BRCMF_E_PSK_SUP &&
-+	    status == BRCMF_E_STATUS_FWSUP_COMPLETED) {
- 		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
-+		if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_1X)
-+			return true;
-+	}
- 	if (event == BRCMF_E_SET_SSID && status == BRCMF_E_STATUS_SUCCESS) {
- 		brcmf_dbg(CONN, "Processing set ssid\n");
- 		memcpy(vif->profile.bssid, e->addr, ETH_ALEN);
-@@ -5341,11 +5343,9 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
- 	}
+-	if (!ifp->ndev || fws->fcmode == BRCMF_FWS_FCMODE_NONE)
++	if (!ifp->ndev || !brcmf_fws_queue_skbs(fws))
+ 		return;
  
- 	if (test_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state) &&
--	    test_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state)) {
--		clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
--		clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state);
-+	    test_and_clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state))
- 		return true;
--	}
-+
- 	return false;
- }
- 
-@@ -5542,22 +5542,27 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	if (test_and_clear_bit(BRCMF_VIF_STATUS_CONNECTING,
--			       &ifp->vif->sme_state)) {
-+			       &ifp->vif->sme_state) ||
-+	    e->event_code == BRCMF_E_PSK_SUP) {
- 		memset(&conn_params, 0, sizeof(conn_params));
--		if (completed) {
-+		if (e->event_code != BRCMF_E_PSK_SUP && completed) {
- 			brcmf_get_assoc_ies(cfg, ifp);
- 			brcmf_update_bss_info(cfg, ifp);
- 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
- 				&ifp->vif->sme_state);
-+		}
-+		if (completed)
- 			conn_params.status = WLAN_STATUS_SUCCESS;
--		} else {
-+		else
- 			conn_params.status = WLAN_STATUS_AUTH_TIMEOUT;
--		}
- 		conn_params.bssid = profile->bssid;
- 		conn_params.req_ie = conn_info->req_ie;
- 		conn_params.req_ie_len = conn_info->req_ie_len;
- 		conn_params.resp_ie = conn_info->resp_ie;
- 		conn_params.resp_ie_len = conn_info->resp_ie_len;
-+		conn_params.authorized =
-+			test_and_clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS,
-+					   &ifp->vif->sme_state);
- 		cfg80211_connect_done(ndev, &conn_params, GFP_KERNEL);
- 		brcmf_dbg(CONN, "Report connect result - connection %s\n",
- 			  completed ? "succeeded" : "failed");
+ 	entry = &fws->desc.iface[ifp->ifidx];
 -- 
 1.9.1
