@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44050 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751148AbdFVBZH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58600 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754195AbdFLPgn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 21:25:07 -0400
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        sssa@qti.qualcomm.com, giulio.genovese@gmail.com,
-        Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 3/3] ath9k: Use mutex_lock to avoid potential race in start/stop rng
-Date: Thu, 22 Jun 2017 09:24:29 +0800
-Message-Id: <1498094669-6510-3-git-send-email-miaoqing@codeaurora.org> (sfid-20170622_032510_851174_C4612DDA)
-In-Reply-To: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
-References: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
+        Mon, 12 Jun 2017 11:36:43 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v3] ath10k: Define structures for CE ctrl/misc register
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1496739941-18132-1-git-send-email-c_sgarna@qti.qualcomm.com>
+References: <1496739941-18132-1-git-send-email-c_sgarna@qti.qualcomm.com>
+To: Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+        Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <a383aa68b0c744e186e0b7e98b78446b@eusanexr01a.eu.qualcomm.com> (sfid-20170612_182752_641910_891ED035)
+Date: Mon, 12 Jun 2017 08:36:17 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com> wrote:
 
-Move ath9k_rng_stop/ath9k_rng_start pair into critical section,
-use mutex_lock to void potential race accessing.
+> Define structures for the copy engine ctrl/misc registers,
+> that includes CE CMD halt, watermark source, watermark destination,
+> host IE ring, source, destination and dmax ring.
+> 
+> This adds support to avoid the conditional compilation,
+> code optimization and dynamic configuration of the copy engine
+> register map for respective hardware bus interface.
+> 
+> Signed-off-by: Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Like kbuild test robot reported, this failed to build. I fixed it like this in
+ahb.c in pending branch:
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9e65d14..8b4ac7f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -731,12 +731,12 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
-+	ath9k_rng_start(sc);
-+
- 	mutex_unlock(&sc->mutex);
- 
- 	ath9k_ps_restore(sc);
- 
--	ath9k_rng_start(sc);
--
- 	return 0;
- }
- 
-@@ -826,10 +826,10 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	ath9k_deinit_channel_context(sc);
- 
--	ath9k_rng_stop(sc);
--
- 	mutex_lock(&sc->mutex);
- 
-+	ath9k_rng_stop(sc);
-+
- 	ath_cancel_work(sc);
- 
- 	if (test_bit(ATH_OP_INVALID, &common->op_flags)) {
+	ar_pci->bus_ops = &ath10k_ahb_bus_ops;
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9768317/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
