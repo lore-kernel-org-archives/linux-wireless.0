@@ -1,111 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35036 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752609AbdFPO6k (ORCPT
+Received: from gateway21.websitewelcome.com ([192.185.45.91]:34267 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752619AbdFLW2J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:58:40 -0400
-Received: by mail-pf0-f194.google.com with SMTP id s66so6917579pfs.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:40 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 20/20] rsi: Rename mutex tx_rxlock to the tx_lock.
-Date: Fri, 16 Jun 2017 20:24:41 +0530
-Message-Id: <1497624881-2315-21-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165843_352609_181168AD)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Mon, 12 Jun 2017 18:28:09 -0400
+Received: from cm6.websitewelcome.com (cm6.websitewelcome.com [108.167.139.19])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id AC2914010C567
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 17:28:06 -0500 (CDT)
+Date: Mon, 12 Jun 2017 17:28:05 -0500
+Message-ID: <20170612172805.Horde.AUST5RGJfhNVnchxoXV3U2C@gator4166.hostgator.com> (sfid-20170613_002815_009787_64476FDF)
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: nfc: nci: fix potential NULL pointer dereference
+References: <20170612220223.GA6326@embeddedgus>
+ <20170612222155.GA18302@roeck-us.net>
+In-Reply-To: <20170612222155.GA18302@roeck-us.net>
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+Hi Guenter,
 
-We have now added separate lock for Rx. This lock is used to protect
-tx path only
+Please, see my comments below
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c | 10 +++++-----
- drivers/net/wireless/rsi/rsi_91x_main.c |  2 +-
- drivers/net/wireless/rsi/rsi_main.h     |  4 ++--
- 3 files changed, 8 insertions(+), 8 deletions(-)
+Quoting Guenter Roeck <linux@roeck-us.net>:
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 68f04a7..88a1a56 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -268,11 +268,11 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			break;
- 		}
- 
--		mutex_lock(&common->tx_rxlock);
-+		mutex_lock(&common->tx_lock);
- 
- 		status = adapter->check_hw_queue_status(adapter, q_num);
- 		if ((status <= 0)) {
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
-@@ -287,7 +287,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 		skb = rsi_core_dequeue_pkt(common, q_num);
- 		if (skb == NULL) {
- 			rsi_dbg(ERR_ZONE, "skb null\n");
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
-@@ -297,14 +297,14 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			status = rsi_send_data_pkt(common, skb);
- 
- 		if (status) {
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
- 		common->tx_stats.total_tx_pkt_send[q_num]++;
- 
- 		tstamp_2 = jiffies;
--		mutex_unlock(&common->tx_rxlock);
-+		mutex_unlock(&common->tx_lock);
- 
- 		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
- 			schedule();
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 939f568..bb0febb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -220,7 +220,7 @@ struct rsi_hw *rsi_91x_init(void)
- 
- 	rsi_init_event(&common->tx_thread.event);
- 	mutex_init(&common->mutex);
--	mutex_init(&common->tx_rxlock);
-+	mutex_init(&common->tx_lock);
- 	mutex_init(&common->rx_lock);
- 
- 	if (rsi_create_kthread(common,
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 6d41c9b..d3bf7ac 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -177,8 +177,8 @@ struct rsi_common {
- 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
- 	/* Mutex declaration */
- 	struct mutex mutex;
--	/* Mutex used between tx/rx threads */
--	struct mutex tx_rxlock;
-+	/* Mutex used for tx thread */
-+	struct mutex tx_lock;
- 	/* Mutex used for rx thread */
- 	struct mutex rx_lock;
- 	u8 endpoint;
--- 
-2.7.4
+> On Mon, Jun 12, 2017 at 05:02:23PM -0500, Gustavo A. R. Silva wrote:
+>> NULL check at line 76: if (conn_info) {, implies that pointer conn_info
+>> might be NULL, but this pointer is being previously dereferenced,
+>> which might cause a NULL pointer dereference.
+>>
+>> Add NULL check before dereferencing pointer conn_info in order to
+>> avoid a potential NULL pointer dereference.
+>>
+>> Addresses-Coverity-ID: 1362349
+>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>> ---
+>>  net/nfc/nci/core.c | 11 +++++------
+>>  1 file changed, 5 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+>> index 61fff42..d2198ce 100644
+>> --- a/net/nfc/nci/core.c
+>> +++ b/net/nfc/nci/core.c
+>> @@ -70,14 +70,13 @@ int  
+>> nci_get_conn_info_by_dest_type_params(struct nci_dev *ndev, u8  
+>> dest_type,
+>>  	struct nci_conn_info *conn_info;
+>>
+>>  	list_for_each_entry(conn_info, &ndev->conn_info_list, list) {
+>
+> conn_info is set in list_for_each_entry() using container_of(),
+> which is never NULL. Plus, it is dereferenced there as well.
+> The check is unnecessary.
+>
+
+Thanks for clarifying.
+
+> Guenter
+>
+>> -		if (conn_info->dest_type == dest_type) {
+>> +		if (conn_info && conn_info->dest_type == dest_type) {
+>>  			if (!params)
+>>  				return conn_info->conn_id;
+>> -			if (conn_info) {
+
+So, this NULL check could be removed as it seems it is not useful at all ?
+
+>> -				if (params->id == conn_info->dest_params->id &&
+>> -				    params->protocol == conn_info->dest_params->protocol)
+>> -					return conn_info->conn_id;
+>> -			}
+>> +
+>> +			if (params->id == conn_info->dest_params->id &&
+>> +			    params->protocol == conn_info->dest_params->protocol)
+>> +				return conn_info->conn_id;
+>>  		}
+>>  	}
+>>
+
+Thank you
+--
+Gustavo A. R. Silva
