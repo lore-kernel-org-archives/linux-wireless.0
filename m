@@ -1,440 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36016 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751560AbdF1UPo (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36151 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752125AbdFLPDX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:15:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:21 +0300
-Message-Id: <20170628201330.9432-23-luca@coelho.fi> (sfid-20170628_221557_904595_CC9B086D)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 22/31] iwlwifi: unify external & internal modparam names
+        Mon, 12 Jun 2017 11:03:23 -0400
+Received: by mail-lf0-f68.google.com with SMTP id x81so9673488lfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 08:03:23 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 03/10] ath10k: per target configurablity of various items
+Date: Mon, 12 Jun 2017 17:03:04 +0200
+Message-Id: <1497279791-9598-4-git-send-email-erik.stromdahl@gmail.com> (sfid-20170612_170347_992972_63267D96)
+In-Reply-To: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Added ability to set bus type and configure the max number of
+peers in the ath10k_hw_params struct.
 
-Where possible (all except for "11n_disable", which isn't valid in C)
-rename the internal names for module parameters to be the same as the
-externally visible names, to aid finding their use etc.
+With this functionality it is possible to have a different
+hw configuration depending on bus type for the same radio
+chipset.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+E.g. SDIO and USB devices using the same chipset as PCIe
+devices will potentially use different board files and perhaps
+other configuration parameters.
+
+One such parameter is the max number of peers.
+Instead of using a default value (suitable for PCIe devices)
+derived from the WMI op version, a per target value can be
+used instead.
+
+This is needed by the QCA9377 USB device in order to prevent
+the target fw to crash after HTT RX ring cfg is issued.
+
+Apparently, the QCA9377 HL device does not seem to handle the
+same amount of peers as the LL devices.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c   |  6 +++---
- drivers/net/wireless/intel/iwlwifi/dvm/lib.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c  |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/dvm/main.c      |  4 ++--
- drivers/net/wireless/intel/iwlwifi/dvm/rx.c        |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c      |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       | 12 ++++++------
- drivers/net/wireless/intel/iwlwifi/iwl-modparams.h | 16 ++++++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  6 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |  4 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  2 +-
- 15 files changed, 43 insertions(+), 43 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c    | 33 +++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath10k/core.h    |  7 -------
+ drivers/net/wireless/ath/ath10k/hw.h      | 22 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
+ 4 files changed, 49 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c
-index 937be04c6c71..482ac8fdc67b 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c
-@@ -2308,10 +2308,10 @@ static ssize_t iwl_dbgfs_fw_restart_write(struct file *file,
- 					  size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index d3bf5c4..587c013 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1631,9 +1631,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+ 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
+ 		hw_params = &ath10k_hw_params_list[i];
+ 
+-		if (hw_params->id == ar->target_version &&
+-		    hw_params->dev_id == ar->dev_id)
+-			break;
++		if (ar->is_high_latency) {
++			/* High latency devices will use different fw depending
++			 * on if it is a USB or SDIO device.
++			 */
++			if (hw_params->bus == ar->hif.bus &&
++			    hw_params->id == ar->target_version &&
++			    hw_params->dev_id == ar->dev_id)
++				break;
++		} else {
++			if (hw_params->id == ar->target_version &&
++			    hw_params->dev_id == ar->dev_id)
++				break;
++		}
+ 	}
+ 
+ 	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
+@@ -1732,6 +1742,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
+ static int ath10k_core_init_firmware_features(struct ath10k *ar)
  {
- 	struct iwl_priv *priv = file->private_data;
--	bool restart_fw = iwlwifi_mod_params.restart_fw;
-+	bool fw_restart = iwlwifi_mod_params.fw_restart;
- 	int __maybe_unused ret;
+ 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
++	int max_num_peers;
  
--	iwlwifi_mod_params.restart_fw = true;
-+	iwlwifi_mod_params.fw_restart = true;
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
+@@ -1811,7 +1822,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
  
- 	mutex_lock(&priv->mutex);
+ 	switch (fw_file->wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+-		ar->max_num_peers = TARGET_NUM_PEERS;
++		max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
+@@ -1823,10 +1834,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		if (ath10k_peer_stats_enabled(ar)) {
+-			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
++			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
+ 		} else {
+-			ar->max_num_peers = TARGET_10X_NUM_PEERS;
++			max_num_peers = TARGET_10X_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+ 		}
+ 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
+@@ -1835,7 +1846,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_TLV:
+-		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
++		max_num_peers = TARGET_TLV_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
+ 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
+@@ -1846,7 +1857,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+-		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
++		max_num_peers = TARGET_10_4_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
+ 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
+ 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
+@@ -1863,10 +1874,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
++	default:
+ 		WARN_ON(1);
+ 		return -EINVAL;
+ 	}
  
-@@ -2320,7 +2320,7 @@ static ssize_t iwl_dbgfs_fw_restart_write(struct file *file,
- 
- 	mutex_unlock(&priv->mutex);
- 
--	iwlwifi_mod_params.restart_fw = restart_fw;
-+	iwlwifi_mod_params.fw_restart = fw_restart;
- 
- 	return count;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
-index 74e52f7c5aa1..2b6ffbc46fa5 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
-@@ -1157,7 +1157,7 @@ int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan)
- 	if (ret)
- 		goto out;
- 
--	if (!iwlwifi_mod_params.sw_crypto) {
-+	if (!iwlwifi_mod_params.swcrypto) {
- 		/* mark all keys clear */
- 		priv->ucode_key_table = 0;
- 		ctx->key_mapping_keys = 0;
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-index 444c74371929..82caae02dd09 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-@@ -138,7 +138,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	 * packets, so enabling it with software crypto isn't safe)
++	if (ar->hw_params.max_num_peers)
++		ar->max_num_peers = ar->hw_params.max_num_peers;
++	else
++		ar->max_num_peers = max_num_peers;
++
+ 	/* Backwards compatibility for firmwares without
+ 	 * ATH10K_FW_IE_HTT_OP_VERSION.
  	 */
- 	if (priv->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_MFP &&
--	    !iwlwifi_mod_params.sw_crypto)
-+	    !iwlwifi_mod_params.swcrypto)
- 		ieee80211_hw_set(hw, MFP_CAPABLE);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 90069b8..cdac923 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -88,13 +88,6 @@
  
- 	hw->sta_data_size = sizeof(struct iwl_station_priv);
-@@ -171,7 +171,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 					     WIPHY_WOWLAN_DISCONNECT |
- 					     WIPHY_WOWLAN_EAP_IDENTITY_REQ |
- 					     WIPHY_WOWLAN_RFKILL_RELEASE;
--		if (!iwlwifi_mod_params.sw_crypto)
-+		if (!iwlwifi_mod_params.swcrypto)
- 			priv->wowlan_support.flags |=
- 				WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
- 				WIPHY_WOWLAN_GTK_REKEY_FAILURE;
-@@ -348,7 +348,7 @@ static void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
+ struct ath10k;
+ 
+-enum ath10k_bus {
+-	ATH10K_BUS_PCI,
+-	ATH10K_BUS_AHB,
+-	ATH10K_BUS_SDIO,
+-	ATH10K_BUS_USB,
+-};
+-
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
  {
- 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	switch (bus) {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index d342728..160377aa 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -20,6 +20,13 @@
  
--	if (iwlwifi_mod_params.sw_crypto)
-+	if (iwlwifi_mod_params.swcrypto)
- 		return;
+ #include "targaddrs.h"
  
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
-@@ -624,7 +624,7 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++enum ath10k_bus {
++	ATH10K_BUS_PCI,
++	ATH10K_BUS_AHB,
++	ATH10K_BUS_SDIO,
++	ATH10K_BUS_USB,
++};
++
+ #define ATH10K_FW_DIR			"ath10k"
  
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ #define QCA988X_2_0_DEVICE_ID   (0x003c)
+@@ -454,6 +461,18 @@ struct ath10k_hw_params {
  
--	if (iwlwifi_mod_params.sw_crypto) {
-+	if (iwlwifi_mod_params.swcrypto) {
- 		IWL_DEBUG_MAC80211(priv, "leave - hwcrypto disabled\n");
- 		return -EOPNOTSUPP;
- 	}
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-index 4c8f9f1a5532..2acd94da9efe 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-@@ -1371,7 +1371,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 
- 	/* is antenna coupling more than 35dB ? */
- 	priv->bt_ant_couple_ok =
--		(iwlwifi_mod_params.ant_coupling >
-+		(iwlwifi_mod_params.antenna_coupling >
- 			IWL_BT_ANTENNA_COUPLING_THRESHOLD) ?
- 			true : false;
- 
-@@ -1958,7 +1958,7 @@ static void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
- 	}
- 
- 	if (!test_bit(STATUS_EXIT_PENDING, &priv->status)) {
--		if (iwlwifi_mod_params.restart_fw) {
-+		if (iwlwifi_mod_params.fw_restart) {
- 			IWL_DEBUG_FW_ERRORS(priv,
- 				  "Restarting adapter due to uCode error.\n");
- 			queue_work(priv->workqueue, &priv->restart);
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-index adfd6307edca..d37e88104229 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rx.c
-@@ -639,7 +639,7 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
- 	}
- 
- 	/* In case of HW accelerated crypto and bad decryption, drop */
--	if (!iwlwifi_mod_params.sw_crypto &&
-+	if (!iwlwifi_mod_params.swcrypto &&
- 	    iwlagn_set_decrypted_flag(priv, hdr, ampdu_status, stats))
- 		return;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-index 087e579854ab..8f3e5586eda9 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-@@ -1120,7 +1120,7 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		return 0;
- 	}
- 
--	iwl_set_rxon_hwcrypto(priv, ctx, !iwlwifi_mod_params.sw_crypto);
-+	iwl_set_rxon_hwcrypto(priv, ctx, !iwlwifi_mod_params.swcrypto);
- 
- 	IWL_DEBUG_INFO(priv,
- 		       "Going to commit RXON\n"
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index c8d451474b64..b5ebd0fcfbf6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1615,11 +1615,11 @@ void iwl_drv_stop(struct iwl_drv *drv)
- 
- /* shared module parameters */
- struct iwl_mod_params iwlwifi_mod_params = {
--	.restart_fw = true,
-+	.fw_restart = true,
- 	.bt_coex_active = true,
- 	.power_level = IWL_POWER_INDEX_1,
- 	.d0i3_disable = true,
--	.d0i3_entry_delay = 1000,
-+	.d0i3_timeout = 1000,
- 	.uapsd_disable = IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT,
- 	/* the rest are 0 by default */
+ 	/* Number of bytes to be discarded for each FFT sample */
+ 	int spectral_bin_discard;
++
++	/* max_num_peers can be used to override the setting derived from
++	 * the WMI op version. If this value is non-zero, it will always
++	 * be used instead of the default value derived from the WMI op
++	 * version.
++	 */
++	int max_num_peers;
++
++	/* Specifies whether or not the device is a high latency device */
++	bool is_high_latency;
++
++	enum ath10k_bus bus;
  };
-@@ -1711,7 +1711,7 @@ module_param_named(debug, iwlwifi_mod_params.debug_level, uint,
- MODULE_PARM_DESC(debug, "debug output mask");
- #endif
  
--module_param_named(swcrypto, iwlwifi_mod_params.sw_crypto, int, S_IRUGO);
-+module_param_named(swcrypto, iwlwifi_mod_params.swcrypto, int, S_IRUGO);
- MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
- module_param_named(11n_disable, iwlwifi_mod_params.disable_11n, uint, S_IRUGO);
- MODULE_PARM_DESC(11n_disable,
-@@ -1720,10 +1720,10 @@ module_param_named(amsdu_size, iwlwifi_mod_params.amsdu_size,
- 		   int, S_IRUGO);
- MODULE_PARM_DESC(amsdu_size,
- 		 "amsdu size 0: 12K for multi Rx queue devices, 4K for other devices 1:4K 2:8K 3:12K (default 0)");
--module_param_named(fw_restart, iwlwifi_mod_params.restart_fw, bool, S_IRUGO);
-+module_param_named(fw_restart, iwlwifi_mod_params.fw_restart, bool, S_IRUGO);
- MODULE_PARM_DESC(fw_restart, "restart firmware in case of error (default true)");
+ struct htt_rx_desc;
+@@ -564,6 +583,9 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
  
--module_param_named(antenna_coupling, iwlwifi_mod_params.ant_coupling,
-+module_param_named(antenna_coupling, iwlwifi_mod_params.antenna_coupling,
- 		   int, S_IRUGO);
- MODULE_PARM_DESC(antenna_coupling,
- 		 "specify antenna coupling in dB (default: 0 dB)");
-@@ -1782,7 +1782,7 @@ module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, S_IRUGO);
- MODULE_PARM_DESC(fw_monitor,
- 		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
++/* Target specific defines for QCA9377 high latency firmware */
++#define TARGET_QCA9377_HL_NUM_PEERS		15
++
+ /* Diagnostic Window */
+ #define CE_DIAG_PIPE	7
  
--module_param_named(d0i3_timeout, iwlwifi_mod_params.d0i3_entry_delay,
-+module_param_named(d0i3_timeout, iwlwifi_mod_params.d0i3_timeout,
- 		   uint, S_IRUGO);
- MODULE_PARM_DESC(d0i3_timeout, "Timeout to D0i3 entry when idle (ms)");
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index f918802..754d445 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1406,7 +1406,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-index 0bd85e58cc2c..a41c46e63eb1 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-@@ -102,32 +102,32 @@ enum iwl_uapsd_disable {
-  *
-  * Holds the module parameters
-  *
-- * @sw_crypto: using hardware encryption, default = 0
-+ * @swcrypto: using hardware encryption, default = 0
-  * @disable_11n: disable 11n capabilities, default = 0,
-  *	use IWL_[DIS,EN]ABLE_HT_* constants
-  * @amsdu_size: See &enum iwl_amsdu_size.
-- * @restart_fw: restart firmware, default = 1
-+ * @fw_restart: restart firmware, default = 1
-  * @bt_coex_active: enable bt coex, default = true
-  * @led_mode: system default, default = 0
-  * @power_save: enable power save, default = false
-  * @power_level: power level, default = 1
-  * @debug_level: levels are IWL_DL_*
-- * @ant_coupling: antenna coupling in dB, default = 0
-+ * @antenna_coupling: antenna coupling in dB, default = 0
-  * @nvm_file: specifies a external NVM file
-  * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
-  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
-  * @d0i3_disable: disable d0i3, default = 1,
-- * @d0i3_entry_delay: time to wait after no refs are taken before
-+ * @d0i3_timeout: time to wait after no refs are taken before
-  *	entering D0i3 (in msecs)
-  * @lar_disable: disable LAR (regulatory), default = 0
-  * @fw_monitor: allow to use firmware monitor
-  * @disable_11ac: disable VHT capabilities, default = false.
-  */
- struct iwl_mod_params {
--	int sw_crypto;
-+	int swcrypto;
- 	unsigned int disable_11n;
- 	int amsdu_size;
--	bool restart_fw;
-+	bool fw_restart;
- 	bool bt_coex_active;
- 	int led_mode;
- 	bool power_save;
-@@ -135,11 +135,11 @@ struct iwl_mod_params {
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	u32 debug_level;
- #endif
--	int ant_coupling;
-+	int antenna_coupling;
- 	char *nvm_file;
- 	u32 uapsd_disable;
- 	bool d0i3_disable;
--	unsigned int d0i3_entry_delay;
-+	unsigned int d0i3_timeout;
- 	bool lar_disable;
- 	bool fw_monitor;
- 	bool disable_11ac;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 0028325fa22d..a37c3e573cac 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -83,7 +83,7 @@ void iwl_mvm_set_rekey_data(struct ieee80211_hw *hw,
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+-	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
++	cfg->num_peers = __cpu_to_le32(ar->max_num_peers);
  
--	if (iwlwifi_mod_params.sw_crypto)
-+	if (iwlwifi_mod_params.swcrypto)
- 		return;
- 
- 	mutex_lock(&mvm->mutex);
-@@ -1054,7 +1054,7 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
- 			return ret;
+ 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
+ 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+@@ -1417,7 +1417,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
  	}
  
--	if (!iwlwifi_mod_params.sw_crypto) {
-+	if (!iwlwifi_mod_params.swcrypto) {
- 		/*
- 		 * This needs to be unlocked due to lock ordering
- 		 * constraints. Since we're in the suspend path
-@@ -1280,8 +1280,8 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 
- 		if (!unified_image) {
- 			iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
--			if (mvm->restart_fw > 0) {
--				mvm->restart_fw--;
-+			if (mvm->fw_restart > 0) {
-+				mvm->fw_restart--;
- 				ieee80211_restart_hw(mvm->hw);
- 			}
- 		}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index f87a43dad086..78dde0a8d358 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -869,8 +869,8 @@ static ssize_t iwl_dbgfs_fw_restart_write(struct iwl_mvm *mvm, char *buf,
- 	mutex_lock(&mvm->mutex);
- 
- 	/* allow one more restart that we're provoking here */
--	if (mvm->restart_fw >= 0)
--		mvm->restart_fw++;
-+	if (mvm->fw_restart >= 0)
-+		mvm->fw_restart++;
- 
- 	/* take the return value to make compiler happy - it will fail anyway */
- 	ret = iwl_mvm_send_cmd_pdu(mvm, REPLY_ERROR, 0, 0, NULL);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index b98978d6cb21..1cfb4c72199a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -493,7 +493,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	 * firmware will interpret some mgmt packets, so enabling it
- 	 * with software crypto isn't safe).
- 	 */
--	if (!iwlwifi_mod_params.sw_crypto) {
-+	if (!iwlwifi_mod_params.swcrypto) {
- 		ieee80211_hw_set(hw, MFP_CAPABLE);
- 		mvm->ciphers[hw->wiphy->n_cipher_suites] =
- 			WLAN_CIPHER_SUITE_AES_CMAC;
-@@ -687,7 +687,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 				     WIPHY_WOWLAN_EAP_IDENTITY_REQ |
- 				     WIPHY_WOWLAN_RFKILL_RELEASE |
- 				     WIPHY_WOWLAN_NET_DETECT;
--		if (!iwlwifi_mod_params.sw_crypto)
-+		if (!iwlwifi_mod_params.swcrypto)
- 			mvm->wowlan.flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
- 					     WIPHY_WOWLAN_GTK_REKEY_FAILURE |
- 					     WIPHY_WOWLAN_4WAY_HANDSHAKE;
-@@ -2888,7 +2888,7 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 	int ret;
- 	u8 key_offset;
- 
--	if (iwlwifi_mod_params.sw_crypto) {
-+	if (iwlwifi_mod_params.swcrypto) {
- 		IWL_DEBUG_MAC80211(mvm, "leave - hwcrypto disabled\n");
- 		return -EOPNOTSUPP;
- 	}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index f2f1e04f471d..e1f7d273d0bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -921,7 +921,7 @@ struct iwl_mvm {
- 	u8 vif_count;
- 
- 	/* -1 for always, 0 for never, >0 for that many times */
--	s8 restart_fw;
-+	s8 fw_restart;
- 	u8 fw_dbg_conf;
- 	struct delayed_work fw_dump_wk;
- 	const struct iwl_mvm_dump_desc *fw_dump_desc;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 695d1aead89f..a0907762b0bf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -594,7 +594,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 			goto out_free;
- 	}
- 
--	mvm->restart_fw = iwlwifi_mod_params.restart_fw ? -1 : 0;
-+	mvm->fw_restart = iwlwifi_mod_params.fw_restart ? -1 : 0;
- 
- 	if (!iwl_mvm_is_dqa_supported(mvm)) {
- 		mvm->last_agg_queue = mvm->cfg->base_params->num_of_queues - 1;
-@@ -1225,7 +1225,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 	 * If WoWLAN fw asserted, don't restart either, mac80211
- 	 * can't recover this since we're already half suspended.
- 	 */
--	if (!mvm->restart_fw && fw_error) {
-+	if (!mvm->fw_restart && fw_error) {
- 		iwl_mvm_fw_dbg_collect_desc(mvm, &iwl_mvm_dump_desc_assert,
- 					    NULL);
- 	} else if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART,
-@@ -1258,8 +1258,8 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 		/* don't let the transport/FW power down */
- 		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
- 
--		if (fw_error && mvm->restart_fw > 0)
--			mvm->restart_fw--;
-+		if (fw_error && mvm->fw_restart > 0)
-+			mvm->fw_restart--;
- 		ieee80211_restart_hw(mvm->hw);
- 	}
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index d48c2ecc0893..35e813bdfbe5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1695,7 +1695,7 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 			mvm->scan_uid_status[uid] = 0;
- 		}
- 		uid = iwl_mvm_scan_uid_by_status(mvm, IWL_MVM_SCAN_SCHED);
--		if (uid >= 0 && !mvm->restart_fw) {
-+		if (uid >= 0 && !mvm->fw_restart) {
- 			ieee80211_sched_scan_stopped(mvm->hw);
- 			mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 			mvm->scan_uid_status[uid] = 0;
-@@ -1725,7 +1725,7 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 		 * restarted.
- 		 */
- 		if ((mvm->scan_status & IWL_MVM_SCAN_SCHED) &&
--		    !mvm->restart_fw) {
-+		    !mvm->fw_restart) {
- 			ieee80211_sched_scan_stopped(mvm->hw);
- 			mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 		}
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 7bf765ba5235..3ca0f374c081 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -723,7 +723,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		pm_runtime_set_active(&pdev->dev);
- 
- 		pm_runtime_set_autosuspend_delay(&pdev->dev,
--					 iwlwifi_mod_params.d0i3_entry_delay);
-+					 iwlwifi_mod_params.d0i3_timeout);
- 		pm_runtime_use_autosuspend(&pdev->dev);
- 
- 		/* We are not supposed to call pm_runtime_allow() by
+ 	cfg->num_peer_keys = __cpu_to_le32(2);
+-	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
++	cfg->num_tids = __cpu_to_le32(ar->max_num_peers * 2);
+ 	cfg->ast_skid_limit = __cpu_to_le32(0x10);
+ 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
+ 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
 -- 
-2.11.0
+2.7.4
