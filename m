@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0042.outbound.protection.outlook.com ([104.47.42.42]:63764
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751690AbdF2QtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 12:49:17 -0400
-Date: Thu, 29 Jun 2017 19:49:04 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33899 "EHLO
+        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752156AbdFMLjB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 07:39:01 -0400
+Received: by mail-lf0-f48.google.com with SMTP id v20so68720284lfa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 04:39:00 -0700 (PDT)
+Subject: Re: [for-4.12] brcmfmac: fix brcmf_fws_add_interface() for USB
+ devices
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: Re: [PATCH 8/8] qtnfmac: implement scan timeout
-Message-ID: <20170629164903.adst7rihexlrb643@bars> (sfid-20170629_184922_258889_54516305)
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
- <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com>
- <87o9t949yu.fsf@purkki.adurom.net>
+Cc: linux-wireless@vger.kernel.org
+References: <1497268595-4836-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170613061312.8B39C607C4@smtp.codeaurora.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <611a8144-0adb-87d2-a5c0-8cc88bc5f1c6@broadcom.com> (sfid-20170613_133904_728498_06CD8C3B)
+Date: Tue, 13 Jun 2017 13:38:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87o9t949yu.fsf@purkki.adurom.net>
+In-Reply-To: <20170613061312.8B39C607C4@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 27, 2017 at 08:27:37PM +0300, Kalle Valo wrote:
-> 
-> External Email
-> 
-> 
-> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
-> 
-> > Userspace tools may hang on scan in the case when scan completion event
-> > is not returned by firmware. This patch implements the scan timeout
-> > to avoid such situation.
-> >
-> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> 
-> [...]
-> 
-> > +static __always_inline void qtnf_wmac_lock(struct qtnf_wmac *mac)
-> > +{
-> > +     mutex_lock(&mac->mac_lock);
-> > +}
-> > +
-> > +static __always_inline void qtnf_wmac_unlock(struct qtnf_wmac *mac)
-> > +{
-> > +     mutex_unlock(&mac->mac_lock);
-> > +}
-> 
-> Why? These look pointless to me.
 
-Could you please clarify a bit. You mean, locking/unlocking directly instead of
-using inline wrappers ?
+
+On 13-06-17 08:13, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> 
+>> USB devices rely on queuing functionality provided by the fwsignal
+>> module regardless the mode fwsignal is operating in. For this some
+>> data structure needs to be reserved which is tied to the interface,
+>> which is done by brcmf_fws_add_interface(). However, it checks the
+>> mode. Replace that by checking result from brcmf_fws_queue_skbs().
+
+Ok. Please add:
+"""
+Otherwise the driver will crash in a null pointer dereference when data
+is transmitted on the interface.
+"""
+
+Regards,
+Arend
+
+>> Fixes: fc0471e3e884 ("brcmfmac: ignore interfaces when fwsignal is disabled")
+>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> 
+> Same here, a short description of the bug would be nice.
+> 
