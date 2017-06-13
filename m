@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-14.163.com ([220.181.12.14]:47954 "EHLO m12-14.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751052AbdFACen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 22:34:43 -0400
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: pizza@shaftnet.org, kvalo@codeaurora.org
+Received: from smtp.codeaurora.org ([198.145.29.96]:47952 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752507AbdFMHHL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 03:07:11 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: wlcore: spi: remove unnecessary variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170609032430.GA7432@embeddedgus>
+References: <20170609032430.GA7432@embeddedgus>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] cw1200: Fix a sleep-in-atomic bug in cw1200_tx_confirm_cb and cw1200_cqm_bssloss_sm
-Date: Thu,  1 Jun 2017 10:36:14 +0800
-Message-Id: <1496284574-11056-1-git-send-email-baijiaju1990@163.com> (sfid-20170601_043507_929544_DB0B8D50)
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Message-Id: <20170613070710.ED647601D9@smtp.codeaurora.org> (sfid-20170613_090810_808879_E32C2858)
+Date: Tue, 13 Jun 2017 07:07:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver may sleep under a spin lock, and the function call path is:
-cw1200_tx_confirm_cb (acquire the lock by spin_lock)
-  __cw1200_cqm_bssloss_sm
-    cancel_work_sync --> may sleep
+"Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
 
-cw1200_cqm_bssloss_sm
-  __cw1200_cqm_bssloss_sm
-    cancel_work_sync --> may sleep
+> Remove unnecessary variable and refactor the code.
+> 
+> Addresses-Coverity-ID: 1365000
+> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 
-To fix it, the lock is released before cancel_work_sync, and the lock 
-is acquired again after this function.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/st/cw1200/sta.c |    2 ++
- 1 file changed, 2 insertions(+)
+c48c281e7236 wlcore: spi: remove unnecessary variable
 
-diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
-index a522248..d5f7698 100644
---- a/drivers/net/wireless/st/cw1200/sta.c
-+++ b/drivers/net/wireless/st/cw1200/sta.c
-@@ -154,7 +154,9 @@ void __cw1200_cqm_bssloss_sm(struct cw1200_common *priv,
- 	int tx = 0;
- 
- 	priv->delayed_link_loss = 0;
-+	spin_unlock(&priv->bss_loss_lock);
- 	cancel_work_sync(&priv->bss_params_work);
-+	spin_lock(&priv->bss_loss_lock);
- 
- 	pr_debug("[STA] CQM BSSLOSS_SM: state: %d init %d good %d bad: %d txlock: %d uj: %d\n",
- 		 priv->bss_loss_state,
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/9777073/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
