@@ -1,95 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43278 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751694AbdFIJD6 (ORCPT
+Received: from gateway31.websitewelcome.com ([192.185.143.36]:39453 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752615AbdFMUnL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 05:03:58 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 07/11] wireless: ipw2x00: convert to use DRIVER_ATTR_RW
-Date: Fri,  9 Jun 2017 11:03:10 +0200
-Message-Id: <20170609090314.13991-7-gregkh@linuxfoundation.org> (sfid-20170609_110743_136723_1A291C51)
-In-Reply-To: <20170609090314.13991-1-gregkh@linuxfoundation.org>
-References: <20170609090314.13991-1-gregkh@linuxfoundation.org>
+        Tue, 13 Jun 2017 16:43:11 -0400
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id 6A4D8124BE0B
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 15:43:03 -0500 (CDT)
+Date: Tue, 13 Jun 2017 15:42:59 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] rtlwifi: rtl8821ae: remove unused variable
+Message-ID: <20170613204259.GA9189@embeddedgus> (sfid-20170613_224337_148122_BAB0857E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are trying to get rid of DRIVER_ATTR(), and the ipw2x00 driver's
-attributes can be trivially changed to use DRIVER_ATTR_RW().
+Remove unused variable rtlhal.
 
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <netdev@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Addresses-Coverity-ID: 1248810
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 8 +++-----
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++-----
- 2 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index f922859acf40..aaaca4d08e2b 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -4160,12 +4160,12 @@ static ssize_t show_bssinfo(struct device *d, struct device_attribute *attr,
- static DEVICE_ATTR(bssinfo, S_IRUGO, show_bssinfo, NULL);
- 
- #ifdef CONFIG_IPW2100_DEBUG
--static ssize_t show_debug_level(struct device_driver *d, char *buf)
-+static ssize_t debug_level_show(struct device_driver *d, char *buf)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 2bc6bac..d158e34 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -1360,7 +1360,6 @@ static bool _rtl8821ae_reset_pcie_interface_dma(struct ieee80211_hw *hw,
+ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
  {
- 	return sprintf(buf, "0x%08X\n", ipw2100_debug_level);
- }
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
+ 	u8 fw_reason = 0;
+ 	struct timeval ts;
+@@ -1372,8 +1371,6 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
  
--static ssize_t store_debug_level(struct device_driver *d,
-+static ssize_t debug_level_store(struct device_driver *d,
- 				 const char *buf, size_t count)
- {
- 	u32 val;
-@@ -4179,9 +4179,7 @@ static ssize_t store_debug_level(struct device_driver *d,
+ 	ppsc->wakeup_reason = 0;
  
- 	return strnlen(buf, count);
- }
+-	rtlhal->last_suspend_sec = ts.tv_sec;
 -
--static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO, show_debug_level,
--		   store_debug_level);
-+static DRIVER_ATTR_RW(debug_level);
- #endif				/* CONFIG_IPW2100_DEBUG */
- 
- static ssize_t show_fatal_error(struct device *d,
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index bbc579b647b6..5b79e2ec3a16 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -1195,12 +1195,12 @@ static void ipw_led_shutdown(struct ipw_priv *priv)
-  *
-  * See the level definitions in ipw for details.
-  */
--static ssize_t show_debug_level(struct device_driver *d, char *buf)
-+static ssize_t debug_level_show(struct device_driver *d, char *buf)
- {
- 	return sprintf(buf, "0x%08X\n", ipw_debug_level);
- }
- 
--static ssize_t store_debug_level(struct device_driver *d, const char *buf,
-+static ssize_t debug_level_store(struct device_driver *d, const char *buf,
- 				 size_t count)
- {
- 	char *p = (char *)buf;
-@@ -1221,9 +1221,7 @@ static ssize_t store_debug_level(struct device_driver *d, const char *buf,
- 
- 	return strnlen(buf, count);
- }
--
--static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
--		   show_debug_level, store_debug_level);
-+static DRIVER_ATTR_RW(debug_level);
- 
- static inline u32 ipw_get_event_log_len(struct ipw_priv *priv)
- {
+ 	switch (fw_reason) {
+ 	case FW_WOW_V2_PTK_UPDATE_EVENT:
+ 		ppsc->wakeup_reason = WOL_REASON_PTK_UPDATE;
 -- 
-2.13.1
+2.5.0
