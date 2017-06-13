@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48520 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:45102 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751551AbdF1SS2 (ORCPT
+        with ESMTP id S1752656AbdFMHBX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 14:18:28 -0400
+        Tue, 13 Jun 2017 03:01:23 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: libertas: Fix lbs_prb_rsp_limit_set()
+Subject: Re: [-next] mwifiex: make function mwifiex_ret_pkt_aggr_ctrl static
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170623151738.qxncismrvd4yzzfr@mwanda>
-References: <20170623151738.qxncismrvd4yzzfr@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jingoo Han <jg1.han@samsung.com>, libertas-dev@lists.infradead.org,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20170628181822.742BF60AD6@smtp.codeaurora.org> (sfid-20170628_201841_215195_344DCFFE)
-Date: Wed, 28 Jun 2017 18:18:22 +0000 (UTC)
+In-Reply-To: <20170602085639.29338-1-colin.king@canonical.com>
+References: <20170602085639.29338-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170613070123.14C71607E4@smtp.codeaurora.org> (sfid-20170613_090334_550132_3B600847)
+Date: Tue, 13 Jun 2017 07:01:23 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Colin Ian King <colin.king@canonical.com> wrote:
 
-> The kstrtoul() test was reversed so this always returned -ENOTSUPP.
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Fixes: 27d7f47756f4 ("net: wireless: replace strict_strtoul() with kstrtoul()")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Reviewed-by: James Cameron <quozl@laptop.org>
+> function mwifiex_ret_pkt_aggr_ctrl can be made static as it does not
+> need to be in global scope.
 > 
-> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-> index eeeb892219aa..37ace5cb309d 100644
-> --- a/drivers/net/wireless/marvell/libertas/mesh.c
-> +++ b/drivers/net/wireless/marvell/libertas/mesh.c
-> @@ -233,8 +233,9 @@ static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
->  	memset(&mesh_access, 0, sizeof(mesh_access));
->  	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
->  
-> -	if (!kstrtoul(buf, 10, &retry_limit))
-> -		return -ENOTSUPP;
-> +	ret = kstrtoul(buf, 10, &retry_limit);
-> +	if (ret)
-> +		return ret;
->  	if (retry_limit > 15)
->  		return -ENOTSUPP;
+> Cleans up sparse warning: "symbol 'mwifiex_ret_pkt_aggr_ctrl' was not
+> declared. Should it be static?"
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-69551f5f370c libertas: Fix lbs_prb_rsp_limit_set()
+292c333300ec mwifiex: make function mwifiex_ret_pkt_aggr_ctrl static
 
 -- 
-https://patchwork.kernel.org/patch/9806775/
+https://patchwork.kernel.org/patch/9761985/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
