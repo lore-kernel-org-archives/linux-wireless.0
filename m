@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:36218 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751895AbdFMKXg (ORCPT
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:34296 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751758AbdFMQob (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 06:23:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170613055448.C0CD36075B@smtp.codeaurora.org>
-References: <20170523180733.26276-1-enric.balletbo@collabora.com> <20170613055448.C0CD36075B@smtp.codeaurora.org>
-From: Enric Balletbo Serra <eballetbo@gmail.com>
-Date: Tue, 13 Jun 2017 12:23:35 +0200
-Message-ID: <CAFqH_53v341QhUewFR5aQdZE1bPo5J5TY0G6zkXU9y0c5VEz1g@mail.gmail.com> (sfid-20170613_122407_393989_34BFA811)
-Subject: Re: brcmfmac: Fix kernel oops on resume when request firmware fails.
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 13 Jun 2017 12:44:31 -0400
+Received: by mail-wr0-f170.google.com with SMTP id 77so4226356wrb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 09:44:31 -0700 (PDT)
+From: Mateusz Jurczyk <mjurczyk@google.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] nfc: Add sockaddr length checks before accessing sa_family in bind handlers
+Date: Tue, 13 Jun 2017 18:44:28 +0200
+Message-Id: <20170613164428.3643-1-mjurczyk@google.com> (sfid-20170613_184449_723582_7E25B10D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+Verify that the caller-provided sockaddr structure is large enough to
+contain the sa_family field, before accessing it in bind() handlers of the
+AF_NFC socket. Since the syscall doesn't enforce a minimum size of the
+corresponding memory region, very short sockaddrs (zero or one byte long)
+result in operating on uninitialized memory while referencing .sa_family.
 
-2017-06-13 7:54 GMT+02:00 Kalle Valo <kvalo@codeaurora.org>:
-> Enric Balletbo i Serra <enric.balletbo@collabora.com> wrote:
->
->> When request firmware fails, brcmf_ops_sdio_remove is being called and
->> brcmf_bus freed. In such circumstancies if you do a suspend/resume cycle
->> the kernel hangs on resume due a NULL pointer dereference in resume
->> function.
->>
->> Steps to reproduce the problem:
->>  - modprobe brcmfmac without the firmware
->>      brcmfmac mmc1:0001:1: Direct firmware load for brcm/brcmfmac4354-sdio.bin
->>      failed with error -2
->>  - do a suspend/resume cycle (echo mem > /sys/power/state)
->>
->> Protect against the NULL pointer derefence by checking if dev_get_drvdata
->> returned a valid pointer.
->>
->> Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
->
-> My understanding is that there's a new version of this patch which fixes
-> the issue. If not, let me know.
->
-> Patch set to Superseded.
->
+Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
+---
+ net/nfc/llcp_sock.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Yes there are these patch series [1] that fixes the issue, I guess
-Arend is working on a v2 to fix a small issue we found.
-
-[1] https://www.spinics.net/lists/linux-wireless/msg162762.html
-
-> --
-> https://patchwork.kernel.org/patch/9743159/
->
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
->
-
-Regards,
- Enric
+diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+index 2ffb18e73df6..80cf35ed320a 100644
+--- a/net/nfc/llcp_sock.c
++++ b/net/nfc/llcp_sock.c
+@@ -77,7 +77,8 @@ static int llcp_sock_bind(struct socket *sock, struct sockaddr *addr, int alen)
+ 	struct sockaddr_nfc_llcp llcp_addr;
+ 	int len, ret = 0;
+ 
+-	if (!addr || addr->sa_family != AF_NFC)
++	if (!addr || alen < offsetofend(struct sockaddr, sa_family) ||
++	    addr->sa_family != AF_NFC)
+ 		return -EINVAL;
+ 
+ 	pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
+@@ -151,7 +152,8 @@ static int llcp_raw_sock_bind(struct socket *sock, struct sockaddr *addr,
+ 	struct sockaddr_nfc_llcp llcp_addr;
+ 	int len, ret = 0;
+ 
+-	if (!addr || addr->sa_family != AF_NFC)
++	if (!addr || alen < offsetofend(struct sockaddr, sa_family) ||
++	    addr->sa_family != AF_NFC)
+ 		return -EINVAL;
+ 
+ 	pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
+-- 
+2.13.1.508.gb3defc5cc-goog
