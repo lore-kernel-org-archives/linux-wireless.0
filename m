@@ -1,62 +1,335 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway23.websitewelcome.com ([192.185.50.185]:18391 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751426AbdFZXGW (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:57329 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752473AbdFMKIq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 19:06:22 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 28CCD39905
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jun 2017 18:06:20 -0500 (CDT)
-Date: Mon, 26 Jun 2017 18:06:19 -0500
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] ti: wl18xx: add checks on wl18xx_top_reg_write() return value
-Message-ID: <20170626230619.GA14831@embeddedgus> (sfid-20170627_010643_890077_9B5BFD06)
+        Tue, 13 Jun 2017 06:08:46 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <gregkh@linuxfoundation.org>
+CC: <Ganesh.Krishna@microchip.com>, <linux-wireless@vger.kernel.org>,
+        <arend.vanspriel@broadcom.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH v5] staging: wilc1000: New cfg packet format in handle_set_wfi_drv_handler
+Date: Tue, 13 Jun 2017 15:38:27 +0530
+Message-ID: <1497348507-3193-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170613_120850_658056_62A17DCA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check return value from call to wl18xx_top_reg_write(),
-so in case of error jump to goto label out and return.
+Change the config packet format used in handle_set_wfi_drv_handler()
+to align the host driver with the new format used in the wilc firmware.
 
-Also, remove unnecessary value check before goto label out.
+The change updates the format in which the host driver provides the
+firmware with the drv_handler index and also uses two new
+fields viz. "mode" and 'name" in the config packet along with this index
+to directly provide details about the interface and its mode to the
+firmware instead of having multiple if-else statements in the host driver
+to decide which interface to configure.
 
-Addresses-Coverity-ID: 1226938
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+This change requires users to move to the newer version of the wilc
+firmware(14.02 or higher) available on the vendor tree on github or on the
+linux-firmware project.
+
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Change in v2: Fix build warning
+Change in v3: Address review comments from v2
+Change in v4:
+- Address review comments from v3.
+- The new firmwaie is available as part of the commit below
+http://lkml.kernel.org/r/1496479001-2733-1-git-send-email-aditya.shankar@microchip.com
+Change in v5: remove repeated code
+- Will update the firmware name as part of a separate patch.
+---
+ drivers/staging/wilc1000/host_interface.c         | 63 +++++++++++++++++------
+ drivers/staging/wilc1000/host_interface.h         |  9 +++-
+ drivers/staging/wilc1000/linux_wlan.c             | 37 ++++---------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
+ drivers/staging/wilc1000/wilc_wlan_if.h           |  2 +-
+ 6 files changed, 67 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index d1aa3ee..0cf3b40 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -793,9 +793,13 @@ static int wl18xx_set_clk(struct wl1271 *wl)
- 		ret = wl18xx_top_reg_write(wl, PLLSH_WCS_PLL_P_FACTOR_CFG_2,
- 					(wl18xx_clk_table[clk_freq].p >> 16) &
- 					PLLSH_WCS_PLL_P_FACTOR_CFG_2_MASK);
-+		if (ret < 0)
-+			goto out;
- 	} else {
- 		ret = wl18xx_top_reg_write(wl, PLLSH_WCS_PLL_SWALLOW_EN,
- 					   PLLSH_WCS_PLL_SWALLOW_EN_VAL2);
-+		if (ret < 0)
-+			goto out;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c8e3229..be806fc 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -329,25 +329,50 @@ static void handle_set_channel(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Failed to set channel\n");
+ }
+ 
+-static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
+-				       struct drv_handler *hif_drv_handler)
++static int handle_set_wfi_drv_handler(struct wilc_vif *vif,
++				      struct drv_handler *hif_drv_handler)
+ {
+ 	int ret = 0;
+ 	struct wid wid;
++	u8 *currbyte, *buffer;
++	struct host_if_drv *hif_drv = NULL;
++
++	if (!vif->hif_drv)
++		return -EINVAL;
++
++	if (!hif_drv_handler)
++		return -EINVAL;
++
++	hif_drv	= vif->hif_drv;
++
++	buffer = kzalloc(DRV_HANDLER_SIZE, GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
++
++	currbyte = buffer;
++	*currbyte = hif_drv->driver_handler_id & DRV_HANDLER_MASK;
++	currbyte++;
++	*currbyte = (u32)0 & DRV_HANDLER_MASK;
++	currbyte++;
++	*currbyte = (u32)0 & DRV_HANDLER_MASK;
++	currbyte++;
++	*currbyte = (u32)0 & DRV_HANDLER_MASK;
++	currbyte++;
++	*currbyte = (hif_drv_handler->name | (hif_drv_handler->mode << 1));
+ 
+ 	wid.id = (u16)WID_SET_DRV_HANDLER;
+ 	wid.type = WID_STR;
+-	wid.val = (s8 *)hif_drv_handler;
+-	wid.size = sizeof(*hif_drv_handler);
++	wid.val = (s8 *)buffer;
++	wid.size = DRV_HANDLER_SIZE;
+ 
+ 	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-				   hif_drv_handler->handler);
+-
+-	if (!hif_drv_handler->handler)
+-		complete(&hif_driver_comp);
+-
++				   hif_drv->driver_handler_id);
+ 	if (ret)
+ 		netdev_err(vif->ndev, "Failed to set driver handler\n");
++
++	complete(&hif_driver_comp);
++	kfree(buffer);
++	return ret;
+ }
+ 
+ static void handle_set_operation_mode(struct wilc_vif *vif,
+@@ -2389,9 +2414,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 
+ 	pu8CurrByte = wid.val;
+ 	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = 0;
+-	*pu8CurrByte++ = 0;
+-	*pu8CurrByte++ = 0;
++	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
++	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
++	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
+ 
+ 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+ 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+@@ -2449,6 +2474,7 @@ static void host_if_work(struct work_struct *work)
+ {
+ 	struct host_if_msg *msg;
+ 	struct wilc *wilc;
++	int ret = 0;
+ 
+ 	msg = container_of(work, struct host_if_msg, work);
+ 	wilc = msg->vif->wilc;
+@@ -2554,7 +2580,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_SET_WFIDRV_HANDLER:
+-		handle_set_wfi_drv_handler(msg->vif, &msg->body.drv);
++		ret = handle_set_wfi_drv_handler(msg->vif, &msg->body.drv);
+ 		break;
+ 
+ 	case HOST_IF_MSG_SET_OPERATION_MODE:
+@@ -2608,6 +2634,8 @@ static void host_if_work(struct work_struct *work)
+ 		break;
  	}
+ free_msg:
++	if (ret)
++		netdev_err(msg->vif->ndev, "Host cmd %d failed\n", msg->id);
+ 	kfree(msg);
+ 	complete(&hif_thread_comp);
+ }
+@@ -3085,7 +3113,8 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
+ 	return 0;
+ }
  
- 	/* choose WCS PLL */
-@@ -819,8 +823,6 @@ static int wl18xx_set_clk(struct wl1271 *wl)
- 	/* reset the swallowing logic */
- 	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_SWALLOW_EN,
- 				   PLLSH_COEX_PLL_SWALLOW_EN_VAL2);
--	if (ret < 0)
--		goto out;
+-int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
++int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
++			     u8 ifc_id)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -3093,7 +3122,8 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
+ 	msg.body.drv.handler = index;
+-	msg.body.drv.mac_idx = mac_idx;
++	msg.body.drv.mode = mode;
++	msg.body.drv.name = ifc_id;
+ 	msg.vif = vif;
  
- out:
- 	return ret;
+ 	result = wilc_enqueue_cmd(&msg);
+@@ -3316,6 +3346,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	for (i = 0; i < wilc->vif_num; i++)
+ 		if (dev == wilc->vif[i]->ndev) {
+ 			wilc->vif[i]->hif_drv = hif_drv;
++			hif_drv->driver_handler_id = i + 1;
+ 			break;
+ 		}
+ 
+@@ -3389,7 +3420,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 	del_timer_sync(&periodic_rssi);
+ 	del_timer_sync(&hif_drv->remain_on_ch_timer);
+ 
+-	wilc_set_wfi_drv_handler(vif, 0, 0);
++	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
+ 	wait_for_completion(&hif_driver_comp);
+ 
+ 	if (hif_drv->usr_scan_req.scan_result) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0e72b91..1ce5ead 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -50,6 +50,8 @@
+ #define WILC_ADD_STA_LENGTH			40
+ #define SCAN_EVENT_DONE_ABORTED
+ #define NUM_CONCURRENT_IFC			2
++#define DRV_HANDLER_SIZE			5
++#define DRV_HANDLER_MASK			0x000000FF
+ 
+ struct rf_info {
+ 	u8 link_speed;
+@@ -216,7 +218,8 @@ struct user_conn_req {
+ 
+ struct drv_handler {
+ 	u32 handler;
+-	u8 mac_idx;
++	u8 mode;
++	u8 name;
+ };
+ 
+ struct op_mode {
+@@ -280,6 +283,7 @@ struct host_if_drv {
+ 	struct timer_list remain_on_ch_timer;
+ 
+ 	bool IFC_UP;
++	int driver_handler_id;
+ };
+ 
+ struct add_sta_param {
+@@ -348,7 +352,8 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   void *user_arg);
+ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
+ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
+-int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx);
++int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
++			     u8 ifc_id);
+ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats);
+ void wilc_resolve_disconnect_aberration(struct wilc_vif *vif);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d6d8034..3087084 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -858,34 +858,15 @@ static int wilc_mac_open(struct net_device *ndev)
+ 
+ 	for (i = 0; i < wl->vif_num; i++) {
+ 		if (ndev == wl->vif[i]->ndev) {
+-			if (vif->iftype == AP_MODE) {
+-				wilc_set_wfi_drv_handler(vif,
+-							 wilc_get_vif_idx(vif),
+-							 0);
+-			} else if (!wilc_wlan_get_num_conn_ifcs(wl)) {
+-				wilc_set_wfi_drv_handler(vif,
+-							 wilc_get_vif_idx(vif),
+-							 wl->open_ifcs);
+-			} else {
+-				if (memcmp(wl->vif[i ^ 1]->bssid,
+-					   wl->vif[i ^ 1]->src_addr, 6))
+-					wilc_set_wfi_drv_handler(vif,
+-							 wilc_get_vif_idx(vif),
+-							 0);
+-				else
+-					wilc_set_wfi_drv_handler(vif,
+-							 wilc_get_vif_idx(vif),
+-							 1);
+-			}
++			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
++						 vif->iftype, vif->ifc_id);
+ 			wilc_set_operation_mode(vif, vif->iftype);
+-
+-			wilc_get_mac_address(vif, mac_add);
+-			netdev_dbg(ndev, "Mac address: %pM\n", mac_add);
+-			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
+-
+ 			break;
+ 		}
+ 	}
++			wilc_get_mac_address(vif, mac_add);
++			netdev_dbg(ndev, "Mac address: %pM\n", mac_add);
++			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
+ 
+ 	memcpy(ndev->dev_addr, wl->vif[i]->src_addr, ETH_ALEN);
+ 
+@@ -1246,11 +1227,13 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		vif = netdev_priv(ndev);
+ 		memset(vif, 0, sizeof(struct wilc_vif));
+ 
+-		if (i == 0)
++		if (i == 0) {
+ 			strcpy(ndev->name, "wlan%d");
+-		else
++			vif->ifc_id = 1;
++		} else {
+ 			strcpy(ndev->name, "p2p%d");
+-
++			vif->ifc_id = 0;
++		}
+ 		vif->wilc = *wilc;
+ 		vif->ndev = ndev;
+ 		wl->vif[i] = vif;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index cae9c8f..68fd5b3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1874,7 +1874,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		if (wl->initialized) {
+ 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
+-						 0);
++						 0, vif->ifc_id);
+ 			wilc_set_operation_mode(vif, AP_MODE);
+ 			wilc_set_power_mgmt(vif, 0, 0);
+ 		}
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index d431673..c89bf43 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -158,6 +158,7 @@ struct wilc_vif {
+ 	struct host_if_drv *hif_drv;
+ 	struct net_device *ndev;
+ 	u8 mode;
++	u8 ifc_id;
+ };
+ 
+ struct wilc {
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 439ac6f..f4d6005 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -845,7 +845,7 @@ typedef enum {
+ 	WID_MODEL_NAME			= 0x3027, /*Added for CAPI tool */
+ 	WID_MODEL_NUM			= 0x3028, /*Added for CAPI tool */
+ 	WID_DEVICE_NAME			= 0x3029, /*Added for CAPI tool */
+-	WID_SET_DRV_HANDLER		= 0x3030,
++	WID_SET_DRV_HANDLER		= 0x3079,
+ 
+ 	/* NMAC String WID list */
+ 	WID_11N_P_ACTION_REQ		= 0x3080,
 -- 
-2.5.0
+2.7.4
