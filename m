@@ -1,266 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60942 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751125AbdFBL22 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:28:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:52 +0300
-Message-Id: <20170602112553.2466-25-luca@coelho.fi> (sfid-20170602_132833_186777_85B0F0C5)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 24/25] iwlwifi: mvm: fix many kernel-doc warnings
+Received: from s3.sipsolutions.net ([5.9.151.49]:52468 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751884AbdFMJPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 05:15:46 -0400
+Message-ID: <1497345344.6068.10.camel@sipsolutions.net> (sfid-20170613_111550_145750_B81E6FA9)
+Subject: Re: LINKMODE & OPERSTATE thoughts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: j@w1.fi
+Date: Tue, 13 Jun 2017 11:15:44 +0200
+In-Reply-To: <ad95b6e5-9220-3eca-bf93-8ba1d89bde3b@gmail.com> (sfid-20170609_234205_953285_C41D8028)
+References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
+         <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+         <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
+         <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
+         <1496993334.2424.1.camel@sipsolutions.net>
+         <08fb9e64-a01e-54ea-7627-a0664d350710@gmail.com>
+         <1497038197.12088.4.camel@sipsolutions.net>
+         <ad95b6e5-9220-3eca-bf93-8ba1d89bde3b@gmail.com>
+         (sfid-20170609_234205_953285_C41D8028)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2017-06-09 at 16:42 -0500, Denis Kenzior wrote:
 
-Fix many kernel-doc warnings. In one case, this required adding
-a new enum value to be able to document things properly.
+> > I'm not convinced that it does have that information in all cases,
+> > and I don't see how that causes race conditions or much latency,
+> > since for client mode userspace would probably just set that
+> > together with the NL80211_STA_FLAG_AUTHORIZED flag?
+> 
+> Well right there is a race condition.  You have 2 sockets and both 
+> conveying the same information?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  | 35 ++++++++++++++--------
- .../net/wireless/intel/iwlwifi/mvm/fw-api-tof.h    | 16 ++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 15 ++++++++--
- 3 files changed, 46 insertions(+), 20 deletions(-)
+There's no race because we wait for the nl80211 operation to return
+before even starting the rtnetlink operation.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-index 0d88721b7b52..9d87fddd29b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h
-@@ -82,6 +82,8 @@
-  * @LTR_CFG_FLAG_SW_SET_SHORT: fixed static short LTR register
-  * @LTR_CFG_FLAG_SW_SET_LONG: fixed static short LONG register
-  * @LTR_CFG_FLAG_DENIE_C10_ON_PD: allow going into C10 on PD
-+ * @LTR_CFG_FLAG_UPDATE_VALUES: update config values and short
-+ *	idle timeout
-  */
- enum iwl_ltr_config_flags {
- 	LTR_CFG_FLAG_FEATURE_ENABLE = BIT(0),
-@@ -91,11 +93,14 @@ enum iwl_ltr_config_flags {
- 	LTR_CFG_FLAG_SW_SET_SHORT = BIT(4),
- 	LTR_CFG_FLAG_SW_SET_LONG = BIT(5),
- 	LTR_CFG_FLAG_DENIE_C10_ON_PD = BIT(6),
-+	LTR_CFG_FLAG_UPDATE_VALUES = BIT(7),
- };
- 
- /**
-  * struct iwl_ltr_config_cmd_v1 - configures the LTR
-  * @flags: See &enum iwl_ltr_config_flags
-+ * @static_long: static LTR Long register value.
-+ * @static_short: static LTR Short register value.
-  */
- struct iwl_ltr_config_cmd_v1 {
- 	__le32 flags;
-@@ -108,10 +113,13 @@ struct iwl_ltr_config_cmd_v1 {
- /**
-  * struct iwl_ltr_config_cmd - configures the LTR
-  * @flags: See &enum iwl_ltr_config_flags
-- * @static_long:
-- * @static_short:
-- * @ltr_cfg_values:
-- * @ltr_short_idle_timeout:
-+ * @static_long: static LTR Long register value.
-+ * @static_short: static LTR Short register value.
-+ * @ltr_cfg_values: LTR parameters table values (in usec) in folowing order:
-+ *	TX, RX, Short Idle, Long Idle. Used only if %LTR_CFG_FLAG_UPDATE_VALUES
-+ *	is set.
-+ * @ltr_short_idle_timeout: LTR Short Idle timeout (in usec). Used only if
-+ *	%LTR_CFG_FLAG_UPDATE_VALUES is set.
-  */
- struct iwl_ltr_config_cmd {
- 	__le32 flags;
-@@ -140,7 +148,7 @@ struct iwl_ltr_config_cmd {
-  *		PBW Snoozing enabled
-  * @POWER_FLAGS_ADVANCE_PM_ENA_MSK: Advanced PM (uAPSD) enable mask
-  * @POWER_FLAGS_LPRX_ENA_MSK: Low Power RX enable.
-- * @POWER_FLAGS_AP_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
-+ * @POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
-  *		detection enablement
- */
- enum iwl_power_flags {
-@@ -166,6 +174,7 @@ enum iwl_power_flags {
-  *			Minimum allowed:- 3 * DTIM. Keep alive period must be
-  *			set regardless of power scheme or current power state.
-  *			FW use this value also when PM is disabled.
-+ * @debug_flags:	debug flags
-  * @rx_data_timeout:    Minimum time (usec) from last Rx packet for AM to
-  *			PSM transition - legacy PM
-  * @tx_data_timeout:    Minimum time (usec) from last Tx packet for AM to
-@@ -191,7 +200,8 @@ struct iwl_powertable_cmd {
- 
- /**
-  * enum iwl_device_power_flags - masks for device power command flags
-- * @DEVIC_POWER_FLAGS_POWER_SAVE_ENA_MSK: '1' Allow to save power by turning off
-+ * @DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK:
-+ *	'1' Allow to save power by turning off
-  *	receiver and transmitter. '0' - does not allow.
- */
- enum iwl_device_power_flags {
-@@ -203,6 +213,7 @@ enum iwl_device_power_flags {
-  * DEVICE_POWER_CMD = 0x77 (command, has simple generic response)
-  *
-  * @flags:	Power table command flags from &enum iwl_device_power_flags
-+ * @reserved: reserved (padding)
-  */
- struct iwl_device_power_cmd {
- 	/* PM_POWER_TABLE_CMD_API_S_VER_6 */
-@@ -223,7 +234,6 @@ struct iwl_device_power_cmd {
-  *			PSM transition - legacy PM
-  * @tx_data_timeout:    Minimum time (usec) from last Tx packet for AM to
-  *			PSM transition - legacy PM
-- * @sleep_interval:	not in use
-  * @skip_dtim_periods:	Number of DTIM periods to skip if Skip over DTIM flag
-  *			is set. For example, if it is required to skip over
-  *			one DTIM, this value need to be set to 2 (DTIM periods).
-@@ -233,7 +243,6 @@ struct iwl_device_power_cmd {
-  *			PSM transition - uAPSD
-  * @lprx_rssi_threshold: Signal strength up to which LP RX can be enabled.
-  *			Default: 80dbm
-- * @num_skip_dtim:	Number of DTIMs to skip if Skip over DTIM flag is set
-  * @snooze_interval:	Maximum time between attempts to retrieve buffered data
-  *			from the AP [msec]
-  * @snooze_window:	A window of time in which PBW snoozing insures that all
-@@ -251,8 +260,9 @@ struct iwl_device_power_cmd {
-  * @heavy_rx_thld_packets:	RX threshold measured in number of packets
-  * @heavy_tx_thld_percentage:	TX threshold measured in load's percentage
-  * @heavy_rx_thld_percentage:	RX threshold measured in load's percentage
-- * @limited_ps_threshold:
--*/
-+ * @limited_ps_threshold: (unused)
-+ * @reserved: reserved (padding)
-+ */
- struct iwl_mac_power_cmd {
- 	/* CONTEXT_DESC_API_T_VER_1 */
- 	__le32 id_and_color;
-@@ -343,6 +353,7 @@ struct iwl_dev_tx_power_cmd_v3 {
-  * @v3: version 3 of the command, embedded here for easier software handling
-  * @enable_ack_reduction: enable or disable close range ack TX power
-  *	reduction.
-+ * @reserved: reserved (padding)
-  */
- struct iwl_dev_tx_power_cmd {
- 	/* v4 is just an extension of v3 - keep this here */
-@@ -393,7 +404,6 @@ struct iwl_geo_tx_power_profiles_cmd {
- /**
-  * struct iwl_beacon_filter_cmd
-  * REPLY_BEACON_FILTERING_CMD = 0xd2 (command)
-- * @id_and_color: MAC contex identifier
-  * @bf_energy_delta: Used for RSSI filtering, if in 'normal' state. Send beacon
-  *      to driver if delta in Energy values calculated for this and last
-  *      passed beacon is greater than this threshold. Zero value means that
-@@ -425,7 +435,8 @@ struct iwl_geo_tx_power_profiles_cmd {
-  *      beacon filtering; beacons will not be forced to be sent to driver
-  *      regardless of whether its temerature has been changed.
-  * @bf_enable_beacon_filter: 1, beacon filtering is enabled; 0, disabled.
-- * @bf_filter_escape_timer: Send beacons to to driver if no beacons were passed
-+ * @bf_debug_flag: beacon filtering debug configuration
-+ * @bf_escape_timer: Send beacons to to driver if no beacons were passed
-  *      for a specific period of time. Units: Beacons.
-  * @ba_escape_timer: Fully receive and parse beacon if no beacons were passed
-  *      for a longer period of time then this escape-timeout. Units: Beacons.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-index 86aa51b2210e..eae036af880e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-@@ -118,11 +118,17 @@ struct iwl_tof_config_cmd {
-  * @bandwidth: current AP Bandwidth: 0  20MHz, 1  40MHz, 2  80MHz
-  * @rate: current AP rate
-  * @ctrl_ch_position: coding of the control channel position relative to
-- *	     the center frequency.
-- *	     40MHz  0 below center, 1 above center
-- *	     80MHz  bits [0..1]: 0  the near 20MHz to the center,
-- *				 1  the far  20MHz to the center
-- *		    bit[2]  as above 40MHz
-+ *	the center frequency:
-+ *
-+ *	40 MHz
-+ *		0 below center, 1 above center
-+ *
-+ *	80 MHz
-+ *		bits [0..1]
-+ *		 * 0  the near 20MHz to the center,
-+ *		 * 1  the far  20MHz to the center
-+ *		bit[2]
-+ *		 as above 40MHz
-  * @ftm_per_burst: FTMs per Burst
-  * @ftm_resp_ts_avail: '0' - we don't measure over the Initial FTM Response,
-  *		  '1' - we measure over the Initial FTM Response
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 30008237323a..e7610add13f6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -74,6 +74,7 @@
-  *	Otherwise, use rate_n_flags from the TX command
-  * @TX_CMD_FLG_BAR: this frame is a BA request, immediate BAR is expected
-  *	Must set TX_CMD_FLG_ACK with this flag.
-+ * @TX_CMD_FLG_TXOP_PROT: TXOP protection requested
-  * @TX_CMD_FLG_VHT_NDPA: mark frame is NDPA for VHT beamformer sequence
-  * @TX_CMD_FLG_HT_NDPA: mark frame is NDPA for HT beamformer sequence
-  * @TX_CMD_FLG_CSI_FDBK2HOST: mark to send feedback to host (only if good CRC)
-@@ -201,7 +202,7 @@ enum iwl_tx_cmd_sec_ctrl {
- 
- /**
-  * enum iwl_tx_offload_assist_flags_pos -  set %iwl_tx_cmd offload_assist values
-- * @TX_CMD_OFFLD_IP_HDR_OFFSET: offset to start of IP header (in words)
-+ * @TX_CMD_OFFLD_IP_HDR: offset to start of IP header (in words)
-  *	from mac header end. For normal case it is 4 words for SNAP.
-  *	note: tx_cmd, mac header and pad are not counted in the offset.
-  *	This is used to help the offload in case there is tunneling such as
-@@ -235,12 +236,14 @@ enum iwl_tx_offload_assist_flags_pos {
-  * @len: in bytes of the payload, see below for details
-  * @offload_assist: TX offload configuration
-  * @tx_flags: combination of TX_CMD_FLG_*
-+ * @scratch: scratch buffer used by the device
-  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
-  *	cleared. Combination of RATE_MCS_*
-  * @sta_id: index of destination station in FW station table
-  * @sec_ctl: security control, TX_CMD_SEC_*
-  * @initial_rate_index: index into the the rate table for initial TX attempt.
-  *	Applied if TX_CMD_FLG_STA_RATE_MSK is set, normally 0 for data frames.
-+ * @reserved2: reserved
-  * @key: security key
-  * @reserved3: reserved
-  * @life_time: frame life time (usecs??)
-@@ -249,8 +252,11 @@ enum iwl_tx_offload_assist_flags_pos {
-  * @dram_msb_ptr: upper bits of the scratch physical address
-  * @rts_retry_limit: max attempts for RTS
-  * @data_retry_limit: max attempts to send the data packet
-- * @tid_spec: TID/tspec
-+ * @tid_tspec: TID/tspec
-  * @pm_frame_timeout: PM TX frame timeout
-+ * @reserved4: reserved
-+ * @payload: payload (same as @hdr)
-+ * @hdr: 802.11 header (same as @payload)
-  *
-  * The byte count (both len and next_frame_len) includes MAC header
-  * (24/26/30/32 bytes)
-@@ -304,10 +310,11 @@ struct iwl_dram_sec_info {
-  * ( TX_CMD = 0x1c )
-  * @len: in bytes of the payload, see below for details
-  * @offload_assist: TX offload configuration
-- * @tx_flags: combination of &iwl_tx_cmd_flags
-+ * @flags: combination of &enum iwl_tx_cmd_flags
-  * @dram_info: FW internal DRAM storage
-  * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
-  *	cleared. Combination of RATE_MCS_*
-+ * @hdr: 802.11 header
-  */
- struct iwl_tx_cmd_gen2 {
- 	__le16 len;
-@@ -519,6 +526,8 @@ struct agg_tx_status {
-  * @pa_integ_res_b: tx power info
-  * @pa_integ_res_c: tx power info
-  * @measurement_req_id: tx power info
-+ * @reduced_tpc: transmit power reduction used
-+ * @reserved: reserved
-  * @tfd_info: TFD information set by the FH
-  * @seq_ctl: sequence control from the Tx cmd
-  * @byte_cnt: byte count from the Tx cmd
--- 
-2.11.0
+> If we can optimize away an extra kernel trap, isn't that worthwhile 
+> thing to do?
+
+In itself, for something as rare as this? I don't really see it that
+way.
+
+> The most common case is issuing Dormant + UP after setting keys & 
+> issuing the set_station command.  Isn't setting STA_FLAG_AUTHORIZED
+> and operstate to IF_OPER_UP in effect equivalent?
+
+Not entirely, since STA_FLAG_AUTHORIZED also applies to stations in
+modes other than client mode, i.e. to stations other than the AP. In
+almost all of those cases, the interface itself is already ready much
+earlier.
+
+> Oh, by the way, some drivers don't implement set_station for normal 
+> links (e.g. setting STA_FLAG_AUTHORIZED returns an error), should
+> they?
+
+If they support encryption they probably should, but they might hook it
+from getting the keys or so?
+
+> The only other cases where we mess with setting linkmode I can think
+> of are:
+> 
+> 1. After connecting to an open network
+> 2. After a fast transition
+> 
+> For 1, it would seem that the kernel can easily infer that the 
+> IF_OPER_UP flag should be tweaked.
+
+Userspace should still set the AUTHORIZED flag in this case, just
+possibly earlier and obviously without any key negotiation. The same is
+true for WEP.
+
+> For 2, this needs to be done after the new TK is installed.  Can we 
+> combine these steps somehow?
+
+I'm just not convinced it's worth it.
+
+
+What I think we *can* do, with new EAPOL-over-nl80211 API, would be to
+mandate that drivers supporting that, and when it's used, must only set
+the carrier state after the controlled port is opened (AUTHORIZED
+flag). That way, wpa_s wouldn't have to play with IF_OPER_DORMANT and
+IF_OPER_UP at all.
+
+johannes
