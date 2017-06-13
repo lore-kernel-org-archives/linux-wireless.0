@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33593 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdFBOPu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 10:15:50 -0400
-Received: by mail-pf0-f196.google.com with SMTP id f27so11918329pfe.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 07:15:50 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 4/6] rsi: receive path enhancement for RS9113
-Date: Fri,  2 Jun 2017 19:43:03 +0530
-Message-Id: <1496412785-8720-5-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170602_161553_068373_FBF36E5B)
-In-Reply-To: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
+Received: from mail-db5eur01on0080.outbound.protection.outlook.com ([104.47.2.80]:2227
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752033AbdFMRil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 13:38:41 -0400
+Subject: Re: [RFC v2 05/10] ath10k: htt: High latency TX support
+To: Erik Stromdahl <erik.stromdahl@gmail.com>, kvalo@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
+ <1497279791-9598-6-git-send-email-erik.stromdahl@gmail.com>
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <f446d226-ca60-7dcb-f62d-00de6ead4cd4@bowerswilkins.com> (sfid-20170613_193846_963591_C5E93870)
+Date: Tue, 13 Jun 2017 10:38:28 -0700
+MIME-Version: 1.0
+In-Reply-To: <1497279791-9598-6-git-send-email-erik.stromdahl@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-
-RS9113 chipset supports Coex feature. Initial frame exchanges during
-device initialization happens on coex queue. This patch adds the
-handling for coex queue.
-
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_main.c | 9 ++++++++-
- drivers/net/wireless/rsi/rsi_main.h     | 1 +
- 2 files changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 8810862..f1cde0c 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -123,9 +123,16 @@ int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
- 
- 		queueno = rsi_get_queueno(frame_desc, offset);
- 		length = rsi_get_length(frame_desc, offset);
--		extended_desc = rsi_get_extended_desc(frame_desc, offset);
-+
-+		/* Extended descriptor is valid for WLAN queues only */
-+		if (queueno == RSI_WIFI_DATA_Q || queueno == RSI_WIFI_MGMT_Q)
-+			extended_desc = rsi_get_extended_desc(frame_desc,
-+							      offset);
- 
- 		switch (queueno) {
-+		case RSI_COEX_Q:
-+			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
-+			break;
- 		case RSI_WIFI_DATA_Q:
- 			skb = rsi_prepare_skb(common,
- 					      (frame_desc + offset),
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 74ae0ac..f12e5d9 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -63,6 +63,7 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define MAX_CONTINUOUS_VI_PKTS          4
- 
- /* Queue information */
-+#define RSI_COEX_Q			0x0
- #define RSI_WIFI_MGMT_Q                 0x4
- #define RSI_WIFI_DATA_Q                 0x5
- #define IEEE80211_MGMT_FRAME            0x00
--- 
-2.7.4
+On 06/12/2017 08:03 AM, Erik Stromdahl wrote:
+> Add HTT TX function for HL interfaces.
+> Intended for SDIO and USB.
+>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> ---
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 48418f9..c5fd803 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -3572,7 +3572,10 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
+>   
+>   	switch (txpath) {
+>   	case ATH10K_MAC_TX_HTT:
+> -		ret = ath10k_htt_tx(htt, txmode, skb);
+> +		if (ar->is_high_latency)
+Can we use function pointers at initial time to avoid condition check at 
+hot path?
+I'm afraid adding more lines on hot path.
+> +			ret = ath10k_htt_tx_hl(htt, txmode, skb);
+> +		else
+> +			ret = ath10k_htt_tx_ll(htt, txmode, skb);
+>   		break;
+>   	case ATH10K_MAC_TX_HTT_MGMT:
+>   		ret = ath10k_htt_mgmt_tx(htt, skb);
