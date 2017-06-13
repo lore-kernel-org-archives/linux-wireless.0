@@ -1,125 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58691 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754804AbdFXVIh (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:36577 "EHLO
+        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752168AbdFML3z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Jun 2017 17:08:37 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
+        Tue, 13 Jun 2017 07:29:55 -0400
+Received: by mail-lf0-f46.google.com with SMTP id o83so68340233lff.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 04:29:54 -0700 (PDT)
+Subject: Re: [V3] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: fix double free upon register_netdevice() failure
-Date: Sat, 24 Jun 2017 22:08:27 +0100
-Message-Id: <1498338507-3432-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170624_230853_666092_EF3E6B20)
+Cc: linux-wireless@vger.kernel.org, "Peter S. Housel" <housel@acm.org>
+References: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170613070028.5F9CB606DC@smtp.codeaurora.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6a8d5627-1d7c-a448-6657-0e1a2bb5ed9a@broadcom.com> (sfid-20170613_132958_233782_E5001302)
+Date: Tue, 13 Jun 2017 13:29:52 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170613070028.5F9CB606DC@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_net_attach() can only fail when register_netdevice()
-fails. When this happens register_netdevice() calls priv_destructor, ie.
-brcmf_cfg80211_free_netdev() freeing the vif instance. Also upon this
-failure brcmf_net_attach() calls free_netdev(). However, callers are also
-doing cleanup resulting in double free. In some places they need netdev
-private space as it holds parameters to communicate with the device. So
-we want to do the cleanup only in callers of brcmf_net_attach() by making
-the following changes:
+On 13-06-17 09:00, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> 
+>> From: "Peter S. Housel" <housel@acm.org>
+>>
+>> An earlier change to this function (3bdae810721b) fixed a leak in the
+>> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
+>> glom_skb buffer, used for emulating a scattering read, is never used
+>> or referenced after its contents are copied into the destination
+>> buffers, and therefore always needs to be freed by the end of the
+>> function.
+>>
+>> Fixes: 3bdae810721b ("brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain")
+>> Fixes: a413e39a38573 ("brcmfmac: fix brcmf_sdcard_recv_chain() for host without sg support")
+>> Cc: stable@vger.kernel.org # 4.9.x-
+>> Signed-off-by: Peter S. Housel <housel@acm.org>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> 
+> Patch applied to wireless-drivers-next.git, thanks.
 
- - set priv_destructor after register_netdevice() succeeds.
- - remove call to free_netdev() in brcmf_net_attach().
- - call free_netdev() in brcmf_net_detach() for unregistered netdev.
- - add free_netdev() if brcmf_net_attach() fails for a created interface.
-
-Fixes: cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Hi Kalle,
-
-Here the patch to fix double free in brcmfmac. The patch is intended
-for 4.13 and applies on top of following commit in the wireless-testing
-tree:
-
-  commit bd688e1cf6760af92562a5cac9b580338ebad62e (tag: wt-2017-06-21)
-  Author: Stephen Rothwell <sfr@canb.auug.org.au>
-  Date:   Thu Jun 8 12:24:08 2017 +1000
-
-      Add localversion to identify builds from this tree
+Yikes. You say wireless-drivers-next? I should have tagged it better,
+but I would like to get this fix in 4.12 and stable.
 
 Regards,
 Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 5 ++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 1 +
- 3 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2443c71..63e7683 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -625,6 +625,7 @@ struct wireless_dev *brcmf_ap_add_vif(struct wiphy *wiphy, const char *name,
- 	err = brcmf_net_attach(ifp, true);
- 	if (err) {
- 		brcmf_err("Registering netdevice failed\n");
-+		free_netdev(ifp->ndev);
- 		goto fail;
- 	}
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index c60b897..b4c8643 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -485,13 +485,13 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 		goto fail;
- 	}
- 
-+	ndev->priv_destructor = brcmf_cfg80211_free_netdev;
- 	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
- 	return 0;
- 
- fail:
- 	drvr->iflist[ifp->bsscfgidx] = NULL;
- 	ndev->netdev_ops = NULL;
--	free_netdev(ndev);
- 	return -EBADE;
- }
- 
-@@ -504,6 +504,7 @@ static void brcmf_net_detach(struct net_device *ndev, bool rtnl_locked)
- 			unregister_netdev(ndev);
- 	} else {
- 		brcmf_cfg80211_free_netdev(ndev);
-+		free_netdev(ndev);
- 	}
- }
- 
-@@ -580,7 +581,6 @@ static int brcmf_net_p2p_attach(struct brcmf_if *ifp)
- fail:
- 	ifp->drvr->iflist[ifp->bsscfgidx] = NULL;
- 	ndev->netdev_ops = NULL;
--	free_netdev(ndev);
- 	return -EBADE;
- }
- 
-@@ -626,7 +626,6 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
- 			return ERR_PTR(-ENOMEM);
- 
- 		ndev->needs_free_netdev = true;
--		ndev->priv_destructor = brcmf_cfg80211_free_netdev;
- 		ifp = netdev_priv(ndev);
- 		ifp->ndev = ndev;
- 		/* store mapping ifidx to bsscfgidx */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index aa299c4..2ce675a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2208,6 +2208,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
- 	err = brcmf_net_attach(ifp, true);
- 	if (err) {
- 		brcmf_err("Registering netdevice failed\n");
-+		free_netdev(ifp->ndev);
- 		goto fail;
- 	}
- 
--- 
-1.9.1
+> 5ea59db8a375 brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
+> 
