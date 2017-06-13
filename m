@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64300 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751188AbdFEUUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:20:16 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 01/12] NFC: pn544: Switch to devm_acpi_dev_add_driver_gpios()
-Date: Mon,  5 Jun 2017 23:19:58 +0300
-Message-Id: <20170605202009.78561-2-andriy.shevchenko@linux.intel.com> (sfid-20170605_222031_852845_F001D8E2)
-In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
-References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:33508 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750899AbdFMHic (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 03:38:32 -0400
+Received: by mail-io0-f170.google.com with SMTP id t87so48670509ioe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 00:38:31 -0700 (PDT)
+MIME-Version: 1.0
+From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
+Date: Tue, 13 Jun 2017 15:38:30 +0800
+Message-ID: <CABWe71weMrbEA=htjdRpUBofKo04jeQ9B56xvUzq2zF1YBmQFg@mail.gmail.com> (sfid-20170613_093839_615937_058F3771)
+Subject: ath9k: wds mode can not recieve any packets.
+To: linux-wireless@vger.kernel.org, nbd@openwrt.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Switch to use managed variant of acpi_dev_add_driver_gpios() to simplify
-error path and fix potentially wrong assingment if ->probe() fails.
+Ath9k in 4addr wds mode. After a while the station will break off.
+Station connectivity remains. But `ifconfig` cannot see any recv
+packet.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/nfc/pn544/i2c.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+wlan0     Link encap:Ethernet  HWaddr C8:EE:A6:2E:60:D8
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:17402577 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:33065526 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:1165838023 (1.0 GiB)  TX bytes:51166664044 (47.6 GiB)
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 71ac0836c9f4..619181e5b395 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -904,7 +904,7 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
- 	phy->i2c_dev = client;
- 	i2c_set_clientdata(client, phy);
- 
--	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_pn544_gpios);
- 	if (r)
- 		dev_dbg(dev, "Unable to add GPIO mapping table\n");
- 
-@@ -958,7 +958,6 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
- 	if (phy->powered)
- 		pn544_hci_i2c_disable(phy);
- 
--	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
- 	return 0;
- }
- 
--- 
-2.11.0
+RX packets count stop increase.
+
+
+/sys/kernel/debug/ieee80211/phy0/ath9k/recv
+         PKTS-ALL :   21445223
+         BYTES-ALL : 2458906640
+
+
+  PKTS-ALL still increase.
