@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60708 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751149AbdFBL0K (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34446 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753617AbdFMOvl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:26:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:31 +0300
-Message-Id: <20170602112553.2466-4-luca@coelho.fi> (sfid-20170602_132636_502366_D4B5F427)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 03/25] iwlwifi: mvm: support old method of NVM parsing
+        Tue, 13 Jun 2017 10:51:41 -0400
+Received: by mail-pg0-f66.google.com with SMTP id v14so19226142pgn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:51:40 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 04/20] rsi: correct SDIO disconnect path handling
+Date: Tue, 13 Jun 2017 20:18:52 +0530
+Message-Id: <1497365348-2305-5-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165143_878930_0592C888)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Karun Eagalapati <karun256@gmail.com>
 
-Add configuration for allowing driver's nvm parsing and
-bypassing the new host command, for debugging.
+Sometimes it's observed that we get interrupt/Rx frame when device is
+already detached from mac80211. In this case couple of error messages
+are displayed in dmesg log. This patch corrects the order so that
+disconnection will happen cleanly
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/constants.h |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index 4eeb6b78d952..6fda8627b726 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -110,6 +110,7 @@
- #define IWL_MVM_TOF_IS_RESPONDER		0
- #define IWL_MVM_SW_TX_CSUM_OFFLOAD		0
- #define IWL_MVM_HW_CSUM_DISABLE			0
-+#define IWL_MVM_PARSE_NVM			0
- #define IWL_MVM_COLLECT_FW_ERR_DUMP		1
- #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE      2
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 3d68595243fc..a8804bc979fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -744,6 +744,14 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		iwl_mvm_load_nvm_to_nic(mvm);
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index ebfd29c..f1ba8ac 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -1026,17 +1026,26 @@ static void rsi_disconnect(struct sdio_func *pfunction)
+ 		return;
  
-+	if (IWL_MVM_PARSE_NVM && read_nvm) {
-+		ret = iwl_nvm_init(mvm, true);
-+		if (ret) {
-+			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
-+			goto error;
-+		}
-+	}
+ 	dev = (struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	sdio_claim_host(pfunction);
++	sdio_release_irq(pfunction);
++	sdio_release_host(pfunction);
++	mdelay(10);
+ 
+-	dev->write_fail = 2;
+ 	rsi_mac80211_detach(adapter);
++	mdelay(10);
+ 
+-	sdio_claim_host(pfunction);
+-	sdio_release_irq(pfunction);
+-	sdio_disable_func(pfunction);
+-	rsi_91x_deinit(adapter);
++	/* Reset Chip */
+ 	rsi_reset_chip(adapter);
 +
- 	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(REGULATORY_AND_NVM_GROUP,
- 						NVM_ACCESS_COMPLETE), 0,
- 				   sizeof(nvm_complete), &nvm_complete);
-@@ -760,7 +768,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		return ret;
++	/* Resetting to take care of the case, where-in driver is re-loaded */
++	sdio_claim_host(pfunction);
+ 	rsi_reset_card(pfunction);
++	sdio_disable_func(pfunction);
+ 	sdio_release_host(pfunction);
++	dev->write_fail = 2;
++	rsi_91x_deinit(adapter);
++	rsi_dbg(ERR_ZONE, "##### RSI SDIO device disconnected #####\n");
++
+ }
  
- 	/* Read the NVM only at driver load time, no need to do this twice */
--	if (read_nvm) {
-+	if (!IWL_MVM_PARSE_NVM && read_nvm) {
- 		ret = iwl_mvm_nvm_get_from_fw(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
+ #ifdef CONFIG_PM
 -- 
-2.11.0
+2.7.4
