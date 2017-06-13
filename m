@@ -1,65 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0061.outbound.protection.outlook.com ([104.47.33.61]:46656
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750999AbdFUNya (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 09:54:30 -0400
-Date: Wed, 21 Jun 2017 16:54:04 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][net-next] qtnfmac: fix uninitialized return code in ret
-Message-ID: <20170621135402.e4iwovvmdumarzqj@bars> (sfid-20170621_155449_284394_1FECDF74)
-References: <20170621132530.11937-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170621132530.11937-1-colin.king@canonical.com>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34080 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753527AbdFMOwe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 10:52:34 -0400
+Received: by mail-pg0-f67.google.com with SMTP id v14so19233931pgn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:34 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 15/20] rsi: separate function for data packet descriptor
+Date: Tue, 13 Jun 2017 20:19:03 +0530
+Message-Id: <1497365348-2305-16-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_170119_948801_9E2C49EA)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> The return value ret is unitialized and garbage is being returned
-> for the three different error conditions when setting up the PCIe
-> BARs. Fix this by initializing ret to  -ENOMEM to indicate that
-> the BARs failed to be setup correctly.
-> 
-> Detected by CoverityScan, CID#1437563 ("Unitialized scalar variable")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-> index f93b27f3a236..7fc4f0d6a9ad 100644
-> --- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-> @@ -247,7 +247,7 @@ static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_bus_priv *priv)
-> 
->  static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_priv *priv)
->  {
-> -       int ret;
-> +       int ret = -ENOMEM;
-> 
->         priv->sysctl_bar = qtnf_map_bar(priv, QTN_SYSCTL_BAR);
->         if (IS_ERR_OR_NULL(priv->sysctl_bar)) {
-> --
+From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
 
-Thanks !
+Data packet descriptor preparation code is moved a separate
+function.
 
-Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 41 +++++++++++++++++-----------------
+ 1 file changed, 21 insertions(+), 20 deletions(-)
 
-By the way, could you please use the recepient list suggested by
-get_maintainer.pl script from the kernel scripts directory.
-
-Regards,
-Sergey
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 20cb608..8fcbadc 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -111,15 +111,8 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
+-/**
+- * rsi_send_data_pkt() - This function sends the recieved data packet from
+- *			 driver to device.
+- * @common: Pointer to the driver private structure.
+- * @skb: Pointer to the socket buffer structure.
+- *
+- * Return: status: 0 on success, -1 on failure.
+- */
+-int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
++/* This function prepares descriptor for given data packet */
++static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct ieee80211_hdr *wh = NULL;
+@@ -129,7 +122,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	struct ieee80211_bss_conf *bss;
+ 	struct rsi_data_desc *data_desc;
+ 	struct xtended_desc *xtend_desc;
+-	int status;
+ 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
+ 	u8 header_size = 0;
+ 	u8 vap_id = 0;
+@@ -140,22 +132,19 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	bss = &info->control.vif->bss_conf;
+ 	tx_params = (struct skb_info *)info->driver_data;
+ 
+-	if (!bss->assoc) {
+-		status = -EINVAL;
+-		goto err;
+-	}
++	if (!bss->assoc)
++		return -EINVAL;
++
+ 	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+-		status = -ENOSPC;
+-		goto err;
++		return -ENOSPC;
+ 	}
+ 	skb_push(skb, header_size);
+ 	dword_align_bytes = ((unsigned long)skb->data & 0x3f);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Not enough headroom\n", __func__);
+-		status = -ENOSPC;
+-		goto err;
++		return -ENOSPC;
+ 	}
+ 	skb_push(skb, dword_align_bytes);
+ 	header_size += dword_align_bytes;
+@@ -232,11 +221,23 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 		data_desc->sta_id = vap_id;
+ 	}
+ 
++	return 0;
++}
++
++/* This function sends received data packet from driver to device */
++int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
++{
++	struct rsi_hw *adapter = common->priv;
++	int status;
++
++	status = rsi_prepare_data_desc(common, skb);
++	if (status)
++		goto err;
++
+ 	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
+ 						   skb->len);
+ 	if (status)
+-		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
+-			__func__);
++		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
+ 
+ err:
+ 	++common->tx_stats.total_tx_pkt_freed[skb->priority];
+-- 
+2.7.4
