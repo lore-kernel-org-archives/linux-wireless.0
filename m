@@ -1,165 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:41819 "EHLO
-        ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751678AbdFJOXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 10:23:37 -0400
-Date: Sat, 10 Jun 2017 22:23:16 +0800
-From: Kevin Lo <kevlo@kevlo.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: fix REG_USTIME_TSF register definition
-Message-ID: <20170610142316.GA9284@ns.kevlo.org> (sfid-20170610_162350_358955_BED1D0A8)
-References: <20170519150240.GA47825@ns.kevlo.org>
- <CA+R5OdtxiN4XBZg3k-Suamj5r4+=jDY-10HdUCHuqb=Nt-baqg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CA+R5OdtxiN4XBZg3k-Suamj5r4+=jDY-10HdUCHuqb=Nt-baqg@mail.gmail.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33047 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753656AbdFMOws (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 10:52:48 -0400
+Received: by mail-pf0-f196.google.com with SMTP id w12so11954511pfk.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:47 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 18/20] rsi: SDIO Rx packet processing enhancement
+Date: Tue, 13 Jun 2017 20:19:06 +0530
+Message-Id: <1497365348-2305-19-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165251_032156_0A1F7772)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for the top post.  This patch has an Acked-by Yan-Hsuan Chuang.
+From: Karun Eagalapati <karun256@gmail.com>
 
-On Wed, Jun 07, 2017 at 09:43:21AM +0800, 莊彥宣 wrote:
-> Yes, the register 0x55c is for REG_USTIME_TSF.
-> And 0x551 is for BCN_CTRL1.
-> 
-> 
-> Acked-by: Yan-Hsuan, Chuang <yhchuang@realtek.com>
-> 
-> 2017-05-19 23:02 GMT+08:00 Kevin Lo <kevlo@kevlo.org>:
-> 
-> > The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
-> > should be 0x55C.
-> >
-> > Signed-off-by: Kevin Lo <kevlo@kevlo.org>
-> > ---
-> >
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> > b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> > index 15400ee6c04b..0c0d64aea651 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> > @@ -248,7 +248,6 @@
-> >  #define REG_RD_NAV_NXT                         0x0544
-> >  #define REG_NAV_PROT_LEN                       0x0546
-> >  #define REG_BCN_CTRL                           0x0550
-> > -#define REG_USTIME_TSF                         0x0551
-> >  #define REG_MBID_NUM                           0x0552
-> >  #define REG_DUAL_TSF_RST                       0x0553
-> >  #define REG_BCN_INTERVAL                       0x0554
-> > @@ -256,6 +255,7 @@
-> >  #define REG_DRVERLYINT                         0x0558
-> >  #define REG_BCNDMATIM                          0x0559
-> >  #define REG_ATIMWND                                    0x055A
-> > +#define REG_USTIME_TSF                         0x055C
-> >  #define REG_BCN_MAX_ERR                                0x055D
-> >  #define REG_RXTSF_OFFSET_CCK           0x055E
-> >  #define REG_RXTSF_OFFSET_OFDM          0x055F
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> > b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> > index 1bb7ed35812d..9e3b58a5d2bb 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> > @@ -227,7 +227,6 @@
-> >  #define REG_RD_NAV_NXT                         0x0544
-> >  #define REG_NAV_PROT_LEN                       0x0546
-> >  #define REG_BCN_CTRL                           0x0550
-> > -#define REG_USTIME_TSF                         0x0551
-> >  #define REG_MBID_NUM                           0x0552
-> >  #define REG_DUAL_TSF_RST                       0x0553
-> >  #define REG_BCN_INTERVAL                       0x0554
-> > @@ -235,6 +234,7 @@
-> >  #define REG_DRVERLYINT                         0x0558
-> >  #define REG_BCNDMATIM                          0x0559
-> >  #define REG_ATIMWND                            0x055A
-> > +#define REG_USTIME_TSF                         0x055C
-> >  #define REG_BCN_MAX_ERR                                0x055D
-> >  #define REG_RXTSF_OFFSET_CCK                   0x055E
-> >  #define REG_RXTSF_OFFSET_OFDM                  0x055F
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> > b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> > index b354b95936e2..d4c4e76a9244 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> > @@ -255,7 +255,6 @@
-> >  #define REG_RD_NAV_NXT                 0x0544
-> >  #define REG_NAV_PROT_LEN               0x0546
-> >  #define REG_BCN_CTRL                   0x0550
-> > -#define REG_USTIME_TSF                 0x0551
-> >  #define REG_MBID_NUM                   0x0552
-> >  #define REG_DUAL_TSF_RST               0x0553
-> >  #define REG_BCN_INTERVAL               0x0554
-> > @@ -263,6 +262,7 @@
-> >  #define REG_DRVERLYINT                 0x0558
-> >  #define REG_BCNDMATIM                  0x0559
-> >  #define REG_ATIMWND                    0x055A
-> > +#define REG_USTIME_TSF                 0x055C
-> >  #define REG_BCN_MAX_ERR                        0x055D
-> >  #define REG_RXTSF_OFFSET_CCK           0x055E
-> >  #define REG_RXTSF_OFFSET_OFDM          0x055F
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> > b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> > index 306059f9b9cc..30938cd9fce5 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> > @@ -217,7 +217,6 @@
-> >  #define REG_RD_NAV_NXT                         0x0544
-> >  #define REG_NAV_PROT_LEN                       0x0546
-> >  #define REG_BCN_CTRL                           0x0550
-> > -#define REG_USTIME_TSF                         0x0551
-> >  #define REG_MBID_NUM                           0x0552
-> >  #define REG_DUAL_TSF_RST                       0x0553
-> >  #define REG_BCN_INTERVAL                       0x0554
-> > @@ -225,6 +224,7 @@
-> >  #define REG_DRVERLYINT                         0x0558
-> >  #define REG_BCNDMATIM                          0x0559
-> >  #define REG_ATIMWND                                    0x055A
-> > +#define REG_USTIME_TSF                         0x055C
-> >  #define REG_BCN_MAX_ERR                                0x055D
-> >  #define REG_RXTSF_OFFSET_CCK           0x055E
-> >  #define REG_RXTSF_OFFSET_OFDM          0x055F
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> > b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> > index 03581d2a5da0..95c4f8e206c7 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> > @@ -261,7 +261,6 @@
-> >  #define REG_RD_NAV_NXT                         0x0544
-> >  #define REG_NAV_PROT_LEN                       0x0546
-> >  #define REG_BCN_CTRL                           0x0550
-> > -#define REG_USTIME_TSF                         0x0551
-> >  #define REG_MBID_NUM                           0x0552
-> >  #define REG_DUAL_TSF_RST                       0x0553
-> >  #define REG_BCN_INTERVAL                       0x0554
-> > @@ -269,6 +268,7 @@
-> >  #define REG_DRVERLYINT                         0x0558
-> >  #define REG_BCNDMATIM                          0x0559
-> >  #define REG_ATIMWND                            0x055A
-> > +#define REG_USTIME_TSF                         0x055C
-> >  #define REG_BCN_MAX_ERR                                0x055D
-> >  #define REG_RXTSF_OFFSET_CCK                   0x055E
-> >  #define REG_RXTSF_OFFSET_OFDM                  0x055F
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> > b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> > index ed69dbe178ff..db8bc8a2de61 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> > @@ -267,7 +267,6 @@
-> >  #define REG_RD_NAV_NXT                         0x0544
-> >  #define REG_NAV_PROT_LEN                       0x0546
-> >  #define REG_BCN_CTRL                           0x0550
-> > -#define REG_USTIME_TSF                         0x0551
-> >  #define REG_MBID_NUM                           0x0552
-> >  #define REG_DUAL_TSF_RST                       0x0553
-> >  #define REG_BCN_INTERVAL                       0x0554
-> > @@ -275,6 +274,7 @@
-> >  #define REG_DRVERLYINT                         0x0558
-> >  #define REG_BCNDMATIM                          0x0559
-> >  #define REG_ATIMWND                            0x055A
-> > +#define REG_USTIME_TSF                         0x055C
-> >  #define REG_BCN_MAX_ERR                                0x055D
-> >  #define REG_RXTSF_OFFSET_CCK                   0x055E
-> >  #define REG_RXTSF_OFFSET_OFDM                  0x055F
-> >
+Newer firmware sends information about number of blocks through
+interrupt only. We don't need to read extra register for this.
+This patch adds needed driver changes for this enhancment. The
+change here is backward compatible
+
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 34 ++++++++++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_main.h         |  1 +
+ drivers/net/wireless/rsi/rsi_sdio.h         |  1 +
+ 3 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index df2a63b..b6d0e2a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -69,20 +69,37 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ static int rsi_process_pkt(struct rsi_common *common)
+ {
+ 	struct rsi_hw *adapter = common->priv;
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	u8 num_blks = 0;
+ 	u32 rcv_pkt_len = 0;
+ 	int status = 0;
++	u8 value = 0;
+ 
+-	status = rsi_sdio_read_register(adapter,
+-					SDIO_RX_NUM_BLOCKS_REG,
+-					&num_blks);
++	num_blks = ((adapter->interrupt_status & 1) |
++			((adapter->interrupt_status >> RECV_NUM_BLOCKS) << 1));
+ 
+-	if (status) {
+-		rsi_dbg(ERR_ZONE,
+-			"%s: Failed to read pkt length from the card:\n",
+-			__func__);
+-		return status;
++	if (!num_blks) {
++		status = rsi_sdio_read_register(adapter,
++						SDIO_RX_NUM_BLOCKS_REG,
++						&value);
++		if (status) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Failed to read pkt length from the card:\n",
++				__func__);
++			return status;
++		}
++		num_blks = value & 0x1f;
+ 	}
++
++	if (dev->write_fail == 2)
++		rsi_sdio_ack_intr(common->priv, (1 << MSDU_PKT_PENDING));
++
++	if (unlikely(!num_blks)) {
++		dev->write_fail = 2;
++		return -1;
++	}
++
+ 	rcv_pkt_len = (num_blks * 256);
+ 
+ 	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
+@@ -224,6 +241,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 			mutex_unlock(&common->tx_rxlock);
+ 			return;
+ 		}
++		adapter->interrupt_status = isr_status;
+ 
+ 		if (isr_status == 0) {
+ 			rsi_set_event(&common->tx_thread.event);
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 4b4312e..febecbd 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -273,6 +273,7 @@ struct rsi_hw {
+ 	bool blcmd_timer_expired;
+ 	u32 flash_capacity;
+ 	struct eepromrw_info eeprom;
++	u32 interrupt_status;
+ 	u8 dfs_region;
+ 	void *rsi_dev;
+ 	struct rsi_host_intf_ops *host_intf_ops;
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index cbbc0448..3cf6756 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -41,6 +41,7 @@ enum sdio_interrupt_type {
+ #define PKT_BUFF_FULL                           1
+ #define PKT_MGMT_BUFF_FULL                      2
+ #define MSDU_PKT_PENDING                        3
++#define RECV_NUM_BLOCKS                         4
+ /* Interrupt Bit Related Macros */
+ #define PKT_BUFF_AVAILABLE                      1
+ #define FW_ASSERT_IND                           2
+-- 
+2.7.4
