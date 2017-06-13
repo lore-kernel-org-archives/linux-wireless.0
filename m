@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40987 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753181AbdFOSZa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:30 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 10/23] adapter: Clear timer handle when DEP timer stopped
-Date: Thu, 15 Jun 2017 11:25:03 -0700
-Message-Id: <20170615182516.4508-11-mgreer@animalcreek.com> (sfid-20170615_202637_237795_7F3E26D6)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51994 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751864AbdFMIUI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 04:20:08 -0400
+Message-ID: <1497342000.6068.3.camel@sipsolutions.net> (sfid-20170613_102047_851783_2C64239D)
+Subject: Re: [PATCH 6/6] mac80211/wpa: use constant time memory comparison
+ for MACs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Date: Tue, 13 Jun 2017 10:20:00 +0200
+In-Reply-To: <20170610025912.6499-7-Jason@zx2c4.com>
+References: <20170610025912.6499-1-Jason@zx2c4.com>
+         <20170610025912.6499-7-Jason@zx2c4.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__near_adapter_set_dep_state() stops the neard DEP timer but
-doesn't clear the timer handle.  This can cause neard to try
-to stop the timer when it isn't running.  To fix that, clear
-the handle so neard doesn't try to stop an already stopped timer.
+On Sat, 2017-06-10 at 04:59 +0200, Jason A. Donenfeld wrote:
+> Otherwise, we enable all sorts of forgeries via timing attack.
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- src/adapter.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+I'm not really sure that this is actually true, since you don't get
+much feedback on your frame that's dropped, especially if you're
+attacking from remote. Basically, I don't see how you can observe the
+timing of this operation?
 
-diff --git a/src/adapter.c b/src/adapter.c
-index 7be87e2..eb1a407 100644
---- a/src/adapter.c
-+++ b/src/adapter.c
-@@ -615,8 +615,10 @@ int __near_adapter_set_dep_state(uint32_t idx, bool dep)
- 		target_idx =  __neard_device_get_idx(adapter->device_link);
- 		__near_adapter_remove_target(idx, target_idx);
- 	} else {
--		if (adapter->dep_timer > 0)
-+		if (adapter->dep_timer > 0) {
- 			g_source_remove(adapter->dep_timer);
-+			adapter->dep_timer = 0;
-+		}
- 
- 		if (!__near_device_register_interface(adapter->device_link))
- 			return -ENODEV;
--- 
-2.13.0
+Anyway, applied.
+
+johannes
