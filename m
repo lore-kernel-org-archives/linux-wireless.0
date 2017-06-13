@@ -1,159 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36310 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753171AbdF2Sb1 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34500 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753311AbdFMOwU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:31:27 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:26 +0300
-Message-Id: <20170629183027.15408-15-luca@coelho.fi> (sfid-20170629_203150_874906_90FAD4A1)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 14/15] iwlwifi: pcie: wait longer after device reset
+        Tue, 13 Jun 2017 10:52:20 -0400
+Received: by mail-pf0-f195.google.com with SMTP id d5so9725195pfe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:19 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 13/20] rsi: data packet descriptor code cleanup
+Date: Tue, 13 Jun 2017 20:19:01 +0530
+Message-Id: <1497365348-2305-14-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_170120_220585_222A9B3E)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
 
-The newest devices need a longer time to reset because of
-their more complex hardware. Wait 5ms after device reset.
-Consolidate all the places that reset the device in the
-PCIe transport to avoid future bugs.
+Currently this descriptor is prepared with the help of __le16
+pointer. This patch makes use of a structure to prepare the
+descriptor in a cleaner way.
 
-While at it, unify the flow to use set_bit instead of full
-write as requested by the hardware designers.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  7 +++++++
- .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |  8 ++------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 23 +++++-----------------
- 4 files changed, 15 insertions(+), 25 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 36 +++++++++++++++++-----------------
+ drivers/net/wireless/rsi/rsi_hal.h     | 25 +++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_mgmt.h    |  3 +++
+ 3 files changed, 46 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index bd2596fdafda..fc5a490880d0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -526,7 +526,7 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index bc2ee8c..8a66edd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -126,10 +126,10 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	struct ieee80211_tx_info *info;
+ 	struct skb_info *tx_params;
+ 	struct ieee80211_bss_conf *bss;
++	struct rsi_data_desc *data_desc;
+ 	int status;
+ 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
+ 	u8 extnd_size;
+-	__le16 *frame_desc;
+ 	u16 seq_num;
  
- 		/* reset the device */
- 		iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--		usleep_range(1000, 2000);
-+		usleep_range(5000, 6000);
- 
- 		/* set INIT_DONE flag */
- 		iwl_set_bit(trans, CSR_GP_CNTRL,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 7ec2d96ccceb..fa315d84e98e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -654,6 +654,13 @@ static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
+ 	info = IEEE80211_SKB_CB(skb);
+@@ -153,12 +153,12 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
  	}
- }
  
-+static inline void iwl_pcie_sw_reset(struct iwl_trans *trans)
-+{
-+	/* Reset entire device - do controller reset (results in SHRD_HW_RST) */
-+	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
-+	usleep_range(5000, 6000);
-+}
+ 	skb_push(skb, (FRAME_DESC_SZ + extnd_size));
+-	frame_desc = (__le16 *)&skb->data[0];
+-	memset((u8 *)frame_desc, 0, FRAME_DESC_SZ);
++	data_desc = (struct rsi_data_desc *)skb->data;
++	memset(data_desc, 0, sizeof(*data_desc));
+ 
+ 	if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
+ 		ieee80211_size += 2;
+-		frame_desc[6] |= cpu_to_le16(BIT(12));
++		data_desc->mac_flags |= cpu_to_le16(RSI_QOS_ENABLE);
+ 	}
+ 
+ 	if ((!(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) &&
+@@ -167,33 +167,33 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 			ieee80211_size += 4;
+ 		else
+ 			ieee80211_size += 8;
+-		frame_desc[6] |= cpu_to_le16(BIT(15));
++		data_desc->mac_flags |= cpu_to_le16(RSI_ENCRYPT_PKT);
+ 	}
++	data_desc->length = skb->len - FRAME_DESC_SZ;
++	data_desc->q_num = RSI_WIFI_DATA_Q;
++	data_desc->header_len = ieee80211_size;
++	data_desc->xtend_desc_size = extnd_size;
+ 
+-	frame_desc[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
+-				    (RSI_WIFI_DATA_Q << 12));
+-	frame_desc[2] = cpu_to_le16((extnd_size) | (ieee80211_size) << 8);
+-
+-	if (common->min_rate != 0xffff) {
++	if (common->min_rate != RSI_RATE_AUTO) {
+ 		/* Send fixed rate */
+-		frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
+-		frame_desc[4] = cpu_to_le16(common->min_rate);
++		data_desc->frame_info = cpu_to_le16(RATE_INFO_ENABLE);
++		data_desc->rate_info = cpu_to_le16(common->min_rate);
+ 
+ 		if (conf_is_ht40(&common->priv->hw->conf))
+-			frame_desc[5] = cpu_to_le16(FULL40M_ENABLE);
++			data_desc->bbp_info = cpu_to_le16(FULL40M_ENABLE);
+ 
+ 		if (common->vif_info[0].sgi) {
+ 			if (common->min_rate & 0x100) /* Only MCS rates */
+-				frame_desc[4] |=
++				data_desc->rate_info |=
+ 					cpu_to_le16(ENABLE_SHORTGI_RATE);
+ 		}
+ 
+ 	}
+ 
+-	frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
+-	frame_desc[7] = cpu_to_le16(((tx_params->tid & 0xf) << 4) |
+-				    (skb->priority & 0xf) |
+-				    (tx_params->sta_id << 8));
++	data_desc->mac_flags = cpu_to_le16(seq_num & 0xfff);
++	data_desc->qid = skb->priority & 0xf;
++	data_desc->tid = tx_params->tid & 0xf;
++	data_desc->sta_id = tx_params->sta_id;
+ 
+ 	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
+ 						   skb->len);
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index aa58125..b137de2 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -135,6 +135,31 @@ struct rsi_mgmt_desc {
+ 	u8 vap_info;
+ } __packed;
+ 
++struct rsi_data_desc {
++#ifdef __LITTLE_ENDIAN
++	u16 length : 12;
++	u16 q_num :4;
++#else
++	u16 q_num :4;
++	u16 length : 12;
++#endif
++	u16 reserved;
++	u8 xtend_desc_size;
++	u8 header_len;
++	__le16 frame_info;
++	__le16 rate_info;
++	__le16 bbp_info;
++	__le16 mac_flags;
++#ifdef __LITTLE_ENDIAN
++	u8 qid : 4;
++	u8 tid : 4;
++#else
++	u8 tid : 4;
++	u8 qid : 4;
++#endif
++	u8 sta_id;
++} __packed;
 +
- static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
- 				     struct iwl_txq *txq, int idx)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index e84c5ff389a8..b84b78293e7b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -136,9 +136,7 @@ static void iwl_pcie_gen2_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
- 	/* Stop device's DMA activity */
- 	iwl_pcie_apm_stop_master(trans);
+ int rsi_hal_device_init(struct rsi_hw *adapter);
  
--	/* Reset the entire device */
--	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 04c491d..2a223a6 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -64,6 +64,8 @@
+ #define RATE_INFO_ENABLE                BIT(0)
+ #define RSI_BROADCAST_PKT               BIT(9)
+ #define RSI_DESC_REQUIRE_CFM_TO_HOST	BIT(2)
++#define RSI_QOS_ENABLE			BIT(12)
++#define RSI_ENCRYPT_PKT			BIT(15)
  
- 	/*
- 	 * Clear "initialization complete" bit to move adapter from
-@@ -188,9 +186,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 	/* Stop the device, and put it in low power state */
- 	iwl_pcie_gen2_apm_stop(trans, false);
+ #define UPPER_20_ENABLE                 (0x2 << 12)
+ #define LOWER_20_ENABLE                 (0x4 << 12)
+@@ -122,6 +124,7 @@
+ #define RSI_RATE_MCS6                   0x106
+ #define RSI_RATE_MCS7                   0x107
+ #define RSI_RATE_MCS7_SG                0x307
++#define RSI_RATE_AUTO			0xffff
  
--	/* stop and reset the on-board processor */
--	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
- 
- 	/*
- 	 * Upon stop, the IVAR table gets erased, so msi-x won't
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index cac584cc07b6..92b3a55d0fbc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -358,9 +358,7 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
- 	__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
- 				 CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
- 
--	/* Reset entire device - do controller reset (results in SHRD_HW_RST) */
--	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
- 
- 	/*
- 	 * Set "initialization complete" bit to move adapter from
-@@ -401,12 +399,7 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
- 				 apmg_xtal_cfg_reg |
- 				 SHR_APMG_XTAL_CFG_XTAL_ON_REQ);
- 
--	/*
--	 * Reset entire device again - do controller reset (results in
--	 * SHRD_HW_RST). Turn MAC off before proceeding.
--	 */
--	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
- 
- 	/* Enable LP XTAL by indirect access through CSR */
- 	apmg_gp1_reg = iwl_trans_pcie_read_shr(trans, SHR_APMG_GP1_REG);
-@@ -499,9 +492,7 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
- 		return;
- 	}
- 
--	/* Reset the entire device */
--	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
- 
- 	/*
- 	 * Clear "initialization complete" bit to move adapter from
-@@ -1181,9 +1172,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	/* Stop the device, and put it in low power state */
- 	iwl_pcie_apm_stop(trans, false);
- 
--	/* stop and reset the on-board processor */
--	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
- 
- 	/*
- 	 * Upon stop, the IVAR table gets erased, so msi-x won't
-@@ -1657,9 +1646,7 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
- 		return err;
- 	}
- 
--	/* Reset the entire device */
--	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
--	usleep_range(1000, 2000);
-+	iwl_pcie_sw_reset(trans);
- 
- 	err = iwl_pcie_apm_init(trans);
- 	if (err)
+ #define BW_20MHZ                        0
+ #define BW_40MHZ                        1
 -- 
-2.11.0
+2.7.4
