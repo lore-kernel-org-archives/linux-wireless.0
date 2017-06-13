@@ -1,109 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35815 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753778AbdFMOwz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44708 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752656AbdFMHA3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:52:55 -0400
-Received: by mail-pf0-f194.google.com with SMTP id s66so7362066pfs.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:54 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 20/20] rsi: Rename mutex tx_rxlock to the tx_lock.
-Date: Tue, 13 Jun 2017 20:19:08 +0530
-Message-Id: <1497365348-2305-21-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165257_943944_695AF956)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Tue, 13 Jun 2017 03:00:29 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [V3] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, "Peter S. Housel" <housel@acm.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170613070028.5F9CB606DC@smtp.codeaurora.org> (sfid-20170613_090332_972319_8A16C1A1)
+Date: Tue, 13 Jun 2017 07:00:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-We have now added separate lock for Rx. This lock is used to protect
-tx path only
+> From: "Peter S. Housel" <housel@acm.org>
+> 
+> An earlier change to this function (3bdae810721b) fixed a leak in the
+> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
+> glom_skb buffer, used for emulating a scattering read, is never used
+> or referenced after its contents are copied into the destination
+> buffers, and therefore always needs to be freed by the end of the
+> function.
+> 
+> Fixes: 3bdae810721b ("brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain")
+> Fixes: a413e39a38573 ("brcmfmac: fix brcmf_sdcard_recv_chain() for host without sg support")
+> Cc: stable@vger.kernel.org # 4.9.x-
+> Signed-off-by: Peter S. Housel <housel@acm.org>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c | 10 +++++-----
- drivers/net/wireless/rsi/rsi_91x_main.c |  2 +-
- drivers/net/wireless/rsi/rsi_main.h     |  4 ++--
- 3 files changed, 8 insertions(+), 8 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 68f04a7..88a1a56 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -268,11 +268,11 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			break;
- 		}
- 
--		mutex_lock(&common->tx_rxlock);
-+		mutex_lock(&common->tx_lock);
- 
- 		status = adapter->check_hw_queue_status(adapter, q_num);
- 		if ((status <= 0)) {
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
-@@ -287,7 +287,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 		skb = rsi_core_dequeue_pkt(common, q_num);
- 		if (skb == NULL) {
- 			rsi_dbg(ERR_ZONE, "skb null\n");
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
-@@ -297,14 +297,14 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			status = rsi_send_data_pkt(common, skb);
- 
- 		if (status) {
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
- 		common->tx_stats.total_tx_pkt_send[q_num]++;
- 
- 		tstamp_2 = jiffies;
--		mutex_unlock(&common->tx_rxlock);
-+		mutex_unlock(&common->tx_lock);
- 
- 		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
- 			schedule();
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index f1cde0c..34ab8f0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -220,7 +220,7 @@ struct rsi_hw *rsi_91x_init(void)
- 
- 	rsi_init_event(&common->tx_thread.event);
- 	mutex_init(&common->mutex);
--	mutex_init(&common->tx_rxlock);
-+	mutex_init(&common->tx_lock);
- 
- 	if (rsi_create_kthread(common,
- 			       &common->tx_thread,
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 6d41c9b..d3bf7ac 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -177,8 +177,8 @@ struct rsi_common {
- 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
- 	/* Mutex declaration */
- 	struct mutex mutex;
--	/* Mutex used between tx/rx threads */
--	struct mutex tx_rxlock;
-+	/* Mutex used for tx thread */
-+	struct mutex tx_lock;
- 	/* Mutex used for rx thread */
- 	struct mutex rx_lock;
- 	u8 endpoint;
+5ea59db8a375 brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9780735/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
