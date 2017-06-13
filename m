@@ -1,55 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36272 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752584AbdF2San (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35660 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752167AbdFMG2a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:30:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:21 +0300
-Message-Id: <20170629183027.15408-10-luca@coelho.fi> (sfid-20170629_203055_110693_6A894688)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 09/15] iwlwifi: mvm: don't mess the SNAP header in TSO for non-QoS packets
+        Tue, 13 Jun 2017 02:28:30 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Caesar Wang <wxt@rock-chips.com>
+Cc: amitkarwar@gmail.com, huxm@marvell.com, nishants@marvell.com,
+        gbhat@marvell.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        briannorris@chromium.org, jeffy.chen@rock-chips.com
+Subject: Re: [PATCH] mwifiex: fixes the trivial print
+References: <1497008411-15223-1-git-send-email-wxt@rock-chips.com>
+Date: Tue, 13 Jun 2017 09:28:23 +0300
+In-Reply-To: <1497008411-15223-1-git-send-email-wxt@rock-chips.com> (Caesar
+        Wang's message of "Fri, 9 Jun 2017 19:40:11 +0800")
+Message-ID: <87poe8pfjs.fsf@purkki.adurom.net> (sfid-20170613_082941_713817_68B54B4C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Caesar Wang <wxt@rock-chips.com> writes:
 
-When we get large sends on non-QoS association, we had a
-bug that mangled the SNAP header. Fix that.
+> We have always met the unused log be printed as following.
+>
+> ...
+> [23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+> cannot find cfp by band 2    & channel=13 freq=0
+> [23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+> cannot find cfp by band 2    & channel=13 freq=0
+>
+> Maybe that's related to wifi regdom, since wifi default area
+> was US and didn't support 12~14 channels.
+>
+> As Frequencies:
+> * 2412 MHz [1] (30.0 dBm)
+> * 2417 MHz [2] (30.0 dBm)
+> * 2422 MHz [3] (30.0 dBm)
+> * 2427 MHz [4] (30.0 dBm)
+> * 2432 MHz [5] (30.0 dBm)
+> * 2437 MHz [6] (30.0 dBm)
+> * 2442 MHz [7] (30.0 dBm)
+> * 2447 MHz [8] (30.0 dBm)
+> * 2452 MHz [9] (30.0 dBm)
+> * 2457 MHz [10] (30.0 dBm)
+> * 2462 MHz [11] (30.0 dBm)
+> * 2467 MHz [12] (disabled)
+> * 2472 MHz [13] (disabled)
+> * 2484 MHz [14] (disabled)
+>
+> Signed-off-by: Caesar Wang <wxt@rock-chips.com>
+> ---
+>
+>  drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
+> index 1ff2205..6e29943 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfp.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
+> @@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
+>  		}
+>  	}
+>  	if (i == sband->n_channels) {
+> -		mwifiex_dbg(priv->adapter, ERROR,
+> +		mwifiex_dbg(priv->adapter, WARN,
+>  			    "%s: cannot find cfp by band %d\t"
+>  			    "& channel=%d freq=%d\n",
+>  			    __func__, band, channel, freq);
 
-Fixes: a6d5e32f247c ("iwlwifi: mvm: send large SKBs to the transport")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+I don't see how this fixes anything, care to explain? And the title is
+quite vague.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 172f0aa8d019..584ddc39d5f7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -849,11 +849,13 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		if (tcp_payload_len > mss) {
- 			skb_shinfo(tmp)->gso_size = mss;
- 		} else {
--			qc = ieee80211_get_qos_ctl((void *)tmp->data);
-+			if (ieee80211_is_data_qos(hdr->frame_control)) {
-+				qc = ieee80211_get_qos_ctl((void *)tmp->data);
- 
--			if (ipv4)
--				ip_send_check(ip_hdr(tmp));
--			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+				if (ipv4)
-+					ip_send_check(ip_hdr(tmp));
-+				*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+			}
- 			skb_shinfo(tmp)->gso_size = 0;
- 		}
- 
+And I would rather fix the root cause, mwifiex folks please comment.
+
 -- 
-2.11.0
+Kalle Valo
