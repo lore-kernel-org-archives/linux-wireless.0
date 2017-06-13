@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50972 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751093AbdFAJDl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:03:41 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [4.12, REGRESSION,
- fix] brcmfmac: fix alignment configuration on host using 64-bit DMA
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170526110255.21342-1-hdegoede@redhat.com>
-References: <20170526110255.21342-1-hdegoede@redhat.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Message-Id: <20170601090340.B7D616073B@smtp.codeaurora.org> (sfid-20170601_110345_335522_197DE0D9)
-Date: Thu,  1 Jun 2017 09:03:40 +0000 (UTC)
+Received: from mga06.intel.com ([134.134.136.31]:1778 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751885AbdFMInb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 04:43:31 -0400
+Message-ID: <1497343318.22624.127.camel@linux.intel.com> (sfid-20170613_104334_979861_278C57BA)
+Subject: Re: [PATCH v2 00/12] NFC: clean up for ACPI GPIO usage
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Jun 2017 11:41:58 +0300
+In-Reply-To: <20170612205620.GC6272@zurbaran.ger.intel.com>
+References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+         <1497281772.22624.124.camel@linux.intel.com>
+         <20170612205620.GC6272@zurbaran.ger.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hans de Goede <hdegoede@redhat.com> wrote:
+On Mon, 2017-06-12 at 22:56 +0200, Samuel Ortiz wrote:
+> On Mon, Jun 12, 2017 at 06:36:12PM +0300, Andy Shevchenko wrote:
 
-> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> > Samuel, anything to comment?
 > 
-> For SDIO the alignment requirement for transfers from device to host
-> is configured in firmware. This configuration is limited to minimum
-> of 4-byte alignment. However, this is not correct for platforms using
-> 64-bit DMA when the minimum alignment should be 8 bytes. This issue
-> appeared when the ALIGNMENT definition was set according the DMA
-> configuration. The configuration in firmware was not using that macro
-> defintion, but a hardcoded value of 4. Hence the driver reported
-> alignment failures for data coming from the device and causing
-> transfers to fail.
-> 
-> Fixes: 6e84ab604bde ("brcmfmac: properly align buffers on certain platforms
-> Reported-by: Hans de Goede <hdegoede@redhat.com>
-> Tested-by: Hans de Goede <hdegoede@redhat.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> I will get to my pending NFC patches during the week.
 
-Patch applied to wireless-drivers.git, thanks.
-
-1dbf647f3175 brcmfmac: fix alignment configuration on host using 64-bit DMA
+Thanks!
 
 -- 
-https://patchwork.kernel.org/patch/9750347/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
