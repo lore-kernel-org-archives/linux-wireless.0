@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:43623 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751091AbdFAEKP (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33601 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753744AbdFMOwE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 00:10:15 -0400
-Date: Thu, 1 Jun 2017 14:10:11 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
-        Tycho Andersen <tycho@tycho.ws>,
-        driverdev-devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC 3/3] MAINTAINERS: add maintainer entry for ks7010
-Message-ID: <20170601041011.GD30618@eros> (sfid-20170601_061039_410597_443729A4)
-References: <1496287628-16787-1-git-send-email-me@tobin.cc>
- <1496287628-16787-4-git-send-email-me@tobin.cc>
- <20170601034630.GB7468@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170601034630.GB7468@kroah.com>
+        Tue, 13 Jun 2017 10:52:04 -0400
+Received: by mail-pf0-f196.google.com with SMTP id w12so11947232pfk.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:03 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 10/20] rsi: set immediate wakeup bit
+Date: Tue, 13 Jun 2017 20:18:58 +0530
+Message-Id: <1497365348-2305-11-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_170119_647113_7183FB0E)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 12:46:30PM +0900, Greg KH wrote:
-> On Thu, Jun 01, 2017 at 01:27:08PM +1000, Tobin C. Harding wrote:
-> > Driver ks7010 does not currently have a maintainer.
-> > 
-> > Add maintainers entry for ks7010.
-> > 
-> > Signed-off-by: Tobin C. Harding <me@tobin.cc>
-> > ---
-> >  MAINTAINERS | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 9e98464..75250ee 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -7429,6 +7429,13 @@ F:	Documentation/auxdisplay/ks0108
-> >  F:	drivers/auxdisplay/ks0108.c
-> >  F:	include/linux/ks0108.h
-> >  
-> > +KS7010 KEYSTREAM DRIVER
-> > +M:      Tobin Harding <me@tobin.cc>
-> > +L:      driverdev-devel@linuxdriverproject.org
-> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
-> > +S:      Maintained
-> > +F:      drivers/staging/ks7010/
-> 
-> All tabs please :)
+From: Karun Eagalapati <karun256@gmail.com>
 
-Will fix in v2.
+immediate wakeup bit is set while sending internal management
+frame to the firmware.
 
-thanks,
-Tobin.
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index c230359..7c9224f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -149,6 +149,7 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 	extnd_size = ((uintptr_t)skb->data & 0x3);
+ 
+ 	if (tx_params->flags & INTERNAL_MGMT_PKT) {
++		skb->data[1] |= BIT(7); /* Immediate Wakeup bit*/
+ 		if ((extnd_size) > skb_headroom(skb)) {
+ 			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+ 			dev_kfree_skb(skb);
+-- 
+2.7.4
