@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44414 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52328 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753711AbdFSKvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:51:13 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1dMuGr-0000CG-Qk
-        for linux-wireless@vger.kernel.org; Mon, 19 Jun 2017 12:51:01 +0200
-Message-ID: <1497869461.29666.0.camel@sipsolutions.net> (sfid-20170619_125121_524529_A0A52605)
-Subject: Re: heads-up: wireless summit planning
+        id S1751906AbdFMJCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 05:02:06 -0400
+Message-ID: <1497344524.6068.5.camel@sipsolutions.net> (sfid-20170613_110226_444570_7390CB36)
+Subject: Re: [PATCH V3 3/9] nl80211: add authorized flag to CONNECT event
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Jun 2017 12:51:01 +0200
-In-Reply-To: <1496129103.3327.5.camel@sipsolutions.net> (sfid-20170530_092508_775937_18EE3273)
-References: <1496129103.3327.5.camel@sipsolutions.net>
-         (sfid-20170530_092508_775937_18EE3273)
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Jun 2017 11:02:04 +0200
+In-Reply-To: <1497010130-16186-4-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1497010130-16186-4-git-send-email-arend.vanspriel@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-05-30 at 09:25 +0200, Johannes Berg wrote:
-> Hi all,
-> 
-> Netdev 2.2 has been announced for Seoul, South Korea, November 8-10:
-> 
-> http://netdevconf.org/2.2/
-> 
-> We're planning to hold the next wireless workshop there.
+On Fri, 2017-06-09 at 13:08 +0100, Arend van Spriel wrote:
+> When the driver supports offloading of the PTK/GTK handshakes
+> completion of that during connect changes the layer 2 control
+> port state to authorized. This patch allows the driver to pass
+> that state in cfg80211_connect_done() resulting in adding the
+> new flag NL80211_ATTR_PORT_AUTHORIZED in the NL80211_CMD_CONNECT
+> notification. For 802.1X the driver is expected to issue the
+> NL80211_CMD_CONNECT notification twice. First without the new
+> attribute to inform user-space that 802.1X authentication can
+> start and a second one with the new attribute to indicate the
+> completion of the handshakes.
 
-Here's a reminder.
+So I was going to apply this, but now I'm no longer sure.
 
-Also, I've just added the wiki page for topic suggestions etc.
+First of all, I'm concerned it could confuse older tools that don't
+expect to see the notification twice. OTOH, they'd get the connected
+notification now and not really know whether or not data can be passed,
+so it seems unlikely they'd rely on it - but are we really sure about
+that?
 
-https://wireless.wiki.kernel.org/en/developers/summits/seoul-2017
+Additionally, I just discussed this with Avi, and it's not clear to us
+what the second notification is actually useful for? If you were going
+to say maybe it makes sense for when you can't send ROAMED, but still
+connected again to the same network so you've already done the 4-way-HS 
+at the time of the first notification - that I think makes sense.
+
+But it seems that wpa_s moves all state machines to COMPLETE when it
+sends the PMK to the device for offload, so it won't really care about
+when that finished?
+
+However, I think this might actually be a BAD thing, because it would
+leave higher layers trying to do DHCP when the link isn't actually
+ready yet.
+
+(This, btw, is another problem we can solve with the EAPOL-over-nl80211 
+since then we can set the carrier later when the port is authorized.)
+
+So - I have no objections to this patch, but I think the double
+notification needs to be revised, and if needed a separate notification
+for "4-way-HS is done now" can be added.
 
 johannes
