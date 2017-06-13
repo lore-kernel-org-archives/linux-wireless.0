@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54652 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751437AbdFEIXV (ORCPT
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:36723 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753195AbdFMLgP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 04:23:21 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Colin King <colin.king@canonical.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "Ganapathi Bhat" <gbhat@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>
-Subject: Re:  [PATCH][-next] mwifiex: make function mwifiex_ret_pkt_aggr_ctrl
- static
-Date: Mon, 5 Jun 2017 08:23:13 +0000
-Message-ID: <0edf9f73cf2f49788ef767658cd038d0@SC-EXCH02.marvell.com> (sfid-20170605_102354_041877_9CB27B25)
-References: <20170602085639.29338-1-colin.king@canonical.com>
-In-Reply-To: <20170602085639.29338-1-colin.king@canonical.com>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 13 Jun 2017 07:36:15 -0400
+Received: by mail-wr0-f173.google.com with SMTP id 36so16890858wry.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 04:36:09 -0700 (PDT)
+Subject: Re: [for-4.12, 3/3] brcmfmac: unbind all devices upon failure in
+ firmware callback
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+References: <1497268054-4507-4-git-send-email-arend.vanspriel@broadcom.com>
+ <20170613061235.D11C6607CC@smtp.codeaurora.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <dba4a756-63de-1dd0-a245-3499b8038d29@broadcom.com> (sfid-20170613_133632_490949_9F674185)
+Date: Tue, 13 Jun 2017 13:36:07 +0200
 MIME-Version: 1.0
+In-Reply-To: <20170613061235.D11C6607CC@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQ29saW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQ29saW4g
-S2luZyBbbWFpbHRvOmNvbGluLmtpbmdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogMjAxN+W5tDbm
-nIgy5pelIDE2OjU3DQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyOyBOaXNoYW50IFNhcm11a2FkYW07
-IEdhbmFwYXRoaSBCaGF0OyBYaW5taW5nIEh1Ow0KPiBLYWxsZSBWYWxvOyBsaW51eC13aXJlbGVz
-c0B2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IGtlcm5lbC1q
-YW5pdG9yc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4g
-U3ViamVjdDogW0VYVF0gW1BBVENIXVstbmV4dF0gbXdpZmlleDogbWFrZSBmdW5jdGlvbg0KPiBt
-d2lmaWV4X3JldF9wa3RfYWdncl9jdHJsIHN0YXRpYw0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4g
-DQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0NCj4gRnJvbTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fu
-b25pY2FsLmNvbT4NCj4gDQo+IGZ1bmN0aW9uIG13aWZpZXhfcmV0X3BrdF9hZ2dyX2N0cmwgY2Fu
-IGJlIG1hZGUgc3RhdGljIGFzIGl0IGRvZXMgbm90IG5lZWQgdG8NCj4gYmUgaW4gZ2xvYmFsIHNj
-b3BlLg0KPiANCj4gQ2xlYW5zIHVwIHNwYXJzZSB3YXJuaW5nOiAic3ltYm9sICdtd2lmaWV4X3Jl
-dF9wa3RfYWdncl9jdHJsJyB3YXMgbm90DQo+IGRlY2xhcmVkLiBTaG91bGQgaXQgYmUgc3RhdGlj
-PyINCg0KWWVzLCBpdCBzaG91bGQgYmUgc3RhdGljLCBUaGFua3MsDQoNClJlZ2FyZHMsDQpTaW1v
-bg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25p
-Y2FsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgv
-c3RhX2NtZHJlc3AuYyB8IDQgKystLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygr
-KSwgMiBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tYXJ2ZWxsL213aWZpZXgvc3RhX2NtZHJlc3AuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L21hcnZlbGwvbXdpZmlleC9zdGFfY21kcmVzcC5jDQo+IGluZGV4IDMzNDhmYjNhNzUxNC4uMjk0
-NTc3NWU4M2M1IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213
-aWZpZXgvc3RhX2NtZHJlc3AuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
-L213aWZpZXgvc3RhX2NtZHJlc3AuYw0KPiBAQCAtMTE1NCw4ICsxMTU0LDggQEAgc3RhdGljIGlu
-dCBtd2lmaWV4X3JldF9jaGFuX3JlZ2lvbl9jZmcoc3RydWN0DQo+IG13aWZpZXhfcHJpdmF0ZSAq
-cHJpdiwNCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4gDQo+IC1pbnQgbXdpZmlleF9yZXRfcGt0X2Fn
-Z3JfY3RybChzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LA0KPiAtCQkJICAgICAgc3RydWN0
-IGhvc3RfY21kX2RzX2NvbW1hbmQgKnJlc3ApDQo+ICtzdGF0aWMgaW50IG13aWZpZXhfcmV0X3Br
-dF9hZ2dyX2N0cmwoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwNCj4gKwkJCQkgICAgIHN0
-cnVjdCBob3N0X2NtZF9kc19jb21tYW5kICpyZXNwKQ0KPiAgew0KPiAgCXN0cnVjdCBob3N0X2Nt
-ZF9kc19wa3RfYWdncl9jdHJsICpwa3RfYWdncl9jdHJsID0NCj4gIAkJCQkJJnJlc3AtPnBhcmFt
-cy5wa3RfYWdncl9jdHJsOw0KPiAtLQ0KPiAyLjExLjANCg0K
+
+
+On 13-06-17 08:12, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> 
+>> In brcmf_sdio_firmware_callback() we need to unbind the driver from
+>> both sdio_func devices.
+>>
+>> Cc: stable@vger.kernel.org # 4.9.x-
+>> Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> 
+> The commit log doesn't really describe the bug you are fixing (ie. doesn't
+> answer "why?"). Can you give some more info, logs etc (as a reply to this mail)
+> and I'll add it.
+
+Merging with the commit message that Enric wrote:
+
+"""
+When request firmware fails, brcmf_ops_sdio_remove is being called and
+brcmf_bus freed. In such circumstancies if you do a suspend/resume cycle
+the kernel hangs on resume due a NULL pointer dereference in resume
+function. So in brcmf_sdio_firmware_callback() we need to unbind the
+driver from both sdio_func devices when firmware load failure is indicated.
+"""
+
+Regards,
+Arend
