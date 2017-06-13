@@ -1,199 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42930 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751566AbdFIMJD (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35815 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753778AbdFMOwz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 08:09:03 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 7/9] brcmfmac: support 4-way handshake offloading for 802.1X
-Date: Fri,  9 Jun 2017 13:08:48 +0100
-Message-Id: <1497010130-16186-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140924_994329_0CC618A9)
-In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 13 Jun 2017 10:52:55 -0400
+Received: by mail-pf0-f194.google.com with SMTP id s66so7362066pfs.2
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:54 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 20/20] rsi: Rename mutex tx_rxlock to the tx_lock.
+Date: Tue, 13 Jun 2017 20:19:08 +0530
+Message-Id: <1497365348-2305-21-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165257_943944_695AF956)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding callbacks for PMK provisioning. If firmware supports offloading
-it is indicated to user-space that 802.1X offload is supported.
+From: Karun Eagalapati <karun256@gmail.com>
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+We have now added separate lock for Rx. This lock is used to protect
+tx path only
+
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 61 ++++++++++++++++++++--
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  3 +-
- 2 files changed, 60 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_core.c | 10 +++++-----
+ drivers/net/wireless/rsi/rsi_91x_main.c |  2 +-
+ drivers/net/wireless/rsi/rsi_main.h     |  4 ++--
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 27a89dc..cc5b8ba 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1704,6 +1704,7 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
- brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
- 	s32 val;
- 	s32 err;
- 	const struct brcmf_tlv *rsn_ie;
-@@ -1714,6 +1715,8 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
- 	u32 mfp;
- 	u16 count;
- 
-+	profile->use_fwsup = BRCMF_PROFILE_FWSUP_NONE;
-+
- 	if (!sme->crypto.n_akm_suites)
- 		return 0;
- 
-@@ -1726,6 +1729,8 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
- 		switch (sme->crypto.akm_suites[0]) {
- 		case WLAN_AKM_SUITE_8021X:
- 			val = WPA_AUTH_UNSPECIFIED;
-+			if (sme->want_1x)
-+				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 68f04a7..88a1a56 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -268,11 +268,11 @@ void rsi_core_qos_processor(struct rsi_common *common)
  			break;
- 		case WLAN_AKM_SUITE_PSK:
- 			val = WPA_AUTH_PSK;
-@@ -1739,9 +1744,13 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
- 		switch (sme->crypto.akm_suites[0]) {
- 		case WLAN_AKM_SUITE_8021X:
- 			val = WPA2_AUTH_UNSPECIFIED;
-+			if (sme->want_1x)
-+				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
- 			break;
- 		case WLAN_AKM_SUITE_8021X_SHA256:
- 			val = WPA2_AUTH_1X_SHA256;
-+			if (sme->want_1x)
-+				profile->use_fwsup = BRCMF_PROFILE_FWSUP_1X;
- 			break;
- 		case WLAN_AKM_SUITE_PSK_SHA256:
- 			val = WPA2_AUTH_PSK_SHA256;
-@@ -1756,6 +1765,9 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
  		}
- 	}
  
-+	if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_1X)
-+		brcmf_dbg(INFO, "using 1X offload\n");
-+
- 	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP))
- 		goto skip_mfp_config;
- 	/* The MFP mode (1 or 2) needs to be determined, parse IEs. The
-@@ -1928,6 +1940,7 @@ static void brcmf_set_join_pref(struct brcmf_if *ifp,
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
- 	struct brcmf_if *ifp = netdev_priv(ndev);
-+	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
- 	struct ieee80211_channel *chan = sme->channel;
- 	struct brcmf_join_params join_params;
- 	size_t join_params_size;
-@@ -2025,16 +2038,24 @@ static void brcmf_set_join_pref(struct brcmf_if *ifp,
- 	}
+-		mutex_lock(&common->tx_rxlock);
++		mutex_lock(&common->tx_lock);
  
- 	if (sme->crypto.psk) {
-+		if (WARN_ON(profile->use_fwsup != BRCMF_PROFILE_FWSUP_NONE)) {
-+			err = -EINVAL;
-+			goto done;
-+		}
- 		brcmf_dbg(INFO, "using PSK offload\n");
-+		profile->use_fwsup = BRCMF_PROFILE_FWSUP_PSK;
-+	}
- 
-+	if (profile->use_fwsup != BRCMF_PROFILE_FWSUP_NONE) {
- 		/* enable firmware supplicant for this interface */
- 		err = brcmf_fil_iovar_int_set(ifp, "sup_wpa", 1);
- 		if (err < 0) {
- 			brcmf_err("failed to enable fw supplicant\n");
- 			goto done;
+ 		status = adapter->check_hw_queue_status(adapter, q_num);
+ 		if ((status <= 0)) {
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
  		}
--		ifp->vif->profile.use_fwsup = BRCMF_PROFILE_FWSUP_PSK;
-+	}
  
-+	if (profile->use_fwsup == BRCMF_PROFILE_FWSUP_PSK) {
- 		err = brcmf_set_pmk(ifp, sme->crypto.psk,
- 				    BRCMF_WSEC_MAX_PSK_LEN);
- 		if (err)
-@@ -5173,6 +5194,34 @@ static int brcmf_cfg80211_tdls_oper(struct wiphy *wiphy,
- }
- #endif
+@@ -287,7 +287,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 		skb = rsi_core_dequeue_pkt(common, q_num);
+ 		if (skb == NULL) {
+ 			rsi_dbg(ERR_ZONE, "skb null\n");
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
  
-+static int brcmf_cfg80211_set_pmk(struct wiphy *wiphy, struct net_device *dev,
-+				  const struct cfg80211_pmk_conf *conf)
-+{
-+	struct brcmf_if *ifp;
-+
-+	brcmf_dbg(TRACE, "enter\n");
-+
-+	/* expect using firmware supplicant for 1X */
-+	ifp = netdev_priv(dev);
-+	if (WARN_ON(ifp->vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_1X))
-+		return -EINVAL;
-+
-+	return brcmf_set_pmk(ifp, conf->pmk, conf->pmk_len);
-+}
-+
-+static int brcmf_cfg80211_del_pmk(struct wiphy *wiphy, struct net_device *dev,
-+				  const u8 *aa)
-+{
-+	struct brcmf_if *ifp;
-+
-+	brcmf_dbg(TRACE, "enter\n");
-+	ifp = netdev_priv(dev);
-+	if (WARN_ON(ifp->vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_1X))
-+		return -EINVAL;
-+
-+	return brcmf_set_pmk(ifp, NULL, 0);
-+}
-+
- static struct cfg80211_ops brcmf_cfg80211_ops = {
- 	.add_virtual_intf = brcmf_cfg80211_add_iface,
- 	.del_virtual_intf = brcmf_cfg80211_del_iface,
-@@ -5216,6 +5265,8 @@ static int brcmf_cfg80211_tdls_oper(struct wiphy *wiphy,
- 	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
- 	.tdls_oper = brcmf_cfg80211_tdls_oper,
- 	.update_connect_params = brcmf_cfg80211_update_conn_params,
-+	.set_pmk = brcmf_cfg80211_set_pmk,
-+	.del_pmk = brcmf_cfg80211_del_pmk,
- };
+@@ -297,14 +297,14 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 			status = rsi_send_data_pkt(common, skb);
  
- struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
-@@ -5276,7 +5327,8 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
- 	u32 event = e->event_code;
- 	u32 status = e->status;
+ 		if (status) {
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
  
--	if (event == BRCMF_E_PSK_SUP &&
-+	if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK &&
-+	    event == BRCMF_E_PSK_SUP &&
- 	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
- 		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
- 	if (event == BRCMF_E_SET_SSID && status == BRCMF_E_STATUS_SUCCESS) {
-@@ -6545,9 +6597,12 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	if (!ifp->drvr->settings->roamoff)
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
--	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_FWSUP))
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_FWSUP)) {
- 		wiphy_ext_feature_set(wiphy,
- 				      NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK);
-+		wiphy_ext_feature_set(wiphy,
-+				      NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X);
-+	}
- 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 779e9b5..c6b6fbb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -115,7 +115,8 @@ struct brcmf_cfg80211_security {
+ 		common->tx_stats.total_tx_pkt_send[q_num]++;
  
- enum brcmf_profile_fwsup {
- 	BRCMF_PROFILE_FWSUP_NONE,
--	BRCMF_PROFILE_FWSUP_PSK
-+	BRCMF_PROFILE_FWSUP_PSK,
-+	BRCMF_PROFILE_FWSUP_1X
- };
+ 		tstamp_2 = jiffies;
+-		mutex_unlock(&common->tx_rxlock);
++		mutex_unlock(&common->tx_lock);
  
- /**
+ 		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
+ 			schedule();
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index f1cde0c..34ab8f0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -220,7 +220,7 @@ struct rsi_hw *rsi_91x_init(void)
+ 
+ 	rsi_init_event(&common->tx_thread.event);
+ 	mutex_init(&common->mutex);
+-	mutex_init(&common->tx_rxlock);
++	mutex_init(&common->tx_lock);
+ 
+ 	if (rsi_create_kthread(common,
+ 			       &common->tx_thread,
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 6d41c9b..d3bf7ac 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -177,8 +177,8 @@ struct rsi_common {
+ 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
+ 	/* Mutex declaration */
+ 	struct mutex mutex;
+-	/* Mutex used between tx/rx threads */
+-	struct mutex tx_rxlock;
++	/* Mutex used for tx thread */
++	struct mutex tx_lock;
+ 	/* Mutex used for rx thread */
+ 	struct mutex rx_lock;
+ 	u8 endpoint;
 -- 
-1.9.1
+2.7.4
