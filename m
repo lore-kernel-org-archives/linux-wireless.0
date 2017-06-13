@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48340 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56296 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751505AbdF1SSB (ORCPT
+        with ESMTP id S1752097AbdFMF67 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 14:18:01 -0400
+        Tue, 13 Jun 2017 01:58:59 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: cw1200: add const to hwbus_ops structures
+Subject: Re: [resend] brcmfmac: p2p and normal ap access are not always
+ possible at the same time
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1498218199-13429-1-git-send-email-bhumirks@gmail.com>
-References: <1498218199-13429-1-git-send-email-bhumirks@gmail.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, pizza@shaftnet.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>
-Message-Id: <20170628181801.049B560AD5@smtp.codeaurora.org> (sfid-20170628_201840_154233_44449136)
-Date: Wed, 28 Jun 2017 18:18:01 +0000 (UTC)
+In-Reply-To: <20170526105747.16874-2-hdegoede@redhat.com>
+References: <20170526105747.16874-2-hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Message-Id: <20170613055859.3BEBF607DC@smtp.codeaurora.org> (sfid-20170613_075906_058906_B7EED59F)
+Date: Tue, 13 Jun 2017 05:58:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhumika Goyal <bhumirks@gmail.com> wrote:
+Hans de Goede <hdegoede@redhat.com> wrote:
 
-> Declare hwbus_ops structures as const as they are only passed as an
-> argument to the function cw1200_core_probe. This argument is of type
-> const. So, make these structures const.
+> The firmware responding with -EBUSY when trying to add an extra virtual-if
+> is a normal thing, do not print an error for this.
 > 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-3ac27dd37b40 cw1200: add const to hwbus_ops structures
+Arend, what should I do with this patch? Take it?
 
 -- 
-https://patchwork.kernel.org/patch/9806289/
+https://patchwork.kernel.org/patch/9750341/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
