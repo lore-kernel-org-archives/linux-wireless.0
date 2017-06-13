@@ -1,89 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22978 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752383AbdFLT7T (ORCPT
+Received: from bh-25.webhostbox.net ([208.91.199.152]:60743 "EHLO
+        bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752501AbdFMAb7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 15:59:19 -0400
-Date: Mon, 12 Jun 2017 22:59:08 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: prameela.j04cs@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] rsi: Add new host interface operations
-Message-ID: <20170612195908.GA2079@elgon.mountain> (sfid-20170612_215922_375199_155C017E)
+        Mon, 12 Jun 2017 20:31:59 -0400
+Subject: Re: nfc: nci: fix potential NULL pointer dereference
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20170612220223.GA6326@embeddedgus>
+ <20170612222155.GA18302@roeck-us.net>
+ <20170612172805.Horde.AUST5RGJfhNVnchxoXV3U2C@gator4166.hostgator.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <28317503-e721-2564-a9ff-82182aa0644a@roeck-us.net> (sfid-20170613_023219_623986_CE561DA6)
+Date: Mon, 12 Jun 2017 17:31:54 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170612172805.Horde.AUST5RGJfhNVnchxoXV3U2C@gator4166.hostgator.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Prameela Rani Garnepudi,
+On 06/12/2017 03:28 PM, Gustavo A. R. Silva wrote:
+> Hi Guenter,
+> 
+> Please, see my comments below
+> 
+> Quoting Guenter Roeck <linux@roeck-us.net>:
+> 
+>> On Mon, Jun 12, 2017 at 05:02:23PM -0500, Gustavo A. R. Silva wrote:
+>>> NULL check at line 76: if (conn_info) {, implies that pointer conn_info
+>>> might be NULL, but this pointer is being previously dereferenced,
+>>> which might cause a NULL pointer dereference.
+>>>
+>>> Add NULL check before dereferencing pointer conn_info in order to
+>>> avoid a potential NULL pointer dereference.
+>>>
+>>> Addresses-Coverity-ID: 1362349
+>>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>>> ---
+>>>  net/nfc/nci/core.c | 11 +++++------
+>>>  1 file changed, 5 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+>>> index 61fff42..d2198ce 100644
+>>> --- a/net/nfc/nci/core.c
+>>> +++ b/net/nfc/nci/core.c
+>>> @@ -70,14 +70,13 @@ int nci_get_conn_info_by_dest_type_params(struct nci_dev *ndev, u8 dest_type,
+>>>      struct nci_conn_info *conn_info;
+>>>
+>>>      list_for_each_entry(conn_info, &ndev->conn_info_list, list) {
+>>
+>> conn_info is set in list_for_each_entry() using container_of(),
+>> which is never NULL. Plus, it is dereferenced there as well.
+>> The check is unnecessary.
+>>
+> 
+> Thanks for clarifying.
+> 
+>> Guenter
+>>
+>>> -        if (conn_info->dest_type == dest_type) {
+>>> +        if (conn_info && conn_info->dest_type == dest_type) {
+>>>              if (!params)
+>>>                  return conn_info->conn_id;
+>>> -            if (conn_info) {
+> 
+> So, this NULL check could be removed as it seems it is not useful at all ?
+> 
+Exactly.
 
-The patch b97e9b94ad75: "rsi: Add new host interface operations" from
-May 16, 2017, leads to the following static checker warning:
-
-	drivers/net/wireless/rsi/rsi_91x_usb.c:400 rsi_usb_master_reg_read()
-	warn: passing casted pointer 'value' to 'rsi_usb_reg_read()' 32 vs 16.
-
-drivers/net/wireless/rsi/rsi_91x_usb.c
-   156  static int rsi_usb_reg_read(struct usb_device *usbdev,
-   157                              u32 reg,
-   158                              u16 *value,
-   159                              u16 len)
-   160  {
-   161          u8 *buf;
-   162          int status = -ENOMEM;
-   163  
-   164          buf  = kmalloc(0x04, GFP_KERNEL);
-
-Why are we allocating 0x4 bytes?
-
-   165          if (!buf)
-   166                  return status;
-   167  
-   168          status = usb_control_msg(usbdev,
-   169                                   usb_rcvctrlpipe(usbdev, 0),
-   170                                   USB_VENDOR_REGISTER_READ,
-   171                                   RSI_USB_REQ_IN,
-   172                                   ((reg & 0xffff0000) >> 16), (reg & 0xffff),
-   173                                   (void *)buf,
-   174                                   len,
-                                         ^^^
-If len is more than 4 then we have memory corruption.
-
-   175                                   USB_CTRL_GET_TIMEOUT);
-   176  
-   177          *value = (buf[0] | (buf[1] << 8));
-   178          if (status < 0) {
-   179                  rsi_dbg(ERR_ZONE,
-   180                          "%s: Reg read failed with error code :%d\n",
-   181                          __func__, status);
-   182          }
-
-[ snip ]
-
-   394  static int rsi_usb_master_reg_read(struct rsi_hw *adapter, u32 reg,
-   395                                     u32 *value, u16 len)
-   396  {
-   397          struct usb_device *usbdev =
-   398                  ((struct rsi_91x_usbdev *)adapter->rsi_dev)->usbdev;
-   399  
-   400          return rsi_usb_reg_read(usbdev, reg, (u16 *)value, len);
-
-This is an endian bug because we're assuming the CPU is little endian.
-
-	u16 tmp;
-	int ret;
-
-	if (len != sizeof(*value)) /* Or maybe sizeof(tmp), who knows? */
-		return -EINVAL;
-	ret = rsi_usb_reg_read(usbdev, reg, &tmp, len);
-	if (ret)
-		return ret;
-
-	*value = tmp;
-	return 0;
-
-
-   401  }
-
-regards,
-dan carpenter
+>>> -                if (params->id == conn_info->dest_params->id &&
+>>> -                    params->protocol == conn_info->dest_params->protocol)
+>>> -                    return conn_info->conn_id;
+>>> -            }
+>>> +
+>>> +            if (params->id == conn_info->dest_params->id &&
+>>> +                params->protocol == conn_info->dest_params->protocol)
+>>> +                return conn_info->conn_id;
+>>>          }
+>>>      }
+>>>
+> 
+> Thank you
+> -- 
+> Gustavo A. R. Silva
+> 
+> 
+> 
+> 
+> 
+> 
+> 
