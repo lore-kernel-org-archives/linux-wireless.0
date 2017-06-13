@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frisell.zx2c4.com ([192.95.5.64]:47113 "EHLO frisell.zx2c4.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751878AbdFKVWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Jun 2017 17:22:01 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:46462 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753024AbdFMHF6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Jun 2017 03:05:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20235732.W6WmnKk6cl@tauon.chronox.de>
-References: <20170610025912.6499-1-Jason@zx2c4.com> <20235732.W6WmnKk6cl@tauon.chronox.de>
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Date: Sun, 11 Jun 2017 23:21:55 +0200
-Message-ID: <CAHmME9rgVXkRfxEhJDu+LmAG64PT=NsJH3se_0ffPPXF=a8q+g@mail.gmail.com> (sfid-20170611_232239_215882_4F024CE8)
-Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
-To: =?UTF-8?Q?Stephan_M=C3=BCller?= <smueller@chronox.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-hardening@lists.openwall.com,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        David Howells <dhowells@redhat.com>,
-        David Safford <safford@us.ibm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Gilad Ben-Yossef <gilad@benyossef.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: mwifiex: Replace semaphore async_sem with mutex
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1496916183-4097-1-git-send-email-binoy.jayan@linaro.org>
+References: <1496916183-4097-1-git-send-email-binoy.jayan@linaro.org>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Binoy Jayan <binoy.jayan@linaro.org>, linux-kernel@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Rajendra <rnayak@codeaurora.org>,
+        Mark Brown <broonie@kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Message-Id: <20170613070552.B281F601D9@smtp.codeaurora.org> (sfid-20170613_090715_050635_CB9B4B14)
+Date: Tue, 13 Jun 2017 07:05:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan,
+Binoy Jayan <binoy.jayan@linaro.org> wrote:
 
-On Sun, Jun 11, 2017 at 11:06 PM, Stephan M=C3=BCller <smueller@chronox.de>=
- wrote:
-> Are you planning to send an update to your patch set? If yes, there is an=
-other
-> one which should be converted too: crypto/rsa-pkcs1pad.c.
+> The semaphore 'async_sem' is used as a simple mutex, so
+> it should be written as one. Semaphores are going away in the future.
+> 
+> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 
-I just sent an update to this thread patching that, per your
-suggestion. Since these issues are expected to be cherry picked by
-their respective committer, I figure we can just pile on the patches
-here, listing the 0/6 intro email as each patch's parent.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Jason
+1abf9ae719f6 mwifiex: Replace semaphore async_sem with mutex
+
+-- 
+https://patchwork.kernel.org/patch/9774361/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
