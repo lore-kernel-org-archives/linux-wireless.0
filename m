@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34501 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753094AbdFRQM5 (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33833 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753706AbdFMOvx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 12:12:57 -0400
-Received: by mail-oi0-f68.google.com with SMTP id w127so7233873oiw.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:12:57 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/11] rtlwifi: btcoex: rtl8723be: fix ant_sel not work
-Date: Sun, 18 Jun 2017 11:12:41 -0500
-Message-Id: <20170618161249.6146-4-Larry.Finger@lwfinger.net> (sfid-20170618_181310_476658_93F87120)
-In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
-References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+        Tue, 13 Jun 2017 10:51:53 -0400
+Received: by mail-pg0-f67.google.com with SMTP id v14so19228036pgn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:51:53 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 07/20] rsi: correct the logic of deriving queue number
+Date: Tue, 13 Jun 2017 20:18:55 +0530
+Message-Id: <1497365348-2305-8-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165156_313384_98CBDB41)
+In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-To make ant_sel work, we should call power_on_setting to set antenna
-correctly.
+Maximum valid queue number is 0x5. So anding with 0x7 should be
+ok here.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 3 +++
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index a79f936bb394..0ce2900722f4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -846,6 +846,9 @@ static bool _rtl8723be_init_mac(struct ieee80211_hw *hw)
- 		return false;
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 25f6195..dc0a0b2 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -381,7 +381,7 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
+ 				       u8 *pkt,
+ 				       u32 len)
+ {
+-	u32 queueno = ((pkt[1] >> 4) & 0xf);
++	u32 queueno = ((pkt[1] >> 4) & 0x7);
+ 	u8 endpoint;
  
-+	if (rtlpriv->cfg->ops->get_btc_status())
-+		rtlpriv->btcoexist.btc_ops->btc_power_on_setting(rtlpriv);
-+
- 	bytetmp = rtl_read_byte(rtlpriv, REG_MULTI_FUNC_CTRL);
- 	rtl_write_byte(rtlpriv, REG_MULTI_FUNC_CTRL, bytetmp | BIT(3));
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index c0d2601bc55f..31fcf43e24c1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2534,6 +2534,7 @@ struct bt_coexist_info {
- struct rtl_btc_ops {
- 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
- 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
-+	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
- 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
- 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
- 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
+ 	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? MGMT_EP : DATA_EP);
 -- 
-2.12.3
+2.7.4
