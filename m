@@ -1,101 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34370 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753800AbdFVVV7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:21:59 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:55 +0300
-Message-Id: <20170622212101.16422-20-luca@coelho.fi> (sfid-20170622_232203_503256_C8761ADD)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 19/25] iwlwifi: mvm: don't warn in queue sync on RF-kill
+Received: from s3.sipsolutions.net ([5.9.151.49]:41480 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751664AbdFNU2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Jun 2017 16:28:48 -0400
+Message-ID: <1497472126.9377.12.camel@sipsolutions.net> (sfid-20170614_222852_641381_BF25D364)
+Subject: Re: [PATCH V3 3/9] nl80211: add authorized flag to CONNECT event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 14 Jun 2017 22:28:46 +0200
+In-Reply-To: <6e0ab1a9-04c3-6840-bab2-119624087e21@broadcom.com> (sfid-20170614_111446_665588_B33FD2CC)
+References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1497010130-16186-4-git-send-email-arend.vanspriel@broadcom.com>
+         <1497344524.6068.5.camel@sipsolutions.net>
+         <6e0ab1a9-04c3-6840-bab2-119624087e21@broadcom.com>
+         (sfid-20170614_111446_665588_B33FD2CC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-If we happen to be in or get into the queue sync when RF-kill
-is asserted, we return from there and warn since there are
-still queue sync notifications outstanding. These can't ever
-come though, because we're in RF-kill, so don't WARN then.
+> > So I was going to apply this, but now I'm no longer sure.
+> 
+> Not sure if this means you can be convinced, but let me try anyway ;-)
 
-While at it, also move the warning to the appropriate place,
-if the request is not synchronous then we shouldn't warn, but
-currently always will.
+:-)
 
-To make it fast, also trigger the waitq when on rfkill assert.
+> > First of all, I'm concerned it could confuse older tools that don't
+> > expect to see the notification twice. OTOH, they'd get the
+> > connected
+> > notification now and not really know whether or not data can be
+> > passed,
+> > so it seems unlikely they'd rely on it - but are we really sure
+> > about
+> > that?
+> 
+> Not sure what should be considered under the term "older tools". For 
+> what it is worth, in wpa_supplicant both nl80211 CONNECT and ROAMED 
+> event result in wpa_supplicant ASSOC event handled in 
+> wpa_supplicant/events.c. This event already deals with authorized
+> flag  to support QCA vendor stuff which typed it as u8 attribute iso
+> flag.
 
-Fixes: 0636b938214c ("iwlwifi: mvm: implement driver RX queues sync command")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  8 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 14 ++++++++++++--
- 2 files changed, 17 insertions(+), 5 deletions(-)
+Yeah, I guess wpa_s would deal with it just fine. I'm a little
+concerned there might be other tools, and we'd only find out in a long
+time when all of this comes together for enough users.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 75ec567ab9e2..2449be6f95a5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4277,11 +4277,13 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 		goto out;
- 	}
- 
--	if (notif->sync)
-+	if (notif->sync) {
- 		ret = wait_event_timeout(mvm->rx_sync_waitq,
--					 atomic_read(&mvm->queue_sync_counter) == 0,
-+					 atomic_read(&mvm->queue_sync_counter) == 0 ||
-+					 iwl_mvm_is_radio_killed(mvm),
- 					 HZ);
--	WARN_ON_ONCE(!ret);
-+		WARN_ON_ONCE(!ret && !iwl_mvm_is_radio_killed(mvm));
-+	}
- 
- out:
- 	atomic_set(&mvm->queue_sync_counter, 0);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index c9686e31b32e..30fc756b5b01 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1094,6 +1094,16 @@ static void iwl_mvm_wake_sw_queue(struct iwl_op_mode *op_mode, int hw_queue)
- 	iwl_mvm_start_mac_queues(mvm, mq);
- }
- 
-+static void iwl_mvm_set_rfkill_state(struct iwl_mvm *mvm)
-+{
-+	bool state = iwl_mvm_is_radio_killed(mvm);
-+
-+	if (state)
-+		wake_up(&mvm->rx_sync_waitq);
-+
-+	wiphy_rfkill_set_hw_state(mvm->hw->wiphy, state);
-+}
-+
- void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state)
- {
- 	if (state)
-@@ -1101,7 +1111,7 @@ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state)
- 	else
- 		clear_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status);
- 
--	wiphy_rfkill_set_hw_state(mvm->hw->wiphy, iwl_mvm_is_radio_killed(mvm));
-+	iwl_mvm_set_rfkill_state(mvm);
- }
- 
- static bool iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
-@@ -1114,7 +1124,7 @@ static bool iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 	else
- 		clear_bit(IWL_MVM_STATUS_HW_RFKILL, &mvm->status);
- 
--	wiphy_rfkill_set_hw_state(mvm->hw->wiphy, iwl_mvm_is_radio_killed(mvm));
-+	iwl_mvm_set_rfkill_state(mvm);
- 
- 	/* iwl_run_init_mvm_ucode is waiting for results, abort it */
- 	if (calibrating)
--- 
-2.11.0
+OTOH, most tools that aren't already quite broken will hopefully use
+wpa_supplicant events.
+
+> > But it seems that wpa_s moves all state machines to COMPLETE when
+> > it sends the PMK to the device for offload, so it won't really care
+> > about when that finished?
+> > 
+> > However, I think this might actually be a BAD thing, because it
+> > would leave higher layers trying to do DHCP when the link isn't
+> > actually ready yet.
+> 
+> Indeed. It introduces a window where the link is not ready. When I 
+> stumbled on that in wpa_s it made sense to me to have the second 
+> notification.
+
+Right.
+
+> > (This, btw, is another problem we can solve with the EAPOL-over-
+> > nl80211 since then we can set the carrier later when the port is
+> > authorized.)
+> 
+> Agree. I did see that thread. However I kinda missed the whole 
+> EAPOL-over-nl80211 idea. Was that result of summit discussion?
+
+Yeah it came up a few times and we finally decided it's worth doing,
+but so far nobody had stepped up yet. Looks like Denis decided it might
+be worth doing.
+
+> > So - I have no objections to this patch, but I think the double
+> > notification needs to be revised, and if needed a separate
+> > notification for "4-way-HS is done now" can be added.
+> 
+> The separate notification was suggested, but as you guys already
+> added a flag in the ROAMED event we decided to do the same for
+> CONNECT event. If you still have concerns about the double CONNECT we
+> can revisit that or leave it for now and deal with it through carrier
+> state with EAPOL-over-nl80211.
+
+For ROAMED the case is clearer: it can either happen with or without
+the attribute, but it'll never happen twice because of the attribute.
+Also, if the attribute is ignored by some tool, it's pretty harmless
+since it'll still know that it was roaming, it just won't know that no
+EAP authentication is needed.
+
+I think I'd be OK with adding a new notification, but EAPOL-over-
+nl80211 seems like it'd solve this, and then we don't need the extra
+notification since we can just set the carrier after it's all
+complete... I don't really know. If we can wait a bit for this, I think
+it'd be the nicer thing, and it looks like the currently existing code
+has the race and is still working OK for people.
+
+johannes
