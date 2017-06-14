@@ -1,51 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:34924 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbdFYOlJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 10:41:09 -0400
-Received: by mail-qt0-f195.google.com with SMTP id w12so10827126qta.2
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 07:41:09 -0700 (PDT)
-From: "Guillermo O. Freschi" <kedrot@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        linux-wireless@vger.kernel.org
-Cc: "Guillermo O. Freschi" <kedrot@gmail.com>
-Subject: [PATCH] drivers: staging: wilc1000/host_interface.c Fix sparse warning: right shift by bigger than source value
-Date: Sun, 25 Jun 2017 11:40:51 -0300
-Message-Id: <20170625144051.28873-1-kedrot@gmail.com> (sfid-20170625_164113_850582_46337F06)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37328 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751608AbdFNLz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Jun 2017 07:55:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Robert O'Callahan <robert@ocallahan.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/3] wireless: wext: use struct iwreq earlier in the call chain
+Date: Wed, 14 Jun 2017 13:55:22 +0200
+Message-Id: <20170614115523.16379-3-johannes@sipsolutions.net> (sfid-20170614_135606_479806_1285F6FF)
+In-Reply-To: <20170614115523.16379-1-johannes@sipsolutions.net>
+References: <20170614115523.16379-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shifting by equal to or bigger than the width of a type results in
-undefined behavior. By using a wide enough temporary variable the issue
-can be avoided.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Guillermo O. Freschi <kedrot@gmail.com>
+To make it clear that we never use struct ifreq, cast from it
+directly in the wext entrypoint and use struct iwreq from there
+on. The next patch will remove the cast again and pass the
+correct struct from the beginning.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ net/wireless/wext-core.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f7c22d7b28d1..ed614698c22c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2416,10 +2416,12 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
- 		goto ERRORHANDLER;
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index 24ba8a99b946..12949c8d3e5f 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -914,13 +914,12 @@ int call_commit_handler(struct net_device *dev)
+  * Main IOCTl dispatcher.
+  * Check the type of IOCTL and call the appropriate wrapper...
+  */
+-static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
++static int wireless_process_ioctl(struct net *net, struct iwreq *iwr,
+ 				  unsigned int cmd,
+ 				  struct iw_request_info *info,
+ 				  wext_ioctl_func standard,
+ 				  wext_ioctl_func private)
+ {
+-	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	struct net_device *dev;
+ 	iw_handler	handler;
  
- 	pu8CurrByte = wid.val;
--	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-+
-+	u32 enabled = strHostIfSetMulti->enabled;
-+	*pu8CurrByte++ = (enabled & 0xFF);
-+	*pu8CurrByte++ = ((enabled >> 8) & 0xFF);
-+	*pu8CurrByte++ = ((enabled >> 16) & 0xFF);
-+	*pu8CurrByte++ = ((enabled >> 24) & 0xFF);
+@@ -928,7 +927,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	 * The copy_to/from_user() of ifr is also dealt with in there */
  
- 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
- 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+ 	/* Make sure the device exist */
+-	if ((dev = __dev_get_by_name(net, ifr->ifr_name)) == NULL)
++	if ((dev = __dev_get_by_name(net, iwr->ifr_name)) == NULL)
+ 		return -ENODEV;
+ 
+ 	/* A bunch of special cases, then the generic case...
+@@ -974,7 +973,7 @@ static int wext_permission_check(unsigned int cmd)
+ }
+ 
+ /* entry point from dev ioctl */
+-static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
++static int wext_ioctl_dispatch(struct net *net, struct iwreq *iwr,
+ 			       unsigned int cmd, struct iw_request_info *info,
+ 			       wext_ioctl_func standard,
+ 			       wext_ioctl_func private)
+@@ -984,9 +983,9 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
+ 	if (ret)
+ 		return ret;
+ 
+-	dev_load(net, ifr->ifr_name);
++	dev_load(net, iwr->ifr_name);
+ 	rtnl_lock();
+-	ret = wireless_process_ioctl(net, ifr, cmd, info, standard, private);
++	ret = wireless_process_ioctl(net, iwr, cmd, info, standard, private);
+ 	rtnl_unlock();
+ 
+ 	return ret;
+@@ -1042,7 +1041,7 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 	struct iw_request_info info = { .cmd = cmd, .flags = 0 };
+ 	int ret;
+ 
+-	ret = wext_ioctl_dispatch(net, ifr, cmd, &info,
++	ret = wext_ioctl_dispatch(net, (void *)ifr, cmd, &info,
+ 				  ioctl_standard_call,
+ 				  ioctl_private_call);
+ 	if (ret >= 0 &&
+@@ -1104,7 +1103,7 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+ 	info.cmd = cmd;
+ 	info.flags = IW_REQUEST_FLAG_COMPAT;
+ 
+-	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd, &info,
++	ret = wext_ioctl_dispatch(net, &iwr, cmd, &info,
+ 				  compat_standard_call,
+ 				  compat_private_call);
+ 
 -- 
 2.11.0
