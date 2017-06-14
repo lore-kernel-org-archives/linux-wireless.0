@@ -1,50 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43856 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751382AbdFHXnY (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.133]:48045 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751707AbdFNLLa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 19:43:24 -0400
-Subject: Re: Question on setting key right after the EAPOL 4/4 is sent.
-To: Denis Kenzior <denkenz@gmail.com>,
+        Wed, 14 Jun 2017 07:11:30 -0400
+Subject: Re: [PATCH] mwifiex: fixes the trivial print
+To: Xinming Hu <huxm@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
- <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com> (sfid-20170609_014328_357309_E3D29C55)
-Date: Thu, 8 Jun 2017 16:43:23 -0700
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        "jeffy.chen@rock-chips.com" <jeffy.chen@rock-chips.com>
+References: <1497008411-15223-1-git-send-email-wxt@rock-chips.com>
+ <87poe8pfjs.fsf@purkki.adurom.net>
+ <b5621250-c9c8-b413-0dae-88b326c729bf@rock-chips.com>
+ <87mv9c74hn.fsf@kamboji.qca.qualcomm.com>
+ <2eb9e680-64bc-a74d-f224-b6e13dd3b45b@rock-chips.com>
+ <87ink0728l.fsf@kamboji.qca.qualcomm.com>
+ <9e123f64d71c466b8a6dc908a51eeb71@SC-EXCH02.marvell.com>
+ <cf947dd3-e3a9-e940-fa15-393c9d952f32@rock-chips.com>
+ <9f6c89acb50b4be3b8bde3291eac891b@SC-EXCH02.marvell.com>
+From: Caesar Wang <wxt@rock-chips.com>
+Message-ID: <107d0efe-b056-96d1-e129-31f4ddfd23c9@rock-chips.com> (sfid-20170614_131136_387224_B2736F45)
+Date: Wed, 14 Jun 2017 19:11:16 +0800
 MIME-Version: 1.0
-In-Reply-To: <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
+In-Reply-To: <9f6c89acb50b4be3b8bde3291eac891b@SC-EXCH02.marvell.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/2017 04:36 PM, Denis Kenzior wrote:
-> Hi Ben,
->
->> The problem I see is that sometimes (and quite often when I am using lots
->> of vdevs and thus the NIC is busy), the keys are set before the EAPOL 4/4
->> hits the air.  When the key is set, the NIC will no longer transmit the
->> frame because of key-length issues in the tx-descriptor (ath10k wave-2
->> in this case).
->
-> We have encountered something similar.  In our case we were seeing PAE packets (e.g. 4WayHandshake packet 1 of 4) before seeing the connect events on nl80211.
->
->> I suspect that there is a fundamental race between the EAPOL packet-tx
->> logic and the key-set logic, but supplicant appears to act as though
->> they are natually synchronized.
->
-> Fundamentally there is a race between the genl/nl80211 socket to the kernel and the PAE socket that handles the authentication aspects.  I think the only way to
-> fix this is to make sure that PAE flows over the genl/nl80211 socket to preserve the proper order of events.  However there are lots of dragons in the kernel
-> side of this and we haven't been brave enough to venture into the depths yet :)
 
-I think that would just push the problem lower.  Probably a real fix would be to somehow propagate
-the tx-status for the specific packet back to the supplicant and only then it would know that the
-key could be set.
+在 2017年06月14日 18:23, Xinming Hu 写道:
+> Hi Caesar,
+> 
+> It proved to be a feature to get better scan result from overlapping channel, introduced in
+> 
+> commit 1b499cb72f26bbf44f2fa158c2d1487730aae96a
+> Author: Amitkumar Karwar <akarwar@marvell.com>
+> Date:   Sun Apr 24 23:49:51 2016 -0700
+> 
+>      mwifiex: disable channel filtering feature in firmware
+>      
+>      As 2.4Ghz channels are overlapping, sometimes AP responds to
+>      probe request even if it's operating on neighbouring channel.
+>      Currently firmware drops those scan entries, as current channel
+>      doesn't match with APs channel.
+>      
+>      This patch enables MWIFIEX_DISABLE_CHAN_FILT flag in scan
+>      command to disable the feature so that better scan results
+>      will be received in 2.4Ghz band.
+> 
+> As I can see, even there could be AP from overlapping channel (might be 12/13/14 in this case),  it will be filtered depend on reg domain rules
+>   
+>         if (ch->flags & IEEE80211_CHAN_DISABLED)
+>              continue;
+> 
+> so it should not been an ERROR. WARN looks fine to me.
+> you can add me acked-by in v2.
 
-Thanks,
-Ben
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Okay, thanks for explanation and having a look at it.
+
+
+-Caesar
+
+> 
+> 
+> Regards,
+> Simon
+> From: Caesar Wang [mailto:wxt@rock-chips.com]
+> Sent: 2017年6月13日 18:52
+> To: Xinming Hu; Kalle Valo; Zhiyuan Yang; Cathy Luo
+> Cc: amitkarwar@gmail.com; Nishant Sarmukadam; Ganapathi Bhat; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org; briannorris@chromium.org; jeffy.chen@rock-chips.com; Ganapathi Bhat
+> Subject: [EXT] Re: [PATCH] mwifiex: fixes the trivial print
+> 
+> External Email
+> ________________________________________
+> Hi Xinming,
+> As issue tracked on https://partnerissuetracker.corp.google.com/u/2/issues/62122843
+> 
+> 
+> 在 2017年06月13日 17:51, Xinming Hu 写道:
+> Hi Caesar,
+> 
+> The original log in google issue tracker show there exist AP in channel 13 after periodically scan.
+> Per my understand, if reg domain is set to US,  channel 12/13/14 will not get chance to scan. (test using iw/wpa_supplicant).
+> I am curious about whether there are any diff from upper layer.
+> 
+> As a test, you can print the scan channel list, as below:
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index a7593aa..a289818 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -2572,6 +2572,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
+>                                MWIFIEX_USER_SCAN_CHAN_MAX); i++) {
+>                  chan = request->channels[i];
+>                  user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
+> +               pr_err("chan->hw_value = %d", chan->hw_value);
+>                  user_scan_cfg->chan_list[i].radio_type = chan->band;
+>   
+>                  if ((chan->flags & IEEE80211_CHAN_NO_IR) || !request->n_ssids)
+> 
+> The below as the required log:
+> localhost / # [   46.760997] mwifiex: chan->hw_value = 1
+> [   46.764878] mwifiex: chan->hw_value = 2
+> [   46.768765] mwifiex: chan->hw_value = 3
+> [   46.772625] mwifiex: chan->hw_value = 4
+> [   46.776608] mwifiex: chan->hw_value = 5
+> [   46.780485] mwifiex: chan->hw_value = 6
+> [   46.784384] mwifiex: chan->hw_value = 7
+> [   46.788252] mwifiex: chan->hw_value = 8
+> [   46.792185] mwifiex: chan->hw_value = 9
+> [   46.796036] mwifiex: chan->hw_value = 10
+> [   46.799978] mwifiex: chan->hw_value = 11
+> [   46.803908] mwifiex: chan->hw_value = 38
+> [   46.807847] mwifiex: chan->hw_value = 42
+> [   46.811786] mwifiex: chan->hw_value = 46
+> [   46.815722] mwifiex: chan->hw_value = 36
+> [   46.819646] mwifiex: chan->hw_value = 40
+> [   46.823577] mwifiex: chan->hw_value = 44
+> [   46.827503] mwifiex: chan->hw_value = 48
+> [   46.831440] mwifiex: chan->hw_value = 52
+> [   46.835363] mwifiex: chan->hw_value = 56
+> [   46.839287] mwifiex: chan->hw_value = 60
+> [   46.843205] mwifiex: chan->hw_value = 64
+> [   46.847129] mwifiex: chan->hw_value = 100
+> [   46.851134] mwifiex: chan->hw_value = 104
+> [   46.855150] mwifiex: chan->hw_value = 108
+> [   46.859155] mwifiex: chan->hw_value = 112
+> [   46.863168] mwifiex: chan->hw_value = 116
+> [   46.867175] mwifiex: chan->hw_value = 120
+> [   46.871186] mwifiex: chan->hw_value = 124
+> [   46.875196] mwifiex: chan->hw_value = 128
+> [   46.879208] mwifiex: chan->hw_value = 132
+> [   46.883214] mwifiex: chan->hw_value = 136
+> [   46.887224] mwifiex: chan->hw_value = 140
+> [   46.891230] mwifiex: chan->hw_value = 149
+> [   46.895241] mwifiex: chan->hw_value = 153
+> [   46.899246] mwifiex: chan->hw_value = 157
+> [   46.903256] mwifiex: chan->hw_value = 161
+> [   46.907262] mwifiex: chan->hw_value = 165
+> [   47.394176] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp: cannot find cfp by band 2    & channel=12 freq=0
+> 
+> -Caesar
+> 
+> 
+> Regards,
+> Simon
+> 
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: 2017年6月13日 15:53
+> To: Caesar Wang
+> Cc: amitkarwar@gmail.com; Xinming Hu; Nishant Sarmukadam; Ganapathi
+> Bhat; linux-wireless@vger.kernel.org; netdev@vger.kernel.org;
+> linux-kernel@vger.kernel.org; briannorris@chromium.org;
+> jeffy.chen@rock-chips.com
+> Subject: [EXT] Re: [PATCH] mwifiex: fixes the trivial print
+> 
+> External Email
+> 
+> ----------------------------------------------------------------------
+> Caesar Wang <wxt@rock-chips.com> writes:
+> 
+> 在 2017年06月13日 15:04, Kalle Valo 写道:
+> Caesar Wang <wxt@rock-chips.com> writes:
+> 
+> Kalle,
+> 
+> 在 2017年06月13日 14:28, Kalle Valo 写道:
+> Caesar Wang <wxt@rock-chips.com> writes:
+> 
+> We have always met the unused log be printed as following.
+> 
+> ...
+> [23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+> cannot find cfp by band 2    & channel=13 freq=0
+> [23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+> cannot find cfp by band 2    & channel=13 freq=0
+> 
+> Maybe that's related to wifi regdom, since wifi default area was
+> US and didn't support 12~14 channels.
+> 
+> As Frequencies:
+> * 2412 MHz [1] (30.0 dBm)
+> * 2417 MHz [2] (30.0 dBm)
+> * 2422 MHz [3] (30.0 dBm)
+> * 2427 MHz [4] (30.0 dBm)
+> * 2432 MHz [5] (30.0 dBm)
+> * 2437 MHz [6] (30.0 dBm)
+> * 2442 MHz [7] (30.0 dBm)
+> * 2447 MHz [8] (30.0 dBm)
+> * 2452 MHz [9] (30.0 dBm)
+> * 2457 MHz [10] (30.0 dBm)
+> * 2462 MHz [11] (30.0 dBm)
+> * 2467 MHz [12] (disabled)
+> * 2472 MHz [13] (disabled)
+> * 2484 MHz [14] (disabled)
+> 
+> Signed-off-by: Caesar Wang <wxt@rock-chips.com>
+> ---
+> 
+>     drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
+>     1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c
+> b/drivers/net/wireless/marvell/mwifiex/cfp.c
+> index 1ff2205..6e29943 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfp.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
+> @@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8
+> band, u16 channel, u32 freq)
+>     		}
+>     	}
+>     	if (i == sband->n_channels) {
+> -		mwifiex_dbg(priv->adapter, ERROR,
+> +		mwifiex_dbg(priv->adapter, WARN,
+>     			    "%s: cannot find cfp by band %d\t"
+>     			    "& channel=%d freq=%d\n",
+>     			    __func__, band, channel, freq);
+> I don't see how this fixes anything, care to explain? And the title
+> is quite vague.
+> Sorry for the description maybe unclear.
+> I'm assuming the print log is expected for marvel wifi driver. Do we
+> should use 'WARN' to instead of the 'ERROR' here.
+> But does that make any functional difference, isn't the warning still
+> printed?
+> 
+> 
+> At least, that shouldn't be printed log by default.  :)
+> 
+> if I read the code is correct. That only the MSG/FATAL/ERROR will
+> output by default.
+> 
+> /**
+>   *enum mwifiex_debug_level  -  marvell wifi debug level  */ enum
+> MWIFIEX_DEBUG_LEVEL {
+>      MWIFIEX_DBG_MSG        = 0x00000001,
+>      MWIFIEX_DBG_FATAL    = 0x00000002,
+>      MWIFIEX_DBG_ERROR    = 0x00000004,
+>      MWIFIEX_DBG_DATA    = 0x00000008,
+>      MWIFIEX_DBG_CMD        = 0x00000010,
+>      MWIFIEX_DBG_EVENT    = 0x00000020,
+>      MWIFIEX_DBG_INTR    = 0x00000040,
+>      MWIFIEX_DBG_IOCTL    = 0x00000080,
+> 
+>      MWIFIEX_DBG_MPA_D    = 0x00008000,
+>      MWIFIEX_DBG_DAT_D    = 0x00010000,
+>      MWIFIEX_DBG_CMD_D    = 0x00020000,
+>      MWIFIEX_DBG_EVT_D    = 0x00040000,
+>      MWIFIEX_DBG_FW_D    = 0x00080000,
+>      MWIFIEX_DBG_IF_D    = 0x00100000,
+> 
+>      MWIFIEX_DBG_ENTRY    = 0x10000000,
+>      MWIFIEX_DBG_WARN    = 0x20000000,
+>      MWIFIEX_DBG_INFO    = 0x40000000,
+>      MWIFIEX_DBG_DUMP    = 0x80000000,
+> 
+>      MWIFIEX_DBG_ANY        = 0xffffffff
+> };
+> 
+> #define MWIFIEX_DEFAULT_DEBUG_MASK    (MWIFIEX_DBG_MSG | \
+>                      MWIFIEX_DBG_FATAL | \
+>                      MWIFIEX_DBG_ERROR)
+> 
+> Heh, makes more sense now :) But you still should improve the title and
+> explain in the commit log that WARN level is not printed by default.
+> 
+> But before you submit v2 let's wait what Marvell says about this.
+> 
+> --
+> Kalle Valo
+> 
