@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f172.google.com ([209.85.128.172]:33930 "EHLO
-        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753296AbdFPKM6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54466 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750756AbdFNJN2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 06:12:58 -0400
-Received: by mail-wr0-f172.google.com with SMTP id 77so35824032wrb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 03:12:58 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: fix uninitialized warning in
- brcmf_usb_probe_phase2()
-To: Kalle Valo <kvalo@codeaurora.org>
+        Wed, 14 Jun 2017 05:13:28 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: amit karwar <amitkarwar@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-References: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
- <87shj0z5i1.fsf@kamboji.qca.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <17b4ddff-0f68-60d0-9f2c-cf5867cfba09@broadcom.com> (sfid-20170616_121302_754304_7962B662)
-Date: Fri, 16 Jun 2017 12:12:56 +0200
+        Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: Re: [PATCH 2/6] rsi: use enum for FSM states
+References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
+        <1496412785-8720-3-git-send-email-amit.karwar@redpinesignals.com>
+        <87lgowpeno.fsf@purkki.adurom.net>
+        <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
+Date: Wed, 14 Jun 2017 12:13:22 +0300
+In-Reply-To: <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
+        (amit karwar's message of "Tue, 13 Jun 2017 20:17:32 +0530")
+Message-ID: <87zidb2aq5.fsf@kamboji.qca.qualcomm.com> (sfid-20170614_111455_857118_21137D2F)
 MIME-Version: 1.0
-In-Reply-To: <87shj0z5i1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/16/2017 10:44 AM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> 
->> This fixes the following warning:
+amit karwar <amitkarwar@gmail.com> writes:
+
+> On Tue, Jun 13, 2017 at 12:17 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
 >>
->>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function
->>    'brcmf_usb_probe_phase2':
->>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2:
->>    warning: 'devinfo' may be used uninitialized in this function
->>    [-Wmaybe-uninitialized]
->>      mutex_unlock(&devinfo->dev_init_lock);
+>>> Currently macros are used for FSM states. We will replace
+>>> it with enum so that new state can be added easily without
+>>> worrying about macro value.
+>>>
+>>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 >>
->> Fixes: 6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
->> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
->> Reported-by: Kalle Valo <kvalo@codeaurora.org>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> ---
->> Hi Kalle,
+>> From and Signed-off-by does not match (gmail.com vs redpinesignals.com).
+>> I suggest that you add a separate From line to the commit log containing
+>> redpinesignals.com, this way you can still submit patches via gmail.com.
+>
+> Sure. I will follow this for my future patches.
+
+Actually please resend this series with matching From and S-o-b. I don't
+want to edit From headers myself.
+
+>> Also your name in patchwork is not capitalised (patchwork is idiotic and
+>> takes the name from patchwork user data and not from the patch):
 >>
->> Here it is. Was indeed a valid warning.
-> 
-> Thanks for the quick fix.
+>>       [1/6] rsi: add usb RS9113 chipset support 2017-06-02 amit
+>> karwar New
+>>       [2/6] rsi: use enum for FSM states 2017-06-02 amit karwar New
+>>       [3/6] rsi: Register interrupt handler before firmware load
+>> 2017-06-02 amit karwar New
+>>       [4/6] rsi: receive path enhancement for RS9113 2017-06-02 amit
+>> karwar New
+>>       [5/6] rsi: configure new boot parameters to device 2017-06-02
+>> amit karwar New
+>>       [6/6] rsi: add tx frame for common device configuration
+>> 2017-06-02 amit karwar New
+>>
+>> To fix that could you please register to patchwork and capitalise your
+>> name correctly? You have only one chance, patchwork doesn't allow users
+>> edit the name afterwards, so don't do any typos :)
+>
+> Thanks. I have registered with patchwork and corrected my name.
 
-Well, wanted to send it sooner, but ...
+What address did you use? Patchwork still shows your name all lower:
 
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
->> @@ -1164,14 +1164,13 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
->>   				   void *nvram, u32 nvlen)
->>   {
->>   	struct brcmf_bus *bus = dev_get_drvdata(dev);
->> -	struct brcmf_usbdev_info *devinfo;
->> +	struct brcmf_usbdev_info *devinfo = bus->bus_priv.usb->devinfo;;
-> 
-> But an extra semicolon :) I'll try to edit it out during commit.
+https://patchwork.kernel.org/project/linux-wireless/list/?submitter=173645
 
-needed time for the extra semicolon :-p Thanks for being thorough.
+I suspect you didn't register with gmail.com, but with some other
+address. I recommend that you link all your email addresses, including
+gmail.com, to the same patchwork account and hopefully that fixes it.
+You should be able to do that from the profile page in patchwork.
 
-Gr. AvS
+-- 
+Kalle Valo
