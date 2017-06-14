@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56390 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33022 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751659AbdF1Rvn (ORCPT
+        with ESMTP id S1754241AbdFNFKA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 13:51:43 -0400
+        Wed, 14 Jun 2017 01:10:00 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,
- 1/8] rtlwifi: Fix a2dp choppy while BT RSSI stays on threshold.
+Subject: Re: [V3,
+ 6/9] brcmfmac: support 4-way handshake offloading for WPA/WPA2-PSK
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170621171538.4462-2-Larry.Finger@lwfinger.net>
-References: <20170621171538.4462-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170628175143.4B0D260AD5@smtp.codeaurora.org> (sfid-20170628_195159_311050_3FB7AEEE)
-Date: Wed, 28 Jun 2017 17:51:43 +0000 (UTC)
+In-Reply-To: <1497010130-16186-7-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497010130-16186-7-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170614050959.8A19B60851@smtp.codeaurora.org> (sfid-20170614_071010_735737_98358254)
+Date: Wed, 14 Jun 2017 05:09:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
+> From: Arend van Spriel <arend@broadcom.com>
 > 
-> In this case, BTC asks to enter/leave PS mode frequently to cause A2DP
-> choppy.
+> The firmware may have supplicant code built-in. This is detected
+> by the driver and indicated in the wiphy features flags. User-space
+> can use this flag to determine whether or not to provide the
+> pre-shared key material in the nl80211 CONNECT command.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+> Reviewed-by: Gautam (Gautam Kumar) Shukla <gautams@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-8 patches applied to wireless-drivers-next.git, thanks.
+Depends on:
 
-135f4fbd75d7 rtlwifi: Fix a2dp choppy while BT RSSI stays on threshold.
-a70883920ea1 rtlwifi: Do IQK only once to reduce wifi occupy antenna
-1024b31629bd rtlwifi: Modify power mode parameters of 8723be and 8821ae.
-838dd0d3ffe6 rtlwifi: Update some cases in btc_get function -- roam, 5G, AP mode, and return value.
-8488e211d665 rtlwifi: Add return value to btc_set.
-f1cb27eda3a6 rtlwifi: Add ap_num field for btcoexist
-c76ab8e75442 rtlwifi: Fill ap_num field by driver
-76f146b6645b rtlwifi: Add in_4way field for btcoexist
+3a00df5707b6 cfg80211: support 4-way handshake offloading for 802.1X
+
+Currently in net-next.
 
 -- 
-https://patchwork.kernel.org/patch/9802331/
+https://patchwork.kernel.org/patch/9778339/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
