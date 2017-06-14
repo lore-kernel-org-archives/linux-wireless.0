@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34386 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753394AbdFVVWN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:58 +0300
-Message-Id: <20170622212101.16422-23-luca@coelho.fi> (sfid-20170622_232216_601717_778972C2)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 22/25] iwlwifi: mvm: document status bits
+Received: from [91.227.64.183] ([91.227.64.183]:49472 "EHLO rere.qmqm.pl"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1750728AbdFNL3c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Jun 2017 07:29:32 -0400
+Date: Wed, 14 Jun 2017 13:29:25 +0200
+From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Subject: Re: [PATCH] wireless: brcmfmac: initialize oob irq data before
+ request_irq()
+Message-ID: <20170614112925.d3j3l5bam5gwhj7h@qmqm.qmqm.pl> (sfid-20170614_132935_681986_10467FE8)
+References: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
+ <87poe74138.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <87poe74138.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jun 14, 2017 at 07:58:35AM +0300, Kalle Valo wrote:
+> Micha³ Miros³aw <mirq-linux@rere.qmqm.pl> writes:
+> > This fixes spin-forever in irq handler when IRQ is already asserted
+> > at request_irq() time.
+> >
+> > Signed-off-by: Micha³ Miros³aw <mirq-linux@rere.qmqm.pl>
+> 
+> Your name in patchwork is broken:
+> 
+> https://patchwork.kernel.org/patch/9784251/
+> 
+> You could try to fix it by registering as then you have (onetime) option
+> to provide your full name.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Doesn't like UTF-8? Registration didn't help though.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index a4bee9c740e0..0b5e92c1483e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1081,6 +1081,18 @@ struct iwl_mvm {
- #define IWL_MAC80211_GET_MVM(_hw)			\
- 	IWL_OP_MODE_GET_MVM((struct iwl_op_mode *)((_hw)->priv))
- 
-+/**
-+ * enum iwl_mvm_status - MVM status bits
-+ * @IWL_MVM_STATUS_HW_RFKILL: HW RF-kill is asserted
-+ * @IWL_MVM_STATUS_HW_CTKILL: CT-kill is active
-+ * @IWL_MVM_STATUS_ROC_RUNNING: remain-on-channel is running
-+ * @IWL_MVM_STATUS_IN_HW_RESTART: HW restart is active
-+ * @IWL_MVM_STATUS_IN_D0I3: NIC is in D0i3
-+ * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-+ * @IWL_MVM_STATUS_D3_RECONFIG: D3 reconfiguration is being done
-+ * @IWL_MVM_STATUS_DUMPING_FW_LOG: FW log is being dumped
-+ * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
-+ */
- enum iwl_mvm_status {
- 	IWL_MVM_STATUS_HW_RFKILL,
- 	IWL_MVM_STATUS_HW_CTKILL,
--- 
-2.11.0
+Best Regards,
+Micha³ Miros³aw
