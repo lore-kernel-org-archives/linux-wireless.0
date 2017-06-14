@@ -1,56 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34858 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751186AbdFYLMJ (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.134]:63461 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752441AbdFNVVv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:37 +0300
-Message-Id: <20170625111158.1792-6-luca@coelho.fi> (sfid-20170625_131217_528740_B95FE978)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 05/26] iwlwifi: mvm: fix fw monitor 7000 HW recollecting
+        Wed, 14 Jun 2017 17:21:51 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: kasan-dev@googlegroups.com, Dmitry Vyukov <dvyukov@google.com>,
+        Alexander Potapenko <glider@google.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v2 09/11] brcmsmac: split up wlc_phy_workarounds_nphy
+Date: Wed, 14 Jun 2017 23:15:44 +0200
+Message-Id: <20170614211556.2062728-10-arnd@arndb.de> (sfid-20170614_232239_315170_93487459)
+In-Reply-To: <20170614211556.2062728-1-arnd@arndb.de>
+References: <20170614211556.2062728-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+The stack consumption in this driver is still relatively high, with one
+remaining warning if the warning level is lowered to 1536 bytes:
 
-To stop and start the FW monitor in the 7000 HW
-family we need to use a different bit, otherwise
-after stopping it for the first time - it won't
-get restarted. Use the correct bitmask.
+drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: error: the frame size of 1880 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
 
-Note: This fix is only for DRAM collection mode.
-      For other modes, an additional fix will be
-      needed.
+The affected function is actually a collection of three separate implementations,
+and each of them is fairly large by itself. Splitting them up is done easily
+and improves readability at the same time.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+I'm leaving the original indentation to make the review easier.
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        | 178 ++++++++++++---------
+ 1 file changed, 104 insertions(+), 74 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 3a8c95162811..4e66cc662120 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1181,9 +1181,13 @@ static void iwl_mvm_fw_error_dump_wk(struct work_struct *work)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index ef685465f80a..ed409a80f3d2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -16061,52 +16061,8 @@ static void wlc_phy_workarounds_nphy_gainctrl(struct brcms_phy *pi)
+ 	}
+ }
  
- 		/* start recording again if the firmware is not crashed */
- 		if (!test_bit(STATUS_FW_ERROR, &mvm->trans->status) &&
--		    mvm->fw->dbg_dest_tlv)
-+		    mvm->fw->dbg_dest_tlv) {
- 			iwl_clear_bits_prph(mvm->trans,
- 					    MON_BUFF_SAMPLE_CTL, 0x100);
-+			iwl_clear_bits_prph(mvm->trans,
-+					    MON_BUFF_SAMPLE_CTL, 0x1);
-+			iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x1);
-+		}
- 	} else {
- 		u32 in_sample = iwl_read_prph(mvm->trans, DBGC_IN_SAMPLE);
- 		u32 out_ctrl = iwl_read_prph(mvm->trans, DBGC_OUT_CTRL);
+-static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
++static void wlc_phy_workarounds_nphy_rev7(struct brcms_phy *pi)
+ {
+-	static const u8 rfseq_rx2tx_events[] = {
+-		NPHY_RFSEQ_CMD_NOP,
+-		NPHY_RFSEQ_CMD_RXG_FBW,
+-		NPHY_RFSEQ_CMD_TR_SWITCH,
+-		NPHY_RFSEQ_CMD_CLR_HIQ_DIS,
+-		NPHY_RFSEQ_CMD_RXPD_TXPD,
+-		NPHY_RFSEQ_CMD_TX_GAIN,
+-		NPHY_RFSEQ_CMD_EXT_PA
+-	};
+-	u8 rfseq_rx2tx_dlys[] = { 8, 6, 6, 2, 4, 60, 1 };
+-	static const u8 rfseq_tx2rx_events[] = {
+-		NPHY_RFSEQ_CMD_NOP,
+-		NPHY_RFSEQ_CMD_EXT_PA,
+-		NPHY_RFSEQ_CMD_TX_GAIN,
+-		NPHY_RFSEQ_CMD_RXPD_TXPD,
+-		NPHY_RFSEQ_CMD_TR_SWITCH,
+-		NPHY_RFSEQ_CMD_RXG_FBW,
+-		NPHY_RFSEQ_CMD_CLR_HIQ_DIS
+-	};
+-	static const u8 rfseq_tx2rx_dlys[] = { 8, 6, 2, 4, 4, 6, 1 };
+-	static const u8 rfseq_tx2rx_events_rev3[] = {
+-		NPHY_REV3_RFSEQ_CMD_EXT_PA,
+-		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
+-		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
+-		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
+-		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
+-		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
+-		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
+-		NPHY_REV3_RFSEQ_CMD_END
+-	};
+-	static const u8 rfseq_tx2rx_dlys_rev3[] = { 8, 4, 2, 2, 4, 4, 6, 1 };
+-	u8 rfseq_rx2tx_events_rev3[] = {
+-		NPHY_REV3_RFSEQ_CMD_NOP,
+-		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
+-		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
+-		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
+-		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
+-		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
+-		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
+-		NPHY_REV3_RFSEQ_CMD_EXT_PA,
+-		NPHY_REV3_RFSEQ_CMD_END
+-	};
+-	u8 rfseq_rx2tx_dlys_rev3[] = { 8, 6, 6, 4, 4, 18, 42, 1, 1 };
+-
+ 	static const u8 rfseq_rx2tx_events_rev3_ipa[] = {
+ 		NPHY_REV3_RFSEQ_CMD_NOP,
+ 		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
+@@ -16120,29 +16076,15 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
+ 	};
+ 	static const u8 rfseq_rx2tx_dlys_rev3_ipa[] = { 8, 6, 6, 4, 4, 16, 43, 1, 1 };
+ 	static const u16 rfseq_rx2tx_dacbufpu_rev7[] = { 0x10f, 0x10f };
+-
+-	s16 alpha0, alpha1, alpha2;
+-	s16 beta0, beta1, beta2;
+-	u32 leg_data_weights, ht_data_weights, nss1_data_weights,
+-	    stbc_data_weights;
++	u32 leg_data_weights;
+ 	u8 chan_freq_range = 0;
+ 	static const u16 dac_control = 0x0002;
+ 	u16 aux_adc_vmid_rev7_core0[] = { 0x8e, 0x96, 0x96, 0x96 };
+ 	u16 aux_adc_vmid_rev7_core1[] = { 0x8f, 0x9f, 0x9f, 0x96 };
+-	u16 aux_adc_vmid_rev4[] = { 0xa2, 0xb4, 0xb4, 0x89 };
+-	u16 aux_adc_vmid_rev3[] = { 0xa2, 0xb4, 0xb4, 0x89 };
+-	u16 *aux_adc_vmid;
+ 	u16 aux_adc_gain_rev7[] = { 0x02, 0x02, 0x02, 0x02 };
+-	u16 aux_adc_gain_rev4[] = { 0x02, 0x02, 0x02, 0x00 };
+-	u16 aux_adc_gain_rev3[] = { 0x02, 0x02, 0x02, 0x00 };
+-	u16 *aux_adc_gain;
+-	static const u16 sk_adc_vmid[] = { 0xb4, 0xb4, 0xb4, 0x24 };
+-	static const u16 sk_adc_gain[] = { 0x02, 0x02, 0x02, 0x02 };
+ 	s32 min_nvar_val = 0x18d;
+ 	s32 min_nvar_offset_6mbps = 20;
+ 	u8 pdetrange;
+-	u8 triso;
+-	u16 regval;
+ 	u16 afectrl_adc_ctrl1_rev7 = 0x20;
+ 	u16 afectrl_adc_ctrl2_rev7 = 0x0;
+ 	u16 rfseq_rx2tx_lpf_h_hpc_rev7 = 0x77;
+@@ -16171,17 +16113,6 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
+ 	u16 freq;
+ 	int coreNum;
+ 
+-	if (CHSPEC_IS5G(pi->radio_chanspec))
+-		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 0);
+-	else
+-		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 1);
+-
+-	if (pi->phyhang_avoid)
+-		wlc_phy_stay_in_carriersearch_nphy(pi, true);
+-
+-	or_phy_reg(pi, 0xb1, NPHY_IQFlip_ADC1 | NPHY_IQFlip_ADC2);
+-
+-	if (NREV_GE(pi->pubpi.phy_rev, 7)) {
+ 
+ 		if (NREV_IS(pi->pubpi.phy_rev, 7)) {
+ 			mod_phy_reg(pi, 0x221, (0x1 << 4), (1 << 4));
+@@ -16703,8 +16634,62 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
+ 					 &aux_adc_gain_rev7);
+ 		wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_AFECTRL, 4, 0x1c, 16,
+ 					 &aux_adc_gain_rev7);
++}
+ 
+-	} else if (NREV_GE(pi->pubpi.phy_rev, 3)) {
++static void wlc_phy_workarounds_nphy_rev3(struct brcms_phy *pi)
++{
++	static const u8 rfseq_tx2rx_events_rev3[] = {
++		NPHY_REV3_RFSEQ_CMD_EXT_PA,
++		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
++		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
++		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
++		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
++		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
++		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
++		NPHY_REV3_RFSEQ_CMD_END
++	};
++	static const u8 rfseq_tx2rx_dlys_rev3[] = { 8, 4, 2, 2, 4, 4, 6, 1 };
++	u8 rfseq_rx2tx_events_rev3[] = {
++		NPHY_REV3_RFSEQ_CMD_NOP,
++		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
++		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
++		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
++		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
++		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
++		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
++		NPHY_REV3_RFSEQ_CMD_EXT_PA,
++		NPHY_REV3_RFSEQ_CMD_END
++	};
++	u8 rfseq_rx2tx_dlys_rev3[] = { 8, 6, 6, 4, 4, 18, 42, 1, 1 };
++	static const u8 rfseq_rx2tx_events_rev3_ipa[] = {
++		NPHY_REV3_RFSEQ_CMD_NOP,
++		NPHY_REV3_RFSEQ_CMD_RXG_FBW,
++		NPHY_REV3_RFSEQ_CMD_TR_SWITCH,
++		NPHY_REV3_RFSEQ_CMD_CLR_HIQ_DIS,
++		NPHY_REV3_RFSEQ_CMD_RXPD_TXPD,
++		NPHY_REV3_RFSEQ_CMD_TX_GAIN,
++		NPHY_REV3_RFSEQ_CMD_CLR_RXRX_BIAS,
++		NPHY_REV3_RFSEQ_CMD_INT_PA_PU,
++		NPHY_REV3_RFSEQ_CMD_END
++	};
++	static const u8 rfseq_rx2tx_dlys_rev3_ipa[] = { 8, 6, 6, 4, 4, 16, 43, 1, 1 };
++	s16 alpha0, alpha1, alpha2;
++	s16 beta0, beta1, beta2;
++	u32 leg_data_weights, ht_data_weights, nss1_data_weights,
++	    stbc_data_weights;
++	u8 chan_freq_range = 0;
++	static const u16 dac_control = 0x0002;
++	u16 aux_adc_vmid_rev4[] = { 0xa2, 0xb4, 0xb4, 0x89 };
++	u16 aux_adc_vmid_rev3[] = { 0xa2, 0xb4, 0xb4, 0x89 };
++	u16 *aux_adc_vmid;
++	u16 aux_adc_gain_rev4[] = { 0x02, 0x02, 0x02, 0x00 };
++	u16 aux_adc_gain_rev3[] = { 0x02, 0x02, 0x02, 0x00 };
++	u16 *aux_adc_gain;
++	static const u16 sk_adc_vmid[] = { 0xb4, 0xb4, 0xb4, 0x24 };
++	static const u16 sk_adc_gain[] = { 0x02, 0x02, 0x02, 0x02 };
++	s32 min_nvar_val = 0x18d;
++	u8 pdetrange;
++	u8 triso;
+ 
+ 		write_phy_reg(pi, 0x23f, 0x1f8);
+ 		write_phy_reg(pi, 0x240, 0x1f8);
+@@ -17030,7 +17015,33 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
+ 					      MHF4_BPHY_TXCORE0,
+ 					      MHF4_BPHY_TXCORE0, BRCM_BAND_ALL);
+ 		}
+-	} else {
++}
++
++void wlc_phy_workarounds_nphy_rev1(struct brcms_phy *pi)
++{
++	static const u8 rfseq_rx2tx_events[] = {
++		NPHY_RFSEQ_CMD_NOP,
++		NPHY_RFSEQ_CMD_RXG_FBW,
++		NPHY_RFSEQ_CMD_TR_SWITCH,
++		NPHY_RFSEQ_CMD_CLR_HIQ_DIS,
++		NPHY_RFSEQ_CMD_RXPD_TXPD,
++		NPHY_RFSEQ_CMD_TX_GAIN,
++		NPHY_RFSEQ_CMD_EXT_PA
++	};
++	u8 rfseq_rx2tx_dlys[] = { 8, 6, 6, 2, 4, 60, 1 };
++	static const u8 rfseq_tx2rx_events[] = {
++		NPHY_RFSEQ_CMD_NOP,
++		NPHY_RFSEQ_CMD_EXT_PA,
++		NPHY_RFSEQ_CMD_TX_GAIN,
++		NPHY_RFSEQ_CMD_RXPD_TXPD,
++		NPHY_RFSEQ_CMD_TR_SWITCH,
++		NPHY_RFSEQ_CMD_RXG_FBW,
++		NPHY_RFSEQ_CMD_CLR_HIQ_DIS
++	};
++	static const u8 rfseq_tx2rx_dlys[] = { 8, 6, 2, 4, 4, 6, 1 };
++	s16 alpha0, alpha1, alpha2;
++	s16 beta0, beta1, beta2;
++	u16 regval;
+ 
+ 		if (pi->sh->boardflags2 & BFL2_SKWRKFEM_BRD ||
+ 		    (pi->sh->boardtype == 0x8b)) {
+@@ -17128,7 +17139,26 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
+ 			mod_phy_reg(pi, 0x221,
+ 				    NPHY_FORCESIG_DECODEGATEDCLKS,
+ 				    NPHY_FORCESIG_DECODEGATEDCLKS);
+-	}
++}
++
++static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
++{
++	if (CHSPEC_IS5G(pi->radio_chanspec))
++		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 0);
++	else
++		wlc_phy_classifier_nphy(pi, NPHY_ClassifierCtrl_cck_en, 1);
++
++	if (pi->phyhang_avoid)
++		wlc_phy_stay_in_carriersearch_nphy(pi, true);
++
++	or_phy_reg(pi, 0xb1, NPHY_IQFlip_ADC1 | NPHY_IQFlip_ADC2);
++
++	if (NREV_GE(pi->pubpi.phy_rev, 7))
++		wlc_phy_workarounds_nphy_rev7(pi);
++	else if (NREV_GE(pi->pubpi.phy_rev, 3))
++		wlc_phy_workarounds_nphy_rev3(pi);
++	else
++		wlc_phy_workarounds_nphy_rev1(pi);
+ 
+ 	if (pi->phyhang_avoid)
+ 		wlc_phy_stay_in_carriersearch_nphy(pi, false);
 -- 
-2.11.0
+2.9.0
