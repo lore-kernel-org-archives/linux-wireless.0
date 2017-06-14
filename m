@@ -1,144 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:35130 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754162AbdFXBxX (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53898 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751606AbdFNWMr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 21:53:23 -0400
-Received: by mail-ot0-f193.google.com with SMTP id z48so6486846otz.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 18:53:22 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
-Date: Fri, 23 Jun 2017 20:53:07 -0500
-Message-Id: <20170624015309.28099-9-Larry.Finger@lwfinger.net> (sfid-20170624_035338_027460_22AD1A91)
-In-Reply-To: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
-References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
+        Wed, 14 Jun 2017 18:12:47 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id B695240A339
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2017 15:12:46 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Question on flushing and deauth frames
+Message-ID: <10e690bb-b201-13e2-8c4d-1708bab37106@candelatech.com> (sfid-20170615_001250_737255_E5AE8CA2)
+Date: Wed, 14 Jun 2017 15:12:46 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+ath10k is a bit weird about flushing frames, and at least my variant of the wave-2
+firmware does not always put the deauth frame on the air when deleting stations.
 
-Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
-the same definitions.
+It will likely not be much fun to fix this.  I was wondering if the code below
+from ieee80211_set_disassoc() could (easily?) be made to wait for a tx-status of the deauth frame
+instead of trying to force a flush?
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
- .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
- 3 files changed, 19 insertions(+), 42 deletions(-)
+        /*
+          * drop any frame before deauth/disassoc, this can be data or
+          * management frame. Since we are disconnecting, we should not
+          * insist sending these frames which can take time and delay
+          * the disconnection and possible the roaming.
+          */
+         if (tx)
+                 ieee80211_flush_queues(local, sdata, true);
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 2ac989a4b2bb..02dff4c3f664 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -43,22 +43,6 @@
- #define RT_SDIO_INTERFACE	3
- #define DEV_BUS_TYPE		RT_PCI_INTERFACE
- 
--/* IC type */
--#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
--
--#define IS_NEW_GENERATION_IC(adapter)		\
--			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
--#define IS_HARDWARE_TYPE_8812(adapter)		\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
--#define IS_HARDWARE_TYPE_8821(adapter)		\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
--#define IS_HARDWARE_TYPE_8723A(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
--#define IS_HARDWARE_TYPE_8723B(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
--#define IS_HARDWARE_TYPE_8192E(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
--
- #include "halbtc8192e2ant.h"
- #include "halbtc8723b1ant.h"
- #include "halbtc8723b2ant.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-index 1b124eade846..5657b1e34ad0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
- void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
--	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
-+	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
- 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
- 				0xFFFFFFFF);
- 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 4c6d01eb065d..f77acd329e0e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -314,35 +314,29 @@ enum hardware_type {
- 	HARDWARE_TYPE_RTL8192EE,
- 	HARDWARE_TYPE_RTL8821AE,
- 	HARDWARE_TYPE_RTL8812AE,
-+	HARDWARE_TYPE_RTL8822BE,
- 
- 	/* keep it last */
- 	HARDWARE_TYPE_NUM
- };
- 
--#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
--#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
--#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
--#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
--#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
--#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
--#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
--#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
--#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
--(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
--#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
--(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
--#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
--(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
--#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
--(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
-+#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
-+#define IS_NEW_GENERATION_IC(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
-+#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
-+#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
-+#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
-+#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
-+#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
- 
- #define RX_HAL_IS_CCK_RATE(rxmcs)			\
- 	((rxmcs) == DESC_RATE1M ||			\
+         /* deauthenticate/disassociate now */
+         if (tx || frame_buf)
+                 ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
+                                                reason, tx, frame_buf);
+
+         /* flush out frame - make sure the deauth was actually sent */
+         if (tx)
+                 ieee80211_flush_queues(local, sdata, false);
+
+Thanks,
+Ben
+
 -- 
-2.12.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
