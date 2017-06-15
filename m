@@ -1,89 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33444 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753232AbdFRQNF (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51008 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752088AbdFONc4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 12:13:05 -0400
-Received: by mail-oi0-f65.google.com with SMTP id k145so7238576oih.0
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:05 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 10/11] rtlwifi: add btc_is_bt_lps_on() for btcoexist
-Date: Sun, 18 Jun 2017 11:12:48 -0500
-Message-Id: <20170618161249.6146-11-Larry.Finger@lwfinger.net> (sfid-20170618_181319_171589_51C52902)
-In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
-References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+        Thu, 15 Jun 2017 09:32:56 -0400
+Subject: Re: Question on flushing and deauth frames
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <10e690bb-b201-13e2-8c4d-1708bab37106@candelatech.com>
+ <CANUX_P2LrrNzLWRtOERnSyu0q=C4u26V+iJbpxqUssYb80PzEg@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <485de26b-87ae-6977-dbb2-bc98378d3aeb@candelatech.com> (sfid-20170615_153324_169065_DC16E2ED)
+Date: Thu, 15 Jun 2017 06:32:54 -0700
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P2LrrNzLWRtOERnSyu0q=C4u26V+iJbpxqUssYb80PzEg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
 
-If LPS is controlled by btcoex, this function tell driver LPS is on or off.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c | 6 ++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h | 1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h              | 1 +
- 3 files changed, 8 insertions(+)
+On 06/14/2017 11:18 PM, Emmanuel Grumbach wrote:
+>> ath10k is a bit weird about flushing frames, and at least my variant of the wave-2
+>> firmware does not always put the deauth frame on the air when deleting stations.
+>>
+>> It will likely not be much fun to fix this.  I was wondering if the code below
+>> from ieee80211_set_disassoc() could (easily?) be made to wait for a tx-status of the deauth frame
+>> instead of trying to force a flush?
+>
+> That's exactly what it does:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 96c1ccbf70ac..7ee2aa94fd2a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -46,6 +46,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
- 	.btc_special_packet_notify = rtl_btc_special_packet_notify,
- 	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
-+	.btc_is_bt_lps_on = rtl_btc_is_bt_lps_on,
- 	.btc_get_ampdu_cfg = rtl_btc_get_ampdu_cfg,
- };
- 
-@@ -61,6 +62,11 @@ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
- 	memcpy(gl_bt_coexist.pwr_mode_val, buf, safe_len);
- }
- 
-+bool rtl_btc_is_bt_lps_on(struct rtl_priv *rtlpriv)
-+{
-+	return gl_bt_coexist.bt_info.bt_lps_on;
-+}
-+
- void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
- 			   u8 *ctrl_agg_size, u8 *agg_size)
- {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index c1c32d685c5d..ed46f418eb91 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -44,6 +44,7 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
- void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
- void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
-+bool rtl_btc_is_bt_lps_on(struct rtl_priv *rtlpriv);
- void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
- 			   u8 *ctrl_agg_size, u8 *agg_size);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 0591adedce76..23d869bcb90d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2563,6 +2563,7 @@ struct rtl_btc_ops {
- 	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
- 	void (*btc_get_ampdu_cfg)(struct rtl_priv *rtlpriv, u8 *reject_agg,
- 				  u8 *ctrl_agg_size, u8 *agg_size);
-+	bool (*btc_is_bt_lps_on)(struct rtl_priv *rtlpriv);
- };
- 
- struct proxim {
+Well, the end effect is supposed to be the same, at least...
+
+>>        /*
+>>          * drop any frame before deauth/disassoc, this can be data or
+>>          * management frame. Since we are disconnecting, we should not
+>>          * insist sending these frames which can take time and delay
+>>          * the disconnection and possible the roaming.
+>>          */
+>>         if (tx)
+>>                 ieee80211_flush_queues(local, sdata, true);
+>
+> Remove all the pending data frames from the queues to clear the way
+> for the deauth.
+> Note the drop=true
+>
+>>
+>>         /* deauthenticate/disassociate now */
+>>         if (tx || frame_buf)
+>>                 ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
+>>                                                reason, tx, frame_buf);
+>>
+>
+> Send the deauth.
+>
+>>         /* flush out frame - make sure the deauth was actually sent */
+>>         if (tx)
+>>                 ieee80211_flush_queues(local, sdata, false);
+>>
+>
+> Wait for the deauth (drop=false).
+> The question here is how ath10k implements the flush(, drop=false)
+
+Not well, it seems.  I don't think it has a good way to flush (drop=false)
+an individual vdev, though probably I could implement it.  And, I think that
+the packets in the mac80211 txqs might be difficult to flush.
+
+But, mac80211 gets a txstatus when the deauth is sent, so if it simply
+waited on that, it would not matter how flush is implemented.  And, it might
+try to re-send a time or two if getting the deauth through was worth the
+wait and the initial attempt(s) got a false txstatus.
+
+Thanks,
+Ben
+
 -- 
-2.12.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
