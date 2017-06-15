@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34905 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdFBOPj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28906 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750774AbdFOFui (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 10:15:39 -0400
-Received: by mail-pf0-f194.google.com with SMTP id u26so11895346pfd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 07:15:39 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Thu, 15 Jun 2017 01:50:38 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 2/6] rsi: use enum for FSM states
-Date: Fri,  2 Jun 2017 19:43:01 +0530
-Message-Id: <1496412785-8720-3-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170602_161543_088409_756684C9)
-In-Reply-To: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 0/3] wil6210 patches
+Date: Thu, 15 Jun 2017 08:50:31 +0300
+Message-Id: <1497505834-9704-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170615_075047_233760_0A796A25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently macros are used for FSM states. We will replace
-it with enum so that new state can be added easily without
-worrying about macro value.
+Changes from v1:
+- Change of wil_platform.h copyright year to 2017
 
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_main.h | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+Dedy Lansky (1):
+  wil6210: prevent platform callbacks after uninit
 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ea4fc22..833c66f5 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -31,13 +31,15 @@
- #define FSM_ZONE                        BIT(7)  /* For State Machine Msgs     */
- #define ISR_ZONE                        BIT(8)  /* For Interrupt Msgs         */
- 
--#define FSM_CARD_NOT_READY              0
--#define FSM_BOOT_PARAMS_SENT            1
--#define FSM_EEPROM_READ_MAC_ADDR        2
--#define FSM_RESET_MAC_SENT              3
--#define FSM_RADIO_CAPS_SENT             4
--#define FSM_BB_RF_PROG_SENT             5
--#define FSM_MAC_INIT_DONE               6
-+enum RSI_FSM_STATES {
-+	FSM_CARD_NOT_READY,
-+	FSM_BOOT_PARAMS_SENT,
-+	FSM_EEPROM_READ_MAC_ADDR,
-+	FSM_RESET_MAC_SENT,
-+	FSM_RADIO_CAPS_SENT,
-+	FSM_BB_RF_PROG_SENT,
-+	FSM_MAC_INIT_DONE
-+};
- 
- extern u32 rsi_zone_enabled;
- extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+Maya Erez (2):
+  wil6210: add support for PCIe D3hot in system suspend
+  wil6210: remove ioctl interface
+
+ drivers/net/wireless/ath/wil6210/Makefile       |   1 -
+ drivers/net/wireless/ath/wil6210/cfg80211.c     |  38 ++++
+ drivers/net/wireless/ath/wil6210/debugfs.c      |  49 +++++
+ drivers/net/wireless/ath/wil6210/interrupt.c    |   6 +
+ drivers/net/wireless/ath/wil6210/ioctl.c        | 180 -------------------
+ drivers/net/wireless/ath/wil6210/main.c         |   7 +-
+ drivers/net/wireless/ath/wil6210/netdev.c       |   8 -
+ drivers/net/wireless/ath/wil6210/pcie_bus.c     |  63 ++++---
+ drivers/net/wireless/ath/wil6210/pm.c           | 228 ++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/txrx.c         |  71 ++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h      |  26 +++
+ drivers/net/wireless/ath/wil6210/wil_platform.h |   7 +-
+ drivers/net/wireless/ath/wil6210/wmi.c          | 143 +++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h          |  27 +--
+ 14 files changed, 612 insertions(+), 242 deletions(-)
+ delete mode 100644 drivers/net/wireless/ath/wil6210/ioctl.c
+
 -- 
-2.7.4
+1.9.1
