@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:35609 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751090AbdFTTxS (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:55630 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750801AbdFOQIL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2017 15:53:18 -0400
-Received: by mail-wr0-f174.google.com with SMTP id y25so65936649wrd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2017 12:53:17 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: Fix a memory leak in error handling path in
- 'brcmf_cfg80211_attach'
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        kvalo@codeaurora.org, rafal@milecki.pl,
-        pieter-paul.giesberts@broadcom.com
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <2343c662-f70d-1e76-d863-5f6bb66c269b@broadcom.com> (sfid-20170620_215339_680418_E349B1A0)
-Date: Tue, 20 Jun 2017 21:53:15 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr>
-Content-Type: text/plain; charset=utf-8
+        Thu, 15 Jun 2017 12:08:11 -0400
+Date: Thu, 15 Jun 2017 12:08:08 -0400 (EDT)
+Message-Id: <20170615.120808.1402317729827497353.davem@davemloft.net> (sfid-20170615_180847_571455_514FB5B1)
+To: sfr@canb.auug.org.au
+Cc: netdev@vger.kernel.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+        linux-kernel@vger.kernel.org, igor.mitsyanko.os@quantenna.com,
+        dlebed@quantenna.com, smaksimenko@quantenna.com,
+        smatyukevich@quantenna.com, btherthala@quantenna.com,
+        hwang@quantenna.com, krath@quantenna.com, avinashp@quantenna.com
+Subject: Re: linux-next: build failure after merge of the
+ wireless-drivers-next tree
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170613120024.2a1ce31b@canb.auug.org.au>
+References: <20170608122759.7ffda0c3@canb.auug.org.au>
+        <20170613120024.2a1ce31b@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Tue, 13 Jun 2017 12:00:24 +1000
 
+> Hi Dave,
+> 
+> On Thu, 8 Jun 2017 12:27:59 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+>>
+>> After merging the wireless-drivers-next tree, today's linux-next build
+>> (x86_64 allmodconfig) failed like this:
+>> 
+>> drivers/net/wireless/quantenna/qtnfmac/core.c: In function 'qtnf_core_net_attach':
+>> drivers/net/wireless/quantenna/qtnfmac/core.c:319:5: error: 'struct net_device' has no member named 'destructor'
+>>   dev->destructor = free_netdev;
+>>      ^
+>> 
+>> Caused by commit
+>> 
+>>   98f44cb0655c ("qtnfmac: introduce new FullMAC driver for Quantenna chipsets")
+> 
+> This commit is now in the net-next tree ...
+> 
+>> interacting with commit
+>> 
+>>   cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+>> 
+>> from the net tree.
+>> 
+>> I applied this merge fix patch for today.
+> 
+> So this merge fix patch is needed when the net and net-next trees are merged.
 
-On 20-06-17 08:22, Christophe JAILLET wrote:
-> If 'wiphy_new()' fails, we leak 'ops'. Add a new label in the error
-> handling path to free it in such a case.
-
-Thanks. Please add the following tags:
-
-Cc: stable@vger.kernel.org
-> Fixes: 5c22fb85102a7 ("brcmfmac: add wowl gtk rekeying offload support")
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+This is now all resolved, thanks!
