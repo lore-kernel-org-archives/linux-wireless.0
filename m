@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33104 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdFBV2D (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:39235 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753139AbdFOSZl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 17:28:03 -0400
-Received: by mail-oi0-f67.google.com with SMTP id h4so13680842oib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 14:28:02 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 1/9] rtlwifi: btcoex: add macros to check chip type
-Date: Fri,  2 Jun 2017 16:27:40 -0500
-Message-Id: <20170602212748.23857-2-Larry.Finger@lwfinger.net> (sfid-20170602_232806_600531_A751C00E)
-In-Reply-To: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
-References: <20170602212748.23857-1-Larry.Finger@lwfinger.net>
+        Thu, 15 Jun 2017 14:25:41 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 18/23] nfctype5: Remove useless initialization
+Date: Thu, 15 Jun 2017 11:25:11 -0700
+Message-Id: <20170615182516.4508-19-mgreer@animalcreek.com> (sfid-20170615_202545_516779_9A89DC7F)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+There is no point in assigning 'local_data' to 'cookie' when 'cookie'
+is going to be reassigned before it is used.
 
-For some external functions that have hardware dependency, we need to
-know the type of the hardware before invoking them.
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ plugins/nfctype5.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 39b9a3309cfd..2ac989a4b2bb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -37,6 +37,28 @@
+diff --git a/plugins/nfctype5.c b/plugins/nfctype5.c
+index f26d8fa..873ac79 100644
+--- a/plugins/nfctype5.c
++++ b/plugins/nfctype5.c
+@@ -430,7 +430,7 @@ static int t5_read(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+ 		size_t len, t5_local_cb local_cb, void *local_data)
+ {
+ 	struct type5_read_single_block_cmd t5_cmd;
+-	struct t5_cookie *cookie = local_data;
++	struct t5_cookie *cookie;
+ 	uint8_t blk_size = near_tag_get_blk_size(tag);
+ 	int err;
  
- #include "halbtcoutsrc.h"
+@@ -529,7 +529,7 @@ static int t5_write(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+ 		size_t len, t5_local_cb local_cb, void *local_data)
+ {
+ 	struct type5_write_single_block_cmd *t5_cmd;
+-	struct t5_cookie *cookie = local_data;
++	struct t5_cookie *cookie;
+ 	uint8_t blk_size = near_tag_get_blk_size(tag);
+ 	int err;
  
-+/* Interface type */
-+#define RT_PCI_INTERFACE	1
-+#define RT_USB_INTERFACE	2
-+#define RT_SDIO_INTERFACE	3
-+#define DEV_BUS_TYPE		RT_PCI_INTERFACE
-+
-+/* IC type */
-+#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
-+
-+#define IS_NEW_GENERATION_IC(adapter)		\
-+			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8812(adapter)		\
-+			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
-+#define IS_HARDWARE_TYPE_8821(adapter)		\
-+			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
-+#define IS_HARDWARE_TYPE_8723A(adapter)	\
-+			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
-+#define IS_HARDWARE_TYPE_8723B(adapter)	\
-+			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
-+#define IS_HARDWARE_TYPE_8192E(adapter)	\
-+			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
-+
- #include "halbtc8192e2ant.h"
- #include "halbtc8723b1ant.h"
- #include "halbtc8723b2ant.h"
 -- 
 2.13.0
