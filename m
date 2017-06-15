@@ -1,823 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33487 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754144AbdFXBxU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28906 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752105AbdFOFup (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 21:53:20 -0400
-Received: by mail-ot0-f193.google.com with SMTP id q16so6494411otb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 18:53:19 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/10] rtlwifi: Update 8723be new phy parameters and its parser.
-Date: Fri, 23 Jun 2017 20:53:04 -0500
-Message-Id: <20170624015309.28099-6-Larry.Finger@lwfinger.net> (sfid-20170624_035337_311469_1D646565)
-In-Reply-To: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
-References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
+        Thu, 15 Jun 2017 01:50:45 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 3/3] wil6210: remove ioctl interface
+Date: Thu, 15 Jun 2017 08:50:34 +0300
+Message-Id: <1497505834-9704-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170615_075049_445504_2586A14D)
+In-Reply-To: <1497505834-9704-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1497505834-9704-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Wireless drivers should not be using ioctl interface,
+hence remove this interface for wil6210 driver.
 
-There are new PHY table values for the RTL8723BE. The changes require
-new parsing code.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 365 +++++++++------------
- .../net/wireless/realtek/rtlwifi/rtl8723be/table.c | 192 ++++++-----
- .../net/wireless/realtek/rtlwifi/rtl8723be/table.h |  10 +-
- 3 files changed, 281 insertions(+), 286 deletions(-)
+ drivers/net/wireless/ath/wil6210/Makefile |   1 -
+ drivers/net/wireless/ath/wil6210/ioctl.c  | 180 ------------------------------
+ drivers/net/wireless/ath/wil6210/netdev.c |   8 --
+ 3 files changed, 189 deletions(-)
+ delete mode 100644 drivers/net/wireless/ath/wil6210/ioctl.c
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-index 9752175cc466..9606641519e7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-@@ -152,33 +152,86 @@ bool rtl8723be_phy_rf_config(struct ieee80211_hw *hw)
- 	return rtl8723be_phy_rf6052_config(hw);
- }
- 
--static bool _rtl8723be_check_condition(struct ieee80211_hw *hw,
--				       const u32  condition)
-+static bool _rtl8723be_check_positive(struct ieee80211_hw *hw,
-+				      const u32 condition1,
-+				      const u32 condition2)
- {
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	u32 _board = rtlefuse->board_type; /*need efuse define*/
--	u32 _interface = rtlhal->interface;
--	u32 _platform = 0x08;/*SupportPlatform */
--	u32 cond = condition;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+	u32 cut_ver = ((rtlhal->version & CHIP_VER_RTL_MASK)
-+					>> CHIP_VER_RTL_SHIFT);
-+	u32 intf = (rtlhal->interface == INTF_USB ? BIT(1) : BIT(0));
-+
-+	u8  board_type = ((rtlhal->board_type & BIT(4)) >> 4) << 0 | /* _GLNA */
-+			 ((rtlhal->board_type & BIT(3)) >> 3) << 1 | /* _GPA  */
-+			 ((rtlhal->board_type & BIT(7)) >> 7) << 2 | /* _ALNA */
-+			 ((rtlhal->board_type & BIT(6)) >> 6) << 3 | /* _APA  */
-+			 ((rtlhal->board_type & BIT(2)) >> 2) << 4;  /* _BT   */
-+
-+	u32 cond1 = condition1, cond2 = condition2;
-+	u32 driver1 = cut_ver << 24 |	/* CUT ver */
-+		      0 << 20 |			/* interface 2/2 */
-+		      0x04 << 16 |		/* platform */
-+		      rtlhal->package_type << 12 |
-+		      intf << 8 |			/* interface 1/2 */
-+		      board_type;
-+
-+	u32 driver2 = rtlhal->type_glna <<  0 |
-+		      rtlhal->type_gpa  <<  8 |
-+		      rtlhal->type_alna << 16 |
-+		      rtlhal->type_apa  << 24;
- 
--	if (condition == 0xCDCDCDCD)
--		return true;
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+		 "===> [8812A] CheckPositive (cond1, cond2) = (0x%X 0x%X)\n",
-+		 cond1, cond2);
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+		 "===> [8812A] CheckPositive (driver1, driver2) = (0x%X 0x%X)\n",
-+		 driver1, driver2);
- 
--	cond = condition & 0xFF;
--	if ((_board & cond) == 0 && cond != 0x1F)
--		return false;
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+		 "	(Platform, Interface) = (0x%X, 0x%X)\n", 0x04, intf);
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-+		 "	(Board, Package) = (0x%X, 0x%X)\n",
-+		 rtlhal->board_type, rtlhal->package_type);
- 
--	cond = condition & 0xFF00;
--	cond = cond >> 8;
--	if ((_interface & cond) == 0 && cond != 0x07)
--		return false;
-+	/*============== Value Defined Check ===============*/
-+	/*QFN Type [15:12] and Cut Version [27:24] need to do value check*/
- 
--	cond = condition & 0xFF0000;
--	cond = cond >> 16;
--	if ((_platform & cond) == 0 && cond != 0x0F)
-+	if (((cond1 & 0x0000F000) != 0) && ((cond1 & 0x0000F000) !=
-+		(driver1 & 0x0000F000)))
- 		return false;
--	return true;
-+	if (((cond1 & 0x0F000000) != 0) && ((cond1 & 0x0F000000) !=
-+		(driver1 & 0x0F000000)))
-+		return false;
-+
-+	/*=============== Bit Defined Check ================*/
-+	/* We don't care [31:28] */
-+
-+	cond1   &= 0x00FF0FFF;
-+	driver1 &= 0x00FF0FFF;
-+
-+	if ((cond1 & driver1) == cond1) {
-+		u32 mask = 0;
-+
-+		if ((cond1 & 0x0F) == 0) /* BoardType is DONTCARE*/
-+			return true;
-+
-+		if ((cond1 & BIT(0)) != 0) /*GLNA*/
-+			mask |= 0x000000FF;
-+		if ((cond1 & BIT(1)) != 0) /*GPA*/
-+			mask |= 0x0000FF00;
-+		if ((cond1 & BIT(2)) != 0) /*ALNA*/
-+			mask |= 0x00FF0000;
-+		if ((cond1 & BIT(3)) != 0) /*APA*/
-+			mask |= 0xFF000000;
-+
-+		/* BoardType of each RF path is matched*/
-+		if ((cond2 & mask) == (driver2 & mask))
-+			return true;
-+		else
-+			return false;
-+	}
-+	return false;
- }
- 
- static void _rtl8723be_config_rf_reg(struct ieee80211_hw *hw, u32 addr,
-@@ -464,6 +517,16 @@ static bool _rtl8723be_phy_bb8723b_config_parafile(struct ieee80211_hw *hw)
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	bool rtstatus;
- 
-+	/* switch ant to BT */
-+	if (rtlpriv->rtlhal.interface == INTF_USB) {
-+		rtl_write_dword(rtlpriv, 0x948, 0x0);
-+	} else {
-+		if (rtlpriv->btcoexist.btc_info.single_ant_path == 0)
-+			rtl_write_dword(rtlpriv, 0x948, 0x280);
-+		else
-+			rtl_write_dword(rtlpriv, 0x948, 0x0);
-+	}
-+
- 	rtstatus = _rtl8723be_phy_config_bb_with_headerfile(hw,
- 						BASEBAND_CONFIG_PHY_REG);
- 	if (!rtstatus) {
-@@ -493,142 +556,84 @@ static bool _rtl8723be_phy_bb8723b_config_parafile(struct ieee80211_hw *hw)
- 	return true;
- }
- 
-+static bool rtl8723be_phy_config_with_headerfile(struct ieee80211_hw *hw,
-+						 u32 *array_table,
-+						 u16 arraylen,
-+		void (*set_reg)(struct ieee80211_hw *hw, u32 regaddr, u32 data))
-+{
-+	#define COND_ELSE  2
-+	#define COND_ENDIF 3
-+
-+	int i = 0;
-+	u8 cond;
-+	bool matched = true, skipped = false;
-+
-+	while ((i + 1) < arraylen) {
-+		u32 v1 = array_table[i];
-+		u32 v2 = array_table[i + 1];
-+
-+		if (v1 & (BIT(31) | BIT(30))) {/*positive & negative condition*/
-+			if (v1 & BIT(31)) {/* positive condition*/
-+				cond  = (u8)((v1 & (BIT(29) | BIT(28))) >> 28);
-+				if (cond == COND_ENDIF) { /*end*/
-+					matched = true;
-+					skipped = false;
-+				} else if (cond == COND_ELSE) { /*else*/
-+					matched = skipped ? false : true;
-+				} else {/*if , else if*/
-+					if (skipped) {
-+						matched = false;
-+					} else {
-+						if (_rtl8723be_check_positive(
-+								hw, v1, v2)) {
-+							matched = true;
-+							skipped = true;
-+						} else {
-+							matched = false;
-+							skipped = false;
-+						}
-+					}
-+				}
-+			} else if (v1 & BIT(30)) { /*negative condition*/
-+			/*do nothing*/
-+			}
-+		} else {
-+			if (matched)
-+				set_reg(hw, v1, v2);
-+		}
-+		i = i + 2;
-+	}
-+
-+	return true;
-+}
-+
- static bool _rtl8723be_phy_config_mac_with_headerfile(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 i;
--	u32 arraylength;
--	u32 *ptrarray;
- 
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, "Read rtl8723beMACPHY_Array\n");
--	arraylength = RTL8723BEMAC_1T_ARRAYLEN;
--	ptrarray = RTL8723BEMAC_1T_ARRAY;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Img:RTL8723bEMAC_1T_ARRAY LEN %d\n", arraylength);
--	for (i = 0; i < arraylength; i = i + 2)
--		rtl_write_byte(rtlpriv, ptrarray[i], (u8)ptrarray[i + 1]);
--	return true;
-+
-+	return rtl8723be_phy_config_with_headerfile(hw,
-+			RTL8723BEMAC_1T_ARRAY, RTL8723BEMAC_1T_ARRAYLEN,
-+			rtl_write_byte_with_val32);
- }
- 
- static bool _rtl8723be_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
- 						     u8 configtype)
- {
--	#define READ_NEXT_PAIR(v1, v2, i) \
--		do { \
--			i += 2; \
--			v1 = array_table[i];\
--			v2 = array_table[i+1]; \
--		} while (0)
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 89bf2f9..4ae21da 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -10,7 +10,6 @@ wil6210-y += interrupt.o
+ wil6210-y += txrx.o
+ wil6210-y += debug.o
+ wil6210-y += rx_reorder.o
+-wil6210-y += ioctl.o
+ wil6210-y += fw.o
+ wil6210-y += pm.o
+ wil6210-y += pmc.o
+diff --git a/drivers/net/wireless/ath/wil6210/ioctl.c b/drivers/net/wireless/ath/wil6210/ioctl.c
+deleted file mode 100644
+index 1c49ad8..0000000
+--- a/drivers/net/wireless/ath/wil6210/ioctl.c
++++ /dev/null
+@@ -1,180 +0,0 @@
+-/*
+- * Copyright (c) 2014,2017 Qualcomm Atheros, Inc.
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
 -
--	int i;
--	u32 *array_table;
--	u16 arraylen;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u32 v1 = 0, v2 = 0;
+-#include <linux/uaccess.h>
 -
--	if (configtype == BASEBAND_CONFIG_PHY_REG) {
--		arraylen = RTL8723BEPHY_REG_1TARRAYLEN;
--		array_table = RTL8723BEPHY_REG_1TARRAY;
+-#include "wil6210.h"
+-#include <uapi/linux/wil6210_uapi.h>
 -
--		for (i = 0; i < arraylen; i = i + 2) {
--			v1 = array_table[i];
--			v2 = array_table[i+1];
--			if (v1 < 0xcdcdcdcd) {
--				_rtl8723be_config_bb_reg(hw, v1, v2);
--			} else {/*This line is the start line of branch.*/
--				/* to protect READ_NEXT_PAIR not overrun */
--				if (i >= arraylen - 2)
--					break;
+-#define wil_hex_dump_ioctl(prefix_str, buf, len) \
+-	print_hex_dump_debug("DBG[IOC ]" prefix_str, \
+-			     DUMP_PREFIX_OFFSET, 16, 1, buf, len, true)
+-#define wil_dbg_ioctl(wil, fmt, arg...) wil_dbg(wil, "DBG[IOC ]" fmt, ##arg)
 -
--				if (!_rtl8723be_check_condition(hw,
--						array_table[i])) {
--					/*Discard the following
--					 *(offset, data) pairs
--					 */
--					READ_NEXT_PAIR(v1, v2, i);
--					while (v2 != 0xDEAD &&
--					       v2 != 0xCDEF &&
--					       v2 != 0xCDCD &&
--					       i < arraylen - 2) {
--						READ_NEXT_PAIR(v1, v2, i);
--					}
--					i -= 2; /* prevent from for-loop += 2*/
--				/*Configure matched pairs and
--				 *skip to end of if-else.
--				 */
--				} else {
--					READ_NEXT_PAIR(v1, v2, i);
--					while (v2 != 0xDEAD &&
--					       v2 != 0xCDEF &&
--					       v2 != 0xCDCD &&
--					       i < arraylen - 2) {
--						_rtl8723be_config_bb_reg(hw,
--								    v1, v2);
--						READ_NEXT_PAIR(v1, v2, i);
--					}
- 
--					while (v2 != 0xDEAD && i < arraylen - 2)
--						READ_NEXT_PAIR(v1, v2, i);
--				}
--			}
--		}
--	} else if (configtype == BASEBAND_CONFIG_AGC_TAB) {
--		arraylen = RTL8723BEAGCTAB_1TARRAYLEN;
--		array_table = RTL8723BEAGCTAB_1TARRAY;
+-static void __iomem *wil_ioc_addr(struct wil6210_priv *wil, uint32_t addr,
+-				  uint32_t size, enum wil_memio_op op)
+-{
+-	void __iomem *a;
+-	u32 off;
 -
--		for (i = 0; i < arraylen; i = i + 2) {
--			v1 = array_table[i];
--			v2 = array_table[i+1];
--			if (v1 < 0xCDCDCDCD) {
--				rtl_set_bbreg(hw, array_table[i],
--					      MASKDWORD,
--					      array_table[i + 1]);
--				udelay(1);
--				continue;
--			} else {/*This line is the start line of branch.*/
--				/* to protect READ_NEXT_PAIR not overrun */
--				if (i >= arraylen - 2)
--					break;
--
--				if (!_rtl8723be_check_condition(hw,
--					array_table[i])) {
--					/*Discard the following
--					 *(offset, data) pairs
--					 */
--					READ_NEXT_PAIR(v1, v2, i);
--					while (v2 != 0xDEAD &&
--					       v2 != 0xCDEF &&
--					       v2 != 0xCDCD &&
--					       i < arraylen - 2) {
--						READ_NEXT_PAIR(v1, v2, i);
--					}
--					i -= 2; /* prevent from for-loop += 2*/
--				/*Configure matched pairs and
--				 *skip to end of if-else.
--				 */
--				} else {
--					READ_NEXT_PAIR(v1, v2, i);
--					while (v2 != 0xDEAD &&
--					       v2 != 0xCDEF &&
--					       v2 != 0xCDCD &&
--					       i < arraylen - 2) {
--						rtl_set_bbreg(hw, array_table[i],
--							      MASKDWORD,
--							      array_table[i + 1]);
--						udelay(1);
--						READ_NEXT_PAIR(v1, v2, i);
--					}
-+	if (configtype == BASEBAND_CONFIG_PHY_REG)
-+		return rtl8723be_phy_config_with_headerfile(hw,
-+				RTL8723BEPHY_REG_1TARRAY,
-+				RTL8723BEPHY_REG_1TARRAYLEN,
-+				_rtl8723be_config_bb_reg);
-+	else if (configtype == BASEBAND_CONFIG_AGC_TAB)
-+		return rtl8723be_phy_config_with_headerfile(hw,
-+				RTL8723BEAGCTAB_1TARRAY,
-+				RTL8723BEAGCTAB_1TARRAYLEN,
-+				rtl_set_bbreg_with_dwmask);
- 
--					while (v2 != 0xDEAD && i < arraylen - 2)
--						READ_NEXT_PAIR(v1, v2, i);
--				}
--			}
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--				 "The agctab_array_table[0] is %x Rtl818EEPHY_REGArray[1] is %x\n",
--				 array_table[i], array_table[i + 1]);
--		}
+-	switch (op & wil_mmio_addr_mask) {
+-	case wil_mmio_addr_linker:
+-		a = wmi_buffer(wil, cpu_to_le32(addr));
+-		break;
+-	case wil_mmio_addr_ahb:
+-		a = wmi_addr(wil, addr);
+-		break;
+-	case wil_mmio_addr_bar:
+-		a = wmi_addr(wil, addr + WIL6210_FW_HOST_OFF);
+-		break;
+-	default:
+-		wil_err(wil, "Unsupported address mode, op = 0x%08x\n", op);
+-		return NULL;
 -	}
--	return true;
-+	return false;
- }
- 
- static u8 _rtl8723be_get_rate_section_index(u32 regaddr)
-@@ -761,73 +766,17 @@ static bool _rtl8723be_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
- bool rtl8723be_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 					     enum radio_path rfpath)
- {
--	#define READ_NEXT_RF_PAIR(v1, v2, i) \
--		do { \
--			i += 2; \
--			v1 = radioa_array_table[i]; \
--			v2 = radioa_array_table[i+1]; \
--		} while (0)
 -
--	int i;
--	bool rtstatus = true;
--	u32 *radioa_array_table;
--	u16 radioa_arraylen;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u32 v1 = 0, v2 = 0;
-+	bool ret = true;
- 
--	radioa_arraylen = RTL8723BE_RADIOA_1TARRAYLEN;
--	radioa_array_table = RTL8723BE_RADIOA_1TARRAY;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "Radio_A:RTL8723BE_RADIOA_1TARRAY %d\n", radioa_arraylen);
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
--	rtstatus = true;
- 	switch (rfpath) {
- 	case RF90_PATH_A:
--		for (i = 0; i < radioa_arraylen; i = i + 2) {
--			v1 = radioa_array_table[i];
--			v2 = radioa_array_table[i+1];
--			if (v1 < 0xcdcdcdcd) {
--				_rtl8723be_config_rf_radio_a(hw, v1, v2);
--			} else {/*This line is the start line of branch.*/
--				/* to protect READ_NEXT_PAIR not overrun */
--				if (i >= radioa_arraylen - 2)
--					break;
+-	off = a - wil->csr;
+-	if (size >= wil->bar_size - off) {
+-		wil_err(wil, "Requested block does not fit into memory: "
+-			"off = 0x%08x size = 0x%08x\n", off, size);
+-		return NULL;
+-	}
 -
--				if (!_rtl8723be_check_condition(hw,
--						radioa_array_table[i])) {
--					/*Discard the following
--					 *(offset, data) pairs
--					 */
--					READ_NEXT_RF_PAIR(v1, v2, i);
--					while (v2 != 0xDEAD &&
--					       v2 != 0xCDEF &&
--					       v2 != 0xCDCD &&
--					       i < radioa_arraylen - 2) {
--						READ_NEXT_RF_PAIR(v1, v2, i);
--					}
--					i -= 2; /* prevent from for-loop += 2*/
--				} else {
--					/*Configure matched pairs
--					 *and skip to end of if-else.
--					 */
--					READ_NEXT_RF_PAIR(v1, v2, i);
--					while (v2 != 0xDEAD &&
--					       v2 != 0xCDEF &&
--					       v2 != 0xCDCD &&
--					       i < radioa_arraylen - 2) {
--						_rtl8723be_config_rf_radio_a(hw,
--									v1, v2);
--						READ_NEXT_RF_PAIR(v1, v2, i);
--					}
+-	return a;
+-}
 -
--					while (v2 != 0xDEAD &&
--					       i < radioa_arraylen - 2) {
--						READ_NEXT_RF_PAIR(v1, v2, i);
--					}
--				}
--			}
+-static int wil_ioc_memio_dword(struct wil6210_priv *wil, void __user *data)
+-{
+-	struct wil_memio io;
+-	void __iomem *a;
+-	bool need_copy = false;
+-
+-	if (copy_from_user(&io, data, sizeof(io)))
+-		return -EFAULT;
+-
+-	wil_dbg_ioctl(wil, "IO: addr = 0x%08x val = 0x%08x op = 0x%08x\n",
+-		      io.addr, io.val, io.op);
+-
+-	a = wil_ioc_addr(wil, io.addr, sizeof(u32), io.op);
+-	if (!a) {
+-		wil_err(wil, "invalid address 0x%08x, op = 0x%08x\n", io.addr,
+-			io.op);
+-		return -EINVAL;
+-	}
+-	/* operation */
+-	switch (io.op & wil_mmio_op_mask) {
+-	case wil_mmio_read:
+-		io.val = readl(a);
+-		need_copy = true;
+-		break;
+-	case wil_mmio_write:
+-		writel(io.val, a);
+-		wmb(); /* make sure write propagated to HW */
+-		break;
+-	default:
+-		wil_err(wil, "Unsupported operation, op = 0x%08x\n", io.op);
+-		return -EINVAL;
+-	}
+-
+-	if (need_copy) {
+-		wil_dbg_ioctl(wil, "IO done: addr = 0x%08x"
+-			      " val = 0x%08x op = 0x%08x\n",
+-			      io.addr, io.val, io.op);
+-		if (copy_to_user(data, &io, sizeof(io)))
+-			return -EFAULT;
+-	}
+-
+-	return 0;
+-}
+-
+-static int wil_ioc_memio_block(struct wil6210_priv *wil, void __user *data)
+-{
+-	struct wil_memio_block io;
+-	void *block;
+-	void __iomem *a;
+-	int rc = 0;
+-
+-	if (copy_from_user(&io, data, sizeof(io)))
+-		return -EFAULT;
+-
+-	wil_dbg_ioctl(wil, "IO: addr = 0x%08x size = 0x%08x op = 0x%08x\n",
+-		      io.addr, io.size, io.op);
+-
+-	/* size */
+-	if (io.size % 4) {
+-		wil_err(wil, "size is not multiple of 4:  0x%08x\n", io.size);
+-		return -EINVAL;
+-	}
+-
+-	a = wil_ioc_addr(wil, io.addr, io.size, io.op);
+-	if (!a) {
+-		wil_err(wil, "invalid address 0x%08x, op = 0x%08x\n", io.addr,
+-			io.op);
+-		return -EINVAL;
+-	}
+-
+-	block = kmalloc(io.size, GFP_USER);
+-	if (!block)
+-		return -ENOMEM;
+-
+-	/* operation */
+-	switch (io.op & wil_mmio_op_mask) {
+-	case wil_mmio_read:
+-		wil_memcpy_fromio_32(block, a, io.size);
+-		wil_hex_dump_ioctl("Read  ", block, io.size);
+-		if (copy_to_user(io.block, block, io.size)) {
+-			rc = -EFAULT;
+-			goto out_free;
 -		}
-+		ret =  rtl8723be_phy_config_with_headerfile(hw,
-+				RTL8723BE_RADIOA_1TARRAY,
-+				RTL8723BE_RADIOA_1TARRAYLEN,
-+				_rtl8723be_config_rf_radio_a);
- 
- 		if (rtlhal->oem_id == RT_CID_819X_HP)
- 			_rtl8723be_config_rf_radio_a(hw, 0x52, 0x7E4BD);
-@@ -840,7 +789,7 @@ bool rtl8723be_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	}
--	return true;
-+	return ret;
+-		break;
+-	case wil_mmio_write:
+-		if (copy_from_user(block, io.block, io.size)) {
+-			rc = -EFAULT;
+-			goto out_free;
+-		}
+-		wil_memcpy_toio_32(a, block, io.size);
+-		wmb(); /* make sure write propagated to HW */
+-		wil_hex_dump_ioctl("Write ", block, io.size);
+-		break;
+-	default:
+-		wil_err(wil, "Unsupported operation, op = 0x%08x\n", io.op);
+-		rc = -EINVAL;
+-		break;
+-	}
+-
+-out_free:
+-	kfree(block);
+-	return rc;
+-}
+-
+-int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd)
+-{
+-	int ret;
+-
+-	switch (cmd) {
+-	case WIL_IOCTL_MEMIO:
+-		ret = wil_ioc_memio_dword(wil, data);
+-		break;
+-	case WIL_IOCTL_MEMIO_BLOCK:
+-		ret = wil_ioc_memio_block(wil, data);
+-		break;
+-	default:
+-		wil_dbg_ioctl(wil, "Unsupported IOCTL 0x%04x\n", cmd);
+-		return -ENOIOCTLCMD;
+-	}
+-
+-	wil_dbg_ioctl(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
+-	return ret;
+-}
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 708facd..4a6ab2d 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -42,20 +42,12 @@ static int wil_stop(struct net_device *ndev)
+ 	return wil_down(wil);
  }
  
- void rtl8723be_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
-@@ -1350,7 +1299,7 @@ void rtl8723be_phy_sw_chnl_callback(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
--	u32 delay;
-+	u32 delay = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE,
- 		 "switch to channel%d\n", rtlphy->current_channel);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.c
-index a180761e8810..381c16b9b3a9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.c
-@@ -26,6 +26,7 @@
-  *****************************************************************************/
- 
- #include "table.h"
-+
- u32 RTL8723BEPHY_REG_1TARRAY[] = {
- 		0x800, 0x80040000,
- 		0x804, 0x00000003,
-@@ -36,7 +37,7 @@ u32 RTL8723BEPHY_REG_1TARRAY[] = {
- 		0x818, 0x02200385,
- 		0x81C, 0x00000000,
- 		0x820, 0x01000100,
--		0x824, 0x00390204,
-+		0x824, 0x00190204,
- 		0x828, 0x00000000,
- 		0x82C, 0x00000000,
- 		0x830, 0x00000000,
-@@ -73,9 +74,8 @@ u32 RTL8723BEPHY_REG_1TARRAY[] = {
- 		0x90C, 0x81121111,
- 		0x910, 0x00000002,
- 		0x914, 0x00000201,
--		0x948, 0x00000280,
- 		0xA00, 0x00D047C8,
--		0xA04, 0x80FF000C,
-+		0xA04, 0x80FF800C,
- 		0xA08, 0x8C838300,
- 		0xA0C, 0x2E7F120F,
- 		0xA10, 0x9500BB78,
-@@ -114,7 +114,7 @@ u32 RTL8723BEPHY_REG_1TARRAY[] = {
- 		0xC4C, 0x007F037F,
- 		0xC50, 0x69553420,
- 		0xC54, 0x43BC0094,
--		0xC58, 0x00023169,
-+		0xC58, 0x00013147,
- 		0xC5C, 0x00250492,
- 		0xC60, 0x00000000,
- 		0xC64, 0x7112848B,
-@@ -125,7 +125,7 @@ u32 RTL8723BEPHY_REG_1TARRAY[] = {
- 		0xC78, 0x0000001F,
- 		0xC7C, 0x00B91612,
- 		0xC80, 0x390000E4,
--		0xC84, 0x20F60000,
-+		0xC84, 0x21F60000,
- 		0xC88, 0x40000100,
- 		0xC8C, 0x20200000,
- 		0xC90, 0x00020E1A,
-@@ -224,15 +224,21 @@ u32 RTL8723BEPHY_REG_1TARRAY[] = {
- 
+-static int wil_do_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
+-{
+-	struct wil6210_priv *wil = ndev_to_wil(ndev);
+-
+-	return wil_ioctl(wil, ifr->ifr_data, cmd);
+-}
+-
+ static const struct net_device_ops wil_netdev_ops = {
+ 	.ndo_open		= wil_open,
+ 	.ndo_stop		= wil_stop,
+ 	.ndo_start_xmit		= wil_start_xmit,
+ 	.ndo_set_mac_address	= eth_mac_addr,
+ 	.ndo_validate_addr	= eth_validate_addr,
+-	.ndo_do_ioctl		= wil_do_ioctl,
  };
  
-+u32 RTL8723BEPHY_REG_1TARRAYLEN =
-+	sizeof(RTL8723BEPHY_REG_1TARRAY) / sizeof(u32);
-+
- u32 RTL8723BEPHY_REG_ARRAY_PG[] = {
--	0, 0, 0, 0x00000e08, 0x0000ff00, 0x00004000,
--	0, 0, 0, 0x0000086c, 0xffffff00, 0x34363800,
--	0, 0, 0, 0x00000e00, 0xffffffff, 0x42444646,
--	0, 0, 0, 0x00000e04, 0xffffffff, 0x30343840,
-+	0, 0, 0, 0x00000e08, 0x0000ff00, 0x00003800,
-+	0, 0, 0, 0x0000086c, 0xffffff00, 0x32343600,
-+	0, 0, 0, 0x00000e00, 0xffffffff, 0x40424444,
-+	0, 0, 0, 0x00000e04, 0xffffffff, 0x28323638,
- 	0, 0, 0, 0x00000e10, 0xffffffff, 0x38404244,
- 	0, 0, 0, 0x00000e14, 0xffffffff, 0x26303436
- };
- 
-+u32 RTL8723BEPHY_REG_ARRAY_PGLEN =
-+		sizeof(RTL8723BEPHY_REG_ARRAY_PG) / sizeof(u32);
-+
- u32 RTL8723BE_RADIOA_1TARRAY[] = {
- 		0x000, 0x00010000,
- 		0x0B0, 0x000DFFE0,
-@@ -257,15 +263,37 @@ u32 RTL8723BE_RADIOA_1TARRAY[] = {
- 		0x01E, 0x00000000,
- 		0x0DF, 0x00000780,
- 		0x050, 0x00067435,
-+	0x80002000,	0x00000000,	0x40000000,	0x00000000,
-+		0x051, 0x0006F10E,
-+		0x052, 0x000007D3,
-+	0x90003000,	0x00000000,	0x40000000,	0x00000000,
-+		0x051, 0x0006F10E,
-+		0x052, 0x000007D3,
-+	0x90004000,	0x00000000,	0x40000000,	0x00000000,
-+		0x051, 0x0006F10E,
-+		0x052, 0x000007D3,
-+	0xA0000000,	0x00000000,
- 		0x051, 0x0006B04E,
- 		0x052, 0x000007D2,
-+	0xB0000000,	0x00000000,
- 		0x053, 0x00000000,
- 		0x054, 0x00050400,
- 		0x055, 0x0004026E,
- 		0x0DD, 0x0000004C,
- 		0x070, 0x00067435,
-+	0x80002000,	0x00000000,	0x40000000,	0x00000000,
-+		0x071, 0x0006F10E,
-+		0x072, 0x000007D3,
-+	0x90003000,	0x00000000,	0x40000000,	0x00000000,
-+		0x071, 0x0006F10E,
-+		0x072, 0x000007D3,
-+	0x90004000,	0x00000000,	0x40000000,	0x00000000,
-+		0x071, 0x0006F10E,
-+		0x072, 0x000007D3,
-+	0xA0000000,	0x00000000,
- 		0x071, 0x0006B04E,
- 		0x072, 0x000007D2,
-+	0xB0000000,	0x00000000,
- 		0x073, 0x00000000,
- 		0x074, 0x00050400,
- 		0x075, 0x0004026E,
-@@ -308,6 +336,7 @@ u32 RTL8723BE_RADIOA_1TARRAY[] = {
- 		0x044, 0x00000051,
- 		0x0EF, 0x00000000,
- 		0x0ED, 0x00000000,
-+		0x07F, 0x00020080,
- 		0x0EF, 0x00002000,
- 		0x03B, 0x000380EF,
- 		0x03B, 0x000302FE,
-@@ -336,14 +365,24 @@ u32 RTL8723BE_RADIOA_1TARRAY[] = {
- 		0x0A3, 0x00008000,
- 		0x0A4, 0x00048D80,
- 		0x0A5, 0x00068000,
--		0x000, 0x00033D80,
-+		0x0ED, 0x00000002,
-+		0x0EF, 0x00000002,
-+		0x056, 0x00000032,
-+		0x076, 0x00000032,
-+		0x001, 0x00000780,
- 
- };
- 
-+u32 RTL8723BE_RADIOA_1TARRAYLEN =
-+	sizeof(RTL8723BE_RADIOA_1TARRAY) / sizeof(u32);
-+
- u32 RTL8723BEMAC_1T_ARRAY[] = {
- 		0x02F, 0x00000030,
- 		0x035, 0x00000000,
-+		0x039, 0x00000008,
-+		0x064, 0x00000000,
- 		0x067, 0x00000020,
-+		0x421, 0x0000000F,
- 		0x428, 0x0000000A,
- 		0x429, 0x00000010,
- 		0x430, 0x00000000,
-@@ -439,9 +478,13 @@ u32 RTL8723BEMAC_1T_ARRAY[] = {
- 		0x709, 0x00000043,
- 		0x70A, 0x00000065,
- 		0x70B, 0x00000087,
-+		0x765, 0x00000018,
-+		0x76E, 0x00000004,
- 
- };
- 
-+u32 RTL8723BEMAC_1T_ARRAYLEN = sizeof(RTL8723BEMAC_1T_ARRAY) / sizeof(u32);
-+
- u32 RTL8723BEAGCTAB_1TARRAY[] = {
- 		0xC78, 0xFD000001,
- 		0xC78, 0xFC010001,
-@@ -466,21 +509,21 @@ u32 RTL8723BEAGCTAB_1TARRAY[] = {
- 		0xC78, 0xE9140001,
- 		0xC78, 0xE8150001,
- 		0xC78, 0xE7160001,
--		0xC78, 0xAA170001,
--		0xC78, 0xA9180001,
--		0xC78, 0xA8190001,
--		0xC78, 0xA71A0001,
--		0xC78, 0xA61B0001,
--		0xC78, 0xA51C0001,
--		0xC78, 0xA41D0001,
--		0xC78, 0xA31E0001,
--		0xC78, 0x671F0001,
--		0xC78, 0x66200001,
--		0xC78, 0x65210001,
--		0xC78, 0x64220001,
--		0xC78, 0x63230001,
--		0xC78, 0x62240001,
--		0xC78, 0x61250001,
-+		0xC78, 0xE6170001,
-+		0xC78, 0xE5180001,
-+		0xC78, 0xE4190001,
-+		0xC78, 0xE31A0001,
-+		0xC78, 0xA51B0001,
-+		0xC78, 0xA41C0001,
-+		0xC78, 0xA31D0001,
-+		0xC78, 0x671E0001,
-+		0xC78, 0x661F0001,
-+		0xC78, 0x65200001,
-+		0xC78, 0x64210001,
-+		0xC78, 0x63220001,
-+		0xC78, 0x4A230001,
-+		0xC78, 0x49240001,
-+		0xC78, 0x48250001,
- 		0xC78, 0x47260001,
- 		0xC78, 0x46270001,
- 		0xC78, 0x45280001,
-@@ -491,22 +534,22 @@ u32 RTL8723BEAGCTAB_1TARRAY[] = {
- 		0xC78, 0x282D0001,
- 		0xC78, 0x272E0001,
- 		0xC78, 0x262F0001,
--		0xC78, 0x25300001,
--		0xC78, 0x24310001,
--		0xC78, 0x09320001,
--		0xC78, 0x08330001,
--		0xC78, 0x07340001,
--		0xC78, 0x06350001,
--		0xC78, 0x05360001,
--		0xC78, 0x04370001,
--		0xC78, 0x03380001,
--		0xC78, 0x02390001,
-+		0xC78, 0x0A300001,
-+		0xC78, 0x09310001,
-+		0xC78, 0x08320001,
-+		0xC78, 0x07330001,
-+		0xC78, 0x06340001,
-+		0xC78, 0x05350001,
-+		0xC78, 0x04360001,
-+		0xC78, 0x03370001,
-+		0xC78, 0x02380001,
-+		0xC78, 0x01390001,
- 		0xC78, 0x013A0001,
--		0xC78, 0x003B0001,
--		0xC78, 0x003C0001,
--		0xC78, 0x003D0001,
--		0xC78, 0x003E0001,
--		0xC78, 0x003F0001,
-+		0xC78, 0x013B0001,
-+		0xC78, 0x013C0001,
-+		0xC78, 0x013D0001,
-+		0xC78, 0x013E0001,
-+		0xC78, 0x013F0001,
- 		0xC78, 0xFC400001,
- 		0xC78, 0xFB410001,
- 		0xC78, 0xFA420001,
-@@ -531,47 +574,50 @@ u32 RTL8723BEAGCTAB_1TARRAY[] = {
- 		0xC78, 0xE7550001,
- 		0xC78, 0xE6560001,
- 		0xC78, 0xE5570001,
--		0xC78, 0xAA580001,
--		0xC78, 0xA9590001,
--		0xC78, 0xA85A0001,
--		0xC78, 0xA75B0001,
--		0xC78, 0xA65C0001,
--		0xC78, 0xA55D0001,
--		0xC78, 0xA45E0001,
--		0xC78, 0x675F0001,
--		0xC78, 0x66600001,
--		0xC78, 0x65610001,
--		0xC78, 0x64620001,
--		0xC78, 0x63630001,
--		0xC78, 0x62640001,
--		0xC78, 0x61650001,
-+		0xC78, 0xE4580001,
-+		0xC78, 0xE3590001,
-+		0xC78, 0xA65A0001,
-+		0xC78, 0xA55B0001,
-+		0xC78, 0xA45C0001,
-+		0xC78, 0xA35D0001,
-+		0xC78, 0x675E0001,
-+		0xC78, 0x665F0001,
-+		0xC78, 0x65600001,
-+		0xC78, 0x64610001,
-+		0xC78, 0x63620001,
-+		0xC78, 0x62630001,
-+		0xC78, 0x61640001,
-+		0xC78, 0x48650001,
- 		0xC78, 0x47660001,
- 		0xC78, 0x46670001,
- 		0xC78, 0x45680001,
- 		0xC78, 0x44690001,
- 		0xC78, 0x436A0001,
- 		0xC78, 0x426B0001,
--		0xC78, 0x296C0001,
--		0xC78, 0x286D0001,
--		0xC78, 0x276E0001,
--		0xC78, 0x266F0001,
--		0xC78, 0x25700001,
--		0xC78, 0x24710001,
--		0xC78, 0x09720001,
--		0xC78, 0x08730001,
--		0xC78, 0x07740001,
--		0xC78, 0x06750001,
--		0xC78, 0x05760001,
--		0xC78, 0x04770001,
--		0xC78, 0x03780001,
--		0xC78, 0x02790001,
-+		0xC78, 0x286C0001,
-+		0xC78, 0x276D0001,
-+		0xC78, 0x266E0001,
-+		0xC78, 0x256F0001,
-+		0xC78, 0x24700001,
-+		0xC78, 0x09710001,
-+		0xC78, 0x08720001,
-+		0xC78, 0x07730001,
-+		0xC78, 0x06740001,
-+		0xC78, 0x05750001,
-+		0xC78, 0x04760001,
-+		0xC78, 0x03770001,
-+		0xC78, 0x02780001,
-+		0xC78, 0x01790001,
- 		0xC78, 0x017A0001,
--		0xC78, 0x007B0001,
--		0xC78, 0x007C0001,
--		0xC78, 0x007D0001,
--		0xC78, 0x007E0001,
--		0xC78, 0x007F0001,
-+		0xC78, 0x017B0001,
-+		0xC78, 0x017C0001,
-+		0xC78, 0x017D0001,
-+		0xC78, 0x017E0001,
-+		0xC78, 0x017F0001,
- 		0xC50, 0x69553422,
- 		0xC50, 0x69553420,
-+		0x824, 0x00390204,
- 
- };
-+
-+u32 RTL8723BEAGCTAB_1TARRAYLEN = sizeof(RTL8723BEAGCTAB_1TARRAY) / sizeof(u32);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.h
-index dc17001632f7..1deaffe22251 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/table.h
-@@ -29,15 +29,15 @@
- #define __RTL8723BE_TABLE__H_
- 
- #include <linux/types.h>
--#define  RTL8723BEPHY_REG_1TARRAYLEN	388
-+extern u32 RTL8723BEPHY_REG_1TARRAYLEN;
- extern u32 RTL8723BEPHY_REG_1TARRAY[];
--#define RTL8723BEPHY_REG_ARRAY_PGLEN	36
-+extern u32 RTL8723BEPHY_REG_ARRAY_PGLEN;
- extern u32 RTL8723BEPHY_REG_ARRAY_PG[];
--#define	RTL8723BE_RADIOA_1TARRAYLEN	206
-+extern u32 RTL8723BE_RADIOA_1TARRAYLEN;
- extern u32 RTL8723BE_RADIOA_1TARRAY[];
--#define RTL8723BEMAC_1T_ARRAYLEN	196
-+extern u32 RTL8723BEMAC_1T_ARRAYLEN;
- extern u32 RTL8723BEMAC_1T_ARRAY[];
--#define RTL8723BEAGCTAB_1TARRAYLEN	260
-+extern u32 RTL8723BEAGCTAB_1TARRAYLEN;
- extern u32 RTL8723BEAGCTAB_1TARRAY[];
- 
- #endif
+ static int wil6210_netdev_poll_rx(struct napi_struct *napi, int budget)
 -- 
-2.12.3
+1.9.1
