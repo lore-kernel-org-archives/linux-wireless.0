@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41538 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752606AbdFWVxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 17:53:22 -0400
-Date: Fri, 23 Jun 2017 23:53:19 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Li@suse.de,
-        Yi <yi1.li@linux.intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        AKASHI Takahiro <takahiro.akashi@linaro.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170623215319.GU21846@wotan.suse.de> (sfid-20170623_235353_909885_DAE3D9C1)
-References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
- <20170515231339.GF17314@wotan.suse.de>
- <0c43c825-df2a-b427-4b67-f17fd644667f@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0c43c825-df2a-b427-4b67-f17fd644667f@broadcom.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52373 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751948AbdFORqW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Jun 2017 13:46:22 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 0/3] NFC: Misc. kernel updates and trf7970a erratum handling
+Date: Thu, 15 Jun 2017 10:46:14 -0700
+Message-Id: <20170615174617.1817-1-mgreer@animalcreek.com> (sfid-20170615_194628_067625_76ED0585)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 16, 2017 at 10:41:08AM +0200, Arend Van Spriel wrote:
-> On 16-5-2017 1:13, Luis R. Rodriguez wrote:
-> > Since no upstream delta is needed for firmwared I'd like to first encourage
-> > evaluating the above. While distributions don't carry it yet that may be seen as
-> > an issue but since what we are looking for are corner cases, only folks needing
-> > to deploy a specific solution would need it or a custom proprietary solution.
-> 
-> Ok. I will go try and run firmwared in OpenWrt on a router platform.
-> Have to steal one from a colleague :-p Will study firmwared.
+Add a couple minor fixups and remove the trf7970a erratum handling
+in which the last byte in the response to a Type 5 Read Multiple Blocks
+command is discarded.  That handling is moved to the neard daemon where
+there is enough context to do it properly.
 
-Arend, curious how this effort goes. Its important to me as we know then that
-if this works its a good approach to recommend moving forward which should also
-prove less complex than that soup we had with the custom fallback stuff.
+Mark Greer (3):
+  NFC: digital: NFC-A SEL_RES must be one byte
+  NFC: digital: NFC-DEP Target WT(nfcdep,max) is now 14
+  Revert "NFC: trf7970a: Handle extra byte in response to Type 5 RMB
+    commands"
 
-  Luis
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ----
+ drivers/nfc/trf7970a.c                             | 25 ++++------------------
+ net/nfc/digital_dep.c                              |  2 +-
+ net/nfc/digital_technology.c                       |  3 ++-
+ 4 files changed, 7 insertions(+), 27 deletions(-)
+
+-- 
+2.13.0
