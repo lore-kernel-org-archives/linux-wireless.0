@@ -1,279 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30765 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751693AbdF1Esl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45335 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbdFOG05 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 00:48:41 -0400
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: Add copy engine register MAP for wcn3990 target
-Date: Wed, 28 Jun 2017 10:18:36 +0530
-Message-Id: <1498625316-21963-1-git-send-email-govinds@qti.qualcomm.com> (sfid-20170628_064847_945333_F172F3CB)
+        Thu, 15 Jun 2017 02:26:57 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v3 3/3] wil6210: remove ioctl interface
+Date: Thu, 15 Jun 2017 09:26:48 +0300
+Message-Id: <1497508008-9536-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170615_082701_797914_F6EA74E1)
+In-Reply-To: <1497508008-9536-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1497508008-9536-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Copy engine is a host to target communication interface
-between wlan firmware and wlan wcn3990 platform driver. Add copy
-engine register map for wcn3990 wlan module. This add support
-for the copy engine source/destination ring configuration for
-wcn3990 chipset.
+Wireless drivers should not be using ioctl interface,
+hence remove this interface for wil6210 driver.
 
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |   5 ++
- drivers/net/wireless/ath/ath10k/hw.c   | 150 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |   9 ++
- drivers/net/wireless/ath/ath10k/pci.c  |   4 +
- 4 files changed, 168 insertions(+)
+ drivers/net/wireless/ath/wil6210/Makefile  |   1 -
+ drivers/net/wireless/ath/wil6210/ioctl.c   | 180 -----------------------------
+ drivers/net/wireless/ath/wil6210/netdev.c  |   8 --
+ drivers/net/wireless/ath/wil6210/wil6210.h |   1 -
+ include/uapi/linux/wil6210_uapi.h          |  87 --------------
+ 5 files changed, 277 deletions(-)
+ delete mode 100644 drivers/net/wireless/ath/wil6210/ioctl.c
+ delete mode 100644 include/uapi/linux/wil6210_uapi.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 38dbdd5..b55196c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2474,6 +2474,11 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 		ar->hw_ce_regs = &qcax_ce_regs;
- 		ar->hw_values = &qca4019_values;
- 		break;
-+	case ATH10K_HW_WCN3990:
-+		ar->regs = &wcn3990_regs;
-+		ar->hw_ce_regs = &wcn3990_ce_regs;
-+		ar->hw_values = &wcn3990_values;
-+		break;
- 	default:
- 		ath10k_err(ar, "unsupported core hardware revision %d\n",
- 			   hw_rev);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index afb0c01..a860691 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -192,6 +192,156 @@
- 	.ce_desc_meta_data_lsb          = 4,
- };
- 
-+const struct ath10k_hw_regs wcn3990_regs = {
-+	.rtc_soc_base_address			= 0x00000000,
-+	.rtc_wmac_base_address			= 0x00000000,
-+	.soc_core_base_address			= 0x00000000,
-+	.ce_wrapper_base_address		= 0x0024C000,
-+	.ce0_base_address			= 0x00240000,
-+	.ce1_base_address			= 0x00241000,
-+	.ce2_base_address			= 0x00242000,
-+	.ce3_base_address			= 0x00243000,
-+	.ce4_base_address			= 0x00244000,
-+	.ce5_base_address			= 0x00245000,
-+	.ce6_base_address			= 0x00246000,
-+	.ce7_base_address			= 0x00247000,
-+	.ce8_base_address			= 0x00248000,
-+	.ce9_base_address			= 0x00249000,
-+	.ce10_base_address			= 0x0024A000,
-+	.ce11_base_address			= 0x0024B000,
-+	.soc_chip_id_address			= 0x000000f0,
-+	.soc_reset_control_si0_rst_mask		= 0x00000001,
-+	.soc_reset_control_ce_rst_mask		= 0x00000100,
-+	.ce_wrap_intr_sum_host_msi_lsb		= 0x0000000c,
-+	.ce_wrap_intr_sum_host_msi_mask		= 0x00fff000,
-+	.pcie_intr_fw_mask			= 0x00100000,
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_src_ring = {
-+	.msb	= 0x00000010,
-+	.lsb	= 0x00000010,
-+	.mask	= GENMASK(17, 17),
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_dst_ring = {
-+	.msb	= 0x00000012,
-+	.lsb	= 0x00000012,
-+	.mask	= GENMASK(18, 18),
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_dmax = {
-+	.msb	= 0x00000000,
-+	.lsb	= 0x00000000,
-+	.mask	= GENMASK(15, 0),
-+};
-+
-+static struct ath10k_hw_ce_ctrl1 wcn3990_ctrl1 = {
-+	.addr		= 0x00000018,
-+	.src_ring	= &wcn3990_src_ring,
-+	.dst_ring	= &wcn3990_dst_ring,
-+	.dmax		= &wcn3990_dmax,
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_host_ie_cc = {
-+	.mask	= GENMASK(0, 0),
-+};
-+
-+static struct ath10k_hw_ce_host_ie wcn3990_host_ie = {
-+	.copy_complete	= &wcn3990_host_ie_cc,
-+};
-+
-+static struct ath10k_hw_ce_host_wm_regs wcn3990_wm_reg = {
-+	.dstr_lmask	= 0x00000010,
-+	.dstr_hmask	= 0x00000008,
-+	.srcr_lmask	= 0x00000004,
-+	.srcr_hmask	= 0x00000002,
-+	.cc_mask	= 0x00000001,
-+	.wm_mask	= 0x0000001E,
-+	.addr		= 0x00000030,
-+};
-+
-+static struct ath10k_hw_ce_misc_regs wcn3990_misc_reg = {
-+	.axi_err	= 0x00000100,
-+	.dstr_add_err	= 0x00000200,
-+	.srcr_len_err	= 0x00000100,
-+	.dstr_mlen_vio	= 0x00000080,
-+	.dstr_overflow	= 0x00000040,
-+	.srcr_overflow	= 0x00000020,
-+	.err_mask	= 0x000003E0,
-+	.addr		= 0x00000038,
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_src_wm_low = {
-+	.msb	= 0x00000000,
-+	.lsb	= 0x00000010,
-+	.mask	= GENMASK(31, 16),
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_src_wm_high = {
-+	.msb	= 0x0000000f,
-+	.lsb	= 0x00000000,
-+	.mask	= GENMASK(15, 0),
-+};
-+
-+static struct ath10k_hw_ce_dst_src_wm_regs wcn3990_wm_src_ring = {
-+	.addr		= 0x0000004c,
-+	.low_rst	= 0x00000000,
-+	.high_rst	= 0x00000000,
-+	.wm_low		= &wcn3990_src_wm_low,
-+	.wm_high	= &wcn3990_src_wm_high,
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_dst_wm_low = {
-+	.lsb	= 0x00000010,
-+	.mask	= GENMASK(31, 16),
-+};
-+
-+static struct ath10k_hw_ce_regs_addr_map wcn3990_dst_wm_high = {
-+	.msb	= 0x0000000f,
-+	.lsb	= 0x00000000,
-+	.mask	= GENMASK(15, 0),
-+};
-+
-+static struct ath10k_hw_ce_dst_src_wm_regs wcn3990_wm_dst_ring = {
-+	.addr		= 0x00000050,
-+	.low_rst	= 0x00000000,
-+	.high_rst	= 0x00000000,
-+	.wm_low		= &wcn3990_dst_wm_low,
-+	.wm_high	= &wcn3990_dst_wm_high,
-+};
-+
-+struct ath10k_hw_ce_regs wcn3990_ce_regs = {
-+	.sr_base_addr		= 0x00000000,
-+	.sr_size_addr		= 0x00000008,
-+	.dr_base_addr		= 0x0000000c,
-+	.dr_size_addr		= 0x00000014,
-+	.misc_ie_addr		= 0x00000034,
-+	.sr_wr_index_addr	= 0x0000003c,
-+	.dst_wr_index_addr	= 0x00000040,
-+	.current_srri_addr	= 0x00000044,
-+	.current_drri_addr	= 0x00000048,
-+	.ddr_addr_for_rri_low	= 0x00000004,
-+	.ddr_addr_for_rri_high	= 0x00000008,
-+	.ce_rri_low		= 0x0024C004,
-+	.ce_rri_high		= 0x0024C008,
-+	.host_ie_addr		= 0x0000002c,
-+	.ctrl1_regs		= &wcn3990_ctrl1,
-+	.host_ie		= &wcn3990_host_ie,
-+	.wm_regs		= &wcn3990_wm_reg,
-+	.misc_regs		= &wcn3990_misc_reg,
-+	.wm_srcr		= &wcn3990_wm_src_ring,
-+	.wm_dstr		= &wcn3990_wm_dst_ring,
-+};
-+
-+const struct ath10k_hw_values wcn3990_values = {
-+	.rtc_state_val_on		= 5,
-+	.ce_count			= 12,
-+	.msi_assign_ce_max		= 12,
-+	.num_target_ce_config_wlan	= 12,
-+	.ce_desc_meta_data_mask		= 0xFFF0,
-+	.ce_desc_meta_data_lsb		= 4,
-+};
-+
- static struct ath10k_hw_ce_regs_addr_map qcax_src_ring = {
- 	.msb	= 0x00000010,
- 	.lsb	= 0x00000010,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index be3eea4..09159296 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -231,6 +231,7 @@ enum ath10k_hw_rev {
- 	ATH10K_HW_QCA9377,
- 	ATH10K_HW_QCA4019,
- 	ATH10K_HW_QCA9887,
-+	ATH10K_HW_WCN3990,
- };
- 
- struct ath10k_hw_regs {
-@@ -247,6 +248,10 @@ struct ath10k_hw_regs {
- 	u32 ce5_base_address;
- 	u32 ce6_base_address;
- 	u32 ce7_base_address;
-+	u32 ce8_base_address;
-+	u32 ce9_base_address;
-+	u32 ce10_base_address;
-+	u32 ce11_base_address;
- 	u32 soc_reset_control_si0_rst_mask;
- 	u32 soc_reset_control_ce_rst_mask;
- 	u32 soc_chip_id_address;
-@@ -267,6 +272,7 @@ struct ath10k_hw_regs {
- extern const struct ath10k_hw_regs qca6174_regs;
- extern const struct ath10k_hw_regs qca99x0_regs;
- extern const struct ath10k_hw_regs qca4019_regs;
-+extern const struct ath10k_hw_regs wcn3990_regs;
- 
- struct ath10k_hw_ce_regs_addr_map {
- 	u32 msb;
-@@ -362,6 +368,8 @@ struct ath10k_hw_values {
- extern const struct ath10k_hw_values qca99x0_values;
- extern const struct ath10k_hw_values qca9888_values;
- extern const struct ath10k_hw_values qca4019_values;
-+extern const struct ath10k_hw_values wcn3990_values;
-+extern struct ath10k_hw_ce_regs wcn3990_ce_regs;
- extern struct ath10k_hw_ce_regs qcax_ce_regs;
- 
- void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
-@@ -375,6 +383,7 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
- #define QCA_REV_9984(ar) ((ar)->hw_rev == ATH10K_HW_QCA9984)
- #define QCA_REV_9377(ar) ((ar)->hw_rev == ATH10K_HW_QCA9377)
- #define QCA_REV_40XX(ar) ((ar)->hw_rev == ATH10K_HW_QCA4019)
-+#define QCA_REV_WCN3990(ar) ((ar)->hw_rev == ATH10K_HW_WCN3990)
- 
- /* Known peculiarities:
-  *  - raw appears in nwifi decap, raw and nwifi appear in ethernet decap
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index abba178..58a0194 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1596,6 +1596,8 @@ void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
- 		 *  to mask irq/MSI.
- 		 */
- 		break;
-+	case ATH10K_HW_WCN3990:
-+		break;
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 89bf2f9..4ae21da 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -10,7 +10,6 @@ wil6210-y += interrupt.o
+ wil6210-y += txrx.o
+ wil6210-y += debug.o
+ wil6210-y += rx_reorder.o
+-wil6210-y += ioctl.o
+ wil6210-y += fw.o
+ wil6210-y += pm.o
+ wil6210-y += pmc.o
+diff --git a/drivers/net/wireless/ath/wil6210/ioctl.c b/drivers/net/wireless/ath/wil6210/ioctl.c
+deleted file mode 100644
+index 1c49ad8..0000000
+--- a/drivers/net/wireless/ath/wil6210/ioctl.c
++++ /dev/null
+@@ -1,180 +0,0 @@
+-/*
+- * Copyright (c) 2014,2017 Qualcomm Atheros, Inc.
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#include <linux/uaccess.h>
+-
+-#include "wil6210.h"
+-#include <uapi/linux/wil6210_uapi.h>
+-
+-#define wil_hex_dump_ioctl(prefix_str, buf, len) \
+-	print_hex_dump_debug("DBG[IOC ]" prefix_str, \
+-			     DUMP_PREFIX_OFFSET, 16, 1, buf, len, true)
+-#define wil_dbg_ioctl(wil, fmt, arg...) wil_dbg(wil, "DBG[IOC ]" fmt, ##arg)
+-
+-static void __iomem *wil_ioc_addr(struct wil6210_priv *wil, uint32_t addr,
+-				  uint32_t size, enum wil_memio_op op)
+-{
+-	void __iomem *a;
+-	u32 off;
+-
+-	switch (op & wil_mmio_addr_mask) {
+-	case wil_mmio_addr_linker:
+-		a = wmi_buffer(wil, cpu_to_le32(addr));
+-		break;
+-	case wil_mmio_addr_ahb:
+-		a = wmi_addr(wil, addr);
+-		break;
+-	case wil_mmio_addr_bar:
+-		a = wmi_addr(wil, addr + WIL6210_FW_HOST_OFF);
+-		break;
+-	default:
+-		wil_err(wil, "Unsupported address mode, op = 0x%08x\n", op);
+-		return NULL;
+-	}
+-
+-	off = a - wil->csr;
+-	if (size >= wil->bar_size - off) {
+-		wil_err(wil, "Requested block does not fit into memory: "
+-			"off = 0x%08x size = 0x%08x\n", off, size);
+-		return NULL;
+-	}
+-
+-	return a;
+-}
+-
+-static int wil_ioc_memio_dword(struct wil6210_priv *wil, void __user *data)
+-{
+-	struct wil_memio io;
+-	void __iomem *a;
+-	bool need_copy = false;
+-
+-	if (copy_from_user(&io, data, sizeof(io)))
+-		return -EFAULT;
+-
+-	wil_dbg_ioctl(wil, "IO: addr = 0x%08x val = 0x%08x op = 0x%08x\n",
+-		      io.addr, io.val, io.op);
+-
+-	a = wil_ioc_addr(wil, io.addr, sizeof(u32), io.op);
+-	if (!a) {
+-		wil_err(wil, "invalid address 0x%08x, op = 0x%08x\n", io.addr,
+-			io.op);
+-		return -EINVAL;
+-	}
+-	/* operation */
+-	switch (io.op & wil_mmio_op_mask) {
+-	case wil_mmio_read:
+-		io.val = readl(a);
+-		need_copy = true;
+-		break;
+-	case wil_mmio_write:
+-		writel(io.val, a);
+-		wmb(); /* make sure write propagated to HW */
+-		break;
+-	default:
+-		wil_err(wil, "Unsupported operation, op = 0x%08x\n", io.op);
+-		return -EINVAL;
+-	}
+-
+-	if (need_copy) {
+-		wil_dbg_ioctl(wil, "IO done: addr = 0x%08x"
+-			      " val = 0x%08x op = 0x%08x\n",
+-			      io.addr, io.val, io.op);
+-		if (copy_to_user(data, &io, sizeof(io)))
+-			return -EFAULT;
+-	}
+-
+-	return 0;
+-}
+-
+-static int wil_ioc_memio_block(struct wil6210_priv *wil, void __user *data)
+-{
+-	struct wil_memio_block io;
+-	void *block;
+-	void __iomem *a;
+-	int rc = 0;
+-
+-	if (copy_from_user(&io, data, sizeof(io)))
+-		return -EFAULT;
+-
+-	wil_dbg_ioctl(wil, "IO: addr = 0x%08x size = 0x%08x op = 0x%08x\n",
+-		      io.addr, io.size, io.op);
+-
+-	/* size */
+-	if (io.size % 4) {
+-		wil_err(wil, "size is not multiple of 4:  0x%08x\n", io.size);
+-		return -EINVAL;
+-	}
+-
+-	a = wil_ioc_addr(wil, io.addr, io.size, io.op);
+-	if (!a) {
+-		wil_err(wil, "invalid address 0x%08x, op = 0x%08x\n", io.addr,
+-			io.op);
+-		return -EINVAL;
+-	}
+-
+-	block = kmalloc(io.size, GFP_USER);
+-	if (!block)
+-		return -ENOMEM;
+-
+-	/* operation */
+-	switch (io.op & wil_mmio_op_mask) {
+-	case wil_mmio_read:
+-		wil_memcpy_fromio_32(block, a, io.size);
+-		wil_hex_dump_ioctl("Read  ", block, io.size);
+-		if (copy_to_user(io.block, block, io.size)) {
+-			rc = -EFAULT;
+-			goto out_free;
+-		}
+-		break;
+-	case wil_mmio_write:
+-		if (copy_from_user(block, io.block, io.size)) {
+-			rc = -EFAULT;
+-			goto out_free;
+-		}
+-		wil_memcpy_toio_32(a, block, io.size);
+-		wmb(); /* make sure write propagated to HW */
+-		wil_hex_dump_ioctl("Write ", block, io.size);
+-		break;
+-	default:
+-		wil_err(wil, "Unsupported operation, op = 0x%08x\n", io.op);
+-		rc = -EINVAL;
+-		break;
+-	}
+-
+-out_free:
+-	kfree(block);
+-	return rc;
+-}
+-
+-int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd)
+-{
+-	int ret;
+-
+-	switch (cmd) {
+-	case WIL_IOCTL_MEMIO:
+-		ret = wil_ioc_memio_dword(wil, data);
+-		break;
+-	case WIL_IOCTL_MEMIO_BLOCK:
+-		ret = wil_ioc_memio_block(wil, data);
+-		break;
+-	default:
+-		wil_dbg_ioctl(wil, "Unsupported IOCTL 0x%04x\n", cmd);
+-		return -ENOIOCTLCMD;
+-	}
+-
+-	wil_dbg_ioctl(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
+-	return ret;
+-}
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 708facd..4a6ab2d 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -42,20 +42,12 @@ static int wil_stop(struct net_device *ndev)
+ 	return wil_down(wil);
  }
  
-@@ -1622,6 +1624,8 @@ static void ath10k_pci_irq_msi_fw_unmask(struct ath10k *ar)
- 		 *  to unmask irq/MSI.
- 		 */
- 		break;
-+	case ATH10K_HW_WCN3990:
-+		break;
- 	}
- }
+-static int wil_do_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
+-{
+-	struct wil6210_priv *wil = ndev_to_wil(ndev);
+-
+-	return wil_ioctl(wil, ifr->ifr_data, cmd);
+-}
+-
+ static const struct net_device_ops wil_netdev_ops = {
+ 	.ndo_open		= wil_open,
+ 	.ndo_stop		= wil_stop,
+ 	.ndo_start_xmit		= wil_start_xmit,
+ 	.ndo_set_mac_address	= eth_mac_addr,
+ 	.ndo_validate_addr	= eth_validate_addr,
+-	.ndo_do_ioctl		= wil_do_ioctl,
+ };
  
+ static int wil6210_netdev_poll_rx(struct napi_struct *napi, int budget)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 35f0554..d085ccf 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -977,7 +977,6 @@ void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
+ 
+ int wil_iftype_nl2wmi(enum nl80211_iftype type);
+ 
+-int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd);
+ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ 			 bool load);
+ bool wil_fw_verify_file_exists(struct wil6210_priv *wil, const char *name);
+diff --git a/include/uapi/linux/wil6210_uapi.h b/include/uapi/linux/wil6210_uapi.h
+deleted file mode 100644
+index 6a3cddd..0000000
+--- a/include/uapi/linux/wil6210_uapi.h
++++ /dev/null
+@@ -1,87 +0,0 @@
+-/*
+- * Copyright (c) 2014 Qualcomm Atheros, Inc.
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#ifndef __WIL6210_UAPI_H__
+-#define __WIL6210_UAPI_H__
+-
+-#if !defined(__KERNEL__)
+-#define __user
+-#endif
+-
+-#include <linux/sockios.h>
+-
+-/* Numbers SIOCDEVPRIVATE and SIOCDEVPRIVATE + 1
+- * are used by Android devices to implement PNO (preferred network offload).
+- * Albeit it is temporary solution, use different numbers to avoid conflicts
+- */
+-
+-/**
+- * Perform 32-bit I/O operation to the card memory
+- *
+- * User code should arrange data in memory like this:
+- *
+- *	struct wil_memio io;
+- *	struct ifreq ifr = {
+- *		.ifr_data = &io,
+- *	};
+- */
+-#define WIL_IOCTL_MEMIO (SIOCDEVPRIVATE + 2)
+-
+-/**
+- * Perform block I/O operation to the card memory
+- *
+- * User code should arrange data in memory like this:
+- *
+- *	void *buf;
+- *	struct wil_memio_block io = {
+- *		.block = buf,
+- *	};
+- *	struct ifreq ifr = {
+- *		.ifr_data = &io,
+- *	};
+- */
+-#define WIL_IOCTL_MEMIO_BLOCK (SIOCDEVPRIVATE + 3)
+-
+-/**
+- * operation to perform
+- *
+- * @wil_mmio_op_mask - bits defining operation,
+- * @wil_mmio_addr_mask - bits defining addressing mode
+- */
+-enum wil_memio_op {
+-	wil_mmio_read = 0,
+-	wil_mmio_write = 1,
+-	wil_mmio_op_mask = 0xff,
+-	wil_mmio_addr_linker = 0 << 8,
+-	wil_mmio_addr_ahb = 1 << 8,
+-	wil_mmio_addr_bar = 2 << 8,
+-	wil_mmio_addr_mask = 0xff00,
+-};
+-
+-struct wil_memio {
+-	uint32_t op; /* enum wil_memio_op */
+-	uint32_t addr; /* should be 32-bit aligned */
+-	uint32_t val;
+-};
+-
+-struct wil_memio_block {
+-	uint32_t op; /* enum wil_memio_op */
+-	uint32_t addr; /* should be 32-bit aligned */
+-	uint32_t size; /* should be multiple of 4 */
+-	void __user *block; /* block address */
+-};
+-
+-#endif /* __WIL6210_UAPI_H__ */
 -- 
 1.9.1
