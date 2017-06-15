@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:58985 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753154AbdFOSZa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:30 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 09/23] adapter: Clear timeout handle when check presence timer stopped
-Date: Thu, 15 Jun 2017 11:25:02 -0700
-Message-Id: <20170615182516.4508-10-mgreer@animalcreek.com> (sfid-20170615_202637_778331_83AA4C59)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+Received: from ozlabs.org ([103.22.144.67]:42885 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751644AbdFOWZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Jun 2017 18:25:10 -0400
+Date: Fri, 16 Jun 2017 08:25:07 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: linux-next: build warning after merge of the wireless-drivers tree
+Message-ID: <20170616082507.1e824796@canb.auug.org.au> (sfid-20170616_002540_827613_94AAE6DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__near_adapter_stop_check_presence() stops the neard check presence
-timer but doesn't clear the timer handle.  This can cause neard to
-try to stop the timer when it isn't running.  To fix that, clear the
-handle so neard doesn't try to stop an already stopped timer.
+Hi all,
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- src/adapter.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+After merging the wireless-drivers tree, today's linux-next build
+(x86_64 allmodconfig) produced this warning:
 
-diff --git a/src/adapter.c b/src/adapter.c
-index 466753b..7be87e2 100644
---- a/src/adapter.c
-+++ b/src/adapter.c
-@@ -505,8 +505,10 @@ void __near_adapter_stop_check_presence(uint32_t adapter_idx,
- 	if (!adapter)
- 		return;
- 
--	if (adapter->presence_timeout > 0)
-+	if (adapter->presence_timeout > 0) {
- 		g_source_remove(adapter->presence_timeout);
-+		adapter->presence_timeout = 0;
-+	}
- }
- 
- static const GDBusMethodTable adapter_methods[] = {
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function 'brcmf_usb_probe_phase2':
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2: warning: 'devinfo' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  mutex_unlock(&devinfo->dev_init_lock);
+  ^
+
+Introduced by commit
+
+  6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
+
 -- 
-2.13.0
+Cheers,
+Stephen Rothwell
