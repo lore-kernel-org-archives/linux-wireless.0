@@ -1,103 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:36293 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751616AbdFJT1P (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:41667 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752965AbdFOSZZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 15:27:15 -0400
-Received: by mail-wr0-f176.google.com with SMTP id v111so60980310wrc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2017 12:27:14 -0700 (PDT)
-Subject: Re: [PATCH v2] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-To: Andy Shevchenko <andy.shevchenko@gmail.com>,
-        "Peter S. Housel" <housel@acm.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Florian Westphal <fw@strlen.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
- <1496442569-11307-1-git-send-email-housel@acm.org>
- <CAHp75VcfK5V42vzsh=L+CnX2ZnF=8UORbOf+f2WfmcNH1DbAsw@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <801f5209-f5a0-7414-f8f4-1500178a680b@broadcom.com> (sfid-20170610_212751_591097_18FE8C73)
-Date: Sat, 10 Jun 2017 21:27:11 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAHp75VcfK5V42vzsh=L+CnX2ZnF=8UORbOf+f2WfmcNH1DbAsw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 15 Jun 2017 14:25:25 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 12/23] nfctype2: Don't read tags with bad magic number
+Date: Thu, 15 Jun 2017 11:25:05 -0700
+Message-Id: <20170615182516.4508-13-mgreer@animalcreek.com> (sfid-20170615_202646_691523_D5B7971C)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03-06-17 17:36, Andy Shevchenko wrote:
-> On Sat, Jun 3, 2017 at 1:29 AM, Peter S. Housel <housel@acm.org> wrote:
->> An earlier change to this function (3bdae810721b) fixed a leak in the
->> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
->> glom_skb buffer, used for emulating a scattering read, is never used
->> or referenced after its contents are copied into the destination
->> buffers, and therefore always needs to be freed by the end of the
->> function.
+NFC Type 2 tags that have a bad magic number need to be reformatted
+so do not try to read them.
 
-[snip]
-
->> +                       skb_queue_walk(pktq, skb) {
->> +                               memcpy(skb->data, glom_skb->data, skb->len);
->> +                               skb_pull(glom_skb, skb->len);
->> +                       }
->>                 }
-> 
->> +               brcmu_pkt_buf_free_skb(glom_skb);
-> 
-> Can we just add this one line instead or I'm missing something?
-
-I guess. We don't want to walk the packet queue if glom_skb is not
-carrying data due to brcmf_sdiod_buffrw() failure.
-
-So I would go with the patch below as brcmu_pkt_buf_free_skb() simply
-ignores null pointer.
-
-Regards,
-Arend
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 5bc2ba2..3722f23 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -705,7 +705,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev
-*sdiodev, struct sk_buff *pkt)
- int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
-                           struct sk_buff_head *pktq, uint totlen)
- {
--       struct sk_buff *glom_skb;
-+       struct sk_buff *glom_skb = NULL;
-        struct sk_buff *skb;
-        u32 addr = sdiodev->sbwad;
-        int err = 0;
-@@ -726,10 +726,8 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev
-*sdiodev,
-                        return -ENOMEM;
-                err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
-                                         glom_skb);
--               if (err) {
--                       brcmu_pkt_buf_free_skb(glom_skb);
-+               if (err)
-                        goto done;
--               }
+ plugins/nfctype2.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-                skb_queue_walk(pktq, skb) {
-                        memcpy(skb->data, glom_skb->data, skb->len);
-@@ -740,6 +738,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev
-*sdiodev,
-                                            pktq);
-
- done:
-+       brcmu_pkt_buf_free_skb(glom_skb);
-        return err;
- }
+diff --git a/plugins/nfctype2.c b/plugins/nfctype2.c
+index 559ecb0..f0f1158 100644
+--- a/plugins/nfctype2.c
++++ b/plugins/nfctype2.c
+@@ -275,6 +275,7 @@ static int meta_recv(uint8_t *resp, int length, void *data)
+ 	if (TAG_DATA_NFC(cc) != TYPE2_MAGIC) {
+ 		DBG("Mark as blank tag");
+ 		near_tag_set_blank(tag, TRUE);
++		goto out_tag;
+ 	} else {
+ 		near_tag_set_blank(tag, FALSE);
+ 	}
+-- 
+2.13.0
