@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:34105 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdFVHpa (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38491 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752640AbdFOSZY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 03:45:30 -0400
-Received: by mail-qk0-f170.google.com with SMTP id d14so5900693qkb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 00:45:30 -0700 (PDT)
-Subject: Re: cfg80211_ops
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        "Tobin C. Harding" <me@tobin.cc>, linux-wireless@vger.kernel.org
-References: <20170622000347.GA15458@eros>
- <a3105fed-a02b-cd0e-1f4a-e3f9a0b7dd1f@quantenna.com>
- <1498113028.2246.4.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <61ef2e4d-5b3f-f839-b097-495713cb290f@broadcom.com> (sfid-20170622_094534_459066_EE85853A)
-Date: Thu, 22 Jun 2017 09:45:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <1498113028.2246.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Thu, 15 Jun 2017 14:25:24 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 02/23] ndef: Fix use of uninitialized variable in property_get_type()
+Date: Thu, 15 Jun 2017 11:24:55 -0700
+Message-Id: <20170615182516.4508-3-mgreer@animalcreek.com> (sfid-20170615_202537_273548_4E6E7398)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-06-17 08:30, Johannes Berg wrote:
-> Also, set_default_key is, IIRC, not needed in WPA/WPA2 client mode, but
-> may be needed for WEP - not sure off the top of my head.
+The 'type' variable in property_get_type() is never set when the
+record type is invalid.  This means that the check for NULL doesn't
+work as it should and a bogus string can be appended.  Fix this by
+adding a default case to the switch statement that checks the record
+type ensuring that 'type' is set to NULL when the record type is
+invalid.
 
-correct (if brcmfmac is).
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ src/ndef.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Gr. AvS
+diff --git a/src/ndef.c b/src/ndef.c
+index b90205b..99f3bc3 100644
+--- a/src/ndef.c
++++ b/src/ndef.c
+@@ -342,6 +342,7 @@ static gboolean property_get_type(const GDBusPropertyTable *property,
+ 	case RECORD_TYPE_WKT_ERROR:
+ 	case RECORD_TYPE_UNKNOWN:
+ 	case RECORD_TYPE_ERROR:
++	default:
+ 		type = NULL;
+ 		break;
+ 
+-- 
+2.13.0
