@@ -1,79 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f49.google.com ([209.85.215.49]:34445 "EHLO
-        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752249AbdFMK63 (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40793 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751893AbdFORqW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 06:58:29 -0400
-Received: by mail-lf0-f49.google.com with SMTP id v20so67911690lfa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 03:58:28 -0700 (PDT)
-Subject: Re: brcmfmac: Fix kernel oops on resume when request firmware fails.
-To: Enric Balletbo Serra <eballetbo@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>
-References: <20170523180733.26276-1-enric.balletbo@collabora.com>
- <20170613055448.C0CD36075B@smtp.codeaurora.org>
- <CAFqH_53v341QhUewFR5aQdZE1bPo5J5TY0G6zkXU9y0c5VEz1g@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6d327f50-8064-0c09-522e-09ef8732861f@broadcom.com> (sfid-20170613_125848_240186_779D91E9)
-Date: Tue, 13 Jun 2017 12:58:25 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAFqH_53v341QhUewFR5aQdZE1bPo5J5TY0G6zkXU9y0c5VEz1g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 15 Jun 2017 13:46:22 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 2/3] NFC: digital: NFC-DEP Target WT(nfcdep,max) is now 14
+Date: Thu, 15 Jun 2017 10:46:16 -0700
+Message-Id: <20170615174617.1817-3-mgreer@animalcreek.com> (sfid-20170615_194627_474805_B1F73DF6)
+In-Reply-To: <20170615174617.1817-1-mgreer@animalcreek.com>
+References: <20170615174617.1817-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-06-17 12:23, Enric Balletbo Serra wrote:
-> Hello Kalle,
-> 
-> 2017-06-13 7:54 GMT+02:00 Kalle Valo <kvalo@codeaurora.org>:
->> Enric Balletbo i Serra <enric.balletbo@collabora.com> wrote:
->>
->>> When request firmware fails, brcmf_ops_sdio_remove is being called and
->>> brcmf_bus freed. In such circumstancies if you do a suspend/resume cycle
->>> the kernel hangs on resume due a NULL pointer dereference in resume
->>> function.
->>>
->>> Steps to reproduce the problem:
->>>  - modprobe brcmfmac without the firmware
->>>      brcmfmac mmc1:0001:1: Direct firmware load for brcm/brcmfmac4354-sdio.bin
->>>      failed with error -2
->>>  - do a suspend/resume cycle (echo mem > /sys/power/state)
->>>
->>> Protect against the NULL pointer derefence by checking if dev_get_drvdata
->>> returned a valid pointer.
->>>
->>> Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
->>
->> My understanding is that there's a new version of this patch which fixes
->> the issue. If not, let me know.
->>
->> Patch set to Superseded.
->>
-> 
-> Yes there are these patch series [1] that fixes the issue, I guess
-> Arend is working on a v2 to fix a small issue we found.
-> 
-> [1] https://www.spinics.net/lists/linux-wireless/msg162762.html
+Version 1.1 of the NFC Forum's NFC Digital Protocol Technical
+Specification dated 2014-07-14 specifies that the NFC-DEP Protocol's
+Target WT(nfcdep,max) value is 14.  In version 1.0 it was 8 so change
+the value in the Linux NFC-DEP Protocol code accordingly.
 
-That series was actually RFT so not a formal submit. I send out a series
-yesterday, which indeed has the small issue fixed [2].
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ net/nfc/digital_dep.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-Arend
-
-[2] https://patchwork.kernel.org/patch/9780793/
-
->> --
->> https://patchwork.kernel.org/patch/9743159/
->>
->> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
->>
-> 
-> Regards,
->  Enric
-> 
+diff --git a/net/nfc/digital_dep.c b/net/nfc/digital_dep.c
+index f864ce19e13d..5bb241bb3490 100644
+--- a/net/nfc/digital_dep.c
++++ b/net/nfc/digital_dep.c
+@@ -151,7 +151,7 @@ static const u8 digital_payload_bits_map[4] = {
+  *  0 <= wt <= 14 (given by the target by the TO field of ATR_RES response)
+  */
+ #define DIGITAL_NFC_DEP_IN_MAX_WT 14
+-#define DIGITAL_NFC_DEP_TG_MAX_WT 8
++#define DIGITAL_NFC_DEP_TG_MAX_WT 14
+ static const u16 digital_rwt_map[DIGITAL_NFC_DEP_IN_MAX_WT + 1] = {
+ 	100,  101,  101,  102,  105,
+ 	110,  119,  139,  177,  255,
+-- 
+2.13.0
