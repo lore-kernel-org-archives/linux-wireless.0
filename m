@@ -1,83 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35195 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752265AbdFURPu (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52645 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753188AbdFOSZa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 13:15:50 -0400
-Received: by mail-oi0-f65.google.com with SMTP id v74so16298476oie.2
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:50 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 6/8] rtlwifi: Add ap_num field for btcoexist
-Date: Wed, 21 Jun 2017 12:15:36 -0500
-Message-Id: <20170621171538.4462-7-Larry.Finger@lwfinger.net> (sfid-20170621_191553_561907_3B589DC1)
-In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
-References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+        Thu, 15 Jun 2017 14:25:30 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 07/23] adapter: Return '-errno' when socket() call fails
+Date: Thu, 15 Jun 2017 11:25:00 -0700
+Message-Id: <20170615182516.4508-8-mgreer@animalcreek.com> (sfid-20170615_202604_436769_87384E61)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+near_adapter_connect() incorrectly returns '-1' when the socket()
+call fails.  Instead, it should return '-errno' which is the real
+error code.
 
-If there are many AP (dirty environment), we use another strategy set
-to resolve coex issue.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 5 +----
- drivers/net/wireless/realtek/rtlwifi/pci.c                    | 1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 2 ++
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ src/adapter.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index ffa7a517b665..9dbb35f190d1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -503,10 +503,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 		ret = false;
- 		break;
- 	case BTC_GET_U1_AP_NUM:
--		/* driver do not know AP num,
--		 * so the return value here is not right
--		 */
--		*u8_tmp = 1;
-+		*u8_tmp = rtlpriv->btcoexist.btc_info.ap_num;
- 		break;
- 	case BTC_GET_U1_ANT_TYPE:
- 		*u8_tmp = (u8)BTC_ANT_TYPE_0;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 2e6b888bd417..00a354c85ece 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -1826,6 +1826,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
- 	rtlpci->driver_is_goingto_unload = false;
- 	if (rtlpriv->cfg->ops->get_btc_status &&
- 	    rtlpriv->cfg->ops->get_btc_status()) {
-+		rtlpriv->btcoexist.btc_info.ap_num = 36;
- 		rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
- 		rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 49c0d2229274..2fb83a7061dd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2481,6 +2481,8 @@ struct rtl_btc_info {
- 	u8 btcoexist;
- 	u8 ant_num;
- 	u8 single_ant_path;
-+
-+	u8 ap_num;
- };
+diff --git a/src/adapter.c b/src/adapter.c
+index bc29ace..bfc64c2 100644
+--- a/src/adapter.c
++++ b/src/adapter.c
+@@ -1044,7 +1044,7 @@ int near_adapter_connect(uint32_t idx, uint32_t target_idx, uint8_t protocol)
  
- struct bt_coexist_info {
+ 	sock = socket(AF_NFC, SOCK_SEQPACKET, NFC_SOCKPROTO_RAW);
+ 	if (sock == -1)
+-		return sock;
++		return -errno;
+ 
+ 	addr.sa_family = AF_NFC;
+ 	addr.dev_idx = idx;
 -- 
-2.12.3
+2.13.0
