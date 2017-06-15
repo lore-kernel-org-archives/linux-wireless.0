@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49331 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751062AbdFANYS (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33989 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752640AbdFOSZ2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 09:24:18 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-CC: Adrian Chadd <adrian@freebsd.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add configurable debugging.
-Date: Thu, 1 Jun 2017 13:24:15 +0000
-Message-ID: <87r2z3lu3j.fsf@kamboji.qca.qualcomm.com> (sfid-20170601_152421_850209_4CA1759D)
-References: <20170510211925.17468-1-adrian@freebsd.org>
-        <87y3tdmdbo.fsf@kamboji.qca.qualcomm.com>
-        <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com>
-In-Reply-To: <2a6a2af2-29c7-6b74-ead1-c5ae8688a87c@broadcom.com> (Arend van
-        Spriel's message of "Wed, 31 May 2017 22:20:45 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Thu, 15 Jun 2017 14:25:28 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 22/23] nfctools: Move nciattach macros & enums to nciattach.c
+Date: Thu, 15 Jun 2017 11:25:15 -0700
+Message-Id: <20170615182516.4508-23-mgreer@animalcreek.com> (sfid-20170615_203119_736833_640C0AE5)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Some header file macros and an enum were copied from Linux and placed
+in neard's include/nfc_copy.h file.  That isn't the proper place as
+nfc_copy.h is supposed to be a pristine copy of the Linux nfc.h file.
+Move those header file definitions into tools/nciattach.c since that
+is the only file that uses them.
 
-> On 31-05-17 14:16, Kalle Valo wrote:
->> Adrian Chadd <adrian@freebsd.org> writes:
->>=20
->>> This adds a few configurable debugging options:
->>>
->>> * driver debugging and tracing is now configurable per device
->>> * driver debugging and tracing is now configurable at runtime
->>> * the debugging / tracing is not run at all (besides a mask check)
->>>   unless the specific debugging bitmap field is configured.
->>>
->>> Signed-off-by: Adrian Chadd <adrian@FreeBSD.org>
->>=20
->> [...]
->>=20
->>> --- a/drivers/net/wireless/ath/ath10k/core.c
->>> +++ b/drivers/net/wireless/ath/ath10k/core.c
->>> @@ -2444,6 +2444,8 @@ struct ath10k *ath10k_core_create(size_t
->>> priv_size, struct device *dev,
->>>  	ar->hw_rev =3D hw_rev;
->>>  	ar->hif.ops =3D hif_ops;
->>>  	ar->hif.bus =3D bus;
->>> +	ar->debug_mask =3D ath10k_debug_mask;
->>> +	ar->trace_debug_mask =3D ath10k_debug_mask;
->>=20
->> Until now tracing has been always enabled, irrespective what debug_mask
->> has contained. Now you are changing that and by default log messages are
->> not delivered through tracing until user enables them. So I think to
->> keep the old behaviour trace_debug_mask should be ATH10K_DBG_ANY
->> (0xffffffff) by default and the user can modify the mask per device via
->> the debugfs file.
->>=20
->> But is it really needed to be able to filter trace messages? debug_mask
->> I understand, but not sure about trace_debug_mask.
->
-> FWIW, in brcmfmac I decided not to filter trace messages. The overhead
-> is relatively small and if needed you can pass filter expressions with
-> trace-cmd record.
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ include/nfc_copy.h | 12 ------------
+ tools/nciattach.c  | 12 ++++++++++++
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-I also think that this is how it should work. For example, if you have
-tracing enabled in wpasupplicant/hostapd with the command below you can
-get a lot of information in one file with relatively little overhead:
-
-trace-cmd record -e mac80211 -e cfg80211 -e ath10k
-
-But if user is forced to use debugfs to enable ath10k tracing that is
-quite a step backwards.
-
---=20
-Kalle Valo=
+diff --git a/include/nfc_copy.h b/include/nfc_copy.h
+index 9e21738..0b25f5c 100644
+--- a/include/nfc_copy.h
++++ b/include/nfc_copy.h
+@@ -287,16 +287,4 @@ struct sockaddr_nfc_llcp {
+ #define NFC_LLCP_REMOTE_LTO	3
+ #define NFC_LLCP_REMOTE_RW	4
+ 
+-#ifndef N_NCI
+-#define N_NCI	25
+-#endif
+-
+-/* Ioctl */
+-#define NCIUARTSETDRIVER	_IOW('U', 0, char *)
+-
+-enum nci_uart_driver {
+-	NCI_UART_DRIVER_MARVELL = 0,
+-	NCI_UART_DRIVER_MAX
+-};
+-
+ #endif /*__LINUX_NFC_H */
+diff --git a/tools/nciattach.c b/tools/nciattach.c
+index c71d9c7..370f98b 100644
+--- a/tools/nciattach.c
++++ b/tools/nciattach.c
+@@ -50,6 +50,18 @@
+ #define ENABLE_PM	1
+ #define DISABLE_PM	0
+ 
++#ifndef N_NCI
++#define N_NCI  25
++#endif
++
++/* Ioctl */
++#define NCIUARTSETDRIVER       _IOW('U', 0, char *)
++
++enum nci_uart_driver {
++	NCI_UART_DRIVER_MARVELL = 0,
++	NCI_UART_DRIVER_MAX
++};
++
+ struct nci_driver_info {
+ 	const char *name;
+ 	enum nci_uart_driver driver_id;
+-- 
+2.13.0
