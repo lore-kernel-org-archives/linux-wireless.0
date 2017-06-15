@@ -1,434 +1,421 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60828 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751147AbdFBL0s (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:53359 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753202AbdFOSZb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:26:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:45 +0300
-Message-Id: <20170602112553.2466-18-luca@coelho.fi> (sfid-20170602_132652_688530_10D334A7)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 17/25] iwlwifi: mvm: document structures used by commands
+        Thu, 15 Jun 2017 14:25:31 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 21/23] nfctype5: Fix formatting
+Date: Thu, 15 Jun 2017 11:25:14 -0700
+Message-Id: <20170615182516.4508-22-mgreer@animalcreek.com> (sfid-20170615_202542_016431_99236A6C)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Use the output of the Linux kernel's 'Lindent' script to format
+the code in nfctype5.c.  Some of the formatting performed by
+Lindent was overridden for various reasons. These include:
+	- no space between '__attribute__' and '((packed))' to match
+	  other tag files
+	- struct members names are aligned when defined for readability
+	- compile-time init of struct members are aligned for readability
+	- call arguments not lined up when result would cause lines with
+	  more than 80 characters
+	- no spaces around ampersand when casting address of a variable
+	- no space between '*' and name in declarations/definitions
 
-Add documentation to a lot of command IDs that links to the
-appropriate structure(s) used with those IDs. In one case,
-actually add and use a new struct for that purpose.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c   |   3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 218 ++++++++++++++++++++++--
- 2 files changed, 209 insertions(+), 12 deletions(-)
+ plugins/nfctype5.c | 118 ++++++++++++++++++++++++++---------------------------
+ 1 file changed, 58 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index 49b4418e6c35..fe7f1e424f55 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -914,7 +914,8 @@ void iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
- 				   struct iwl_rx_cmd_buffer *rxb)
+diff --git a/plugins/nfctype5.c b/plugins/nfctype5.c
+index d6eec3c..3d2cdf0 100644
+--- a/plugins/nfctype5.c
++++ b/plugins/nfctype5.c
+@@ -262,14 +262,14 @@ static bool t5_tag_is_ti_pro(struct near_tag *tag)
+ }
+ 
+ static int t5_cmd_hdr_init(struct near_tag *tag, struct type5_cmd_hdr *cmd_hdr,
+-		int cmd)
++			   int cmd)
  {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	u32 ant_isolation = le32_to_cpup((void *)pkt->data);
-+	struct iwl_mvm_antenna_coupling_notif *notif = (void *)pkt->data;
-+	u32 ant_isolation = le32_to_cpu(notif->isolation);
- 	struct iwl_bt_coex_corun_lut_update_cmd cmd = {};
- 	u8 __maybe_unused lower_bound, upper_bound;
- 	u8 lut;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 6e0e65eb2b4d..332f204761cc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -130,31 +130,86 @@ enum iwl_mvm_tx_fifo {
+ 	uint8_t *uid;
+ 
+ 	DBG("");
+ 
+ 	uid = near_tag_get_iso15693_uid(near_tag_get_adapter_idx(tag),
+-						near_tag_get_target_idx(tag));
++					near_tag_get_target_idx(tag));
+ 	if (!uid) {
+ 		near_error("No type 5 UID");
+ 		return -EINVAL;
+@@ -287,7 +287,7 @@ static int t5_cmd_hdr_init(struct near_tag *tag, struct type5_cmd_hdr *cmd_hdr,
+ static int t5_check_resp(uint8_t *resp, int length)
+ {
+ 	struct type5_err_resp *t5_err_resp =
+-		(struct type5_err_resp *)(resp + NFC_HEADER_SIZE);
++	    (struct type5_err_resp *)(resp + NFC_HEADER_SIZE);
+ 	int err = 0;
+ 
+ 	DBG("");
+@@ -304,7 +304,7 @@ static int t5_check_resp(uint8_t *resp, int length)
+ 		if (t5_err_resp->flags & RESP_FLAG_ERR) {
+ 			if (length == 2)
+ 				near_error("Tag failure: 0x%x",
+-						t5_err_resp->err_code);
++					   t5_err_resp->err_code);
+ 			else
+ 				near_error("Tag failure: Cause unknown");
+ 
+@@ -339,7 +339,7 @@ static int t5_cookie_release(int err, void *data)
+ 
+ 	else if (cookie->cb)
+ 		cookie->cb(near_tag_get_adapter_idx(cookie->tag),
+-				near_tag_get_target_idx(cookie->tag), err);
++			   near_tag_get_target_idx(cookie->tag), err);
+ 
+ 	if (cookie->ndef) {
+ 		g_free(cookie->ndef->data);
+@@ -375,7 +375,7 @@ static int t5_cookie_release_local(int err, void *data)
+ static int t5_read_resp(uint8_t *resp, int length, void *data)
+ {
+ 	struct type5_read_single_block_resp *t5_resp =
+-		(struct type5_read_single_block_resp *)(resp + NFC_HEADER_SIZE);
++	    (struct type5_read_single_block_resp *)(resp + NFC_HEADER_SIZE);
+ 	struct type5_read_single_block_cmd t5_cmd;
+ 	struct t5_cookie *cookie = data;
+ 	struct near_tag *tag = cookie->tag;
+@@ -400,7 +400,7 @@ static int t5_read_resp(uint8_t *resp, int length, void *data)
+ 	length = MIN(length, (int)cookie->bytes_left);
+ 
+ 	memcpy(&cookie->buf[cookie->dst_offset],
+-			&t5_resp->data[cookie->src_offset], length);
++	       &t5_resp->data[cookie->src_offset], length);
+ 
+ 	if (cookie->bytes_left <= blk_size)
+ 		goto out_done;
+@@ -417,8 +417,8 @@ static int t5_read_resp(uint8_t *resp, int length, void *data)
+ 	t5_cmd.blk_no = cookie->blk;
+ 
+ 	return near_adapter_send(near_tag_get_adapter_idx(tag),
+-			(uint8_t *)&t5_cmd, sizeof(t5_cmd), t5_read_resp,
+-			cookie, t5_cookie_release_local);
++				 (uint8_t *)&t5_cmd, sizeof(t5_cmd),
++				 t5_read_resp, cookie, t5_cookie_release_local);
+ 
+ out_done:
+ 	DBG("Done reading: %d", err);
+@@ -427,7 +427,7 @@ out_done:
+ }
+ 
+ static int t5_read(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+-		size_t len, t5_local_cb local_cb, void *local_data)
++		   size_t len, t5_local_cb local_cb, void *local_data)
+ {
+ 	struct type5_read_single_block_cmd t5_cmd;
+ 	struct t5_cookie *cookie;
+@@ -455,15 +455,15 @@ static int t5_read(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+ 	cookie->blk = t5_cmd.blk_no;
+ 
+ 	return near_adapter_send(near_tag_get_adapter_idx(tag),
+-			(uint8_t *)&t5_cmd, sizeof(t5_cmd), t5_read_resp,
+-			cookie, t5_cookie_release_local);
++				 (uint8_t *)&t5_cmd, sizeof(t5_cmd),
++				 t5_read_resp, cookie, t5_cookie_release_local);
+ }
+ 
+ static int t5_write_resp(uint8_t *resp, int length, void *data)
+ {
+ 	struct type5_write_single_block_resp *t5_resp =
+-		(struct type5_write_single_block_resp *)
+-			(resp + NFC_HEADER_SIZE);
++	    (struct type5_write_single_block_resp *)
++	    (resp + NFC_HEADER_SIZE);
+ 	struct type5_write_single_block_cmd *t5_cmd = NULL;
+ 	struct t5_cookie *cookie = data;
+ 	struct near_tag *tag = cookie->tag;
+@@ -497,8 +497,7 @@ static int t5_write_resp(uint8_t *resp, int length, void *data)
+ 		goto out_done;
+ 	}
+ 
+-	err = t5_cmd_hdr_init(tag, &t5_cmd->hdr,
+-				CMD_WRITE_SINGLE_BLOCK);
++	err = t5_cmd_hdr_init(tag, &t5_cmd->hdr, CMD_WRITE_SINGLE_BLOCK);
+ 	if (err)
+ 		goto out_done;
+ 
+@@ -510,8 +509,8 @@ static int t5_write_resp(uint8_t *resp, int length, void *data)
+ 	memcpy(t5_cmd->data, &cookie->buf[cookie->src_offset], blk_size);
+ 
+ 	err = near_adapter_send(near_tag_get_adapter_idx(tag),
+-			(uint8_t *)t5_cmd, sizeof(*t5_cmd) + blk_size,
+-			t5_write_resp, cookie, t5_cookie_release_local);
++				(uint8_t *) t5_cmd, sizeof(*t5_cmd) + blk_size,
++				t5_write_resp, cookie, t5_cookie_release_local);
+ 
+ 	g_free(t5_cmd);
+ 	return err;
+@@ -526,7 +525,7 @@ out_done:
+ }
+ 
+ static int t5_write(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+-		size_t len, t5_local_cb local_cb, void *local_data)
++		    size_t len, t5_local_cb local_cb, void *local_data)
+ {
+ 	struct type5_write_single_block_cmd *t5_cmd;
+ 	struct t5_cookie *cookie;
+@@ -537,7 +536,7 @@ static int t5_write(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+ 
+ 	if (offset % blk_size) {
+ 		near_error("Write - Invalid offset - offset: %d, blk_size: %d",
+-				offset, blk_size);
++			   offset, blk_size);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -582,8 +581,8 @@ static int t5_write(struct near_tag *tag, uint8_t offset, uint8_t *buf,
+ 	cookie->blk = t5_cmd->blk_no;
+ 
+ 	err = near_adapter_send(near_tag_get_adapter_idx(tag),
+-			(uint8_t *)t5_cmd, sizeof(*t5_cmd) + blk_size,
+-			t5_write_resp, cookie, t5_cookie_release_local);
++				(uint8_t *) t5_cmd, sizeof(*t5_cmd) + blk_size,
++				t5_write_resp, cookie, t5_cookie_release_local);
+ 
+ out_err:
+ 	g_free(t5_cmd);
+@@ -624,10 +623,9 @@ static bool t5_cc_is_valid(struct type5_cc *t5_cc)
+ 	bool valid = false;
+ 
+ 	if ((t5_cc->cc0 == TYPE5_CC0_NDEF_MAGIC) &&
+-			(TYPE5_CC1_VER_GET_MAJOR(t5_cc->cc1) ==
+-				 TYPE5_VERSION_MAJOR) &&
+-			(TYPE5_CC1_VER_GET_MINOR(t5_cc->cc1) ==
+-				 TYPE5_VERSION_MINOR))
++	    (TYPE5_CC1_VER_GET_MAJOR(t5_cc->cc1) ==
++	     TYPE5_VERSION_MAJOR) &&
++	    (TYPE5_CC1_VER_GET_MINOR(t5_cc->cc1) == TYPE5_VERSION_MINOR))
+ 		valid = true;
+ 
+ 	return valid;
+@@ -641,14 +639,14 @@ static size_t t5_cc_get_data_length(struct type5_cc *t5_cc)
+ static bool t5_cc_is_read_only(struct type5_cc *t5_cc)
+ {
+ 	return (t5_cc->cc1 & TYPE5_CC1_WRITE_ACCESS_MASK) !=
+-		TYPE5_CC1_WRITE_ACCESS_ALWAYS;
++	    TYPE5_CC1_WRITE_ACCESS_ALWAYS;
+ }
+ 
+ static int t5_read_multiple_blocks_resp(uint8_t *resp, int length, void *data)
+ {
+ 	struct type5_read_multiple_blocks_resp *t5_resp =
+-		(struct type5_read_multiple_blocks_resp *)
+-					(resp + NFC_HEADER_SIZE);
++	    (struct type5_read_multiple_blocks_resp *)
++	    (resp + NFC_HEADER_SIZE);
+ 	struct t5_cookie *cookie = data;
+ 	struct near_tag *tag = cookie->tag;
+ 	uint8_t blk_size = near_tag_get_blk_size(tag);
+@@ -666,7 +664,7 @@ static int t5_read_multiple_blocks_resp(uint8_t *resp, int length, void *data)
+ 
+ 	length -= NFC_HEADER_SIZE;
+ 	expected_len = sizeof(*t5_resp) +
+-		       cookie->nb_requested_blocks * blk_size;
++	    cookie->nb_requested_blocks * blk_size;
+ 
+ 	/*
+ 	 * Sometimes an extra byte is returned in RMB response data.
+@@ -692,8 +690,7 @@ out_done:
+ static int t5_read_multiple_blocks(struct near_tag *tag,
+ 				   uint8_t starting_block,
+ 				   uint8_t number_of_blocks,
+-				   near_recv rx_cb,
+-				   struct t5_cookie *cookie)
++				   near_recv rx_cb, struct t5_cookie *cookie)
+ {
+ 	struct type5_read_multiple_blocks_cmd t5_cmd;
+ 	int err;
+@@ -708,8 +705,8 @@ static int t5_read_multiple_blocks(struct near_tag *tag,
+ 	t5_cmd.num_blks = number_of_blocks - 1;
+ 
+ 	return near_adapter_send(near_tag_get_adapter_idx(tag),
+-			(uint8_t *)&t5_cmd, sizeof(t5_cmd),
+-                        rx_cb, cookie, t5_cookie_release);
++				 (uint8_t *)&t5_cmd, sizeof(t5_cmd),
++				 rx_cb, cookie, t5_cookie_release);
+ }
+ 
+ static int t5_read_meta_resp(struct near_tag *tag, int err, void *data)
+@@ -730,11 +727,11 @@ static int t5_read_meta_resp(struct near_tag *tag, int err, void *data)
+ 
+ 	if (t5_cc_is_valid(t5_cc)) {
+ 		data_length = t5_cc_get_data_length(t5_cc) -
+-			TYPE5_DATA_START_OFFSET(tag);
++		    TYPE5_DATA_START_OFFSET(tag);
+ 
+ 		err = near_tag_add_data(near_tag_get_adapter_idx(tag),
+-				near_tag_get_target_idx(tag), NULL,
+-				data_length);
++					near_tag_get_target_idx(tag), NULL,
++					data_length);
+ 		if (err)
+ 			goto out_err;
+ 
+@@ -757,13 +754,13 @@ static int t5_read_meta_resp(struct near_tag *tag, int err, void *data)
+ 
+ 		if (rmb_supported) {
+ 			first_block = TYPE5_DATA_START_OFFSET(tag) /
+-				near_tag_get_blk_size(tag);
++			    near_tag_get_blk_size(tag);
+ 			cookie->nb_requested_blocks =
+-				near_tag_get_num_blks(tag) - first_block;
++			    near_tag_get_num_blks(tag) - first_block;
+ 			err = t5_read_multiple_blocks(tag, first_block,
+-					cookie->nb_requested_blocks,
+-					t5_read_multiple_blocks_resp,
+-					cookie);
++						   cookie->nb_requested_blocks,
++						   t5_read_multiple_blocks_resp,
++						   cookie);
+ 		} else {
+ 			err = t5_read(tag, TYPE5_DATA_START_OFFSET(tag),
+ 				      tag_data, data_length, t5_read_data_resp,
+@@ -798,7 +795,7 @@ static int t5_read_meta(struct near_tag *tag, struct t5_cookie *cookie)
+ 	cookie->buf = buf;
+ 
+ 	err = t5_read(tag, TYPE5_META_START_OFFSET, buf, TYPE5_LEN_CC_BYTES,
+-			t5_read_meta_resp, cookie);
++		      t5_read_meta_resp, cookie);
+ 	if (err < 0)
+ 		g_free(buf);
+ 
+@@ -808,7 +805,7 @@ static int t5_read_meta(struct near_tag *tag, struct t5_cookie *cookie)
+ static int t5_get_sys_info_resp(uint8_t *resp, int length, void *data)
+ {
+ 	struct type5_get_system_info_resp *t5_resp =
+-		(struct type5_get_system_info_resp *)(resp + NFC_HEADER_SIZE);
++	    (struct type5_get_system_info_resp *)(resp + NFC_HEADER_SIZE);
+ 	struct t5_cookie *cookie = data;
+ 	struct near_tag *tag = cookie->tag;
+ 	uint8_t offset = 0;
+@@ -824,7 +821,7 @@ static int t5_get_sys_info_resp(uint8_t *resp, int length, void *data)
+ 
+ 	if (length < (int)sizeof(*t5_resp)) {
+ 		near_error("Get System Info - Invalid response - length: %d",
+-				length);
++			   length);
+ 		err = -EIO;
+ 		goto out_err;
+ 	}
+@@ -838,13 +835,14 @@ static int t5_get_sys_info_resp(uint8_t *resp, int length, void *data)
+ 	if (t5_resp->info_flags & GET_SYS_INFO_FLAG_MEM_SIZE) {
+ 		if (t5_resp->info_flags & GET_SYS_INFO_FLAG_16B_NB_BLOCK) {
+ 			near_tag_set_num_blks(tag, (t5_resp->data[offset] |
+-				(t5_resp->data[offset + 1] << 8)) + 1);
++						    (t5_resp->data[offset + 1]
++						     << 8)) + 1);
+ 			offset += 2;
+ 		} else
+ 			near_tag_set_num_blks(tag, t5_resp->data[offset++] + 1);
+ 		near_tag_set_blk_size(tag,
+-			(t5_resp->data[offset++] & 0x1f) + 1);
+-	} else { /* Tag must provide memory size info */
++				      (t5_resp->data[offset++] & 0x1f) + 1);
++	} else {		/* Tag must provide memory size info */
+ 		err = -EIO;
+ 		goto out_err;
+ 	}
+@@ -870,12 +868,12 @@ static int t5_get_sys_info(struct near_tag *tag, struct t5_cookie *cookie)
+ 		return err;
+ 
+ 	return near_adapter_send(near_tag_get_adapter_idx(tag),
+-			(uint8_t *)&t5_cmd, sizeof(t5_cmd),
+-			t5_get_sys_info_resp, cookie, NULL);
++				 (uint8_t *)&t5_cmd, sizeof(t5_cmd),
++				 t5_get_sys_info_resp, cookie, NULL);
+ }
+ 
+ static int nfctype5_read(uint32_t adapter_idx, uint32_t target_idx,
+-		near_tag_io_cb cb)
++			 near_tag_io_cb cb)
+ {
+ 	struct t5_cookie *cookie;
+ 	struct near_tag *tag;
+@@ -942,7 +940,7 @@ static int nfctype5_write_resp(struct near_tag *tag, int err, void *data)
+ }
+ 
+ static int nfctype5_write(uint32_t adapter_idx, uint32_t target_idx,
+-		struct near_ndef_message *ndef, near_tag_io_cb cb)
++			  struct near_ndef_message *ndef, near_tag_io_cb cb)
+ {
+ 	struct t5_cookie *cookie;
+ 	struct near_tag *tag;
+@@ -966,8 +964,8 @@ static int nfctype5_write(uint32_t adapter_idx, uint32_t target_idx,
+ 	cookie->ndef = ndef;
+ 
+ 	err = t5_write(tag, TYPE5_DATA_START_OFFSET(tag),
+-			ndef->data + ndef->offset, ndef->length,
+-			nfctype5_write_resp, cookie);
++		       ndef->data + ndef->offset, ndef->length,
++		       nfctype5_write_resp, cookie);
+ 	if (err < 0)
+ 		err = t5_cookie_release(err, cookie);
+ 
+@@ -981,7 +979,7 @@ out_err:
+ }
+ 
+ static int nfctype5_check_presence_resp(struct near_tag *tag, int err,
+-		void *data)
++					void *data)
+ {
+ 	struct t5_cookie *cookie = data;
+ 
+@@ -993,7 +991,7 @@ static int nfctype5_check_presence_resp(struct near_tag *tag, int err,
+ }
+ 
+ static int nfctype5_check_presence(uint32_t adapter_idx, uint32_t target_idx,
+-		near_tag_io_cb cb)
++				   near_tag_io_cb cb)
+ {
+ 	struct t5_cookie *cookie;
+ 	struct near_tag *tag;
+@@ -1056,7 +1054,7 @@ static int nfctype5_format_resp(struct near_tag *tag, int err, void *data)
+ }
+ 
+ static int nfctype5_format(uint32_t adapter_idx, uint32_t target_idx,
+-		near_tag_io_cb cb)
++			   near_tag_io_cb cb)
+ {
+ 	struct type5_cc t5_cc;
+ 	struct t5_cookie *cookie;
+@@ -1118,7 +1116,7 @@ static int nfctype5_format(uint32_t adapter_idx, uint32_t target_idx,
+ 	t5_cc.cc3 = 0;
+ 
+ 	err = t5_write(tag, TYPE5_META_START_OFFSET, (uint8_t *)&t5_cc,
+-			sizeof(t5_cc), nfctype5_format_resp, cookie);
++		       sizeof(t5_cc), nfctype5_format_resp, cookie);
+ 	if (err < 0)
+ 		err = t5_cookie_release(err, cookie);
+ 
+@@ -1136,7 +1134,7 @@ static struct near_tag_driver type5_driver = {
+ 	.priority	= NEAR_TAG_PRIORITY_DEFAULT,
+ 	.read		= nfctype5_read,
+ 	.write		= nfctype5_write,
+-	.check_presence = nfctype5_check_presence,
++	.check_presence	= nfctype5_check_presence,
+ 	.format		= nfctype5_format,
  };
  
+@@ -1155,4 +1153,4 @@ static void nfctype5_exit(void)
+ }
  
--/* commands */
-+/**
-+ * enum iwl_legacy_cmds - legacy group command IDs
-+ */
- enum iwl_legacy_cmds {
-+	/**
-+	 * @MVM_ALIVE:
-+	 * Alive data from the firmware, as described in
-+	 * &struct mvm_alive_resp_v3 or &struct mvm_alive_resp.
-+	 */
- 	MVM_ALIVE = 0x1,
-+
-+	/**
-+	 * @REPLY_ERROR: Cause an error in the firmware, for testing purposes.
-+	 */
- 	REPLY_ERROR = 0x2,
-+
-+	/**
-+	 * @ECHO_CMD: Send data to the device to have it returned immediately.
-+	 */
- 	ECHO_CMD = 0x3,
- 
-+	/**
-+	 * @INIT_COMPLETE_NOTIF: Notification that initialization is complete.
-+	 */
- 	INIT_COMPLETE_NOTIF = 0x4,
- 
--	/* PHY context commands */
-+	/**
-+	 * @PHY_CONTEXT_CMD:
-+	 * Add/modify/remove a PHY context, using &struct iwl_phy_context_cmd.
-+	 */
- 	PHY_CONTEXT_CMD = 0x8,
-+
-+	/**
-+	 * @DBG_CFG: Debug configuration command.
-+	 */
- 	DBG_CFG = 0x9,
-+
-+	/**
-+	 * @ANTENNA_COUPLING_NOTIFICATION:
-+	 * Antenna coupling data, &struct iwl_mvm_antenna_coupling_notif
-+	 */
- 	ANTENNA_COUPLING_NOTIFICATION = 0xa,
- 
--	/* UMAC scan commands */
-+	/**
-+	 * @SCAN_ITERATION_COMPLETE_UMAC:
-+	 * Firmware indicates a scan iteration completed, using
-+	 * &struct iwl_umac_scan_iter_complete_notif.
-+	 */
- 	SCAN_ITERATION_COMPLETE_UMAC = 0xb5,
-+
-+	/**
-+	 * @SCAN_CFG_CMD:
-+	 * uses &struct iwl_scan_config_v1 or &struct iwl_scan_config
-+	 */
- 	SCAN_CFG_CMD = 0xc,
- 	SCAN_REQ_UMAC = 0xd,
- 	SCAN_ABORT_UMAC = 0xe,
-+
-+	/**
-+	 * @SCAN_COMPLETE_UMAC: uses &struct iwl_umac_scan_complete
-+	 */
- 	SCAN_COMPLETE_UMAC = 0xf,
- 
- 	BA_WINDOW_STATUS_NOTIFICATION_ID = 0x13,
- 
--	/* station table */
-+	/**
-+	 * @ADD_STA_KEY:
-+	 * &struct iwl_mvm_add_sta_key_cmd_v1 or
-+	 * &struct iwl_mvm_add_sta_key_cmd.
-+	 */
- 	ADD_STA_KEY = 0x17,
-+
-+	/**
-+	 * @ADD_STA:
-+	 * &struct iwl_mvm_add_sta_cmd or &struct iwl_mvm_add_sta_cmd_v7.
-+	 */
- 	ADD_STA = 0x18,
-+	/**
-+	 * @REMOVE_STA: &struct iwl_mvm_rm_sta_cmd
-+	 */
- 	REMOVE_STA = 0x19,
- 
- 	/* paging get item */
-@@ -162,10 +217,23 @@ enum iwl_legacy_cmds {
- 
- 	/* TX */
- 	TX_CMD = 0x1c,
-+
-+	/**
-+	 * @TXPATH_FLUSH: &struct iwl_tx_path_flush_cmd
-+	 */
- 	TXPATH_FLUSH = 0x1e,
-+
-+	/**
-+	 * @MGMT_MCAST_KEY:
-+	 * &struct iwl_mvm_mgmt_mcast_key_cmd or
-+	 * &struct iwl_mvm_mgmt_mcast_key_cmd_v1
-+	 */
- 	MGMT_MCAST_KEY = 0x1f,
- 
- 	/* scheduler config */
-+	/**
-+	 * @SCD_QUEUE_CFG: &struct iwl_scd_txq_cfg_cmd
-+	 */
- 	SCD_QUEUE_CFG = 0x1d,
- 
- 	/* global key */
-@@ -179,17 +247,40 @@ enum iwl_legacy_cmds {
- 	TDLS_CHANNEL_SWITCH_NOTIFICATION = 0xaa,
- 	TDLS_CONFIG_CMD = 0xa7,
- 
--	/* MAC and Binding commands */
-+	/**
-+	 * @MAC_CONTEXT_CMD: &struct iwl_mac_ctx_cmd
-+	 */
- 	MAC_CONTEXT_CMD = 0x28,
-+
-+	/**
-+	 * @TIME_EVENT_CMD:
-+	 * &struct iwl_time_event_cmd, response in &struct iwl_time_event_resp
-+	 */
- 	TIME_EVENT_CMD = 0x29, /* both CMD and response */
-+	/**
-+	 * @TIME_EVENT_NOTIFICATION: &struct iwl_time_event_notif
-+	 */
- 	TIME_EVENT_NOTIFICATION = 0x2a,
-+	/**
-+	 * @BINDING_CONTEXT_CMD:
-+	 * &struct iwl_binding_cmd or &struct iwl_binding_cmd_v1
-+	 */
- 	BINDING_CONTEXT_CMD = 0x2b,
-+	/**
-+	 * @TIME_QUOTA_CMD: &struct iwl_time_quota_cmd
-+	 */
- 	TIME_QUOTA_CMD = 0x2c,
- 	NON_QOS_TX_COUNTER_CMD = 0x2d,
- 
-+	/**
-+	 * @LQ_CMD: using &struct iwl_lq_cmd
-+	 */
- 	LQ_CMD = 0x4e,
- 
--	/* paging block to FW cpu2 */
-+	/**
-+	 * @FW_PAGING_BLOCK_CMD:
-+	 * &struct iwl_fw_paging_cmd or &struct iwl_fw_paging_cmd_v1
-+	 */
- 	FW_PAGING_BLOCK_CMD = 0x4f,
- 
- 	/* Scan offload */
-@@ -203,6 +294,9 @@ enum iwl_legacy_cmds {
- 	SCAN_ITERATION_COMPLETE = 0xe7,
- 
- 	/* Phy */
-+	/**
-+	 * @PHY_CONFIGURATION_CMD: &struct iwl_phy_cfg_cmd
-+	 */
- 	PHY_CONFIGURATION_CMD = 0x6a,
- 	CALIB_RES_NOTIF_PHY_DB = 0x6b,
- 	PHY_DB_CMD = 0x6c,
-@@ -211,7 +305,9 @@ enum iwl_legacy_cmds {
- 	TOF_CMD = 0x10,
- 	TOF_NOTIFICATION = 0x11,
- 
--	/* Power - legacy power table command */
-+	/**
-+	 * @POWER_TABLE_CMD: &struct iwl_device_power_cmd
-+	 */
- 	POWER_TABLE_CMD = 0x77,
- 	PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION = 0x78,
- 	LTR_CONFIG = 0xee,
-@@ -222,17 +318,38 @@ enum iwl_legacy_cmds {
- 	/* Set/Get DC2DC frequency tune */
- 	DC2DC_CONFIG_CMD = 0x83,
- 
--	/* NVM */
-+	/**
-+	 * @NVM_ACCESS_CMD: using &struct iwl_nvm_access_cmd
-+	 */
- 	NVM_ACCESS_CMD = 0x88,
- 
- 	SET_CALIB_DEFAULT_CMD = 0x8e,
- 
- 	BEACON_NOTIFICATION = 0x90,
- 	BEACON_TEMPLATE_CMD = 0x91,
-+	/**
-+	 * @TX_ANT_CONFIGURATION_CMD: &struct iwl_tx_ant_cfg_cmd
-+	 */
- 	TX_ANT_CONFIGURATION_CMD = 0x98,
-+
-+	/**
-+	 * @STATISTICS_CMD: &struct iwl_statistics_cmd
-+	 */
- 	STATISTICS_CMD = 0x9c,
-+
-+	/**
-+	 * @STATISTICS_NOTIFICATION:
-+	 * one of &struct iwl_notif_statistics_v10,
-+	 * &struct iwl_notif_statistics_v11,
-+	 * &struct iwl_notif_statistics_cdb
-+	 */
- 	STATISTICS_NOTIFICATION = 0x9d,
- 	EOSP_NOTIFICATION = 0x9e,
-+
-+	/**
-+	 * @REDUCE_TX_POWER_CMD:
-+	 * &struct iwl_dev_tx_power_cmd_v3 or &struct iwl_dev_tx_power_cmd
-+	 */
- 	REDUCE_TX_POWER_CMD = 0x9f,
- 
- 	/* RF-KILL commands and notifications */
-@@ -241,11 +358,19 @@ enum iwl_legacy_cmds {
- 
- 	MISSED_BEACONS_NOTIFICATION = 0xa2,
- 
--	/* Power - new power table command */
-+	/**
-+	 * @MAC_PM_POWER_TABLE: using &struct iwl_mac_power_cmd
-+	 */
- 	MAC_PM_POWER_TABLE = 0xa9,
- 
-+	/**
-+	 * @MFUART_LOAD_NOTIFICATION: &struct iwl_mfuart_load_notif
-+	 */
- 	MFUART_LOAD_NOTIFICATION = 0xb1,
- 
-+	/**
-+	 * @RSS_CONFIG_CMD: &struct iwl_rss_config_cmd
-+	 */
- 	RSS_CONFIG_CMD = 0xb3,
- 
- 	REPLY_RX_PHY_CMD = 0xc0,
-@@ -254,7 +379,14 @@ enum iwl_legacy_cmds {
- 	BA_NOTIF = 0xc5,
- 
- 	/* Location Aware Regulatory */
-+	/**
-+	 * @MCC_UPDATE_CMD: using &struct iwl_mcc_update_cmd
-+	 */
- 	MCC_UPDATE_CMD = 0xc8,
-+
-+	/**
-+	 * @MCC_CHUB_UPDATE_CMD: using &struct iwl_mcc_chub_notif
-+	 */
- 	MCC_CHUB_UPDATE_CMD = 0xc9,
- 
- 	MARKER_CMD = 0xcb,
-@@ -262,14 +394,29 @@ enum iwl_legacy_cmds {
- 	/* BT Coex */
- 	BT_COEX_PRIO_TABLE = 0xcc,
- 	BT_COEX_PROT_ENV = 0xcd,
-+	/**
-+	 * @BT_PROFILE_NOTIFICATION: &struct iwl_bt_coex_profile_notif
-+	 */
- 	BT_PROFILE_NOTIFICATION = 0xce,
-+	/**
-+	 * @BT_CONFIG: &struct iwl_bt_coex_cmd
-+	 */
- 	BT_CONFIG = 0x9b,
- 	BT_COEX_UPDATE_SW_BOOST = 0x5a,
- 	BT_COEX_UPDATE_CORUN_LUT = 0x5b,
- 	BT_COEX_UPDATE_REDUCED_TXP = 0x5c,
-+	/**
-+	 * @BT_COEX_CI: &struct iwl_bt_coex_ci_cmd
-+	 */
- 	BT_COEX_CI = 0x5d,
- 
-+	/**
-+	 * @REPLY_SF_CFG_CMD: &struct iwl_sf_cfg_cmd
-+	 */
- 	REPLY_SF_CFG_CMD = 0xd1,
-+	/**
-+	 * @REPLY_BEACON_FILTERING_CMD: &struct iwl_beacon_filter_cmd
-+	 */
- 	REPLY_BEACON_FILTERING_CMD = 0xd2,
- 
- 	/* DTS measurements */
-@@ -283,19 +430,39 @@ enum iwl_legacy_cmds {
- 	BCAST_FILTER_CMD = 0xcf,
- 	MCAST_FILTER_CMD = 0xd0,
- 
--	/* D3 commands/notifications */
-+	/**
-+	 * @D3_CONFIG_CMD: &struct iwl_d3_manager_config
-+	 */
- 	D3_CONFIG_CMD = 0xd3,
- 	PROT_OFFLOAD_CONFIG_CMD = 0xd4,
- 	OFFLOADS_QUERY_CMD = 0xd5,
- 	REMOTE_WAKE_CONFIG_CMD = 0xd6,
- 	D0I3_END_CMD = 0xed,
- 
--	/* for WoWLAN in particular */
-+	/**
-+	 * @WOWLAN_PATTERNS: &struct iwl_wowlan_patterns_cmd
-+	 */
- 	WOWLAN_PATTERNS = 0xe0,
-+
-+	/**
-+	 * @WOWLAN_CONFIGURATION: &struct iwl_wowlan_config_cmd
-+	 */
- 	WOWLAN_CONFIGURATION = 0xe1,
-+	/**
-+	 * @WOWLAN_TSC_RSC_PARAM: &struct iwl_wowlan_rsc_tsc_params_cmd
-+	 */
- 	WOWLAN_TSC_RSC_PARAM = 0xe2,
-+	/**
-+	 * @WOWLAN_TKIP_PARAM: &struct iwl_wowlan_tkip_params_cmd
-+	 */
- 	WOWLAN_TKIP_PARAM = 0xe3,
-+	/**
-+	 * @WOWLAN_KEK_KCK_MATERIAL: &struct iwl_wowlan_kek_kck_material_cmd
-+	 */
- 	WOWLAN_KEK_KCK_MATERIAL = 0xe4,
-+	/**
-+	 * @WOWLAN_GET_STATUSES: response in &struct iwl_wowlan_status
-+	 */
- 	WOWLAN_GET_STATUSES = 0xe5,
- 	WOWLAN_TX_POWER_PER_DB = 0xe6,
- 
-@@ -316,21 +483,42 @@ enum iwl_mac_conf_subcmd_ids {
- 	CHANNEL_SWITCH_NOA_NOTIF = 0xFF,
- };
- 
-+/**
-+ * enum iwl_phy_ops_subcmd_ids - PHY group commands
-+ */
- enum iwl_phy_ops_subcmd_ids {
- 	CMD_DTS_MEASUREMENT_TRIGGER_WIDE = 0x0,
- 	CTDP_CONFIG_CMD = 0x03,
-+
-+	/**
-+	 * @TEMP_REPORTING_THRESHOLDS_CMD: &struct temp_report_ths_cmd
-+	 */
- 	TEMP_REPORTING_THRESHOLDS_CMD = 0x04,
- 	GEO_TX_POWER_LIMIT = 0x05,
- 	CT_KILL_NOTIFICATION = 0xFE,
- 	DTS_MEASUREMENT_NOTIF_WIDE = 0xFF,
- };
- 
-+/**
-+ * enum iwl_system_subcmd_ids - system group command IDs
-+ */
- enum iwl_system_subcmd_ids {
-+	/**
-+	 * @SHARED_MEM_CFG_CMD:
-+	 * response in &struct iwl_shared_mem_cfg or
-+	 * &struct iwl_shared_mem_cfg_v1
-+	 */
- 	SHARED_MEM_CFG_CMD = 0x0,
- 	INIT_EXTENDED_CFG_CMD = 0x03,
- };
- 
-+/**
-+ * enum iwl_data_path_subcmd_ids - data path group commands
-+ */
- enum iwl_data_path_subcmd_ids {
-+	/**
-+	 * @DQA_ENABLE_CMD: &struct iwl_dqa_enable_cmd
-+	 */
- 	DQA_ENABLE_CMD = 0x0,
- 	UPDATE_MU_GROUPS_CMD = 0x1,
- 	TRIGGER_RX_QUEUES_NOTIF_CMD = 0x2,
-@@ -2433,4 +2621,12 @@ struct iwl_nvm_get_info_rsp {
- 	struct iwl_nvm_get_info_regulatory regulatory;
- } __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_RSP_S_VER_1 */
- 
-+/**
-+ * struct iwl_mvm_antenna_coupling_notif - antenna coupling notification
-+ * @isolation: antenna isolation value
-+ */
-+struct iwl_mvm_antenna_coupling_notif {
-+	__le32 isolation;
-+} __packed;
-+
- #endif /* __fw_api_h__ */
+ NEAR_PLUGIN_DEFINE(nfctype5, "ISO 15693 (NFC Type 5) tags support", VERSION,
+-			NEAR_PLUGIN_PRIORITY_HIGH, nfctype5_init, nfctype5_exit)
++		   NEAR_PLUGIN_PRIORITY_HIGH, nfctype5_init, nfctype5_exit)
 -- 
-2.11.0
+2.13.0
