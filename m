@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53944 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751606AbdFIJIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 05:08:17 -0400
-Message-ID: <1496999284.2424.7.camel@sipsolutions.net> (sfid-20170609_111133_698990_9B968F7F)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Fri, 09 Jun 2017 11:08:04 +0200
-In-Reply-To: <d41f58e9-b12e-9e52-a0fb-b674d278353b@broadcom.com> (sfid-20170603_100839_987129_9FE5CC46)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         <1495104012.2553.3.camel@sipsolutions.net>
-         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
-         <1495189263.3274.4.camel@sipsolutions.net>
-         <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
-         <1495448886.2653.12.camel@sipsolutions.net>
-         <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
-         <1496050303.2467.3.camel@sipsolutions.net>
-         <d41f58e9-b12e-9e52-a0fb-b674d278353b@broadcom.com>
-         (sfid-20170603_100839_987129_9FE5CC46)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:55403 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752180AbdFOSZY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Jun 2017 14:25:24 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 00/23] neard: Support TI Std & Pro tags, fixups, etc.
+Date: Thu, 15 Jun 2017 11:24:53 -0700
+Message-Id: <20170615182516.4508-1-mgreer@animalcreek.com> (sfid-20170615_202536_684458_629D5118)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This is an assortment of commits that make some fixups, do some general
+tightening of NDEF data checking, add support for TI Standard and Pro
+Type 5 tags, and stop issuing the Read Multiple Blocks command when
+formatting a Type 5 tag.  The reasoning for each change is in the
+individual commit descriptions.
 
-Sorry about the delay.
+For convenience, a branch with these commits is available in the
+submit/updates-v1 branch here:
 
-> > Then you have to support NEW_KEY (AP case) and then using NEW_KEY
-> > to
-> > detect whether or not a wpa_s configuration option to not use
-> > offloaded
-> > 4-way-HS can be used will not work correctly.
-> > 
-> > I don't really see that this is a sensible configuration, but I
-> > could
-> > imagine it existing if somebody "bolted on" AP functionality for a
-> > client-side chipset or something like that.
+	https://github.com/animalcreek/neard.git
 
-> So I want to get back to this as to assure we have the same
-> understanding. First off, the proposed offloads are STA-only. 
+Mark Greer (23):
+  ndef: Add default language ("en") for Text records
+  ndef: Fix use of uninitialized variable in property_get_type()
+  ndef: Unrecognized WKTs should return RECORD_TYPE_UNKNOWN
+  ndef: Verify RTD record type name encodings
+  ndef: Discard records containing errors
+  ndef: Validate text data in WKT Text records
+  adapter: Return '-errno' when socket() call fails
+  adapter: Return '-errno' when connect() call fails
+  adapter: Clear timeout handle when check presence timer stopped
+  adapter: Clear timer handle when DEP timer stopped
+  adapter: Do not poll when there is an active tag
+  nfctype2: Don't read tags with bad magic number
+  nfctype5: Reduce noise when tag is moved out of range
+  nfctype5: Add space between 'if' and first '('
+  nfctype5: Remove superfluous parentheses
+  nfctype5: Rework code that identifies ST Micro Type 5 tags
+  nfctype5: Add support for TI Standard and Pro Type 5 tag
+  nfctype5: Remove useless initialization
+  nfctype5: Don't issue RMB command when formatting
+  nfctype5: Discard extra byte in RMB response data
+  nfctype5: Fix formatting
+  nfctools: Move nciattach macros & enums to nciattach.c
+  nfc_copy: Update nfc_copy.h to match Linux kernel's version
 
-Right. But we at least also want to have them for AP mode, which
-answers your below question.
+ include/nfc_copy.h          |  63 +++++----
+ plugins/nfctype2.c          |   1 +
+ plugins/nfctype5.c          | 320 ++++++++++++++++++++++++--------------------
+ src/adapter.c               |  15 ++-
+ src/ndef.c                  |  43 +++++-
+ tools/nciattach.c           |  12 ++
+ tools/nfctool/llcp-decode.c |  14 +-
+ tools/nfctool/snep-decode.c |  12 +-
+ 8 files changed, 290 insertions(+), 190 deletions(-)
 
-> So if a
-> driver supports STA and AP mode and the 4-way-HS offload, we could
-> already have the case you describe here. So not really a "bolted on"
-> scenario I would say.
-
-But if you say you don't have it in AP mode, or you didn't even think
-about it in AP mode yet, then I think you're right and the "bolted on"
-part doesn't really apply (*).
-
-However, this does mean that checking for NEW_KEY support _isn't_
-sufficient to understand whether or not the device also supports doing
-the 4-way-HS in the host, because the device might _not_ support that
-in client mode, yet implement NEW_KEY for AP mode, right?
-
-In any case - I don't think this changes much my opinion. I think that
-newer wpa_s should always use the offload where available, and if
-there's a debug option to turn that off, and that debug option causes
-failures because the driver rejects the NEW_KEY command, rather than
-causing an up-front configuration failure because wpa_s knows that the
-NEW_KEY wouldn't be supported, then I don't think for a debug option
-that makes a big difference. For something that higher layers might
-need to set, it would make a difference - but that's not at stake here.
-
-johannes
-
-(*) my line of thinking was that if you have the necessary state
-machine for client in the firmware, then it's not a huge step to also
-have it for AP, since you have the crypto primitives for it
+-- 
+2.13.0
