@@ -1,123 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34217 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753029AbdFPO6d (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57190 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752836AbdFOO4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:58:33 -0400
-Received: by mail-pg0-f66.google.com with SMTP id j186so6648541pge.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:33 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 18/20] rsi: SDIO Rx packet processing enhancement
-Date: Fri, 16 Jun 2017 20:24:39 +0530
-Message-Id: <1497624881-2315-19-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165836_372966_FFAB5513)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Thu, 15 Jun 2017 10:56:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        kasan-dev@googlegroups.com, Dmitry Vyukov <dvyukov@google.com>,
+        Alexander Potapenko <glider@google.com>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH v2 08/11] brcmsmac: make some local variables 'static const' to reduce stack size
+References: <20170614211556.2062728-1-arnd@arndb.de>
+        <20170614211556.2062728-9-arnd@arndb.de>
+Date: Thu, 15 Jun 2017 17:56:27 +0300
+In-Reply-To: <20170614211556.2062728-9-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 14 Jun 2017 23:15:43 +0200")
+Message-ID: <87mv99e1us.fsf@codeaurora.org> (sfid-20170615_165705_008897_F9E99F2E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Newer firmware sends information about number of blocks through
-interrupt only. We don't need to read extra register for this.
-This patch adds needed driver changes for this enhancment. The
-change here is backward compatible
+> With KASAN and a couple of other patches applied, this driver is one
+> of the few remaining ones that actually use more than 2048 bytes of
+> kernel stack:
+>
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+>
+> Here, I'm reducing the stack size by marking as many local variables as
+> 'static const' as I can without changing the actual code.
+>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 34 ++++++++++++++++++++++-------
- drivers/net/wireless/rsi/rsi_main.h         |  1 +
- drivers/net/wireless/rsi/rsi_sdio.h         |  1 +
- 3 files changed, 28 insertions(+), 8 deletions(-)
+I found the cover letter from lkml and apparently the plan is that
+Andrew will pick these three brcmsmac patches, so I'll drop them in
+wireless patchwork.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index df2a63b..b6d0e2a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -69,20 +69,37 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
- static int rsi_process_pkt(struct rsi_common *common)
- {
- 	struct rsi_hw *adapter = common->priv;
-+	struct rsi_91x_sdiodev *dev =
-+		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
- 	u8 num_blks = 0;
- 	u32 rcv_pkt_len = 0;
- 	int status = 0;
-+	u8 value = 0;
- 
--	status = rsi_sdio_read_register(adapter,
--					SDIO_RX_NUM_BLOCKS_REG,
--					&num_blks);
-+	num_blks = ((adapter->interrupt_status & 1) |
-+			((adapter->interrupt_status >> RECV_NUM_BLOCKS) << 1));
- 
--	if (status) {
--		rsi_dbg(ERR_ZONE,
--			"%s: Failed to read pkt length from the card:\n",
--			__func__);
--		return status;
-+	if (!num_blks) {
-+		status = rsi_sdio_read_register(adapter,
-+						SDIO_RX_NUM_BLOCKS_REG,
-+						&value);
-+		if (status) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to read pkt length from the card:\n",
-+				__func__);
-+			return status;
-+		}
-+		num_blks = value & 0x1f;
- 	}
-+
-+	if (dev->write_fail == 2)
-+		rsi_sdio_ack_intr(common->priv, (1 << MSDU_PKT_PENDING));
-+
-+	if (unlikely(!num_blks)) {
-+		dev->write_fail = 2;
-+		return -1;
-+	}
-+
- 	rcv_pkt_len = (num_blks * 256);
- 
- 	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
-@@ -224,6 +241,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 			mutex_unlock(&common->tx_rxlock);
- 			return;
- 		}
-+		adapter->interrupt_status = isr_status;
- 
- 		if (isr_status == 0) {
- 			rsi_set_event(&common->tx_thread.event);
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 4b4312e..febecbd 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -273,6 +273,7 @@ struct rsi_hw {
- 	bool blcmd_timer_expired;
- 	u32 flash_capacity;
- 	struct eepromrw_info eeprom;
-+	u32 interrupt_status;
- 	u8 dfs_region;
- 	void *rsi_dev;
- 	struct rsi_host_intf_ops *host_intf_ops;
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index cbbc0448..3cf6756 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -41,6 +41,7 @@ enum sdio_interrupt_type {
- #define PKT_BUFF_FULL                           1
- #define PKT_MGMT_BUFF_FULL                      2
- #define MSDU_PKT_PENDING                        3
-+#define RECV_NUM_BLOCKS                         4
- /* Interrupt Bit Related Macros */
- #define PKT_BUFF_AVAILABLE                      1
- #define FW_ASSERT_IND                           2
 -- 
-2.7.4
+Kalle Valo
