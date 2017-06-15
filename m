@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:42153 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750981AbdFPDky (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 23:40:54 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 0/2] NFC: Add deactivate target functionality
-Date: Thu, 15 Jun 2017 20:34:20 -0700
-Message-Id: <20170616033422.18484-1-mgreer@animalcreek.com> (sfid-20170616_054104_764357_CC4CAE6B)
+Received: from ozlabs.org ([103.22.144.67]:33325 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752884AbdFOSZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Jun 2017 14:25:30 -0400
+Date: Fri, 16 Jun 2017 04:25:19 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+        linux-kernel@vger.kernel.org, igor.mitsyanko.os@quantenna.com,
+        dlebed@quantenna.com, smaksimenko@quantenna.com,
+        smatyukevich@quantenna.com, btherthala@quantenna.com,
+        hwang@quantenna.com, krath@quantenna.com, avinashp@quantenna.com
+Subject: Re: linux-next: build failure after merge of the
+ wireless-drivers-next tree
+Message-ID: <20170616042519.40f63561@canb.auug.org.au> (sfid-20170615_202636_143743_B6948EF7)
+In-Reply-To: <20170615.120808.1402317729827497353.davem@davemloft.net>
+References: <20170608122759.7ffda0c3@canb.auug.org.au>
+        <20170613120024.2a1ce31b@canb.auug.org.au>
+        <20170615.120808.1402317729827497353.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is currently no way for userspace to deactivate an active target.
-Since the target is active, the adapter cannot be powered down which
-wastes wastes power when the target has been read and isn't needed
-anymore (but remains within range).  To solve this, add a way to
-deactivate a currently active target which will then allow the adapter
-to be powered down.
+Hi Dave,
 
-To be fully operational, this requires companion patches for neard.
-Those patches will be submitted shortly.
+On Thu, 15 Jun 2017 12:08:08 -0400 (EDT) David Miller <davem@davemloft.net> wrote:
+>
+> From: Stephen Rothwell <sfr@canb.auug.org.au>
+> Date: Tue, 13 Jun 2017 12:00:24 +1000
+> 
+> > On Thu, 8 Jun 2017 12:27:59 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:  
+> >>
+> >> After merging the wireless-drivers-next tree, today's linux-next build
+> >> (x86_64 allmodconfig) failed like this:
+> >> 
+> >> drivers/net/wireless/quantenna/qtnfmac/core.c: In function 'qtnf_core_net_attach':
+> >> drivers/net/wireless/quantenna/qtnfmac/core.c:319:5: error: 'struct net_device' has no member named 'destructor'
+> >>   dev->destructor = free_netdev;
+> >>      ^
+> >> 
+> >> Caused by commit
+> >> 
+> >>   98f44cb0655c ("qtnfmac: introduce new FullMAC driver for Quantenna chipsets")  
+> > 
+> > This commit is now in the net-next tree ...
+> >   
+> >> interacting with commit
+> >> 
+> >>   cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+> >> 
+> >> from the net tree.
+> >> 
+> >> I applied this merge fix patch for today.  
+> > 
+> > So this merge fix patch is needed when the net and net-next trees are merged.  
+> 
+> This is now all resolved, thanks!
 
-Mark Greer (2):
-  NFC: digital: Abort cmd when deactivating target
-  NFC: Add NFC_CMD_DEACTIVATE_TARGET support
-
- include/uapi/linux/nfc.h |  2 ++
- net/nfc/digital_core.c   |  1 +
- net/nfc/netlink.c        | 29 +++++++++++++++++++++++++++++
- 3 files changed, 32 insertions(+)
+Thanks for letting me know.
 
 -- 
-2.13.0
+Cheers,
+Stephen Rothwell
