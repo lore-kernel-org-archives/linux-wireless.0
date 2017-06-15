@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34877 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752961AbdFPO6Z (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:50455 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751888AbdFOSZT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:58:25 -0400
-Received: by mail-pf0-f195.google.com with SMTP id s66so6916673pfs.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:25 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 16/20] rsi: rename variable in_sdio_litefi_irq
-Date: Fri, 16 Jun 2017 20:24:37 +0530
-Message-Id: <1497624881-2315-17-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165828_737202_49432884)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Thu, 15 Jun 2017 14:25:19 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 04/23] ndef: Verify RTD record type name encodings
+Date: Thu, 15 Jun 2017 11:24:57 -0700
+Message-Id: <20170615182516.4508-5-mgreer@animalcreek.com> (sfid-20170615_202536_141646_6C848E95)
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+The NFC Forum's Record Type Definition (RTD) Technical Specification
+version 1.0, section 3.4 (RTD Type Names Requirements) specifies that
+RTD type name encodings MUST be done according to the ASCII chart in
+Appendix A (Character Set for Record Types).  Enforce this by checking
+that all of the RTD type name encodings are valid before determining
+their type.  Conveniently, isprint() does the correct checking.
 
-The variable in_sdio_litefi_irq is renamed to sdio_irq_task,
-as it is more relevant here.
-
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
 ---
- drivers/net/wireless/rsi/rsi_sdio.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ src/ndef.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index f11f818..cbbc0448 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -104,7 +104,7 @@ struct receive_info {
+diff --git a/src/ndef.c b/src/ndef.c
+index 03d6b13..7a3c76b 100644
+--- a/src/ndef.c
++++ b/src/ndef.c
+@@ -27,6 +27,7 @@
+ #include <stdlib.h>
+ #include <errno.h>
+ #include <string.h>
++#include <ctype.h>
  
- struct rsi_91x_sdiodev {
- 	struct sdio_func *pfunction;
--	struct task_struct *in_sdio_litefi_irq;
-+	struct task_struct *sdio_irq_task;
- 	struct receive_info rx_info;
- 	u32 next_read_delay;
- 	u32 sdio_high_speed_enable;
+ #include <glib.h>
+ 
+@@ -881,6 +882,8 @@ static enum record_type get_external_record_type(uint8_t *type,
+ static enum record_type get_record_type(enum record_tnf tnf,
+ 				uint8_t *type, size_t type_length)
+ {
++	unsigned int i;
++
+ 	DBG("");
+ 
+ 	switch (tnf) {
+@@ -891,6 +894,10 @@ static enum record_type get_record_type(enum record_tnf tnf,
+ 		break;
+ 
+ 	case RECORD_TNF_WELLKNOWN:
++		for (i = 0; i < type_length; i++)
++			if (!isprint(type[i]))
++				return RECORD_TYPE_ERROR;
++
+ 		if (type_length == 1) {
+ 			if (type[0] == 'T')
+ 				return RECORD_TYPE_WKT_TEXT;
 -- 
-2.7.4
+2.13.0
