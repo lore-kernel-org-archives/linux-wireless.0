@@ -1,245 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:62175
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752117AbdFTT4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2017 15:56:09 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 6/8] qtnfmac: move current channel info from vif to mac
-Date: Tue, 20 Jun 2017 22:55:15 +0300
-Message-Id: <20170620195517.18373-7-sergey.matyukevich.os@quantenna.com> (sfid-20170620_215614_335779_CA01C4DC)
-In-Reply-To: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34997 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753069AbdFPO6h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 10:58:37 -0400
+Received: by mail-pf0-f193.google.com with SMTP id s66so6917302pfs.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:36 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 19/20] rsi: use separate mutex lock for receive thread
+Date: Fri, 16 Jun 2017 20:24:40 +0530
+Message-Id: <1497624881-2315-20-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165839_865869_037CDFB8)
+In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless cfg80211 core supplies channel settings in cfg80211_ap_settings
-structure for each BSS in multiple BSS configuration. On the other hand
-all the virtual interfaces on one radio are using the same PHY settings
-including channel.
+From: Karun Eagalapati <karun256@gmail.com>
 
-Move chandef structure from vif to mac structure in order to mantain
-the only instance of cfg80211_chan_def structure in qtnf_wmac
-rather than its multiple copies in qtnf_vif.
+Deadlock issue is observed during our stress tests. The root
+cause for the issue is same lock is used between tx and rx threads.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+This patch adds a separate mutex lock for rx thread to resolve
+the problem.
+
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 39 +++++++++++++++--------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++--
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  2 +-
- drivers/net/wireless/quantenna/qtnfmac/event.c    |  7 ++--
- 4 files changed, 31 insertions(+), 23 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_main.c     |  1 +
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 10 +++++-----
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  6 +++---
+ drivers/net/wireless/rsi/rsi_main.h         |  2 ++
+ 4 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 77afc0fc8c03..3f90f57ed595 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -408,11 +408,19 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			 struct cfg80211_ap_settings *settings)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
-+	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index f1cde0c..939f568 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -221,6 +221,7 @@ struct rsi_hw *rsi_91x_init(void)
+ 	rsi_init_event(&common->tx_thread.event);
+ 	mutex_init(&common->mutex);
+ 	mutex_init(&common->tx_rxlock);
++	mutex_init(&common->rx_lock);
  
--	bss_cfg = &vif->bss_cfg;
-+	if (!cfg80211_chandef_identical(&mac->chandef, &settings->chandef)) {
-+		memcpy(&mac->chandef, &settings->chandef, sizeof(mac->chandef));
-+		if (vif->vifid != 0)
-+			pr_warn("%s: unexpected chan %u (%u MHz)\n", dev->name,
-+				settings->chandef.chan->hw_value,
-+				settings->chandef.chan->center_freq);
-+	}
+ 	if (rsi_create_kthread(common,
+ 			       &common->tx_thread,
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index b6d0e2a..b3f7adc 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -230,7 +230,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 	dev->rx_info.sdio_int_counter++;
  
-+	bss_cfg = &vif->bss_cfg;
- 	memset(bss_cfg, 0, sizeof(*bss_cfg));
- 
- 	bss_cfg->bcn_period = settings->beacon_interval;
-@@ -423,8 +431,6 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	bss_cfg->ssid_len = settings->ssid_len;
- 	memcpy(&bss_cfg->ssid, settings->ssid, bss_cfg->ssid_len);
- 
--	memcpy(&bss_cfg->chandef, &settings->chandef,
--	       sizeof(struct cfg80211_chan_def));
- 	memcpy(&bss_cfg->crypto, &settings->crypto,
- 	       sizeof(struct cfg80211_crypto_settings));
- 
-@@ -755,6 +761,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	     struct cfg80211_connect_params *sme)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
-+	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct cfg80211_chan_def chandef;
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
-@@ -777,7 +784,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 			cfg80211_chandef_create(&chandef, sme->channel,
- 						NL80211_CHAN_HT20);
- 
--		memcpy(&bss_cfg->chandef, &chandef, sizeof(bss_cfg->chandef));
-+		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
- 	}
- 
- 	bss_cfg->ssid_len = sme->ssid_len;
-@@ -857,14 +864,14 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct ieee80211_supported_band *sband;
--	struct cfg80211_chan_def *bss_chandef;
-+	struct cfg80211_chan_def *chandef;
- 	struct ieee80211_channel *chan;
- 	struct qtnf_chan_stats stats;
- 	struct qtnf_vif *vif;
- 	int ret;
- 
- 	vif = qtnf_netdev_get_priv(dev);
--	bss_chandef = &vif->bss_cfg.chandef;
-+	chandef = &mac->chandef;
- 
- 	sband = wiphy->bands[NL80211_BAND_2GHZ];
- 	if (sband && idx >= sband->n_channels) {
-@@ -884,9 +891,10 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 	survey->channel = chan;
- 	survey->filled = 0x0;
- 
--	if (bss_chandef->chan)
--		if (chan->hw_value == bss_chandef->chan->hw_value)
--			survey->filled |= SURVEY_INFO_IN_USE;
-+	if (chandef->chan) {
-+		if (chan->hw_value == chandef->chan->hw_value)
-+			survey->filled = SURVEY_INFO_IN_USE;
-+	}
- 
- 	ret = qtnf_cmd_get_chan_stats(mac, chan->hw_value, &stats);
- 	switch (ret) {
-@@ -898,7 +906,7 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 			break;
+ 	do {
+-		mutex_lock(&common->tx_rxlock);
++		mutex_lock(&common->rx_lock);
+ 		status = rsi_sdio_read_register(common->priv,
+ 						RSI_FN1_INT_REGISTER,
+ 						&isr_status);
+@@ -238,7 +238,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 			rsi_dbg(ERR_ZONE,
+ 				"%s: Failed to Read Intr Status Register\n",
+ 				__func__);
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->rx_lock);
+ 			return;
+ 		}
+ 		adapter->interrupt_status = isr_status;
+@@ -246,7 +246,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 		if (isr_status == 0) {
+ 			rsi_set_event(&common->tx_thread.event);
+ 			dev->rx_info.sdio_intr_status_zero++;
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->rx_lock);
+ 			return;
  		}
  
--		survey->filled = SURVEY_INFO_TIME |
-+		survey->filled |= SURVEY_INFO_TIME |
- 				 SURVEY_INFO_TIME_SCAN |
- 				 SURVEY_INFO_TIME_BUSY |
- 				 SURVEY_INFO_TIME_RX |
-@@ -930,15 +938,14 @@ static int
- qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		 struct cfg80211_chan_def *chandef)
- {
-+	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct net_device *ndev = wdev->netdev;
--	struct qtnf_bss_config *bss_cfg;
- 	struct qtnf_vif *vif;
- 
- 	if (!ndev)
- 		return -ENODEV;
- 
- 	vif = qtnf_netdev_get_priv(wdev->netdev);
--	bss_cfg = &vif->bss_cfg;
- 
- 	switch (vif->wdev.iftype) {
- 	case NL80211_IFTYPE_STATION:
-@@ -950,7 +957,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	case NL80211_IFTYPE_AP_VLAN:
- 		/* AP_VLAN: get primary vif and pass through to AP */
- 		vif = vif->u.vlan.parent;
--		bss_cfg = &vif->bss_cfg;
- 	case NL80211_IFTYPE_AP:
- 		if (!(vif->bss_status & QTNF_STATE_AP_START)) {
- 			pr_warn("%s: AP not started\n", ndev->name);
-@@ -962,7 +968,12 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		return -ENODATA;
- 	}
- 
--	memcpy(chandef, &bss_cfg->chandef, sizeof(*chandef));
-+	if (!cfg80211_chandef_valid(&mac->chandef)) {
-+		pr_err("invalid channel settings on %s\n", ndev->name);
-+		return -ENODATA;
-+	}
-+
-+	memcpy(chandef, &mac->chandef, sizeof(*chandef));
- 	return 0;
+@@ -304,7 +304,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 					rsi_dbg(ERR_ZONE,
+ 						"%s: Failed to read pkt\n",
+ 						__func__);
+-					mutex_unlock(&common->tx_rxlock);
++					mutex_unlock(&common->rx_lock);
+ 					return;
+ 				}
+ 				break;
+@@ -319,7 +319,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 			}
+ 			isr_status ^= BIT(isr_type - 1);
+ 		} while (isr_status);
+-		mutex_unlock(&common->tx_rxlock);
++		mutex_unlock(&common->rx_lock);
+ 	} while (1);
  }
  
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 2e7034a560aa..f44ae71047c3 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -185,7 +185,7 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif)
- {
- 	struct sk_buff *cmd_skb;
- 	struct qtnf_bss_config *bss_cfg = &vif->bss_cfg;
--	struct cfg80211_chan_def *chandef = &bss_cfg->chandef;
-+	struct cfg80211_chan_def *chandef = &vif->mac->chandef;
- 	struct qlink_tlv_channel *qchan;
- 	struct qlink_auth_encr aen;
- 	u16 res_code = QLINK_CMD_RESULT_OK;
-@@ -2086,8 +2086,8 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index d3e0a07..465692b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -37,14 +37,14 @@ void rsi_usb_rx_thread(struct rsi_common *common)
+ 		if (atomic_read(&dev->rx_thread.thread_done))
+ 			goto out;
  
- 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
+-		mutex_lock(&common->tx_rxlock);
++		mutex_lock(&common->rx_lock);
+ 		status = rsi_read_pkt(common, 0);
+ 		if (status) {
+ 			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->rx_lock);
+ 			return;
+ 		}
+-		mutex_unlock(&common->tx_rxlock);
++		mutex_unlock(&common->rx_lock);
+ 		rsi_reset_event(&dev->rx_thread.event);
+ 		if (adapter->rx_urb_submit(adapter)) {
+ 			rsi_dbg(ERR_ZONE,
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index febecbd..6d41c9b 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -179,6 +179,8 @@ struct rsi_common {
+ 	struct mutex mutex;
+ 	/* Mutex used between tx/rx threads */
+ 	struct mutex tx_rxlock;
++	/* Mutex used for rx thread */
++	struct mutex rx_lock;
+ 	u8 endpoint;
  
--	if (bss_cfg->chandef.chan)
--		cmd->channel = cpu_to_le16(bss_cfg->chandef.chan->hw_value);
-+	if (vif->mac->chandef.chan)
-+		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
- 
- 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 8824e3d0b5bc..3c62f5bd28e4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -68,7 +68,6 @@ struct qtnf_bss_config {
- 	u16 auth_type;
- 	bool privacy;
- 	enum nl80211_mfp mfp;
--	struct cfg80211_chan_def chandef;
- 	struct cfg80211_crypto_settings crypto;
- 	u16 bg_scan_period;
- 	u32 connect_flags;
-@@ -155,6 +154,7 @@ struct qtnf_wmac {
- 	struct qtnf_mac_info macinfo;
- 	struct qtnf_vif iflist[QTNF_MAX_INTF];
- 	struct cfg80211_scan_request *scan_req;
-+	struct cfg80211_chan_def chandef;
- };
- 
- struct qtnf_hw_info {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 6e1e93ccc40e..d1edeb3892df 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -358,7 +358,6 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 	struct wiphy *wiphy = priv_to_wiphy(mac);
- 	struct cfg80211_chan_def chandef;
- 	struct ieee80211_channel *chan;
--	struct qtnf_bss_config *bss_cfg;
- 	struct qtnf_vif *vif;
- 	int freq;
- 	int i;
-@@ -383,16 +382,14 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 	if (!cfg80211_chandef_valid(&chandef))
- 		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
- 
-+	memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
-+
- 	for (i = 0; i < QTNF_MAX_INTF; i++) {
- 		vif = &mac->iflist[i];
- 		if (vif->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED)
- 			continue;
- 
- 		if (vif->netdev) {
--			bss_cfg = &vif->bss_cfg;
--			memcpy(&bss_cfg->chandef, &chandef,
--			       sizeof(bss_cfg->chandef));
--
- 			mutex_lock(&vif->wdev.mtx);
- 			cfg80211_ch_switch_notify(vif->netdev, &chandef);
- 			mutex_unlock(&vif->wdev.mtx);
+ 	/* Channel/band related */
 -- 
-2.11.0
+2.7.4
