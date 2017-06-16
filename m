@@ -1,48 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33603 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753214AbdFVLRA (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:35926 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752770AbdFPO6W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 07:17:00 -0400
-Received: by mail-pg0-f67.google.com with SMTP id u62so2022791pgb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 04:16:59 -0700 (PDT)
-Date: Thu, 22 Jun 2017 16:46:55 +0530
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Remove unnecessary conditions
-Message-ID: <20170622111655.GA4891@symbol-HP-ZBook-15> (sfid-20170622_131709_847990_F548BEDD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 16 Jun 2017 10:58:22 -0400
+Received: by mail-pg0-f68.google.com with SMTP id v18so6634363pgb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:22 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 15/20] rsi: separate function for data packet descriptor
+Date: Fri, 16 Jun 2017 20:24:36 +0530
+Message-Id: <1497624881-2315-16-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165825_313235_730CFB83)
+In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As wmm_enable is initialized to false, hence the else condition never
-execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
-condition can be removed and boundary will be assigned with TX_PAGE_BOUNDARY.
+From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+Data packet descriptor preparation code is moved a separate
+function.
+
+Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 51 +++++++++++++++++++---------------
+ 1 file changed, 28 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index f95a645..e9c5f6a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -845,13 +845,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 		pr_err("Failed to init power on!\n");
- 		return err;
- 	}
--	if (!wmm_enable) {
- 		boundary = TX_PAGE_BOUNDARY;
--	} else { /* for WMM */
--		boundary = (IS_NORMAL_CHIP(rtlhal->version))
--					? WMM_CHIP_B_TX_PAGE_BOUNDARY
--					: WMM_CHIP_A_TX_PAGE_BOUNDARY;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index af7fe87..b0a7a15 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -108,25 +108,15 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
+-/**
+- * rsi_send_data_pkt() - This function sends the recieved data packet from
+- *			 driver to device.
+- * @common: Pointer to the driver private structure.
+- * @skb: Pointer to the socket buffer structure.
+- *
+- * Return: status: 0 on success, -1 on failure.
+- */
+-int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
++/* This function prepares descriptor for given data packet */
++static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ {
+-	struct rsi_hw *adapter = common->priv;
+ 	struct ieee80211_hdr *wh = NULL;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_vif *vif = NULL;
+ 	struct skb_info *tx_params;
+ 	struct ieee80211_bss_conf *bss;
+ 	struct rsi_data_desc *data_desc;
+ 	struct xtended_desc *xtend_desc;
+-	int status;
+ 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
+ 	u8 header_size;
+ 	u8 vap_id = 0;
+@@ -137,22 +127,16 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	bss = &info->control.vif->bss_conf;
+ 	tx_params = (struct skb_info *)info->driver_data;
+ 
+-	if (!bss->assoc) {
+-		status = -EINVAL;
+-		goto err;
 -	}
- 	if (false == rtl92c_init_llt_table(hw, boundary)) {
- 		pr_err("Failed to init LLT Table!\n");
- 		return -EINVAL;
---
-1.9.1
+ 	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+-		status = -ENOSPC;
+-		goto err;
++		return -ENOSPC;
+ 	}
+ 	skb_push(skb, header_size);
+ 	dword_align_bytes = ((unsigned long)skb->data & 0x3f);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Not enough headroom\n", __func__);
+-		status = -ENOSPC;
+-		goto err;
++		return -ENOSPC;
+ 	}
+ 	skb_push(skb, dword_align_bytes);
+ 	header_size += dword_align_bytes;
+@@ -164,7 +148,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
+ 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
+ 	seq_num = (le16_to_cpu(wh->seq_ctrl) >> 4);
+-	vif = adapter->vifs[0];
+ 
+ 	data_desc->xtend_desc_size = header_size - FRAME_DESC_SZ;
+ 
+@@ -227,11 +210,33 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 		data_desc->sta_id = vap_id;
+ 	}
+ 
++	return 0;
++}
++
++/* This function sends received data packet from driver to device */
++int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_tx_info *info;
++	struct ieee80211_bss_conf *bss;
++	int status = -EIO;
++
++	info = IEEE80211_SKB_CB(skb);
++	bss = &info->control.vif->bss_conf;
++
++	if (!bss->assoc) {
++		status = -EINVAL;
++		goto err;
++	}
++
++	status = rsi_prepare_data_desc(common, skb);
++	if (status)
++		goto err;
++
+ 	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
+ 						   skb->len);
+ 	if (status)
+-		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
+-			__func__);
++		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
+ 
+ err:
+ 	++common->tx_stats.total_tx_pkt_freed[skb->priority];
+-- 
+2.7.4
