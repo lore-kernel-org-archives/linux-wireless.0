@@ -1,462 +1,347 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:56953 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751427AbdFHIVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 04:21:47 -0400
-Subject: Re: ath9k_htc - Division by zero in kernel (as well as firmware
- panic)
-To: Tobias Diedrich <ranma+ath9k_htc_fw@tdiedrich.de>,
-        Nathan Royce <nroycea+kernel@gmail.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
-References: <CALaQ_hrrcu7KebkwLE7xABEgiTwyvcmKb+tUfhG3bRf+kRz7RQ@mail.gmail.com>
- <71818afe-9075-5582-bb6c-650dfa8a5363@rempel-privat.de>
- <20170607001213.GC20162@yumi.tdiedrich.de>
- <92468e50-409f-c54f-8bf8-87587061d98e@rempel-privat.de>
- <20170607223913.GD20162@yumi.tdiedrich.de>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <830f8fa3-d22c-fb83-e2ed-9ef3649b592c@rempel-privat.de> (sfid-20170608_102221_977917_8A23038C)
-Date: Thu, 8 Jun 2017 10:15:25 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170607223913.GD20162@yumi.tdiedrich.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="cLebMpS5ECEpr9GHWbafHxusSvr7tMgl8"
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33875 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754404AbdFPOoz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 10:44:55 -0400
+Received: by mail-pg0-f65.google.com with SMTP id j186so6583651pge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:44:55 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 6/6] rsi: add tx frame for common device configuration
+Date: Fri, 16 Jun 2017 20:12:05 +0530
+Message-Id: <1497624125-2047-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_164510_986723_039C7678)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---cLebMpS5ECEpr9GHWbafHxusSvr7tMgl8
-Content-Type: multipart/mixed; boundary="9VP7hlG7A2m9JshTxcWubMOELbO40QgeJ";
- protected-headers="v1"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: Tobias Diedrich <ranma+ath9k_htc_fw@tdiedrich.de>,
- Nathan Royce <nroycea+kernel@gmail.com>,
- QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
- Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
-Message-ID: <830f8fa3-d22c-fb83-e2ed-9ef3649b592c@rempel-privat.de>
-Subject: Re: ath9k_htc - Division by zero in kernel (as well as firmware
- panic)
-References: <CALaQ_hrrcu7KebkwLE7xABEgiTwyvcmKb+tUfhG3bRf+kRz7RQ@mail.gmail.com>
- <71818afe-9075-5582-bb6c-650dfa8a5363@rempel-privat.de>
- <20170607001213.GC20162@yumi.tdiedrich.de>
- <92468e50-409f-c54f-8bf8-87587061d98e@rempel-privat.de>
- <20170607223913.GD20162@yumi.tdiedrich.de>
-In-Reply-To: <20170607223913.GD20162@yumi.tdiedrich.de>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
---9VP7hlG7A2m9JshTxcWubMOELbO40QgeJ
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+After successful loading of firmware, a CARD READY indication is
+received by host. Common device configuration parameters are sent
+to the device after this. It includes information like device
+operating mode (Wi-Fi alone or BT coex), power save related
+parameters, GPIO information etc. As device supports BT coex,
+this frame is send in COEX queue initially. Based on the operating
+mode, CARD READY indication is received from each protocol module
+in firmware i.e. WLAN, BT.
 
-Am 08.06.2017 um 00:39 schrieb Tobias Diedrich:
-> Oleksij Rempel wrote:
->> Am 07.06.2017 um 02:12 schrieb Tobias Diedrich:
->>> Oleksij Rempel wrote:
->>>> Yes, this is "normal" problem. The firmware has no error handler for=
- PCI
->>>> bus related exceptions. So if we filed to read PCI bus first time, w=
-e
->>>> have choice to Ooops and stall or Ooops and reboot ASAP. So we reboo=
-t
->>>> and provide an kernel "firmware panic!" message.
->>>> Every one who can or will to fix this, is welcome.
->>>>
->>>>> *****
->>>>> Jun 02 14:55:30 computer kernel: usb 1-1.1: ath: firmware panic!
->>>>> exccause: 0x0000000d; pc: 0x0090ae81; badvaddr: 0x10ff4038.
->>> [...]
->>>
->>>> memdmp 50ae78 50ae88
->>>
->>> 50ae78: 6c10 0412 6aa2 0c02 0088 20c0 2008 1940  l...j..........@
->>>
->>> [...copy to bin...]
->>> $ bin/objdump -b binary -m xtensa  -D /tmp/memdump.bin=20
->>> [..]
->>>    0:   6c1004          entry   a1, 32
->>>    3:   126aa2          l32r    a2, 0xfffdaa8c
->>>    6:   0c0200          memw
->>>    9:   8820            l32i.n  a8, a2, 0      <----------Exception c=
-ause PC still points at load
->>>    b:   c020            movi.n  a2, 0
->>>    d:   081940          extui   a9, a8, 1, 1
->>>
->>> Judging from that it should be fairly simple to at least implement
->>> some sort of retry, possible after triggering a PCIe link retrain?
->>
->> I assume, yes.
->>
->>> There are some related PCIe root complex registers that may point to
->>> what exactly failed if they were dumped.
->>>
->>> The root complex registers live at 0x00040000 and I think match the
->>> registers described for the root complex in the AR9344 datasheet.
->>
->> Suddenly I don't have ar7010 docs to tell..
->>
->>> PCIE_INT_MASK would map to 0x40050 and has a bit for SYS_ERR:
->>> "A system error. The RC Core asserts CFG_SYS_ERR_RC if any device in
->>> the hierarchy reports any of the following errors and the associated
->>> enable bit is set in the Root Control register: ERR_COR, ERR_FATAL,
->>> ERR_NONFATAL."
->>>
->>> AFAICS link retrain can be done by setting bit3 (INIT_RST,
->>> "Application request to initiate a training reset") in
->>> PCIE_APP (0x40000).
->>>
->>> See sboot/magpie_1_1/sboot/cmnos/eeprom/src/cmnos_eeprom.c (which
->>> flips some bits in the RC to enable the PCIe bus for reading the
->>> EEPROM).
->>>
->>> The root complex pci configuration space is at 0x20000 which could
->>> have further error details:
->>>> memdmp 20000 20200
->>>
->>> 020000: a02a 168c 0010 0006 0000 0001 0001 0000  .*..............
->>> 020010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020030: 0000 0000 0000 0040 0000 0000 0000 01ff  .......@........
->>> 020040: 5bc3 5001 0000 0000 0000 0000 0000 0000  [.P.............
->>> 020050: 0080 7005 0000 0000 0000 0000 0000 0000  ..p.............
->>> 020060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020070: 0042 0010 0000 8701 0000 2010 0013 4411  .B............D.
->>> 020080: 3011 0000 0000 0000 00c0 03c0 0000 0000  0...............
->>> 020090: 0000 0000 0000 0010 0000 0000 0000 0000  ................
->>> 0200a0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0200b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0200c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0200d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0200e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0200f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020100: 1401 0001 0000 0000 0000 0000 0006 2030  ...............0
->>> 020110: 0000 0000 0000 2000 0000 00a0 0000 0000  ................
->>> 020120: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020130: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020140: 0001 0002 0000 0000 0000 0000 0000 0000  ................
->>> 020150: 0000 0000 8000 00ff 0000 0000 0000 0000  ................
->>> 020160: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020170: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020180: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 020190: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0201a0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0201b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0201c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0201d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0201e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>> 0201f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
->>>
->>> Transformed into something suitable for feeding into lspci -F:
->>>
->>> 00:00.0 Description filled in by lspci
->>> 00: 8c 16 2a a0 06 00 10 00 01 00 00 00 00 00 01 00
->>> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> 30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 00 00
->>> 40: 01 50 c3 5b 00 00 00 00 00 00 00 00 00 00 00 00
->>> 50: 05 70 80 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> 70: 10 00 42 00 01 87 00 00 10 20 00 00 11 44 13 00
->>> 80: 00 00 11 30 00 00 00 00 c0 03 c0 00 00 00 00 00
->>> 90: 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00
->>> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>>
->>> $ lspci -F /tmp/hexdump -vvv
->>> 00:00.0 Non-VGA unclassified device: Qualcomm Atheros Device a02a (re=
-v 01)
->>>         !!! Invalid class 0000 for header type 01
->>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- P=
-arErr- Stepping- SERR- FastB2B- DisINTx-
->>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbo=
-rt- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>         Latency: 0
->>>         Interrupt: pin A routed to IRQ 255
->>>         Bus: primary=3D00, secondary=3D00, subordinate=3D00, sec-late=
-ncy=3D0
->>>         I/O behind bridge: 00000000-00000fff
->>>         Memory behind bridge: 00000000-000fffff
->>>         Prefetchable memory behind bridge: 00000000-000fffff
->>>         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbo=
-rt- <TAbort- <MAbort- <SERR- <PERR-
->>>         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-=
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c  |   3 +-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 100 ++++++++++++++++++++++++++++----
+ drivers/net/wireless/rsi/rsi_hal.h      |   3 +
+ drivers/net/wireless/rsi/rsi_main.h     |  10 +++-
+ drivers/net/wireless/rsi/rsi_mgmt.h     |  76 ++++++++++++++++++++++++
+ 5 files changed, 178 insertions(+), 14 deletions(-)
 
->>>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->>>         Capabilities: [40] Power Management version 3
->>>                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=3D375mA PME(D0=
-+,D1+,D2-,D3hot+,D3cold-)
->>>                 Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0=
- PME-
->>>         Capabilities: [50] MSI: Enable- Count=3D1/1 Maskable- 64bit+
->>>                 Address: 0000000000000000  Data: 0000
->>>         Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
->>>                 DevCap: MaxPayload 256 bytes, PhantFunc 0
->>>                         ExtTag- RBE+
->>>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-=
- Unsupported-
->>>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
->>>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
->>>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxP=
-wr- TransPend-
->>>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, E=
-xit Latency L0s <1us, L1 <64us
->>>                         ClockPM- Surprise- LLActRep+ BwNot- ASPMOptCo=
-mp-
->>>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk=
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 94e074d..c230359 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -718,7 +718,8 @@ int rsi_hal_device_init(struct rsi_hw *adapter)
+ {
+ 	struct rsi_common *common = adapter->priv;
+ 
+-	common->coex_mode = 1;
++	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
++	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+ 	adapter->device_model = RSI_DEV_9113;
+ 
+ 	switch (adapter->device_model) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index b2950aa..83ce81a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -224,6 +224,12 @@ static void rsi_set_default_parameters(struct rsi_common *common)
+ 	common->fsm_state = FSM_CARD_NOT_READY;
+ 	common->iface_down = true;
+ 	common->endpoint = EP_2GHZ_20MHZ;
++	common->driver_mode = 1; /* End to end mode */
++	common->lp_ps_handshake_mode = 0; /* Default no handShake mode*/
++	common->ulp_ps_handshake_mode = 2; /* Default PKT handShake mode*/
++	common->rf_power_val = 0; /* Default 1.9V */
++	common->wlan_rf_power_mode = 0;
++	common->obm_ant_sel_val = 2;
+ }
+ 
+ /**
+@@ -762,6 +768,53 @@ int rsi_hal_load_key(struct rsi_common *common,
+ }
+ 
+ /*
++ * This function sends the common device configuration parameters to device.
++ * This frame includes the useful information to make device works on
++ * specific operating mode.
++ */
++static int rsi_send_common_dev_params(struct rsi_common *common)
++{
++	struct sk_buff *skb;
++	u16 frame_len;
++	struct rsi_config_vals *dev_cfgs;
++
++	frame_len = sizeof(struct rsi_config_vals);
++
++	rsi_dbg(MGMT_TX_ZONE, "Sending common device config params\n");
++	skb = dev_alloc_skb(frame_len);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to allocate skb\n", __func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, frame_len);
++
++	dev_cfgs = (struct rsi_config_vals *)skb->data;
++	memset(dev_cfgs, 0, (sizeof(struct rsi_config_vals)));
++
++	rsi_set_len_qno(&dev_cfgs->len_qno, (frame_len - FRAME_DESC_SZ),
++			RSI_COEX_Q);
++	dev_cfgs->pkt_type = COMMON_DEV_CONFIG;
++
++	dev_cfgs->lp_ps_handshake = common->lp_ps_handshake_mode;
++	dev_cfgs->ulp_ps_handshake = common->ulp_ps_handshake_mode;
++
++	dev_cfgs->unused_ulp_gpio = RSI_UNUSED_ULP_GPIO_BITMAP;
++	dev_cfgs->unused_soc_gpio_bitmap =
++				cpu_to_le32(RSI_UNUSED_SOC_GPIO_BITMAP);
++
++	dev_cfgs->opermode = common->oper_mode;
++	dev_cfgs->wlan_rf_pwr_mode = common->wlan_rf_power_mode;
++	dev_cfgs->driver_mode = common->driver_mode;
++	dev_cfgs->region_code = NL80211_DFS_FCC;
++	dev_cfgs->antenna_sel_val = common->obm_ant_sel_val;
++
++	skb_put(skb, frame_len);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/*
+  * rsi_load_bootup_params() - This function send bootup params to the firmware.
+  * @common: Pointer to the driver private structure.
+  *
+@@ -1493,6 +1546,40 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 	return -EINVAL;
+ }
+ 
++static int rsi_handle_card_ready(struct rsi_common *common, u8 *msg)
++{
++	switch (common->fsm_state) {
++	case FSM_CARD_NOT_READY:
++		rsi_dbg(INIT_ZONE, "Card ready indication from Common HAL\n");
++		rsi_set_default_parameters(common);
++		if (rsi_send_common_dev_params(common) < 0)
++			return -EINVAL;
++		common->fsm_state = FSM_COMMON_DEV_PARAMS_SENT;
++		break;
++	case FSM_COMMON_DEV_PARAMS_SENT:
++		rsi_dbg(INIT_ZONE, "Card ready indication from WLAN HAL\n");
++
++		/* Get usb buffer status register address */
++		common->priv->usb_buffer_status_reg = *(u32 *)&msg[8];
++		rsi_dbg(INFO_ZONE, "USB buffer status register = %x\n",
++			common->priv->usb_buffer_status_reg);
++
++		if (rsi_load_bootup_params(common)) {
++			common->fsm_state = FSM_CARD_NOT_READY;
++			return -EINVAL;
++		}
++		common->fsm_state = FSM_BOOT_PARAMS_SENT;
++		break;
++	default:
++		rsi_dbg(ERR_ZONE,
++			"%s: card ready indication in invalid state %d.\n",
++			__func__, common->fsm_state);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ /**
+  * rsi_mgmt_pkt_recv() - This function processes the management packets
+  *			 recieved from the hardware.
+@@ -1505,7 +1592,6 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
+ {
+ 	s32 msg_len = (le16_to_cpu(*(__le16 *)&msg[0]) & 0x0fff);
+ 	u16 msg_type = (msg[2]);
+-	int ret;
+ 
+ 	rsi_dbg(FSM_ZONE, "%s: Msg Len: %d, Msg Type: %4x\n",
+ 		__func__, msg_len, msg_type);
+@@ -1515,17 +1601,7 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
+ 	} else if (msg_type == CARD_READY_IND) {
+ 		rsi_dbg(FSM_ZONE, "%s: Card ready indication received\n",
+ 			__func__);
+-		if (common->fsm_state == FSM_CARD_NOT_READY) {
+-			rsi_set_default_parameters(common);
 -
->>>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt=
--
->>>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotCl=
-k+ DLActive+ BWMgmt- ABWMgmt-
->>>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEI=
-ntEna- CRSVisible-
->>>                 RootCap: CRSVisible-
->>>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
->>>                 DevCap2: Completion Timeout: Not Supported, TimeoutDi=
-s+, LTR-, OBFF Not Supported ARIFwd-
->>>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis=
--, LTR-, OBFF Disabled ARIFwd-
->>>                 LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance-=
- SpeedDis-
->>>                          Transmit Margin: Normal Operating Range, Ent=
-erModifiedCompliance- ComplianceSOS-
->>>                          Compliance De-emphasis: -6dB
->>>                 LnkSta2: Current De-emphasis Level: -6dB, Equalizatio=
-nComplete-, EqualizationPhase1-
->>>                          EqualizationPhase2-, EqualizationPhase3-, Li=
-nkEqualizationRequest-
->>>
->>
->> Looks promising :)
->>
->=20
-> POC seems to work, though this may additionally need to restore wifi
-> state as well, no guarantees there.
-
-This probably will be next topic. Can you address some comments in the
-review and create a pull request in the github repo?
-
->=20
->> str 40018 3
-> 00040018 : 00000003
->>
-> Retry(1) failed PCIe access @0x10ff4038
-> Before: int_mask=3D0 app=3Dffc1 reset=3D0
-> After: int_mask=3D0 app=3Dffc1 reset=3D7
-> wlan int status=3D0
->=20
->> str 40018 3
-> 00040018 : 00000003
->>
-> Retry(1) failed PCIe access @0x10ff4038
-> Before: int_mask=3D0 app=3Dffc1 reset=3D0
-> After: int_mask=3D0 app=3Dffc1 reset=3D7
-> wlan int status=3D0
->>
->=20
->=20
-> diff --git a/target_firmware/magpie_fw_dev/target/init/app_start.c b/ta=
-rget_firmware/magpie_fw_dev/target/init/app_start.c
-> index 8fa9c8b..fea62c1 100644
-> --- a/target_firmware/magpie_fw_dev/target/init/app_start.c
-> +++ b/target_firmware/magpie_fw_dev/target/init/app_start.c
-> @@ -137,6 +137,13 @@ void __section(boot) __noreturn __visible app_star=
-t(void)
-> =20
->  	A_PRINTF(" A_WDT_INIT()\n\r");
-> =20
-> +#if defined(PROJECT_MAGPIE)
-
-please, use /**/ style comments.
-
-> +	// For some reason needs to be called again here for the
-> +	// exception handlers to work properly, at least on the XBOX
-> +	// adapter.
-> +	fatal_exception_func();
-> +#endif
-> +
->  #if defined(PROJECT_K2)
->  	save_cmnos_printf =3D fw_cmnos_printf;
->  #endif
-> diff --git a/target_firmware/magpie_fw_dev/target/init/init.c b/target_=
-firmware/magpie_fw_dev/target/init/init.c
-> index 7484c05..cad2519 100755
-> --- a/target_firmware/magpie_fw_dev/target/init/init.c
-> +++ b/target_firmware/magpie_fw_dev/target/init/init.c
-> @@ -212,6 +212,78 @@ LOCAL void zfGenWrongEpidEvent(uint32_t epid)
->  	mUSB_EP3_XFER_DONE();
->  }
-> =20
-> +static void
-> +AR7010_pcie_reset(void)
-> +{
-> +#define PCIE_RC_ACCESS_DELAY    20
-> +
-> +#define PCI_RC_RESET_BIT                            BIT6
-> +#define PCI_RC_PHY_RESET_BIT                        BIT7
-> +#define PCI_RC_PLL_RESET_BIT                        BIT8
-> +#define PCI_RC_PHY_SHIFT_RESET_BIT                  BIT10
-> +
-> +#define HAL_WORD_REG_WRITE(addr, val) do { *((uint32_t*)(addr)) =3D va=
-l; } while (0)
-> +#define HAL_WORD_REG_READ(addr) (*((uint32_t*)(addr)))
-
-we already have iowrite32* ioread32* functions, why do we need more?
-
-> +#define CMD_PCI_RC_RESET_ON()    HAL_WORD_REG_WRITE(MAGPIE_REG_RST_RES=
-ET_ADDR,  \
-> +                                    (HAL_WORD_REG_READ(MAGPIE_REG_RST_=
-RESET_ADDR)|  \
-> +                                        (PCI_RC_PHY_SHIFT_RESET_BIT|PC=
-I_RC_PLL_RESET_BIT|PCI_RC_PHY_RESET_BIT|PCI_RC_RESET_BIT)))
-> +
-> +#define CMD_PCI_RC_RESET_CLR()   HAL_WORD_REG_WRITE(MAGPIE_REG_RST_RES=
-ET_ADDR, \
-> +                                    (HAL_WORD_REG_READ(MAGPIE_REG_RST_=
-RESET_ADDR)&   \
-> +                                        (~(PCI_RC_PHY_SHIFT_RESET_BIT|=
-PCI_RC_PLL_RESET_BIT|PCI_RC_PHY_RESET_BIT|PCI_RC_RESET_BIT))))
-> +
-> +	int i;
-> +
-> +	CMD_PCI_RC_RESET_ON();
-> +	A_DELAY_USECS(PCIE_RC_ACCESS_DELAY);
-> +
-> +	/* dereset the reset */
-> +	CMD_PCI_RC_RESET_CLR();
-> +	A_DELAY_USECS(500);
-> +
-> +	/* 7. set bus master and memory space enable */
-> +	DEBUG_SYSTEM_STATE =3D (DEBUG_SYSTEM_STATE&(~0xff)) | 0x45;
-> +	HAL_WORD_REG_WRITE(0x00020004, (HAL_WORD_REG_READ(0x00020004)|(BIT1|B=
-IT2)));
-> +	A_DELAY_USECS(PCIE_RC_ACCESS_DELAY);
-> +
-> +	/* 7.5. asser pcie_ep reset */
-> +	HAL_WORD_REG_WRITE(0x00040018, (HAL_WORD_REG_READ(0x00040018) & ~(0x1=
- << 2)));
-> +	A_DELAY_USECS(PCIE_RC_ACCESS_DELAY);
-> +
-> +	/* 7.5. de-asser pcie_ep reset */
-> +	HAL_WORD_REG_WRITE(0x00040018, (HAL_WORD_REG_READ(0x00040018)|(0x1 <<=
- 2)));
-> +	A_DELAY_USECS(PCIE_RC_ACCESS_DELAY);
-> +
-> +	/* 8. set app_ltssm_enable */
-> +	DEBUG_SYSTEM_STATE =3D (DEBUG_SYSTEM_STATE&(~0xff)) | 0x46;
-> +	HAL_WORD_REG_WRITE(0x00040000, (HAL_WORD_REG_READ(0x00040000)|0xffc1)=
-);
-> +
-> +	/*!
-> +	 * Receive control (PCIE_RESET),
-> +	 *  0x40018, BIT0: LINK_UP, PHY Link up -PHY Link up/down indicator
-> +	 *  in case the link up is not ready and we access the 0x14000000,
-> +	 *  vmc will hang here
-> +	 */
-> +
-> +	/* poll 0x40018/bit0 (1000 times) until it turns to 1 */
-> +	i =3D 10000;
-> +	while(i-->0)
-> +	{
-> +		uint32_t reg_value =3D HAL_WORD_REG_READ(0x00040018);
-> +		if( reg_value & BIT0 )
-> +			break;
-> +		A_DELAY_USECS(PCIE_RC_ACCESS_DELAY);
-> +	}
-> +
-> +	HAL_WORD_REG_WRITE(0x14000004, (HAL_WORD_REG_READ(0x14000004)|0x116))=
-;
-> +	A_DELAY_USECS(PCIE_RC_ACCESS_DELAY);
-> +
-> +	HAL_WORD_REG_WRITE(0x14000010, (HAL_WORD_REG_READ(0x14000010)|EEPROM_=
-CTRL_BASE));
-> +}
-> +
-> +static int exception_retries =3D 0;
-> +
->  void
->  AR6002_fatal_exception_handler_patch(CPU_exception_frame_t *exc_frame)=
-
->  {
-> @@ -226,6 +298,32 @@ AR6002_fatal_exception_handler_patch(CPU_exception=
-_frame_t *exc_frame)
->  	dump.pc                     =3D exc_frame->xt_pc;
->  	dump.assline                =3D 0;
-
-i would prefer to put it in to separate function. may be, complete pci
-code in a separate file?
-
-> +	if (dump.badvaddr >=3D 0x10000000 &&
-> +	    dump.badvaddr <  0x18000000) {
-
-if (!bla)
-  return;
-
-> +		// Exception while accessing PCIe memory space.
-> +		volatile uint32_t *pcie_app =3D (uint32_t*) 0x40000;
-> +		volatile uint32_t *pcie_reset =3D (uint32_t*) 0x40018;
-> +		volatile uint32_t *pcie_int_mask =3D (uint32_t*) 0x40050;
-
-magic values should be replaced.
-
-> +		// Maybe retry.
-> +		if (++exception_retries < 2) {
-
-if (!bla)
-  return;
-
-> +			A_PRINTF("\nRetry(%d) failed PCIe access @0x%x\n",
-> +				exception_retries, dump.badvaddr);
-> +			A_PRINTF("Before: int_mask=3D%x app=3D%x reset=3D%x\n", *pcie_int_m=
-ask, *pcie_app, *pcie_reset);
-> +
-> +			AR7010_pcie_reset();
-> +
-> +			A_PRINTF("After: int_mask=3D%x app=3D%x reset=3D%x\n", *pcie_int_ma=
-sk, *pcie_app, *pcie_reset);
-> +
-> +			// This should recurse if we failed to recover.
-> +			A_PRINTF("wlan int status=3D%x\n", HAL_WORD_REG_READ(0x10ff4038));
-> +
-> +			// Reset retry counter.
-> +			exception_retries =3D 0;
-> +			return;
-> +		}
-> +	}
-> +
->  	zfGenExceptionEvent(dump.exc_frame.xt_exccause, dump.pc, dump.badvadd=
-r);
-> =20
->  #if SYSTEM_MODULE_PRINT
-
-I'm exciting to see it mainline. Thank you for your work!
-
---=20
-Regards,
-Oleksij
-
-
---9VP7hlG7A2m9JshTxcWubMOELbO40QgeJ--
-
---cLebMpS5ECEpr9GHWbafHxusSvr7tMgl8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF4EAREIAAYFAlk5B50ACgkQHwImuRkmbWn6ZQD/e0A0BtBf340aplv6mATMixjY
-0j2X6wDYg7ADvCSJo3IA/RzofFw8k3y+umDQrSM82QCGT3PfmoMrUq334g/lOLIG
-=cY9A
------END PGP SIGNATURE-----
-
---cLebMpS5ECEpr9GHWbafHxusSvr7tMgl8--
+-			ret = rsi_load_bootup_params(common);
+-			if (ret)
+-				return ret;
+-			else
+-				common->fsm_state = FSM_BOOT_PARAMS_SENT;
+-		} else {
+-			return -EINVAL;
+-		}
++		return rsi_handle_card_ready(common, msg);
+ 	} else if (msg_type == TX_STATUS_IND) {
+ 		if (msg[15] == PROBEREQ_CONFIRM) {
+ 			common->mgmt_q_block = false;
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index b95200d..902dc54 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -63,6 +63,9 @@
+ 
+ #define COMMAN_HAL_WAIT_FOR_CARD_READY	1
+ 
++#define RSI_DEV_OPMODE_WIFI_ALONE	1
++#define RSI_DEV_COEX_MODE_WIFI_ALONE	1
++
+ struct bl_header {
+ 	__le32 flags;
+ 	__le32 image_no;
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index f12e5d9..f398525 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -34,6 +34,7 @@
+ enum RSI_FSM_STATES {
+ 	FSM_FW_NOT_LOADED,
+ 	FSM_CARD_NOT_READY,
++	FSM_COMMON_DEV_PARAMS_SENT,
+ 	FSM_BOOT_PARAMS_SENT,
+ 	FSM_EEPROM_READ_MAC_ADDR,
+ 	FSM_RESET_MAC_SENT,
+@@ -210,8 +211,14 @@ struct rsi_common {
+ 	struct cqm_info cqm_info;
+ 
+ 	bool hw_data_qs_blocked;
++	u8 driver_mode;
+ 	u8 coex_mode;
+-	
++	u16 oper_mode;
++	u8 lp_ps_handshake_mode;
++	u8 ulp_ps_handshake_mode;
++	u8 rf_power_val;
++	u8 wlan_rf_power_mode;
++	u8 obm_ant_sel_val;
+ 	int tx_power;
+ 	u8 ant_in_use;
+ };
+@@ -234,6 +241,7 @@ struct rsi_hw {
+ 
+ 	enum host_intf rsi_host_intf;
+ 	u16 block_size;
++	u32 usb_buffer_status_reg;
+ #ifdef CONFIG_RSI_DEBUGFS
+ 	struct rsi_debugfs *dfsentry;
+ 	u8 num_debugfs_entries;
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index dfbf7a5..dcb6db7 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -205,6 +205,7 @@ enum cmd_frame_type {
+ 	CW_MODE_REQ,
+ 	PER_CMD_PKT,
+ 	ANT_SEL_FRAME = 0x20,
++	COMMON_DEV_CONFIG = 0x28,
+ 	RADIO_PARAMS_UPDATE = 0x29
+ };
+ 
+@@ -282,6 +283,76 @@ struct rsi_radio_caps {
+ 	__le16 preamble_type;
+ } __packed;
+ 
++/* ULP GPIO flags */
++#define RSI_GPIO_MOTION_SENSOR_ULP_WAKEUP	BIT(0)
++#define RSI_GPIO_SLEEP_IND_FROM_DEVICE		BIT(1)
++#define RSI_GPIO_2_ULP				BIT(2)
++#define RSI_GPIO_PUSH_BUTTON_ULP_WAKEUP		BIT(3)
++
++/* SOC GPIO flags */
++#define RSI_GPIO_0_PSPI_CSN_0			BIT(0)
++#define RSI_GPIO_1_PSPI_CSN_1			BIT(1)
++#define RSI_GPIO_2_HOST_WAKEUP_INTR		BIT(2)
++#define RSI_GPIO_3_PSPI_DATA_0			BIT(3)
++#define RSI_GPIO_4_PSPI_DATA_1			BIT(4)
++#define RSI_GPIO_5_PSPI_DATA_2			BIT(5)
++#define RSI_GPIO_6_PSPI_DATA_3			BIT(6)
++#define RSI_GPIO_7_I2C_SCL			BIT(7)
++#define RSI_GPIO_8_I2C_SDA			BIT(8)
++#define RSI_GPIO_9_UART1_RX			BIT(9)
++#define RSI_GPIO_10_UART1_TX			BIT(10)
++#define RSI_GPIO_11_UART1_RTS_I2S_CLK		BIT(11)
++#define RSI_GPIO_12_UART1_CTS_I2S_WS		BIT(12)
++#define RSI_GPIO_13_DBG_UART_RX_I2S_DIN		BIT(13)
++#define RSI_GPIO_14_DBG_UART_RX_I2S_DOUT	BIT(14)
++#define RSI_GPIO_15_LP_WAKEUP_BOOT_BYPASS	BIT(15)
++#define RSI_GPIO_16_LED_0			BIT(16)
++#define RSI_GPIO_17_BTCOEX_WLAN_ACT_EXT_ANT_SEL	BIT(17)
++#define RSI_GPIO_18_BTCOEX_BT_PRIO_EXT_ANT_SEL	BIT(18)
++#define RSI_GPIO_19_BTCOEX_BT_ACT_EXT_ON_OFF	BIT(19)
++#define RSI_GPIO_20_RF_RESET			BIT(20)
++#define RSI_GPIO_21_SLEEP_IND_FROM_DEVICE	BIT(21)
++
++#define RSI_UNUSED_SOC_GPIO_BITMAP (RSI_GPIO_9_UART1_RX | \
++				    RSI_GPIO_10_UART1_TX | \
++				    RSI_GPIO_11_UART1_RTS_I2S_CLK | \
++				    RSI_GPIO_12_UART1_CTS_I2S_WS | \
++				    RSI_GPIO_13_DBG_UART_RX_I2S_DIN | \
++				    RSI_GPIO_14_DBG_UART_RX_I2S_DOUT | \
++				    RSI_GPIO_15_LP_WAKEUP_BOOT_BYPASS | \
++				    RSI_GPIO_17_BTCOEX_WLAN_ACT_EXT_ANT_SEL | \
++				    RSI_GPIO_18_BTCOEX_BT_PRIO_EXT_ANT_SEL | \
++				    RSI_GPIO_19_BTCOEX_BT_ACT_EXT_ON_OFF | \
++				    RSI_GPIO_21_SLEEP_IND_FROM_DEVICE)
++
++#define RSI_UNUSED_ULP_GPIO_BITMAP (RSI_GPIO_MOTION_SENSOR_ULP_WAKEUP | \
++				    RSI_GPIO_SLEEP_IND_FROM_DEVICE | \
++				    RSI_GPIO_2_ULP | \
++				    RSI_GPIO_PUSH_BUTTON_ULP_WAKEUP);
++struct rsi_config_vals {
++	__le16 len_qno;
++	u8 pkt_type;
++	u8 misc_flags;
++	__le16 reserved1[6];
++	u8 lp_ps_handshake;
++	u8 ulp_ps_handshake;
++	u8 sleep_config_params; /* 0 for no handshake,
++				 * 1 for GPIO based handshake,
++				 * 2 packet handshake
++				 */
++	u8 unused_ulp_gpio;
++	__le32 unused_soc_gpio_bitmap;
++	u8 ext_pa_or_bt_coex_en;
++	u8 opermode;
++	u8 wlan_rf_pwr_mode;
++	u8 bt_rf_pwr_mode;
++	u8 zigbee_rf_pwr_mode;
++	u8 driver_mode;
++	u8 region_code;
++	u8 antenna_sel_val;
++	u8 reserved2[16];
++} __packed;
++
+ static inline u32 rsi_get_queueno(u8 *addr, u16 offset)
+ {
+ 	return (le16_to_cpu(*(__le16 *)&addr[offset]) & 0x7000) >> 12;
+@@ -307,6 +378,11 @@ static inline u8 rsi_get_channel(u8 *addr)
+ 	return *(char *)(addr + 15);
+ }
+ 
++static inline void rsi_set_len_qno(__le16 *addr, u16 len, u8 qno)
++{
++	*addr = cpu_to_le16(len | ((qno & 7) << 12));
++}
++
+ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
+ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
+ 			     u8 vap_status);
+-- 
+2.7.4
