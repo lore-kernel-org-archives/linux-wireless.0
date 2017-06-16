@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:46223 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751132AbdFHNLe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 09:11:34 -0400
-From: "Chadzynski, MikolajX" <mikolajx.chadzynski@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        "nishants@marvell.com" <nishants@marvell.com>,
-        "gbhat@marvell.com" <gbhat@marvell.com>,
-        "huxm@marvell.com" <huxm@marvell.com>
-Subject: porting 'mwifiex: resolve races between async FW init (failure) and
- device removal' to kernel 4.1.x
-Date: Thu, 8 Jun 2017 13:11:28 +0000
-Message-ID: <382E97DBE488D844B7F3CE8D1D2355C83717C8B6@IRSMSX104.ger.corp.intel.com> (sfid-20170608_151138_332042_E8B635B8)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from smtprelay0013.hostedemail.com ([216.40.44.13]:41280 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752647AbdFPMEr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 08:04:47 -0400
+Message-ID: <1497614684.10546.9.camel@perches.com> (sfid-20170616_140450_615428_DECB47D9)
+Subject: Re: [RFC] networking: add and use skb_put_u8()
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 16 Jun 2017 05:04:44 -0700
+In-Reply-To: <1497608566.2622.7.camel@sipsolutions.net>
+References: <20170616090300.13805-1-johannes@sipsolutions.net>
+         <b7ba5145-b4f0-0f86-e93d-ad8700483ff2@broadcom.com>
+         (sfid-20170616_121658_816680_06914E8C) <1497608566.2622.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Races between async firmware initialization and device removal appears on kernel 4.1.x.
-Whole scenario leading to the error together with logs is in https://bugzilla.kernel.org/show_bug.cgi?id=196003
-Mapping the patch from kernel 4.11.x "mwifiex: resolve races between async FW init (failure) and device removal" solved the problem.
-In Bugzilla I've also attached patch which I've tested for pcie interface and it works.
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
+On Fri, 2017-06-16 at 12:22 +0200, Johannes Berg wrote:
+> On Fri, 2017-06-16 at 12:16 +0200, Arend van Spriel wrote:
+> > 
+> > >      @@
+> > >      expression SKB, C, S;
+> > >      typedef u8;
+> > >      identifier fn = {skb_put};
+> > >      fresh identifier fn2 = fn ## "_u8";
+> > >      @@
+> > >      - *(u8 *)fn(SKB, S) = C;
+> > >      + fn2(SKB, C);
+> > > 
+> > > Note that due to the "C", the spatch isn't perfect, it should
+> > > have checked that C is 1, but there's also places that use a
+> > 
+> > Don't you mean "S" here?
+> 
+> Indeed, I mean S, will fix.
+
+Perhaps
+
+	skb_put_data(skb, &c, sizeof(c))
+
+as that avoids api expansion.
+
+Optimizing the indirections and the size in a macro front-end
+in skb_put_data may be better as it's would be completely
+consistent for all use styles.
