@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55366 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751927AbdFVOnG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 10:43:06 -0400
-Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered frames
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20170621235022.25362-1-johannes@sipsolutions.net>
- <20170621235022.25362-3-johannes@sipsolutions.net>
- <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
- <1498112650.2246.1.camel@sipsolutions.net>
-Cc: nbd@nbd.name
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com> (sfid-20170622_164309_380353_D02C5192)
-Date: Thu, 22 Jun 2017 07:43:04 -0700
-MIME-Version: 1.0
-In-Reply-To: <1498112650.2246.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:57830 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752742AbdFPHTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 03:19:42 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-06-16
+Date: Fri, 16 Jun 2017 09:19:35 +0200
+Message-Id: <20170616071936.4515-1-johannes@sipsolutions.net> (sfid-20170616_091954_610403_3FA3FF48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave,
 
+Here I just have the cleanups with the fix for that ancient bug
+I sent the RFC patches for.
 
-On 06/21/2017 11:24 PM, Johannes Berg wrote:
-> On Wed, 2017-06-21 at 17:02 -0700, Ben Greear wrote:
->> I think a comment for the above code block would be warranted (and
->> for ath10k as well).
->>
->> I guess this is the part about dequeueing the frames immediately?
->
-> Yeah, I figured it was pretty obvious, but I can add a comment :)
-
-It is fairly obvious today, but 6 months from now when someone tries yet again
-to figure out WTF is ath10k doing, it will be one more piece of mystery code!
+Please pull and let me know if there's any problem.
 
 Thanks,
-Ben
+johannes
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+
+
+The following changes since commit c5549ee40112f2511a794c9aad7eb6ac5f18b0eb:
+
+  Merge tag 'mac80211-for-davem-2017-06-13' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-06-13 13:34:13 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-06-16
+
+for you to fetch changes up to 68dd02d19c811ca8ea60220a9d73e13b4bdad73a:
+
+  dev_ioctl: copy only the smaller struct iwreq for wext (2017-06-14 13:52:44 +0200)
+
+----------------------------------------------------------------
+Here's just the fix for that ancient bug:
+ * remove wext calling ndo_do_ioctl, since nobody needs
+   that now and it makes the type change easier
+ * use struct iwreq instead of struct ifreq almost everywhere
+   in wireless extensions code
+ * copy only struct iwreq from userspace in dev_ioctl for the
+   wireless extensions, since it's smaller than struct ifreq
+
+----------------------------------------------------------------
+Johannes Berg (3):
+      wireless: wext: remove ndo_do_ioctl fallback
+      wireless: wext: use struct iwreq earlier in the call chain
+      dev_ioctl: copy only the smaller struct iwreq for wext
+
+ include/net/wext.h       |  4 ++--
+ net/core/dev_ioctl.c     | 19 ++++++++++++++++---
+ net/wireless/wext-core.c | 22 +++++++++-------------
+ 3 files changed, 27 insertions(+), 18 deletions(-)
