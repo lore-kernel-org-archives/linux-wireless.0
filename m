@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33520 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO5x (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36768 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752231AbdFPO5t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:57:53 -0400
-Received: by mail-pg0-f68.google.com with SMTP id u62so1018194pgb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:52 -0700 (PDT)
+        Fri, 16 Jun 2017 10:57:49 -0400
+Received: by mail-pf0-f196.google.com with SMTP id y7so6919661pfd.3
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:49 -0700 (PDT)
 From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
         Amitkumar Karwar <amitkarwar@gmail.com>,
         Karun Eagalapati <karun256@gmail.com>,
         Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 06/20] rsi: USB tx headroom cleanup
-Date: Fri, 16 Jun 2017 20:24:27 +0530
-Message-Id: <1497624881-2315-7-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165755_847629_3A16DFB9)
+Subject: [v2 05/20] rsi: card reset for USB interface
+Date: Fri, 16 Jun 2017 20:24:26 +0530
+Message-Id: <1497624881-2315-6-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165752_427179_5A2FAAD4)
 In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,84 +22,118 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Karun Eagalapati <karun256@gmail.com>
 
-USB headroom is added while submitting the data to URB as per
-firmware's requirement. This logic is moved to rsi_usb_card_write() so
-that caller need not worry about it.
+We need to reset the chip in teardown path so that it can work
+next time when driver is loaded. This patch adds support for this
+reset configuration for USB.
 
 Signed-off-by: Karun Eagalapati <karun256@gmail.com>
 Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 41 +++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 72 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_usb.h     |  1 +
+ 2 files changed, 73 insertions(+)
 
 diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 1d7bb9d..25f6195 100644
+index bcd7f45..1d7bb9d 100644
 --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
 +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -29,19 +29,24 @@
-  * Return: status: 0 on success, a negative error code on failure.
-  */
- static int rsi_usb_card_write(struct rsi_hw *adapter,
--			      void *buf,
-+			      u8 *buf,
- 			      u16 len,
- 			      u8 endpoint)
- {
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
- 	int status;
--	s32 transfer;
-+	u8 *seg = dev->tx_buffer;
-+	int transfer;
-+	int ep = dev->bulkout_endpoint_addr[endpoint - 1];
- 
-+	memset(seg, 0, len + RSI_USB_TX_HEAD_ROOM);
-+	memcpy(seg + RSI_USB_TX_HEAD_ROOM, buf, len);
-+	len += RSI_USB_TX_HEAD_ROOM;
-+	transfer = len;
- 	status = usb_bulk_msg(dev->usbdev,
--			      usb_sndbulkpipe(dev->usbdev,
--			      dev->bulkout_endpoint_addr[endpoint - 1]),
--			      buf,
--			      len,
-+			      usb_sndbulkpipe(dev->usbdev, ep),
-+			      (void *)seg,
-+			      (int)len,
- 			      &transfer,
- 			      HZ * 5);
- 
-@@ -68,23 +73,19 @@ static int rsi_write_multiple(struct rsi_hw *adapter,
- 			      u8 *data,
- 			      u32 count)
- {
--	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
--	u8 *seg = dev->tx_buffer;
-+	struct rsi_91x_usbdev *dev =
-+		(struct rsi_91x_usbdev *)adapter->rsi_dev;
- 
--	if (dev->write_fail)
--		return 0;
-+	if (!adapter)
-+		return -ENODEV;
- 
--	if (endpoint == MGMT_EP) {
--		memset(seg, 0, RSI_USB_TX_HEAD_ROOM);
--		memcpy(seg + RSI_USB_TX_HEAD_ROOM, data, count);
--	} else {
--		seg = ((u8 *)data - RSI_USB_TX_HEAD_ROOM);
--	}
-+	if (endpoint == 0)
-+		return -EINVAL;
-+
-+	if (dev->write_fail)
-+		return -ENETDOWN;
- 
--	return rsi_usb_card_write(adapter,
--				  seg,
--				  count + RSI_USB_TX_HEAD_ROOM,
--				  endpoint);
-+	return rsi_usb_card_write(adapter, data, count, endpoint);
+@@ -558,6 +558,77 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 	return status;
  }
  
++static int usb_ulp_read_write(struct rsi_hw *adapter, u16 addr, u32 data,
++			      u16 len_in_bits)
++{
++	int ret;
++
++	ret = rsi_usb_master_reg_write
++			(adapter, RSI_GSPI_DATA_REG1,
++			 ((addr << 6) | ((data >> 16) & 0xffff)), 2);
++	if (ret < 0)
++		return ret;
++
++	ret = rsi_usb_master_reg_write(adapter, RSI_GSPI_DATA_REG0,
++				       (data & 0xffff), 2);
++	if (ret < 0)
++		return ret;
++
++	/* Initializing GSPI for ULP read/writes */
++	rsi_usb_master_reg_write(adapter, RSI_GSPI_CTRL_REG0,
++				 RSI_GSPI_CTRL_REG0_VALUE, 2);
++
++	ret = rsi_usb_master_reg_write(adapter, RSI_GSPI_CTRL_REG1,
++				       ((len_in_bits - 1) | RSI_GSPI_TRIG), 2);
++	if (ret < 0)
++		return ret;
++
++	msleep(20);
++
++	return 0;
++}
++
++static int rsi_reset_card(struct rsi_hw *adapter)
++{
++	int ret;
++
++	rsi_dbg(INFO_ZONE, "Resetting Card...\n");
++	rsi_usb_master_reg_write(adapter, RSI_TA_HOLD_REG, 0xE, 4);
++
++	/* This msleep will ensure Thread-Arch processor to go to hold
++	 * and any pending dma transfers to rf in device to finish.
++	 */
++	msleep(100);
++
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1,
++				 RSI_ULP_WRITE_2, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2,
++				 RSI_ULP_WRITE_0, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1,
++				 RSI_ULP_WRITE_50, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2,
++				 RSI_ULP_WRITE_0, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
++				 RSI_ULP_TIMER_ENABLE, 32);
++	if (ret < 0)
++		goto fail;
++
++	rsi_dbg(INFO_ZONE, "Reset card done\n");
++	return ret;
++
++fail:
++	rsi_dbg(ERR_ZONE, "Reset card failed\n");
++	return ret;
++}
++
  /**
+  * rsi_probe() - This function is called by kernel when the driver provided
+  *		 Vendor and device IDs are matched. All the initialization
+@@ -641,6 +712,7 @@ static void rsi_disconnect(struct usb_interface *pfunction)
+ 		return;
+ 
+ 	rsi_mac80211_detach(adapter);
++	rsi_reset_card(adapter);
+ 	rsi_deinit_usb_interface(adapter);
+ 	rsi_91x_deinit(adapter);
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 59513ac..2c5c0e7 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -25,6 +25,7 @@
+ #define USB_INTERNAL_REG_1           0x25000
+ #define RSI_USB_READY_MAGIC_NUM      0xab
+ #define FW_STATUS_REG                0x41050012
++#define RSI_TA_HOLD_REG              0x22000844
+ 
+ #define USB_VENDOR_REGISTER_READ     0x15
+ #define USB_VENDOR_REGISTER_WRITE    0x16
 -- 
 2.7.4
