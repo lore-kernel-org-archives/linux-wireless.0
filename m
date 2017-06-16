@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:41571 "EHLO
-        mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750775AbdFCQ7y (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:60931 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751667AbdFPD5b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Jun 2017 12:59:54 -0400
-Date: Sat, 3 Jun 2017 09:59:50 -0700
-From: Marc MERLIN <marc@merlins.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: After upgrading to 4.11.1, wifi driver refuses to load after being unloaded once.
-Message-ID: <20170603165950.GC29546@merlins.org> (sfid-20170603_185957_877400_0FA3BB56)
-References: <20170526024826.3qjx7pe3kz44klk3@merlins.org> <1496396575.9478.54.camel@coelho.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496396575.9478.54.camel@coelho.fi>
+        Thu, 15 Jun 2017 23:57:31 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 2/4] adapter: Add call indicating whether constant poll is enabled
+Date: Thu, 15 Jun 2017 20:57:26 -0700
+Message-Id: <20170616035728.19415-3-mgreer@animalcreek.com> (sfid-20170616_055745_658754_74DA5389)
+In-Reply-To: <20170616035728.19415-1-mgreer@animalcreek.com>
+References: <20170616035728.19415-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 02, 2017 at 12:42:55PM +0300, Luca Coelho wrote:
-> I kernel v4.9, we stopped supporting firmware versions smaller than 22
-> for the 8260.  But unfortunately I made a mistake in the patch[1] when I
-> removed support for those firmwares and I used 17, which is the lowest
-> version for 7260 devices.
-> 
-> I have just sent out a patch[2] with a fix for that.
-> 
-> You can probably solve your problem by getting the latest firmware we
-> have released, which is version 27.  You can get it from the linux-
-> firmware.git repository[3].  Please try that and let us know how it
-> goes.
+Add a routine that returns a boolean indicating whether the adapter
+constant poll option is enabled or not.
+
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ src/adapter.c | 5 +++++
+ src/near.h    | 1 +
+ 2 files changed, 6 insertions(+)
+
+diff --git a/src/adapter.c b/src/adapter.c
+index e8c7c61..9c483ca 100644
+--- a/src/adapter.c
++++ b/src/adapter.c
+@@ -578,6 +578,11 @@ void __near_adapter_destroy(struct near_adapter *adapter)
+ 	free_adapter(adapter);
+ }
  
-Thanks. I think the other problem is that
-https://wireless.wiki.kernel.org/en/users/drivers/iwlwifihttps://wireless.wiki.kernel.org/en/users/drivers/iwlwifi
-says to use 'iwlwifi-8000-ucode-16.242414.0.tgz' for 4.3+ kenrels.
-and strangely says "iwlwifi-8000-ucode-25.30.13.0.tgz" for 4.1+ kernels.
-
-Unless I'm crazy, it didn't have -25 when I looked last time.
-Is there a way to keep what I thought was the canonical page, up to date?
-
-Firmware 27 seems to work, but I'm getting allocation error/warnings?
-
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-Intel(R) Wireless WiFi driver for Linux
-Copyright(c) 2003- 2015 Intel Corporation
-iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
-iwlwifi 0000:04:00.0: Falling back to user helper
-iwlwifi 0000:04:00.0: capa flags index 3 larger than supported by driver
-iwlwifi 0000:04:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
-iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 24 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 32 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 6 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 7 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 16 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
-ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
-thermal thermal_zone3: failed to read out thermal zone (-5)
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 24 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 32 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 6 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 7 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 1 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 16 pages, ret: -12
-cma: cma_alloc: alloc failed, req-size: 8 pages, ret: -12
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-
-Thanks,
-Marc
++bool __near_adapter_is_constant_poll(struct near_adapter *adapter)
++{
++	return adapter->constant_poll;
++}
++
+ const char *__near_adapter_get_path(struct near_adapter *adapter)
+ {
+ 	return adapter->path;
+diff --git a/src/near.h b/src/near.h
+index 7795e61..50a4c8b 100644
+--- a/src/near.h
++++ b/src/near.h
+@@ -78,6 +78,7 @@ void __near_manager_cleanup(void);
+ struct near_adapter *__near_adapter_create(uint32_t idx,
+ 		const char *name, uint32_t protocols, bool powered);
+ void __near_adapter_destroy(struct near_adapter *adapter);
++bool __near_adapter_is_constant_poll(struct near_adapter *adapter);
+ const char *__near_adapter_get_path(struct near_adapter *adapter);
+ struct near_adapter *__near_adapter_get(uint32_t idx);
+ int __near_adapter_add(struct near_adapter *adapter);
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+2.13.0
