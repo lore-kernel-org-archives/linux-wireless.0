@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58518 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753154AbdFVKUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 06:20:34 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name, toke@toke.dk, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: agg-tx: call drv_wake_tx_queue in proper context
-Date: Thu, 22 Jun 2017 12:20:28 +0200
-Message-Id: <20170622102030.9795-1-johannes@sipsolutions.net> (sfid-20170622_122048_470852_25B543B6)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48693 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752163AbdFPG56 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 02:57:58 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v3] ath10k: Define structures for CE ctrl/misc register
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1496739941-18132-1-git-send-email-c_sgarna@qti.qualcomm.com>
+References: <1496739941-18132-1-git-send-email-c_sgarna@qti.qualcomm.com>
+To: Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+        Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <5db1646de68e4b9c86763c7a37ba1397@euamsexm01a.eu.qualcomm.com> (sfid-20170616_085825_375849_33F6AA0C)
+Date: Fri, 16 Jun 2017 08:51:49 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com> wrote:
 
-Since drv_wake_tx_queue() is normally called in the TX path, which
-is already in an RCU critical section, we should call it the same
-way in the aggregation code path, so if the driver expects to be
-able to use RCU, it'll already be protected without having to enter
-a nested critical section.
+> Define structures for the copy engine ctrl/misc registers,
+> that includes CE CMD halt, watermark source, watermark destination,
+> host IE ring, source, destination and dmax ring.
+> 
+> This adds support to avoid the conditional compilation,
+> code optimization and dynamic configuration of the copy engine
+> register map for respective hardware bus interface.
+> 
+> Signed-off-by: Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Additionally, disable soft-IRQs, since not doing so could cause
-issues in a driver that relies on them already being disabled like
-in the other path.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+03a016f8944c ath10k: define structures for CE ctrl/misc register
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index cbd48762256c..4f9dd3e59091 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -226,7 +226,11 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
- 		clear_bit(IEEE80211_TXQ_AMPDU, &txqi->flags);
- 
- 	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
-+	local_bh_disable();
-+	rcu_read_lock();
- 	drv_wake_tx_queue(sta->sdata->local, txqi);
-+	rcu_read_unlock();
-+	local_bh_enable();
- }
- 
- /*
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9768317/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
