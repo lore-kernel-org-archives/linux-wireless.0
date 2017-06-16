@@ -1,63 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44664 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751162AbdFEPNv (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:44555 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751641AbdFPD5b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 11:13:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH 2/9] rtlwifi: btcoex: rename ex_halbtc....YZant to ex_btc.....YZant
-References: <20170602213435.29968-1-Larry.Finger@lwfinger.net>
-        <87bmq28p6l.fsf@codeaurora.org>
-Date: Mon, 05 Jun 2017 18:13:45 +0300
-Message-ID: <87vaoa79hy.fsf@qca.qualcomm.com> (sfid-20170605_171419_373205_A9658F5E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 15 Jun 2017 23:57:31 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 1/4] adapter: Make adapter_start_poll() global
+Date: Thu, 15 Jun 2017 20:57:25 -0700
+Message-Id: <20170616035728.19415-2-mgreer@animalcreek.com> (sfid-20170616_055746_213807_4FF9421A)
+In-Reply-To: <20170616035728.19415-1-mgreer@animalcreek.com>
+References: <20170616035728.19415-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Removing the X letters from the subject to bypass vger filters)
+An upcoming commit will need to call adapter_start_poll() from the
+tag code so make it global.  To be consistent with the names of
+other global routines in adapter.c, add the '__near_' prefix.
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+---
+ src/adapter.c | 22 +++++++++++-----------
+ src/near.h    |  1 +
+ 2 files changed, 12 insertions(+), 11 deletions(-)
 
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
->>
->> These external functions are for BT-coexistence, so remove the "hal"
->> prefix for consistancy.
->>
->> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Ping-Ke Shih <pkshih@realtek.com>
->> Cc: Birming Chiu <birming@realtek.com>
->> Cc: Shaofu <shaofu@realtek.com>
->> Cc: Steven Ting <steventing@realtek.com>
->
-> On my inbox I see four different versions of this patch 2 but on
-> patchwork I only see one, but with a different date than rest of the
-> patches in this series and hence is wrong order. What happened, did you
-> perhaps delete some of the patches from patchwork?
->
-> But anyway, if there are accidental multiple patch submissions please
-> always submit the whole series again as v2. Resubmitting is the most
-> reliable method to make sure that I apply the correct version of
-> patches, anything is else is just confusing me and increases the chances
-> that I apply the wrong version.
-
-Hehe, so I think I now understand what happened:
-
-<linux-wireless@vger.kernel.org>: host vger.kernel.org[209.132.180.67] said:
-    550 5.7.1 Content-Policy reject msg: The capital Triple-X in subject is way
-    too often associated with junk email, please rephrase.  BF:<H 0>;
-    S1751112AbdFEOtn (in reply to end of DATA command)
-
-But anyway, please resubmit the whole series as v2.
-
+diff --git a/src/adapter.c b/src/adapter.c
+index 9e3e75e..e8c7c61 100644
+--- a/src/adapter.c
++++ b/src/adapter.c
+@@ -152,7 +152,7 @@ static void rf_mode_changed(struct near_adapter *adapter)
+ 					NFC_ADAPTER_INTERFACE, "Mode");
+ }
+ 
+-static int adapter_start_poll(struct near_adapter *adapter)
++int __near_adapter_start_poll(struct near_adapter *adapter)
+ {
+ 	int err;
+ 	uint32_t im_protos, tm_protos;
+@@ -375,7 +375,7 @@ static DBusMessage *start_poll_loop(DBusConnection *conn,
+ 	else
+ 		adapter->poll_mode = NEAR_ADAPTER_MODE_INITIATOR;
+ 
+-	err = adapter_start_poll(adapter);
++	err = __near_adapter_start_poll(adapter);
+ 	if (err < 0)
+ 		return __near_error_failed(msg, -err);
+ 
+@@ -433,7 +433,7 @@ static gboolean check_presence(gpointer user_data)
+ out_err:
+ 	near_adapter_disconnect(adapter->idx);
+ 	if (adapter->constant_poll)
+-		adapter_start_poll(adapter);
++		__near_adapter_start_poll(adapter);
+ 
+ 	return FALSE;
+ }
+@@ -447,7 +447,7 @@ static gboolean dep_timer(gpointer user_data)
+ 	if (!adapter)
+ 		return FALSE;
+ 
+-	adapter_start_poll(adapter);
++	__near_adapter_start_poll(adapter);
+ 
+ 	return FALSE;
+ }
+@@ -469,7 +469,7 @@ static void tag_present_cb(uint32_t adapter_idx, uint32_t target_idx,
+ 
+ 		near_adapter_disconnect(adapter->idx);
+ 		if (adapter->constant_poll)
+-			adapter_start_poll(adapter);
++			__near_adapter_start_poll(adapter);
+ 
+ 		return;
+ 	}
+@@ -606,7 +606,7 @@ int __near_adapter_set_dep_state(uint32_t idx, bool dep)
+ 		 * that very moment. In this case we need to try polling later
+ 		 * again, so constant polling will work properly.
+ 		 */
+-		if(adapter_start_poll(adapter) == -EBUSY) {
++		if(__near_adapter_start_poll(adapter) == -EBUSY) {
+ 			near_error("Adapter is busy, retry polling later");
+ 			g_timeout_add_seconds(1, dep_timer, adapter);
+ 		}
+@@ -688,7 +688,7 @@ static void tag_read_cb(uint32_t adapter_idx, uint32_t target_idx, int status)
+ 	if (status < 0) {
+ 		near_adapter_disconnect(adapter->idx);
+ 		if (adapter->constant_poll)
+-			adapter_start_poll(adapter);
++			__near_adapter_start_poll(adapter);
+ 
+ 		return;
+ 	}
+@@ -717,7 +717,7 @@ static void device_read_cb(uint32_t adapter_idx, uint32_t target_idx,
+ 		}
+ 
+ 		if (adapter->constant_poll)
+-			adapter_start_poll(adapter);
++			__near_adapter_start_poll(adapter);
+ 
+ 		return;
+ 	}
+@@ -838,7 +838,7 @@ int __near_adapter_add_target(uint32_t idx, uint32_t target_idx,
+ 					iso15693_uid_len, iso15693_uid);
+ 
+ 	if (ret < 0 && adapter->constant_poll)
+-		adapter_start_poll(adapter);
++		__near_adapter_start_poll(adapter);
+ 
+ 	return ret;
+ }
+@@ -879,7 +879,7 @@ static gboolean poll_error(gpointer user_data)
+ 		 __near_netlink_adapter_enable(adapter->idx, true);
+ 	}
+ 
+-	adapter_start_poll(adapter);
++	__near_adapter_start_poll(adapter);
+ 
+ 	return FALSE;
+ }
+@@ -954,7 +954,7 @@ int __near_adapter_remove_device(uint32_t idx)
+ 	adapter->dep_up = false;
+ 
+ 	if (adapter->constant_poll)
+-		adapter_start_poll(adapter);
++		__near_adapter_start_poll(adapter);
+ 
+ 	return 0;
+ }
+diff --git a/src/near.h b/src/near.h
+index 1ac6191..7795e61 100644
+--- a/src/near.h
++++ b/src/near.h
+@@ -94,6 +94,7 @@ int __near_adapter_remove_device(uint32_t idx);
+ int __near_adapter_set_dep_state(uint32_t idx, bool dep);
+ bool __near_adapter_get_dep_state(uint32_t idx);
+ void __near_adapter_listen(struct near_device_driver *driver);
++int __near_adapter_start_poll(struct near_adapter *adapter);
+ void __near_adapter_start_check_presence(uint32_t adapter_idx, uint32_t target_idx);
+ void __near_adapter_stop_check_presence(uint32_t adapter_idx, uint32_t target_idx);
+ int __near_adapter_init(void);
 -- 
-Kalle Valo
+2.13.0
