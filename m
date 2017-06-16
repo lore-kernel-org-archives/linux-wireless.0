@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58234 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751576AbdF0RUm (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18824 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753053AbdFPIuY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 13:20:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 1/8] qtnfmac: updates and fixes for regulatory support
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-        <20170620195517.18373-2-sergey.matyukevich.os@quantenna.com>
-Date: Tue, 27 Jun 2017 20:20:38 +0300
-In-Reply-To: <20170620195517.18373-2-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Tue, 20 Jun 2017 22:55:10 +0300")
-Message-ID: <87wp7x4aah.fsf@purkki.adurom.net> (sfid-20170627_192046_544588_EAF6F37D)
+        Fri, 16 Jun 2017 04:50:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/3] ath10k: Configure rxnss_override for 10.4
+ firmware.
+Date: Fri, 16 Jun 2017 08:50:13 +0000
+Message-ID: <87o9toz58b.fsf@kamboji.qca.qualcomm.com> (sfid-20170616_105043_751640_A5A48853)
+References: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
+        <20170609110750.14950-2-sven.eckelmann@openmesh.com>
+In-Reply-To: <20170609110750.14950-2-sven.eckelmann@openmesh.com> (Sven
+        Eckelmann's message of "Fri, 9 Jun 2017 13:07:49 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
 
-> This patch introduces several changes for regulatory support
-> in qtnfmac driver:
+> From: Ben Greear <greearb@candelatech.com>
 >
-> * Introduce support for setting regdomain from host
-> New command is implemented to notify firmware about regdomain changes
-> performed by host. Firmware is supposed to check requested regdomain
-> changes. On success firmware enables updated hardware channel
-> configuration and then host driver updates channel info for each band.
+> QCA9984 hardware can do 4x4 at 80Mhz, but only 2x2 at 160Mhz.
 >
-> * Introduce support of custom regulatory rules
-> Obtain custom regulatory rules from the firmware and
-> enable them during wiphy registration
+> First, report this to user-space by setting the max-tx-speed
+> and max-rx-speed vht capabilities.
 >
-> * Regulatory for self-managed setup
-> Regdomain information needs to be registered with cfg80211
-> for devices with REGULATORY_WIPHY_SELF_MANAGED flag set.
+> Second, if the peer rx-speed is configured, and if we
+> are in 160 or 80+80 mode, and the peer rx-speed matches
+> the max speed for 2x2 or 1x1 at 160Mhz (long guard interval),
+> then use that info to set the peer_bw_rxnss_override appropriately.
 >
-> * Misc fixes in regulatory code paths
->   - add missing lock in qtnf_cmd_get_mac_chan_info
->   - do not free band channel structure if channel count is the same
->   - free allocated regdomain hw_info.rd structure on detach
+> Without this, a 9984 firmware will not use 2x2 ratesets when
+> transmitting to peer (it will be stuck at 1x1), because
+> the firmware would not have configured the rxnss_override.
 >
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> This could use some testing....
 
-Each patch should contain one logical change, but here you are listing
-multiple changes in the commit log which is a clear indication that's
-not the case here. Is there a specific reason why you did it like this?
+Sven, I assume you have tested this so I removed the last sentence.
 
--- 
-Kalle Valo
+> @@ -4408,6 +4422,23 @@ static struct ieee80211_sta_vht_cap ath10k_create_=
+vht_cap(struct ath10k *ar)
+>  	vht_cap.vht_mcs.rx_mcs_map =3D cpu_to_le16(mcs_map);
+>  	vht_cap.vht_mcs.tx_mcs_map =3D cpu_to_le16(mcs_map);
+> =20
+> +	/* If we are supporting 160Mhz or 80+80, then the NIC may be able to do
+> +	 * a restricted NSS for 160 or 80+80 vs what it can do for 80Mhz.  Give
+> +	 * user-space a clue if that is the case.
+> +	 */
+> +	if (vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
+> +		switch (ar->dev_id) {
+> +		case QCA9984_1_0_DEVICE_ID:
+> +			/* Can do only 2x2 VHT160 or 80+80.
+> +			 * 1560Mbps is 4x4 80Mhz or 2x2 160Mhz,
+> +			 * long-guard-interval
+> +			 */
+> +			vht_cap.vht_mcs.rx_highest =3D 1560;
+> +			vht_cap.vht_mcs.tx_highest =3D 1560;
+> +			break;
+> +		}
+> +	}
+
+We have hw_params for stuff like this so I changed this and the
+following patch to use that. Please review:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=3Dp=
+ending&id=3D81f55f2a3e1837287a52de6577ca89a2c7393456
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=3Dp=
+ending&id=3D09ce674529472c8deca41fbb28bad59e03330321
+
+--=20
+Kalle Valo=
