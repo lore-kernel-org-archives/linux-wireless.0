@@ -1,80 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:36101 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751433AbdFHC2C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2017 22:28:02 -0400
-Date: Thu, 8 Jun 2017 12:27:59 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: linux-next: build failure after merge of the wireless-drivers-next
- tree
-Message-ID: <20170608122759.7ffda0c3@canb.auug.org.au> (sfid-20170608_042832_734780_9B5ABE20)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:42153 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750981AbdFPDky (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Jun 2017 23:40:54 -0400
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: [PATCH 0/2] NFC: Add deactivate target functionality
+Date: Thu, 15 Jun 2017 20:34:20 -0700
+Message-Id: <20170616033422.18484-1-mgreer@animalcreek.com> (sfid-20170616_054104_764357_CC4CAE6B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+There is currently no way for userspace to deactivate an active target.
+Since the target is active, the adapter cannot be powered down which
+wastes wastes power when the target has been read and isn't needed
+anymore (but remains within range).  To solve this, add a way to
+deactivate a currently active target which will then allow the adapter
+to be powered down.
 
-After merging the wireless-drivers-next tree, today's linux-next build
-(x86_64 allmodconfig) failed like this:
+To be fully operational, this requires companion patches for neard.
+Those patches will be submitted shortly.
 
-drivers/net/wireless/quantenna/qtnfmac/core.c: In function 'qtnf_core_net_attach':
-drivers/net/wireless/quantenna/qtnfmac/core.c:319:5: error: 'struct net_device' has no member named 'destructor'
-  dev->destructor = free_netdev;
-     ^
+Mark Greer (2):
+  NFC: digital: Abort cmd when deactivating target
+  NFC: Add NFC_CMD_DEACTIVATE_TARGET support
 
-Caused by commit
-
-  98f44cb0655c ("qtnfmac: introduce new FullMAC driver for Quantenna chipsets")
-
-interacting with commit
-
-  cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
-
-from the net tree.
-
-I applied this merge fix patch for today.
-
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Thu, 8 Jun 2017 12:24:08 +1000
-Subject: [PATCH] qtnfmac: fix up for "net: Fix inconsistent teardown and
- release of private netdev state."
-
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
- drivers/net/wireless/quantenna/qtnfmac/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index c5ac252464f4..f053532c0e87 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -316,7 +316,7 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 	vif->netdev = dev;
- 
- 	dev->netdev_ops = &qtnf_netdev_ops;
--	dev->destructor = free_netdev;
-+	dev->needs_free_netdev = true;
- 	dev_net_set(dev, wiphy_net(wiphy));
- 	dev->ieee80211_ptr = &vif->wdev;
- 	dev->ieee80211_ptr->iftype = iftype;
--- 
-2.11.0
+ include/uapi/linux/nfc.h |  2 ++
+ net/nfc/digital_core.c   |  1 +
+ net/nfc/netlink.c        | 29 +++++++++++++++++++++++++++++
+ 3 files changed, 32 insertions(+)
 
 -- 
-Cheers,
-Stephen Rothwell
+2.13.0
