@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43546 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752692AbdFPIxW (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:35072 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752231AbdFPO5a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 04:53:22 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+        Fri, 16 Jun 2017 10:57:30 -0400
+Received: by mail-pg0-f66.google.com with SMTP id f127so6640081pgc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:30 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Message-Id: <20170616085321.8B1D360D5D@smtp.codeaurora.org> (sfid-20170616_105325_759894_C6EB7947)
-Date: Fri, 16 Jun 2017 08:53:21 +0000 (UTC)
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 00/20] rsi driver enhancements
+Date: Fri, 16 Jun 2017 20:24:21 +0530
+Message-Id: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165734_503109_0968AD1B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+This patch series includes some fixes and enhancements in Tx and Rx
+data paths. Connection in open security and data traffic has been
+verified with SDIO and USB variants of 9113 chipset.
 
-> This fixes the following warning:
-> 
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function
->   'brcmf_usb_probe_phase2':
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2:
->   warning: 'devinfo' may be used uninitialized in this function
->   [-Wmaybe-uninitialized]
->     mutex_unlock(&devinfo->dev_init_lock);
-> 
-> Fixes: 6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
-> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> Reported-by: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Changes in v2 series:
+1/20: Get rid of __LITTLE_ENDIAN flag usage
+11/20: Get rid of __LITTLE_ENDIAN flag usage
+12/20: Changes to match modified 11/20
+13/20: Get rid of __LITTLE_ENDIAN flag usage
+14/20: Changes to match modified 13/20
+15/20: Changes to match modified 13/20
+19/20: mutex_init was missed for rx_lock in v1
 
-Patch applied to wireless-drivers.git, thanks.
+Amitkumar Karwar (1):
+  rsi: correct the logic of deriving queue number
 
-35abcd4f9f30 brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2()
+Karun Eagalapati (13):
+  rsi: fix sdio card reset problem
+  rsi: chip reset for SDIO interface
+  rsi: correct SDIO disconnect path handling
+  rsi: card reset for USB interface
+  rsi: USB tx headroom cleanup
+  rsi: rename USB endpoint macros
+  rsi: choose correct endpoint based on queue.
+  rsi: set immediate wakeup bit
+  rsi: rename variable in_sdio_litefi_irq
+  rsi: Optimise sdio claim and release host
+  rsi: SDIO Rx packet processing enhancement
+  rsi: use separate mutex lock for receive thread
+  rsi: Rename mutex tx_rxlock to the tx_lock.
+
+Prameela Rani Garnepudi (2):
+  rsi: changes in eeprom read frame
+  rsi: separate function for management packet descriptor
+
+pavani.muthyala (4):
+  rsi: management frame descriptor preparation cleanup
+  rsi: data packet descriptor code cleanup
+  rsi: data packet descriptor enhancements
+  rsi: separate function for data packet descriptor
+
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  10 +-
+ drivers/net/wireless/rsi/rsi_91x_hal.c      | 270 ++++++++++++++++++----------
+ drivers/net/wireless/rsi/rsi_91x_main.c     |   3 +-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  90 +++++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 154 ++++++++++++----
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  44 +++--
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 118 +++++++++---
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |   6 +-
+ drivers/net/wireless/rsi/rsi_hal.h          |  64 +++++++
+ drivers/net/wireless/rsi/rsi_main.h         |  30 +++-
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  26 ++-
+ drivers/net/wireless/rsi/rsi_sdio.h         |   4 +-
+ drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
+ 13 files changed, 617 insertions(+), 207 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/9790847/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
