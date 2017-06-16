@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:36799 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751050AbdFYNEx (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33678 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752231AbdFPO6G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 09:04:53 -0400
-Date: Sun, 25 Jun 2017 14:04:37 +0100 (BST)
-From: Sami Kerola <kerolasa@iki.fi>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Tim Gardner <tim.gardner@canonical.com>,
-        Karel Zak <kzak@redhat.com>
-cc: linux-wireless@vger.kernel.org, util-linux@vger.kernel.org
-Subject: rfkill(8) move and improvements
-Message-ID: <alpine.LNX.2.20.1706251339500.25762@imuri> (sfid-20170625_150517_301357_F56411D4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Fri, 16 Jun 2017 10:58:06 -0400
+Received: by mail-pg0-f67.google.com with SMTP id u62so1019132pgb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:06 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 10/20] rsi: set immediate wakeup bit
+Date: Fri, 16 Jun 2017 20:24:31 +0530
+Message-Id: <1497624881-2315-11-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_170119_774763_BE7CDD0B)
+In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello maintainers and other,
+From: Karun Eagalapati <karun256@gmail.com>
 
-The otherday I ran powertop and it did rfkill to save battery, which was 
-particularly annoying because I had not installed rfkill(8) package.  
-Fixing the immediate issue was relatively easy, but the ordeal made me 
-wonder if this tool could be moved to a package that is installed by 
-default to all systems, such as util-linux.
+immediate wakeup bit is set while sending internal management
+frame to the firmware.
 
-To put money where my mouth is I have done the time consuming bits of the 
-move.  Notice that full history of the rfkill project is saved in the git 
-branch below, with attribution to original authors and no change to 
-copyleft statement.
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-https://github.com/kerolasa/lelux-utiliteetit/tree/rfkill
-
-But it would not be sufficient to do just the minimal, so I took liberty 
-to make few additional changes. These include libsmartcols output, 
-bash-completion file, add syslog message when state changes happen, and 
-converting unix timestamps in event output to human readable format. 
-Perhaps the easiest is to simply to see what I have done something like:
-
-git clone https://github.com/kerolasa/lelux-utiliteetit.git rfkill-proposal
-cd rfkill-proposal
-./autogen.sh && ./configure && make -j4
-git checkout rfkill
-./rfkill
-./rfkill --help
-./rfkill event
-man ./sys-utils/rfkill.8
-. bash-completion/rfkill
-PATH="$PWD:$PATH"
-rfkill <tab tab>
-git show origin/rfkill-master..origin/rfkill
-
-What do you think, would the move and proposed updates be ok?
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index c230359..7c9224f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -149,6 +149,7 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 	extnd_size = ((uintptr_t)skb->data & 0x3);
+ 
+ 	if (tx_params->flags & INTERNAL_MGMT_PKT) {
++		skb->data[1] |= BIT(7); /* Immediate Wakeup bit*/
+ 		if ((extnd_size) > skb_headroom(skb)) {
+ 			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+ 			dev_kfree_skb(skb);
 -- 
-Sami Kerola
-http://www.iki.fi/kerolasa/
+2.7.4
