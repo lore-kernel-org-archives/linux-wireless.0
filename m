@@ -1,63 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36440 "EHLO
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35036 "EHLO
         mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753717AbdFMOv4 (ORCPT
+        with ESMTP id S1752609AbdFPO6k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:51:56 -0400
-Received: by mail-pf0-f194.google.com with SMTP id y7so21959735pfd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:51:56 -0700 (PDT)
+        Fri, 16 Jun 2017 10:58:40 -0400
+Received: by mail-pf0-f194.google.com with SMTP id s66so6917579pfs.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:58:40 -0700 (PDT)
 From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
+Cc: linux-wireless@vger.kernel.org,
         Amitkumar Karwar <amitkarwar@gmail.com>,
         Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 08/20] rsi: rename USB endpoint macros
-Date: Tue, 13 Jun 2017 20:18:56 +0530
-Message-Id: <1497365348-2305-9-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165200_568517_185586AE)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 20/20] rsi: Rename mutex tx_rxlock to the tx_lock.
+Date: Fri, 16 Jun 2017 20:24:41 +0530
+Message-Id: <1497624881-2315-21-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165843_352609_181168AD)
+In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Karun Eagalapati <karun256@gmail.com>
 
-These endpoints are for WLAN and BT protocols.
+We have now added separate lock for Rx. This lock is used to protect
+tx path only
 
 Signed-off-by: Karun Eagalapati <karun256@gmail.com>
 Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 2 +-
- drivers/net/wireless/rsi/rsi_usb.h     | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_core.c | 10 +++++-----
+ drivers/net/wireless/rsi/rsi_91x_main.c |  2 +-
+ drivers/net/wireless/rsi/rsi_main.h     |  4 ++--
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index dc0a0b2..99967ce 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -384,7 +384,7 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
- 	u32 queueno = ((pkt[1] >> 4) & 0x7);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 68f04a7..88a1a56 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -268,11 +268,11 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 			break;
+ 		}
+ 
+-		mutex_lock(&common->tx_rxlock);
++		mutex_lock(&common->tx_lock);
+ 
+ 		status = adapter->check_hw_queue_status(adapter, q_num);
+ 		if ((status <= 0)) {
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+ 
+@@ -287,7 +287,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 		skb = rsi_core_dequeue_pkt(common, q_num);
+ 		if (skb == NULL) {
+ 			rsi_dbg(ERR_ZONE, "skb null\n");
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+ 
+@@ -297,14 +297,14 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 			status = rsi_send_data_pkt(common, skb);
+ 
+ 		if (status) {
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+ 
+ 		common->tx_stats.total_tx_pkt_send[q_num]++;
+ 
+ 		tstamp_2 = jiffies;
+-		mutex_unlock(&common->tx_rxlock);
++		mutex_unlock(&common->tx_lock);
+ 
+ 		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
+ 			schedule();
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 939f568..bb0febb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -220,7 +220,7 @@ struct rsi_hw *rsi_91x_init(void)
+ 
+ 	rsi_init_event(&common->tx_thread.event);
+ 	mutex_init(&common->mutex);
+-	mutex_init(&common->tx_rxlock);
++	mutex_init(&common->tx_lock);
+ 	mutex_init(&common->rx_lock);
+ 
+ 	if (rsi_create_kthread(common,
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 6d41c9b..d3bf7ac 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -177,8 +177,8 @@ struct rsi_common {
+ 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
+ 	/* Mutex declaration */
+ 	struct mutex mutex;
+-	/* Mutex used between tx/rx threads */
+-	struct mutex tx_rxlock;
++	/* Mutex used for tx thread */
++	struct mutex tx_lock;
+ 	/* Mutex used for rx thread */
+ 	struct mutex rx_lock;
  	u8 endpoint;
- 
--	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? MGMT_EP : DATA_EP);
-+	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? WLAN_EP : BT_EP);
- 
- 	return rsi_write_multiple(adapter,
- 				  endpoint,
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 2c5c0e7..3babf81 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -33,8 +33,8 @@
- 
- #define MAX_RX_URBS                  1
- #define MAX_BULK_EP                  8
--#define MGMT_EP                      1
--#define DATA_EP                      2
-+#define WLAN_EP                      1
-+#define BT_EP                        2
- 
- #define RSI_USB_BUF_SIZE	     4096
- 
 -- 
 2.7.4
