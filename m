@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40808 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750967AbdFVAC5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 20:02:57 -0400
-Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered frames
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20170621235022.25362-1-johannes@sipsolutions.net>
- <20170621235022.25362-3-johannes@sipsolutions.net>
-Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com> (sfid-20170622_020315_396259_A8B9A090)
-Date: Wed, 21 Jun 2017 17:02:51 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170621235022.25362-3-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:37002 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752647AbdFPNOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 09:14:55 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Jelle van der Waa <jelle@vdwaa.nl>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of the brcm43430 chip
+Date: Fri, 16 Jun 2017 15:14:49 +0200
+Message-Id: <20170616131449.12108-2-hdegoede@redhat.com> (sfid-20170616_151457_638926_31240129)
+In-Reply-To: <20170616131449.12108-1-hdegoede@redhat.com>
+References: <20170616131449.12108-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2017 04:50 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Some drivers may want to also use the TXQ abstraction with
-> non-data packets that need powersave buffering, so add a
-> hardware flag to allow this.
->
-> Change ath9k/ath10k to use these by dequeuing the frames
-> immediately and invoking the normal TX path for them.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+The brcm43430 chip needs different firmware files for chip revision 0
+and 1. The file currently in linux-firmware is for revision 1 only.
 
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -154,8 +154,24 @@ void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue)
->  {
->  	struct ath_softc *sc = hw->priv;
->  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-> -	struct ath_atx_tid *tid = (struct ath_atx_tid *) queue->drv_priv;
-> -	struct ath_txq *txq = tid->txq;
-> +	struct ath_atx_tid *tid;
-> +	struct ath_txq *txq;
-> +
-> +	if (unlikely(queue->tid == IEEE80211_NUM_TIDS)) {
-> +		struct sk_buff *skb = ieee80211_tx_dequeue(hw, queue);
-> +		struct ieee80211_tx_control control = {
-> +			.sta = queue->sta,
-> +		};
-> +
-> +		if (WARN_ON(!skb))
-> +			return;
-> +
-> +		ath9k_tx(hw, &control, skb);
-> +		return;
-> +	}
+This commit makes brcmfmac request brcmfmac43430a0-sdio.bin instead
+of brcmfmac43430-sdio.bin for revision 0 chips.
 
-I think a comment for the above code block would be warranted (and for ath10k as well).
+Note that the behavior for revision 1 chips is not changed, ideally those
+would load brcmfmac43430a1-sdio.bin, but that will break existing setups.
 
-I guess this is the part about dequeueing the frames immediately?
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 4ed40c94bda9..5125aeeb5310 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -612,7 +612,9 @@ BRCMF_FW_NVRAM_DEF(43340, "brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
+-BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
++BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin", "brcmfmac43430a0-sdio.txt");
++/* Note the names are not postfixed with a1 for backward compatibility */
++BRCMF_FW_NVRAM_DEF(43430A1, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
+ BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
+@@ -630,7 +632,8 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.13.0
