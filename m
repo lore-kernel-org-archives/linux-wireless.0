@@ -1,308 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35048 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751134AbdFYLN3 (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35164 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752231AbdFPO5j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Mordechai Goodstein <mordechay.goodstein@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:51 +0300
-Message-Id: <20170625111158.1792-20-luca@coelho.fi> (sfid-20170625_131332_734596_238829D1)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 19/26] iwlwifi: mvm: support new flush API
+        Fri, 16 Jun 2017 10:57:39 -0400
+Received: by mail-pg0-f67.google.com with SMTP id f127so6640605pgc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:38 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 02/20] rsi: fix sdio card reset problem
+Date: Fri, 16 Jun 2017 20:24:23 +0530
+Message-Id: <1497624881-2315-3-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165741_932377_EFB71282)
+In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechai Goodstein <mordechay.goodstein@intel.com>
+From: Karun Eagalapati <karun256@gmail.com>
 
-This new API allows flushing queues based on station ID and TID in A000
-devices.  One reason for using this is that tfd_queue_mask is only good
-for 32 queues, which is not enough for A000 devices.
+card reset is not working with recent kernels. Using
+host->card->ocr instead of host->ocr_avail solved the problem.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   | 19 ++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 14 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 12 +++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 51 ++++++++++++----------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 44 ++++++++++++++-----
- 6 files changed, 100 insertions(+), 42 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 744dc069ff23..c2a1aeef74ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -119,19 +119,30 @@ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
- 					size_t count, loff_t *ppos)
- {
- 	int ret;
--	u32 scd_q_msk;
-+	u32 flush_arg;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index e5ea99b..b5ac503 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -219,26 +219,18 @@ static void rsi_reset_card(struct sdio_func *pfunction)
+ 	if (err)
+ 		rsi_dbg(ERR_ZONE, "%s: CMD0 failed : %d\n", __func__, err);
  
- 	if (!iwl_mvm_firmware_running(mvm) ||
- 	    mvm->cur_ucode != IWL_UCODE_REGULAR)
- 		return -EIO;
- 
--	if (sscanf(buf, "%x", &scd_q_msk) != 1)
-+	if (kstrtou32(buf, 0, &flush_arg))
- 		return -EINVAL;
- 
--	IWL_ERR(mvm, "FLUSHING queues: scd_q_msk = 0x%x\n", scd_q_msk);
-+	if (iwl_mvm_has_new_tx_api(mvm)) {
-+		IWL_DEBUG_TX_QUEUES(mvm,
-+				    "FLUSHING all tids queues on sta_id = %d\n",
-+				    flush_arg);
-+		mutex_lock(&mvm->mutex);
-+		ret = iwl_mvm_flush_sta_tids(mvm, flush_arg, 0xFF, 0) ? : count;
-+		mutex_unlock(&mvm->mutex);
-+		return ret;
-+	}
-+
-+	IWL_DEBUG_TX_QUEUES(mvm, "FLUSHING queues mask to flush = 0x%x\n",
-+			    flush_arg);
- 
- 	mutex_lock(&mvm->mutex);
--	ret =  iwl_mvm_flush_tx_path(mvm, scd_q_msk, 0) ? : count;
-+	ret =  iwl_mvm_flush_tx_path(mvm, flush_arg, 0) ? : count;
- 	mutex_unlock(&mvm->mutex);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 0562ce406249..a37c584b0b48 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -846,12 +846,24 @@ enum iwl_dump_control {
-  * @flush_ctl: control flags
-  * @reserved: reserved
-  */
--struct iwl_tx_path_flush_cmd {
-+struct iwl_tx_path_flush_cmd_v1 {
- 	__le32 queues_ctl;
- 	__le16 flush_ctl;
- 	__le16 reserved;
- } __packed; /* TX_PATH_FLUSH_CMD_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_tx_path_flush_cmd -- queue/FIFO flush command
-+ * @sta_id: station ID to flush
-+ * @tid_mask: TID mask to flush
-+ * @reserved: reserved
-+ */
-+struct iwl_tx_path_flush_cmd {
-+	__le32 sta_id;
-+	__le16 tid_mask;
-+	__le16 reserved;
-+} __packed; /* TX_PATH_FLUSH_CMD_API_S_VER_2 */
-+
- /* Available options for the SCD_QUEUE_CFG HCMD */
- enum iwl_scd_cfg_actions {
- 	SCD_CFG_DISABLE_QUEUE		= 0x0,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 7171928872de..3b1f15873034 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1385,6 +1385,8 @@ static inline const char *iwl_mvm_get_tx_fail_reason(u32 status) { return ""; }
- #endif
- int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags);
- int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags);
-+int iwl_mvm_flush_sta_tids(struct iwl_mvm *mvm, u32 sta_id,
-+			   u16 tids, u32 flags);
- 
- void iwl_mvm_async_handlers_purge(struct iwl_mvm *mvm);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index fc2c607013fb..2e4bfe9f07ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1477,9 +1477,15 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
- 	synchronize_net();
- 
- 	/* Flush the hw queues, in case something got queued during entry */
--	ret = iwl_mvm_flush_tx_path(mvm, iwl_mvm_flushable_queues(mvm), flags);
--	if (ret)
--		return ret;
-+	/* TODO new tx api */
-+	if (iwl_mvm_has_new_tx_api(mvm)) {
-+		WARN_ONCE(1, "d0i3: Need to implement flush TX queue\n");
-+	} else {
-+		ret = iwl_mvm_flush_tx_path(mvm, iwl_mvm_flushable_queues(mvm),
-+					    flags);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	/* configure wowlan configuration only if needed */
- 	if (mvm->d0i3_ap_sta_id != IWL_MVM_INVALID_STA) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index aa41ee8ed916..02f35a929606 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -734,7 +734,6 @@ static int iwl_mvm_sta_alloc_queue_tvqm(struct iwl_mvm *mvm,
- 	spin_lock_bh(&mvmsta->lock);
- 	mvmsta->tid_data[tid].txq_id = queue;
- 	mvmsta->tid_data[tid].is_tid_active = true;
--	mvmsta->tfd_queue_msk |= BIT(queue);
- 	spin_unlock_bh(&mvmsta->lock);
- 
- 	return 0;
-@@ -2004,8 +2003,6 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 			mvm->probe_queue = queue;
- 		else if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
- 			mvm->p2p_dev_queue = queue;
--
--		bsta->tfd_queue_msk |= BIT(queue);
- 	}
- 
- 	return 0;
-@@ -2015,29 +2012,32 @@ static void iwl_mvm_free_bcast_sta_queues(struct iwl_mvm *mvm,
- 					  struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	int queue;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	iwl_mvm_flush_sta(mvm, &mvmvif->bcast_sta, true, 0);
- 
--	if (vif->type == NL80211_IFTYPE_AP ||
--	    vif->type == NL80211_IFTYPE_ADHOC)
--		iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
--				    IWL_MAX_TID_COUNT, 0);
--
--	if (mvmvif->bcast_sta.tfd_queue_msk & BIT(mvm->probe_queue)) {
--		iwl_mvm_disable_txq(mvm, mvm->probe_queue,
--				    vif->hw_queue[0], IWL_MAX_TID_COUNT,
--				    0);
--		mvmvif->bcast_sta.tfd_queue_msk &= ~BIT(mvm->probe_queue);
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_ADHOC:
-+		queue = mvm->probe_queue;
-+		break;
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		queue = mvm->p2p_dev_queue;
-+		break;
-+	default:
-+		WARN(1, "Can't free bcast queue on vif type %d\n",
-+		     vif->type);
-+		return;
- 	}
- 
--	if (mvmvif->bcast_sta.tfd_queue_msk & BIT(mvm->p2p_dev_queue)) {
--		iwl_mvm_disable_txq(mvm, mvm->p2p_dev_queue,
--				    vif->hw_queue[0], IWL_MAX_TID_COUNT,
--				    0);
--		mvmvif->bcast_sta.tfd_queue_msk &= ~BIT(mvm->p2p_dev_queue);
+-	if (!host->ocr_avail) {
+-		/* Issue CMD5, arg = 0 */
+-		err = rsi_issue_sdiocommand(pfunction,
+-					    SD_IO_SEND_OP_COND,
+-					    0,
+-					    (MMC_RSP_R4 | MMC_CMD_BCR),
+-					    &resp);
+-		if (err)
+-			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
+-				__func__, err);
+-		host->ocr_avail = resp;
 -	}
-+	iwl_mvm_disable_txq(mvm, queue, vif->hw_queue[0], IWL_MAX_TID_COUNT, 0);
-+	if (iwl_mvm_has_new_tx_api(mvm))
-+		return;
-+
-+	WARN_ON(!(mvmvif->bcast_sta.tfd_queue_msk & BIT(queue)));
-+	mvmvif->bcast_sta.tfd_queue_msk &= ~BIT(queue);
- }
++	/* Issue CMD5, arg = 0 */
++	err = rsi_issue_sdiocommand(pfunction,	SD_IO_SEND_OP_COND, 0,
++				    (MMC_RSP_R4 | MMC_CMD_BCR), &resp);
++	if (err)
++		rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n", __func__, err);
++	card->ocr = resp;
  
- /* Send the FW a request to remove the station from it's internal data
-@@ -2913,14 +2913,17 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	if (old_state >= IWL_AGG_ON) {
- 		iwl_mvm_drain_sta(mvm, mvmsta, true);
--		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), 0))
--			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
- 
--		if (iwl_mvm_has_new_tx_api(mvm))
-+		if (iwl_mvm_has_new_tx_api(mvm)) {
-+			if (iwl_mvm_flush_sta_tids(mvm, mvmsta->sta_id,
-+						   BIT(tid), 0))
-+				IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
- 			iwl_trans_wait_txq_empty(mvm->trans, txq_id);
--
--		else
-+		} else {
-+			if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), 0))
-+				IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
- 			iwl_trans_wait_tx_queues_empty(mvm->trans, BIT(txq_id));
-+		}
- 
- 		iwl_mvm_drain_sta(mvm, mvmsta, false);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 02f293b711fd..157a75394763 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1902,11 +1902,13 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags)
- {
- 	int ret;
--	struct iwl_tx_path_flush_cmd flush_cmd = {
-+	struct iwl_tx_path_flush_cmd_v1 flush_cmd = {
- 		.queues_ctl = cpu_to_le32(tfd_msk),
- 		.flush_ctl = cpu_to_le16(DUMP_TX_FIFO_FLUSH),
- 	};
- 
-+	WARN_ON(iwl_mvm_has_new_tx_api(mvm));
-+
- 	ret = iwl_mvm_send_cmd_pdu(mvm, TXPATH_FLUSH, flags,
- 				   sizeof(flush_cmd), &flush_cmd);
- 	if (ret)
-@@ -1914,19 +1916,41 @@ int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags)
- 	return ret;
- }
- 
--int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
-+int iwl_mvm_flush_sta_tids(struct iwl_mvm *mvm, u32 sta_id,
-+			   u16 tids, u32 flags)
- {
--	u32 mask;
-+	int ret;
-+	struct iwl_tx_path_flush_cmd flush_cmd = {
-+		.sta_id = cpu_to_le32(sta_id),
-+		.tid_mask = cpu_to_le16(tids),
-+	};
- 
--	if (internal) {
--		struct iwl_mvm_int_sta *int_sta = sta;
-+	WARN_ON(!iwl_mvm_has_new_tx_api(mvm));
- 
--		mask = int_sta->tfd_queue_msk;
--	} else {
--		struct iwl_mvm_sta *mvm_sta = sta;
-+	ret = iwl_mvm_send_cmd_pdu(mvm, TXPATH_FLUSH, flags,
-+				   sizeof(flush_cmd), &flush_cmd);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to send flush command (%d)\n", ret);
-+	return ret;
-+}
- 
--		mask = mvm_sta->tfd_queue_msk;
-+int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
-+{
-+	struct iwl_mvm_int_sta *int_sta = sta;
-+	struct iwl_mvm_sta *mvm_sta = sta;
-+
-+	if (iwl_mvm_has_new_tx_api(mvm)) {
-+		if (internal)
-+			return iwl_mvm_flush_sta_tids(mvm, int_sta->sta_id,
-+						      BIT(IWL_MGMT_TID), flags);
-+
-+		return iwl_mvm_flush_sta_tids(mvm, mvm_sta->sta_id,
-+					      0xFF, flags);
- 	}
- 
--	return iwl_mvm_flush_tx_path(mvm, mask, flags);
-+	if (internal)
-+		return iwl_mvm_flush_tx_path(mvm, int_sta->tfd_queue_msk,
-+					     flags);
-+
-+	return iwl_mvm_flush_tx_path(mvm, mvm_sta->tfd_queue_msk, flags);
- }
+ 	/* Issue CMD5, arg = ocr. Wait till card is ready  */
+ 	for (i = 0; i < 100; i++) {
+-		err = rsi_issue_sdiocommand(pfunction,
+-					    SD_IO_SEND_OP_COND,
+-					    host->ocr_avail,
+-					    (MMC_RSP_R4 | MMC_CMD_BCR),
+-					    &resp);
++		err = rsi_issue_sdiocommand(pfunction, SD_IO_SEND_OP_COND,
++					    card->ocr,
++					    (MMC_RSP_R4 | MMC_CMD_BCR), &resp);
+ 		if (err) {
+ 			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
+ 				__func__, err);
 -- 
-2.11.0
+2.7.4
