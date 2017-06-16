@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54036 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751058AbdFAM6U (ORCPT
+Received: from smtprelay0224.hostedemail.com ([216.40.44.224]:52390 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752686AbdFPMmx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 08:58:20 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Initialize nbytes to 0
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1483653641-8377-1-git-send-email-greearb@candelatech.com>
-References: <1483653641-8377-1-git-send-email-greearb@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        Ben Greear <greearb@candelatech.com>
-Message-ID: <b2a323bda04b475983a58e4c7113a81a@eusanexr01a.eu.qualcomm.com> (sfid-20170601_145832_686245_5E3ACBD0)
-Date: Thu, 1 Jun 2017 05:58:16 -0700
+        Fri, 16 Jun 2017 08:42:53 -0400
+Message-ID: <1497616969.10546.11.camel@perches.com> (sfid-20170616_144256_252836_AF59FF29)
+Subject: Re: [RFC] networking: add and use skb_put_u8()
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 16 Jun 2017 05:42:49 -0700
+In-Reply-To: <1497614684.10546.9.camel@perches.com>
+References: <20170616090300.13805-1-johannes@sipsolutions.net>
+         <b7ba5145-b4f0-0f86-e93d-ad8700483ff2@broadcom.com>
+         (sfid-20170616_121658_816680_06914E8C) <1497608566.2622.7.camel@sipsolutions.net>
+         <1497614684.10546.9.camel@perches.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> wrote:
-
-> ath10k firmware checks nbytes == 0 as part of determining if DMA
-> has completed successfully.  To help make this work more often,
-> have the driver initialize nbytes to zero when freeing the descriptor
-> slot.
+On Fri, 2017-06-16 at 05:04 -0700, Joe Perches wrote:
+> Perhaps
 > 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> 	skb_put_data(skb, &c, sizeof(c))
+> 
+> as that avoids api expansion.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Hmm.  Perhaps not.
 
-4f40b423339b ath10k: initialize nbytes to 0
+That wouldn't work very well for constants
+when some variant like skb_putchar/skb_put_u8
+works perfectly.
 
--- 
-https://patchwork.kernel.org/patch/9499733/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I still think skb_putchar is nicer naming,
+but perhaps the skb_put_u<size> is more
+amenable to use with constants.
