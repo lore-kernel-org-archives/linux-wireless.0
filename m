@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:33897 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751479AbdF1HXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 03:23:43 -0400
-Date: Wed, 28 Jun 2017 09:23:38 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
-        mgreer@animalcreek.com, colin.king@canonical.com, justin@kuvee.com
-Subject: Re: [PATCH v4] NFC: trf7970a: Correct register settings for 27MHz
- clock
-Message-ID: <20170628071746.GL21214@zurbaran.ger.intel.com> (sfid-20170628_092416_763754_1D10407F)
-References: <1493328526-28395-1-git-send-email-geoff@kuvee.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49930 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750760AbdFPFH1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Jun 2017 01:07:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: linux-next: build warning after merge of the wireless-drivers tree
+References: <20170616082507.1e824796@canb.auug.org.au>
+Date: Fri, 16 Jun 2017 08:07:21 +0300
+In-Reply-To: <20170616082507.1e824796@canb.auug.org.au> (Stephen Rothwell's
+        message of "Fri, 16 Jun 2017 08:25:07 +1000")
+Message-ID: <87a858ed12.fsf@codeaurora.org> (sfid-20170616_070745_149396_F48CD133)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493328526-28395-1-git-send-email-geoff@kuvee.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Geoff,
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-On Thu, Apr 27, 2017 at 05:28:46PM -0400, Geoff Lansberry wrote:
-> In prior commits the selected clock frequency does not propagate
-> correctly to what is written to the TRF7970A_MODULATOR_SYS_CLK_CTRL
-> register.
-> 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
->  drivers/nfc/trf7970a.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-Applied to nfc-next, thanks.
+> After merging the wireless-drivers tree, today's linux-next build
+> (x86_64 allmodconfig) produced this warning:
+>
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function
+> 'brcmf_usb_probe_phase2':
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2:
+> warning: 'devinfo' may be used uninitialized in this function
+> [-Wmaybe-uninitialized]
+>   mutex_unlock(&devinfo->dev_init_lock);
+>   ^
+>
+> Introduced by commit
+>
+>   6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
 
-Cheers,
-Samuel.
+Thanks, for the report. I also noticed this, only after I had applied
+the patch, but hopefully Arend sends a patch to fix this soon.
+
+-- 
+Kalle Valo
