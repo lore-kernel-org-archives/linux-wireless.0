@@ -1,74 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:33162 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752010AbdF0WHO (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33921 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754297AbdFPOi6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 18:07:14 -0400
-Received: by mail-qk0-f181.google.com with SMTP id r62so37254303qkf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 15:07:14 -0700 (PDT)
-Subject: Re: [PATCH 3/4] brcmfmac: rework headroom check in .start_xmit()
+        Fri, 16 Jun 2017 10:38:58 -0400
+Received: by mail-pf0-f195.google.com with SMTP id d5so6826134pfe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:38:58 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        James Hughes <james.hughes@raspberrypi.org>
-References: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com>
- <1498125664-25980-4-git-send-email-arend.vanspriel@broadcom.com>
- <874lv15xp9.fsf@purkki.adurom.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0d8f0be4-4487-5f0d-c903-c87656c96bac@broadcom.com> (sfid-20170628_000718_742408_DE28A8F3)
-Date: Wed, 28 Jun 2017 00:07:10 +0200
-MIME-Version: 1.0
-In-Reply-To: <874lv15xp9.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 5/6] rsi: configure new boot parameters to device
+Date: Fri, 16 Jun 2017 20:05:40 +0530
+Message-Id: <1497623741-2082-6-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_163901_524608_2C13F942)
+In-Reply-To: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-06-17 16:09, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> 
->> Since commit 9cc4b7cb86cb ("brcmfmac: Make skb header writable
->> before use") the headroom usage has been fixed. However, the
->> driver was keeping statistics that got lost. So reworking the
->> code so we get those driver statistics back for debugging.
->>
->> Cc: James Hughes <james.hughes@raspberrypi.org>
->> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> ---
->>  .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 15 ++++++++++++--
->>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 23 +++++++++++++++-------
->>  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 13 +++++++-----
->>  3 files changed, 37 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
->> index e1a4d9e..163ddc4 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
->> @@ -113,6 +113,17 @@ struct brcmf_bus_msgbuf {
->>  
->>  
->>  /**
->> + * struct brcmf_bus_stats - bus statistic counters.
->> + *
->> + * @pktcowed: packets cowed for extra headroom/unorphan.
->> + * @pktcow_failed: packets dropped due to failed cow-ing.
->> + */
->> +struct brcmf_bus_stats {
->> +	atomic_t pktcowed;
->> +	atomic_t pktcow_failed;
->> +};
-> 
-> Same question as in the previous patch. I only see updates for these
-> variables, but nobody reading them?
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Hi Kalle,
+Boot parameters are changed in new firmware. Also three
+new sdio sleep parameters are added for ultra low power
+save.
 
-You are right. My intention was to expose these to debugfs, but clearly
-did not include it in this patch series. So how do you want to handle
-this. Feel free to drop patch 2 and 3. I can resubmit them with
-subsequent patches dealing with exposing it to debugfs if that makes
-more sense.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 20 +++++++++++++-------
+ drivers/net/wireless/rsi/rsi_boot_params.h | 15 +++++++++------
+ 2 files changed, 22 insertions(+), 13 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index fac87c0..b2950aa 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -45,10 +45,10 @@ static struct bootup_params boot_params_20 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = cpu_to_le16(BIT(3)),
+-			.bbp_lmac_clk_reg_val = cpu_to_le16(0x121),
+-			.umac_clock_reg_config = 0x0,
+-			.qspi_uart_clock_reg_config = 0x0
++			.switch_clk_info = cpu_to_le16(0xb),
++			.bbp_lmac_clk_reg_val = cpu_to_le16(0x111),
++			.umac_clock_reg_config = cpu_to_le16(0x48),
++			.qspi_uart_clock_reg_config = cpu_to_le16(0x1211)
+ 		}
+ 	},
+ 	{
+@@ -106,7 +106,10 @@ static struct bootup_params boot_params_20 = {
+ 	.wdt_prog_value = 0x0,
+ 	.wdt_soc_rst_delay = 0x0,
+ 	.dcdc_operation_mode = 0x0,
+-	.soc_reset_wait_cnt = 0x0
++	.soc_reset_wait_cnt = 0x0,
++	.waiting_time_at_fresh_sleep = 0x0,
++	.max_threshold_to_avoid_sleep = 0x0,
++	.beacon_resedue_alg_en = 0,
+ };
+ 
+ static struct bootup_params boot_params_40 = {
+@@ -139,7 +142,7 @@ static struct bootup_params boot_params_40 = {
+ 			.switch_clk_info = cpu_to_le16(0x09),
+ 			.bbp_lmac_clk_reg_val = cpu_to_le16(0x1121),
+ 			.umac_clock_reg_config = cpu_to_le16(0x48),
+-			.qspi_uart_clock_reg_config = 0x0
++			.qspi_uart_clock_reg_config = cpu_to_le16(0x1211)
+ 		}
+ 	},
+ 	{
+@@ -197,7 +200,10 @@ static struct bootup_params boot_params_40 = {
+ 	.wdt_prog_value = 0x0,
+ 	.wdt_soc_rst_delay = 0x0,
+ 	.dcdc_operation_mode = 0x0,
+-	.soc_reset_wait_cnt = 0x0
++	.soc_reset_wait_cnt = 0x0,
++	.waiting_time_at_fresh_sleep = 0x0,
++	.max_threshold_to_avoid_sleep = 0x0,
++	.beacon_resedue_alg_en = 0,
+ };
+ 
+ static u16 mcs[] = {13, 26, 39, 52, 78, 104, 117, 130};
+diff --git a/drivers/net/wireless/rsi/rsi_boot_params.h b/drivers/net/wireless/rsi/rsi_boot_params.h
+index 5e2721f..238ee96 100644
+--- a/drivers/net/wireless/rsi/rsi_boot_params.h
++++ b/drivers/net/wireless/rsi/rsi_boot_params.h
+@@ -24,19 +24,19 @@
+ #define WIFI_AFEPLL_CONFIGS              BIT(7)
+ #define WIFI_SWITCH_CLK_CONFIGS          BIT(8)
+ 
+-#define TA_PLL_M_VAL_20                  8
+-#define TA_PLL_N_VAL_20                  1
++#define TA_PLL_M_VAL_20                  9
++#define TA_PLL_N_VAL_20                  0
+ #define TA_PLL_P_VAL_20                  4
+ 
+ #define PLL960_M_VAL_20                  0x14
+ #define PLL960_N_VAL_20                  0
+ #define PLL960_P_VAL_20                  5
+ 
+-#define UMAC_CLK_40MHZ                   40
++#define UMAC_CLK_40MHZ                   80
+ 
+-#define TA_PLL_M_VAL_40                  46
+-#define TA_PLL_N_VAL_40                  3
+-#define TA_PLL_P_VAL_40                  3
++#define TA_PLL_M_VAL_40                  9
++#define TA_PLL_N_VAL_40                  0
++#define TA_PLL_P_VAL_40                  4
+ 
+ #define PLL960_M_VAL_40                  0x14
+ #define PLL960_N_VAL_40                  0
+@@ -122,5 +122,8 @@ struct bootup_params {
+ 	/* dcdc modes configs */
+ 	__le32 dcdc_operation_mode;
+ 	__le32 soc_reset_wait_cnt;
++	__le32 waiting_time_at_fresh_sleep;
++	__le32 max_threshold_to_avoid_sleep;
++	u8 beacon_resedue_alg_en;
+ } __packed;
+ #endif
+-- 
+2.7.4
