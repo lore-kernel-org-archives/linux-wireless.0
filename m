@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57932 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751988AbdFNJVL (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34494 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752051AbdFPOiy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 05:21:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, "Peter S. Housel" <housel@acm.org>
-Subject: Re: [V3] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-References: <1497264382-2290-1-git-send-email-arend.vanspriel@broadcom.com>
-        <20170613070028.5F9CB606DC@smtp.codeaurora.org>
-        <6a8d5627-1d7c-a448-6657-0e1a2bb5ed9a@broadcom.com>
-Date: Wed, 14 Jun 2017 12:21:06 +0300
-In-Reply-To: <6a8d5627-1d7c-a448-6657-0e1a2bb5ed9a@broadcom.com> (Arend van
-        Spriel's message of "Tue, 13 Jun 2017 13:29:52 +0200")
-Message-ID: <87vany3oxp.fsf@kamboji.qca.qualcomm.com> (sfid-20170614_112120_814470_A39542D1)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 16 Jun 2017 10:38:54 -0400
+Received: by mail-pg0-f67.google.com with SMTP id j186so6558190pge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:38:54 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [v2 4/6] rsi: receive path enhancement for RS9113
+Date: Fri, 16 Jun 2017 20:05:39 +0530
+Message-Id: <1497623741-2082-5-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_163857_042186_6AE5F561)
+In-Reply-To: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497623741-2082-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> On 13-06-17 09:00, Kalle Valo wrote:
->> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->> 
->>> From: "Peter S. Housel" <housel@acm.org>
->>>
->>> An earlier change to this function (3bdae810721b) fixed a leak in the
->>> case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
->>> glom_skb buffer, used for emulating a scattering read, is never used
->>> or referenced after its contents are copied into the destination
->>> buffers, and therefore always needs to be freed by the end of the
->>> function.
->>>
->>> Fixes: 3bdae810721b ("brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain")
->>> Fixes: a413e39a38573 ("brcmfmac: fix brcmf_sdcard_recv_chain() for
->>> host without sg support")
->>> Cc: stable@vger.kernel.org # 4.9.x-
->>> Signed-off-by: Peter S. Housel <housel@acm.org>
->>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> 
->> Patch applied to wireless-drivers-next.git, thanks.
->
-> Yikes. You say wireless-drivers-next? I should have tagged it better,
-> but I would like to get this fix in 4.12 and stable.
+RS9113 chipset supports Coex feature. Initial frame exchanges during
+device initialization happens on coex queue. This patch adds the
+handling for coex queue.
 
-Yes, always document clearly your intentions. I have so many patches
-(and emails) to go through that I do not have much time for each patch
-to figure out which tree it should go. And in this case the commit log
-didn't mention any major breakage so I assumed this is for -next.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 9 ++++++++-
+ drivers/net/wireless/rsi/rsi_main.h     | 1 +
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-In theory I could cherry-pick the commit to wireless-drivers, but as
-this doesn't look like a serious issue (no crashes or anything like
-that), is it enough that this goes to 4.12 via stable tree? Just takes a
-little longer, nothing else.
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 8810862..f1cde0c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -123,9 +123,16 @@ int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
+ 
+ 		queueno = rsi_get_queueno(frame_desc, offset);
+ 		length = rsi_get_length(frame_desc, offset);
+-		extended_desc = rsi_get_extended_desc(frame_desc, offset);
++
++		/* Extended descriptor is valid for WLAN queues only */
++		if (queueno == RSI_WIFI_DATA_Q || queueno == RSI_WIFI_MGMT_Q)
++			extended_desc = rsi_get_extended_desc(frame_desc,
++							      offset);
+ 
+ 		switch (queueno) {
++		case RSI_COEX_Q:
++			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
++			break;
+ 		case RSI_WIFI_DATA_Q:
+ 			skb = rsi_prepare_skb(common,
+ 					      (frame_desc + offset),
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 74ae0ac..f12e5d9 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -63,6 +63,7 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ #define MAX_CONTINUOUS_VI_PKTS          4
+ 
+ /* Queue information */
++#define RSI_COEX_Q			0x0
+ #define RSI_WIFI_MGMT_Q                 0x4
+ #define RSI_WIFI_DATA_Q                 0x5
+ #define IEEE80211_MGMT_FRAME            0x00
 -- 
-Kalle Valo
+2.7.4
