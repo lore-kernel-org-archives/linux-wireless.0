@@ -1,128 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37332 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752167AbdFNLzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 07:55:39 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Robert O'Callahan <robert@ocallahan.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] dev_ioctl: copy only the smaller struct iwreq for wext
-Date: Wed, 14 Jun 2017 13:55:23 +0200
-Message-Id: <20170614115523.16379-4-johannes@sipsolutions.net> (sfid-20170614_135558_240898_4BE5C2F5)
-In-Reply-To: <20170614115523.16379-1-johannes@sipsolutions.net>
-References: <20170614115523.16379-1-johannes@sipsolutions.net>
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:38737
+        "EHLO osg.samsung.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753305AbdFQP1W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Jun 2017 11:27:22 -0400
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 07/26] rfkill.txt: standardize document format
+Date: Sat, 17 Jun 2017 12:26:47 -0300
+Message-Id: <0cbf26da98f6f6124c440be11452d0df7b537ec7.1497713221.git.mchehab@s-opensource.com> (sfid-20170617_173242_253452_6BEDDD09)
+In-Reply-To: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
+References: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
+In-Reply-To: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
+References: <1a82f2bf2de4b016964cb71ff92dc3a472044f40.1497713221.git.mchehab@s-opensource.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Each text file under Documentation follows a different
+format. Some doesn't even have titles!
 
-Unfortunately, struct iwreq isn't a proper subset of struct ifreq,
-but is still handled by the same code path. Robert reported that
-then applications may (randomly) fault if the struct iwreq they
-pass happens to land within 8 bytes of the end of a mapping (the
-struct is only 32 bytes, vs. struct ifreq's 40 bytes).
+Change its representation to follow the adopted standard,
+using ReST markups for it to be parseable by Sphinx:
 
-To fix this, pull out the code handling wireless extension ioctls
-and copy only the smaller structure in this case.
+- mark titles;
+- comment contents index;
+- mark literal blocks;
+- adjust identation.
 
-This bug goes back a long time, I tracked that it was introduced
-into mainline in 2.1.15, over 20 years ago!
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=195869
-
-Reported-by: Robert O'Callahan <robert@ocallahan.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
 ---
- include/net/wext.h       |  4 ++--
- net/core/dev_ioctl.c     | 19 ++++++++++++++++---
- net/wireless/wext-core.c |  6 +++---
- 3 files changed, 21 insertions(+), 8 deletions(-)
+ Documentation/rfkill.txt | 43 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
 
-diff --git a/include/net/wext.h b/include/net/wext.h
-index 345911965dbb..454ff763eeba 100644
---- a/include/net/wext.h
-+++ b/include/net/wext.h
-@@ -6,7 +6,7 @@
- struct net;
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 8c174063b3f0..a289285d2412 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -1,13 +1,13 @@
++===============================
+ rfkill - RF kill switch support
+ ===============================
  
- #ifdef CONFIG_WEXT_CORE
--int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
-+int wext_handle_ioctl(struct net *net, struct iwreq *iwr, unsigned int cmd,
- 		      void __user *arg);
- int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- 			     unsigned long arg);
-@@ -14,7 +14,7 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- struct iw_statistics *get_wireless_stats(struct net_device *dev);
- int call_commit_handler(struct net_device *dev);
- #else
--static inline int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
-+static inline int wext_handle_ioctl(struct net *net, struct iwreq *iwr, unsigned int cmd,
- 				    void __user *arg)
- {
- 	return -EINVAL;
-diff --git a/net/core/dev_ioctl.c b/net/core/dev_ioctl.c
-index b94b1d293506..27fad31784a8 100644
---- a/net/core/dev_ioctl.c
-+++ b/net/core/dev_ioctl.c
-@@ -410,6 +410,22 @@ int dev_ioctl(struct net *net, unsigned int cmd, void __user *arg)
- 	if (cmd == SIOCGIFNAME)
- 		return dev_ifname(net, (struct ifreq __user *)arg);
+-1. Introduction
+-2. Implementation details
+-3. Kernel API
+-4. Userspace support
  
-+	/*
-+	 * Take care of Wireless Extensions. Unfortunately struct iwreq
-+	 * isn't a proper subset of struct ifreq (it's 8 byte shorter)
-+	 * so we need to treat it specially, otherwise applications may
-+	 * fault if the struct they're passing happens to land at the
-+	 * end of a mapped page.
-+	 */
-+	if (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) {
-+		struct iwreq iwr;
++.. contents::
++   :depth: 2
+ 
+-1. Introduction
++Introduction
++============
+ 
+ The rfkill subsystem provides a generic interface to disabling any radio
+ transmitter in the system. When a transmitter is blocked, it shall not
+@@ -21,17 +21,24 @@ aircraft.
+ The rfkill subsystem has a concept of "hard" and "soft" block, which
+ differ little in their meaning (block == transmitters off) but rather in
+ whether they can be changed or not:
+- - hard block: read-only radio block that cannot be overridden by software
+- - soft block: writable radio block (need not be readable) that is set by
+-               the system software.
 +
-+		if (copy_from_user(&iwr, arg, sizeof(iwr)))
-+			return -EFAULT;
++ - hard block
++	read-only radio block that cannot be overridden by software
 +
-+		return wext_handle_ioctl(net, &iwr, cmd, arg);
-+	}
++ - soft block
++	writable radio block (need not be readable) that is set by
++        the system software.
+ 
+ The rfkill subsystem has two parameters, rfkill.default_state and
+-rfkill.master_switch_mode, which are documented in admin-guide/kernel-parameters.rst.
++rfkill.master_switch_mode, which are documented in
++admin-guide/kernel-parameters.rst.
+ 
+ 
+-2. Implementation details
++Implementation details
++======================
+ 
+ The rfkill subsystem is composed of three main components:
 +
- 	if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
- 		return -EFAULT;
- 
-@@ -559,9 +575,6 @@ int dev_ioctl(struct net *net, unsigned int cmd, void __user *arg)
- 				ret = -EFAULT;
- 			return ret;
- 		}
--		/* Take care of Wireless Extensions */
--		if (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST)
--			return wext_handle_ioctl(net, &ifr, cmd, arg);
- 		return -ENOTTY;
- 	}
- }
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 12949c8d3e5f..6cdb054484d6 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -1035,18 +1035,18 @@ static int ioctl_standard_call(struct net_device *	dev,
- }
+  * the rfkill core,
+  * the deprecated rfkill-input module (an input layer handler, being
+    replaced by userspace policy code) and
+@@ -55,7 +62,8 @@ use the return value of rfkill_set_hw_state() unless the hardware actually
+ keeps track of soft and hard block separately.
  
  
--int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
-+int wext_handle_ioctl(struct net *net, struct iwreq *iwr, unsigned int cmd,
- 		      void __user *arg)
- {
- 	struct iw_request_info info = { .cmd = cmd, .flags = 0 };
- 	int ret;
+-3. Kernel API
++Kernel API
++==========
  
--	ret = wext_ioctl_dispatch(net, (void *)ifr, cmd, &info,
-+	ret = wext_ioctl_dispatch(net, iwr, cmd, &info,
- 				  ioctl_standard_call,
- 				  ioctl_private_call);
- 	if (ret >= 0 &&
- 	    IW_IS_GET(cmd) &&
--	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
-+	    copy_to_user(arg, iwr, sizeof(struct iwreq)))
- 		return -EFAULT;
  
- 	return ret;
+ Drivers for radio transmitters normally implement an rfkill driver.
+@@ -69,7 +77,7 @@ For some platforms, it is possible that the hardware state changes during
+ suspend/hibernation, in which case it will be necessary to update the rfkill
+ core with the current state is at resume time.
+ 
+-To create an rfkill driver, driver's Kconfig needs to have
++To create an rfkill driver, driver's Kconfig needs to have::
+ 
+ 	depends on RFKILL || !RFKILL
+ 
+@@ -87,7 +95,8 @@ RFKill provides per-switch LED triggers, which can be used to drive LEDs
+ according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+ 
+ 
+-5. Userspace support
++Userspace support
++=================
+ 
+ The recommended userspace interface to use is /dev/rfkill, which is a misc
+ character device that allows userspace to obtain and set the state of rfkill
+@@ -112,11 +121,11 @@ rfkill core framework.
+ Additionally, each rfkill device is registered in sysfs and emits uevents.
+ 
+ rfkill devices issue uevents (with an action of "change"), with the following
+-environment variables set:
++environment variables set::
+ 
+-RFKILL_NAME
+-RFKILL_STATE
+-RFKILL_TYPE
++	RFKILL_NAME
++	RFKILL_STATE
++	RFKILL_TYPE
+ 
+ The contents of these variables corresponds to the "name", "state" and
+ "type" sysfs files explained above.
 -- 
-2.11.0
+2.9.4
