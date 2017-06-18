@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35006 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751134AbdFYLNF (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35809 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750782AbdFRE0e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:05 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:57 +0300
-Message-Id: <20170625111158.1792-26-luca@coelho.fi> (sfid-20170625_131317_474220_AC3906B6)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 25/26] iwlwifi: pcie: work around suspend/resume issue
+        Sun, 18 Jun 2017 00:26:34 -0400
+Received: by mail-qt0-f196.google.com with SMTP id x58so16005794qtc.2
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Jun 2017 21:26:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 18 Jun 2017 14:26:13 +1000
+Message-ID: <CAGRGNgU8=i6Nox1k2c3RozPncm92Z9Gd85f=wgzwaSDmavbA4A@mail.gmail.com> (sfid-20170618_062641_943523_CB0D519C)
+Subject: Re: [PATCH] brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2()
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Arend,
 
-In some platforms, having the device enabled with certain radio
-frontends causes the platform to not be able to resume properly
-from suspend, regardless of the wakeup cause. This was traced to
-a hardware issue with the integrated 9000-series A-step variant.
-Set the right hardware bit to disable the problematic state.
+On Fri, Jun 16, 2017 at 6:36 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> This fixes the following warning:
+>
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function
+>   'brcmf_usb_probe_phase2':
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2:
+>   warning: 'devinfo' may be used uninitialized in this function
+>   [-Wmaybe-uninitialized]
+>     mutex_unlock(&devinfo->dev_init_lock);
+>
+> Fixes: 6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
+> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+> Reported-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+> index 9ce3b55..8b16387 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+> @@ -1164,14 +1164,13 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
+>                                    void *nvram, u32 nvlen)
+>  {
+>         struct brcmf_bus *bus = dev_get_drvdata(dev);
+> -       struct brcmf_usbdev_info *devinfo;
+> +       struct brcmf_usbdev_info *devinfo = bus->bus_priv.usb->devinfo;;
+>
+>         if (ret)
+>                 goto error;
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h    |  4 ++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 11 +++++++++++
- 2 files changed, 15 insertions(+)
+Completely unrelated to this specific patch, I just want to point out
+that this construct looks _really_ weird.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 36fb20168598..e239b1d92cf9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -153,6 +153,10 @@
- /* GIO Chicken Bits (PCI Express bus link power management) */
- #define CSR_GIO_CHICKEN_BITS    (CSR_BASE+0x100)
- 
-+/* host chicken bits */
-+#define CSR_HOST_CHICKEN	(CSR_BASE + 0x204)
-+#define CSR_HOST_CHICKEN_PM_IDLE_SRC_DIS_SB_PME	BIT(19)
-+
- /* Analog phase-lock-loop configuration  */
- #define CSR_ANA_PLL_CFG         (CSR_BASE+0x20c)
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 233b6734c237..5778ba2278d1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3134,6 +3134,17 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		}
- 	}
- 
-+	/*
-+	 * 9000-series integrated A-step has a problem with suspend/resume
-+	 * and sometimes even causes the whole platform to get stuck. This
-+	 * workaround makes the hardware not go into the problematic state.
-+	 */
-+	if (trans->cfg->integrated &&
-+	    trans->cfg->device_family == IWL_DEVICE_FAMILY_9000 &&
-+	    CSR_HW_REV_STEP(trans->hw_rev) == SILICON_A_STEP)
-+		iwl_set_bit(trans, CSR_HOST_CHICKEN,
-+			    CSR_HOST_CHICKEN_PM_IDLE_SRC_DIS_SB_PME);
-+
- 	trans->hw_rf_id = iwl_read32(trans, CSR_HW_RF_ID);
- 
- 	iwl_pcie_set_interrupt_capa(pdev, trans);
+Thanks,
+
 -- 
-2.11.0
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
