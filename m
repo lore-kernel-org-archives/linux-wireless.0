@@ -1,45 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36190 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752407AbdF2RIM (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33441 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753225AbdFRQND (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 13:08:12 -0400
-Message-ID: <1498756084.22048.143.camel@coelho.fi> (sfid-20170629_190854_257142_7709F16A)
-From: Luca Coelho <luca@coelho.fi>
-To: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
-        johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        linuxwifi@intel.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 29 Jun 2017 20:08:04 +0300
-In-Reply-To: <1498650587.22048.110.camel@coelho.fi>
-References: <1498034442-17664-1-git-send-email-bhumirks@gmail.com>
-         <1498650587.22048.110.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: mvm: add const to thermal_cooling_device_ops
- structure
+        Sun, 18 Jun 2017 12:13:03 -0400
+Received: by mail-oi0-f65.google.com with SMTP id k145so7238526oih.0
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:03 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 08/11] rtlwifi: Add btcoex record_pwr_mode
+Date: Sun, 18 Jun 2017 11:12:46 -0500
+Message-Id: <20170618161249.6146-9-Larry.Finger@lwfinger.net> (sfid-20170618_181320_445377_AA92149A)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-06-28 at 14:49 +0300, Luca Coelho wrote:
-> On Wed, 2017-06-21 at 14:10 +0530, Bhumika Goyal wrote:
-> > Declare thermal_cooling_device_ops structure as const as it is only passed
-> > as an argument to the function thermal_cooling_device_register and this
-> > argument is of type const. So, declare the structure as const.
-> > 
-> > Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> > ---
-> 
-> Thanks, we're reviewing this internally.  It looks fine, but I need to
-> assess whether this will have any impacts in our backports project
-> before we can apply it.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-This has been applied in our internal tree and will eventually land in
-the mainline.
+Add btcoex record pwr mode to control LPS's parameters and share time
+with BT.
 
-Thanks!
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c | 13 +++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h |  1 +
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c      |  7 ++++++-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h      |  4 +++-
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c      |  8 +++++++-
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h      |  4 +++-
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c      |  7 ++++++-
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h      |  4 +++-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h              |  1 +
+ 9 files changed, 43 insertions(+), 6 deletions(-)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 9635c1478875..3b976dab712f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -45,8 +45,21 @@ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_is_disable_edca_turbo = rtl_btc_is_disable_edca_turbo,
+ 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
+ 	.btc_special_packet_notify = rtl_btc_special_packet_notify,
++	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
+ };
+ 
++void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
++{
++	u8 safe_len;
++
++	safe_len = sizeof(gl_bt_coexist.pwr_mode_val);
++
++	if (safe_len > len)
++		safe_len = len;
++
++	memcpy(gl_bt_coexist.pwr_mode_val, buf, safe_len);
++}
++
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
+ {
+ 	exhalbtc_initlize_variables();
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index fff5117e1c4e..9eeb4fdeaec1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -43,6 +43,7 @@ bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv);
+ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
+ bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
+ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
++void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+ 
+ struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index c6c9c66abe1f..c11f1c04f871 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -422,7 +422,8 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 u1_h2c_set_pwrmode[H2C_92E_PWEMODE_LENGTH] = { 0 };
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	u8 rlbm , power_state = 0;
++	u8 rlbm, power_state = 0, byte5 = 0x40;
++	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD , "FW LPS mode = %d\n", mode);
+ 
+@@ -440,10 +441,14 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	else
+ 		power_state |= FW_PWR_STATE_RF_OFF;
+ 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
++	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+ 		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
+ 		      u1_h2c_set_pwrmode, H2C_92E_PWEMODE_LENGTH);
++	if (rtlpriv->cfg->ops->get_btc_status())
++		btc_ops->btc_record_pwr_mode(rtlpriv, u1_h2c_set_pwrmode,
++					     H2C_92E_PWEMODE_LENGTH);
+ 	rtl92ee_fill_h2c_cmd(hw, H2C_92E_SETPWRMODE, H2C_92E_PWEMODE_LENGTH,
+ 			     u1_h2c_set_pwrmode);
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
+index af8271967a88..b770f722daa6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
+@@ -37,7 +37,7 @@
+ #define USE_OLD_WOWLAN_DEBUG_FW 0
+ 
+ #define H2C_92E_RSVDPAGE_LOC_LEN		5
+-#define H2C_92E_PWEMODE_LENGTH			5
++#define H2C_92E_PWEMODE_LENGTH			7
+ #define H2C_92E_JOINBSSRPT_LENGTH		1
+ #define H2C_92E_AP_OFFLOAD_LENGTH		3
+ #define H2C_92E_WOWLAN_LENGTH			3
+@@ -154,6 +154,8 @@ enum rtl8192e_c2h_evt {
+ 	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __val)
+ #define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__cmd, __val)		\
+ 	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_BYTE5(__cmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__cmd) + 5, 0, 8, __val)
+ #define GET_92E_H2CCMD_PWRMODE_PARM_MODE(__cmd)			\
+ 	LE_BITS_TO_1BYTE(__cmd, 0, 8)
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index a7e31af2b5de..488376becdcb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -240,7 +240,9 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 u1_h2c_set_pwrmode[H2C_PWEMODE_LENGTH] = { 0 };
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	u8 rlbm, power_state = 0;
++	u8 rlbm, power_state = 0, byte5 = 0x40;
++	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
+ 
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+@@ -257,10 +259,14 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	else
+ 		power_state |= FW_PWR_STATE_RF_OFF;
+ 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
++	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+ 		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
+ 		      u1_h2c_set_pwrmode, H2C_PWEMODE_LENGTH);
++	if (rtlpriv->cfg->ops->get_btc_status())
++		btc_ops->btc_record_pwr_mode(rtlpriv, u1_h2c_set_pwrmode,
++					     H2C_PWEMODE_LENGTH);
+ 	rtl8723be_fill_h2c_cmd(hw, H2C_8723B_SETPWRMODE, H2C_PWEMODE_LENGTH,
+ 			       u1_h2c_set_pwrmode);
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
+index 2482b3bc2bfa..2de4edb62bca 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
+@@ -33,7 +33,7 @@
+ 
+ #define USE_OLD_WOWLAN_DEBUG_FW			0
+ 
+-#define H2C_PWEMODE_LENGTH			5
++#define H2C_PWEMODE_LENGTH			7
+ 
+ /* Fw PS state for RPWM.
+ *BIT[2:0] = HW state
+@@ -125,6 +125,8 @@ enum rtl8723b_c2h_evt {
+ 	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+3, 0, 8, __val)
+ #define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__ph2ccmd, __val)		\
+ 	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+4, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_BYTE5(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 5, 0, 8, __val)
+ #define GET_88E_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd)			\
+ 	LE_BITS_TO_1BYTE(__ph2ccmd, 0, 8)
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 5eeb0b1cafa4..96b8a9bdaf55 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -489,7 +489,8 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 u1_h2c_set_pwrmode[H2C_8821AE_PWEMODE_LENGTH] = { 0 };
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	u8 rlbm, power_state = 0;
++	u8 rlbm, power_state = 0, byte5 = 0x40;
++	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
+ 
+@@ -508,10 +509,14 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 		power_state |= FW_PWR_STATE_RF_OFF;
+ 
+ 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
++	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+ 		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
+ 		      u1_h2c_set_pwrmode, H2C_8821AE_PWEMODE_LENGTH);
++	if (rtlpriv->cfg->ops->get_btc_status())
++		btc_ops->btc_record_pwr_mode(rtlpriv, u1_h2c_set_pwrmode,
++					     H2C_8821AE_PWEMODE_LENGTH);
+ 	rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_SETPWRMODE,
+ 			       H2C_8821AE_PWEMODE_LENGTH,
+ 			       u1_h2c_set_pwrmode);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
+index 98d871afd92a..32d46d7128f5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
+@@ -42,7 +42,7 @@
+ #define USE_OLD_WOWLAN_DEBUG_FW 0
+ 
+ #define H2C_8821AE_RSVDPAGE_LOC_LEN		5
+-#define H2C_8821AE_PWEMODE_LENGTH			5
++#define H2C_8821AE_PWEMODE_LENGTH			7
+ #define H2C_8821AE_JOINBSSRPT_LENGTH		1
+ #define H2C_8821AE_AP_OFFLOAD_LENGTH		3
+ #define H2C_8821AE_WOWLAN_LENGTH			3
+@@ -218,6 +218,8 @@ enum rtl8821a_h2c_cmd {
+ 	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __value)
+ #define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__cmd, __value)	\
+ 	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __value)
++#define SET_H2CCMD_PWRMODE_PARM_BYTE5(__cmd, __value)		\
++	SET_BITS_TO_LE_1BYTE((__cmd) + 5, 0, 8, __value)
+ #define GET_8821AE_H2CCMD_PWRMODE_PARM_MODE(__cmd)		\
+ 	LE_BITS_TO_1BYTE(__cmd, 0, 8)
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 8f3035b41e6f..41ebdb9d3627 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2560,6 +2560,7 @@ struct rtl_btc_ops {
+ 	bool (*btc_is_bt_disabled) (struct rtl_priv *rtlpriv);
+ 	void (*btc_special_packet_notify)(struct rtl_priv *rtlpriv,
+ 					  u8 pkt_type);
++	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+ };
+ 
+ struct proxim {
+-- 
+2.12.3
