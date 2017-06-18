@@ -1,60 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33820 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbdFEPaD (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34526 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753185AbdFRQNE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 11:30:03 -0400
-Received: by mail-oi0-f68.google.com with SMTP id d99so10783051oic.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:03 -0700 (PDT)
+        Sun, 18 Jun 2017 12:13:04 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w127so7234032oiw.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:04 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
         Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 0/9] rtlwifi: btcoex: Further updates
-Date: Mon,  5 Jun 2017 10:29:50 -0500
-Message-Id: <20170605152959.27439-1-Larry.Finger@lwfinger.net> (sfid-20170605_173036_568901_B368C47A)
+Subject: [PATCH 09/11] rtlwifi: Add rx ampdu cfg for btcoexist.
+Date: Sun, 18 Jun 2017 11:12:47 -0500
+Message-Id: <20170618161249.6146-10-Larry.Finger@lwfinger.net> (sfid-20170618_181327_957033_AA1C9681)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of 9 patches contain the material that was originally sent as
-1 of 7. Each of these now accomplish a single task.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Larry
+If RX ampdu is too long, BT will have less time.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 27 ++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/base.h        |  1 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 16 +++++++++++--
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 12 ++++++++++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  2 ++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  2 ++
+ 6 files changed, 58 insertions(+), 2 deletions(-)
 
-Yan-Hsuan Chuang (9):
-  rtlwifi: btcoex: add macros to check chip type
-  rtlwifi: btcoex: rename ex_halbtcXXXXYZant to ex_btcXXXXYZant
-  rtlwifi: btcoex: settings before firmware is downloaded
-  rtlwifi: btcoex: hook external PnP notify by chip for wifi driver
-  rtlwifi: btcoex: add settings before the hardware is ready
-  rtlwifi: btcoex: hook external functions for newer chips
-  rtlwifi: btcoex: bind BT coex information with wifi driver
-  rtlwifi: btcoex: remove unused display functions
-  rtlwifi: btcoex: let btcoex get wifi rssi and link status
-
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  22 +
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   2 +-
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  32 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  52 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  41 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  38 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  26 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 838 ++++++++++++++++-----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  42 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  35 +-
- 11 files changed, 814 insertions(+), 317 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 897ec3cfa8c8..c6fef54f6543 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1582,6 +1582,7 @@ int rtl_rx_agg_start(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_tid_data *tid_data;
+ 	struct rtl_sta_info *sta_entry = NULL;
++	u8 reject_agg;
+ 
+ 	if (sta == NULL)
+ 		return -EINVAL;
+@@ -1589,6 +1590,14 @@ int rtl_rx_agg_start(struct ieee80211_hw *hw,
+ 	if (unlikely(tid >= MAX_TID_COUNT))
+ 		return -EINVAL;
+ 
++	if (rtlpriv->cfg->ops->get_btc_status()) {
++		rtlpriv->btcoexist.btc_ops->btc_get_ampdu_cfg(rtlpriv,
++							      &reject_agg,
++							      NULL, NULL);
++		if (reject_agg)
++			return -EINVAL;
++	}
++
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+ 	if (!sta_entry)
+ 		return -ENXIO;
+@@ -1643,6 +1652,24 @@ int rtl_tx_agg_oper(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++void rtl_rx_ampdu_apply(struct rtl_priv *rtlpriv)
++{
++	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++	u8 reject_agg, ctrl_agg_size = 0, agg_size;
++
++	if (rtlpriv->cfg->ops->get_btc_status())
++		btc_ops->btc_get_ampdu_cfg(rtlpriv, &reject_agg,
++					   &ctrl_agg_size, &agg_size);
++
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++		 "Set RX AMPDU: coex - reject=%d, ctrl_agg_size=%d, size=%d",
++		 reject_agg, ctrl_agg_size, agg_size);
++
++	rtlpriv->hw->max_rx_aggregation_subframes =
++		(ctrl_agg_size ? agg_size : IEEE80211_MAX_AMPDU_BUF);
++}
++EXPORT_SYMBOL(rtl_rx_ampdu_apply);
++
+ /*********************************************************
+  *
+  * wq & timer callback functions
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index a619fc92a9c0..21fa4562f631 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -147,6 +147,7 @@ int rtl_rx_agg_start(struct ieee80211_hw *hw,
+ 		     struct ieee80211_sta *sta, u16 tid);
+ int rtl_rx_agg_stop(struct ieee80211_hw *hw,
+ 		    struct ieee80211_sta *sta, u16 tid);
++void rtl_rx_ampdu_apply(struct rtl_priv *rtlpriv);
+ void rtl_watchdog_wq_callback(void *data);
+ void rtl_fwevt_wq_callback(void *data);
+ void rtl_c2hcmd_wq_callback(void *data);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 451039ac7b0a..226927a752f8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -272,14 +272,24 @@ static void halbtc_disable_low_power(struct btc_coexist *btcoexist,
+ static void halbtc_aggregation_check(struct btc_coexist *btcoexist)
+ {
+ 	bool need_to_act = false;
++	static unsigned long pre_time;
++	unsigned long cur_time = 0;
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+ 	/* To void continuous deleteBA=>addBA=>deleteBA=>addBA
+ 	 * This function is not allowed to continuous called
+ 	 * It can only be called after 8 seconds
+ 	 */
+ 
++	cur_time = jiffies;
++	if (jiffies_to_msecs(cur_time - pre_time) <= 8000) {
++		/* over 8 seconds you can execute this function again. */
++		return;
++	}
++	pre_time = cur_time;
++
+ 	if (btcoexist->bt_info.reject_agg_pkt) {
+-		;/* TODO: reject */
++		need_to_act = true;
+ 		btcoexist->bt_info.pre_reject_agg_pkt =
+ 			btcoexist->bt_info.reject_agg_pkt;
+ 	} else {
+@@ -304,8 +314,10 @@ static void halbtc_aggregation_check(struct btc_coexist *btcoexist)
+ 			btcoexist->bt_info.pre_agg_buf_size =
+ 				btcoexist->bt_info.agg_buf_size;
+ 		}
+-	}
+ 
++		if (need_to_act)
++			rtl_rx_ampdu_apply(rtlpriv);
++	}
+ }
+ 
+ static u32 halbtc_get_bt_patch_version(struct btc_coexist *btcoexist)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 3b976dab712f..96c1ccbf70ac 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -46,6 +46,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
+ 	.btc_special_packet_notify = rtl_btc_special_packet_notify,
+ 	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
++	.btc_get_ampdu_cfg = rtl_btc_get_ampdu_cfg,
+ };
+ 
+ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
+@@ -60,6 +61,17 @@ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
+ 	memcpy(gl_bt_coexist.pwr_mode_val, buf, safe_len);
+ }
+ 
++void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
++			   u8 *ctrl_agg_size, u8 *agg_size)
++{
++	if (reject_agg)
++		*reject_agg = gl_bt_coexist.bt_info.reject_agg_pkt;
++	if (ctrl_agg_size)
++		*ctrl_agg_size = gl_bt_coexist.bt_info.bt_ctrl_agg_buf_size;
++	if (agg_size)
++		*agg_size = gl_bt_coexist.bt_info.agg_buf_size;
++}
++
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
+ {
+ 	exhalbtc_initlize_variables();
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 9eeb4fdeaec1..c1c32d685c5d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -44,6 +44,8 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
+ bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
+ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
+ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
++void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
++			   u8 *ctrl_agg_size, u8 *agg_size);
+ 
+ struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 41ebdb9d3627..0591adedce76 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2561,6 +2561,8 @@ struct rtl_btc_ops {
+ 	void (*btc_special_packet_notify)(struct rtl_priv *rtlpriv,
+ 					  u8 pkt_type);
+ 	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
++	void (*btc_get_ampdu_cfg)(struct rtl_priv *rtlpriv, u8 *reject_agg,
++				  u8 *ctrl_agg_size, u8 *agg_size);
+ };
+ 
+ struct proxim {
 -- 
-2.13.0
+2.12.3
