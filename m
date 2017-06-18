@@ -1,288 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35054 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751134AbdFYLNi (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:36444 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753094AbdFRQMy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:47 +0300
-Message-Id: <20170625111158.1792-16-luca@coelho.fi> (sfid-20170625_131342_588464_EB0FCF69)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 15/26] iwlwifi: add a W/A for a scheduler hardware bug
+        Sun, 18 Jun 2017 12:12:54 -0400
+Received: by mail-ot0-f193.google.com with SMTP id r67so9070816ota.3
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:12:54 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 00/11] rtlwifi: Update drivers for various changes in btcoex
+Date: Sun, 18 Jun 2017 11:12:38 -0500
+Message-Id: <20170618161249.6146-1-Larry.Finger@lwfinger.net> (sfid-20170618_181308_671626_8012425B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+There have been a number of changes in btcoex that require changes in
+the other drivers.
 
-In case we need to move the scheduler write pointer by
-steps of 0x40, 0x80 or 0xc0, the scheduler gets stuck.
-This leads to hardware error interrupts with status:
-0x5A5A5A5A or alike.
+Larry
 
-In order to work around this, detect in the transport
-layer that we are going to hit this case and tell iwlmvm
-to increment the sequence number of the packets. This
-allows to keep the requirement that the WiFi sequence
-number is in sync with the index in the scheduler Tx queue
-and it also allows to avoid the problematic sequence.
-This means that from time to time, we will start a queue
-from ssn + 1, but that shouldn't be a problem since we
-don't switch to new queues for AMPDU now that we have
-DQA which allows to keep the same queue while toggling
-the AMPDU state.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-This bug has been fixed on 9000 devices and up.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 13 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 17 ++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 50 ++++++++++++----------
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 22 +++++++++-
- 6 files changed, 72 insertions(+), 34 deletions(-)
+Ping-Ke Shih (11):
+  rtlwifi: btcoex: call bind to setup btcoex
+  rtlwifi: btcoex: set correct interface type and parameter.
+  rtlwifi: btcoex: rtl8723be: fix ant_sel not work
+  rtlwifi: Correct power save capability while init mac80211
+  rtlwifi: extend debug_comp to u64
+  rtlwifi: Add TX report and disable key to force wait until report
+    acked.
+  rtlwifi: Revise special packet notification to be readable format.
+  rtlwifi: Add btcoex record_pwr_mode
+  rtlwifi: Add rx ampdu cfg for btcoexist.
+  rtlwifi: add btc_is_bt_lps_on() for btcoexist
+  rtlwifi: btcoexist control to enter/leave LPS
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 2e975c0be045..57db6250a329 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -482,7 +482,9 @@ struct iwl_trans_txq_scd_cfg {
-  *	iwl_trans_ac_txq_enable wrapper. fw_alive must have been called before
-  *	this one. The op_mode must not configure the HCMD queue. The scheduler
-  *	configuration may be %NULL, in which case the hardware will not be
-- *	configured. May sleep.
-+ *	configured. If true is returned, the operation mode needs to increment
-+ *	the sequence number of the packets routed to this queue because of a
-+ *	hardware scheduler bug. May sleep.
-  * @txq_disable: de-configure a Tx queue to send AMPDUs
-  *	Must be atomic
-  * @txq_set_shared_mode: change Tx queue shared/unshared marking
-@@ -544,7 +546,7 @@ struct iwl_trans_ops {
- 	void (*reclaim)(struct iwl_trans *trans, int queue, int ssn,
- 			struct sk_buff_head *skbs);
- 
--	void (*txq_enable)(struct iwl_trans *trans, int queue, u16 ssn,
-+	bool (*txq_enable)(struct iwl_trans *trans, int queue, u16 ssn,
- 			   const struct iwl_trans_txq_scd_cfg *cfg,
- 			   unsigned int queue_wdg_timeout);
- 	void (*txq_disable)(struct iwl_trans *trans, int queue,
-@@ -952,7 +954,7 @@ static inline void iwl_trans_txq_disable(struct iwl_trans *trans, int queue,
- 	trans->ops->txq_disable(trans, queue, configure_scd);
- }
- 
--static inline void
-+static inline bool
- iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
- 			 const struct iwl_trans_txq_scd_cfg *cfg,
- 			 unsigned int queue_wdg_timeout)
-@@ -961,10 +963,11 @@ iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
- 
- 	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
--		return;
-+		return false;
- 	}
- 
--	trans->ops->txq_enable(trans, queue, ssn, cfg, queue_wdg_timeout);
-+	return trans->ops->txq_enable(trans, queue, ssn,
-+				      cfg, queue_wdg_timeout);
- }
- 
- static inline void
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index e616472afd45..7171928872de 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1744,7 +1744,7 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
- }
- 
- /* hw scheduler queue config */
--void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-+bool iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 			u16 ssn, const struct iwl_trans_txq_scd_cfg *cfg,
- 			unsigned int wdg_timeout);
- int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm, int mac80211_queue,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 0249300c4600..aa41ee8ed916 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -758,7 +758,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	bool using_inactive_queue = false, same_sta = false;
- 	unsigned long disable_agg_tids = 0;
- 	enum iwl_mvm_agg_state queue_state;
--	bool shared_queue = false;
-+	bool shared_queue = false, inc_ssn;
- 	int ssn;
- 	unsigned long tfd_queue_mask;
- 	int ret;
-@@ -885,8 +885,12 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	}
- 
- 	ssn = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
--	iwl_mvm_enable_txq(mvm, queue, mac_queue, ssn, &cfg,
--			   wdg_timeout);
-+	inc_ssn = iwl_mvm_enable_txq(mvm, queue, mac_queue,
-+				     ssn, &cfg, wdg_timeout);
-+	if (inc_ssn) {
-+		ssn = (ssn + 1) & IEEE80211_SCTL_SEQ;
-+		le16_add_cpu(&hdr->seq_ctrl, 0x10);
-+	}
- 
- 	/*
- 	 * Mark queue as shared in transport if shared
-@@ -898,6 +902,13 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
- 
- 	spin_lock_bh(&mvmsta->lock);
-+	/*
-+	 * This looks racy, but it is not. We have only one packet for
-+	 * this ra/tid in our Tx path since we stop the Qdisc when we
-+	 * need to allocate a new TFD queue.
-+	 */
-+	if (inc_ssn)
-+		mvmsta->tid_data[tid].seq_number += 0x10;
- 	mvmsta->tid_data[tid].txq_id = queue;
- 	mvmsta->tid_data[tid].is_tid_active = true;
- 	mvmsta->tfd_queue_msk |= BIT(queue);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 8ba8b71dd1a4..0093e78dd571 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -757,35 +757,39 @@ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm, int mac80211_queue,
- 	return queue;
- }
- 
--void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-+bool iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 			u16 ssn, const struct iwl_trans_txq_scd_cfg *cfg,
- 			unsigned int wdg_timeout)
- {
-+	struct iwl_scd_txq_cfg_cmd cmd = {
-+		.scd_queue = queue,
-+		.action = SCD_CFG_ENABLE_QUEUE,
-+		.window = cfg->frame_limit,
-+		.sta_id = cfg->sta_id,
-+		.ssn = cpu_to_le16(ssn),
-+		.tx_fifo = cfg->fifo,
-+		.aggregate = cfg->aggregate,
-+		.tid = cfg->tid,
-+	};
-+	bool inc_ssn;
-+
- 	if (WARN_ON(iwl_mvm_has_new_tx_api(mvm)))
--		return;
-+		return false;
- 
- 	/* Send the enabling command if we need to */
--	if (iwl_mvm_update_txq_mapping(mvm, queue, mac80211_queue,
--				       cfg->sta_id, cfg->tid)) {
--		struct iwl_scd_txq_cfg_cmd cmd = {
--			.scd_queue = queue,
--			.action = SCD_CFG_ENABLE_QUEUE,
--			.window = cfg->frame_limit,
--			.sta_id = cfg->sta_id,
--			.ssn = cpu_to_le16(ssn),
--			.tx_fifo = cfg->fifo,
--			.aggregate = cfg->aggregate,
--			.tid = cfg->tid,
--		};
--
--		iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn, NULL,
--					 wdg_timeout);
--		WARN(iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0,
--					  sizeof(struct iwl_scd_txq_cfg_cmd),
--					  &cmd),
--		     "Failed to configure queue %d on FIFO %d\n", queue,
--		     cfg->fifo);
--	}
-+	if (!iwl_mvm_update_txq_mapping(mvm, queue, mac80211_queue,
-+					cfg->sta_id, cfg->tid))
-+		return false;
-+
-+	inc_ssn = iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn,
-+					   NULL, wdg_timeout);
-+	if (inc_ssn)
-+		le16_add_cpu(&cmd.ssn, 1);
-+
-+	WARN(iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd),
-+	     "Failed to configure queue %d on FIFO %d\n", queue, cfg->fifo);
-+
-+	return inc_ssn;
- }
- 
- int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 644c0e583f32..4295b8409720 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -516,7 +516,7 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans);
- void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr);
- int iwl_pcie_tx_stop(struct iwl_trans *trans);
- void iwl_pcie_tx_free(struct iwl_trans *trans);
--void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int queue, u16 ssn,
-+bool iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int queue, u16 ssn,
- 			       const struct iwl_trans_txq_scd_cfg *cfg,
- 			       unsigned int wdg_timeout);
- void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int queue,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 6b19ccc0ae41..9087b1fccaee 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1277,13 +1277,14 @@ static int iwl_pcie_txq_set_ratid_map(struct iwl_trans *trans, u16 ra_tid,
-  * combined with Traffic ID (QOS priority), in format used by Tx Scheduler */
- #define BUILD_RAxTID(sta_id, tid)	(((sta_id) << 4) + (tid))
- 
--void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
-+bool iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
- 			       const struct iwl_trans_txq_scd_cfg *cfg,
- 			       unsigned int wdg_timeout)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
- 	int fifo = -1;
-+	bool scd_bug = false;
- 
- 	if (test_and_set_bit(txq_id, trans_pcie->queue_used))
- 		WARN_ONCE(1, "queue %d already used - expect issues", txq_id);
-@@ -1324,6 +1325,23 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
- 
- 			ssn = txq->read_ptr;
- 		}
-+	} else {
-+		/*
-+		 * If we need to move the SCD write pointer by steps of
-+		 * 0x40, 0x80 or 0xc0, it gets stuck. Avoids this and let
-+		 * the op_mode know by returning true later.
-+		 * Do this only in case cfg is NULL since this trick can
-+		 * be done only if we have DQA enabled which is true for mvm
-+		 * only. And mvm never sets a cfg pointer.
-+		 * This is really ugly, but this is the easiest way out for
-+		 * this sad hardware issue.
-+		 * This bug has been fixed on devices 9000 and up.
-+		 */
-+		scd_bug = !trans->cfg->mq_rx_supported &&
-+			!((ssn - txq->write_ptr) & 0x3f) &&
-+			(ssn != txq->write_ptr);
-+		if (scd_bug)
-+			ssn++;
- 	}
- 
- 	/* Place first TFD at index corresponding to start sequence number.
-@@ -1367,6 +1385,8 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
- 				    "Activate queue %d WrPtr: %d\n",
- 				    txq_id, ssn & 0xff);
- 	}
-+
-+	return scd_bug;
- }
- 
- void iwl_trans_pcie_txq_set_shared_mode(struct iwl_trans *trans, u32 txq_id,
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 180 +++++++++++++++++++--
+ drivers/net/wireless/realtek/rtlwifi/base.h        |  14 ++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  41 ++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   3 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  52 +++++-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   7 +
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   5 +-
+ drivers/net/wireless/realtek/rtlwifi/debug.c       |   2 +-
+ drivers/net/wireless/realtek/rtlwifi/debug.h       |   7 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |  70 +++++++-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.h    |   4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.h   |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |  71 +++++++-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.h    |   4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.h   |  12 ++
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  73 +++++++--
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.h    |   4 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.h   |  13 ++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  18 +++
+ 25 files changed, 536 insertions(+), 62 deletions(-)
+
 -- 
-2.11.0
+2.12.3
