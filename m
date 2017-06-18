@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37324 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751843AbdFNLz2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 07:55:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Robert O'Callahan <robert@ocallahan.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] wireless: wext: remove ndo_do_ioctl fallback
-Date: Wed, 14 Jun 2017 13:55:21 +0200
-Message-Id: <20170614115523.16379-2-johannes@sipsolutions.net> (sfid-20170614_135557_710375_48034AC3)
-In-Reply-To: <20170614115523.16379-1-johannes@sipsolutions.net>
-References: <20170614115523.16379-1-johannes@sipsolutions.net>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34501 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753094AbdFRQM5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Jun 2017 12:12:57 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w127so7233873oiw.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:12:57 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 03/11] rtlwifi: btcoex: rtl8723be: fix ant_sel not work
+Date: Sun, 18 Jun 2017 11:12:41 -0500
+Message-Id: <20170618161249.6146-4-Larry.Finger@lwfinger.net> (sfid-20170618_181310_476658_93F87120)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-There are no longer any drivers (in the tree proper, I didn't
-check all the staging drivers) that take WEXT ioctls through
-this API, the only remaining ones that even have ndo_do_ioctl
-are using it only for private ioctls.
+To make ant_sel work, we should call power_on_setting to set antenna
+correctly.
 
-Therefore, we can remove this call.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- net/wireless/wext-core.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 3 +++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 1a4db6790e20..24ba8a99b946 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -957,9 +957,6 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 		else if (private)
- 			return private(dev, iwr, cmd, info, handler);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index a79f936bb394..0ce2900722f4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -846,6 +846,9 @@ static bool _rtl8723be_init_mac(struct ieee80211_hw *hw)
+ 		return false;
  	}
--	/* Old driver API : call driver ioctl handler */
--	if (dev->netdev_ops->ndo_do_ioctl)
--		return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
- 	return -EOPNOTSUPP;
- }
  
++	if (rtlpriv->cfg->ops->get_btc_status())
++		rtlpriv->btcoexist.btc_ops->btc_power_on_setting(rtlpriv);
++
+ 	bytetmp = rtl_read_byte(rtlpriv, REG_MULTI_FUNC_CTRL);
+ 	rtl_write_byte(rtlpriv, REG_MULTI_FUNC_CTRL, bytetmp | BIT(3));
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index c0d2601bc55f..31fcf43e24c1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2534,6 +2534,7 @@ struct bt_coexist_info {
+ struct rtl_btc_ops {
+ 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
++	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
+ 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
+ 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
 -- 
-2.11.0
+2.12.3
