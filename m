@@ -1,114 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30902 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753962AbdFSKJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:09:16 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 11/13] NFC: st-nci: Add GPIO ACPI mapping table
-Date: Mon, 19 Jun 2017 13:08:56 +0300
-Message-Id: <20170619100858.2655-12-andriy.shevchenko@linux.intel.com> (sfid-20170619_120920_957623_A2D2133C)
-In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
-References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33435 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753223AbdFRQND (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Jun 2017 12:13:03 -0400
+Received: by mail-oi0-f65.google.com with SMTP id k145so7238478oih.0
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:01 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/11] rtlwifi: Revise special packet notification to be readable format.
+Date: Sun, 18 Jun 2017 11:12:45 -0500
+Message-Id: <20170618161249.6146-8-Larry.Finger@lwfinger.net> (sfid-20170618_181312_303717_EACA24BF)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
+We extend types of special packets to a enumeration from boolean value.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/nfc/st-nci/i2c.c | 17 +++++++++++++----
- drivers/nfc/st-nci/spi.c | 17 +++++++++++++----
- 2 files changed, 26 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
-index 2ee381586f14..edda253b07fe 100644
---- a/drivers/nfc/st-nci/i2c.c
-+++ b/drivers/nfc/st-nci/i2c.c
-@@ -40,8 +40,6 @@
- #define ST_NCI_DRIVER_NAME "st_nci"
- #define ST_NCI_I2C_DRIVER_NAME "st_nci_i2c"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index f9d249f85177..897ec3cfa8c8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1313,14 +1313,15 @@ bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
+ }
+ EXPORT_SYMBOL_GPL(rtl_action_proc);
  
--#define ST_NCI_GPIO_NAME_RESET "reset"
--
- struct st_nci_i2c_phy {
- 	struct i2c_client *i2c_dev;
- 	struct llt_ndlc *ndlc;
-@@ -205,14 +203,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
- 	.disable = st_nci_i2c_disable,
- };
- 
-+static const struct acpi_gpio_params reset_gpios = { 1, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
-+	{ "reset-gpios", &reset_gpios, 1 },
-+	{},
-+};
-+
- static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
+-static void setup_arp_tx(struct rtl_priv *rtlpriv, struct rtl_ps_ctl *ppsc)
++static void setup_special_tx(struct rtl_priv *rtlpriv, struct rtl_ps_ctl *ppsc,
++			     int type)
  {
- 	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct device *dev = &client->dev;
-+	int r;
-+
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
-+	if (r)
-+		return r;
+ 	struct ieee80211_hw *hw = rtlpriv->hw;
  
- 	/* Get RESET GPIO from ACPI */
--	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET,
--						1, GPIOD_OUT_HIGH);
-+	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
- 	if (IS_ERR(phy->gpiod_reset)) {
- 		nfc_err(dev, "Unable to get RESET GPIO\n");
- 		return -ENODEV;
-diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
-index 383bf69163ef..99ecf92edc8c 100644
---- a/drivers/nfc/st-nci/spi.c
-+++ b/drivers/nfc/st-nci/spi.c
-@@ -41,8 +41,6 @@
- #define ST_NCI_DRIVER_NAME "st_nci"
- #define ST_NCI_SPI_DRIVER_NAME "st_nci_spi"
+ 	rtlpriv->ra.is_special_data = true;
+ 	if (rtlpriv->cfg->ops->get_btc_status())
+ 		rtlpriv->btcoexist.btc_ops->btc_special_packet_notify(
+-					rtlpriv, 1);
++					rtlpriv, type);
+ 	rtl_lps_leave(hw);
+ 	ppsc->last_delaylps_stamp_jiffies = jiffies;
+ }
+@@ -1390,13 +1391,15 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+ 					 (is_tx) ? "Tx" : "Rx");
  
--#define ST_NCI_GPIO_NAME_RESET "reset"
--
- struct st_nci_spi_phy {
- 	struct spi_device *spi_dev;
- 	struct llt_ndlc *ndlc;
-@@ -220,14 +218,25 @@ static struct nfc_phy_ops spi_phy_ops = {
- 	.disable = st_nci_spi_disable,
- };
+ 				if (is_tx)
+-					setup_arp_tx(rtlpriv, ppsc);
++					setup_special_tx(rtlpriv, ppsc,
++							 PACKET_DHCP);
++
+ 				return true;
+ 			}
+ 		}
+ 	} else if (ETH_P_ARP == ether_type) {
+ 		if (is_tx)
+-			setup_arp_tx(rtlpriv, ppsc);
++			setup_special_tx(rtlpriv, ppsc, PACKET_ARP);
  
-+static const struct acpi_gpio_params reset_gpios = { 1, 0, false };
+ 		return true;
+ 	} else if (ETH_P_PAE == ether_type) {
+@@ -1407,6 +1410,8 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+ 			rtlpriv->ra.is_special_data = true;
+ 			rtl_lps_leave(hw);
+ 			ppsc->last_delaylps_stamp_jiffies = jiffies;
 +
-+static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
-+	{ "reset-gpios", &reset_gpios, 1 },
-+	{},
-+};
-+
- static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
- {
- 	struct st_nci_spi_phy *phy = spi_get_drvdata(spi_dev);
- 	struct device *dev = &spi_dev->dev;
-+	int r;
-+
-+	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
-+	if (r)
-+		return r;
++			setup_special_tx(rtlpriv, ppsc, PACKET_EAPOL);
+ 		}
  
- 	/* Get RESET GPIO from ACPI */
--	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET,
--						1, GPIOD_OUT_HIGH);
-+	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
- 	if (IS_ERR(phy->gpiod_reset)) {
- 		nfc_err(dev, "Unable to get RESET GPIO\n");
- 		return PTR_ERR(phy->gpiod_reset);
+ 		return true;
 -- 
-2.11.0
+2.12.3
