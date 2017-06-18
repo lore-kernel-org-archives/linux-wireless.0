@@ -1,45 +1,542 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60418 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751966AbdFLHpI (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34514 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753094AbdFRQNA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 03:45:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 12 Jun 2017 10:44:58 +0300
-Message-Id: <20170612074458.8897-1-luca@coelho.fi> (sfid-20170612_094512_184014_BD33E03B)
-Subject: [PATCH] mac80211: Fix incorrect condition when checking rx timestamp
+        Sun, 18 Jun 2017 12:13:00 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w127so7233963oiw.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:00 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 06/11] rtlwifi: Add TX report and disable key to force wait until report acked.
+Date: Sun, 18 Jun 2017 11:12:44 -0500
+Message-Id: <20170618161249.6146-7-Larry.Finger@lwfinger.net> (sfid-20170618_181311_752427_DDADB8F8)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-If the driver reports the rx timestamp at PLCP start, mac80211 can
-only handle legacy encoding, but the code checks that the encoding
-is not legacy. Fix this.
+When using EAPOL to do a PTK rekey, there is a possible race condition.
+When msg 3/4 is received, the supplicant will send msg 4/4 and install
+the new key immediately; however, the driver must make sure that msg 4/4
+is sent before installing the new key. We use TX report to ensure it is
+sent.
 
-Fixes: da6a4352e7c8 ("mac80211: separate encoding/bandwidth from flags")
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- net/mac80211/ieee80211_i.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 128 +++++++++++++++++++--
+ drivers/net/wireless/realtek/rtlwifi/base.h        |  13 +++
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   2 +
+ drivers/net/wireless/realtek/rtlwifi/debug.h       |   1 +
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   1 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.h   |  14 +--
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   1 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.h   |  16 ++-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |   3 +
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.h   |  17 ++-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  10 ++
+ 16 files changed, 194 insertions(+), 25 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 392fbab73c04..2197c62a0a6e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1523,7 +1523,7 @@ ieee80211_have_rx_timestamp(struct ieee80211_rx_status *status)
- 		return true;
- 	/* can't handle non-legacy preamble yet */
- 	if (status->flag & RX_FLAG_MACTIME_PLCP_START &&
--	    status->encoding != RX_ENC_LEGACY)
-+	    status->encoding == RX_ENC_LEGACY)
- 		return true;
- 	return false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 6415ec03008f..f9d249f85177 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1114,6 +1114,9 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 	if (txrate)
+ 		tcb_desc->hw_rate = txrate->hw_value;
+ 
++	if (rtl_is_tx_report_skb(hw, skb))
++		tcb_desc->use_spe_rpt = 1;
++
+ 	if (ieee80211_is_data(fc)) {
+ 		/*
+ 		 *we set data rate INX 0
+@@ -1322,21 +1325,13 @@ static void setup_arp_tx(struct rtl_priv *rtlpriv, struct rtl_ps_ctl *ppsc)
+ 	ppsc->last_delaylps_stamp_jiffies = jiffies;
  }
+ 
+-/*should call before software enc*/
+-u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+-		       bool is_enc)
++static const u8 *rtl_skb_ether_type_ptr(struct ieee80211_hw *hw,
++					struct sk_buff *skb, bool is_enc)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	__le16 fc = rtl_get_fc(skb);
+-	u16 ether_type;
+ 	u8 mac_hdr_len = ieee80211_get_hdrlen_from_skb(skb);
+ 	u8 encrypt_header_len = 0;
+ 	u8 offset;
+-	const struct iphdr *ip;
+-
+-	if (!ieee80211_is_data(fc))
+-		goto end;
+ 
+ 	switch (rtlpriv->sec.pairwise_enc_algorithm) {
+ 	case WEP40_ENCRYPTION:
+@@ -1356,10 +1351,29 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+ 	offset = mac_hdr_len + SNAP_SIZE;
+ 	if (is_enc)
+ 		offset += encrypt_header_len;
+-	ether_type = be16_to_cpup((__be16 *)(skb->data + offset));
++
++	return skb->data + offset;
++}
++
++/*should call before software enc*/
++u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
++		       bool is_enc)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++	__le16 fc = rtl_get_fc(skb);
++	u16 ether_type;
++	const u8 *ether_type_ptr;
++	const struct iphdr *ip;
++
++	if (!ieee80211_is_data(fc))
++		goto end;
++
++	ether_type_ptr = rtl_skb_ether_type_ptr(hw, skb, is_enc);
++	ether_type = be16_to_cpup((__be16 *)ether_type_ptr);
+ 
+ 	if (ETH_P_IP == ether_type) {
+-		ip = (struct iphdr *)((u8 *)skb->data + offset +
++		ip = (struct iphdr *)((u8 *)ether_type_ptr +
+ 		     PROTOC_TYPE_SIZE);
+ 		if (IPPROTO_UDP == ip->protocol) {
+ 			struct udphdr *udp = (struct udphdr *)((u8 *)ip +
+@@ -1409,6 +1423,96 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+ }
+ EXPORT_SYMBOL_GPL(rtl_is_special_data);
+ 
++bool rtl_is_tx_report_skb(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	u16 ether_type;
++	const u8 *ether_type_ptr;
++
++	ether_type_ptr = rtl_skb_ether_type_ptr(hw, skb, true);
++	ether_type = be16_to_cpup((__be16 *)ether_type_ptr);
++
++	/* EAPOL */
++	if (ether_type == ETH_P_PAE)
++		return true;
++
++	return false;
++}
++
++static u16 rtl_get_tx_report_sn(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
++	u16 sn;
++
++	sn = atomic_inc_return(&tx_report->sn) & 0x0FFF;
++
++	tx_report->last_sent_sn = sn;
++	tx_report->last_sent_time = jiffies;
++
++	RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_DMESG,
++		 "Send TX-Report sn=0x%X\n", sn);
++
++	return sn;
++}
++
++void rtl_get_tx_report(struct rtl_tcb_desc *ptcb_desc, u8 *pdesc,
++		       struct ieee80211_hw *hw)
++{
++	if (ptcb_desc->use_spe_rpt) {
++		u16 sn = rtl_get_tx_report_sn(hw);
++
++		SET_TX_DESC_SPE_RPT(pdesc, 1);
++		SET_TX_DESC_SW_DEFINE(pdesc, sn);
++	}
++}
++EXPORT_SYMBOL_GPL(rtl_get_tx_report);
++
++void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf, u8 c2h_cmd_len)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
++	u16 sn;
++
++	sn = ((tmp_buf[7] & 0x0F) << 8) | tmp_buf[6];
++
++	tx_report->last_recv_sn = sn;
++
++	RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_DMESG,
++		 "Recv TX-Report st=0x%02X sn=0x%X retry=0x%X\n",
++		 tmp_buf[0], sn, tmp_buf[2]);
++}
++EXPORT_SYMBOL_GPL(rtl_tx_report_handler);
++
++bool rtl_check_tx_report_acked(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
++
++	if (tx_report->last_sent_sn == tx_report->last_recv_sn)
++		return true;
++
++	if (time_before(tx_report->last_sent_time + 3 * HZ, jiffies)) {
++		RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_WARNING,
++			 "Check TX-Report timeout!!\n");
++		return true;	/* 3 sec. (timeout) seen as acked */
++	}
++
++	return false;
++}
++
++void rtl_wait_tx_report_acked(struct ieee80211_hw *hw, u32 wait_ms)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	int i;
++
++	for (i = 0; i < wait_ms; i++) {
++		if (rtl_check_tx_report_acked(hw))
++			break;
++		usleep_range(1000, 2000);
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++			 "Wait 1ms (%d/%d) to disable key.\n", i, wait_ms);
++	}
++}
+ /*********************************************************
+  *
+  * functions called by core.c
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index 02ff0c5624a7..a619fc92a9c0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -107,6 +107,11 @@ enum ap_peer {
+ 	SET_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr, \
+ 	(GET_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr) & (~(__val))))
+ 
++#define SET_TX_DESC_SPE_RPT(__pdesc, __val)			\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 19, 1, __val)
++#define SET_TX_DESC_SW_DEFINE(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 0, 12, __val)
++
+ int rtl_init_core(struct ieee80211_hw *hw);
+ void rtl_deinit_core(struct ieee80211_hw *hw);
+ void rtl_init_rx_config(struct ieee80211_hw *hw);
+@@ -123,6 +128,14 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb);
+ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+ 		       bool is_enc);
+ 
++bool rtl_is_tx_report_skb(struct ieee80211_hw *hw, struct sk_buff *skb);
++void rtl_get_tx_report(struct rtl_tcb_desc *ptcb_desc, u8 *pdesc,
++		       struct ieee80211_hw *hw);
++void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf,
++			   u8 c2h_cmd_len);
++bool rtl_check_tx_report_acked(struct ieee80211_hw *hw);
++void rtl_wait_tx_report_acked(struct ieee80211_hw *hw, u32 wait_ms);
++
+ void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
+ int rtl_tx_agg_start(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct ieee80211_sta *sta, u16 tid, u16 *ssn);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 5053d8c73e29..1a53a95d373b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1671,6 +1671,8 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		 *so don't use rtl_cam_reset_all_entry
+ 		 *or clear all entry here.
+ 		 */
++		rtl_wait_tx_report_acked(hw, 500); /* wait 500ms for TX ack */
++
+ 		rtl_cam_delete_one_entry(hw, mac_addr, key_idx);
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
+index a4006104ee8a..947718001457 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.h
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
+@@ -105,6 +105,7 @@
+ #define COMP_EASY_CONCURRENT	COMP_USB /* reuse of this bit is OK */
+ #define COMP_BT_COEXIST			BIT(30)
+ #define COMP_IQK			BIT(31)
++#define COMP_TX_REPORT			BIT_ULL(32)
+ 
+ /*--------------------------------------------------------------
+ 		Define the rt_print components
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index 7661cfa53032..774e72058d24 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -270,7 +270,7 @@ static struct rtl_hal_ops rtl8188ee_hal_ops = {
+ 
+ static struct rtl_mod_params rtl88ee_mod_params = {
+ 	.sw_crypto = false,
+-	.inactiveps = false,
++	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = false,
+ 	.msi_support = true,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index 1f42ce5f8f27..c6c9c66abe1f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -843,6 +843,7 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 	case C2H_8192E_TX_REPORT:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
+ 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
++		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	case C2H_8192E_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index 48820bc497d8..eaa503b7c4b4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -253,7 +253,7 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
+ 
+ static struct rtl_mod_params rtl92ee_mod_params = {
+ 	.sw_crypto = false,
+-	.inactiveps = false,
++	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+ 	.msi_support = true,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index b1864bb07c2c..55f238a2a310 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -731,6 +731,9 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
+ 		}
+ 
++		/* tx report */
++		rtl_get_tx_report(ptcb_desc, pdesc, hw);
++
+ 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+ 
+ 		if (ieee80211_is_mgmt(fc)) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+index 8053d1b12ec4..b0105c529010 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+@@ -159,7 +159,7 @@
+ #define SET_TX_DESC_NULL_0(__pdesc, __val)		\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 14, 1, __val)
+ #define SET_TX_DESC_NULL_1(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+8, 15, 1, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 15, 1, __val)
+ #define SET_TX_DESC_BK(__pdesc, __val)			\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 16, 1, __val)
+ #define SET_TX_DESC_MORE_FRAG(__pdesc, __val)		\
+@@ -167,7 +167,7 @@
+ #define SET_TX_DESC_RAW(__pdesc, __val)			\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 18, 1, __val)
+ #define SET_TX_DESC_SPE_RPT(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+8, 19, 1, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 19, 1, __val)
+ #define SET_TX_DESC_AMPDU_DENSITY(__pdesc, __val)	\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 20, 3, __val)
+ #define SET_TX_DESC_BT_NULL(__pdesc, __val)		\
+@@ -252,15 +252,15 @@
+ 
+ /* Dword 6 */
+ #define SET_TX_DESC_SW_DEFINE(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+24, 0, 12, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 0, 12, __val)
+ #define SET_TX_DESC_ANTSEL_A(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+24, 16, 3, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 16, 3, __val)
+ #define SET_TX_DESC_ANTSEL_B(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+24, 19, 3, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 19, 3, __val)
+ #define SET_TX_DESC_ANTSEL_C(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+24, 22, 3, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 22, 3, __val)
+ #define SET_TX_DESC_ANTSEL_D(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+24, 25, 3, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 25, 3, __val)
+ 
+ /* Dword 7 */
+ #define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index 4fc839b1d601..a7e31af2b5de 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -662,6 +662,7 @@ void rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
+ 	case C2H_8723B_TX_REPORT:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
++		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	case C2H_8723B_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+index 3c6ce994c6aa..0e8944119652 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+@@ -488,6 +488,9 @@ void rtl8723be_tx_fill_desc(struct ieee80211_hw *hw,
+ 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
+ 		}
+ 
++		/* tx report */
++		rtl_get_tx_report(ptcb_desc, pdesc, hw);
++
+ 		/* ptcb_desc->use_driver_rate = true; */
+ 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+ 		if (ptcb_desc->hw_rate > DESC92C_RATEMCS0)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+index 8a9fe41ac15b..0274659f48ed 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+@@ -107,7 +107,7 @@
+ #define SET_TX_DESC_RDG_ENABLE(__pdesc, __val)		\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 13, 1, __val)
+ #define SET_TX_DESC_BAR_RTY_TH(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+8, 14, 2, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 14, 2, __val)
+ #define SET_TX_DESC_AGG_BREAK(__pdesc, __val)		\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 16, 1, __val)
+ #define SET_TX_DESC_MORE_FRAG(__pdesc, __val)		\
+@@ -115,7 +115,7 @@
+ #define SET_TX_DESC_RAW(__pdesc, __val)			\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 18, 1, __val)
+ #define SET_TX_DESC_SPE_RPT(__pdesc, __val)		\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+8, 19, 1, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 19, 1, __val)
+ #define SET_TX_DESC_AMPDU_DENSITY(__pdesc, __val)	\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 20, 3, __val)
+ #define SET_TX_DESC_BT_INT(__pdesc, __val)		\
+@@ -187,6 +187,18 @@
+ #define SET_TX_DESC_RTS_SC(__pdesc, __val)		\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+20, 13, 4, __val)
+ 
++#define SET_TX_DESC_SW_DEFINE(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 0, 12, __val)
++#define SET_TX_DESC_MBSSID(__pdesc, __val)		\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 12, 4, __val)
++#define SET_TX_DESC_ANTSEL_A(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 16, 3, __val)
++#define SET_TX_DESC_ANTSEL_B(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 19, 3, __val)
++#define SET_TX_DESC_ANTSEL_C(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 22, 3, __val)
++#define SET_TX_DESC_ANTSEL_D(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 25, 3, __val)
+ 
+ #define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+28, 0, 16, __val)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 73350103b736..5eeb0b1cafa4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -1873,6 +1873,9 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
+ 	case C2H_8812_DBG:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "[C2H], C2H_8812_DBG!!\n");
+ 		break;
++	case C2H_8812_TX_REPORT:
++		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
++		break;
+ 	case C2H_8812_RA_RPT:
+ 		rtl8821ae_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+index 03665e82065f..749818929e8f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+@@ -740,6 +740,9 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
+ 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
+ 		}
+ 
++		/* tx report */
++		rtl_get_tx_report(ptcb_desc, pdesc, hw);
++
+ 		/* ptcb_desc->use_driver_rate = true; */
+ 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+ 		if (ptcb_desc->hw_rate > DESC_RATEMCS0)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+index b6f3c564b8d1..9843a616dcec 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+@@ -114,7 +114,7 @@
+ #define SET_TX_DESC_RAW(__pdesc, __val)				\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 18, 1, __val)
+ #define SET_TX_DESC_SPE_RPT(__pdesc, __val)			\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+8, 19, 1, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 19, 1, __val)
+ #define SET_TX_DESC_AMPDU_DENSITY(__pdesc, __val)	\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+8, 20, 3, __val)
+ #define SET_TX_DESC_BT_INT(__pdesc, __val)	\
+@@ -185,8 +185,21 @@
+ #define SET_TX_DESC_RTS_SC(__pdesc, __val)	\
+ 	SET_BITS_TO_LE_4BYTE(__pdesc+20, 13, 4, __val)
+ 
++#define SET_TX_DESC_SW_DEFINE(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 0, 12, __val)
++#define SET_TX_DESC_ANTSEL_A(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 16, 3, __val)
++#define SET_TX_DESC_ANTSEL_B(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 19, 3, __val)
++#define SET_TX_DESC_ANTSEL_C(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 22, 3, __val)
++#define SET_TX_DESC_ANTSEL_D(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 25, 3, __val)
++#define SET_TX_DESC_MBSSID(__pdesc, __val)	\
++	SET_BITS_TO_LE_4BYTE(i(__pdesc) + 24, 12, 4, __val)
++
+ #define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
+-	SET_BITS_TO_LE_4BYTE(__pdesc+28, 0, 16, __val)
++	SET_BITS_TO_LE_4BYTE((__pdesc) + 28, 0, 16, __val)
+ 
+ #define GET_TX_DESC_TX_BUFFER_SIZE(__pdesc)		\
+ 	LE_BITS_TO_4BYTE(__pdesc+28, 0, 16)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 31fcf43e24c1..8f3035b41e6f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1886,6 +1886,13 @@ struct rtl_efuse {
+ 	u8 channel_plan;
+ };
+ 
++struct rtl_tx_report {
++	atomic_t sn;
++	u16 last_sent_sn;
++	unsigned long last_sent_time;
++	u16 last_recv_sn;
++};
++
+ struct rtl_ps_ctl {
+ 	bool pwrdomain_protect;
+ 	bool in_powersavemode;
+@@ -2075,6 +2082,8 @@ struct rtl_tcb_desc {
+ 	u8 use_driver_rate:1;
+ 	u8 disable_ratefallback:1;
+ 
++	u8 use_spe_rpt:1;
++
+ 	u8 ratr_index;
+ 	u8 mac_id;
+ 	u8 hw_rate;
+@@ -2589,6 +2598,7 @@ struct rtl_priv {
+ 	struct rtl_security sec;
+ 	struct rtl_efuse efuse;
+ 	struct rtl_led_ctl ledctl;
++	struct rtl_tx_report tx_report;
+ 
+ 	struct rtl_ps_ctl psc;
+ 	struct rate_adaptive ra;
 -- 
-2.11.0
+2.12.3
