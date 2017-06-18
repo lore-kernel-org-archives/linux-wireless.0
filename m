@@ -1,88 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:54789 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753362AbdFMCA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 22:00:28 -0400
-Date: Tue, 13 Jun 2017 12:00:24 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: linux-next: build failure after merge of the
- wireless-drivers-next tree
-Message-ID: <20170613120024.2a1ce31b@canb.auug.org.au> (sfid-20170613_040306_233128_4C512EDB)
-In-Reply-To: <20170608122759.7ffda0c3@canb.auug.org.au>
-References: <20170608122759.7ffda0c3@canb.auug.org.au>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:33368 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751014AbdFRUby (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Jun 2017 16:31:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170618191854.17767-1-Jason@zx2c4.com>
+References: <1497720871224217@kroah.com> <20170618191854.17767-1-Jason@zx2c4.com>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Sun, 18 Jun 2017 23:31:52 +0300
+Message-ID: <CANUX_P1=8R5E8uk7VsqyAXQvRD52J1XdcL1R6R6GJeM_dv85vw@mail.gmail.com> (sfid-20170618_223208_904867_4E6579DD)
+Subject: Re: [PATCH] mac80211/wpa: use constant time memory comparison for MACs
+To: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Sun, Jun 18, 2017 at 10:18 PM, Jason A. Donenfeld <Jason@zx2c4.com> wrote:
+> Otherwise, we enable all sorts of forgeries via timing attack.
 
-On Thu, 8 Jun 2017 12:27:59 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+crypto_memneq's description says:
+
+Returns 0 when data is equal, 1 otherwise.
+
+Clearly this is not suitable here. You are allowing replay attacks...
+For network drivers, this is worse than timing attacks. You still need
+to explain how you can exploit timing attacks *on a remote system*. On
+your local system, threads are impacted etc... Fine. On a remote
+system (you are in Rx path here..) how do you exploit them?
+
+
 >
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (x86_64 allmodconfig) failed like this:
-> 
-> drivers/net/wireless/quantenna/qtnfmac/core.c: In function 'qtnf_core_net_attach':
-> drivers/net/wireless/quantenna/qtnfmac/core.c:319:5: error: 'struct net_device' has no member named 'destructor'
->   dev->destructor = free_netdev;
->      ^
-> 
-> Caused by commit
-> 
->   98f44cb0655c ("qtnfmac: introduce new FullMAC driver for Quantenna chipsets")
-
-This commit is now in the net-next tree ...
-
-> interacting with commit
-> 
->   cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
-> 
-> from the net tree.
-> 
-> I applied this merge fix patch for today.
-
-So this merge fix patch is needed when the net and net-next trees are merged.
-
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Thu, 8 Jun 2017 12:24:08 +1000
-> Subject: [PATCH] qtnfmac: fix up for "net: Fix inconsistent teardown and
->  release of private netdev state."
-> 
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
->  drivers/net/wireless/quantenna/qtnfmac/core.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-> index c5ac252464f4..f053532c0e87 100644
-> --- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-> @@ -316,7 +316,7 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
->  	vif->netdev = dev;
->  
->  	dev->netdev_ops = &qtnf_netdev_ops;
-> -	dev->destructor = free_netdev;
-> +	dev->needs_free_netdev = true;
->  	dev_net_set(dev, wiphy_net(wiphy));
->  	dev->ieee80211_ptr = &vif->wdev;
->  	dev->ieee80211_ptr->iftype = iftype;
-> -- 
-> 2.11.0
-
--- 
-Cheers,
-Stephen Rothwell
+> Here's the backport for 3.18.
+>
+>  net/mac80211/wpa.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+> index 983527a4c1ab..49592c7e4199 100644
+> --- a/net/mac80211/wpa.c
+> +++ b/net/mac80211/wpa.c
+> @@ -16,6 +16,7 @@
+>  #include <asm/unaligned.h>
+>  #include <net/mac80211.h>
+>  #include <crypto/aes.h>
+> +#include <crypto/algapi.h>
+>
+>  #include "ieee80211_i.h"
+>  #include "michael.h"
+> @@ -150,7 +151,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+>         data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+>         key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+>         michael_mic(key, hdr, data, data_len, mic);
+> -       if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
+> +       if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
+>                 goto mic_fail;
+>
+>         /* remove Michael MIC from payload */
+> @@ -520,7 +521,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+>
+>         queue = rx->security_idx;
+>
+> -       if (memcmp(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <= 0) {
+> +       if (crypto_memneq(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <= 0) {
+>                 key->u.ccmp.replays++;
+>                 return RX_DROP_UNUSABLE;
+>         }
+> @@ -771,7 +772,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
+>                 bip_aad(skb, aad);
+>                 ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
+>                                    skb->data + 24, skb->len - 24, mic);
+> -               if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
+> +               if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
+>                         key->u.aes_cmac.icverrors++;
+>                         return RX_DROP_UNUSABLE;
+>                 }
+> --
+> 2.13.1
+>
