@@ -1,49 +1,413 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:33694 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751416AbdFZHEz (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:33399 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753241AbdFRQNG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:04:55 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH 7/7] staging: wilc1000: Update ACM bit status
-Date: Mon, 26 Jun 2017 12:33:38 +0530
-Message-ID: <1498460618-22187-8-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090458_188726_934D7602)
-In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 18 Jun 2017 12:13:06 -0400
+Received: by mail-ot0-f194.google.com with SMTP id q16so6296136otb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:06 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 11/11] rtlwifi: btcoexist control to enter/leave LPS
+Date: Sun, 18 Jun 2017 11:12:49 -0500
+Message-Id: <20170618161249.6146-12-Larry.Finger@lwfinger.net> (sfid-20170618_181318_574187_CC99BED9)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new function to update ACM bit status for a queue
-for all access categories.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+To yield better user experience, have btcoex control LPS's parameters.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/base.c        |  8 +++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  7 ++-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 18 ++++++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  3 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    | 63 ++++++++++++++++++---
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    | 63 ++++++++++++++++++---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 64 +++++++++++++++++++---
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  3 +
+ 8 files changed, 203 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e323fd4..929166a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -461,6 +461,14 @@ static inline u8 ac_change(struct wilc *wilc, u8 *ac)
- 	return 1;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index c6fef54f6543..180850cb4671 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1802,12 +1802,20 @@ void rtl_watchdog_wq_callback(void *data)
+ 									false;
+ 		}
+ 
++		/* PS is controlled by coex. */
++		if (rtlpriv->cfg->ops->get_btc_status() &&
++		    rtlpriv->btcoexist.btc_ops->btc_is_bt_ctrl_lps(rtlpriv))
++			goto label_lps_done;
++
+ 		if (((rtlpriv->link_info.num_rx_inperiod +
+ 		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 		    (rtlpriv->link_info.num_rx_inperiod > 2))
+ 			rtl_lps_leave(hw);
+ 		else
+ 			rtl_lps_enter(hw);
++
++label_lps_done:
++		;
+ 	}
+ 
+ 	rtlpriv->link_info.num_rx_inperiod = 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 226927a752f8..eaa916a0727b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -242,14 +242,19 @@ static void halbtc_enter_lps(struct btc_coexist *btcoexist)
+ 	}
+ 
+ 	btcoexist->bt_info.bt_ctrl_lps = true;
+-	btcoexist->bt_info.bt_lps_on = false;
++	btcoexist->bt_info.bt_lps_on = true;
+ 	rtl_lps_enter(rtlpriv->mac80211.hw);
  }
  
-+static inline void ac_acm_bit(struct wilc *wilc, u32 reg)
+ static void halbtc_normal_lps(struct btc_coexist *btcoexist)
+ {
++	struct rtl_priv *rtlpriv;
++
++	rtlpriv = btcoexist->adapter;
++
+ 	if (btcoexist->bt_info.bt_ctrl_lps) {
+ 		btcoexist->bt_info.bt_lps_on = false;
++		rtl_lps_leave(rtlpriv->mac80211.hw);
+ 		btcoexist->bt_info.bt_ctrl_lps = false;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 7ee2aa94fd2a..4366c9817e1e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -46,6 +46,9 @@ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
+ 	.btc_special_packet_notify = rtl_btc_special_packet_notify,
+ 	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
++	.btc_get_lps_val = rtl_btc_get_lps_val,
++	.btc_get_rpwm_val = rtl_btc_get_rpwm_val,
++	.btc_is_bt_ctrl_lps = rtl_btc_is_bt_ctrl_lps,
+ 	.btc_is_bt_lps_on = rtl_btc_is_bt_lps_on,
+ 	.btc_get_ampdu_cfg = rtl_btc_get_ampdu_cfg,
+ };
+@@ -62,6 +65,21 @@ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
+ 	memcpy(gl_bt_coexist.pwr_mode_val, buf, safe_len);
+ }
+ 
++u8 rtl_btc_get_lps_val(struct rtl_priv *rtlpriv)
 +{
-+	wilc->txq[AC_BK_Q].acm = (reg & 0x00000002) >> BK_AC_ACM_STAT_POS;
-+	wilc->txq[AC_BE_Q].acm = (reg & 0x00000100) >> BE_AC_ACM_STAT_POS;
-+	wilc->txq[AC_VI_Q].acm = (reg & 0x00010000) >> VI_AC_ACM_STAT_POS;
-+	wilc->txq[AC_VO_Q].acm = (reg & 0x01000000) >> VO_AC_ACM_STAT_POS;
++	return gl_bt_coexist.bt_info.lps_val;
 +}
 +
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
++u8 rtl_btc_get_rpwm_val(struct rtl_priv *rtlpriv)
++{
++	return gl_bt_coexist.bt_info.rpwm_val;
++}
++
++bool rtl_btc_is_bt_ctrl_lps(struct rtl_priv *rtlpriv)
++{
++	return gl_bt_coexist.bt_info.bt_ctrl_lps;
++}
++
+ bool rtl_btc_is_bt_lps_on(struct rtl_priv *rtlpriv)
  {
+ 	return gl_bt_coexist.bt_info.bt_lps_on;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index ed46f418eb91..6fe521cbe7f0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -44,6 +44,9 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
+ bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
+ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
+ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
++u8   rtl_btc_get_lps_val(struct rtl_priv *rtlpriv);
++u8   rtl_btc_get_rpwm_val(struct rtl_priv *rtlpriv);
++bool rtl_btc_is_bt_ctrl_lps(struct rtl_priv *rtlpriv);
+ bool rtl_btc_is_bt_lps_on(struct rtl_priv *rtlpriv);
+ void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
+ 			   u8 *ctrl_agg_size, u8 *agg_size);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index c11f1c04f871..2ba9e613a7f6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -422,24 +422,71 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 u1_h2c_set_pwrmode[H2C_92E_PWEMODE_LENGTH] = { 0 };
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	u8 rlbm, power_state = 0, byte5 = 0x40;
++	u8 rlbm, power_state = 0, byte5 = 0;
++	u8 awake_intvl;	/* DTIM = (awake_intvl - 1) */
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
++			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
+ 
+-	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD , "FW LPS mode = %d\n", mode);
++	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
++		 mode, bt_ctrl_lps);
++
++	switch (mode) {
++	case FW_PS_MIN_MODE:
++		rlbm = 0;
++		awake_intvl = 2;
++		break;
++	case FW_PS_MAX_MODE:
++		rlbm = 1;
++		awake_intvl = 2;
++		break;
++	case FW_PS_DTIM_MODE:
++		rlbm = 2;
++		awake_intvl = ppsc->reg_max_lps_awakeintvl;
++		/* hw->conf.ps_dtim_period or mac->vif->bss_conf.dtim_period
++		 * is only used in swlps.
++		 */
++		break;
++	default:
++		rlbm = 2;
++		awake_intvl = 4;
++		break;
++	}
++
++	if (rtlpriv->mac80211.p2p) {
++		awake_intvl = 2;
++		rlbm = 1;
++	}
++
++	if (mode == FW_PS_ACTIVE_MODE) {
++		byte5 = 0x40;
++		power_state = FW_PWR_STATE_ACTIVE;
++	} else {
++		if (bt_ctrl_lps) {
++			byte5 = btc_ops->btc_get_lps_val(rtlpriv);
++			power_state = btc_ops->btc_get_rpwm_val(rtlpriv);
++
++			if ((rlbm == 2) && (byte5 & BIT(4))) {
++				/* Keep awake interval to 1 to prevent from
++				 * decreasing coex performance
++				 */
++				awake_intvl = 2;
++				rlbm = 2;
++			}
++		} else {
++			byte5 = 0x40;
++			power_state = FW_PWR_STATE_RF_OFF;
++		}
++	}
+ 
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+-	rlbm = 0;/*YJ,temp,120316. FW now not support RLBM=2.*/
+ 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+ 					 (rtlpriv->mac80211.p2p) ?
+ 					 ppsc->smart_ps : 1);
+ 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
+-					       ppsc->reg_max_lps_awakeintvl);
++					       awake_intvl);
+ 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
+-	if (mode == FW_PS_ACTIVE_MODE)
+-		power_state |= FW_PWR_STATE_ACTIVE;
+-	else
+-		power_state |= FW_PWR_STATE_RF_OFF;
+ 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
+ 	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index 488376becdcb..a37eb27cefe6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -240,24 +240,71 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 u1_h2c_set_pwrmode[H2C_PWEMODE_LENGTH] = { 0 };
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	u8 rlbm, power_state = 0, byte5 = 0x40;
++	u8 rlbm, power_state = 0, byte5 = 0;
++	u8 awake_intvl;	/* DTIM = (awake_intvl - 1) */
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
++			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
+ 
+-	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
++	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
++		 mode, bt_ctrl_lps);
++
++	switch (mode) {
++	case FW_PS_MIN_MODE:
++		rlbm = 0;
++		awake_intvl = 2;
++		break;
++	case FW_PS_MAX_MODE:
++		rlbm = 1;
++		awake_intvl = 2;
++		break;
++	case FW_PS_DTIM_MODE:
++		rlbm = 2;
++		awake_intvl = ppsc->reg_max_lps_awakeintvl;
++		/* hw->conf.ps_dtim_period or mac->vif->bss_conf.dtim_period
++		 * is only used in swlps.
++		 */
++		break;
++	default:
++		rlbm = 2;
++		awake_intvl = 4;
++		break;
++	}
++
++	if (rtlpriv->mac80211.p2p) {
++		awake_intvl = 2;
++		rlbm = 1;
++	}
++
++	if (mode == FW_PS_ACTIVE_MODE) {
++		byte5 = 0x40;
++		power_state = FW_PWR_STATE_ACTIVE;
++	} else {
++		if (bt_ctrl_lps) {
++			byte5 = btc_ops->btc_get_lps_val(rtlpriv);
++			power_state = btc_ops->btc_get_rpwm_val(rtlpriv);
++
++			if ((rlbm == 2) && (byte5 & BIT(4))) {
++				/* Keep awake interval to 1 to prevent from
++				 * decreasing coex performance
++				 */
++				awake_intvl = 2;
++				rlbm = 2;
++			}
++		} else {
++			byte5 = 0x40;
++			power_state = FW_PWR_STATE_RF_OFF;
++		}
++	}
+ 
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+-	rlbm = 0;/*YJ,temp,120316. FW now not support RLBM=2.*/
+ 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+ 					 (rtlpriv->mac80211.p2p) ?
+ 					  ppsc->smart_ps : 1);
+ 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
+-					       ppsc->reg_max_lps_awakeintvl);
++					       awake_intvl);
+ 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
+-	if (mode == FW_PS_ACTIVE_MODE)
+-		power_state |= FW_PWR_STATE_ACTIVE;
+-	else
+-		power_state |= FW_PWR_STATE_RF_OFF;
+ 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
+ 	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 96b8a9bdaf55..cc03f9813824 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -489,25 +489,71 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 u1_h2c_set_pwrmode[H2C_8821AE_PWEMODE_LENGTH] = { 0 };
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	u8 rlbm, power_state = 0, byte5 = 0x40;
++	u8 rlbm, power_state = 0, byte5 = 0;
++	u8 awake_intvl;	/* DTIM = (awake_intvl - 1) */
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
++			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
+ 
+-	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
++	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
++		 mode, bt_ctrl_lps);
++
++	switch (mode) {
++	case FW_PS_MIN_MODE:
++		rlbm = 0;
++		awake_intvl = 2;
++		break;
++	case FW_PS_MAX_MODE:
++		rlbm = 1;
++		awake_intvl = 2;
++		break;
++	case FW_PS_DTIM_MODE:
++		rlbm = 2;
++		awake_intvl = ppsc->reg_max_lps_awakeintvl;
++		/* hw->conf.ps_dtim_period or mac->vif->bss_conf.dtim_period
++		 * is only used in swlps.
++		 */
++		break;
++	default:
++		rlbm = 2;
++		awake_intvl = 4;
++		break;
++	}
++
++	if (rtlpriv->mac80211.p2p) {
++		awake_intvl = 2;
++		rlbm = 1;
++	}
++
++	if (mode == FW_PS_ACTIVE_MODE) {
++		byte5 = 0x40;
++		power_state = FW_PWR_STATE_ACTIVE;
++	} else {
++		if (bt_ctrl_lps) {
++			byte5 = btc_ops->btc_get_lps_val(rtlpriv);
++			power_state = btc_ops->btc_get_rpwm_val(rtlpriv);
++
++			if ((rlbm == 2) && (byte5 & BIT(4))) {
++				/* Keep awake interval to 1 to prevent from
++				 * decreasing coex performance
++				 */
++				awake_intvl = 2;
++				rlbm = 2;
++			}
++		} else {
++			byte5 = 0x40;
++			power_state = FW_PWR_STATE_RF_OFF;
++		}
++	}
+ 
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+-	rlbm = 0;/*YJ,temp,120316. FW now not support RLBM=2.*/
+ 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+ 					 (rtlpriv->mac80211.p2p) ?
+ 					 ppsc->smart_ps : 1);
+ 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
+-					       ppsc->reg_max_lps_awakeintvl);
++					       awake_intvl);
+ 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
+-	if (mode == FW_PS_ACTIVE_MODE)
+-		power_state |= FW_PWR_STATE_ACTIVE;
+-	else
+-		power_state |= FW_PWR_STATE_RF_OFF;
+-
+ 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
+ 	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 23d869bcb90d..49c0d2229274 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2561,6 +2561,9 @@ struct rtl_btc_ops {
+ 	void (*btc_special_packet_notify)(struct rtl_priv *rtlpriv,
+ 					  u8 pkt_type);
+ 	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
++	u8   (*btc_get_lps_val)(struct rtl_priv *rtlpriv);
++	u8   (*btc_get_rpwm_val)(struct rtl_priv *rtlpriv);
++	bool (*btc_is_bt_ctrl_lps)(struct rtl_priv *rtlpriv);
+ 	void (*btc_get_ampdu_cfg)(struct rtl_priv *rtlpriv, u8 *reject_agg,
+ 				  u8 *ctrl_agg_size, u8 *agg_size);
+ 	bool (*btc_is_bt_lps_on)(struct rtl_priv *rtlpriv);
 -- 
-2.7.4
+2.12.3
