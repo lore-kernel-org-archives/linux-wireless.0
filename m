@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35030 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751134AbdFYLNU (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:36445 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753111AbdFRQMz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:13:20 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:50 +0300
-Message-Id: <20170625111158.1792-19-luca@coelho.fi> (sfid-20170625_131324_011054_C30AA17B)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 18/26] iwlwifi: mvm: reset the fw_dump_desc pointer after ASSERT
+        Sun, 18 Jun 2017 12:12:55 -0400
+Received: by mail-ot0-f194.google.com with SMTP id r67so9070833ota.3
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:12:55 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/11] rtlwifi: btcoex: call bind to setup btcoex
+Date: Sun, 18 Jun 2017 11:12:39 -0500
+Message-Id: <20170618161249.6146-2-Larry.Finger@lwfinger.net> (sfid-20170618_181309_407879_52A6BD89)
+In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-When we get an ASSERT, the fw_dump_desc pointer points to
-iwl_mvm_dump_desc_assert which can't be freed since it is
-a global. We still need to NULL'ify the pointer when we
-call iwl_mvm_free_fw_dump_desc otherwise we will hit
+New btcoex add a function 'bind' to connect adapter, so we should call
+it during initializing.
 
-int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
-                                const struct iwl_mvm_dump_desc *desc,
-                                const struct iwl_fw_dbg_trigger_tlv *trigger)
-{
-<snip>
-        if (WARN_ON(mvm->fw_dump_desc))
-                iwl_mvm_free_fw_dump_desc(mvm);
-
-Fixes: b6eaa45aa18b ("iwlwifi: mvm: add the cause of the firmware dump in the dump")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index d5cb47e2fe44..1602b360353c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -319,10 +319,8 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 32cbbd0595ed..21d39973feab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -600,6 +600,7 @@ bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
+ extern struct btc_coexist gl_bt_coexist;
  
- void iwl_mvm_free_fw_dump_desc(struct iwl_mvm *mvm)
+ bool exhalbtc_initlize_variables(void);
++bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 3ab0cfe26513..7d4a94efe260 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -50,6 +50,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
  {
--	if (mvm->fw_dump_desc == &iwl_mvm_dump_desc_assert)
--		return;
--
--	kfree(mvm->fw_dump_desc);
-+	if (mvm->fw_dump_desc != &iwl_mvm_dump_desc_assert)
-+		kfree(mvm->fw_dump_desc);
- 	mvm->fw_dump_desc = NULL;
+ 	exhalbtc_initlize_variables();
++	exhalbtc_bind_bt_coex_withadapter(rtlpriv);
  }
  
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
 -- 
-2.11.0
+2.12.3
