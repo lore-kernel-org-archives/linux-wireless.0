@@ -1,123 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0220.hostedemail.com ([216.40.44.220]:53061 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752335AbdFSUSl (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43362 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753320AbdFSP3M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 16:18:41 -0400
-From: Joe Perches <joe@perches.com>
+        Mon, 19 Jun 2017 11:29:12 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: linux-kernel@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 5/5] realtek: rtlwifi: drivers: Use the rtl_btc convenience macro
-Date: Mon, 19 Jun 2017 13:18:18 -0700
-Message-Id: <b70dcaa00cc18869fe82894537941693db37be5d.1497903396.git.joe@perches.com> (sfid-20170619_221925_133003_E26E1BD6)
-In-Reply-To: <cover.1497903396.git.joe@perches.com>
-References: <cover.1497903396.git.joe@perches.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4.9 08/60] mac80211/wpa: use constant time memory comparison for MACs
+Date: Mon, 19 Jun 2017 23:17:02 +0800
+Message-Id: <20170619151644.992367914@linuxfoundation.org> (sfid-20170619_180504_832823_207716B7)
+In-Reply-To: <20170619151644.680979056@linuxfoundation.org>
+References: <20170619151644.680979056@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert the uses of the btcoexist.<funcs> to the rtl_btc macro to
-save a few lines of code.
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+------------------
+
+From: Jason A. Donenfeld <Jason@zx2c4.com>
+
+commit 98c67d187db7808b1f3c95f2110dd4392d034182 upstream.
+
+Otherwise, we enable all sorts of forgeries via timing attack.
+
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c      | 3 +--
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c | 4 +---
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c      | 3 +--
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c      | 3 +--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c      | 6 ++----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c      | 3 +--
- 6 files changed, 7 insertions(+), 15 deletions(-)
+ net/mac80211/wpa.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index 11d97fa0e921..9fc3e79e5a43 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -2572,8 +2572,7 @@ void rtl92ee_bt_hw_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -17,6 +17,7 @@
+ #include <asm/unaligned.h>
+ #include <net/mac80211.h>
+ #include <crypto/aes.h>
++#include <crypto/algapi.h>
  
--	if (rtlpriv->cfg->ops->get_btc_status())
--		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
-+	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
- }
+ #include "ieee80211_i.h"
+ #include "michael.h"
+@@ -153,7 +154,7 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
+ 		goto mic_fail;
  
- void rtl92ee_suspend(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
-index ec9bcf32f0ab..8621ea8f6644 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
-@@ -1767,9 +1767,7 @@ void rtl_8723e_c2h_command_handle(struct ieee80211_hw *hw)
- 
- 		rtl8723e_dm_bt_parse_bt_info(hw, ptmp_buf, c2h_event.cmd_len);
- 
--		if (rtlpriv->cfg->ops->get_btc_status())
--			rtlpriv->btcoexist.btc_ops->btc_periodical(rtlpriv);
--
-+		rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_periodical(rtlpriv));
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index 5ac7b815648a..3b6d140bb863 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -2419,8 +2419,7 @@ void rtl8723e_bt_hw_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	if (rtlpriv->cfg->ops->get_btc_status())
--		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
-+	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
- }
- 
- void rtl8723e_suspend(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index a79f936bb394..bddc4f56832d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -2719,8 +2719,7 @@ void rtl8723be_bt_hw_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	if (rtlpriv->cfg->ops->get_btc_status())
--		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
-+	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
- 
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index 73350103b736..a7a537716a8e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -1879,10 +1879,8 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 	case C2H_8812_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
- 			 "[C2H], C2H_8812_BT_INFO!!\n");
--		if (rtlpriv->cfg->ops->get_btc_status())
--			rtlpriv->btcoexist.btc_ops->btc_btinfo_notify(rtlpriv,
--								      tmp_buf,
--								      c2h_cmd_len);
-+		rtl_btc(rtlpriv, rtlpriv->cfg->ops,
-+			btc_btinfo_notify(rtlpriv, tmp_buf, c2h_cmd_len));
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 2bc6bace069c..f76c64570d16 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -4012,8 +4012,7 @@ void rtl8821ae_bt_hw_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	if (rtlpriv->cfg->ops->get_btc_status())
--		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
-+	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
- }
- 
- void rtl8821ae_suspend(struct ieee80211_hw *hw)
--- 
-2.10.0.rc2.1.g053435c
+ 	/* remove Michael MIC from payload */
+@@ -1047,7 +1048,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
+ 				   skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
+@@ -1097,7 +1098,7 @@ ieee80211_crypto_aes_cmac_256_decrypt(st
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac_256(key->u.aes_cmac.tfm, aad,
+ 				       skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
+@@ -1201,7 +1202,7 @@ ieee80211_crypto_aes_gmac_decrypt(struct
+ 		if (ieee80211_aes_gmac(key->u.aes_gmac.tfm, aad, nonce,
+ 				       skb->data + 24, skb->len - 24,
+ 				       mic) < 0 ||
+-		    memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		    crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_gmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
