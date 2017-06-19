@@ -1,57 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:59752 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752524AbdFLOsB (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:40514 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751097AbdFSPQd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 10:48:01 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 19 Jun 2017 11:16:33 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4.11 10/78] mac80211/wpa: use constant time memory comparison for MACs
+Date: Mon, 19 Jun 2017 23:15:10 +0800
+Message-Id: <20170619151029.781306005@linuxfoundation.org> (sfid-20170619_182013_134034_6A51AB45)
+In-Reply-To: <20170619151029.408399976@linuxfoundation.org>
+References: <20170619151029.408399976@linuxfoundation.org>
 MIME-Version: 1.0
-Subject: Re: [v2,2/3] ath10k: Configure rxnss_override for 10.4 firmware.
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170609110750.14950-2-sven.eckelmann@openmesh.com>
-References: <20170609110750.14950-2-sven.eckelmann@openmesh.com>
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-CC: <ath10k@lists.infradead.org>, Ben Greear <greearb@candelatech.com>,
-        <linux-wireless@vger.kernel.org>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Message-ID: <6eeaab36e33747e3ac057888070acb2b@eusanexr01a.eu.qualcomm.com> (sfid-20170612_164806_082365_FD1ECD42)
-Date: Mon, 12 Jun 2017 07:47:57 -0700
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
+4.11-stable review patch.  If anyone has any objections, please let me know.
 
-> QCA9984 hardware can do 4x4 at 80Mhz, but only 2x2 at 160Mhz.
-> 
-> First, report this to user-space by setting the max-tx-speed
-> and max-rx-speed vht capabilities.
-> 
-> Second, if the peer rx-speed is configured, and if we
-> are in 160 or 80+80 mode, and the peer rx-speed matches
-> the max speed for 2x2 or 1x1 at 160Mhz (long guard interval),
-> then use that info to set the peer_bw_rxnss_override appropriately.
-> 
-> Without this, a 9984 firmware will not use 2x2 ratesets when
-> transmitting to peer (it will be stuck at 1x1), because
-> the firmware would not have configured the rxnss_override.
-> 
-> This could use some testing....
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> [sven.eckelmann@openmesh.com: rebase, cleanup, drop 160Mhz workaround cleanup]
-> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+------------------
 
-This one had warnings, fixed in pending branch:
+From: Jason A. Donenfeld <Jason@zx2c4.com>
 
-drivers/net/wireless/ath/ath10k/mac.c:4436:52: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/ath/ath10k/mac.c:4436:52:    expected restricted __le16 [assigned] [usertype] rx_highest
-drivers/net/wireless/ath/ath10k/mac.c:4436:52:    got int
-drivers/net/wireless/ath/ath10k/mac.c:4437:52: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/ath/ath10k/mac.c:4437:52:    expected restricted __le16 [assigned] [usertype] tx_highest
-drivers/net/wireless/ath/ath10k/mac.c:4437:52:    got int
+commit 98c67d187db7808b1f3c95f2110dd4392d034182 upstream.
 
--- 
-https://patchwork.kernel.org/patch/9778087/
+Otherwise, we enable all sorts of forgeries via timing attack.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ net/mac80211/wpa.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -17,6 +17,7 @@
+ #include <asm/unaligned.h>
+ #include <net/mac80211.h>
+ #include <crypto/aes.h>
++#include <crypto/algapi.h>
+ 
+ #include "ieee80211_i.h"
+ #include "michael.h"
+@@ -153,7 +154,7 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
+ 		goto mic_fail;
+ 
+ 	/* remove Michael MIC from payload */
+@@ -1048,7 +1049,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
+ 				   skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
+@@ -1098,7 +1099,7 @@ ieee80211_crypto_aes_cmac_256_decrypt(st
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac_256(key->u.aes_cmac.tfm, aad,
+ 				       skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
+@@ -1202,7 +1203,7 @@ ieee80211_crypto_aes_gmac_decrypt(struct
+ 		if (ieee80211_aes_gmac(key->u.aes_gmac.tfm, aad, nonce,
+ 				       skb->data + 24, skb->len - 24,
+ 				       mic) < 0 ||
+-		    memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		    crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_gmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
