@@ -1,63 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36668 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbdFOOkG (ORCPT
+Received: from smtprelay0220.hostedemail.com ([216.40.44.220]:53061 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752335AbdFSUSl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 10:40:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Micha=C5=82_Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Subject: Re: [PATCH] wireless: brcmfmac: initialize oob irq data before request_irq()
-References: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
-        <87poe74138.fsf@kamboji.qca.qualcomm.com>
-        <20170614112925.d3j3l5bam5gwhj7h@qmqm.qmqm.pl>
-Date: Thu, 15 Jun 2017 17:40:01 +0300
-In-Reply-To: <20170614112925.d3j3l5bam5gwhj7h@qmqm.qmqm.pl> (=?utf-8?Q?=22?=
- =?utf-8?Q?Micha=C5=82=09Miros=C5=82aw=22's?= message of "Wed, 14 Jun 2017
- 13:29:25 +0200")
-Message-ID: <87vanxe2m6.fsf@codeaurora.org> (sfid-20170615_164010_234851_E86D2C8E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Mon, 19 Jun 2017 16:18:41 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 5/5] realtek: rtlwifi: drivers: Use the rtl_btc convenience macro
+Date: Mon, 19 Jun 2017 13:18:18 -0700
+Message-Id: <b70dcaa00cc18869fe82894537941693db37be5d.1497903396.git.joe@perches.com> (sfid-20170619_221925_133003_E26E1BD6)
+In-Reply-To: <cover.1497903396.git.joe@perches.com>
+References: <cover.1497903396.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl> writes:
+Convert the uses of the btcoexist.<funcs> to the rtl_btc macro to
+save a few lines of code.
 
-> On Wed, Jun 14, 2017 at 07:58:35AM +0300, Kalle Valo wrote:
->> Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl> writes:
->> > This fixes spin-forever in irq handler when IRQ is already asserted
->> > at request_irq() time.
->> >
->> > Signed-off-by: Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl>
->>=20
->> Your name in patchwork is broken:
->>=20
->> https://patchwork.kernel.org/patch/9784251/
->>=20
->> You could try to fix it by registering as then you have (onetime) option
->> to provide your full name.
->
-> Doesn't like UTF-8?
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c      | 3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c | 4 +---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c      | 3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c      | 3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c      | 6 ++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c      | 3 +--
+ 6 files changed, 7 insertions(+), 15 deletions(-)
 
-patchwork.kernel.org was updated something like a year ago to get proper
-UTF-8 support and I have been succesfully applied patches from Rafal who
-also uses UTF-8 with his name:
-
-git log --author rafal@milecki.pl drivers/net/wireless/
-
-You could always compare his posts with yours and see what you do
-differently. Here's one example:
-
-https://patchwork.kernel.org/patch/9640743/
-
-> Registration didn't help though.
-
-Darn. This time I can manually apply the patch but for the future we
-should try to solve this.
-
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index 11d97fa0e921..9fc3e79e5a43 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -2572,8 +2572,7 @@ void rtl92ee_bt_hw_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	if (rtlpriv->cfg->ops->get_btc_status())
+-		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
++	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
+ }
+ 
+ void rtl92ee_suspend(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+index ec9bcf32f0ab..8621ea8f6644 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+@@ -1767,9 +1767,7 @@ void rtl_8723e_c2h_command_handle(struct ieee80211_hw *hw)
+ 
+ 		rtl8723e_dm_bt_parse_bt_info(hw, ptmp_buf, c2h_event.cmd_len);
+ 
+-		if (rtlpriv->cfg->ops->get_btc_status())
+-			rtlpriv->btcoexist.btc_ops->btc_periodical(rtlpriv);
+-
++		rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_periodical(rtlpriv));
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 5ac7b815648a..3b6d140bb863 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -2419,8 +2419,7 @@ void rtl8723e_bt_hw_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	if (rtlpriv->cfg->ops->get_btc_status())
+-		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
++	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
+ }
+ 
+ void rtl8723e_suspend(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index a79f936bb394..bddc4f56832d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2719,8 +2719,7 @@ void rtl8723be_bt_hw_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	if (rtlpriv->cfg->ops->get_btc_status())
+-		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
++	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
+ 
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 73350103b736..a7a537716a8e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -1879,10 +1879,8 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
+ 	case C2H_8812_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+ 			 "[C2H], C2H_8812_BT_INFO!!\n");
+-		if (rtlpriv->cfg->ops->get_btc_status())
+-			rtlpriv->btcoexist.btc_ops->btc_btinfo_notify(rtlpriv,
+-								      tmp_buf,
+-								      c2h_cmd_len);
++		rtl_btc(rtlpriv, rtlpriv->cfg->ops,
++			btc_btinfo_notify(rtlpriv, tmp_buf, c2h_cmd_len));
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 2bc6bace069c..f76c64570d16 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -4012,8 +4012,7 @@ void rtl8821ae_bt_hw_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	if (rtlpriv->cfg->ops->get_btc_status())
+-		rtlpriv->btcoexist.btc_ops->btc_init_hw_config(rtlpriv);
++	rtl_btc(rtlpriv, rtlpriv->cfg->ops, btc_init_hw_config(rtlpriv));
+ }
+ 
+ void rtl8821ae_suspend(struct ieee80211_hw *hw)
+-- 
+2.10.0.rc2.1.g053435c
