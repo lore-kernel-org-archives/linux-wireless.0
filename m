@@ -1,39 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:32879 "EHLO
-        mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751035AbdFHEu0 (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:44490 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750790AbdFSEFi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 00:50:26 -0400
-Received: by mail-vk0-f49.google.com with SMTP id p62so12822165vkp.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jun 2017 21:50:25 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-From: Xuebing Wang <xbing6@gmail.com>
-Subject: [linux-wireless] [mac80211] Does IEEE80211_IBSS_MAX_STA_ENTRIES (in
- net/mac80211/ibss.c) work?
-Message-ID: <0d40c0dc-4476-0567-6cb9-149a3fcc83e4@gmail.com> (sfid-20170608_065030_455925_0924E9C8)
-Date: Thu, 8 Jun 2017 12:50:20 +0800
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 19 Jun 2017 00:05:38 -0400
+Date: Mon, 19 Jun 2017 00:05:21 -0400 (EDT)
+Message-Id: <20170619.000521.1966902961112226460.davem@davemloft.net> (sfid-20170619_060548_571705_872F0F93)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2017-06-16
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170616071936.4515-1-johannes@sipsolutions.net>
+References: <20170616071936.4515-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi community,
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 16 Jun 2017 09:19:35 +0200
 
-Does IEEE80211_IBSS_MAX_STA_ENTRIES (in net/mac80211/ibss.c) work?
+> Here I just have the cleanups with the fix for that ancient bug
+> I sent the RFC patches for.
+> 
+> Please pull and let me know if there's any problem.
 
-I hard-code it to be 2 (from original 128), and update kernel for one 
-node, and start IBSS network with 5 nodes. In the node with hard-coded 
-IBSS_MAX_STA_ENTRIES = 2, I still can see and ping all other 4 nodes. I 
-am using kernel v3.18.29, does IBSS_MAX_STA_ENTRIES work with latest 
-kernel source code?
-
-My purpose is to limit the max number of peers (for all nodes in IBSS 
-network) to be 12 or 20.
-
-I apologize if I should dive deeper instead of posting this question. I 
-will check here too, just to see if I can get any quick answers. :-)
-
-Thanks a lot.
-
-Xuebing Wang
+Pulled, thanks Johannes.
