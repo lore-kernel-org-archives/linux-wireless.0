@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34681 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750797AbdFPUSD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 16:18:03 -0400
-Received: by mail-wm0-f51.google.com with SMTP id d64so6091881wmf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 13:18:02 -0700 (PDT)
-Subject: Re: [PATCH 1/2] brcmfmac: Log chip id and revision
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Jelle van der Waa <jelle@vdwaa.nl>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <20170616131449.12108-1-hdegoede@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <25322f02-1e26-16b4-21b5-3e55a5a9f5ff@broadcom.com> (sfid-20170616_221807_103046_F0AD8388)
-Date: Fri, 16 Jun 2017 22:18:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170616131449.12108-1-hdegoede@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mga06.intel.com ([134.134.136.31]:59135 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753775AbdFSKJW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:22 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 01/13] NFC: pn544: Switch to devm_acpi_dev_add_driver_gpios()
+Date: Mon, 19 Jun 2017 13:08:46 +0300
+Message-Id: <20170619100858.2655-2-andriy.shevchenko@linux.intel.com> (sfid-20170619_120928_616871_38F5D748)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16-06-17 15:14, Hans de Goede wrote:
-> For debugging some problems, it is useful to know the chip revision
-> add a brcmf_info message logging this.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index e03450059b06..4ed40c94bda9 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -4214,6 +4214,8 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
->  	if (ret)
->  		goto fail;
->  
-> +	brcmf_info("Loading firmware %s for chip %08x rev %08x\n",
-> +		   sdiodev->fw_name, bus->ci->chip, bus->ci->chiprev);
+Switch to use managed variant of acpi_dev_add_driver_gpios() to simplify
+error path and fix potentially wrong assignment if ->probe() fails.
 
-I would prefer to have this in brcmf_fw_map_chip_to_name() in
-firmware.c, ie.:
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/pn544/i2c.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-brcmf_info("mapping chip %x(%d) rev %d\n", chip, chip, chiprev);
-
-That way it will be done for all host-interfaces.
-
-Regards,
-Arend
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index fedde9d46ab6..4b14740edb67 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -904,7 +904,7 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 	phy->i2c_dev = client;
+ 	i2c_set_clientdata(client, phy);
+ 
+-	r = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_pn544_gpios);
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_pn544_gpios);
+ 	if (r)
+ 		dev_dbg(dev, "Unable to add GPIO mapping table\n");
+ 
+@@ -958,7 +958,6 @@ static int pn544_hci_i2c_remove(struct i2c_client *client)
+ 	if (phy->powered)
+ 		pn544_hci_i2c_disable(phy);
+ 
+-	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&client->dev));
+ 	return 0;
+ }
+ 
+-- 
+2.11.0
