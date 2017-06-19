@@ -1,92 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdFZHEk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:04:40 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH 3/7] staging: wilc1000: WMM classification of data
-Date: Mon, 26 Jun 2017 12:33:34 +0530
-Message-ID: <1498460618-22187-4-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090443_415054_BC8482DA)
-In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:11837 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753783AbdFSKKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:10:35 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 09/13] NFC: st-nci: Covert to use GPIO descriptor
+Date: Mon, 19 Jun 2017 13:08:54 +0300
+Message-Id: <20170619100858.2655-10-andriy.shevchenko@linux.intel.com> (sfid-20170619_121040_207342_3B8185C0)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new function to classify data to available
-WMM access categories based on the DSCP value in the header.
+Since we got rid of platform data, the driver may use GPIO descriptor
+directly.
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+Looking deeply to the use of the GPIO pin it looks like it should be
+a GPIO based reset control rather than custom GPIO handling. But this
+is out of scope of the change.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 51 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+ drivers/nfc/st-nci/i2c.c | 39 ++++++++++++---------------------------
+ drivers/nfc/st-nci/spi.c | 47 ++++++++++++++++-------------------------------
+ 2 files changed, 28 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 8c997ba..d1ed3ba8 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -375,6 +375,57 @@ static inline void ac_q_limit(u8 ac, u16 *q_limit)
- 				      sum) + 1;
+diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
+index bdfbd543e671..93a621e27d4e 100644
+--- a/drivers/nfc/st-nci/i2c.c
++++ b/drivers/nfc/st-nci/i2c.c
+@@ -19,13 +19,12 @@
+ 
+ #include <linux/module.h>
+ #include <linux/i2c.h>
+-#include <linux/gpio.h>
+ #include <linux/gpio/consumer.h>
+-#include <linux/of_gpio.h>
+ #include <linux/acpi.h>
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
+ #include <linux/nfc.h>
++#include <linux/of.h>
+ 
+ #include "st-nci.h"
+ 
+@@ -49,7 +48,7 @@ struct st_nci_i2c_phy {
+ 
+ 	bool irq_active;
+ 
+-	unsigned int gpio_reset;
++	struct gpio_desc *gpiod_reset;
+ 
+ 	struct st_nci_se_status se_status;
+ };
+@@ -58,9 +57,9 @@ static int st_nci_i2c_enable(void *phy_id)
+ {
+ 	struct st_nci_i2c_phy *phy = phy_id;
+ 
+-	gpio_set_value(phy->gpio_reset, 0);
++	gpiod_set_value(phy->gpiod_reset, 0);
+ 	usleep_range(10000, 15000);
+-	gpio_set_value(phy->gpio_reset, 1);
++	gpiod_set_value(phy->gpiod_reset, 1);
+ 	usleep_range(80000, 85000);
+ 
+ 	if (phy->ndlc->powered == 0 && phy->irq_active == 0) {
+@@ -209,20 +208,17 @@ static struct nfc_phy_ops i2c_phy_ops = {
+ static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
+-	struct gpio_desc *gpiod_reset;
+ 	struct device *dev = &client->dev;
+ 	u8 tmp;
+ 
+ 	/* Get RESET GPIO from ACPI */
+-	gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET, 1,
+-					   GPIOD_OUT_HIGH);
+-	if (IS_ERR(gpiod_reset)) {
++	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET,
++						1, GPIOD_OUT_HIGH);
++	if (IS_ERR(phy->gpiod_reset)) {
+ 		nfc_err(dev, "Unable to get RESET GPIO\n");
+ 		return -ENODEV;
+ 	}
+ 
+-	phy->gpio_reset = desc_to_gpio(gpiod_reset);
+-
+ 	phy->se_status.is_ese_present = false;
+ 	phy->se_status.is_uicc_present = false;
+ 
+@@ -242,30 +238,19 @@ static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
+ static int st_nci_i2c_of_request_resources(struct i2c_client *client)
+ {
+ 	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
++	struct device *dev = &client->dev;
+ 	struct device_node *pp;
+-	int gpio;
+-	int r;
+ 
+ 	pp = client->dev.of_node;
+ 	if (!pp)
+ 		return -ENODEV;
+ 
+ 	/* Get GPIO from device tree */
+-	gpio = of_get_named_gpio(pp, "reset-gpios", 0);
+-	if (gpio < 0) {
+-		nfc_err(&client->dev,
+-			"Failed to retrieve reset-gpios from device tree\n");
+-		return gpio;
+-	}
+-
+-	/* GPIO request and configuration */
+-	r = devm_gpio_request_one(&client->dev, gpio,
+-				GPIOF_OUT_INIT_HIGH, ST_NCI_GPIO_NAME_RESET);
+-	if (r) {
+-		nfc_err(&client->dev, "Failed to request reset pin\n");
+-		return r;
++	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(phy->gpiod_reset)) {
++		nfc_err(dev, "Unable to get RESET GPIO\n");
++		return PTR_ERR(phy->gpiod_reset);
+ 	}
+-	phy->gpio_reset = gpio;
+ 
+ 	phy->se_status.is_ese_present =
+ 				of_property_read_bool(pp, "ese-present");
+diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
+index 4585e205778b..2834f6984608 100644
+--- a/drivers/nfc/st-nci/spi.c
++++ b/drivers/nfc/st-nci/spi.c
+@@ -19,13 +19,12 @@
+ 
+ #include <linux/module.h>
+ #include <linux/spi/spi.h>
+-#include <linux/gpio.h>
+ #include <linux/gpio/consumer.h>
+-#include <linux/of_gpio.h>
+ #include <linux/acpi.h>
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
+ #include <linux/nfc.h>
++#include <linux/of.h>
+ #include <net/nfc/nci.h>
+ 
+ #include "st-nci.h"
+@@ -50,7 +49,7 @@ struct st_nci_spi_phy {
+ 
+ 	bool irq_active;
+ 
+-	unsigned int gpio_reset;
++	struct gpio_desc *gpiod_reset;
+ 
+ 	struct st_nci_se_status se_status;
+ };
+@@ -59,9 +58,9 @@ static int st_nci_spi_enable(void *phy_id)
+ {
+ 	struct st_nci_spi_phy *phy = phy_id;
+ 
+-	gpio_set_value(phy->gpio_reset, 0);
++	gpiod_set_value(phy->gpiod_reset, 0);
+ 	usleep_range(10000, 15000);
+-	gpio_set_value(phy->gpio_reset, 1);
++	gpiod_set_value(phy->gpiod_reset, 1);
+ 	usleep_range(80000, 85000);
+ 
+ 	if (phy->ndlc->powered == 0 && phy->irq_active == 0) {
+@@ -224,20 +223,17 @@ static struct nfc_phy_ops spi_phy_ops = {
+ static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
+ {
+ 	struct st_nci_spi_phy *phy = spi_get_drvdata(spi_dev);
+-	struct gpio_desc *gpiod_reset;
+ 	struct device *dev = &spi_dev->dev;
+ 	u8 tmp;
+ 
+ 	/* Get RESET GPIO from ACPI */
+-	gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET, 1,
+-					   GPIOD_OUT_HIGH);
+-	if (IS_ERR(gpiod_reset)) {
++	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET,
++						1, GPIOD_OUT_HIGH);
++	if (IS_ERR(phy->gpiod_reset)) {
+ 		nfc_err(dev, "Unable to get RESET GPIO\n");
+-		return -ENODEV;
++		return PTR_ERR(phy->gpiod_reset);
+ 	}
+ 
+-	phy->gpio_reset = desc_to_gpio(gpiod_reset);
+-
+ 	phy->se_status.is_ese_present = false;
+ 	phy->se_status.is_uicc_present = false;
+ 
+@@ -254,33 +250,22 @@ static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
+ 	return 0;
  }
  
-+static inline u8 ac_classify(struct wilc *wilc, struct txq_entry_t *tqe)
-+{
-+	u8 *eth_hdr_ptr;
-+	u8 *buffer = tqe->buffer;
-+	u8 ac;
-+	u16 h_proto;
-+
-+	spin_lock_irqsave(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
-+
-+	eth_hdr_ptr = &buffer[0];
-+	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
-+	if (h_proto == ETH_P_IP) {
-+		u8 *ip_hdr_ptr;
-+		u32 IHL, DSCP;
-+
-+		ip_hdr_ptr = &buffer[ETHERNET_HDR_LEN];
-+		IHL = (ip_hdr_ptr[0] & 0xf) << 2;
-+		DSCP = (ip_hdr_ptr[1] & 0xfc);
-+
-+		switch (DSCP) {
-+		case 0x20:
-+		case 0x40:
-+		case 0x08:
-+			ac = AC_BK_Q;
-+			break;
-+		case 0x80:
-+		case 0xA0:
-+		case 0x28:
-+			ac = AC_VI_Q;
-+			break;
-+		case 0xC0:
-+		case 0xd0:
-+		case 0xE0:
-+		case 0x88:
-+		case 0xB8:
-+			ac = AC_VO_Q;
-+			break;
-+		default:
-+			ac = AC_BE_Q;
-+			break;
-+		}
-+	} else {
-+		ac  = AC_BE_Q;
-+	}
-+
-+	tqe->q_num = ac;
-+	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
-+
-+	return ac;
-+}
-+
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
+-static int st_nci_spi_of_request_resources(struct spi_device *dev)
++static int st_nci_spi_of_request_resources(struct spi_device *spi)
  {
+-	struct st_nci_spi_phy *phy = spi_get_drvdata(dev);
++	struct st_nci_spi_phy *phy = spi_get_drvdata(spi);
++	struct device *dev = &spi->dev;
+ 	struct device_node *pp;
+-	int gpio;
+-	int r;
+ 
+-	pp = dev->dev.of_node;
++	pp = spi->dev.of_node;
+ 	if (!pp)
+ 		return -ENODEV;
+ 
+ 	/* Get GPIO from device tree */
+-	gpio = of_get_named_gpio(pp, "reset-gpios", 0);
+-	if (gpio < 0) {
+-		nfc_err(&dev->dev,
+-			"Failed to retrieve reset-gpios from device tree\n");
+-		return gpio;
+-	}
+-
+-	/* GPIO request and configuration */
+-	r = devm_gpio_request_one(&dev->dev, gpio,
+-				GPIOF_OUT_INIT_HIGH, ST_NCI_GPIO_NAME_RESET);
+-	if (r) {
+-		nfc_err(&dev->dev, "Failed to request reset pin\n");
+-		return r;
++	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(phy->gpiod_reset)) {
++		nfc_err(dev, "Unable to get RESET GPIO\n");
++		return PTR_ERR(phy->gpiod_reset);
+ 	}
+-	phy->gpio_reset = gpio;
+ 
+ 	phy->se_status.is_ese_present =
+ 				of_property_read_bool(pp, "ese-present");
 -- 
-2.7.4
+2.11.0
