@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59774 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751077AbdFETXZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 15:23:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi 2017-06-05
-References: <1496689233.9478.71.camel@coelho.fi>
-Date: Mon, 05 Jun 2017 22:23:21 +0300
-In-Reply-To: <1496689233.9478.71.camel@coelho.fi> (Luca Coelho's message of
-        "Mon, 05 Jun 2017 22:00:33 +0300")
-Message-ID: <87a85m6xxy.fsf@codeaurora.org> (sfid-20170605_212328_684040_3C82805A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:44414 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753711AbdFSKvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:51:13 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1dMuGr-0000CG-Qk
+        for linux-wireless@vger.kernel.org; Mon, 19 Jun 2017 12:51:01 +0200
+Message-ID: <1497869461.29666.0.camel@sipsolutions.net> (sfid-20170619_125121_524529_A0A52605)
+Subject: Re: heads-up: wireless summit planning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 19 Jun 2017 12:51:01 +0200
+In-Reply-To: <1496129103.3327.5.camel@sipsolutions.net> (sfid-20170530_092508_775937_18EE3273)
+References: <1496129103.3327.5.camel@sipsolutions.net>
+         (sfid-20170530_092508_775937_18EE3273)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Tue, 2017-05-30 at 09:25 +0200, Johannes Berg wrote:
+> Hi all,
+> 
+> Netdev 2.2 has been announced for Seoul, South Korea, November 8-10:
+> 
+> http://netdevconf.org/2.2/
+> 
+> We're planning to hold the next wireless workshop there.
 
-> Here are some fixes for 4.12.  More details in the tag description. =C2=
-=A0As
-> we agreed, I updated the commit messages on the first two patches.
->
-> I have sent this out before and kbuildbot didn't find any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 6d18c732b95c0a9d35e9f978b4438bba154122=
-84:
->
->   bridge: start hello_timer when enabling KERNEL_STP in br_stp_start (201=
-7-05-21 13:33:28 -0400)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- tags/iwlwifi-for-kalle-2017-06-05
+Here's a reminder.
 
-Pulled, thanks.
+Also, I've just added the wiki page for topic suggestions etc.
 
---=20
-Kalle Valo
+https://wireless.wiki.kernel.org/en/developers/summits/seoul-2017
+
+johannes
