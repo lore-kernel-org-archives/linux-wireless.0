@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34958 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751339AbdFYLMm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:42 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:53 +0300
-Message-Id: <20170625111158.1792-22-luca@coelho.fi> (sfid-20170625_131301_815239_A5DDBC5C)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 21/26] iwlwifi: mvm: print base HW address during init
+Received: from mga04.intel.com ([192.55.52.120]:35244 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753866AbdFSKJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:10 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 06/13] NFC: fdp: Add GPIO ACPI mapping table
+Date: Mon, 19 Jun 2017 13:08:51 +0300
+Message-Id: <20170619100858.2655-7-andriy.shevchenko@linux.intel.com> (sfid-20170619_120918_836852_334119D8)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+In order to make GPIO ACPI library stricter prepare users of
+gpiod_get_index() to correctly behave when there no mapping is
+provided by firmware.
 
-It's sometimes hard to find out which HW address the iwlwifi device is
-using, for instance when reading crouded sniffer logs.  To make it
-easier, print out an info level message with the HW address as soon as
-we know it.
+Here we add explicit mapping between _CRS GpioIo() resources and
+their names used in the driver.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 2 ++
- 2 files changed, 4 insertions(+)
+ drivers/nfc/fdp/i2c.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 070f3dfb94ce..5c08f4d40f6a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -640,6 +640,8 @@ static int iwl_set_hw_address(struct iwl_trans *trans,
- 		return -EINVAL;
- 	}
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index c955f1f5139d..c4da50e07bbc 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -27,7 +27,6 @@
  
-+	IWL_INFO(trans, "base HW address: %pM\n", data->hw_addr);
-+
- 	return 0;
+ #define FDP_I2C_DRIVER_NAME	"fdp_nci_i2c"
+ 
+-#define FDP_DP_POWER_GPIO_NAME	"power"
+ #define FDP_DP_CLOCK_TYPE_NAME	"clock-type"
+ #define FDP_DP_CLOCK_FREQ_NAME	"clock-freq"
+ #define FDP_DP_FW_VSC_CFG_NAME	"fw-vsc-cfg"
+@@ -281,6 +280,13 @@ static void fdp_nci_i2c_read_device_properties(struct device *dev,
+ 		*clock_type, *clock_freq, *fw_vsc_cfg != NULL ? "yes" : "no");
  }
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index efdcffbaac6f..dac7e542a190 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -599,6 +599,8 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
- 		goto err_free;
++static const struct acpi_gpio_params power_gpios = { 0, 0, false };
++
++static const struct acpi_gpio_mapping acpi_fdp_gpios[] = {
++	{ "power-gpios", &power_gpios, 1 },
++	{},
++};
++
+ static int fdp_nci_i2c_probe(struct i2c_client *client)
+ {
+ 	struct fdp_i2c_phy *phy;
+@@ -321,10 +327,12 @@ static int fdp_nci_i2c_probe(struct i2c_client *client)
+ 		return r;
  	}
  
-+	IWL_INFO(trans, "base HW address: %pM\n", mvm->nvm_data->hw_addr);
-+
- 	/* Initialize general data */
- 	mvm->nvm_data->nvm_version = le16_to_cpu(rsp->general.nvm_version);
+-	/* Requesting the power gpio */
+-	phy->power_gpio = devm_gpiod_get(dev, FDP_DP_POWER_GPIO_NAME,
+-					 GPIOD_OUT_LOW);
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_fdp_gpios);
++	if (r)
++		dev_dbg(dev, "Unable to add GPIO mapping table\n");
  
++	/* Requesting the power gpio */
++	phy->power_gpio = devm_gpiod_get(dev, "power", GPIOD_OUT_LOW);
+ 	if (IS_ERR(phy->power_gpio)) {
+ 		nfc_err(dev, "Power GPIO request failed\n");
+ 		return PTR_ERR(phy->power_gpio);
 -- 
 2.11.0
