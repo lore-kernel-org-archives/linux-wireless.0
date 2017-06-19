@@ -1,281 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.133]:48045 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751707AbdFNLLa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 07:11:30 -0400
-Subject: Re: [PATCH] mwifiex: fixes the trivial print
-To: Xinming Hu <huxm@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        "jeffy.chen@rock-chips.com" <jeffy.chen@rock-chips.com>
-References: <1497008411-15223-1-git-send-email-wxt@rock-chips.com>
- <87poe8pfjs.fsf@purkki.adurom.net>
- <b5621250-c9c8-b413-0dae-88b326c729bf@rock-chips.com>
- <87mv9c74hn.fsf@kamboji.qca.qualcomm.com>
- <2eb9e680-64bc-a74d-f224-b6e13dd3b45b@rock-chips.com>
- <87ink0728l.fsf@kamboji.qca.qualcomm.com>
- <9e123f64d71c466b8a6dc908a51eeb71@SC-EXCH02.marvell.com>
- <cf947dd3-e3a9-e940-fa15-393c9d952f32@rock-chips.com>
- <9f6c89acb50b4be3b8bde3291eac891b@SC-EXCH02.marvell.com>
-From: Caesar Wang <wxt@rock-chips.com>
-Message-ID: <107d0efe-b056-96d1-e129-31f4ddfd23c9@rock-chips.com> (sfid-20170614_131136_387224_B2736F45)
-Date: Wed, 14 Jun 2017 19:11:16 +0800
-MIME-Version: 1.0
-In-Reply-To: <9f6c89acb50b4be3b8bde3291eac891b@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga04.intel.com ([192.55.52.120]:25391 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753965AbdFSKJN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:13 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 07/13] NFC: st-nci: Get rid of platform data
+Date: Mon, 19 Jun 2017 13:08:52 +0300
+Message-Id: <20170619100858.2655-8-andriy.shevchenko@linux.intel.com> (sfid-20170619_120919_896046_ACB10544)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Legacy platform data must go away. We are on the safe side here since
+there are no users of it in the kernel.
 
-在 2017年06月14日 18:23, Xinming Hu 写道:
-> Hi Caesar,
-> 
-> It proved to be a feature to get better scan result from overlapping channel, introduced in
-> 
-> commit 1b499cb72f26bbf44f2fa158c2d1487730aae96a
-> Author: Amitkumar Karwar <akarwar@marvell.com>
-> Date:   Sun Apr 24 23:49:51 2016 -0700
-> 
->      mwifiex: disable channel filtering feature in firmware
->      
->      As 2.4Ghz channels are overlapping, sometimes AP responds to
->      probe request even if it's operating on neighbouring channel.
->      Currently firmware drops those scan entries, as current channel
->      doesn't match with APs channel.
->      
->      This patch enables MWIFIEX_DISABLE_CHAN_FILT flag in scan
->      command to disable the feature so that better scan results
->      will be received in 2.4Ghz band.
-> 
-> As I can see, even there could be AP from overlapping channel (might be 12/13/14 in this case),  it will be filtered depend on reg domain rules
->   
->         if (ch->flags & IEEE80211_CHAN_DISABLED)
->              continue;
-> 
-> so it should not been an ERROR. WARN looks fine to me.
-> you can add me acked-by in v2.
+If anyone by any odd reason needs it the GPIO lookup tables and
+built-in device properties at your service.
 
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ MAINTAINERS                          |  1 -
+ drivers/nfc/st-nci/i2c.c             | 43 ++----------------------------------
+ drivers/nfc/st-nci/spi.c             | 43 ++----------------------------------
+ include/linux/platform_data/st-nci.h | 31 --------------------------
+ 4 files changed, 4 insertions(+), 114 deletions(-)
+ delete mode 100644 include/linux/platform_data/st-nci.h
 
-Okay, thanks for explanation and having a look at it.
-
-
--Caesar
-
-> 
-> 
-> Regards,
-> Simon
-> From: Caesar Wang [mailto:wxt@rock-chips.com]
-> Sent: 2017年6月13日 18:52
-> To: Xinming Hu; Kalle Valo; Zhiyuan Yang; Cathy Luo
-> Cc: amitkarwar@gmail.com; Nishant Sarmukadam; Ganapathi Bhat; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org; briannorris@chromium.org; jeffy.chen@rock-chips.com; Ganapathi Bhat
-> Subject: [EXT] Re: [PATCH] mwifiex: fixes the trivial print
-> 
-> External Email
-> ________________________________________
-> Hi Xinming,
-> As issue tracked on https://partnerissuetracker.corp.google.com/u/2/issues/62122843
-> 
-> 
-> 在 2017年06月13日 17:51, Xinming Hu 写道:
-> Hi Caesar,
-> 
-> The original log in google issue tracker show there exist AP in channel 13 after periodically scan.
-> Per my understand, if reg domain is set to US,  channel 12/13/14 will not get chance to scan. (test using iw/wpa_supplicant).
-> I am curious about whether there are any diff from upper layer.
-> 
-> As a test, you can print the scan channel list, as below:
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index a7593aa..a289818 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -2572,6 +2572,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
->                                MWIFIEX_USER_SCAN_CHAN_MAX); i++) {
->                  chan = request->channels[i];
->                  user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
-> +               pr_err("chan->hw_value = %d", chan->hw_value);
->                  user_scan_cfg->chan_list[i].radio_type = chan->band;
->   
->                  if ((chan->flags & IEEE80211_CHAN_NO_IR) || !request->n_ssids)
-> 
-> The below as the required log:
-> localhost / # [   46.760997] mwifiex: chan->hw_value = 1
-> [   46.764878] mwifiex: chan->hw_value = 2
-> [   46.768765] mwifiex: chan->hw_value = 3
-> [   46.772625] mwifiex: chan->hw_value = 4
-> [   46.776608] mwifiex: chan->hw_value = 5
-> [   46.780485] mwifiex: chan->hw_value = 6
-> [   46.784384] mwifiex: chan->hw_value = 7
-> [   46.788252] mwifiex: chan->hw_value = 8
-> [   46.792185] mwifiex: chan->hw_value = 9
-> [   46.796036] mwifiex: chan->hw_value = 10
-> [   46.799978] mwifiex: chan->hw_value = 11
-> [   46.803908] mwifiex: chan->hw_value = 38
-> [   46.807847] mwifiex: chan->hw_value = 42
-> [   46.811786] mwifiex: chan->hw_value = 46
-> [   46.815722] mwifiex: chan->hw_value = 36
-> [   46.819646] mwifiex: chan->hw_value = 40
-> [   46.823577] mwifiex: chan->hw_value = 44
-> [   46.827503] mwifiex: chan->hw_value = 48
-> [   46.831440] mwifiex: chan->hw_value = 52
-> [   46.835363] mwifiex: chan->hw_value = 56
-> [   46.839287] mwifiex: chan->hw_value = 60
-> [   46.843205] mwifiex: chan->hw_value = 64
-> [   46.847129] mwifiex: chan->hw_value = 100
-> [   46.851134] mwifiex: chan->hw_value = 104
-> [   46.855150] mwifiex: chan->hw_value = 108
-> [   46.859155] mwifiex: chan->hw_value = 112
-> [   46.863168] mwifiex: chan->hw_value = 116
-> [   46.867175] mwifiex: chan->hw_value = 120
-> [   46.871186] mwifiex: chan->hw_value = 124
-> [   46.875196] mwifiex: chan->hw_value = 128
-> [   46.879208] mwifiex: chan->hw_value = 132
-> [   46.883214] mwifiex: chan->hw_value = 136
-> [   46.887224] mwifiex: chan->hw_value = 140
-> [   46.891230] mwifiex: chan->hw_value = 149
-> [   46.895241] mwifiex: chan->hw_value = 153
-> [   46.899246] mwifiex: chan->hw_value = 157
-> [   46.903256] mwifiex: chan->hw_value = 161
-> [   46.907262] mwifiex: chan->hw_value = 165
-> [   47.394176] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp: cannot find cfp by band 2    & channel=12 freq=0
-> 
-> -Caesar
-> 
-> 
-> Regards,
-> Simon
-> 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: 2017年6月13日 15:53
-> To: Caesar Wang
-> Cc: amitkarwar@gmail.com; Xinming Hu; Nishant Sarmukadam; Ganapathi
-> Bhat; linux-wireless@vger.kernel.org; netdev@vger.kernel.org;
-> linux-kernel@vger.kernel.org; briannorris@chromium.org;
-> jeffy.chen@rock-chips.com
-> Subject: [EXT] Re: [PATCH] mwifiex: fixes the trivial print
-> 
-> External Email
-> 
-> ----------------------------------------------------------------------
-> Caesar Wang <wxt@rock-chips.com> writes:
-> 
-> 在 2017年06月13日 15:04, Kalle Valo 写道:
-> Caesar Wang <wxt@rock-chips.com> writes:
-> 
-> Kalle,
-> 
-> 在 2017年06月13日 14:28, Kalle Valo 写道:
-> Caesar Wang <wxt@rock-chips.com> writes:
-> 
-> We have always met the unused log be printed as following.
-> 
-> ...
-> [23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-> cannot find cfp by band 2    & channel=13 freq=0
-> [23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-> cannot find cfp by band 2    & channel=13 freq=0
-> 
-> Maybe that's related to wifi regdom, since wifi default area was
-> US and didn't support 12~14 channels.
-> 
-> As Frequencies:
-> * 2412 MHz [1] (30.0 dBm)
-> * 2417 MHz [2] (30.0 dBm)
-> * 2422 MHz [3] (30.0 dBm)
-> * 2427 MHz [4] (30.0 dBm)
-> * 2432 MHz [5] (30.0 dBm)
-> * 2437 MHz [6] (30.0 dBm)
-> * 2442 MHz [7] (30.0 dBm)
-> * 2447 MHz [8] (30.0 dBm)
-> * 2452 MHz [9] (30.0 dBm)
-> * 2457 MHz [10] (30.0 dBm)
-> * 2462 MHz [11] (30.0 dBm)
-> * 2467 MHz [12] (disabled)
-> * 2472 MHz [13] (disabled)
-> * 2484 MHz [14] (disabled)
-> 
-> Signed-off-by: Caesar Wang <wxt@rock-chips.com>
-> ---
-> 
->     drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
->     1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c
-> b/drivers/net/wireless/marvell/mwifiex/cfp.c
-> index 1ff2205..6e29943 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-> @@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8
-> band, u16 channel, u32 freq)
->     		}
->     	}
->     	if (i == sband->n_channels) {
-> -		mwifiex_dbg(priv->adapter, ERROR,
-> +		mwifiex_dbg(priv->adapter, WARN,
->     			    "%s: cannot find cfp by band %d\t"
->     			    "& channel=%d freq=%d\n",
->     			    __func__, band, channel, freq);
-> I don't see how this fixes anything, care to explain? And the title
-> is quite vague.
-> Sorry for the description maybe unclear.
-> I'm assuming the print log is expected for marvel wifi driver. Do we
-> should use 'WARN' to instead of the 'ERROR' here.
-> But does that make any functional difference, isn't the warning still
-> printed?
-> 
-> 
-> At least, that shouldn't be printed log by default.  :)
-> 
-> if I read the code is correct. That only the MSG/FATAL/ERROR will
-> output by default.
-> 
-> /**
->   *enum mwifiex_debug_level  -  marvell wifi debug level  */ enum
-> MWIFIEX_DEBUG_LEVEL {
->      MWIFIEX_DBG_MSG        = 0x00000001,
->      MWIFIEX_DBG_FATAL    = 0x00000002,
->      MWIFIEX_DBG_ERROR    = 0x00000004,
->      MWIFIEX_DBG_DATA    = 0x00000008,
->      MWIFIEX_DBG_CMD        = 0x00000010,
->      MWIFIEX_DBG_EVENT    = 0x00000020,
->      MWIFIEX_DBG_INTR    = 0x00000040,
->      MWIFIEX_DBG_IOCTL    = 0x00000080,
-> 
->      MWIFIEX_DBG_MPA_D    = 0x00008000,
->      MWIFIEX_DBG_DAT_D    = 0x00010000,
->      MWIFIEX_DBG_CMD_D    = 0x00020000,
->      MWIFIEX_DBG_EVT_D    = 0x00040000,
->      MWIFIEX_DBG_FW_D    = 0x00080000,
->      MWIFIEX_DBG_IF_D    = 0x00100000,
-> 
->      MWIFIEX_DBG_ENTRY    = 0x10000000,
->      MWIFIEX_DBG_WARN    = 0x20000000,
->      MWIFIEX_DBG_INFO    = 0x40000000,
->      MWIFIEX_DBG_DUMP    = 0x80000000,
-> 
->      MWIFIEX_DBG_ANY        = 0xffffffff
-> };
-> 
-> #define MWIFIEX_DEFAULT_DEBUG_MASK    (MWIFIEX_DBG_MSG | \
->                      MWIFIEX_DBG_FATAL | \
->                      MWIFIEX_DBG_ERROR)
-> 
-> Heh, makes more sense now :) But you still should improve the title and
-> explain in the commit log that WARN level is not printed by default.
-> 
-> But before you submit v2 let's wait what Marvell says about this.
-> 
-> --
-> Kalle Valo
-> 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e3d41ceaf20d..6f2d96313230 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9177,7 +9177,6 @@ F:	include/linux/platform_data/nfcmrvl.h
+ F:	include/linux/platform_data/nxp-nci.h
+ F:	include/linux/platform_data/pn544.h
+ F:	include/linux/platform_data/st21nfca.h
+-F:	include/linux/platform_data/st-nci.h
+ F:	Documentation/devicetree/bindings/net/nfc/
+ 
+ NFS, SUNRPC, AND LOCKD CLIENTS
+diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
+index 9dfae0efa922..6d3d8e43fa50 100644
+--- a/drivers/nfc/st-nci/i2c.c
++++ b/drivers/nfc/st-nci/i2c.c
+@@ -27,7 +27,6 @@
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
+ #include <linux/nfc.h>
+-#include <linux/platform_data/st-nci.h>
+ 
+ #include "st-nci.h"
+ 
+@@ -40,6 +39,7 @@
+ #define ST_NCI_I2C_MIN_SIZE 4   /* PCB(1) + NCI Packet header(3) */
+ #define ST_NCI_I2C_MAX_SIZE 250 /* req 4.2.1 */
+ 
++#define ST_NCI_DRIVER_NAME "st_nci"
+ #define ST_NCI_I2C_DRIVER_NAME "st_nci_i2c"
+ 
+ #define ST_NCI_GPIO_NAME_RESET "reset"
+@@ -281,41 +281,10 @@ static int st_nci_i2c_of_request_resources(struct i2c_client *client)
+ 	return 0;
+ }
+ 
+-static int st_nci_i2c_request_resources(struct i2c_client *client)
+-{
+-	struct st_nci_nfc_platform_data *pdata;
+-	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
+-	int r;
+-
+-	pdata = client->dev.platform_data;
+-	if (pdata == NULL) {
+-		nfc_err(&client->dev, "No platform data\n");
+-		return -EINVAL;
+-	}
+-
+-	/* store for later use */
+-	phy->gpio_reset = pdata->gpio_reset;
+-	phy->irq_polarity = pdata->irq_polarity;
+-
+-	r = devm_gpio_request_one(&client->dev,
+-			phy->gpio_reset, GPIOF_OUT_INIT_HIGH,
+-			ST_NCI_GPIO_NAME_RESET);
+-	if (r) {
+-		pr_err("%s : reset gpio_request failed\n", __FILE__);
+-		return r;
+-	}
+-
+-	phy->se_status.is_ese_present = pdata->is_ese_present;
+-	phy->se_status.is_uicc_present = pdata->is_uicc_present;
+-
+-	return 0;
+-}
+-
+ static int st_nci_i2c_probe(struct i2c_client *client,
+ 				  const struct i2c_device_id *id)
+ {
+ 	struct st_nci_i2c_phy *phy;
+-	struct st_nci_nfc_platform_data *pdata;
+ 	int r;
+ 
+ 	dev_dbg(&client->dev, "%s\n", __func__);
+@@ -335,20 +304,12 @@ static int st_nci_i2c_probe(struct i2c_client *client,
+ 
+ 	i2c_set_clientdata(client, phy);
+ 
+-	pdata = client->dev.platform_data;
+-	if (!pdata && client->dev.of_node) {
++	if (client->dev.of_node) {
+ 		r = st_nci_i2c_of_request_resources(client);
+ 		if (r) {
+ 			nfc_err(&client->dev, "No platform data\n");
+ 			return r;
+ 		}
+-	} else if (pdata) {
+-		r = st_nci_i2c_request_resources(client);
+-		if (r) {
+-			nfc_err(&client->dev,
+-				"Cannot get platform resources\n");
+-			return r;
+-		}
+ 	} else if (ACPI_HANDLE(&client->dev)) {
+ 		r = st_nci_i2c_acpi_request_resources(client);
+ 		if (r) {
+diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
+index 89e341eba3eb..ee8ea708d5b7 100644
+--- a/drivers/nfc/st-nci/spi.c
++++ b/drivers/nfc/st-nci/spi.c
+@@ -28,7 +28,6 @@
+ #include <linux/delay.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+-#include <linux/platform_data/st-nci.h>
+ 
+ #include "st-nci.h"
+ 
+@@ -41,6 +40,7 @@
+ #define ST_NCI_SPI_MIN_SIZE 4   /* PCB(1) + NCI Packet header(3) */
+ #define ST_NCI_SPI_MAX_SIZE 250 /* req 4.2.1 */
+ 
++#define ST_NCI_DRIVER_NAME "st_nci"
+ #define ST_NCI_SPI_DRIVER_NAME "st_nci_spi"
+ 
+ #define ST_NCI_GPIO_NAME_RESET "reset"
+@@ -296,40 +296,9 @@ static int st_nci_spi_of_request_resources(struct spi_device *dev)
+ 	return 0;
+ }
+ 
+-static int st_nci_spi_request_resources(struct spi_device *dev)
+-{
+-	struct st_nci_nfc_platform_data *pdata;
+-	struct st_nci_spi_phy *phy = spi_get_drvdata(dev);
+-	int r;
+-
+-	pdata = dev->dev.platform_data;
+-	if (pdata == NULL) {
+-		nfc_err(&dev->dev, "No platform data\n");
+-		return -EINVAL;
+-	}
+-
+-	/* store for later use */
+-	phy->gpio_reset = pdata->gpio_reset;
+-	phy->irq_polarity = pdata->irq_polarity;
+-
+-	r = devm_gpio_request_one(&dev->dev,
+-			phy->gpio_reset, GPIOF_OUT_INIT_HIGH,
+-			ST_NCI_GPIO_NAME_RESET);
+-	if (r) {
+-		pr_err("%s : reset gpio_request failed\n", __FILE__);
+-		return r;
+-	}
+-
+-	phy->se_status.is_ese_present = pdata->is_ese_present;
+-	phy->se_status.is_uicc_present = pdata->is_uicc_present;
+-
+-	return 0;
+-}
+-
+ static int st_nci_spi_probe(struct spi_device *dev)
+ {
+ 	struct st_nci_spi_phy *phy;
+-	struct st_nci_nfc_platform_data *pdata;
+ 	int r;
+ 
+ 	dev_dbg(&dev->dev, "%s\n", __func__);
+@@ -351,20 +320,12 @@ static int st_nci_spi_probe(struct spi_device *dev)
+ 
+ 	spi_set_drvdata(dev, phy);
+ 
+-	pdata = dev->dev.platform_data;
+-	if (!pdata && dev->dev.of_node) {
++	if (dev->dev.of_node) {
+ 		r = st_nci_spi_of_request_resources(dev);
+ 		if (r) {
+ 			nfc_err(&dev->dev, "No platform data\n");
+ 			return r;
+ 		}
+-	} else if (pdata) {
+-		r = st_nci_spi_request_resources(dev);
+-		if (r) {
+-			nfc_err(&dev->dev,
+-				"Cannot get platform resources\n");
+-			return r;
+-		}
+ 	} else if (ACPI_HANDLE(&dev->dev)) {
+ 		r = st_nci_spi_acpi_request_resources(dev);
+ 		if (r) {
+diff --git a/include/linux/platform_data/st-nci.h b/include/linux/platform_data/st-nci.h
+deleted file mode 100644
+index f6494b347c06..000000000000
+--- a/include/linux/platform_data/st-nci.h
++++ /dev/null
+@@ -1,31 +0,0 @@
+-/*
+- * Driver include for ST NCI NFC chip family.
+- *
+- * Copyright (C) 2014-2015  STMicroelectronics SAS. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+- */
+-
+-#ifndef _ST_NCI_H_
+-#define _ST_NCI_H_
+-
+-#define ST_NCI_DRIVER_NAME "st_nci"
+-
+-struct st_nci_nfc_platform_data {
+-	unsigned int gpio_reset;
+-	unsigned int irq_polarity;
+-	bool is_ese_present;
+-	bool is_uicc_present;
+-};
+-
+-#endif /* _ST_NCI_H_ */
+-- 
+2.11.0
