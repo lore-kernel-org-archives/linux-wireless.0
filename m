@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33243 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752776AbdF1PMf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 11:12:35 -0400
-Received: by mail-oi0-f68.google.com with SMTP id l83so5758457oif.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 08:12:35 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH v3 00/10] Set 3 of changes related to updates of btcoexist
-Date: Wed, 28 Jun 2017 10:12:15 -0500
-Message-Id: <20170628151225.22190-1-Larry.Finger@lwfinger.net> (sfid-20170628_171310_704178_2D3A7E2A)
+Received: from mga03.intel.com ([134.134.136.65]:28332 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753711AbdFSKJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:37 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 02/13] NFC: st21nfca: Add GPIO ACPI mapping table
+Date: Mon, 19 Jun 2017 13:08:47 +0300
+Message-Id: <20170619100858.2655-3-andriy.shevchenko@linux.intel.com> (sfid-20170619_120941_978400_48B3EC85)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To get maximum benefit of the recent changes in btcoexist, changes need
-to be made in the drivers for the NIC. This is set 3 of those changes.
+In order to make GPIO ACPI library stricter prepare users of
+gpiod_get_index() to correctly behave when there no mapping is
+provided by firmware.
 
-v2 - remove \r characters as suggested by Joe Perches
-v3 - remove those \r characters missed in v2
+Here we add explicit mapping between _CRS GpioIo() resources and
+their names used in the driver.
 
-Ping-Ke Shih (10):
-  rtlwifi: Fill in_4way field by driver
-  rtlwifi: Add BT_MP_INFO to c2h handler.
-  rtlwifi: Add board type for 8723be and 8192ee
-  rtlwifi: add amplifier type for 8812ae
-  rtlwifi: Update 8723be new phy parameters and its parser.
-  rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
-  rtlwifi: Uses addr1 instead DA to determine broadcast and multicast
-    addr.
-  rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
-  rtlwifi: use debugfs to debug.
-  rtlwifi: btcoex: Use seq_file to dump btcoex status
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/st21nfca/i2c.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/realtek/rtlwifi/base.c        |  21 +-
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  16 -
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 202 +++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 269 ++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 206 +++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 285 ++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 177 ++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 150 ++++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  14 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  34 ++
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   2 +
- drivers/net/wireless/realtek/rtlwifi/core.c        |   2 +
- drivers/net/wireless/realtek/rtlwifi/debug.c       | 439 +++++++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/debug.h       |  12 +
- drivers/net/wireless/realtek/rtlwifi/pci.c         |   6 +
- .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   9 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   5 +
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   9 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   7 +
- .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 365 ++++++++---------
- .../net/wireless/realtek/rtlwifi/rtl8723be/table.c | 192 +++++----
- .../net/wireless/realtek/rtlwifi/rtl8723be/table.h |  10 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  13 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  41 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  58 +--
- 31 files changed, 1588 insertions(+), 974 deletions(-)
-
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 4bff76baa341..3621290807f6 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -501,14 +501,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
+ 	.disable = st21nfca_hci_i2c_disable,
+ };
+ 
++static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
++
++static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
++	{ "enable-gpios", &enable_gpios, 1 },
++	{},
++};
++
+ static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
++	int ret;
++
++	ret = devm_acpi_dev_add_driver_gpios(dev, acpi_st21nfca_gpios);
++	if (ret)
++		return ret;
+ 
+ 	/* Get EN GPIO from ACPI */
+-	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+-					      GPIOD_OUT_LOW);
++	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
+ 	if (IS_ERR(phy->gpiod_ena)) {
+ 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
+ 		return PTR_ERR(phy->gpiod_ena);
+@@ -523,8 +534,7 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 	struct device *dev = &client->dev;
+ 
+ 	/* Get GPIO from device tree */
+-	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
+-					      GPIOD_OUT_HIGH);
++	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
+ 	if (IS_ERR(phy->gpiod_ena)) {
+ 		nfc_err(dev, "Failed to request enable pin\n");
+ 		return PTR_ERR(phy->gpiod_ena);
 -- 
-2.12.3
+2.11.0
