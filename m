@@ -1,47 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34274 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750813AbdFBOPf (ORCPT
+Received: from smtprelay0206.hostedemail.com ([216.40.44.206]:42629 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752475AbdFSUSy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 10:15:35 -0400
-Received: by mail-pf0-f196.google.com with SMTP id w69so11905603pfk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 07:15:35 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 1/6] rsi: add usb RS9113 chipset support
-Date: Fri,  2 Jun 2017 19:43:00 +0530
-Message-Id: <1496412785-8720-2-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170602_161538_285076_048219EA)
-In-Reply-To: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
+        Mon, 19 Jun 2017 16:18:54 -0400
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/5] realtek: btcoexist: Make the rtl_btc_ops struct const
+Date: Mon, 19 Jun 2017 13:18:17 -0700
+Message-Id: <b71e1465b0ca58d748229392ab1bcdbaf65d762d.1497903396.git.joe@perches.com> (sfid-20170619_221925_712811_5FA92AFA)
+In-Reply-To: <cover.1497903396.git.joe@perches.com>
+References: <cover.1497903396.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Avoid allowing a write into what should be const.
 
-usb device id and vendor id for RS9113 chipset are included.
-So it can be used through usb interface.
-
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c               | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h              | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index f5de693..bcd7f45 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -666,6 +666,7 @@ static const struct usb_device_id rsi_dev_table[] = {
- 	{ USB_DEVICE(0x041B, 0x0301) },
- 	{ USB_DEVICE(0x041B, 0x0201) },
- 	{ USB_DEVICE(0x041B, 0x9330) },
-+	{ USB_DEVICE(0x1618, 0x9113) },
- 	{ /* Blank */},
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 3ab0cfe26513..19a95b69255d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -29,7 +29,7 @@
+ #include "rtl_btc.h"
+ #include "halbt_precomp.h"
+ 
+-static struct rtl_btc_ops rtl_btc_operation = {
++static const struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_init_variables = rtl_btc_init_variables,
+ 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
+ 	.btc_init_hw_config = rtl_btc_init_hw_config,
+@@ -161,7 +161,7 @@ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type)
+ 	return exhalbtc_special_packet_notify(&gl_bt_coexist, pkt_type);
+ }
+ 
+-struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
++const struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
+ {
+ 	return &rtl_btc_operation;
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index fff5117e1c4e..83c5bb2d6ad8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -44,7 +44,7 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
+ bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
+ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
+ 
+-struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
++const struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
+ 
+ u8 rtl_get_hwpg_bt_exist(struct rtl_priv *rtlpriv);
+ u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index fa93401acdab..8000894c4212 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1814,7 +1814,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal_ops *ops = rtlpriv->cfg->ops;
+-	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++	const struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 9a916188a703..d03f0ca92530 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2475,7 +2475,7 @@ struct rtl_btc_info {
  };
  
+ struct bt_coexist_info {
+-	struct rtl_btc_ops *btc_ops;
++	const struct rtl_btc_ops *btc_ops;
+ 	struct rtl_btc_info btc_info;
+ 	/* EEPROM BT info. */
+ 	u8 eeprom_bt_coexist;
 -- 
-2.7.4
+2.10.0.rc2.1.g053435c
