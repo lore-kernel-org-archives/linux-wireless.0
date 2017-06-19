@@ -1,87 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:44351 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751212AbdFEC4l (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Jun 2017 22:56:41 -0400
-Date: Mon, 5 Jun 2017 12:56:37 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: wsa@the-dreams.de
-Cc: linux-wireless@vger.kernel.org,
-        driverdev-devel@linuxdriverproject.org,
-        kernelnewbies@kernelnewbies.org
-Subject: ks7010 firmware upload fail
-Message-ID: <20170605025637.GA23011@eros> (sfid-20170605_045658_788018_943E07C1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:30902 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753962AbdFSKJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:16 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 11/13] NFC: st-nci: Add GPIO ACPI mapping table
+Date: Mon, 19 Jun 2017 13:08:56 +0300
+Message-Id: <20170619100858.2655-12-andriy.shevchenko@linux.intel.com> (sfid-20170619_120920_957623_A2D2133C)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+In order to make GPIO ACPI library stricter prepare users of
+gpiod_get_index() to correctly behave when there no mapping is
+provided by firmware.
 
-I am attempting to test the ks7010 SIDO Wi-Fi driver (drivers/staging/ks7010/).
+Here we add explicit mapping between _CRS GpioIo() resources and
+their names used in the driver.
 
-Currently probing the driver fails because of a firmware upload error.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/nfc/st-nci/i2c.c | 17 +++++++++++++----
+ drivers/nfc/st-nci/spi.c | 17 +++++++++++++----
+ 2 files changed, 26 insertions(+), 8 deletions(-)
 
-I am seeking ideas on where to continue troubleshooting this issue.
-
-Test setup:
-- Spectec SDW-823 WIFI card (micro SD).
-- Raspberry Pi B 1 (kernel 4.9.29) breakout board connected via GPIO pins.
-- Driver code from current mainline (commit 453e102db531ac1ffa55f3e03c4907c063125859)
-  (with additional debugging output calls).
-
-Debugging thus far:
-
-- define DEBUG in ks7010 and mmc makefiles (core, card, host).
-
-kernel messages from time of fail:
-
-[ 3746.903972] mmc1: starting CMD53 arg 94002004 flags 000001b5
-[ 3746.903985] mmc1:     blksz 4 blocks 1 flags 00000100 tsac 1000 ms nsac 0
-[ 3746.904077] mmc1: req done (CMD53): 0: 00001000 00000000 00000000 00000000
-[ 3746.904090] mmc1:     4 bytes transferred: 0
-[ 3746.904114] mmc1: starting CMD53 arg 94000804 flags 000001b5
-[ 3746.904126] mmc1:     blksz 4 blocks 1 flags 00000100 tsac 1000 ms nsac 0
-[ 3746.904180] mmc1: req done (CMD53): 0: 00001000 00000000 00000000 00000000
-[ 3746.904189] mmc1:     4 bytes transferred: 0
-[ 3746.912784] ks7010_upload_firmware: updated index to: 6000000
-[ 3746.912816] mmc1: starting CMD53 arg 9e000080 flags 000001b5
-[ 3746.912831] mmc1:     blksz 512 blocks 128 flags 00000100 tsac 1000 ms nsac 0
-[ 3746.916336] mmc1: req done (CMD53): 0: 00001000 00000000 00000000 00000000
-[ 3746.916353] mmc1:     65536 bytes transferred: 0
-[ 3746.916420] ks7010_upload_firmware: wrote to address 10000 (DATA_WINDOW) 65536 bytes
-[ 3746.916429] ks7010_sdio_data_compare: read 65536 bytes from address 10000
-[ 3746.916436] debug messages from mmc/core are enabled
-[ 3746.916459] mmc1: starting CMD53 arg 1e000080 flags 000001b5
-[ 3746.916472] mmc1:     blksz 512 blocks 128 flags 00000200 tsac 1000 ms nsac 0
-[ 3746.916575] mmc1: req done (CMD53): 0: 00001000 00000000 00000000 00000000
-[ 3746.916588] mmc1:     0 bytes transferred: -84
-[ 3746.920029] ks7010_sdio_read: sdio_memcpy_fromio() failed: -84
-[ 3746.920100] ks7010: ERROR firmware load failed: 9
-
-Briefly, firmware is uploaded to the card in chunks. Each chunk is
-read back from the card to verify the transfer.
-
-CMD53 can be seen to succeed when writing the first chunk to the
-card. ks7010_sdio_data_compare() is then called which calls
-ks7010_sdio_read() to read back the data written to the card. It is
-this call that fails.
-
-(CMD52 appears to be successful as well as CMD53 write).
-
-All function calls (including memory addresses on the card, and kernel
-buffer addresses) appear to be correct.
-
-Removing the call to ks7010_sdio_data_compare() leads to an MMC read
-error for each successive read (via CMD53) by the driver.
-
-My question is should I be digging further into the MMC code or be doing
-something else with the driver code?
-
-Any suggestions, no matter how simple, most appreciated. This is my
-first time digging into MMC and my first time really trying to trouble
-shoot a kernel issue.
-
-thanks,
-Tobin.
+diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
+index 2ee381586f14..edda253b07fe 100644
+--- a/drivers/nfc/st-nci/i2c.c
++++ b/drivers/nfc/st-nci/i2c.c
+@@ -40,8 +40,6 @@
+ #define ST_NCI_DRIVER_NAME "st_nci"
+ #define ST_NCI_I2C_DRIVER_NAME "st_nci_i2c"
+ 
+-#define ST_NCI_GPIO_NAME_RESET "reset"
+-
+ struct st_nci_i2c_phy {
+ 	struct i2c_client *i2c_dev;
+ 	struct llt_ndlc *ndlc;
+@@ -205,14 +203,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
+ 	.disable = st_nci_i2c_disable,
+ };
+ 
++static const struct acpi_gpio_params reset_gpios = { 1, 0, false };
++
++static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
++	{ "reset-gpios", &reset_gpios, 1 },
++	{},
++};
++
+ static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct st_nci_i2c_phy *phy = i2c_get_clientdata(client);
+ 	struct device *dev = &client->dev;
++	int r;
++
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
++	if (r)
++		return r;
+ 
+ 	/* Get RESET GPIO from ACPI */
+-	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET,
+-						1, GPIOD_OUT_HIGH);
++	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+ 	if (IS_ERR(phy->gpiod_reset)) {
+ 		nfc_err(dev, "Unable to get RESET GPIO\n");
+ 		return -ENODEV;
+diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
+index 383bf69163ef..99ecf92edc8c 100644
+--- a/drivers/nfc/st-nci/spi.c
++++ b/drivers/nfc/st-nci/spi.c
+@@ -41,8 +41,6 @@
+ #define ST_NCI_DRIVER_NAME "st_nci"
+ #define ST_NCI_SPI_DRIVER_NAME "st_nci_spi"
+ 
+-#define ST_NCI_GPIO_NAME_RESET "reset"
+-
+ struct st_nci_spi_phy {
+ 	struct spi_device *spi_dev;
+ 	struct llt_ndlc *ndlc;
+@@ -220,14 +218,25 @@ static struct nfc_phy_ops spi_phy_ops = {
+ 	.disable = st_nci_spi_disable,
+ };
+ 
++static const struct acpi_gpio_params reset_gpios = { 1, 0, false };
++
++static const struct acpi_gpio_mapping acpi_st_nci_gpios[] = {
++	{ "reset-gpios", &reset_gpios, 1 },
++	{},
++};
++
+ static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
+ {
+ 	struct st_nci_spi_phy *phy = spi_get_drvdata(spi_dev);
+ 	struct device *dev = &spi_dev->dev;
++	int r;
++
++	r = devm_acpi_dev_add_driver_gpios(dev, acpi_st_nci_gpios);
++	if (r)
++		return r;
+ 
+ 	/* Get RESET GPIO from ACPI */
+-	phy->gpiod_reset = devm_gpiod_get_index(dev, ST_NCI_GPIO_NAME_RESET,
+-						1, GPIOD_OUT_HIGH);
++	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+ 	if (IS_ERR(phy->gpiod_reset)) {
+ 		nfc_err(dev, "Unable to get RESET GPIO\n");
+ 		return PTR_ERR(phy->gpiod_reset);
+-- 
+2.11.0
