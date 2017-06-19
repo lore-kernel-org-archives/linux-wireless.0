@@ -1,123 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36244 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753157AbdF2Sak (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:30:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:18 +0300
-Message-Id: <20170629183027.15408-7-luca@coelho.fi> (sfid-20170629_203059_475354_EA7B133D)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 06/15] iwlwifi: mvm: fix mac80211's hw_queue in DQA mode
+Received: from mga04.intel.com ([192.55.52.120]:33142 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753997AbdFSKJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:34 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 04/13] NFC: fdp: Convert I2C driver to ->probe_new()
+Date: Mon, 19 Jun 2017 13:08:49 +0300
+Message-Id: <20170619100858.2655-5-andriy.shevchenko@linux.intel.com> (sfid-20170619_121009_083430_7F7CAAF5)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+There is no platform code that uses i2c module table.
+Remove it altogether and adjust ->probe() to be ->probe_new().
 
-When in non-DQA mode, mac80211 actually gets a pretty much perfect
-idea (in vif->hw_queue/cab_queue) of which queues we're using. But
-in DQA mode, this isn't true - nonetheless, we were adding all the
-queues, even the ones stations are using, to the queue allocation
-bitmap.
-
-Fix this, we should only add the queues we really are using in DQA
-mode:
- * IWL_MVM_OFFCHANNEL_QUEUE, as we use this in both modes
- * mvm->aux_queue, as we use this in both modes - mac80211
-   never really knows about it but we use it as a cookie
-   internally, so can't reuse it
- * possibly the GCAST queue (cab_queue)
- * all the "queues" we told mac80211 about we were using on each
-   interface (vif->hw_queue), these are entirely virtual in this
-   mode
-
-Also add back the failure now when we can't allocate any more of
-these - now virtual - queues; this was skipped in DQA mode and
-would lead to having multiple ACs or even interfaces use the same
-queue number in mac80211 (10, since that's the limit), which would
-stop far too many queues if stopped.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 32 ++++++++++++++++++-----
- 1 file changed, 26 insertions(+), 6 deletions(-)
+ drivers/nfc/fdp/i2c.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 71f23ac608eb..dc631b23e189 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -257,7 +257,7 @@ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
- 	};
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index e0baec848ff2..8a66b1845f27 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -281,8 +281,7 @@ static void fdp_nci_i2c_read_device_properties(struct device *dev,
+ 		*clock_type, *clock_freq, *fw_vsc_cfg != NULL ? "yes" : "no");
+ }
  
- 	if (iwl_mvm_is_dqa_supported(mvm))
--		data.used_hw_queues |= BIT(IWL_MVM_DQA_CMD_QUEUE);
-+		data.used_hw_queues |= BIT(IWL_MVM_DQA_GCAST_QUEUE);
- 	else
- 		data.used_hw_queues |= BIT(IWL_MVM_CMD_QUEUE);
+-static int fdp_nci_i2c_probe(struct i2c_client *client,
+-			     const struct i2c_device_id *id)
++static int fdp_nci_i2c_probe(struct i2c_client *client)
+ {
+ 	struct fdp_i2c_phy *phy;
+ 	struct device *dev = &client->dev;
+@@ -360,12 +359,6 @@ static int fdp_nci_i2c_remove(struct i2c_client *client)
+ 	return 0;
+ }
  
-@@ -268,6 +268,14 @@ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
- 		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
- 		iwl_mvm_iface_hw_queues_iter, &data);
- 
-+	/*
-+	 * for DQA, the hw_queue in mac80211 is never really used for
-+	 * real traffic (only the few queue IDs covered above), so
-+	 * we can reuse the real HW queue IDs the stations use
-+	 */
-+	if (iwl_mvm_is_dqa_supported(mvm))
-+		return data.used_hw_queues;
-+
- 	/* don't assign the same hw queues as TDLS stations */
- 	ieee80211_iterate_stations_atomic(mvm->hw,
- 					  iwl_mvm_mac_sta_hw_queues_iter,
-@@ -344,7 +352,7 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 		.found_vif = false,
- 	};
- 	u32 ac;
--	int ret, i;
-+	int ret, i, queue_limit;
- 	unsigned long used_hw_queues;
- 
- 	/*
-@@ -430,17 +438,29 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 		return 0;
- 	}
- 
-+	if (iwl_mvm_is_dqa_supported(mvm)) {
-+		/*
-+		 * queues in mac80211 almost entirely independent of
-+		 * the ones here - no real limit
-+		 */
-+		queue_limit = IEEE80211_MAX_QUEUES;
-+		BUILD_BUG_ON(IEEE80211_MAX_QUEUES >
-+			     BITS_PER_BYTE *
-+			     sizeof(mvm->hw_queue_to_mac80211[0]));
-+	} else {
-+		/* need to not use too many in this case */
-+		queue_limit = mvm->first_agg_queue;
-+	}
-+
- 	/*
- 	 * Find available queues, and allocate them to the ACs. When in
- 	 * DQA-mode they aren't really used, and this is done only so the
- 	 * mac80211 ieee80211_check_queues() function won't fail
- 	 */
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
--		u8 queue = find_first_zero_bit(&used_hw_queues,
--					       mvm->first_agg_queue);
-+		u8 queue = find_first_zero_bit(&used_hw_queues, queue_limit);
- 
--		if (!iwl_mvm_is_dqa_supported(mvm) &&
--		    queue >= mvm->first_agg_queue) {
-+		if (queue >= queue_limit) {
- 			IWL_ERR(mvm, "Failed to allocate queue\n");
- 			ret = -EIO;
- 			goto exit_fail;
+-static struct i2c_device_id fdp_nci_i2c_id_table[] = {
+-	{"int339a", 0},
+-	{}
+-};
+-MODULE_DEVICE_TABLE(i2c, fdp_nci_i2c_id_table);
+-
+ static const struct acpi_device_id fdp_nci_i2c_acpi_match[] = {
+ 	{"INT339A", 0},
+ 	{}
+@@ -377,8 +370,7 @@ static struct i2c_driver fdp_nci_i2c_driver = {
+ 		   .name = FDP_I2C_DRIVER_NAME,
+ 		   .acpi_match_table = ACPI_PTR(fdp_nci_i2c_acpi_match),
+ 		  },
+-	.id_table = fdp_nci_i2c_id_table,
+-	.probe = fdp_nci_i2c_probe,
++	.probe_new = fdp_nci_i2c_probe,
+ 	.remove = fdp_nci_i2c_remove,
+ };
+ module_i2c_driver(fdp_nci_i2c_driver);
 -- 
 2.11.0
