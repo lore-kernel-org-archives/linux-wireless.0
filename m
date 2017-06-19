@@ -1,78 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdFZHEf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:04:35 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH 1/7] staging: wilc1000: Add support for AC classification.
-Date: Mon, 26 Jun 2017 12:33:32 +0530
-Message-ID: <1498460618-22187-2-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090438_824108_C1411FEC)
-In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from frisell.zx2c4.com ([192.95.5.64]:58813 "EHLO frisell.zx2c4.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750828AbdFSQqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 12:46:39 -0400
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+To: gregkh@linuxfoundation.org
+Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 3.18-stable] mac80211/wpa: use constant time memory comparison for MACs
+Date: Mon, 19 Jun 2017 18:44:06 +0200
+Message-Id: <20170619164406.23738-1-Jason@zx2c4.com> (sfid-20170619_184642_601041_5EEDA816)
+In-Reply-To: <1497818656.2259.1.camel@sipsolutions.net>
+References: <1497818656.2259.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new variables and defines for adding access
-category classification
+Otherwise, we enable all sorts of forgeries via timing attack.
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+This is for 3.18. Tested this, and it works as intended.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 7a5eba9..c97f94a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -133,6 +133,17 @@
+ net/mac80211/wpa.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 983527a4c1ab..bf87de469c03 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -16,6 +16,7 @@
+ #include <asm/unaligned.h>
+ #include <net/mac80211.h>
+ #include <crypto/aes.h>
++#include <crypto/algapi.h>
  
- #define MODALIAS		"WILC_SPI"
- #define GPIO_NUM		0x44
-+
-+#define NQUEUES			4
-+#define VO_AC_COUNT_POS		25
-+#define VO_AC_ACM_STAT_POS	24
-+#define VI_AC_COUNT_POS		17
-+#define VI_AC_ACM_STAT_POS	16
-+#define BE_AC_COUNT_POS		9
-+#define BE_AC_ACM_STAT_POS	8
-+#define BK_AC_COUNT_POS		2
-+#define BK_AC_ACM_STAT_POS	1
-+#define AC_BUFFER_SIZE		1000
- /*******************************************/
- /*        E0 and later Interrupt flags.    */
- /*******************************************/
-@@ -206,11 +217,25 @@ typedef void (*wilc_debug_func)(u32, char *, ...);
-  *      Tx/Rx Queue Structure
-  *
-  ********************************************/
-+struct txq_handle {
-+	struct txq_entry_t *txq_head;
-+	struct txq_entry_t *txq_tail;
-+	u16 count;
-+	u8 acm;
-+};
-+
-+enum ip_pkt_priority {
-+	AC_VO_Q = 0,
-+	AC_VI_Q = 1,
-+	AC_BE_Q = 2,
-+	AC_BK_Q = 3
-+};
+ #include "ieee80211_i.h"
+ #include "michael.h"
+@@ -150,7 +151,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
+ 		goto mic_fail;
  
- struct txq_entry_t {
- 	struct txq_entry_t *next;
- 	struct txq_entry_t *prev;
- 	int type;
-+	u8 q_num;
- 	int tcp_pending_ack_idx;
- 	u8 *buffer;
- 	int buffer_size;
+ 	/* remove Michael MIC from payload */
+@@ -771,7 +772,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
+ 				   skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
 -- 
-2.7.4
+2.13.1
