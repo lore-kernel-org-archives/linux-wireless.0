@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48152 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751148AbdFARWr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 13:22:47 -0400
-Date: Thu, 1 Jun 2017 10:22:46 -0700
-From: Kyle McMartin <kyle@infradead.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        linux-firmware@kernel.org
-Subject: Re: [PATCH] linux-firmware: add firmware image for Redpine 9113
- chipset
-Message-ID: <20170601172246.GB13400@bombadil.infradead.org> (sfid-20170601_192251_428942_D674D05C)
-References: <1496236783-3250-1-git-send-email-amit.karwar@redpinesignals.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496236783-3250-1-git-send-email-amit.karwar@redpinesignals.com>
+Received: from mga07.intel.com ([134.134.136.100]:63280 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753775AbdFSKJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 06:09:24 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 13/13] MAINTAINERS: Remove non-existing NFC platform data files
+Date: Mon, 19 Jun 2017 13:08:58 +0300
+Message-Id: <20170619100858.2655-14-andriy.shevchenko@linux.intel.com> (sfid-20170619_120929_156604_D3977A08)
+In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 31, 2017 at 06:49:43PM +0530, Amitkumar Karwar wrote:
-> This image will be loaded by rsi driver. Firmware version is 1.5.3
-> 
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+There are no longer platform data files for NFC drivers.
+Remove it from MAINTAINERS data base.
 
-Applied, thanks Amitkumar.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ MAINTAINERS | 2 --
+ 1 file changed, 2 deletions(-)
 
---kyle
-
-> ---
->  WHENCE                   |   3 +++
->  rsi/rs9113_wlan_qspi.rps | Bin 0 -> 199180 bytes
->  2 files changed, 3 insertions(+)
->  create mode 100644 rsi/rs9113_wlan_qspi.rps
-> 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6f2d96313230..6b6079ad91f4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9175,8 +9175,6 @@ F:	include/uapi/linux/nfc.h
+ F:	drivers/nfc/
+ F:	include/linux/platform_data/nfcmrvl.h
+ F:	include/linux/platform_data/nxp-nci.h
+-F:	include/linux/platform_data/pn544.h
+-F:	include/linux/platform_data/st21nfca.h
+ F:	Documentation/devicetree/bindings/net/nfc/
+ 
+ NFS, SUNRPC, AND LOCKD CLIENTS
+-- 
+2.11.0
