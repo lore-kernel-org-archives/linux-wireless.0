@@ -1,41 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60722 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752045AbdFMGMg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 02:12:36 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [for-4.12,
- 3/3] brcmfmac: unbind all devices upon failure in firmware callback
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1497268054-4507-4-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497268054-4507-4-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170613061235.E0D89607C4@smtp.codeaurora.org> (sfid-20170613_081358_250421_BA39A7D0)
-Date: Tue, 13 Jun 2017 06:12:35 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:34424 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751773AbdFTVJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 17:09:54 -0400
+Message-ID: <1497992992.11421.3.camel@sipsolutions.net> (sfid-20170620_230958_118791_62EA1EED)
+Subject: Re: [RFC] mac80211: support non-data TXQs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Tue, 20 Jun 2017 23:09:52 +0200
+In-Reply-To: <20170620210309.1193-1-johannes@sipsolutions.net> (sfid-20170620_230321_402397_A3FCC329)
+References: <20170620210309.1193-1-johannes@sipsolutions.net>
+         (sfid-20170620_230321_402397_A3FCC329)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-
-> In brcmf_sdio_firmware_callback() we need to unbind the driver from
-> both sdio_func devices.
+On Tue, 2017-06-20 at 23:03 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Cc: stable@vger.kernel.org # 4.9.x-
-> Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Some drivers may want to also use the TXQ abstraction with
+> non-data packets, so add a hardware flag to allow this.
 
-The commit log doesn't really describe the bug you are fixing (ie. doesn't
-answer "why?"). Can you give some more info, logs etc (as a reply to this mail)
-and I'll add it.
+Need to replace various ARRAY_SIZE(sta->txq) in ath9k/ath10k by
+IEEE80211_NUM_TIDS.
 
--- 
-https://patchwork.kernel.org/patch/9780797/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
