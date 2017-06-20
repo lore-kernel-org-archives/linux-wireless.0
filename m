@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60868 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751147AbdFBL1T (ORCPT
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:35609 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751090AbdFTTxS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:27:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:39 +0300
-Message-Id: <20170602112553.2466-12-luca@coelho.fi> (sfid-20170602_132723_854788_BAB5FF98)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 11/25] iwlwifi: mvm: wait for the flushed queue only
+        Tue, 20 Jun 2017 15:53:18 -0400
+Received: by mail-wr0-f174.google.com with SMTP id y25so65936649wrd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2017 12:53:17 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Fix a memory leak in error handling path in
+ 'brcmf_cfg80211_attach'
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        kvalo@codeaurora.org, rafal@milecki.pl,
+        pieter-paul.giesberts@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2343c662-f70d-1e76-d863-5f6bb66c269b@broadcom.com> (sfid-20170620_215339_680418_E349B1A0)
+Date: Tue, 20 Jun 2017 21:53:15 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
 
-The function flushed only agg queue and no more traffic
-is queued on it.
-However, it waits for all queues to empty, which is not
-necessary and may take more time.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On 20-06-17 08:22, Christophe JAILLET wrote:
+> If 'wiphy_new()' fails, we leak 'ops'. Add a new label in the error
+> handling path to free it in such a case.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index bf105c6572ba..9f74d4ff6b73 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2850,8 +2850,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		iwl_mvm_drain_sta(mvm, mvmsta, true);
- 		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), 0))
- 			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
--		iwl_trans_wait_tx_queues_empty(mvm->trans,
--					       mvmsta->tfd_queue_msk);
-+		iwl_trans_wait_tx_queues_empty(mvm->trans, BIT(txq_id));
- 		iwl_mvm_drain_sta(mvm, mvmsta, false);
- 
- 		iwl_mvm_sta_tx_agg(mvm, sta, tid, txq_id, false);
--- 
-2.11.0
+Thanks. Please add the following tags:
+
+Cc: stable@vger.kernel.org
+> Fixes: 5c22fb85102a7 ("brcmfmac: add wowl gtk rekeying offload support")
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
