@@ -1,11 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35175 "EHLO
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33009 "EHLO
         mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751116AbdFURPq (ORCPT
+        with ESMTP id S1752693AbdFTAce (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 13:15:46 -0400
-Received: by mail-oi0-f67.google.com with SMTP id v74so16298305oie.2
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:46 -0700 (PDT)
+        Mon, 19 Jun 2017 20:32:34 -0400
+Received: by mail-oi0-f67.google.com with SMTP id j63so971365oiy.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:34 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
@@ -13,18 +13,17 @@ Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
         Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Birming Chiu <birming@realtek.com>,
         Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 2/8] rtlwifi: Do IQK only once to reduce wifi occupy antenna
-Date: Wed, 21 Jun 2017 12:15:32 -0500
-Message-Id: <20170621171538.4462-3-Larry.Finger@lwfinger.net> (sfid-20170621_191551_356480_DF66A62F)
-In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
-References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+Subject: [PATCH 09/10] rtlwifi: Add in_4way field for btcoexist
+Date: Mon, 19 Jun 2017 19:32:17 -0500
+Message-Id: <20170620003218.17010-10-Larry.Finger@lwfinger.net> (sfid-20170620_023239_121089_704D4AA5)
+In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-Modify 8723be and 8192e only.
-8812/8821 do IQK in DM, so we may do it later.
+If wifi is in 4way, btcoex give wifi higher priority to use antenna.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
@@ -33,70 +32,35 @@ Cc: Birming Chiu <birming@realtek.com>
 Cc: Shaofu <shaofu@realtek.com>
 Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c  | 3 ++-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c  | 7 +++++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 3 ++-
- 3 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +--
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index 11d97fa0e921..d84ac7adfd82 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -1670,7 +1670,8 @@ void rtl92ee_card_disable(struct ieee80211_hw *hw)
- 	_rtl92ee_poweroff_adapter(hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 9dbb35f190d1..e6024b013ca5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -428,8 +428,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 			*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_4_WAY_PROGRESS:
+-		/* TODO */
+-		*bool_tmp = false;
++		*bool_tmp = rtlpriv->btcoexist.btc_info.in_4way;
+ 		break;
+ 	case BTC_GET_BL_WIFI_UNDER_5G:
+ 		if (rtlhal->current_bandtype == BAND_ON_5G)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 98183dc707aa..fb1ebb01133f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2484,6 +2484,7 @@ struct rtl_btc_info {
+ 	u8 single_ant_path;
  
- 	/* after power off we should do iqk again */
--	rtlpriv->phy.iqk_initialized = false;
-+	if (!rtlpriv->cfg->ops->get_btc_status())
-+		rtlpriv->phy.iqk_initialized = false;
- }
+ 	u8 ap_num;
++	bool in_4way;
+ };
  
- void rtl92ee_interrupt_recognized(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 0ce2900722f4..2a7ad5ffe997 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -1443,7 +1443,9 @@ int rtl8723be_hw_init(struct ieee80211_hw *hw)
- 		 */
- 		if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2 ||
- 		    !rtlpriv->cfg->ops->get_btc_status()) {
--			rtl8723be_phy_iq_calibrate(hw, false);
-+			rtl8723be_phy_iq_calibrate(hw,
-+						   (rtlphy->iqk_initialized ?
-+						    true : false));
- 			rtlphy->iqk_initialized = true;
- 		}
- 		rtl8723be_dm_check_txpower_tracking(hw);
-@@ -1677,7 +1679,8 @@ void rtl8723be_card_disable(struct ieee80211_hw *hw)
- 	_rtl8723be_poweroff_adapter(hw);
- 
- 	/* after power off we should do iqk again */
--	rtlpriv->phy.iqk_initialized = false;
-+	if (!rtlpriv->cfg->ops->get_btc_status())
-+		rtlpriv->phy.iqk_initialized = false;
- }
- 
- void rtl8723be_interrupt_recognized(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-index ab0f39e46e1b..9752175cc466 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-@@ -2352,7 +2352,7 @@ void rtl8723be_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
- 	if (b_recovery) {
- 		rtl8723_phy_reload_adda_registers(hw, iqk_bb_reg,
- 						  rtlphy->iqk_bb_backup, 9);
--		return;
-+		goto label_done;
- 	}
- 	/* Save RF Path */
- 	path_sel_bb = rtl_get_bbreg(hw, 0x948, MASKDWORD);
-@@ -2460,6 +2460,7 @@ void rtl8723be_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
- 	rtl_set_bbreg(hw, 0x948, MASKDWORD, path_sel_bb);
- 	/* rtl_set_rfreg(hw, RF90_PATH_A, 0xb0, 0xfffff, path_sel_rf); */
- 
-+label_done:
- 	spin_lock(&rtlpriv->locks.iqk_lock);
- 	rtlphy->lck_inprogress = false;
- 	spin_unlock(&rtlpriv->locks.iqk_lock);
+ struct bt_coexist_info {
 -- 
 2.12.3
