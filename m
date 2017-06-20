@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43072 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751128AbdFBNsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 09:48:18 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-06-02
-Date: Fri,  2 Jun 2017 15:47:44 +0200
-Message-Id: <20170602134745.15366-1-johannes@sipsolutions.net> (sfid-20170602_154829_014917_9B356492)
+Received: from mail-by2nam01on0054.outbound.protection.outlook.com ([104.47.34.54]:47040
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751529AbdFTUJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 16:09:52 -0400
+Date: Tue, 20 Jun 2017 23:09:17 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 5/8] qtnfmac: enable reporting the current operating
+ channel
+Message-ID: <20170620200915.kltxuoaxlhnvaat7@bars> (sfid-20170620_220956_644095_CC0BCF3F)
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+ <20170620195517.18373-6-sergey.matyukevich.os@quantenna.com>
+ <1497988764.11421.1.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1497988764.11421.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+> 
+> > +     if (sme->channel) {
+> > +             /* FIXME: need to set proper nl80211_channel_type
+> > value */
+> > +             cfg80211_chandef_create(&chandef, sme->channel,
+> > +                                     NL80211_CHAN_HT20);
+> > +             /* fall-back to minimal safe chandef description */
+> > +             if (!cfg80211_chandef_valid(&chandef))
+> > +                     cfg80211_chandef_create(&chandef, sme-
+> > >channel,
+> > +                                             NL80211_CHAN_HT20);
+> >
+> This seems odd since you just do the same thing over again? Not that I
+> could see how it would be invalid anyway.
 
-Here I just have two fixes for issues that folks reported to me recently.
+The first call of cfg80211_chandef_create will be replaced by proper chandef
+calculation based on current h/w channel settings. This piece is still in work.
+NL80211_CHAN_HT20 is going to be used as a safe fallback when channel info
+turns out to be inconsistent.
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 029c58178b9aa0a293a86ee0da3355611ac99d07:
-
-  Merge tag 'mac80211-for-davem-2017-05-23' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-05-24 15:31:39 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-06-02
-
-for you to fetch changes up to e165bc02a02c70e40d5c811c705ba269aeca0497:
-
-  mac80211: fix dropped counter in multiqueue RX (2017-06-01 21:26:03 +0200)
-
-----------------------------------------------------------------
-Just two fixes:
- * fix the per-CPU drop counters to not be added to the
-   rx_packets counter, but really the drop counter
- * fix TX aggregation start/stop callback races by setting
-   bits instead of allocating and queueing an skb
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      mac80211: fix TX aggregation start/stop callback race
-      mac80211: fix dropped counter in multiqueue RX
-
- net/mac80211/agg-tx.c      | 128 ++++++++++++++++++---------------------------
- net/mac80211/ht.c          |  16 ++++--
- net/mac80211/ieee80211_i.h |  14 ++---
- net/mac80211/iface.c       |  11 +---
- net/mac80211/sta_info.c    |   2 +-
- net/mac80211/sta_info.h    |   2 +
- 6 files changed, 72 insertions(+), 101 deletions(-)
+Regards,
+Sergey
