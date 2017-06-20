@@ -1,48 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52682 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751092AbdFHLBB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 07:01:01 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: don't look at the PM bit of BAR frames
-Date: Thu,  8 Jun 2017 14:00:49 +0300
-Message-Id: <20170608110049.8747-1-emmanuel.grumbach@intel.com> (sfid-20170608_130104_649578_6E1C9125)
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:36644 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752652AbdFTAc3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Jun 2017 20:32:29 -0400
+Received: by mail-ot0-f194.google.com with SMTP id r67so13317905ota.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:29 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 04/10] rtlwifi: Update some cases in btc_get function -- roam, 5G, AP mode, and return value.
+Date: Mon, 19 Jun 2017 19:32:12 -0500
+Message-Id: <20170620003218.17010-5-Larry.Finger@lwfinger.net> (sfid-20170620_023248_503188_E988A2CC)
+In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a peer sends a BAR frame with PM bit clear, we should
-not modify its PM state as madated by the spec in
-802.11-20012 10.2.1.2.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Return value may be false in some situations.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- net/mac80211/rx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 24 +++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e48724a6725e..bb1e4bbf55e2 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1558,12 +1558,16 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	 */
- 	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
- 	    !ieee80211_has_morefrags(hdr->frame_control) &&
-+	    !ieee80211_is_back_req(hdr->frame_control) &&
- 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
- 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
- 	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
--	    /* PM bit is only checked in frames where it isn't reserved,
-+	    /*
-+	     * PM bit is only checked in frames where it isn't reserved,
- 	     * in AP mode it's reserved in non-bufferable management frames
- 	     * (cf. IEEE 802.11-2012 8.2.4.1.7 Power Management field)
-+	     * BAR frames should be ignored as specified in
-+	     * IEEE 802.11-2012 10.2.1.2.
- 	     */
- 	    (!ieee80211_is_mgmt(hdr->frame_control) ||
- 	     ieee80211_is_bufferable_mmpdu(hdr->frame_control))) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index eaa916a0727b..d8fb2442f795 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -381,6 +381,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	u32 *u32_tmp = (u32 *)out_buf;
+ 	u8 *u8_tmp = (u8 *)out_buf;
+ 	bool tmp = false;
++	bool ret = true;
+ 
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+ 		return false;
+@@ -388,9 +389,11 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	switch (get_type) {
+ 	case BTC_GET_BL_HS_OPERATION:
+ 		*bool_tmp = false;
++		ret = false;
+ 		break;
+ 	case BTC_GET_BL_HS_CONNECTING:
+ 		*bool_tmp = false;
++		ret = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_CONNECTED:
+ 		if (rtlpriv->mac80211.opmode == NL80211_IFTYPE_STATION &&
+@@ -429,11 +432,16 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_UNDER_5G:
+-		/* TODO */
+-		*bool_tmp = false;
++		if (rtlhal->current_bandtype == BAND_ON_5G)
++			*bool_tmp = true;
++		else
++			*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_AP_MODE_ENABLE:
+-		*bool_tmp = false;
++		if (mac->opmode == NL80211_IFTYPE_AP)
++			*bool_tmp = true;
++		else
++			*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_ENABLE_ENCRYPTION:
+ 		if (NO_ENCRYPTION == rtlpriv->sec.pairwise_enc_algorithm)
+@@ -460,8 +468,8 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
+ 		break;
+ 	case BTC_GET_S4_HS_RSSI:
+-		/* TODO */
+-		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
++		*s32_tmp = 0;
++		ret = false;
+ 		break;
+ 	case BTC_GET_U4_WIFI_BW:
+ 		*u32_tmp = halbtc_get_wifi_bw(btcoexist);
+@@ -491,7 +499,8 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		*u8_tmp = halbtc_get_wifi_central_chnl(btcoexist);
+ 		break;
+ 	case BTC_GET_U1_WIFI_HS_CHNL:
+-		*u8_tmp = 1;
++		*u8_tmp = 0;
++		ret = false;
+ 		break;
+ 	case BTC_GET_U1_AP_NUM:
+ 		/* driver do not know AP num,
+@@ -512,10 +521,11 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		break;
+ 
+ 	default:
++		ret = false;
+ 		break;
+ 	}
+ 
+-	return true;
++	return ret;
+ }
+ 
+ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
 -- 
-2.9.3
+2.12.3
