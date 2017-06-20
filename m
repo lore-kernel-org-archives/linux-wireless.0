@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49766 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751579AbdF0RG0 (ORCPT
+Received: from smtp02.smtpout.orange.fr ([80.12.242.124]:50969 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdFTGWP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 13:06:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
+        Tue, 20 Jun 2017 02:22:15 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        rafal@milecki.pl, pieter-paul.giesberts@broadcom.com
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 21/26] iwlwifi: mvm: print base HW address during init
-References: <20170625111158.1792-1-luca@coelho.fi>
-        <20170625111158.1792-22-luca@coelho.fi>
-Date: Tue, 27 Jun 2017 20:06:22 +0300
-In-Reply-To: <20170625111158.1792-22-luca@coelho.fi> (Luca Coelho's message of
-        "Sun, 25 Jun 2017 14:11:53 +0300")
-Message-ID: <87a84tbbsh.fsf@codeaurora.org> (sfid-20170627_190636_001626_9AF12C21)
-MIME-Version: 1.0
-Content-Type: text/plain
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] cfg80211: Fix a memory leak in error handling path in 'brcmf_cfg80211_attach'
+Date: Tue, 20 Jun 2017 08:22:05 +0200
+Message-Id: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr> (sfid-20170620_082239_065920_6BD04A50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+If 'wiphy_new()' fails, we leak 'ops'. Add a new label in the error
+handling path to free it in such a case.
 
-> From: Luca Coelho <luciano.coelho@intel.com>
->
-> It's sometimes hard to find out which HW address the iwlwifi device is
-> using, for instance when reading crouded sniffer logs.  To make it
-> easier, print out an info level message with the HW address as soon as
-> we know it.
->
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: 5c22fb85102a7 ("brcmfmac: add wowl gtk rekeying offload support")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-"crouded sniffer logs", what's that?
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2443c71a202f..032d823c53c2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6861,7 +6861,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	wiphy = wiphy_new(ops, sizeof(struct brcmf_cfg80211_info));
+ 	if (!wiphy) {
+ 		brcmf_err("Could not allocate wiphy device\n");
+-		return NULL;
++		goto ops_out;
+ 	}
+ 	memcpy(wiphy->perm_addr, drvr->mac, ETH_ALEN);
+ 	set_wiphy_dev(wiphy, busdev);
+@@ -7012,6 +7012,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	ifp->vif = NULL;
+ wiphy_out:
+ 	brcmf_free_wiphy(wiphy);
++ops_out:
+ 	kfree(ops);
+ 	return NULL;
+ }
 -- 
-Kalle Valo
+2.11.0
