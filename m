@@ -1,73 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52732 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752456AbdFMJoO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 05:44:14 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-06-13
-Date: Tue, 13 Jun 2017 11:44:08 +0200
-Message-Id: <20170613094409.12965-1-johannes@sipsolutions.net> (sfid-20170613_114433_669322_E8AA7BB1)
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:35600 "EHLO
+        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750993AbdFTN0J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 09:26:09 -0400
+Received: by mail-qk0-f177.google.com with SMTP id a199so57130724qkb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2017 06:26:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87vansxax3.fsf@kamboji.qca.qualcomm.com>
+References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1496412785-8720-3-git-send-email-amit.karwar@redpinesignals.com>
+ <87lgowpeno.fsf@purkki.adurom.net> <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
+ <87zidb2aq5.fsf@kamboji.qca.qualcomm.com> <CAEhWJFmXJSJNJxppNtfK-vTRaq1vCZckWChW++TCfj8j8-ZwAg@mail.gmail.com>
+ <87r2yle2en.fsf@codeaurora.org> <CAEhWJFkxg1FnW65E3k-i6sWe1S67gQhr8=9zAZCiyNo4b6Ag6A@mail.gmail.com>
+ <87vansxax3.fsf@kamboji.qca.qualcomm.com>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Tue, 20 Jun 2017 18:56:08 +0530
+Message-ID: <CAEhWJFmdMKU88e6zMPkE2xiQhL+RrfoU6PQdxw8oTf4=Sn8P8Q@mail.gmail.com> (sfid-20170620_152613_859044_A0D2B3E8)
+Subject: Re: [PATCH 2/6] rsi: use enum for FSM states
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Mon, Jun 19, 2017 at 8:49 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> On Thu, Jun 15, 2017 at 8:14 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>>>
+>>>> On Wed, Jun 14, 2017 at 2:43 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>>> amit karwar <amitkarwar@gmail.com> writes:
+>>>>>
+>>>>>> On Tue, Jun 13, 2017 at 12:17 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>>>>
+>>>>>>> Also your name in patchwork is not capitalised (patchwork is idiotic and
+>>>>>>> takes the name from patchwork user data and not from the patch):
+>>>>>>>
+>>>>>>>       [1/6] rsi: add usb RS9113 chipset support 2017-06-02 amit
+>>>>>>> karwar New
+>>>>>>>       [2/6] rsi: use enum for FSM states 2017-06-02 amit karwar New
+>>>>>>>       [3/6] rsi: Register interrupt handler before firmware load
+>>>>>>> 2017-06-02 amit karwar New
+>>>>>>>       [4/6] rsi: receive path enhancement for RS9113 2017-06-02 amit
+>>>>>>> karwar New
+>>>>>>>       [5/6] rsi: configure new boot parameters to device 2017-06-02
+>>>>>>> amit karwar New
+>>>>>>>       [6/6] rsi: add tx frame for common device configuration
+>>>>>>> 2017-06-02 amit karwar New
+>>>>>>>
+>>>>>>> To fix that could you please register to patchwork and capitalise your
+>>>>>>> name correctly? You have only one chance, patchwork doesn't allow users
+>>>>>>> edit the name afterwards, so don't do any typos :)
+>>>>>>
+>>>>>> Thanks. I have registered with patchwork and corrected my name.
+>>>>>
+>>>>> What address did you use? Patchwork still shows your name all lower:
+>>>>>
+>>>>> https://patchwork.kernel.org/project/linux-wireless/list/?submitter=173645
+>>>>>
+>>>>> I suspect you didn't register with gmail.com, but with some other
+>>>>> address. I recommend that you link all your email addresses, including
+>>>>> gmail.com, to the same patchwork account and hopefully that fixes it.
+>>>>> You should be able to do that from the profile page in patchwork.
+>>>>
+>>>> I had registered with my gmail id. Also, other email id has also been
+>>>> linked to patchwork. But still patchwork took previous user name.
+>>>> I could not find a way to check my name in patchwork database after
+>>>> login. I have now corrected my display name in gmail's setting.
+>>>
+>>> Good, thanks. This name format bug in patchwork is really annoying, I'm
+>>> suffering from frequently. Let's see how your next submission goes and
+>>> hopefully we can sort it out.
+>>
+>> I just submitted a patch series. But patchwork is still showing older name.
+>
+> I think the best is that you now report this to kernel.org admins:
+>
+> https://korg.wiki.kernel.org/userdoc/support
+>
+> Hopefully they can easily fix it directly in the database.
+>
 
-Here are some more fixes for the current cycle. Nothing really
-big, though my own patches look bigger than they are due to some
-code moving. The commit logs are far longer than the changes :-)
-
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 0bed865060836dc5f26b68052de0a504d66d9fae:
-
-  net: Fix build regression in rtl8723bs staging driver. (2017-06-08 11:51:59 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-06-13
-
-for you to fetch changes up to b3dd8279659f14f3624bb32559782d699fa6f7d1:
-
-  mac80211: don't send SMPS action frame in AP mode when not needed (2017-06-13 10:24:35 +0200)
-
-----------------------------------------------------------------
-Some fixes:
- * Avi fixes some fallout from my mac80211 RX flags changes
- * Emmanuel fixes an issue with adhering to the spec, and
-   an oversight in the SMPS management code
- * Jason's patch makes mac80211 use constant-time memory
-   comparisons for message authentication, to avoid having
-   potentially observable timing differences
- * my fix makes mac80211 set the basic rates bitmap before
-   the channel so the next update to the driver has more
-   consistent data - this required another rework patch to
-   remove some useless 5/10 MHz code that can never be hit
-
-----------------------------------------------------------------
-Avraham Stern (1):
-      mac80211: Fix incorrect condition when checking rx timestamp
-
-Emmanuel Grumbach (2):
-      mac80211: don't look at the PM bit of BAR frames
-      mac80211: don't send SMPS action frame in AP mode when not needed
-
-Jason A. Donenfeld (1):
-      mac80211/wpa: use constant time memory comparison for MACs
-
-Johannes Berg (2):
-      mac80211: remove 5/10 MHz rate code from station MLME
-      mac80211: set bss_info data before configuring the channel
-
- net/mac80211/cfg.c         |  2 ++
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/mlme.c        | 62 +++++++++++++++++++++++-----------------------
- net/mac80211/rx.c          |  6 ++++-
- net/mac80211/wpa.c         |  9 ++++---
- 5 files changed, 44 insertions(+), 37 deletions(-)
+Thanks for the pointers. I have dropped an email to helpdesk for this issue.
