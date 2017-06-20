@@ -1,252 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33441 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753225AbdFRQND (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 12:13:03 -0400
-Received: by mail-oi0-f65.google.com with SMTP id k145so7238526oih.0
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:13:03 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/11] rtlwifi: Add btcoex record_pwr_mode
-Date: Sun, 18 Jun 2017 11:12:46 -0500
-Message-Id: <20170618161249.6146-9-Larry.Finger@lwfinger.net> (sfid-20170618_181320_445377_AA92149A)
-In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
-References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+Received: from mail-dm3nam03on0071.outbound.protection.outlook.com ([104.47.41.71]:30144
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752117AbdFTT4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 15:56:06 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 5/8] qtnfmac: enable reporting the current operating channel
+Date: Tue, 20 Jun 2017 22:55:14 +0300
+Message-Id: <20170620195517.18373-6-sergey.matyukevich.os@quantenna.com> (sfid-20170620_215610_767547_199205B9)
+In-Reply-To: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+This patch implements all the necessary features needed to keep
+operating channel information in sync between firmware and driver:
 
-Add btcoex record pwr mode to control LPS's parameters and share time
-with BT.
+- implement cfg80211 qtnf_get_channel handler
+- implement QLINK_EVENT_FREQ_CHANGE event handling
+  using this event firmware notifies host when operating channel is changed
+- update qtnf_dump_survey
+  specify current channel in use in survey report
+- update qtnf_connect
+  pass to firmware channel number rather than frequency
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c | 13 +++++++++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h |  1 +
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c      |  7 ++++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h      |  4 +++-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c      |  8 +++++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h      |  4 +++-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c      |  7 ++++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h      |  4 +++-
- drivers/net/wireless/realtek/rtlwifi/wifi.h              |  1 +
- 9 files changed, 43 insertions(+), 6 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 66 ++++++++++++++++++++++-
+ drivers/net/wireless/quantenna/qtnfmac/commands.c |  2 +-
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 60 ++++++++++++++++++++-
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 15 +++++-
+ 4 files changed, 136 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 9635c1478875..3b976dab712f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -45,8 +45,21 @@ static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_is_disable_edca_turbo = rtl_btc_is_disable_edca_turbo,
- 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
- 	.btc_special_packet_notify = rtl_btc_special_packet_notify,
-+	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
- };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index eb648f02aa40..77afc0fc8c03 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -755,6 +755,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	     struct cfg80211_connect_params *sme)
+ {
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
++	struct cfg80211_chan_def chandef;
+ 	struct qtnf_bss_config *bss_cfg;
+ 	int ret;
  
-+void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
+@@ -767,9 +768,20 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	bss_cfg = &vif->bss_cfg;
+ 	memset(bss_cfg, 0, sizeof(*bss_cfg));
+ 
++	if (sme->channel) {
++		/* FIXME: need to set proper nl80211_channel_type value */
++		cfg80211_chandef_create(&chandef, sme->channel,
++					NL80211_CHAN_HT20);
++		/* fall-back to minimal safe chandef description */
++		if (!cfg80211_chandef_valid(&chandef))
++			cfg80211_chandef_create(&chandef, sme->channel,
++						NL80211_CHAN_HT20);
++
++		memcpy(&bss_cfg->chandef, &chandef, sizeof(bss_cfg->chandef));
++	}
++
+ 	bss_cfg->ssid_len = sme->ssid_len;
+ 	memcpy(&bss_cfg->ssid, sme->ssid, bss_cfg->ssid_len);
+-	bss_cfg->chandef.chan = sme->channel;
+ 	bss_cfg->auth_type = sme->auth_type;
+ 	bss_cfg->privacy = sme->privacy;
+ 	bss_cfg->mfp = sme->mfp;
+@@ -845,10 +857,15 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct ieee80211_supported_band *sband;
++	struct cfg80211_chan_def *bss_chandef;
+ 	struct ieee80211_channel *chan;
+ 	struct qtnf_chan_stats stats;
++	struct qtnf_vif *vif;
+ 	int ret;
+ 
++	vif = qtnf_netdev_get_priv(dev);
++	bss_chandef = &vif->bss_cfg.chandef;
++
+ 	sband = wiphy->bands[NL80211_BAND_2GHZ];
+ 	if (sband && idx >= sband->n_channels) {
+ 		idx -= sband->n_channels;
+@@ -867,6 +884,10 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ 	survey->channel = chan;
+ 	survey->filled = 0x0;
+ 
++	if (bss_chandef->chan)
++		if (chan->hw_value == bss_chandef->chan->hw_value)
++			survey->filled |= SURVEY_INFO_IN_USE;
++
+ 	ret = qtnf_cmd_get_chan_stats(mac, chan->hw_value, &stats);
+ 	switch (ret) {
+ 	case 0:
+@@ -905,6 +926,46 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
++static int
++qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 struct cfg80211_chan_def *chandef)
 +{
-+	u8 safe_len;
++	struct net_device *ndev = wdev->netdev;
++	struct qtnf_bss_config *bss_cfg;
++	struct qtnf_vif *vif;
 +
-+	safe_len = sizeof(gl_bt_coexist.pwr_mode_val);
++	if (!ndev)
++		return -ENODEV;
 +
-+	if (safe_len > len)
-+		safe_len = len;
++	vif = qtnf_netdev_get_priv(wdev->netdev);
++	bss_cfg = &vif->bss_cfg;
 +
-+	memcpy(gl_bt_coexist.pwr_mode_val, buf, safe_len);
++	switch (vif->wdev.iftype) {
++	case NL80211_IFTYPE_STATION:
++		if (vif->sta_state == QTNF_STA_DISCONNECTED) {
++			pr_warn("%s: STA disconnected\n", ndev->name);
++			return -ENODATA;
++		}
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		/* AP_VLAN: get primary vif and pass through to AP */
++		vif = vif->u.vlan.parent;
++		bss_cfg = &vif->bss_cfg;
++	case NL80211_IFTYPE_AP:
++		if (!(vif->bss_status & QTNF_STATE_AP_START)) {
++			pr_warn("%s: AP not started\n", ndev->name);
++			return -ENODATA;
++		}
++		break;
++	default:
++		pr_err("unsupported vif type (%d)\n", vif->wdev.iftype);
++		return -ENODATA;
++	}
++
++	memcpy(chandef, &bss_cfg->chandef, sizeof(*chandef));
++	return 0;
 +}
 +
- void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
- {
- 	exhalbtc_initlize_variables();
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index fff5117e1c4e..9eeb4fdeaec1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -43,6 +43,7 @@ bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
- void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
-+void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
- 
- struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index c6c9c66abe1f..c11f1c04f871 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -422,7 +422,8 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 u1_h2c_set_pwrmode[H2C_92E_PWEMODE_LENGTH] = { 0 };
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	u8 rlbm , power_state = 0;
-+	u8 rlbm, power_state = 0, byte5 = 0x40;
-+	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD , "FW LPS mode = %d\n", mode);
- 
-@@ -440,10 +441,14 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	else
- 		power_state |= FW_PWR_STATE_RF_OFF;
- 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
-+	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
- 
- 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
- 		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
- 		      u1_h2c_set_pwrmode, H2C_92E_PWEMODE_LENGTH);
-+	if (rtlpriv->cfg->ops->get_btc_status())
-+		btc_ops->btc_record_pwr_mode(rtlpriv, u1_h2c_set_pwrmode,
-+					     H2C_92E_PWEMODE_LENGTH);
- 	rtl92ee_fill_h2c_cmd(hw, H2C_92E_SETPWRMODE, H2C_92E_PWEMODE_LENGTH,
- 			     u1_h2c_set_pwrmode);
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-index af8271967a88..b770f722daa6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-@@ -37,7 +37,7 @@
- #define USE_OLD_WOWLAN_DEBUG_FW 0
- 
- #define H2C_92E_RSVDPAGE_LOC_LEN		5
--#define H2C_92E_PWEMODE_LENGTH			5
-+#define H2C_92E_PWEMODE_LENGTH			7
- #define H2C_92E_JOINBSSRPT_LENGTH		1
- #define H2C_92E_AP_OFFLOAD_LENGTH		3
- #define H2C_92E_WOWLAN_LENGTH			3
-@@ -154,6 +154,8 @@ enum rtl8192e_c2h_evt {
- 	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __val)
- #define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__cmd, __val)		\
- 	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __val)
-+#define SET_H2CCMD_PWRMODE_PARM_BYTE5(__cmd, __val)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd) + 5, 0, 8, __val)
- #define GET_92E_H2CCMD_PWRMODE_PARM_MODE(__cmd)			\
- 	LE_BITS_TO_1BYTE(__cmd, 0, 8)
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-index a7e31af2b5de..488376becdcb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-@@ -240,7 +240,9 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 u1_h2c_set_pwrmode[H2C_PWEMODE_LENGTH] = { 0 };
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	u8 rlbm, power_state = 0;
-+	u8 rlbm, power_state = 0, byte5 = 0x40;
-+	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
-+
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
- 
- 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
-@@ -257,10 +259,14 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	else
- 		power_state |= FW_PWR_STATE_RF_OFF;
- 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
-+	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
- 
- 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
- 		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
- 		      u1_h2c_set_pwrmode, H2C_PWEMODE_LENGTH);
-+	if (rtlpriv->cfg->ops->get_btc_status())
-+		btc_ops->btc_record_pwr_mode(rtlpriv, u1_h2c_set_pwrmode,
-+					     H2C_PWEMODE_LENGTH);
- 	rtl8723be_fill_h2c_cmd(hw, H2C_8723B_SETPWRMODE, H2C_PWEMODE_LENGTH,
- 			       u1_h2c_set_pwrmode);
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
-index 2482b3bc2bfa..2de4edb62bca 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
-@@ -33,7 +33,7 @@
- 
- #define USE_OLD_WOWLAN_DEBUG_FW			0
- 
--#define H2C_PWEMODE_LENGTH			5
-+#define H2C_PWEMODE_LENGTH			7
- 
- /* Fw PS state for RPWM.
- *BIT[2:0] = HW state
-@@ -125,6 +125,8 @@ enum rtl8723b_c2h_evt {
- 	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+3, 0, 8, __val)
- #define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__ph2ccmd, __val)		\
- 	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+4, 0, 8, __val)
-+#define SET_H2CCMD_PWRMODE_PARM_BYTE5(__ph2ccmd, __val)			\
-+	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 5, 0, 8, __val)
- #define GET_88E_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd)			\
- 	LE_BITS_TO_1BYTE(__ph2ccmd, 0, 8)
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index 5eeb0b1cafa4..96b8a9bdaf55 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -489,7 +489,8 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 u1_h2c_set_pwrmode[H2C_8821AE_PWEMODE_LENGTH] = { 0 };
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	u8 rlbm, power_state = 0;
-+	u8 rlbm, power_state = 0, byte5 = 0x40;
-+	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
- 
-@@ -508,10 +509,14 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
- 		power_state |= FW_PWR_STATE_RF_OFF;
- 
- 	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
-+	SET_H2CCMD_PWRMODE_PARM_BYTE5(u1_h2c_set_pwrmode, byte5);
- 
- 	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
- 		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
- 		      u1_h2c_set_pwrmode, H2C_8821AE_PWEMODE_LENGTH);
-+	if (rtlpriv->cfg->ops->get_btc_status())
-+		btc_ops->btc_record_pwr_mode(rtlpriv, u1_h2c_set_pwrmode,
-+					     H2C_8821AE_PWEMODE_LENGTH);
- 	rtl8821ae_fill_h2c_cmd(hw, H2C_8821AE_SETPWRMODE,
- 			       H2C_8821AE_PWEMODE_LENGTH,
- 			       u1_h2c_set_pwrmode);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-index 98d871afd92a..32d46d7128f5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-@@ -42,7 +42,7 @@
- #define USE_OLD_WOWLAN_DEBUG_FW 0
- 
- #define H2C_8821AE_RSVDPAGE_LOC_LEN		5
--#define H2C_8821AE_PWEMODE_LENGTH			5
-+#define H2C_8821AE_PWEMODE_LENGTH			7
- #define H2C_8821AE_JOINBSSRPT_LENGTH		1
- #define H2C_8821AE_AP_OFFLOAD_LENGTH		3
- #define H2C_8821AE_WOWLAN_LENGTH			3
-@@ -218,6 +218,8 @@ enum rtl8821a_h2c_cmd {
- 	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __value)
- #define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__cmd, __value)	\
- 	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __value)
-+#define SET_H2CCMD_PWRMODE_PARM_BYTE5(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd) + 5, 0, 8, __value)
- #define GET_8821AE_H2CCMD_PWRMODE_PARM_MODE(__cmd)		\
- 	LE_BITS_TO_1BYTE(__cmd, 0, 8)
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 8f3035b41e6f..41ebdb9d3627 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2560,6 +2560,7 @@ struct rtl_btc_ops {
- 	bool (*btc_is_bt_disabled) (struct rtl_priv *rtlpriv);
- 	void (*btc_special_packet_notify)(struct rtl_priv *rtlpriv,
- 					  u8 pkt_type);
-+	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+ static struct cfg80211_ops qtn_cfg80211_ops = {
+ 	.add_virtual_intf	= qtnf_add_virtual_intf,
+ 	.change_virtual_intf	= qtnf_change_virtual_intf,
+@@ -926,7 +987,8 @@ static struct cfg80211_ops qtn_cfg80211_ops = {
+ 	.scan			= qtnf_scan,
+ 	.connect		= qtnf_connect,
+ 	.disconnect		= qtnf_disconnect,
+-	.dump_survey		= qtnf_dump_survey
++	.dump_survey		= qtnf_dump_survey,
++	.get_channel		= qtnf_get_channel
  };
  
- struct proxim {
+ static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 22741bf6f4ac..2e7034a560aa 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2087,7 +2087,7 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
+ 
+ 	if (bss_cfg->chandef.chan)
+-		cmd->freq = cpu_to_le16(bss_cfg->chandef.chan->center_freq);
++		cmd->channel = cpu_to_le16(bss_cfg->chandef.chan->hw_value);
+ 
+ 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 9b61e9a83670..6e1e93ccc40e 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -211,8 +211,8 @@ qtnf_event_handle_bss_leave(struct qtnf_vif *vif,
+ 
+ 	pr_debug("VIF%u.%u: disconnected\n", vif->mac->macid, vif->vifid);
+ 
+-	cfg80211_disconnected(vif->netdev, leave_info->reason, NULL, 0, 0,
+-			      GFP_KERNEL);
++	cfg80211_disconnected(vif->netdev, le16_to_cpu(leave_info->reason),
++			      NULL, 0, 0, GFP_KERNEL);
+ 
+ 	vif->sta_state = QTNF_STA_DISCONNECTED;
+ 	netif_carrier_off(vif->netdev);
+@@ -350,6 +350,58 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
+ 	return 0;
+ }
+ 
++static int
++qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
++			      const struct qlink_event_freq_change *data,
++			      u16 len)
++{
++	struct wiphy *wiphy = priv_to_wiphy(mac);
++	struct cfg80211_chan_def chandef;
++	struct ieee80211_channel *chan;
++	struct qtnf_bss_config *bss_cfg;
++	struct qtnf_vif *vif;
++	int freq;
++	int i;
++
++	if (len < sizeof(*data)) {
++		pr_err("payload is too short\n");
++		return -EINVAL;
++	}
++
++	freq = le32_to_cpu(data->freq);
++	chan = ieee80211_get_channel(wiphy, freq);
++	if (!chan) {
++		pr_err("channel at %d MHz not found\n", freq);
++		return -EINVAL;
++	}
++
++	pr_info("MAC%d switch to new channel %u MHz\n", mac->macid, freq);
++
++	/* FIXME: need to figure out proper nl80211_channel_type value */
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++	/* fall-back to minimal safe chandef description */
++	if (!cfg80211_chandef_valid(&chandef))
++		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++
++	for (i = 0; i < QTNF_MAX_INTF; i++) {
++		vif = &mac->iflist[i];
++		if (vif->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED)
++			continue;
++
++		if (vif->netdev) {
++			bss_cfg = &vif->bss_cfg;
++			memcpy(&bss_cfg->chandef, &chandef,
++			       sizeof(bss_cfg->chandef));
++
++			mutex_lock(&vif->wdev.mtx);
++			cfg80211_ch_switch_notify(vif->netdev, &chandef);
++			mutex_unlock(&vif->wdev.mtx);
++		}
++	}
++
++	return 0;
++}
++
+ static int qtnf_event_parse(struct qtnf_wmac *mac,
+ 			    const struct sk_buff *event_skb)
+ {
+@@ -400,6 +452,10 @@ static int qtnf_event_parse(struct qtnf_wmac *mac,
+ 		ret = qtnf_event_handle_bss_leave(vif, (const void *)event,
+ 						  event_len);
+ 		break;
++	case QLINK_EVENT_FREQ_CHANGE:
++		ret = qtnf_event_handle_freq_change(mac, (const void *)event,
++						    event_len);
++		break;
+ 	default:
+ 		pr_warn("unknown event type: %x\n", event_id);
+ 		break;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 847c80f40a9a..5859ef624058 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -390,7 +390,7 @@ enum qlink_sta_connect_flags {
+ struct qlink_cmd_connect {
+ 	struct qlink_cmd chdr;
+ 	__le32 flags;
+-	__le16 freq;
++	__le16 channel;
+ 	__le16 bg_scan_period;
+ 	u8 bssid[ETH_ALEN];
+ 	u8 payload[0];
+@@ -673,6 +673,7 @@ enum qlink_event_type {
+ 	QLINK_EVENT_SCAN_COMPLETE	= 0x0025,
+ 	QLINK_EVENT_BSS_JOIN		= 0x0026,
+ 	QLINK_EVENT_BSS_LEAVE		= 0x0027,
++	QLINK_EVENT_FREQ_CHANGE		= 0x0028,
+ };
+ 
+ /**
+@@ -739,7 +740,17 @@ struct qlink_event_bss_join {
+  */
+ struct qlink_event_bss_leave {
+ 	struct qlink_event ehdr;
+-	u16 reason;
++	__le16 reason;
++} __packed;
++
++/**
++ * struct qlink_event_freq_change - data for QLINK_EVENT_FREQ_CHANGE event
++ *
++ * @freq: new operating frequency in MHz
++ */
++struct qlink_event_freq_change {
++	struct qlink_event ehdr;
++	__le32 freq;
+ } __packed;
+ 
+ enum qlink_rxmgmt_flags {
 -- 
-2.12.3
+2.11.0
