@@ -1,93 +1,345 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f174.google.com ([209.85.216.174]:35470 "EHLO
-        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751382AbdFGQqG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2017 12:46:06 -0400
-Received: by mail-qt0-f174.google.com with SMTP id w1so12490478qtg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jun 2017 09:46:06 -0700 (PDT)
-Subject: Re: [V4,1/3] brcmfmac: add support multi-scheduled scan
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
- <20170522151649.B5F1060AC8@smtp.codeaurora.org>
- <621288e8-e950-5aea-7d27-c5cb802dd416@broadcom.com>
- <87y3t34zom.fsf@codeaurora.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <26477cca-3aa9-b2c9-0469-a9d0ee008e0a@broadcom.com> (sfid-20170607_184610_966647_77C22B51)
-Date: Wed, 7 Jun 2017 18:46:02 +0200
+Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:45824
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752116AbdFTT4C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 15:56:02 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 4/8] qtnfmac: implement cfg80211 dump_survey handler
+Date: Tue, 20 Jun 2017 22:55:13 +0300
+Message-Id: <20170620195517.18373-5-sergey.matyukevich.os@quantenna.com> (sfid-20170620_215607_589385_72F208C6)
+In-Reply-To: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <87y3t34zom.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-06-17 16:53, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> 
->> On 5/22/2017 5:16 PM, Kalle Valo wrote:
->>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>>> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
->>>>
->>>> This change adds support for multi-scheduled scan in the driver. It
->>>> currently relies on g-scan support in firmware and will set struct
->>>> wiphy::max_sched_scan_reqs accordingly. This is limited to 16 concurrent
->>>> requests.
->>>>
->>>> The firmware currently has a limit of 64 channels that can be configured
->>>> for all requests in total regardless whether there are duplicates. So if
->>>> a request uses 35 channels there are 29 channels left for another request.
->>>> When user-space does not specify any channels cfg80211 will add all
->>>> channels defined by the wiphy instance to the request, which makes
->>>> reaching the limit rather easy for dual-band devices.
->>>>
->>>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->>>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->>>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>
->>> I see new warnings:
->>>
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c: In function ‘brcmf_pno_config_sched_scans’:
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:166:6: warning: ‘mac_mask’ may be used uninitialized in this function [-Wmaybe-uninitialized]
->>>    u8 *mac_mask;
->>>        ^
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:183:2: warning: ‘mac_addr’ may be used uninitialized in this function [-Wmaybe-uninitialized]
->>>    memcpy(pfn_mac.mac, mac_addr, ETH_ALEN);
->>>    ^
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:165:6: note: ‘mac_addr’ was declared here
->>>    u8 *mac_addr;
->>>        ^
->>>
->>> 3 patches set to Changes Requested.
->>>
->>> 9736151 [V4,1/3] brcmfmac: add support multi-scheduled scan
->>> 9736147 [V4,2/3] brcmfmac: add mutex to protect pno requests
->>> 9736149 [V4,3/3] brcmfmac: add scheduled scan support for specified BSSIDs
->>
->> Not seeing it here using gcc version 4.8.4 (Ubuntu
->> 4.8.4-2ubuntu1~14.04.3).
-> 
-> My version is:
-> 
-> gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
-> 
-> I don't think that's really exocit version of the compiler, or is it?
+This patch implements cfg80211 dump_survey handler enabling
+per-channel survey data reports.
 
-Nope.
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  69 +++++++++++++-
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 107 ++++++++++++++++++++++
+ drivers/net/wireless/quantenna/qtnfmac/commands.h |   2 +
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |   9 ++
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  31 +++++++
+ 5 files changed, 217 insertions(+), 1 deletion(-)
 
->> Also tried using W=1 on the make command
->> line. Getting a bunck of other warnings, but not the ones above.
-> 
-> This was without W=1, just a default compilation with all wireless
-> drivers enabled.
-> 
->> Do you want me to fix it?
-> 
-> Yes, please. I try to keep the patches warning free, even if they are
-> false warnings.
-
-Will do. And thanks again for the reminder ;-)
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index e222e8d038d3..eb648f02aa40 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -839,6 +839,72 @@ qtnf_disconnect(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static int
++qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
++		 int idx, struct survey_info *survey)
++{
++	struct qtnf_wmac *mac = wiphy_priv(wiphy);
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *chan;
++	struct qtnf_chan_stats stats;
++	int ret;
++
++	sband = wiphy->bands[NL80211_BAND_2GHZ];
++	if (sband && idx >= sband->n_channels) {
++		idx -= sband->n_channels;
++		sband = NULL;
++	}
++
++	if (!sband)
++		sband = wiphy->bands[NL80211_BAND_5GHZ];
++
++	if (!sband || idx >= sband->n_channels)
++		return -ENOENT;
++
++	chan = &sband->channels[idx];
++	memset(&stats, 0, sizeof(stats));
++
++	survey->channel = chan;
++	survey->filled = 0x0;
++
++	ret = qtnf_cmd_get_chan_stats(mac, chan->hw_value, &stats);
++	switch (ret) {
++	case 0:
++		if (unlikely(stats.chan_num != chan->hw_value)) {
++			pr_err("received stats for channel %d instead of %d\n",
++			       stats.chan_num, chan->hw_value);
++			ret = -EINVAL;
++			break;
++		}
++
++		survey->filled = SURVEY_INFO_TIME |
++				 SURVEY_INFO_TIME_SCAN |
++				 SURVEY_INFO_TIME_BUSY |
++				 SURVEY_INFO_TIME_RX |
++				 SURVEY_INFO_TIME_TX |
++				 SURVEY_INFO_NOISE_DBM;
++
++		survey->time_scan = stats.cca_try;
++		survey->time = stats.cca_try;
++		survey->time_tx = stats.cca_tx;
++		survey->time_rx = stats.cca_rx;
++		survey->time_busy = stats.cca_busy;
++		survey->noise = stats.chan_noise;
++		break;
++	case -ENOENT:
++		pr_debug("no stats for channel %u\n", chan->hw_value);
++		ret = 0;
++		break;
++	default:
++		pr_debug("failed to get chan(%d) stats from card\n",
++			 chan->hw_value);
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
+ static struct cfg80211_ops qtn_cfg80211_ops = {
+ 	.add_virtual_intf	= qtnf_add_virtual_intf,
+ 	.change_virtual_intf	= qtnf_change_virtual_intf,
+@@ -859,7 +925,8 @@ static struct cfg80211_ops qtn_cfg80211_ops = {
+ 	.set_default_mgmt_key	= qtnf_set_default_mgmt_key,
+ 	.scan			= qtnf_scan,
+ 	.connect		= qtnf_connect,
+-	.disconnect		= qtnf_disconnect
++	.disconnect		= qtnf_disconnect,
++	.dump_survey		= qtnf_dump_survey
+ };
+ 
+ static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 221804f8c43a..22741bf6f4ac 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1358,6 +1358,62 @@ static int qtnf_cmd_resp_proc_phy_params(struct qtnf_wmac *mac,
+ 	return 0;
+ }
+ 
++static int
++qtnf_cmd_resp_proc_chan_stat_info(struct qtnf_chan_stats *stats,
++				  const u8 *payload, size_t payload_len)
++{
++	struct qlink_chan_stats *qlink_stats;
++	const struct qlink_tlv_hdr *tlv;
++	size_t tlv_full_len;
++	u16 tlv_value_len;
++	u16 tlv_type;
++
++	tlv = (struct qlink_tlv_hdr *)payload;
++	while (payload_len >= sizeof(struct qlink_tlv_hdr)) {
++		tlv_type = le16_to_cpu(tlv->type);
++		tlv_value_len = le16_to_cpu(tlv->len);
++		tlv_full_len = tlv_value_len + sizeof(struct qlink_tlv_hdr);
++		if (tlv_full_len > payload_len) {
++			pr_warn("malformed TLV 0x%.2X; LEN: %u\n",
++				tlv_type, tlv_value_len);
++			return -EINVAL;
++		}
++		switch (tlv_type) {
++		case QTN_TLV_ID_CHANNEL_STATS:
++			if (unlikely(tlv_value_len != sizeof(*qlink_stats))) {
++				pr_err("invalid CHANNEL_STATS entry size\n");
++				return -EINVAL;
++			}
++
++			qlink_stats = (void *)tlv->val;
++
++			stats->chan_num = le32_to_cpu(qlink_stats->chan_num);
++			stats->cca_tx = le32_to_cpu(qlink_stats->cca_tx);
++			stats->cca_rx = le32_to_cpu(qlink_stats->cca_rx);
++			stats->cca_busy = le32_to_cpu(qlink_stats->cca_busy);
++			stats->cca_try = le32_to_cpu(qlink_stats->cca_try);
++			stats->chan_noise = qlink_stats->chan_noise;
++
++			pr_debug("chan(%u) try(%u) busy(%u) noise(%d)\n",
++				 stats->chan_num, stats->cca_try,
++				 stats->cca_busy, stats->chan_noise);
++			break;
++		default:
++			pr_warn("Unknown TLV type: %#x\n",
++				le16_to_cpu(tlv->type));
++		}
++		payload_len -= tlv_full_len;
++		tlv = (struct qlink_tlv_hdr *)(tlv->val + tlv_value_len);
++	}
++
++	if (payload_len) {
++		pr_warn("malformed TLV buf; bytes left: %zu\n", payload_len);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ int qtnf_cmd_get_mac_info(struct qtnf_wmac *mac)
+ {
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+@@ -2227,3 +2283,54 @@ int qtnf_cmd_reg_notify(struct qtnf_bus *bus, struct regulatory_request *req)
+ 
+ 	return ret;
+ }
++
++int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
++			    struct qtnf_chan_stats *stats)
++{
++	struct sk_buff *cmd_skb, *resp_skb = NULL;
++	struct qlink_cmd_get_chan_stats *cmd;
++	struct qlink_resp_get_chan_stats *resp;
++	size_t var_data_len;
++	u16 res_code = QLINK_CMD_RESULT_OK;
++	int ret = 0;
++
++	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, QLINK_VIFID_RSVD,
++					    QLINK_CMD_CHAN_STATS,
++					    sizeof(*cmd));
++	if (!cmd_skb)
++		return -ENOMEM;
++
++	qtnf_bus_lock(mac->bus);
++
++	cmd = (struct qlink_cmd_get_chan_stats *)cmd_skb->data;
++	cmd->channel = cpu_to_le16(channel);
++
++	ret = qtnf_cmd_send_with_reply(mac->bus, cmd_skb, &resp_skb, &res_code,
++				       sizeof(*resp), &var_data_len);
++	if (unlikely(ret)) {
++		qtnf_bus_unlock(mac->bus);
++		return ret;
++	}
++
++	if (unlikely(res_code != QLINK_CMD_RESULT_OK)) {
++		switch (res_code) {
++		case QLINK_CMD_RESULT_ENOTFOUND:
++			ret = -ENOENT;
++			break;
++		default:
++			pr_err("cmd exec failed: 0x%.4X\n", res_code);
++			ret = -EFAULT;
++			break;
++		}
++		goto out;
++	}
++
++	resp = (struct qlink_resp_get_chan_stats *)resp_skb->data;
++	ret = qtnf_cmd_resp_proc_chan_stat_info(stats, resp->info,
++						var_data_len);
++
++out:
++	qtnf_bus_unlock(mac->bus);
++	consume_skb(resp_skb);
++	return ret;
++}
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+index 155b265d42bf..41e2d50988b7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+@@ -71,5 +71,7 @@ int qtnf_cmd_send_disconnect(struct qtnf_vif *vif,
+ int qtnf_cmd_send_updown_intf(struct qtnf_vif *vif,
+ 			      bool up);
+ int qtnf_cmd_reg_notify(struct qtnf_bus *bus, struct regulatory_request *req);
++int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
++			    struct qtnf_chan_stats *stats);
+ 
+ #endif /* QLINK_COMMANDS_H_ */
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 0d06ec932caf..8824e3d0b5bc 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -138,6 +138,15 @@ struct qtnf_mac_info {
+ 	size_t n_limits;
+ };
+ 
++struct qtnf_chan_stats {
++	u32 chan_num;
++	u32 cca_tx;
++	u32 cca_rx;
++	u32 cca_busy;
++	u32 cca_try;
++	s8 chan_noise;
++};
++
+ struct qtnf_wmac {
+ 	u8 macid;
+ 	u8 wiphy_registered;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 892752599109..847c80f40a9a 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -165,6 +165,7 @@ enum qlink_cmd_type {
+ 	QLINK_CMD_CHANGE_STA		= 0x0051,
+ 	QLINK_CMD_DEL_STA		= 0x0052,
+ 	QLINK_CMD_SCAN			= 0x0053,
++	QLINK_CMD_CHAN_STATS		= 0x0054,
+ 	QLINK_CMD_CONNECT		= 0x0060,
+ 	QLINK_CMD_DISCONNECT		= 0x0061,
+ };
+@@ -440,6 +441,16 @@ struct qlink_cmd_chans_info_get {
+ } __packed;
+ 
+ /**
++ * struct qlink_cmd_get_chan_stats - data for QLINK_CMD_CHAN_STATS command
++ *
++ * @channel: channel number according to 802.11 17.3.8.3.2 and Annex J
++ */
++struct qlink_cmd_get_chan_stats {
++	struct qlink_cmd chdr;
++	__le16 channel;
++} __packed;
++
++/**
+  * enum qlink_reg_initiator - Indicates the initiator of a reg domain request
+  *
+  * See &enum nl80211_reg_initiator for more info.
+@@ -641,6 +652,16 @@ struct qlink_resp_phy_params {
+ 	u8 info[0];
+ } __packed;
+ 
++/**
++ * struct qlink_resp_get_chan_stats - response for QLINK_CMD_CHAN_STATS cmd
++ *
++ * @info: variable-length channel info.
++ */
++struct qlink_resp_get_chan_stats {
++	struct qlink_cmd rhdr;
++	u8 info[0];
++} __packed;
++
+ /* QLINK Events messages related definitions
+  */
+ 
+@@ -813,6 +834,7 @@ enum qlink_tlv_id {
+ 	QTN_TLV_ID_COVERAGE_CLASS	= 0x0213,
+ 	QTN_TLV_ID_IFACE_LIMIT		= 0x0214,
+ 	QTN_TLV_ID_NUM_IFACE_COMB	= 0x0215,
++	QTN_TLV_ID_CHANNEL_STATS	= 0x0216,
+ 	QTN_TLV_ID_STA_BASIC_COUNTERS	= 0x0300,
+ 	QTN_TLV_ID_STA_GENERIC_INFO	= 0x0301,
+ 	QTN_TLV_ID_KEY			= 0x0302,
+@@ -1014,4 +1036,13 @@ struct qlink_auth_encr {
+ 	u8 control_port_no_encrypt;
+ } __packed;
+ 
++struct qlink_chan_stats {
++	__le32 chan_num;
++	__le32 cca_tx;
++	__le32 cca_rx;
++	__le32 cca_busy;
++	__le32 cca_try;
++	s8 chan_noise;
++} __packed;
++
+ #endif /* _QTN_QLINK_H_ */
+-- 
+2.11.0
