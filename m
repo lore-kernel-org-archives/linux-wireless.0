@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55978 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46556 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751538AbdF1Rub (ORCPT
+        with ESMTP id S1750910AbdFTGdj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 13:50:31 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [net-next] qtnfmac: fix uninitialized return code in ret
+        Tue, 20 Jun 2017 02:33:39 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170621132530.11937-1-colin.king@canonical.com>
-References: <20170621132530.11937-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20170628175030.F05F460AFB@smtp.codeaurora.org> (sfid-20170628_195052_340202_2C868B1E)
-Date: Wed, 28 Jun 2017 17:50:30 +0000 (UTC)
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, rafal@milecki.pl,
+        pieter-paul.giesberts@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: Fix a memory leak in error handling path in 'brcmf_cfg80211_attach'
+References: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr>
+Date: Tue, 20 Jun 2017 09:33:32 +0300
+In-Reply-To: <20170620062205.16078-1-christophe.jaillet@wanadoo.fr>
+        (Christophe JAILLET's message of "Tue, 20 Jun 2017 08:22:05 +0200")
+Message-ID: <871sqfcgn7.fsf@codeaurora.org> (sfid-20170620_083400_357853_851C70FD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Christophe JAILLET <christophe.jaillet@wanadoo.fr> writes:
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The return value ret is unitialized and garbage is being returned
-> for the three different error conditions when setting up the PCIe
-> BARs. Fix this by initializing ret to  -ENOMEM to indicate that
-> the BARs failed to be setup correctly.
-> 
-> Detected by CoverityScan, CID#1437563 ("Unitialized scalar variable")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> If 'wiphy_new()' fails, we leak 'ops'. Add a new label in the error
+> handling path to free it in such a case.
+>
+> Fixes: 5c22fb85102a7 ("brcmfmac: add wowl gtk rekeying offload support")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-3e3d8aa61107 qtnfmac: fix uninitialized return code in ret
+The prefix should be "brcmfmac:", like in the commit you are fixing.
+"cfg80211:" is very misleading.
 
 -- 
-https://patchwork.kernel.org/patch/9801833/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
