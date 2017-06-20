@@ -1,52 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41335 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753004AbdFVKBJ (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:35196 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752643AbdFTAc0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 06:01:09 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Subject: [PATCH 4/4] MAINTAINERS: add brcm80211 maintainer info from Cypress
-Date: Thu, 22 Jun 2017 11:01:04 +0100
-Message-Id: <1498125664-25980-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170622_120125_038985_4A412BE3)
-In-Reply-To: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 19 Jun 2017 20:32:26 -0400
+Received: by mail-ot0-f196.google.com with SMTP id z48so13333825otz.2
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:26 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/10] rtlwifi: Fix a2dp choppy while BT RSSI stays on threshold.
+Date: Mon, 19 Jun 2017 19:32:09 -0500
+Message-Id: <20170620003218.17010-2-Larry.Finger@lwfinger.net> (sfid-20170620_023230_786767_31534D0E)
+In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since Cypress took over IoT part of Broadcom some chips supported
-by brcmfmac moved over as well. Adding maintainer info of our peers
-at Cypress to make their support official.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+In this case, BTC asks to enter/leave PS mode frequently to cause A2DP
+choppy.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- MAINTAINERS | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/ps.c           | 14 ++++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 10 ++++++++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c |  8 ++++++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 10 ++++++++--
+ 4 files changed, 30 insertions(+), 12 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f4e682c..fa9744f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2785,8 +2785,11 @@ BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
- M:	Arend van Spriel <arend.vanspriel@broadcom.com>
- M:	Franky Lin <franky.lin@broadcom.com>
- M:	Hante Meuleman <hante.meuleman@broadcom.com>
-+M:	Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-+M:	Wright Feng <wright.feng@cypress.com>
- L:	linux-wireless@vger.kernel.org
- L:	brcm80211-dev-list.pdl@broadcom.com
-+L:	brcm80211-dev-list@cypress.com
- S:	Supported
- F:	drivers/net/wireless/broadcom/brcm80211/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index 0d152877d969..07ee3096f50e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -356,7 +356,7 @@ void rtl_lps_set_psmode(struct ieee80211_hw *hw, u8 rt_psmode)
+ 	if (mac->link_state != MAC80211_LINKED)
+ 		return;
  
+-	if (ppsc->dot11_psmode == rt_psmode)
++	if (ppsc->dot11_psmode == rt_psmode && rt_psmode == EACTIVE)
+ 		return;
+ 
+ 	/* Update power save mode configured. */
+@@ -438,11 +438,13 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
+ 
+ 	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
+ 
+-	if (ppsc->dot11_psmode == EACTIVE) {
+-		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-			 "Enter 802.11 power save mode...\n");
+-		rtl_lps_set_psmode(hw, EAUTOPS);
+-	}
++	/* Don't need to check (ppsc->dot11_psmode == EACTIVE), because
++	 * bt_ccoexist may ask to enter lps.
++	 * In normal case, this constraint move to rtl_lps_set_psmode().
++	 */
++	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
++		 "Enter 802.11 power save mode...\n");
++	rtl_lps_set_psmode(hw, EAUTOPS);
+ 
+ 	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index 2ba9e613a7f6..f4ee7906eb20 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -427,6 +427,11 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
+ 			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
++	bool bt_lps_on = (rtlpriv->cfg->ops->get_btc_status() ?
++			  btc_ops->btc_is_bt_lps_on(rtlpriv) : false);
++
++	if (bt_ctrl_lps)
++		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
+ 
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
+ 		 mode, bt_ctrl_lps);
+@@ -482,8 +487,9 @@ void rtl92ee_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+ 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+-					 (rtlpriv->mac80211.p2p) ?
+-					 ppsc->smart_ps : 1);
++					 bt_ctrl_lps ? 0 :
++					 ((rtlpriv->mac80211.p2p) ?
++					  ppsc->smart_ps : 1));
+ 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
+ 					       awake_intvl);
+ 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index a37eb27cefe6..95b2e9a87d20 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -245,6 +245,11 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
+ 			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
++	bool bt_lps_on = (rtlpriv->cfg->ops->get_btc_status() ?
++			  btc_ops->btc_is_bt_lps_on(rtlpriv) : false);
++
++	if (bt_ctrl_lps)
++		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
+ 
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
+ 		 mode, bt_ctrl_lps);
+@@ -300,8 +305,7 @@ void rtl8723be_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+ 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+-					 (rtlpriv->mac80211.p2p) ?
+-					  ppsc->smart_ps : 1);
++					 bt_ctrl_lps ? 0 : ppsc->smart_ps);
+ 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
+ 					       awake_intvl);
+ 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index cc03f9813824..97401aa4dacb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -494,6 +494,11 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 	bool bt_ctrl_lps = (rtlpriv->cfg->ops->get_btc_status() ?
+ 			    btc_ops->btc_is_bt_ctrl_lps(rtlpriv) : false);
++	bool bt_lps_on = (rtlpriv->cfg->ops->get_btc_status() ?
++			  btc_ops->btc_is_bt_lps_on(rtlpriv) : false);
++
++	if (bt_ctrl_lps)
++		mode = (bt_lps_on ? FW_PS_MIN_MODE : FW_PS_ACTIVE_MODE);
+ 
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "FW LPS mode = %d (coex:%d)\n",
+ 		 mode, bt_ctrl_lps);
+@@ -549,8 +554,9 @@ void rtl8821ae_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+ 	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
+ 	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
+ 	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
+-					 (rtlpriv->mac80211.p2p) ?
+-					 ppsc->smart_ps : 1);
++					 bt_ctrl_lps ? 0 :
++					 ((rtlpriv->mac80211.p2p) ?
++					  ppsc->smart_ps : 1));
+ 	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
+ 					       awake_intvl);
+ 	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
 -- 
-1.9.1
+2.12.3
