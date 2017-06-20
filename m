@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57190 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752836AbdFOO4d (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 10:56:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        kasan-dev@googlegroups.com, Dmitry Vyukov <dvyukov@google.com>,
-        Alexander Potapenko <glider@google.com>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH v2 08/11] brcmsmac: make some local variables 'static const' to reduce stack size
-References: <20170614211556.2062728-1-arnd@arndb.de>
-        <20170614211556.2062728-9-arnd@arndb.de>
-Date: Thu, 15 Jun 2017 17:56:27 +0300
-In-Reply-To: <20170614211556.2062728-9-arnd@arndb.de> (Arnd Bergmann's message
-        of "Wed, 14 Jun 2017 23:15:43 +0200")
-Message-ID: <87mv99e1us.fsf@codeaurora.org> (sfid-20170615_165705_008897_F9E99F2E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:33880 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751131AbdFTURb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 16:17:31 -0400
+Message-ID: <1497989849.11421.2.camel@sipsolutions.net> (sfid-20170620_221735_507113_5A3FE052)
+Subject: Re: [PATCH 5/8] qtnfmac: enable reporting the current operating
+ channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Tue, 20 Jun 2017 22:17:29 +0200
+In-Reply-To: <20170620200915.kltxuoaxlhnvaat7@bars>
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+         <20170620195517.18373-6-sergey.matyukevich.os@quantenna.com>
+         <1497988764.11421.1.camel@sipsolutions.net>
+         <20170620200915.kltxuoaxlhnvaat7@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+On Tue, 2017-06-20 at 23:09 +0300, Sergey Matyukevich wrote:
+> > 
+> > > +     if (sme->channel) {
+> > > +             /* FIXME: need to set proper nl80211_channel_type
+> > > value */
+> > > +             cfg80211_chandef_create(&chandef, sme->channel,
+> > > +                                     NL80211_CHAN_HT20);
+> > > +             /* fall-back to minimal safe chandef description */
+> > > +             if (!cfg80211_chandef_valid(&chandef))
+> > > +                     cfg80211_chandef_create(&chandef, sme-
+> > > > channel,
+> > > 
+> > > +                                             NL80211_CHAN_HT20);
+> > > 
+> > 
+> > This seems odd since you just do the same thing over again? Not
+> > that I
+> > could see how it would be invalid anyway.
+> 
+> The first call of cfg80211_chandef_create will be replaced by proper
+> chandef calculation based on current h/w channel settings. This piece
+> is still in work. NL80211_CHAN_HT20 is going to be used as a safe
+> fallback when channel info turns out to be inconsistent.
 
-> With KASAN and a couple of other patches applied, this driver is one
-> of the few remaining ones that actually use more than 2048 bytes of
-> kernel stack:
->
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
->
-> Here, I'm reducing the stack size by marking as many local variables as
-> 'static const' as I can without changing the actual code.
->
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Yeah, ok. I guess I'd advocate doing that when the code is actually
+there, but I suppose it doesn't really matter much.
 
-I found the cover letter from lkml and apparently the plan is that
-Andrew will pick these three brcmsmac patches, so I'll drop them in
-wireless patchwork.
-
--- 
-Kalle Valo
+johannes
