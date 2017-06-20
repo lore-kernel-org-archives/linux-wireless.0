@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35431 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753153AbdFVMdw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 08:33:52 -0400
-Received: by mail-qk0-f195.google.com with SMTP id 16so1913975qkg.2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 05:33:51 -0700 (PDT)
+Received: from mail-co1nam03on0054.outbound.protection.outlook.com ([104.47.40.54]:45408
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752479AbdFTV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Jun 2017 17:58:08 -0400
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: Re: [PATCH] mac80211: don't look at the PM bit of BAR frames
+To: emmanuel.grumbach@intel.com,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20170608110049.8747-1-emmanuel.grumbach@intel.com>
+Message-ID: <5d0d7ce8-ff71-7b37-012d-2db75da49d9d@quantenna.com> (sfid-20170620_235817_452113_F991B52D)
+Date: Tue, 20 Jun 2017 14:57:57 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170622111655.GA4891@symbol-HP-ZBook-15>
-References: <20170622111655.GA4891@symbol-HP-ZBook-15>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 22 Jun 2017 22:33:30 +1000
-Message-ID: <CAGRGNgWE8fbhg1+ccm9U7azioMQ-6bDUqYtUQkHcAq_Za9jurA@mail.gmail.com> (sfid-20170622_143413_478050_EEB032FF)
-Subject: Re: [PATCH] rtlwifi: Remove unnecessary conditions
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170608110049.8747-1-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Souptick,
-
-On Thu, Jun 22, 2017 at 9:16 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
-> As wmm_enable is initialized to false, hence the else condition never
-> execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
-> condition can be removed and boundary will be assigned with TX_PAGE_BOUNDARY.
->
-> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+On 06/08/2017 04:00 AM, Emmanuel Grumbach wrote:
+> When a peer sends a BAR frame with PM bit clear, we should
+> not modify its PM state as madated by the spec in
+> 802.11-20012 10.2.1.2.
+> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > ---
->  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 6 ------
->  1 file changed, 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> index f95a645..e9c5f6a 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> @@ -845,13 +845,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
->                 pr_err("Failed to init power on!\n");
->                 return err;
->         }
-> -       if (!wmm_enable) {
->                 boundary = TX_PAGE_BOUNDARY;
+>   net/mac80211/rx.c | 6 +++++-
+>   1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index e48724a6725e..bb1e4bbf55e2 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1558,12 +1558,16 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+>   	 */
+>   	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
+>   	    !ieee80211_has_morefrags(hdr->frame_control) &&
+> +	    !ieee80211_is_back_req(hdr->frame_control) &&
 
-Firstly this isn't indented properly.
+BTW latest spec also notes that PSPOLL frame has PM bit reserved too, 
+because it may not result in ACK frame from AP.
 
-Secondly, can this be moved up to where boundary is defined?
+>   	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
+>   	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
+>   	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+> -	    /* PM bit is only checked in frames where it isn't reserved,
+> +	    /*
+> +	     * PM bit is only checked in frames where it isn't reserved,
+>   	     * in AP mode it's reserved in non-bufferable management frames
+>   	     * (cf. IEEE 802.11-2012 8.2.4.1.7 Power Management field)
+> +	     * BAR frames should be ignored as specified in
+> +	     * IEEE 802.11-2012 10.2.1.2.
 
-Thanks,
+Comment placement is a little confusing IMO. Maybe move 
+ieee80211_is_back_req() check to this position?
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+>   	     */
+>   	    (!ieee80211_is_mgmt(hdr->frame_control) ||
+>   	     ieee80211_is_bufferable_mmpdu(hdr->frame_control))) {
+> 
