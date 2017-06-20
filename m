@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:32768 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdFVMk6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52348 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752665AbdFTBOB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 08:40:58 -0400
-Received: by mail-ua0-f196.google.com with SMTP id z34so2136574uab.0
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 05:40:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWE8fbhg1+ccm9U7azioMQ-6bDUqYtUQkHcAq_Za9jurA@mail.gmail.com>
-References: <20170622111655.GA4891@symbol-HP-ZBook-15> <CAGRGNgWE8fbhg1+ccm9U7azioMQ-6bDUqYtUQkHcAq_Za9jurA@mail.gmail.com>
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Date: Thu, 22 Jun 2017 18:10:56 +0530
-Message-ID: <CAFqt6zb-y-W2b_188LYr8259K8PyZX4xp4nc2Cf0cbiy0TwMZg@mail.gmail.com> (sfid-20170622_144101_661403_B22AF72A)
-Subject: Re: [PATCH] rtlwifi: Remove unnecessary conditions
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 19 Jun 2017 21:14:01 -0400
+From: miaoqing@codeaurora.org
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        sssa@qti.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 1/2] ath9k: fix tx99 use after free
+Date: Tue, 20 Jun 2017 09:13:39 +0800
+Message-Id: <1497921220-12940-1-git-send-email-miaoqing@codeaurora.org> (sfid-20170620_031405_221565_04A0AA0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-On Thu, Jun 22, 2017 at 6:03 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Souptick,
->
-> On Thu, Jun 22, 2017 at 9:16 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
->> As wmm_enable is initialized to false, hence the else condition never
->> execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
->> condition can be removed and boundary will be assigned with TX_PAGE_BOUNDARY.
->>
->> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->> ---
->>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 6 ------
->>  1 file changed, 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
->> index f95a645..e9c5f6a 100644
->> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
->> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
->> @@ -845,13 +845,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
->>                 pr_err("Failed to init power on!\n");
->>                 return err;
->>         }
->> -       if (!wmm_enable) {
->>                 boundary = TX_PAGE_BOUNDARY;
->
-> Firstly this isn't indented properly.
->
-> Secondly, can this be moved up to where boundary is defined?
+One scenario that could lead to UAF is two threads writing
+simultaneously to the "tx99" debug file. One of them would
+set the "start" value to true and follow to ath9k_tx99_init().
+Inside the function it would set the sc->tx99_state to true
+after allocating sc->tx99skb. Then, the other thread would
+execute write_file_tx99() and call ath9k_tx99_deinit().
+sc->tx99_state would be freed. After that, the first thread
+would continue inside ath9k_tx99_init() and call
+r = ath9k_tx99_send(sc, sc->tx99_skb, &txctl);
+that would make use of the freed sc->tx99_skb memory.
 
-Sure. I will modify it and send in v2.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/tx99.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
->
-> Thanks,
->
-> --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-
--Souptick
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index a866cbd..49ed1af 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -189,22 +189,27 @@ static ssize_t write_file_tx99(struct file *file, const char __user *user_buf,
+ 	if (strtobool(buf, &start))
+ 		return -EINVAL;
+ 
++	mutex_lock(&sc->mutex);
++
+ 	if (start == sc->tx99_state) {
+ 		if (!start)
+-			return count;
++			goto out;
+ 		ath_dbg(common, XMIT, "Resetting TX99\n");
+ 		ath9k_tx99_deinit(sc);
+ 	}
+ 
+ 	if (!start) {
+ 		ath9k_tx99_deinit(sc);
+-		return count;
++		goto out;
+ 	}
+ 
+ 	r = ath9k_tx99_init(sc);
+-	if (r)
++	if (r) {
++		mutex_unlock(&sc->mutex);
+ 		return r;
+-
++	}
++out:
++	mutex_unlock(&sc->mutex);
+ 	return count;
+ }
+ 
+-- 
+1.9.1
