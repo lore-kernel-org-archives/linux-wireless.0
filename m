@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44892 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753694AbdFWJVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 05:21:42 -0400
-Message-ID: <1498209700.2595.2.camel@sipsolutions.net> (sfid-20170623_112146_910532_78699D24)
-Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Date: Fri, 23 Jun 2017 11:21:40 +0200
-In-Reply-To: <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
-References: <20170621235022.25362-1-johannes@sipsolutions.net>
-         <20170621235022.25362-3-johannes@sipsolutions.net>
-         <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
-         <1498112650.2246.1.camel@sipsolutions.net>
-         <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58272 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751116AbdFUQok (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 12:44:40 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/11] rtlwifi: btcoex: call bind to setup btcoex
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170618161249.6146-2-Larry.Finger@lwfinger.net>
+References: <20170618161249.6146-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170621152855.E42106084E@smtp.codeaurora.org> (sfid-20170621_184454_726369_D904CE1F)
+Date: Wed, 21 Jun 2017 15:28:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-06-22 at 07:43 -0700, Ben Greear wrote:
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> On 06/21/2017 11:24 PM, Johannes Berg wrote:
-> > On Wed, 2017-06-21 at 17:02 -0700, Ben Greear wrote:
-> > > I think a comment for the above code block would be warranted
-> > > (and
-> > > for ath10k as well).
-> > > 
-> > > I guess this is the part about dequeueing the frames immediately?
-> > 
-> > Yeah, I figured it was pretty obvious, but I can add a comment :)
+> New btcoex add a function 'bind' to connect adapter, so we should call
+> it during initializing.
 > 
-> It is fairly obvious today, but 6 months from now when someone tries
-> yet again to figure out WTF is ath10k doing, it will be one more
-> piece of mystery code!
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-:-)
+11 patches applied to wireless-drivers-next.git, thanks.
 
-Turns out this won't work well, I had misunderstood the TXQ code.
+87d8a9f35202 rtlwifi: btcoex: call bind to setup btcoex
+43f5644a90a0 rtlwifi: btcoex: set correct interface type and parameter.
+f95d95a7cd55 rtlwifi: btcoex: rtl8723be: fix ant_sel not work
+e332e2a29448 rtlwifi: Correct power save capability while init mac80211
+79b64ed7a6b2 rtlwifi: extend debug_comp to u64
+8479580b5267 rtlwifi: Add TX report and disable key to force wait until report acked.
+5b757ba757d4 rtlwifi: Revise special packet notification to be readable format.
+54685f9c7af1 rtlwifi: Add btcoex record_pwr_mode
+2635664e6e4a rtlwifi: Add rx ampdu cfg for btcoexist.
+c692205da18b rtlwifi: add btc_is_bt_lps_on() for btcoexist
+42213f2f3590 rtlwifi: btcoexist control to enter/leave LPS
 
-We do need queueing for these frames, we just do it on the pending
-thing in mac80211... that's rather awful, and means we have to
-integrate much deeper with ath9k/ath10k to make any progress here.
+-- 
+https://patchwork.kernel.org/patch/9794911/
 
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
