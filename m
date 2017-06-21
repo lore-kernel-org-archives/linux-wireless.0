@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35946 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751518AbdF1UPB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34186 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751795AbdFUQyl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:15:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Wed, 21 Jun 2017 12:54:41 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Micha=C5=82_Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
 Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:22 +0300
-Message-Id: <20170628201330.9432-24-luca@coelho.fi> (sfid-20170628_221504_347765_6AD9DF58)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 23/31] iwlwifi: pcie: make ctxt-info free idempotent
+        brcm80211-dev-list.pdl@broadcom.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Subject: Re: [PATCH] wireless: brcmfmac: initialize oob irq data before request_irq()
+References: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
+Date: Wed, 21 Jun 2017 18:36:09 +0300
+In-Reply-To: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
+        (=?utf-8?Q?=22Micha=C5=82_Miros=C5=82aw=22's?= message of "Tue, 13 Jun 2017
+ 18:02:03 +0200")
+Message-ID: <874lv9nyja.fsf@purkki.adurom.net> (sfid-20170621_185444_456389_5D0893AF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl> writes:
 
-By setting the pointers to NULL at the end, these functions
-are made idempotent.
+> This fixes spin-forever in irq handler when IRQ is already asserted
+> at request_irq() time.
+>
+> Signed-off-by: Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c | 2 ++
- 1 file changed, 2 insertions(+)
+To avoid the UTF-8 problem I skipped patchwork and applied this manually
+to wireless-drivers-next:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index b1f43397bb59..00d1a5f048b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -103,6 +103,7 @@ static void iwl_pcie_ctxt_info_free_fw_img(struct iwl_trans *trans)
- 
- 	kfree(dram->fw);
- 	dram->fw_cnt = 0;
-+	dram->fw = NULL;
- }
- 
- void iwl_pcie_ctxt_info_free_paging(struct iwl_trans *trans)
-@@ -124,6 +125,7 @@ void iwl_pcie_ctxt_info_free_paging(struct iwl_trans *trans)
- 
- 	kfree(dram->paging);
- 	dram->paging_cnt = 0;
-+	dram->paging = NULL;
- }
- 
- static int iwl_pcie_ctxt_info_init_fw_sec(struct iwl_trans *trans,
--- 
-2.11.0
+3f426c968955 brcmfmac: initialize oob irq data before request_irq()
+
+But hopefully you can get your name in patchwork fixed so that I don't
+need to manually apply your patches.
+
+--=20
+Kalle Valo
