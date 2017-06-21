@@ -1,98 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0040.outbound.protection.outlook.com ([104.47.34.40]:18208
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751764AbdFHCn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2017 22:43:27 -0400
-Subject: Re: linux-next: build failure after merge of the
- wireless-drivers-next tree
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-References: <20170608122759.7ffda0c3@canb.auug.org.au>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <3594bd0d-e2b4-a380-ba06-8dedbbcbe11f@quantenna.com> (sfid-20170608_044424_743446_2D5FF37C)
-Date: Wed, 7 Jun 2017 19:43:18 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170608122759.7ffda0c3@canb.auug.org.au>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from smtp02.smtpout.orange.fr ([80.12.242.124]:59476 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752582AbdFUFqB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 01:46:01 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        rafal@milecki.pl, pieter-paul.giesberts@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        stable@vger.kernel.org
+Subject: [PATCH v2] brcmfmac: Fix a memory leak in error handling path in 'brcmf_cfg80211_attach'
+Date: Wed, 21 Jun 2017 07:45:53 +0200
+Message-Id: <20170621054553.16546-1-christophe.jaillet@wanadoo.fr> (sfid-20170621_074628_110044_0995050B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2017 07:27 PM, Stephen Rothwell wrote:
-> 
-> External Email
-> 
-> 
-> Hi all,
-> 
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (x86_64 allmodconfig) failed like this:
-> 
-> drivers/net/wireless/quantenna/qtnfmac/core.c: In function 'qtnf_core_net_attach':
-> drivers/net/wireless/quantenna/qtnfmac/core.c:319:5: error: 'struct net_device' has no member named 'destructor'
->    dev->destructor = free_netdev;
->       ^
-> 
-> Caused by commit
-> 
->    98f44cb0655c ("qtnfmac: introduce new FullMAC driver for Quantenna chipsets")
-> 
-> interacting with commit
-> 
->    cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
-> 
-> from the net tree.
-> 
-> I applied this merge fix patch for today.
+If 'wiphy_new()' fails, we leak 'ops'. Add a new label in the error
+handling path to free it in such a case.
 
-Hi Stephen,
-thanks. As I understand, you've applied this patch during a merge and no 
-further actions are required, correct?
+Cc: stable@vger.kernel.org
+Fixes: 5c22fb85102a7 ("brcmfmac: add wowl gtk rekeying offload support")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+v2: Add CC tag
+    Change prefix
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-> 
-> From: Stephen Rothwell <sfr@canb.auug.org.au>
-> Date: Thu, 8 Jun 2017 12:24:08 +1000
-> Subject: [PATCH] qtnfmac: fix up for "net: Fix inconsistent teardown and
->   release of private netdev state."
-> 
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-
-Acked-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-
-> ---
->   drivers/net/wireless/quantenna/qtnfmac/core.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-> index c5ac252464f4..f053532c0e87 100644
-> --- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-> @@ -316,7 +316,7 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
->          vif->netdev = dev;
-> 
->          dev->netdev_ops = &qtnf_netdev_ops;
-> -       dev->destructor = free_netdev;
-> +       dev->needs_free_netdev = true;
->          dev_net_set(dev, wiphy_net(wiphy));
->          dev->ieee80211_ptr = &vif->wdev;
->          dev->ieee80211_ptr->iftype = iftype;
-> --
-> 2.11.0
-> 
-> --
-> Cheers,
-> Stephen Rothwell
-> 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2443c71a202f..032d823c53c2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6861,7 +6861,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	wiphy = wiphy_new(ops, sizeof(struct brcmf_cfg80211_info));
+ 	if (!wiphy) {
+ 		brcmf_err("Could not allocate wiphy device\n");
+-		return NULL;
++		goto ops_out;
+ 	}
+ 	memcpy(wiphy->perm_addr, drvr->mac, ETH_ALEN);
+ 	set_wiphy_dev(wiphy, busdev);
+@@ -7012,6 +7012,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	ifp->vif = NULL;
+ wiphy_out:
+ 	brcmf_free_wiphy(wiphy);
++ops_out:
+ 	kfree(ops);
+ 	return NULL;
+ }
+-- 
+2.11.0
