@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57304 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751065AbdFNE6m (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 00:58:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Micha=C5=82_Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Subject: Re: [PATCH] wireless: brcmfmac: initialize oob irq data before request_irq()
-References: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
-Date: Wed, 14 Jun 2017 07:58:35 +0300
-In-Reply-To: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
-        (=?utf-8?Q?=22Micha=C5=82_Miros=C5=82aw=22's?= message of "Tue, 13 Jun 2017
- 18:02:03 +0200")
-Message-ID: <87poe74138.fsf@kamboji.qca.qualcomm.com> (sfid-20170614_065901_353118_8A084531)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:53036 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751884AbdFUXu0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 19:50:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 4/6] mac80211: don't put null-data frames on the normal TXQ
+Date: Thu, 22 Jun 2017 01:50:20 +0200
+Message-Id: <20170621235022.25362-4-johannes@sipsolutions.net> (sfid-20170622_015029_401105_5DD7E2F0)
+In-Reply-To: <20170621235022.25362-1-johannes@sipsolutions.net>
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> This fixes spin-forever in irq handler when IRQ is already asserted
-> at request_irq() time.
->
-> Signed-off-by: Micha=C5=82 Miros=C5=82aw <mirq-linux@rere.qmqm.pl>
+Since (QoS) NDP frames shouldn't be put into aggregation nor are
+assigned real sequence numbers, etc. it's better to treat them as
+non-data packets and not put them on the normal TXQs.
 
-Your name in patchwork is broken:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://patchwork.kernel.org/patch/9784251/
-
-You could try to fix it by registering as then you have (onetime) option
-to provide your full name.
-
---=20
-Kalle Valo
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1b3ac635fbdd..d2a91594312d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1252,7 +1252,7 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+ 		return NULL;
+ 
+-	if (!ieee80211_is_data(hdr->frame_control)) {
++	if (!ieee80211_is_data_present(hdr->frame_control)) {
+ 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
+ 		     ieee80211_is_bufferable_mmpdu(hdr->frame_control)) &&
+ 		    sta && sta->uploaded)
+-- 
+2.11.0
