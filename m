@@ -1,77 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54466 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750756AbdFNJN2 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36533 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752265AbdFURPs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 05:13:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: amit karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [PATCH 2/6] rsi: use enum for FSM states
-References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
-        <1496412785-8720-3-git-send-email-amit.karwar@redpinesignals.com>
-        <87lgowpeno.fsf@purkki.adurom.net>
-        <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
-Date: Wed, 14 Jun 2017 12:13:22 +0300
-In-Reply-To: <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
-        (amit karwar's message of "Tue, 13 Jun 2017 20:17:32 +0530")
-Message-ID: <87zidb2aq5.fsf@kamboji.qca.qualcomm.com> (sfid-20170614_111455_857118_21137D2F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 21 Jun 2017 13:15:48 -0400
+Received: by mail-oi0-f68.google.com with SMTP id g14so16355977oib.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:48 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 4/8] rtlwifi: Update some cases in btc_get function -- roam, 5G, AP mode, and return value.
+Date: Wed, 21 Jun 2017 12:15:34 -0500
+Message-Id: <20170621171538.4462-5-Larry.Finger@lwfinger.net> (sfid-20170621_191551_933115_46DA1BA4)
+In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-amit karwar <amitkarwar@gmail.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> On Tue, Jun 13, 2017 at 12:17 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->>
->>> Currently macros are used for FSM states. We will replace
->>> it with enum so that new state can be added easily without
->>> worrying about macro value.
->>>
->>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->>
->> From and Signed-off-by does not match (gmail.com vs redpinesignals.com).
->> I suggest that you add a separate From line to the commit log containing
->> redpinesignals.com, this way you can still submit patches via gmail.com.
->
-> Sure. I will follow this for my future patches.
+Return value may be false in some situations.
 
-Actually please resend this series with matching From and S-o-b. I don't
-want to edit From headers myself.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 24 +++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
->> Also your name in patchwork is not capitalised (patchwork is idiotic and
->> takes the name from patchwork user data and not from the patch):
->>
->>       [1/6] rsi: add usb RS9113 chipset support 2017-06-02 amit
->> karwar New
->>       [2/6] rsi: use enum for FSM states 2017-06-02 amit karwar New
->>       [3/6] rsi: Register interrupt handler before firmware load
->> 2017-06-02 amit karwar New
->>       [4/6] rsi: receive path enhancement for RS9113 2017-06-02 amit
->> karwar New
->>       [5/6] rsi: configure new boot parameters to device 2017-06-02
->> amit karwar New
->>       [6/6] rsi: add tx frame for common device configuration
->> 2017-06-02 amit karwar New
->>
->> To fix that could you please register to patchwork and capitalise your
->> name correctly? You have only one chance, patchwork doesn't allow users
->> edit the name afterwards, so don't do any typos :)
->
-> Thanks. I have registered with patchwork and corrected my name.
-
-What address did you use? Patchwork still shows your name all lower:
-
-https://patchwork.kernel.org/project/linux-wireless/list/?submitter=173645
-
-I suspect you didn't register with gmail.com, but with some other
-address. I recommend that you link all your email addresses, including
-gmail.com, to the same patchwork account and hopefully that fixes it.
-You should be able to do that from the profile page in patchwork.
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index eaa916a0727b..d8fb2442f795 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -381,6 +381,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	u32 *u32_tmp = (u32 *)out_buf;
+ 	u8 *u8_tmp = (u8 *)out_buf;
+ 	bool tmp = false;
++	bool ret = true;
+ 
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+ 		return false;
+@@ -388,9 +389,11 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	switch (get_type) {
+ 	case BTC_GET_BL_HS_OPERATION:
+ 		*bool_tmp = false;
++		ret = false;
+ 		break;
+ 	case BTC_GET_BL_HS_CONNECTING:
+ 		*bool_tmp = false;
++		ret = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_CONNECTED:
+ 		if (rtlpriv->mac80211.opmode == NL80211_IFTYPE_STATION &&
+@@ -429,11 +432,16 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_UNDER_5G:
+-		/* TODO */
+-		*bool_tmp = false;
++		if (rtlhal->current_bandtype == BAND_ON_5G)
++			*bool_tmp = true;
++		else
++			*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_AP_MODE_ENABLE:
+-		*bool_tmp = false;
++		if (mac->opmode == NL80211_IFTYPE_AP)
++			*bool_tmp = true;
++		else
++			*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_ENABLE_ENCRYPTION:
+ 		if (NO_ENCRYPTION == rtlpriv->sec.pairwise_enc_algorithm)
+@@ -460,8 +468,8 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
+ 		break;
+ 	case BTC_GET_S4_HS_RSSI:
+-		/* TODO */
+-		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
++		*s32_tmp = 0;
++		ret = false;
+ 		break;
+ 	case BTC_GET_U4_WIFI_BW:
+ 		*u32_tmp = halbtc_get_wifi_bw(btcoexist);
+@@ -491,7 +499,8 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		*u8_tmp = halbtc_get_wifi_central_chnl(btcoexist);
+ 		break;
+ 	case BTC_GET_U1_WIFI_HS_CHNL:
+-		*u8_tmp = 1;
++		*u8_tmp = 0;
++		ret = false;
+ 		break;
+ 	case BTC_GET_U1_AP_NUM:
+ 		/* driver do not know AP num,
+@@ -512,10 +521,11 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		break;
+ 
+ 	default:
++		ret = false;
+ 		break;
+ 	}
+ 
+-	return true;
++	return ret;
+ }
+ 
+ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
 -- 
-Kalle Valo
+2.12.3
