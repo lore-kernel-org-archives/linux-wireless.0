@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33082 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751247AbdFAJmA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14892 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750859AbdFUNSc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:42:00 -0400
+        Wed, 21 Jun 2017 09:18:32 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,1/7] rtlwifi: btcoex: update new btcoex version
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170526184147.31239-2-Larry.Finger@lwfinger.net>
-References: <20170526184147.31239-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>, lkp@intel.com
-Message-Id: <20170601094159.E09236074A@smtp.codeaurora.org> (sfid-20170601_114213_930266_0BE3E404)
-Date: Thu,  1 Jun 2017 09:41:59 +0000 (UTC)
+Subject: Re: [v2,
+ 1/3] ath10k: Use complete VHT chan width for 160MHz workaround
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
+References: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+CC: <ath10k@lists.infradead.org>, Ben Greear <greearb@candelatech.com>,
+        <linux-wireless@vger.kernel.org>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Message-ID: <afa6ec98d286450687ed30267026d7a8@euamsexm01a.eu.qualcomm.com> (sfid-20170621_151845_607195_5C23239A)
+Date: Wed, 21 Jun 2017 15:18:09 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
 
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> The ath10k firmware doesn't announce its VHT channel width capabilities in
+> the vht_cap information from the "service ready event" arguments. The
+> driver must therefore check whether the 160MHz short GI bit is set and
+> whether the driver still doesn't set the bits for the 160/80+80 MHz
+> capabilities.
 > 
-> This patch updates the btcoexist to a newer version with some callbacks.
+> The two bits for the channel width are a two bit integer and not two
+> separate bits which cannot be parsed without the knowledge of the other
+> bit. Using IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ (b10..) as a
+> mask for this task doesn't make any sense. The correct mask for the VHT
+> channel width should be used instead to make this check more readable.
 > 
-> Specific issues fixed are
-> pre_load_firmware()
-> 	fix the unstable issues before FW is ready
-> power_on_seting()
-> 	fix the unstable issues before HW is ready
-> Some notify finctions, check hardware type and call corresponding
-> functions to specific chip
-> 
-> As noted by the kbuild test robot <lkp@intel.com>, there was a missing
-> global. This problem has been fixed.
-> 
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
-> Cc: lkp@intel.com
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> [sven.eckelmann@openmesh.com: separate 160Mhz workaround cleanup, add commit
+>  message]
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-There are two red flags which immediately caught my attention: "update to a
-newer version" and listing multiple changes in the commit log. A patch should
-have one logical change but this one seems to have a lot of changes which makes
-it difficult to track what has changed. This definitely should split into
-smaller patches.
+3 patches applied to ath-next branch of ath.git, thanks.
 
-I'll still try to commit patches 2-7, hopefully they don't depend on anything
-in this patch.
-
-Patch set to Changes Requested.
+e509e5947708 ath10k: use complete VHT chan width for 160MHz workaround
+cc914a55006e ath10k: configure rxnss_override for QCA9984
+6824834946a6 ath10k: set rxnss_override for QCA9888
 
 -- 
-https://patchwork.kernel.org/patch/9750977/
+https://patchwork.kernel.org/patch/9778085/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
