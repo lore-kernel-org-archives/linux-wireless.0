@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:59771 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751745AbdF3Kqo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 06:46:44 -0400
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: fix a typo: "incative" -> "inactive"
-Date: Fri, 30 Jun 2017 11:46:40 +0100
-Message-Id: <20170630104640.9985-1-colin.king@canonical.com> (sfid-20170630_124812_814514_43FDB511)
-MIME-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:58235 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751640AbdFUF74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 01:59:56 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: don't look at the PM bit of BAR frames
+Date: Wed, 21 Jun 2017 05:59:34 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3EE711B9F@hasmsx109.ger.corp.intel.com> (sfid-20170621_080000_649958_2F4F803C)
+References: <20170608110049.8747-1-emmanuel.grumbach@intel.com>
+ <5d0d7ce8-ff71-7b37-012d-2db75da49d9d@quantenna.com>
+In-Reply-To: <5d0d7ce8-ff71-7b37-012d-2db75da49d9d@quantenna.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
-
-Trivial fix to typos in netdev_err error messages. I should have spotted
-this in a previous round of spelling mistake checks on this driver but
-this one slipped through.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f7c22d7b28d1..a3cdade02c93 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1963,7 +1963,7 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 				      wilc_get_vif_idx(vif));
- 
- 	if (result) {
--		netdev_err(vif->ndev, "Failed to SET incative time\n");
-+		netdev_err(vif->ndev, "Failed to SET inactive time\n");
- 		return -EFAULT;
- 	}
- 
-@@ -1976,7 +1976,7 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 				      wilc_get_vif_idx(vif));
- 
- 	if (result) {
--		netdev_err(vif->ndev, "Failed to get incative time\n");
-+		netdev_err(vif->ndev, "Failed to get inactive time\n");
- 		return -EFAULT;
- 	}
- 
--- 
-2.11.0
+PiANCj4gT24gMDYvMDgvMjAxNyAwNDowMCBBTSwgRW1tYW51ZWwgR3J1bWJhY2ggd3JvdGU6DQo+
+ID4gV2hlbiBhIHBlZXIgc2VuZHMgYSBCQVIgZnJhbWUgd2l0aCBQTSBiaXQgY2xlYXIsIHdlIHNo
+b3VsZCBub3QgbW9kaWZ5DQo+ID4gaXRzIFBNIHN0YXRlIGFzIG1hZGF0ZWQgYnkgdGhlIHNwZWMg
+aW4NCj4gPiA4MDIuMTEtMjAwMTIgMTAuMi4xLjIuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBF
+bW1hbnVlbCBHcnVtYmFjaA0KPiA+IDxlbW1hbnVlbC5ncnVtYmFjaC1yYWwySlFDcmh1RUF2eHRp
+dU13eDN3QHB1YmxpYy5nbWFuZS5vcmc+DQo+ID4gLS0tDQo+ID4gICBuZXQvbWFjODAyMTEvcngu
+YyB8IDYgKysrKystDQo+ID4gICAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAxIGRl
+bGV0aW9uKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3J4LmMgYi9uZXQv
+bWFjODAyMTEvcnguYyBpbmRleA0KPiA+IGU0ODcyNGE2NzI1ZS4uYmIxZTRiYmY1NWUyIDEwMDY0
+NA0KPiA+IC0tLSBhL25ldC9tYWM4MDIxMS9yeC5jDQo+ID4gKysrIGIvbmV0L21hYzgwMjExL3J4
+LmMNCj4gPiBAQCAtMTU1OCwxMiArMTU1OCwxNiBAQCBpZWVlODAyMTFfcnhfaF9zdGFfcHJvY2Vz
+cyhzdHJ1Y3QNCj4gaWVlZTgwMjExX3J4X2RhdGEgKnJ4KQ0KPiA+ICAgCSAqLw0KPiA+ICAgCWlm
+ICghaWVlZTgwMjExX2h3X2NoZWNrKCZzdGEtPmxvY2FsLT5odywgQVBfTElOS19QUykgJiYNCj4g
+PiAgIAkgICAgIWllZWU4MDIxMV9oYXNfbW9yZWZyYWdzKGhkci0+ZnJhbWVfY29udHJvbCkgJiYN
+Cj4gPiArCSAgICAhaWVlZTgwMjExX2lzX2JhY2tfcmVxKGhkci0+ZnJhbWVfY29udHJvbCkgJiYN
+Cj4gDQo+IEJUVyBsYXRlc3Qgc3BlYyBhbHNvIG5vdGVzIHRoYXQgUFNQT0xMIGZyYW1lIGhhcyBQ
+TSBiaXQgcmVzZXJ2ZWQgdG9vLA0KPiBiZWNhdXNlIGl0IG1heSBub3QgcmVzdWx0IGluIEFDSyBm
+cmFtZSBmcm9tIEFQLg0KDQpQUyBwb2xsIGFyZSBhbHJlYWR5IGhhbmRsZWQgYmVmb3JlIGluIHRo
+ZSBmbG93IGFuZCBkb24ndCByZWFjaCB0aGlzIGNvZGUuDQoNCg0KPiANCj4gPiAgIAkgICAgIShz
+dGF0dXMtPnJ4X2ZsYWdzICYgSUVFRTgwMjExX1JYX0RFRkVSUkVEX1JFTEVBU0UpICYmDQo+ID4g
+ICAJICAgIChyeC0+c2RhdGEtPnZpZi50eXBlID09IE5MODAyMTFfSUZUWVBFX0FQIHx8DQo+ID4g
+ICAJICAgICByeC0+c2RhdGEtPnZpZi50eXBlID09IE5MODAyMTFfSUZUWVBFX0FQX1ZMQU4pICYm
+DQo+ID4gLQkgICAgLyogUE0gYml0IGlzIG9ubHkgY2hlY2tlZCBpbiBmcmFtZXMgd2hlcmUgaXQg
+aXNuJ3QgcmVzZXJ2ZWQsDQo+ID4gKwkgICAgLyoNCj4gPiArCSAgICAgKiBQTSBiaXQgaXMgb25s
+eSBjaGVja2VkIGluIGZyYW1lcyB3aGVyZSBpdCBpc24ndCByZXNlcnZlZCwNCj4gPiAgIAkgICAg
+ICogaW4gQVAgbW9kZSBpdCdzIHJlc2VydmVkIGluIG5vbi1idWZmZXJhYmxlIG1hbmFnZW1lbnQg
+ZnJhbWVzDQo+ID4gICAJICAgICAqIChjZi4gSUVFRSA4MDIuMTEtMjAxMiA4LjIuNC4xLjcgUG93
+ZXIgTWFuYWdlbWVudCBmaWVsZCkNCj4gPiArCSAgICAgKiBCQVIgZnJhbWVzIHNob3VsZCBiZSBp
+Z25vcmVkIGFzIHNwZWNpZmllZCBpbg0KPiA+ICsJICAgICAqIElFRUUgODAyLjExLTIwMTIgMTAu
+Mi4xLjIuDQo+IA0KPiBDb21tZW50IHBsYWNlbWVudCBpcyBhIGxpdHRsZSBjb25mdXNpbmcgSU1P
+LiBNYXliZSBtb3ZlDQo+IGllZWU4MDIxMV9pc19iYWNrX3JlcSgpIGNoZWNrIHRvIHRoaXMgcG9z
+aXRpb24/DQo+IA0KDQpEb24ndCBrbm93LiBJdCdzIGJlZW4gbWVyZ2VkIGFscmVhZHkuIFNvIHlv
+dSdkIG5lZWQgdG8gc2VuZCBhIHBhdGNoIGZpeGluZyB0aGlzIGlmIHlvdSB3YW50IDopDQo=
