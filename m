@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52243 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751058AbdFANCG (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:45202 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751042AbdFUNZi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 09:02:06 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 21 Jun 2017 09:25:38 -0400
+From: Colin King <colin.king@canonical.com>
+To: Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][net-next] qtnfmac: fix uninitialized return code in ret
+Date: Wed, 21 Jun 2017 14:25:30 +0100
+Message-Id: <20170621132530.11937-1-colin.king@canonical.com> (sfid-20170621_152556_831507_AEF3A1C1)
 MIME-Version: 1.0
-Subject: Re: ath10k: fix the logic of limiting tdls peer counts
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1496177909-5579-1-git-send-email-ryanhsu@qca.qualcomm.com>
-References: <1496177909-5579-1-git-send-email-ryanhsu@qca.qualcomm.com>
-To: <ryanhsu@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <ryanhsu@qti.qualcomm.com>, <kaliu@qti.qualcomm.com>,
-        <yintang@qti.qualcomm.com>
-Message-ID: <022043783bb54759888017d9acd62c47@eusanexr01a.eu.qualcomm.com> (sfid-20170601_150227_772151_FE4AC98E)
-Date: Thu, 1 Jun 2017 06:02:00 -0700
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ryanhsu@qti.qualcomm.com wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> The original idea is to limit the maximum TDLS peer link, but the logic
-> is always false, and never be able to restrict the number of TDLS peer
-> creation.
-> 
-> Fix the logic here and also move the checking earlier, so that it could
-> avoid to handle the failure case, e.g disable the tdls peer, delete the
-> peer and also vdev count cleanup.
-> 
-> Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+The return value ret is unitialized and garbage is being returned
+for the three different error conditions when setting up the PCIe
+BARs. Fix this by initializing ret to  -ENOMEM to indicate that
+the BARs failed to be setup correctly.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Detected by CoverityScan, CID#1437563 ("Unitialized scalar variable")
 
-9a993cc1ea95 ath10k: fix the logic of limiting tdls peer counts
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index f93b27f3a236..7fc4f0d6a9ad 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -247,7 +247,7 @@ static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_bus_priv *priv)
+ 
+ static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_priv *priv)
+ {
+-	int ret;
++	int ret = -ENOMEM;
+ 
+ 	priv->sysctl_bar = qtnf_map_bar(priv, QTN_SYSCTL_BAR);
+ 	if (IS_ERR_OR_NULL(priv->sysctl_bar)) {
 -- 
-https://patchwork.kernel.org/patch/9755235/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
