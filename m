@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:33450 "EHLO
-        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750704AbdFFF0h (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2017 01:26:37 -0400
-Received: by mail-vk0-f47.google.com with SMTP id p62so41763888vkp.0
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 22:26:37 -0700 (PDT)
-MIME-Version: 1.0
-From: Benjamin Wie <beewee91@gmail.com>
-Date: Tue, 6 Jun 2017 07:26:36 +0200
-Message-ID: <CAAPSgj3XDzQ_7TK4SuX_L_1QgQ=CDtn6EqWPo4RFWM+20JG4Hw@mail.gmail.com> (sfid-20170606_072643_256442_FE50768D)
-Subject: ath9k: wifi not working with btcoex_enable on AR9462
-To: linux-wireless@vger.kernel.org
+Received: from s3.sipsolutions.net ([5.9.151.49]:39538 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750987AbdFUHJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 03:09:37 -0400
+Message-ID: <1498028959.4955.1.camel@sipsolutions.net> (sfid-20170621_090940_331939_95828741)
+Subject: Re: [RFC] mac80211: support non-data TXQs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 21 Jun 2017 09:09:19 +0200
+In-Reply-To: <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
+References: <20170620210309.1193-1-johannes@sipsolutions.net>
+         <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2017-06-20 at 21:19 -0700, Igor Mitsyanko wrote:
 
-I'm trying to use a bluetooth speaker while connected to a wifi. At
-first, once I started sending something to the speaker via bluetooth,
-the wifi connection was slowed down a lot or even disconnected because
-btcoex_enable was not set.
-Now I enabled it using:
+> > -	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
+> > +	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
+> 
+> Isn't that a little confusing? Wouldn't it be better to have a
+> separate  member for non-data txq and name it accordingly (something
+> like  txq_nodata). 
 
-  modprobe -r ath9k
-  modprobe ath9k btcoex_enable=1
+We do this trick in quite a number of places, so it shouldn't really
+come as a surprise.
 
-with the result, that I can't connect to the wifi at all, even if
-bluetooth is completely disabled.
-Do you know how to fix this?
+> You have to handle it specially in most cases anyway I guess.
+> With this approach you won't have to replace ARRAY_SIZE(sta->txq) by 
+> IEEE80211_NUM_TIDS anywhere.
 
-[ben@localhost]~% uname -r
-4.11.3-200.fc25.x86_64
+Yeah, that would indeed be a good reason - I didn't realize the
+ARRAY_SIZE() when I originally wrote the patch. And yes, I do need to
+treat it specially - except then if it's separate I also have to
+initialize it separately, so it's a bit of a trade-off.
 
-[ben@localhost]~% lspci -k
-(...)
-04:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network
-Adapter (rev 01)
-    Subsystem: Foxconn International, Inc. Device e052
-    Kernel driver in use: ath9k
-    Kernel modules: ath9k
+> [snip]
+[please trim the amount of text you quote]
 
-[ben@localhost]~% dmesg | grep ath
-[    4.482734] usbcore: registered new interface driver ath3k
-[    4.769527] ath: phy0: ASPM enabled: 0x42
-[    4.769530] ath: EEPROM regdomain: 0x6c
-[    4.769531] ath: EEPROM indicates we should expect a direct regpair map
-[    4.769533] ath: Country alpha2 being used: 00
-[    4.769533] ath: Regpair used: 0x6c
-[    4.819454] ath9k 0000:04:00.0 wlp4s0: renamed from wlan0
+> > -		txqi->txq.ac = ieee80211_ac_from_tid(tid);
+> > +		if (tid == IEEE80211_NUM_TIDS + 1)
+> > +			txqi->txq.ac = IEEE80211_AC_VO;
+> 
+> Why voice, maybe commit message should mention it?
 
+That's standard for management frames, I really didn't think that'd
+need any comment?
 
-Thank you!
-Benjamin
+johannes
