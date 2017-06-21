@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0186.hostedemail.com ([216.40.44.186]:39554 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751281AbdFXMBU (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32164 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbdFUNT0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Jun 2017 08:01:20 -0400
-Message-ID: <1498305676.24295.27.camel@perches.com> (sfid-20170624_140124_112984_ECBE46C2)
-Subject: Re: [PATCH 10/10] rtlwifi: btcoex: Use seq_file to dump btcoex
- status
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Date: Sat, 24 Jun 2017 05:01:16 -0700
-In-Reply-To: <20170624015309.28099-11-Larry.Finger@lwfinger.net>
-References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
-         <20170624015309.28099-11-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 21 Jun 2017 09:19:26 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v3,1/3] wil6210: prevent platform callbacks after uninit
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1497508008-9536-2-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1497508008-9536-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Dedy Lansky <qca_dlansky@qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <c8e53ed1f61f4b7c9ce262da7b95a5bc@euamsexm01a.eu.qualcomm.com> (sfid-20170621_151929_660236_CBE89CBC)
+Date: Wed, 21 Jun 2017 15:19:18 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-23 at 20:53 -0500, Larry Finger wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+
+> After calling platform_ops.uninit() it is still possible to invoke
+> platform callbacks.
+> To prevent this, zero platform_ops right after invoking uninit.
 > 
-> If we use seq_file to dump status, then we can use 'cat' to access
-> debugfs.  Other related changes are
-> 1. implement btc_disp_dbg_msg() to access btcoex's common status.
-> 2. remove obsolete field bt_exist
-[]
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-[]
-> @@ -2719,75 +2719,64 @@ void ex_btc8192e2ant_display_coex_info(struct btc_coexist *btcoexist)
->  	u8 wifi_dot11_chnl, wifi_hs_chnl;
->  	u32 fw_ver = 0, bt_patch_ver = 0;
->  
-> -	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
-> -		 "\r\n ============[BT Coexist info]============");
-> +	seq_puts(m, "\r\n ============[BT Coexist info]============");
->  
->  	if (btcoexist->manual_control) {
-> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
-> -			 "\r\n ===========[Under Manual Control]===========");
-> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
-> -			 "\r\n ==========================================");
-> -	}
-> -
-> -	if (!board_info->bt_exist) {
-> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n BT not exists !!!");
-> -		return;
-> +		seq_puts(m, "\r\n ===========[Under Manual Control]===========");
-> +		seq_puts(m, "\r\n ==========================================");
+> Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-All the \r uses should probably be removed.
+3 patches applied to ath-next branch of ath.git, thanks.
 
->  	}
->  
-> -	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
-> -		 "\r\n %-35s = %d/ %d ", "Ant PG number/ Ant mechanism:",
-> +	seq_printf(m, "\r\n %-35s = %d/ %d ", "Ant PG number/ Ant mechanism:",
->  		   board_info->pg_ant_num, board_info->btdm_ant_num);
+5b49ee9f13c7 wil6210: prevent platform callbacks after uninit
+fe9ee51e6a43 wil6210: add support for PCIe D3hot in system suspend
+a520b49ec155 wil6210: remove ioctl interface
 
-etc...
+-- 
+https://patchwork.kernel.org/patch/9788123/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
