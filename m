@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:47590 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752883AbdFAQLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 12:11:15 -0400
-Date: Thu, 1 Jun 2017 10:11:13 -0600
-From: Jonathan Corbet <corbet@lwn.net>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
- b43legacy_attr_interfmode_store
-Message-ID: <20170601101113.6dd30d6d@lwn.net> (sfid-20170601_181224_343666_117B2F03)
-In-Reply-To: <592F6843.9000204@163.com>
-References: <1496226547-5921-1-git-send-email-baijiaju1990@163.com>
-        <85905124-7167-aeb0-8aff-4ceec09e9542@lwfinger.net>
-        <592F6843.9000204@163.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34074 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751116AbdFURPt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 13:15:49 -0400
+Received: by mail-oi0-f66.google.com with SMTP id b6so2189973oia.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:49 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 5/8] rtlwifi: Add return value to btc_set.
+Date: Wed, 21 Jun 2017 12:15:35 -0500
+Message-Id: <20170621171538.4462-6-Larry.Finger@lwfinger.net> (sfid-20170621_191602_408702_E82FE0B3)
+In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 01 Jun 2017 09:05:07 +0800
-Jia-Ju Bai <baijiaju1990@163.com> wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> I admit my patches are not well tested, and they may not well fix the bugs.
-> I am looking forward to opinions and suggestions :)
+We will use return value to handle error case.
 
-May I politely suggest that sending out untested locking changes is a
-dangerous thing to do?  You really should not be changing the locking in a
-piece of kernel code without understanding very well what the lock is
-protecting and being able to say why your changes are safe.  Without that,
-the risk of introducing subtle bugs is very high.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-It looks like you have written a useful tool that could help us to make
-the kernel more robust.  If you are interested in my suggestion, I would
-recommend that you post the sleep-in-atomic scenarios that you are
-finding, but refrain from "fixing" them in any case where you cannot offer
-a strong explanation of why your fix is correct.
-
-Thanks for working to find bugs in the kernel!
-
-jon
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index d8fb2442f795..ffa7a517b665 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -534,6 +534,7 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
+ 	bool *bool_tmp = (bool *)in_buf;
+ 	u8 *u8_tmp = (u8 *)in_buf;
+ 	u32 *u32_tmp = (u32 *)in_buf;
++	bool ret = true;
+ 
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+ 		return false;
+@@ -577,6 +578,7 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
+ 
+ 	/* the following are some action which will be triggered */
+ 	case BTC_SET_ACT_GET_BT_RSSI:
++		ret = false;
+ 		break;
+ 	case BTC_SET_ACT_AGGREGATE_CTRL:
+ 		halbtc_aggregation_check(btcoexist);
+@@ -622,7 +624,7 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
+ 		break;
+ 	}
+ 
+-	return true;
++	return ret;
+ }
+ 
+ /************************************************************
+-- 
+2.12.3
