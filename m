@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0071.outbound.protection.outlook.com ([104.47.0.71]:31136
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752010AbdF0WH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 18:07:58 -0400
-From: peter.oh@bowerswilkins.com
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Peter Oh <peter.oh@bowerswilkins.com>, johannes.berg@intel.com
-Subject: [PATCH] ieee80211: update public action codes
-Date: Tue, 27 Jun 2017 15:07:29 -0700
-Message-Id: <1498601249-8372-1-git-send-email-peter.oh@bowerswilkins.com> (sfid-20170628_000813_941100_16976F4A)
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:33197 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751093AbdFUIsa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 04:48:30 -0400
+Received: by mail-wr0-f177.google.com with SMTP id r103so125154761wrb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 01:48:30 -0700 (PDT)
+Subject: Re: [RFC] mac80211: support non-data TXQs
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20170620210309.1193-1-johannes@sipsolutions.net>
+ <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
+ <1498028959.4955.1.camel@sipsolutions.net>
+ <1498034220.4955.3.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <23cd1255-32a3-84c2-77d1-4cd29bdc81dd@broadcom.com> (sfid-20170621_104836_051158_8F0E9A88)
+Date: Wed, 21 Jun 2017 10:48:27 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1498034220.4955.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Peter Oh <peter.oh@bowerswilkins.com>
+On 6/21/2017 10:37 AM, Johannes Berg wrote:
+> On Wed, 2017-06-21 at 09:09 +0200, Johannes Berg wrote:
+>> On Tue, 2017-06-20 at 21:19 -0700, Igor Mitsyanko wrote:
+>>
+>>>> -	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
+>>>> +	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
+>>>
+>>> Isn't that a little confusing? Wouldn't it be better to have a
+>>> separate  member for non-data txq and name it accordingly
+>>> (something
+>>> like  txq_nodata).
+>>
+>> We do this trick in quite a number of places, so it shouldn't really
+>> come as a surprise.
+>>
+>>> You have to handle it specially in most cases anyway I guess.
+>>> With this approach you won't have to replace ARRAY_SIZE(sta->txq)
+>>> by IEEE80211_NUM_TIDS anywhere.
+>>
+>> Yeah, that would indeed be a good reason - I didn't realize the
+>> ARRAY_SIZE() when I originally wrote the patch. And yes, I do need to
+>> treat it specially - except then if it's separate I also have to
+>> initialize it separately, so it's a bit of a trade-off.
+> 
+> I changed my mind on changing this, the allocation, initialization and
+> teardown etc. just gets much more complicated with doing that, needing
+> special cases in quite a number of places.
 
-Update Public Action field values as updated in IEEE Std 802.11-2016,
-so that modules/drivers can refer it.
+So for the sake of ath{9,10}k and possible future drivers you may want 
+to document it clearly in mac80211.h(?), ie. when driver does not want a 
+separate non-data txq they should use IEEE80211_NUM_TIDS.
 
-Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
----
- include/linux/ieee80211.h | 35 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 6903335..91a1145 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2113,10 +2113,43 @@ enum ieee80211_key_len {
- 
- #define PMK_MAX_LEN			48
- 
--/* Public action codes */
-+/* Public action codes (IEEE Std 802.11-2016, 9.6.8.1, Table 9-307) */
- enum ieee80211_pub_actioncode {
-+	WLAN_PUB_ACTION_20_40_BSS_COEX = 0,
-+	WLAN_PUB_ACTION_DSE_ENABLEMENT = 1,
-+	WLAN_PUB_ACTION_DSE_DEENABLEMENT = 2,
-+	WLAN_PUB_ACTION_DSE_REG_LOC_ANN = 3,
- 	WLAN_PUB_ACTION_EXT_CHANSW_ANN = 4,
-+	WLAN_PUB_ACTION_DSE_MSMT_REQ = 5,
-+	WLAN_PUB_ACTION_DSE_MSMT_RESP = 6,
-+	WLAN_PUB_ACTION_MSMT_PILOT = 7,
-+	WLAN_PUB_ACTION_DSE_PC = 8,
-+	WLAN_PUB_ACTION_VENDOR_SPECIFIC = 9,
-+	WLAN_PUB_ACTION_GAS_INITIAL_REQ = 10,
-+	WLAN_PUB_ACTION_GAS_INITIAL_RESP = 11,
-+	WLAN_PUB_ACTION_GAS_COMEBACK_REQ = 12,
-+	WLAN_PUB_ACTION_GAS_COMEBACK_RESP = 13,
- 	WLAN_PUB_ACTION_TDLS_DISCOVER_RES = 14,
-+	WLAN_PUB_ACTION_LOC_TRACK_NOTI = 15,
-+	WLAN_PUB_ACTION_QAB_REQUEST_FRAME = 16,
-+	WLAN_PUB_ACTION_QAB_RESPONSE_FRAME = 17,
-+	WLAN_PUB_ACTION_QMF_POLICY = 18,
-+	WLAN_PUB_ACTION_QMF_POLICY_CHANGE = 19,
-+	WLAN_PUB_ACTION_QLOAD_REQUEST = 20,
-+	WLAN_PUB_ACTION_QLOAD_REPORT = 21,
-+	WLAN_PUB_ACTION_HCCA_TXOP_ADVERT = 22,
-+	WLAN_PUB_ACTION_HCCA_TXOP_RESPONSE = 23,
-+	WLAN_PUB_ACTION_PUBLIC_KEY = 24,
-+	WLAN_PUB_ACTION_CHANNEL_AVAIL_QUERY = 25,
-+	WLAN_PUB_ACTION_CHANNEL_SCHEDULE_MGMT = 26,
-+	WLAN_PUB_ACTION_CONTACT_VERI_SIGNAL = 27,
-+	WLAN_PUB_ACTION_GDD_ENABLEMENT_REQ = 28,
-+	WLAN_PUB_ACTION_GDD_ENABLEMENT_RESP = 29,
-+	WLAN_PUB_ACTION_NETWORK_CHANNEL_CONTROL = 30,
-+	WLAN_PUB_ACTION_WHITE_SPACE_MAP_ANN = 31,
-+	WLAN_PUB_ACTION_FTM_REQUEST = 32,
-+	WLAN_PUB_ACTION_FTM = 33,
-+	WLAN_PUB_ACTION_FILS_DISCOVERY = 34,
- };
- 
- /* TDLS action codes */
--- 
-2.7.4
+Regards,
+Arend
