@@ -1,44 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34394 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753394AbdFVVWP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54220 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdFUQjl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:21:01 +0300
-Message-Id: <20170622212101.16422-26-luca@coelho.fi> (sfid-20170622_232218_313081_FAC9DB6A)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 25/25] iwlwifi: mvm: better link scan notification results length
+        Wed, 21 Jun 2017 12:39:41 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: rtlwifi: fix REG_USTIME_TSF register definition
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170519150240.GA47825@ns.kevlo.org>
+References: <20170519150240.GA47825@ns.kevlo.org>
+To: Kevin Lo <kevlo@kevlo.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170621152428.E3552607E4@smtp.codeaurora.org> (sfid-20170621_183947_273981_F87A6009)
+Date: Wed, 21 Jun 2017 15:24:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Kevin Lo <kevlo@kevlo.org> wrote:
 
-Show the name of the member (scanned_channels) that provides the
-length with some better markup.
+> The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
+> should be 0x55C.
+> 
+> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+> index 15400ee6c04b..0c0d64aea651 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
+> @@ -248,7 +248,6 @@
+>  #define REG_RD_NAV_NXT				0x0544
+>  #define REG_NAV_PROT_LEN			0x0546
+>  #define REG_BCN_CTRL				0x0550
+> -#define REG_USTIME_TSF				0x0551
+>  #define REG_MBID_NUM				0x0552
+>  #define REG_DUAL_TSF_RST			0x0553
+>  #define REG_BCN_INTERVAL			0x0554
+> @@ -256,6 +255,7 @@
+>  #define REG_DRVERLYINT				0x0558
+>  #define REG_BCNDMATIM				0x0559
+>  #define REG_ATIMWND					0x055A
+> +#define REG_USTIME_TSF				0x055C
+>  #define REG_BCN_MAX_ERR				0x055D
+>  #define REG_RXTSF_OFFSET_CCK		0x055E
+>  #define REG_RXTSF_OFFSET_OFDM		0x055F
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
+> index 1bb7ed35812d..9e3b58a5d2bb 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
+> @@ -227,7 +227,6 @@
+>  #define REG_RD_NAV_NXT				0x0544
+>  #define REG_NAV_PROT_LEN			0x0546
+>  #define REG_BCN_CTRL				0x0550
+> -#define REG_USTIME_TSF				0x0551
+>  #define REG_MBID_NUM				0x0552
+>  #define REG_DUAL_TSF_RST			0x0553
+>  #define REG_BCN_INTERVAL			0x0554
+> @@ -235,6 +234,7 @@
+>  #define REG_DRVERLYINT				0x0558
+>  #define REG_BCNDMATIM				0x0559
+>  #define REG_ATIMWND				0x055A
+> +#define REG_USTIME_TSF				0x055C
+>  #define REG_BCN_MAX_ERR				0x055D
+>  #define REG_RXTSF_OFFSET_CCK			0x055E
+>  #define REG_RXTSF_OFFSET_OFDM			0x055F
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
+> index b354b95936e2..d4c4e76a9244 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
+> @@ -255,7 +255,6 @@
+>  #define REG_RD_NAV_NXT			0x0544
+>  #define REG_NAV_PROT_LEN		0x0546
+>  #define REG_BCN_CTRL			0x0550
+> -#define REG_USTIME_TSF			0x0551
+>  #define REG_MBID_NUM			0x0552
+>  #define REG_DUAL_TSF_RST		0x0553
+>  #define REG_BCN_INTERVAL		0x0554
+> @@ -263,6 +262,7 @@
+>  #define REG_DRVERLYINT			0x0558
+>  #define REG_BCNDMATIM			0x0559
+>  #define REG_ATIMWND			0x055A
+> +#define REG_USTIME_TSF			0x055C
+>  #define REG_BCN_MAX_ERR			0x055D
+>  #define REG_RXTSF_OFFSET_CCK		0x055E
+>  #define REG_RXTSF_OFFSET_OFDM		0x055F
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
+> index 306059f9b9cc..30938cd9fce5 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
+> @@ -217,7 +217,6 @@
+>  #define REG_RD_NAV_NXT				0x0544
+>  #define REG_NAV_PROT_LEN			0x0546
+>  #define REG_BCN_CTRL				0x0550
+> -#define REG_USTIME_TSF				0x0551
+>  #define REG_MBID_NUM				0x0552
+>  #define REG_DUAL_TSF_RST			0x0553
+>  #define REG_BCN_INTERVAL			0x0554
+> @@ -225,6 +224,7 @@
+>  #define REG_DRVERLYINT				0x0558
+>  #define REG_BCNDMATIM				0x0559
+>  #define REG_ATIMWND					0x055A
+> +#define REG_USTIME_TSF				0x055C
+>  #define REG_BCN_MAX_ERR				0x055D
+>  #define REG_RXTSF_OFFSET_CCK		0x055E
+>  #define REG_RXTSF_OFFSET_OFDM		0x055F
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
+> index 03581d2a5da0..95c4f8e206c7 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
+> @@ -261,7 +261,6 @@
+>  #define REG_RD_NAV_NXT				0x0544
+>  #define REG_NAV_PROT_LEN			0x0546
+>  #define REG_BCN_CTRL				0x0550
+> -#define REG_USTIME_TSF				0x0551
+>  #define REG_MBID_NUM				0x0552
+>  #define REG_DUAL_TSF_RST			0x0553
+>  #define REG_BCN_INTERVAL			0x0554
+> @@ -269,6 +268,7 @@
+>  #define REG_DRVERLYINT				0x0558
+>  #define REG_BCNDMATIM				0x0559
+>  #define REG_ATIMWND				0x055A
+> +#define REG_USTIME_TSF				0x055C
+>  #define REG_BCN_MAX_ERR				0x055D
+>  #define REG_RXTSF_OFFSET_CCK			0x055E
+>  #define REG_RXTSF_OFFSET_OFDM			0x055F
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+> index ed69dbe178ff..db8bc8a2de61 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
+> @@ -267,7 +267,6 @@
+>  #define REG_RD_NAV_NXT				0x0544
+>  #define REG_NAV_PROT_LEN			0x0546
+>  #define REG_BCN_CTRL				0x0550
+> -#define REG_USTIME_TSF				0x0551
+>  #define REG_MBID_NUM				0x0552
+>  #define REG_DUAL_TSF_RST			0x0553
+>  #define REG_BCN_INTERVAL			0x0554
+> @@ -275,6 +274,7 @@
+>  #define REG_DRVERLYINT				0x0558
+>  #define REG_BCNDMATIM				0x0559
+>  #define REG_ATIMWND				0x055A
+> +#define REG_USTIME_TSF				0x055C
+>  #define REG_BCN_MAX_ERR				0x055D
+>  #define REG_RXTSF_OFFSET_CCK			0x055E
+>  #define REG_RXTSF_OFFSET_OFDM			0x055F
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
-index d27c67b67015..f8e92026bdc6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
-@@ -769,7 +769,7 @@ struct iwl_scan_offload_profiles_query {
-  * @last_channel: last channel that was scanned
-  * @start_tsf: TSF timer in usecs of the scan start time for the mac specified
-  *	in &struct iwl_scan_req_umac.
-- * @results: array of scan results, only "scanned_channels" of them are valid
-+ * @results: array of scan results, length in @scanned_channels
-  */
- struct iwl_umac_scan_iter_complete_notif {
- 	__le32 uid;
+9da96c5e7edd rtlwifi: fix REG_USTIME_TSF register definition
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9737421/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
