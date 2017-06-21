@@ -1,106 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36212 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752584AbdF2Sai (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:30:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:14 +0300
-Message-Id: <20170629183027.15408-3-luca@coelho.fi> (sfid-20170629_203050_349611_6295D037)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 02/15] iwlwifi: pcie: add MSI-X interrupt tracing
+Received: from s3.sipsolutions.net ([5.9.151.49]:53028 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751835AbdFUXu0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 19:50:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/6] mac80211: agg-tx: call drv_wake_tx_queue in proper context
+Date: Thu, 22 Jun 2017 01:50:17 +0200
+Message-Id: <20170621235022.25362-1-johannes@sipsolutions.net> (sfid-20170622_015031_101372_B49F3704)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We have tracing for both pre-ICT and ICT interrupts, including all
-the data read there. Extend the tracing to MSI-X interrupts.
+Since drv_wake_tx_queue() is normally called in the TX path, which
+is already in an RCU critical section, we should call it the same
+way in the aggregation code path, so if the driver expects to be
+able to use RCU, it'll already be protected without having to enter
+a nested critical section.
 
+Additionally, disable soft-IRQs, since not doing so could cause
+issues in a driver that relies on them already being disabled like
+in the other path.
+
+Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-devtrace-io.h   | 26 +++++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |  4 ++++
- 2 files changed, 29 insertions(+), 1 deletion(-)
+ net/mac80211/agg-tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h
-index 1dccae6532cf..4164dc1745ed 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-io.h
-@@ -1,7 +1,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2016-2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -29,6 +29,7 @@
- #define __IWLWIFI_DEVICE_TRACE_IO
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index cbd48762256c..4f9dd3e59091 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -226,7 +226,11 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
+ 		clear_bit(IEEE80211_TXQ_AMPDU, &txqi->flags);
  
- #include <linux/tracepoint.h>
-+#include <linux/pci.h>
+ 	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
++	local_bh_disable();
++	rcu_read_lock();
+ 	drv_wake_tx_queue(sta->sdata->local, txqi);
++	rcu_read_unlock();
++	local_bh_enable();
+ }
  
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM iwlwifi_io
-@@ -165,6 +166,29 @@ TRACE_EVENT(iwlwifi_dev_irq,
- 	TP_printk("%d", 0)
- );
- 
-+TRACE_EVENT(iwlwifi_dev_irq_msix,
-+	TP_PROTO(const struct device *dev, struct msix_entry *msix_entry,
-+		 bool defirq, u32 inta_fh, u32 inta_hw),
-+	TP_ARGS(dev, msix_entry, defirq, inta_fh, inta_hw),
-+	TP_STRUCT__entry(
-+		DEV_ENTRY
-+		__field(u32, entry)
-+		__field(u8, defirq)
-+		__field(u32, inta_fh)
-+		__field(u32, inta_hw)
-+	),
-+	TP_fast_assign(
-+		DEV_ASSIGN;
-+		__entry->entry = msix_entry->entry;
-+		__entry->defirq = defirq;
-+		__entry->inta_fh = inta_fh;
-+		__entry->inta_hw = inta_hw;
-+	),
-+	TP_printk("entry:%d defirq:%d fh:0x%x, hw:0x%x",
-+		  __entry->entry, __entry->defirq,
-+		  __entry->inta_fh, __entry->inta_hw)
-+);
-+
- TRACE_EVENT(iwlwifi_dev_ict_read,
- 	TP_PROTO(const struct device *dev, u32 index, u32 value),
- 	TP_ARGS(dev, index, value),
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 1618a59a8a2f..351c4423125a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1391,6 +1391,8 @@ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id)
- 	struct iwl_trans_pcie *trans_pcie = iwl_pcie_get_trans_pcie(entry);
- 	struct iwl_trans *trans = trans_pcie->trans;
- 
-+	trace_iwlwifi_dev_irq_msix(trans->dev, entry, false, 0, 0);
-+
- 	if (WARN_ON(entry->entry >= trans->num_rx_queues))
- 		return IRQ_NONE;
- 
-@@ -1932,6 +1934,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 	iwl_write32(trans, CSR_MSIX_HW_INT_CAUSES_AD, inta_hw);
- 	spin_unlock(&trans_pcie->irq_lock);
- 
-+	trace_iwlwifi_dev_irq_msix(trans->dev, entry, true, inta_fh, inta_hw);
-+
- 	if (unlikely(!(inta_fh | inta_hw))) {
- 		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
- 		lock_map_release(&trans->sync_cmd_lockdep_map);
+ /*
 -- 
 2.11.0
