@@ -1,268 +1,401 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60582 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751239AbdFBJfg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 05:35:36 -0400
-From: Luca Coelho <luca@coelho.fi>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53054 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751999AbdFUXu0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 19:50:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 12:35:07 +0300
-Message-Id: <20170602093516.16369-2-luca@coelho.fi> (sfid-20170602_113540_246332_4CD9F098)
-In-Reply-To: <20170602093516.16369-1-luca@coelho.fi>
-References: <20170602093516.16369-1-luca@coelho.fi>
-Subject: [PATCH 01/10] iwlwifi: mvm: rs: start using LQ command color
+Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 6/6] mac80211: always go through txqs
+Date: Thu, 22 Jun 2017 01:50:22 +0200
+Message-Id: <20170621235022.25362-6-johannes@sipsolutions.net> (sfid-20170622_015034_824329_9B98B317)
+In-Reply-To: <20170621235022.25362-1-johannes@sipsolutions.net>
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Up until now, the driver was comparing the rate reported by the FW and
-the rate of the latest LQ command to avoid processing data belonging
-to the old LQ command. Recently, FW changed the meaning of the initial
-rate field in tx response and it holds the actual rate (which is not
-necessarily the initial rate of LQ's rate table). Use instead LQ cmd
-color to be able to filter out tx responses/BA notifications which
-where sent during earlier LQ commands' time frame.
-
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h |  5 +++
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 46 ++++++----------------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h        | 15 +++++++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 12 +++++-
- 6 files changed, 47 insertions(+), 36 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |  1 +
+ include/net/mac80211.h                |  6 ++-
+ net/mac80211/debugfs.c                |  2 +-
+ net/mac80211/debugfs_netdev.c         |  2 +-
+ net/mac80211/debugfs_sta.c            |  2 +-
+ net/mac80211/ieee80211_i.h            |  2 +
+ net/mac80211/iface.c                  | 17 +++----
+ net/mac80211/main.c                   |  8 ++++
+ net/mac80211/sta_info.c               |  3 --
+ net/mac80211/tx.c                     | 83 +++++++++++++++++++----------------
+ net/mac80211/util.c                   |  4 +-
+ 11 files changed, 71 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
-index 1b7d265ffb0a..a10c6aae9ab9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rs.h
-@@ -307,6 +307,11 @@ enum {
- /* Bit 1-3: LQ command color. Used to match responses to LQ commands */
- #define LQ_FLAG_COLOR_POS               1
- #define LQ_FLAG_COLOR_MSK               (7 << LQ_FLAG_COLOR_POS)
-+#define LQ_FLAG_COLOR_GET(_f)		(((_f) & LQ_FLAG_COLOR_MSK) >>\
-+					 LQ_FLAG_COLOR_POS)
-+#define LQ_FLAGS_COLOR_INC(_c)		((((_c) + 1) << LQ_FLAG_COLOR_POS) &\
-+					 LQ_FLAG_COLOR_MSK)
-+#define LQ_FLAG_COLOR_SET(_f, _c)	((_c) | ((_f) & ~LQ_FLAG_COLOR_MSK))
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index c8852acc1462..1f11c5ccc880 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2299,6 +2299,7 @@ static void mac80211_hwsim_get_et_stats(struct ieee80211_hw *hw,
  
- /* Bit 4-5: Tx RTS BW Signalling
-  * (0) No RTS BW signalling
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 81b98915b1a4..1360ebfdc51b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -519,8 +519,11 @@ struct agg_tx_status {
-  * bit-7 invalid rate indication
-  */
- #define TX_RES_INIT_RATE_INDEX_MSK 0x0f
-+#define TX_RES_RATE_TABLE_COLOR_POS 4
- #define TX_RES_RATE_TABLE_COLOR_MSK 0x70
- #define TX_RES_INV_RATE_INDEX_MSK 0x80
-+#define TX_RES_RATE_TABLE_COL_GET(_f) (((_f) & TX_RES_RATE_TABLE_COLOR_MSK) >>\
-+				       TX_RES_RATE_TABLE_COLOR_POS)
+ #define HWSIM_COMMON_OPS					\
+ 	.tx = mac80211_hwsim_tx,				\
++	.wake_tx_queue = ieee80211_wake_tx_queue,		\
+ 	.start = mac80211_hwsim_start,				\
+ 	.stop = mac80211_hwsim_stop,				\
+ 	.add_interface = mac80211_hwsim_add_interface,		\
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f2c6f0e0f928..3fc92c0e8779 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -97,7 +97,8 @@
+  * Other frames (e.g. control or management) are still pushed using drv_tx().
+  *
+  * Drivers indicate that they use this model by implementing the .wake_tx_queue
+- * driver operation.
++ * driver operation; if they don't want to use this model they need to set the
++ * .wake_tx_queue operation to point to ieee80211_wake_tx_queue().
+  *
+  * Intermediate queues (struct ieee80211_txq) are kept per-sta per-tid, with
+  * another per-sta for non-data/non-mgmt and bufferable management frames, and
+@@ -5867,6 +5868,9 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
+ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 				     struct ieee80211_txq *txq);
  
- #define IWL_MVM_TX_RES_GET_TID(_ra_tid) ((_ra_tid) & 0x0f)
- #define IWL_MVM_TX_RES_GET_RA(_ra_tid) ((_ra_tid) >> 4)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 7788eefcd2bd..aa785cf3cf68 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -2,7 +2,7 @@
++void ieee80211_wake_tx_queue(struct ieee80211_hw *hw,
++			     struct ieee80211_txq *txq);
++
+ /**
+  * ieee80211_txq_get_depth - get pending frame/byte count of given txq
   *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -1083,34 +1083,6 @@ static void rs_get_lower_rate_down_column(struct iwl_lq_sta *lq_sta,
- 		rs_get_lower_rate_in_column(lq_sta, rate);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 5fae001f286c..9ab432bde8b4 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -373,7 +373,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(user_power);
+ 	DEBUGFS_ADD(power);
+ 
+-	if (local->ops->wake_tx_queue)
++	if (local->ops->wake_tx_queue != ieee80211_wake_tx_queue)
+ 		DEBUGFS_ADD_MODE(aqm, 0600);
+ 
+ 	statsd = debugfs_create_dir("statistics", phyd);
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index c813207bb123..2098767353ac 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -659,7 +659,7 @@ static void add_common_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_5ghz);
+ 	DEBUGFS_ADD(hw_queues);
+ 
+-	if (sdata->local->ops->wake_tx_queue)
++	if (sdata->local->ops->wake_tx_queue != ieee80211_wake_tx_queue)
+ 		DEBUGFS_ADD(aqm);
  }
  
--/* Check if both rates are identical
-- * allow_ant_mismatch enables matching a SISO rate on ANT_A or ANT_B
-- * with a rate indicating STBC/BFER and ANT_AB.
-- */
--static inline bool rs_rate_equal(struct rs_rate *a,
--				 struct rs_rate *b,
--				 bool allow_ant_mismatch)
--
--{
--	bool ant_match = (a->ant == b->ant) && (a->stbc == b->stbc) &&
--		(a->bfer == b->bfer);
--
--	if (allow_ant_mismatch) {
--		if (a->stbc || a->bfer) {
--			WARN_ONCE(a->ant != ANT_AB, "stbc %d bfer %d ant %d",
--				  a->stbc, a->bfer, a->ant);
--			ant_match |= (b->ant == ANT_A || b->ant == ANT_B);
--		} else if (b->stbc || b->bfer) {
--			WARN_ONCE(b->ant != ANT_AB, "stbc %d bfer %d ant %d",
--				  b->stbc, b->bfer, b->ant);
--			ant_match |= (a->ant == ANT_A || a->ant == ANT_B);
--		}
--	}
--
--	return (a->type == b->type) && (a->bw == b->bw) && (a->sgi == b->sgi) &&
--		(a->ldpc == b->ldpc) && (a->index == b->index) && ant_match;
--}
--
- /* Check if both rates share the same column */
- static inline bool rs_rate_column_match(struct rs_rate *a,
- 					struct rs_rate *b)
-@@ -1182,12 +1154,12 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	u32 lq_hwrate;
- 	struct rs_rate lq_rate, tx_resp_rate;
- 	struct iwl_scale_tbl_info *curr_tbl, *other_tbl, *tmp_tbl;
--	u8 reduced_txp = (uintptr_t)info->status.status_driver_data[0];
-+	u32 tlc_info = (uintptr_t)info->status.status_driver_data[0];
-+	u8 reduced_txp = tlc_info & RS_DRV_DATA_TXP_MSK;
-+	u8 lq_color = RS_DRV_DATA_LQ_COLOR_GET(tlc_info);
- 	u32 tx_resp_hwrate = (uintptr_t)info->status.status_driver_data[1];
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta;
--	bool allow_ant_mismatch = fw_has_api(&mvm->fw->ucode_capa,
--					     IWL_UCODE_TLV_API_LQ_SS_PARAMS);
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index d046c17ea48d..80194f82f6a9 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -539,7 +539,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_stats.fragments);
+ 	DEBUGFS_ADD_COUNTER(tx_filtered, status_stats.filtered);
  
- 	/* Treat uninitialized rate scaling data same as non-existing. */
- 	if (!lq_sta) {
-@@ -1262,10 +1234,10 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	rs_rate_from_ucode_rate(lq_hwrate, info->band, &lq_rate);
+-	if (local->ops->wake_tx_queue)
++	if (local->ops->wake_tx_queue != ieee80211_wake_tx_queue)
+ 		DEBUGFS_ADD(aqm);
  
- 	/* Here we actually compare this rate to the latest LQ command */
--	if (!rs_rate_equal(&tx_resp_rate, &lq_rate, allow_ant_mismatch)) {
-+	if (lq_color != LQ_FLAG_COLOR_GET(table->flags)) {
- 		IWL_DEBUG_RATE(mvm,
--			       "initial tx resp rate 0x%x does not match 0x%x\n",
--			       tx_resp_hwrate, lq_hwrate);
-+			       "tx resp color 0x%x does not match 0x%x\n",
-+			       lq_color, LQ_FLAG_COLOR_GET(table->flags));
- 
- 		/*
- 		 * Since rates mis-match, the last LQ command may have failed.
-@@ -3326,6 +3298,7 @@ static void rs_build_rates_table(struct iwl_mvm *mvm,
- 	u8 valid_tx_ant = 0;
- 	struct iwl_lq_cmd *lq_cmd = &lq_sta->lq;
- 	bool toggle_ant = false;
-+	u32 color;
- 
- 	memcpy(&rate, initial_rate, sizeof(rate));
- 
-@@ -3380,6 +3353,9 @@ static void rs_build_rates_table(struct iwl_mvm *mvm,
- 				 num_rates, num_retries, valid_tx_ant,
- 				 toggle_ant);
- 
-+	/* update the color of the LQ command (as a counter at bits 1-3) */
-+	color = LQ_FLAGS_COLOR_INC(LQ_FLAG_COLOR_GET(lq_cmd->flags));
-+	lq_cmd->flags = LQ_FLAG_COLOR_SET(lq_cmd->flags, color);
- }
- 
- struct rs_bfer_active_iter_data {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-index ee207f2c0a90..3abde1cb0303 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-@@ -2,6 +2,7 @@
-  *
-  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -357,6 +358,20 @@ struct iwl_lq_sta {
- 	} pers;
+ 	if (sizeof(sta->driver_buffered_tids) == sizeof(u32))
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 011c18077e21..3413a1f6408e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -815,6 +815,8 @@ enum txq_info_flags {
+ 	IEEE80211_TXQ_STOP,
+ 	IEEE80211_TXQ_AMPDU,
+ 	IEEE80211_TXQ_NO_AMSDU,
++	IEEE80211_TXQ_PENDING,
++	IEEE80211_TXQ_RESULT,
  };
  
-+/* ieee80211_tx_info's status_driver_data[0] is packed with lq color and txp
-+ * Note, it's iwlmvm <-> mac80211 interface.
-+ * bits 0-7: reduced tx power
-+ * bits 8-10: LQ command's color
-+ */
-+#define RS_DRV_DATA_TXP_MSK 0xff
-+#define RS_DRV_DATA_LQ_COLOR_POS 8
-+#define RS_DRV_DATA_LQ_COLOR_MSK (7 << RS_DRV_DATA_LQ_COLOR_POS)
-+#define RS_DRV_DATA_LQ_COLOR_GET(_f) (((_f) & RS_DRV_DATA_LQ_COLOR_MSK) >>\
-+				      RS_DRV_DATA_LQ_COLOR_POS)
-+#define RS_DRV_DATA_PACK(_c, _p) ((void *)(uintptr_t)\
-+				  (((uintptr_t)_p) |\
-+				   ((_c) << RS_DRV_DATA_LQ_COLOR_POS)))
-+
- /* Initialize station's rate scaling information after adding station */
- void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			  enum nl80211_band band, bool init);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 2716cb5483bf..ad62b67dceb2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -313,6 +313,7 @@ enum iwl_mvm_agg_state {
-  *	This is basically (last acked packet++).
-  * @rate_n_flags: Rate at which Tx was attempted. Holds the data between the
-  *	Tx response (TX_CMD), and the block ack notification (COMPRESSED_BA).
-+ * @lq_color: the color of the LQ command as it appears in tx response.
-  * @amsdu_in_ampdu_allowed: true if A-MSDU in A-MPDU is allowed.
-  * @state: state of the BA agreement establishment / tear down.
-  * @txq_id: Tx queue used by the BA session / DQA
-@@ -331,6 +332,7 @@ struct iwl_mvm_tid_data {
- 	u16 next_reclaimed;
- 	/* The rest is Tx AGG related */
- 	u32 rate_n_flags;
-+	u8 lq_color;
- 	bool amsdu_in_ampdu_allowed;
- 	enum iwl_mvm_agg_state state;
- 	u16 txq_id;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index bcaceb64a6e8..f21901cd4a4f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1323,6 +1323,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	struct iwl_mvm_sta *mvmsta;
- 	struct sk_buff_head skbs;
- 	u8 skb_freed = 0;
-+	u8 lq_color;
- 	u16 next_reclaimed, seq_ctl;
- 	bool is_ndp = false;
+ /**
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 492cc65b9871..b2545899bc6b 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -729,7 +729,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
  
-@@ -1405,8 +1406,9 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 		info->status.tx_time =
- 			le16_to_cpu(tx_resp->wireless_media_time);
- 		BUILD_BUG_ON(ARRAY_SIZE(info->status.status_driver_data) < 1);
-+		lq_color = TX_RES_RATE_TABLE_COL_GET(tx_resp->tlc_info);
- 		info->status.status_driver_data[0] =
--				(void *)(uintptr_t)tx_resp->reduced_tpc;
-+			RS_DRV_DATA_PACK(lq_color, tx_resp->reduced_tpc);
+ 	if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+ 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+-	    local->ops->wake_tx_queue) {
++	    local->ops->wake_tx_queue != ieee80211_wake_tx_queue) {
+ 		/* XXX: for AP_VLAN, actually track AP queues */
+ 		netif_tx_start_all_queues(dev);
+ 	} else if (dev) {
+@@ -1756,13 +1756,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	} else {
+ 		int size = ALIGN(sizeof(*sdata) + local->hw.vif_data_size,
+ 				 sizeof(void *));
+-		int txq_size = 0;
++		int txq_size = sizeof(struct txq_info) +
++			       local->hw.txq_data_size;
  
- 		ieee80211_tx_status(mvm->hw, skb);
+-		if (local->ops->wake_tx_queue)
+-			txq_size += sizeof(struct txq_info) +
+-				    local->hw.txq_data_size;
+-
+-		if (local->ops->wake_tx_queue)
++		if (local->ops->wake_tx_queue != ieee80211_wake_tx_queue)
+ 			if_setup = ieee80211_if_setup_no_queue;
+ 		else
+ 			if_setup = ieee80211_if_setup;
+@@ -1812,10 +1809,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		memcpy(sdata->vif.addr, ndev->dev_addr, ETH_ALEN);
+ 		memcpy(sdata->name, ndev->name, IFNAMSIZ);
+ 
+-		if (txq_size) {
+-			txqi = netdev_priv(ndev) + size;
+-			ieee80211_txq_init(local, sdata, NULL, txqi, 0);
+-		}
++		txqi = netdev_priv(ndev) + size;
++		ieee80211_txq_init(local, sdata, NULL, txqi, 0);
+ 
+ 		sdata->dev = ndev;
  	}
-@@ -1638,6 +1640,9 @@ static void iwl_mvm_rx_tx_cmd_agg(struct iwl_mvm *mvm,
- 			le32_to_cpu(tx_resp->initial_rate);
- 		mvmsta->tid_data[tid].tx_time =
- 			le16_to_cpu(tx_resp->wireless_media_time);
-+		mvmsta->tid_data[tid].lq_color =
-+			(tx_resp->tlc_info & TX_RES_RATE_TABLE_COLOR_MSK) >>
-+			TX_RES_RATE_TABLE_COLOR_POS;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8c33c07e47a5..8eaac8e29bb4 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -508,6 +508,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 		return NULL;
+ 	use_chanctx = i == 5;
+ 
++	if (WARN_ON(!ops->wake_tx_queue))
++		return NULL;
++
+ 	/* Ensure 32-byte alignment of our private data and hw private data.
+ 	 * We use the wiphy priv data for both our ieee80211_local and for
+ 	 * the driver's private data
+@@ -849,6 +852,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		return -EINVAL;
+ #endif
+ 
++	if (local->ops->wake_tx_queue == ieee80211_wake_tx_queue) {
++		if (WARN_ON(local->hw.txq_data_size))
++			return -EINVAL;
++	}
++
+ 	if (!local->use_chanctx) {
+ 		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
+ 			const struct ieee80211_iface_combination *comb;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index e99da54c2270..c1c73125bcd9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2319,9 +2319,6 @@ unsigned long ieee80211_sta_last_active(struct sta_info *sta)
+ 
+ static void sta_update_codel_params(struct sta_info *sta, u32 thr)
+ {
+-	if (!sta->sdata->local->ops->wake_tx_queue)
+-		return;
+-
+ 	if (thr && thr < STA_SLOW_THRESHOLD * sta->local->num_sta) {
+ 		sta->cparams.target = MS2TIME(50);
+ 		sta->cparams.interval = MS2TIME(300);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ce78ac4d781e..7f8b8cb60109 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1248,7 +1248,8 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_txq *txq;
+ 
+-	if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
++	if (vif->type == NL80211_IFTYPE_MONITOR ||
++	    (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE)) {
+ 		txq = NULL;
+ 	} else if (!ieee80211_is_data_present(hdr->frame_control)) {
+@@ -1448,9 +1449,6 @@ int ieee80211_txq_setup_flows(struct ieee80211_local *local)
+ 	bool supp_vht = false;
+ 	enum nl80211_band band;
+ 
+-	if (!local->ops->wake_tx_queue)
+-		return 0;
+-
+ 	ret = fq_init(fq, 4096);
+ 	if (ret)
+ 		return ret;
+@@ -1496,9 +1494,6 @@ void ieee80211_txq_teardown_flows(struct ieee80211_local *local)
+ {
+ 	struct fq *fq = &local->fq;
+ 
+-	if (!local->ops->wake_tx_queue)
+-		return;
+-
+ 	kfree(local->cvars);
+ 	local->cvars = NULL;
+ 
+@@ -1509,17 +1504,13 @@ void ieee80211_txq_teardown_flows(struct ieee80211_local *local)
+ 
+ static bool ieee80211_queue_skb(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+-				struct sta_info *sta,
+-				struct sk_buff *skb)
++				struct sta_info *sta, struct sk_buff *skb,
++				bool txpending)
+ {
+ 	struct fq *fq = &local->fq;
+ 	struct ieee80211_vif *vif;
+ 	struct txq_info *txqi;
+ 
+-	if (!local->ops->wake_tx_queue ||
+-	    sdata->vif.type == NL80211_IFTYPE_MONITOR)
+-		return false;
+-
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data, u.ap);
+@@ -1527,16 +1518,23 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
+ 	vif = &sdata->vif;
+ 	txqi = ieee80211_get_txq(local, vif, sta, skb);
+ 
+-	if (WARN_ON(!txqi))
+-		return false;
++	if (WARN_ON(!txqi)) {
++		ieee80211_free_txskb(&local->hw, skb);
++		return true;
++	}
+ 
+ 	spin_lock_bh(&fq->lock);
+ 	ieee80211_txq_enqueue(local, txqi, skb);
+ 	spin_unlock_bh(&fq->lock);
+ 
++	if (txpending)
++		set_bit(IEEE80211_TXQ_PENDING, &txqi->flags);
++	else
++		clear_bit(IEEE80211_TXQ_PENDING, &txqi->flags);
++	set_bit(IEEE80211_TXQ_RESULT, &txqi->flags);
+ 	drv_wake_tx_queue(local, txqi);
+-
+-	return true;
++	clear_bit(IEEE80211_TXQ_PENDING, &txqi->flags);
++	return test_bit(IEEE80211_TXQ_RESULT, &txqi->flags);
+ }
+ 
+ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+@@ -1820,8 +1818,6 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_tx_data tx;
+ 	ieee80211_tx_result res_prepare;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	bool result = true;
+-	int led_len;
+ 
+ 	if (unlikely(skb->len < 10)) {
+ 		dev_kfree_skb(skb);
+@@ -1829,7 +1825,6 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
  	}
  
- 	rcu_read_unlock();
-@@ -1707,6 +1712,11 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
- 	iwl_mvm_check_ratid_empty(mvm, sta, tid);
+ 	/* initialises tx */
+-	led_len = skb->len;
+ 	res_prepare = ieee80211_tx_prepare(sdata, &tx, sta, skb);
  
- 	freed = 0;
+ 	if (unlikely(res_prepare == TX_DROP)) {
+@@ -1848,14 +1843,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+ 	if (invoke_tx_handlers_early(&tx))
+ 		return false;
+ 
+-	if (ieee80211_queue_skb(local, sdata, tx.sta, tx.skb))
+-		return true;
+-
+-	if (!invoke_tx_handlers_late(&tx))
+-		result = __ieee80211_tx(local, &tx.skbs, led_len,
+-					tx.sta, txpending);
+-
+-	return result;
++	return ieee80211_queue_skb(local, sdata, tx.sta, tx.skb, txpending);
+ }
+ 
+ /* device xmit handlers */
+@@ -3300,6 +3288,8 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	struct tid_ampdu_tx *tid_tx = NULL;
+ 	u8 tid = IEEE80211_NUM_TIDS;
+ 
++	return false;
 +
-+	/* pack lq color from tid_data along the reduced txp */
-+	ba_info->status.status_driver_data[0] =
-+		RS_DRV_DATA_PACK(tid_data->lq_color,
-+				 ba_info->status.status_driver_data[0]);
- 	ba_info->status.status_driver_data[1] = (void *)(uintptr_t)rate;
+ 	/* control port protocol needs a lot of special handling */
+ 	if (cpu_to_be16(ethertype) == sdata->control_port_protocol)
+ 		return false;
+@@ -3392,18 +3382,8 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
  
- 	skb_queue_walk(&reclaimed_skbs, skb) {
+-	if (ieee80211_queue_skb(local, sdata, sta, skb))
+-		return true;
+-
+-	ieee80211_xmit_fast_finish(sdata, sta, fast_tx->pn_offs,
+-				   fast_tx->key, skb);
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+-		sdata = container_of(sdata->bss,
+-				     struct ieee80211_sub_if_data, u.ap);
++	ieee80211_queue_skb(local, sdata, sta, skb, false);
+ 
+-	__skb_queue_tail(&tx.skbs, skb);
+-	ieee80211_tx_frags(local, &sdata->vif, &sta->sta, &tx.skbs, false);
+ 	return true;
+ }
+ 
+@@ -4704,3 +4684,28 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_xmit(sdata, NULL, skb);
+ 	local_bh_enable();
+ }
++
++void ieee80211_wake_tx_queue(struct ieee80211_hw *hw,
++			     struct ieee80211_txq *txq)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct txq_info *txqi = container_of(txq, struct txq_info, txq);
++	struct sk_buff *skb;
++	struct sk_buff_head skbs;
++	struct sta_info *sta = NULL;
++
++	if (txq->sta)
++		sta = container_of(txq->sta, struct sta_info, sta);
++
++	while ((skb = ieee80211_tx_dequeue(hw, txq))) {
++		__skb_queue_head_init(&skbs);
++		__skb_queue_head(&skbs, skb);
++		skb_queue_splice_tail_init(&txqi->frags, &skbs);
++
++		/* use approximate length for fragmented frames for LED blinking */
++		if (!__ieee80211_tx(local, &skbs, skbs.qlen * skb->len, sta,
++				    test_bit(IEEE80211_TXQ_PENDING, &txqi->flags)))
++			clear_bit(IEEE80211_TXQ_RESULT, &txqi->flags);
++	}
++}
++EXPORT_SYMBOL_GPL(ieee80211_wake_tx_queue);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 259698de569f..ed2dba05f340 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -244,7 +244,7 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int n_acs = IEEE80211_NUM_ACS;
+ 
+-	if (local->ops->wake_tx_queue)
++	if (local->ops->wake_tx_queue != ieee80211_wake_tx_queue)
+ 		return;
+ 
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+@@ -350,7 +350,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 	if (__test_and_set_bit(reason, &local->queue_stop_reasons[queue]))
+ 		return;
+ 
+-	if (local->ops->wake_tx_queue)
++	if (local->ops->wake_tx_queue != ieee80211_wake_tx_queue)
+ 		return;
+ 
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
 -- 
 2.11.0
