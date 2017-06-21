@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:34302 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751128AbdFYKeA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54232 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751069AbdFUQjl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 06:34:00 -0400
-Received: by mail-qt0-f169.google.com with SMTP id 32so8192491qtv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 03:33:59 -0700 (PDT)
+        Wed, 21 Jun 2017 12:39:41 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CABWe71xq3h42Ho3iwA8yi-xfA5eu5r_gnOr03M9n2zLgoFTV6A@mail.gmail.com>
-References: <CABWe71xWAruWUurYeLV=+G=tagnSmohS3KG0m-M+G9eBjrG_Ow@mail.gmail.com>
- <CABWe71xq3h42Ho3iwA8yi-xfA5eu5r_gnOr03M9n2zLgoFTV6A@mail.gmail.com>
-From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
-Date: Sun, 25 Jun 2017 18:33:58 +0800
-Message-ID: <CABWe71ww6Yt8dt_nrzenACZrNx8ooCp9_Ss+pwvDK8sgKDBaKA@mail.gmail.com> (sfid-20170625_123540_322056_03C6D3AF)
-Subject: Re: mac80211: out of date seq number cause network stall
-To: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [2/2] brcmfmac: Use separate firmware for revision 0 of the
+ brcm43430 chip
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170616131449.12108-2-hdegoede@redhat.com>
+References: <20170616131449.12108-2-hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jelle van der Waa <jelle@vdwaa.nl>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Message-Id: <20170621152125.0735060854@smtp.codeaurora.org> (sfid-20170621_183947_855511_768D7E6E)
+Date: Wed, 21 Jun 2017 15:21:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Hans de Goede <hdegoede@redhat.com> wrote:
 
-In function `ieee80211_sta_manage_reorder_buf`:
+> The brcm43430 chip needs different firmware files for chip revision 0
+> and 1. The file currently in linux-firmware is for revision 1 only.
+> 
+> This commit makes brcmfmac request brcmfmac43430a0-sdio.bin instead
+> of brcmfmac43430-sdio.bin for revision 0 chips.
+> 
+> Note that the behavior for revision 1 chips is not changed, ideally those
+> would load brcmfmac43430a1-sdio.bin, but that will break existing setups.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-1104         /* frame with out of date sequence number */
-1105         if (ieee80211_sn_less(mpdu_seq_num, head_seq_num)) {
-1106                 dev_kfree_skb(skb);
-1107                 goto out;
-1108         }
-1109
+Patch applied to wireless-drivers-next.git, thanks.
 
-head_seq_num will out of oder, in ath9k wds mode.  But i can not find
-why will out of order.
+1278bd149839 brcmfmac: Use separate firmware for revision 0 of the brcm43430 chip
 
-[ 1549.043719]  mac80211 mpdu_seq_num: 325  head_seq_num:326
-[ 1549.053979]  mac80211 mpdu_seq_num: 325  head_seq_num:1263
-[ 1549.072450]  mac80211 mpdu_seq_num: 326  head_seq_num:1263
+-- 
+https://patchwork.kernel.org/patch/9791523/
 
-head_seq_num out of order. Then almost 1000 packet will drop. I have
-read function `ieee80211_sta_manage_reorder_buf` and add some debug
-info. I suppose this bug is not caused by this function.
-
-I grep all mac80211 code, and there's no code change  head_seq_num.
-
-Please help.
-
-On Sun, Jun 25, 2017 at 1:49 AM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@gma=
-il.com> wrote:
-> Hi,
->
-> I found `head seq number` bigger than all seq num:
->
-> [ 3887.972639] ma80211 with out of date seq number: 1296 1297 1889
-> [ 3887.977134] ma80211 with out of date seq number: 1296 1298 1889
-> [ 3887.983082] ma80211 with out of date seq number: 1296 1299 1889
-> [ 3887.988929] ma80211 with out of date seq number: 1296 1300 1889
-> [ 3887.994861] ma80211 with out of date seq number: 1296 1301 1889
-> [ 3888.000764] ma80211 with out of date seq number: 1296 1302 1889
-> [ 3888.006638] ma80211 with out of date seq number: 1296 1303 1889
-> [ 3888.012576] ma80211 with out of date seq number: 1296 1304 1889
->
-> On Sun, Jun 25, 2017 at 1:21 AM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@g=
-mail.com> wrote:
->> Hi,
->>
->> I first find this bug in wds ath9k mode.
->>
->> When use iperf3, so many out of date seq number, in mac80211 function
->> ieee80211_sta_manage_reorder_buf:
->>
->> [ 1248.968407] mac80211 with out of date seq number: 2551 2547 2552
->> [ 1248.972972] mac80211 with out of date seq number: 2551 2548 2552
->> [ 1248.978800] mac80211 with out of date seq number: 2551 2549 2552
->> [ 1248.984760] mac80211 with out of date seq number: 2551 2550 2552
->> [ 1248.990636] mac80211 with out of date seq number: 2551 2551 2552
->>
->>
->> `previous seq number` `current seq number` `head seq num`.
->>
->>
->> when `head seq number` - `current seq num` > 200 . Iperf3 will block.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
