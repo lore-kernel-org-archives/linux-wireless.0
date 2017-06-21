@@ -1,146 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:33139 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdFYPn6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 11:43:58 -0400
-Received: by mail-ot0-f195.google.com with SMTP id q16so9328002otb.0
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:57 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
-Date: Sun, 25 Jun 2017 10:43:42 -0500
-Message-Id: <20170625154344.19213-9-Larry.Finger@lwfinger.net> (sfid-20170625_174410_504614_B831393E)
-In-Reply-To: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
-References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53032 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751940AbdFUXu0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 19:50:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered frames
+Date: Thu, 22 Jun 2017 01:50:19 +0200
+Message-Id: <20170621235022.25362-3-johannes@sipsolutions.net> (sfid-20170622_015037_199350_B3597170)
+In-Reply-To: <20170621235022.25362-1-johannes@sipsolutions.net>
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
-the same definitions.
+Some drivers may want to also use the TXQ abstraction with
+non-data packets that need powersave buffering, so add a
+hardware flag to allow this.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Change ath9k/ath10k to use these by dequeuing the frames
+immediately and invoking the normal TX path for them.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2 - no changes
----
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
- .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
- 3 files changed, 19 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c  | 13 +++++++++++++
+ drivers/net/wireless/ath/ath9k/ath9k.h |  2 ++
+ drivers/net/wireless/ath/ath9k/main.c  |  5 ++---
+ drivers/net/wireless/ath/ath9k/xmit.c  | 20 ++++++++++++++++++--
+ include/net/mac80211.h                 | 13 ++++++++-----
+ net/mac80211/debugfs_sta.c             |  4 ++--
+ net/mac80211/rx.c                      |  2 +-
+ net/mac80211/tx.c                      | 16 +++++++++++-----
+ 8 files changed, 57 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 2ac989a4b2bb..02dff4c3f664 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -43,22 +43,6 @@
- #define RT_SDIO_INTERFACE	3
- #define DEV_BUS_TYPE		RT_PCI_INTERFACE
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 16cf250f6c39..ee11a01e4f61 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4236,6 +4236,19 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
+ 	int ret = 0;
+ 	int max = 16;
  
--/* IC type */
--#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
--
--#define IS_NEW_GENERATION_IC(adapter)		\
--			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
--#define IS_HARDWARE_TYPE_8812(adapter)		\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
--#define IS_HARDWARE_TYPE_8821(adapter)		\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
--#define IS_HARDWARE_TYPE_8723A(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
--#define IS_HARDWARE_TYPE_8723B(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
--#define IS_HARDWARE_TYPE_8192E(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
--
- #include "halbtc8192e2ant.h"
- #include "halbtc8723b1ant.h"
- #include "halbtc8723b2ant.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-index 1b124eade846..5657b1e34ad0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
- void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
++	if (unlikely(txq->tid == IEEE80211_NUM_TIDS)) {
++		struct sk_buff *skb = ieee80211_tx_dequeue(hw, txq);
++		struct ieee80211_tx_control control = {
++			.sta = txq->sta,
++		};
++
++		if (WARN_ON(!skb))
++			return;
++
++		ath10k_mac_op_tx(hw, &control, skb);
++		return;
++	}
++
+ 	spin_lock_bh(&ar->txqs_lock);
+ 	if (list_empty(&artxq->list))
+ 		list_add_tail(&artxq->list, &ar->txqs);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index cf076719c27e..4a427248e9fe 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -618,6 +618,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ 				   u16 tids, int nframes,
+ 				   enum ieee80211_frame_release_type reason,
+ 				   bool more_data);
++void ath9k_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
++	      struct sk_buff *skb);
+ void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue);
+ 
+ /********/
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9e65d14e7b1e..6ddb01d26ac6 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -740,9 +740,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	return 0;
+ }
+ 
+-static void ath9k_tx(struct ieee80211_hw *hw,
+-		     struct ieee80211_tx_control *control,
+-		     struct sk_buff *skb)
++void ath9k_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
++	      struct sk_buff *skb)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 396bf05c6bf6..8ff00ebff261 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -154,8 +154,24 @@ void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ath_atx_tid *tid = (struct ath_atx_tid *) queue->drv_priv;
+-	struct ath_txq *txq = tid->txq;
++	struct ath_atx_tid *tid;
++	struct ath_txq *txq;
++
++	if (unlikely(queue->tid == IEEE80211_NUM_TIDS)) {
++		struct sk_buff *skb = ieee80211_tx_dequeue(hw, queue);
++		struct ieee80211_tx_control control = {
++			.sta = queue->sta,
++		};
++
++		if (WARN_ON(!skb))
++			return;
++
++		ath9k_tx(hw, &control, skb);
++		return;
++	}
++
++	tid = (struct ath_atx_tid *) queue->drv_priv;
++	txq = tid->txq;
  
--	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
-+	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
- 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
- 				0xFFFFFFFF);
- 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 4c6d01eb065d..f77acd329e0e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -314,35 +314,29 @@ enum hardware_type {
- 	HARDWARE_TYPE_RTL8192EE,
- 	HARDWARE_TYPE_RTL8821AE,
- 	HARDWARE_TYPE_RTL8812AE,
-+	HARDWARE_TYPE_RTL8822BE,
+ 	ath_dbg(common, QUEUE, "Waking TX queue: %pM (%d)\n",
+ 		queue->sta ? queue->sta->addr : queue->vif->addr,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 263cb30d77c8..871e4399a999 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -99,8 +99,9 @@
+  * Drivers indicate that they use this model by implementing the .wake_tx_queue
+  * driver operation.
+  *
+- * Intermediate queues (struct ieee80211_txq) are kept per-sta per-tid, with a
+- * single per-vif queue for multicast data frames.
++ * Intermediate queues (struct ieee80211_txq) are kept per-sta per-tid, with
++ * another per-sta for non-data/non-mgmt and bufferable management frames, and
++ * a single per-vif queue for multicast data frames.
+  *
+  * The driver is expected to initialize its private per-queue data for stations
+  * and interfaces in the .add_interface and .sta_add ops.
+@@ -1783,7 +1784,8 @@ struct ieee80211_sta_rates {
+  *	unlimited.
+  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
+  * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
+- * @txq: per-TID data TX queues (if driver uses the TXQ abstraction)
++ * @txq: per-TID data TX queues (if driver uses the TXQ abstraction); note that
++ *	the last entry (%IEEE80211_NUM_TIDS) is used for non-data frames
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[NUM_NL80211_BANDS];
+@@ -1823,7 +1825,7 @@ struct ieee80211_sta {
+ 	bool support_p2p_ps;
+ 	u16 max_rc_amsdu_len;
  
- 	/* keep it last */
- 	HARDWARE_TYPE_NUM
- };
+-	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
++	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
  
--#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
--#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
--#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
--#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
--#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
--#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
--#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
--#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
--#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
--(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
--#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
--(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
--#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
--(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
--#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
--(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
-+#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
-+#define IS_NEW_GENERATION_IC(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
-+#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
-+#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
-+#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
-+#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
-+#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+@@ -1857,7 +1859,8 @@ struct ieee80211_tx_control {
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @sta: station table entry, %NULL for per-vif queue
+- * @tid: the TID for this queue (unused for per-vif queue)
++ * @tid: the TID for this queue (unused for per-vif queue),
++ *	%IEEE80211_NUM_TIDS for non-data (if enabled)
+  * @ac: the AC for this queue
+  * @drv_priv: driver private area, sized by hw->txq_data_size
+  *
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index b15412c21ac9..d046c17ea48d 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -140,7 +140,7 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ {
+ 	struct sta_info *sta = file->private_data;
+ 	struct ieee80211_local *local = sta->local;
+-	size_t bufsz = AQM_TXQ_ENTRY_LEN*(IEEE80211_NUM_TIDS+1);
++	size_t bufsz = AQM_TXQ_ENTRY_LEN * (IEEE80211_NUM_TIDS + 2);
+ 	char *buf = kzalloc(bufsz, GFP_KERNEL), *p = buf;
+ 	struct txq_info *txqi;
+ 	ssize_t rv;
+@@ -162,7 +162,7 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 		       bufsz+buf-p,
+ 		       "tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets\n");
  
- #define RX_HAL_IS_CCK_RATE(rxmcs)			\
- 	((rxmcs) == DESC_RATE1M ||			\
+-	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
++	for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
+ 		txqi = to_txq_info(sta->sta.txq[i]);
+ 		p += scnprintf(p, bufsz+buf-p,
+ 			       "%d %d %u %u %u %u %u %u %u %u %u\n",
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 70e9d2ca8bbe..0444e2f0169f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1387,7 +1387,7 @@ static void sta_ps_start(struct sta_info *sta)
+ 	if (!sta->sta.txq[0])
+ 		return;
+ 
+-	for (tid = 0; tid < ARRAY_SIZE(sta->sta.txq); tid++) {
++	for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
+ 		if (txq_has_queue(sta->sta.txq[tid]))
+ 			set_bit(tid, &sta->txq_buffered_tids);
+ 		else
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index bd609326d77c..1b3ac635fbdd 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4,6 +4,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
++ * Copyright 2017	Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -1251,10 +1252,12 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+ 		return NULL;
+ 
+-	if (!ieee80211_is_data(hdr->frame_control))
+-		return NULL;
+-
+-	if (sta) {
++	if (!ieee80211_is_data(hdr->frame_control)) {
++		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
++		     ieee80211_is_bufferable_mmpdu(hdr->frame_control)) &&
++		    sta && sta->uploaded)
++			txq = sta->sta.txq[IEEE80211_NUM_TIDS];
++	} else if (sta) {
+ 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+ 
+ 		if (!sta->uploaded)
+@@ -1412,7 +1415,10 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 		txqi->txq.sta = &sta->sta;
+ 		sta->sta.txq[tid] = &txqi->txq;
+ 		txqi->txq.tid = tid;
+-		txqi->txq.ac = ieee80211_ac_from_tid(tid);
++		if (tid == IEEE80211_NUM_TIDS)
++			txqi->txq.ac = IEEE80211_AC_VO;
++		else
++			txqi->txq.ac = ieee80211_ac_from_tid(tid);
+ 	} else {
+ 		sdata->vif.txq = &txqi->txq;
+ 		txqi->txq.tid = 0;
 -- 
-2.12.3
+2.11.0
