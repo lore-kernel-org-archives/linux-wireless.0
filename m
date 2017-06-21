@@ -1,128 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42892 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751651AbdFIMJA (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:34468 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752265AbdFURPw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 08:09:00 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 4/9] nl80211: add authorized flag to ROAM event
-Date: Fri,  9 Jun 2017 13:08:45 +0100
-Message-Id: <1497010130-16186-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140941_813858_6A4C7E46)
-In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 21 Jun 2017 13:15:52 -0400
+Received: by mail-ot0-f195.google.com with SMTP id p48so20324427otc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:52 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 8/8] rtlwifi: Add in_4way field for btcoexist
+Date: Wed, 21 Jun 2017 12:15:38 -0500
+Message-Id: <20170621171538.4462-9-Larry.Finger@lwfinger.net> (sfid-20170621_191557_556296_E31E98B0)
+In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Drivers that initiate roaming while being connected to a network that
-uses 802.1X authentication need to inform user space if 802.1X
-authentication is further required after roaming.
-For example, when using the Fast transition protocol, roaming within
-the mobility domain does not require new 802.1X authentication, but
-roaming to another mobility domain does.
-In addition, some drivers may not support 802.1X authentication
-(so it has to be done in user space), while other drivers do.
+If wifi is in 4way, btcoex give wifi higher priority to use antenna.
 
-Add a flag to the roaming notification to indicate if user space is
-required to do 802.1X authentication after the roaming or not.
-This flag will only be used for networks that use 802.1X
-authentication. For networks that do not use 802.1X authentication it
-is assumed that no further action is required from user space after
-the roaming notification.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-[arend.vanspriel@broadcom.com reuse NL80211_ATTR_PORT_AUTHORIZED]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- include/net/cfg80211.h       |  4 ++++
- include/uapi/linux/nl80211.h | 10 +++++++++-
- net/wireless/nl80211.c       |  4 +++-
- net/wireless/sme.c           |  1 +
- 4 files changed, 17 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +--
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7097310..6160c49 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5444,6 +5444,9 @@ void cfg80211_connect_done(struct net_device *dev,
-  * @req_ie_len: association request IEs length
-  * @resp_ie: association response IEs (may be %NULL)
-  * @resp_ie_len: assoc response IEs length
-+ * @authorized: true if the 802.1X authentication was done by the driver or is
-+ *	not needed (e.g., when Fast Transition protocol was used), false
-+ *	otherwise. Ignored for networks that don't use 802.1X authentication.
-  */
- struct cfg80211_roam_info {
- 	struct ieee80211_channel *channel;
-@@ -5453,6 +5456,7 @@ struct cfg80211_roam_info {
- 	size_t req_ie_len;
- 	const u8 *resp_ie;
- 	size_t resp_ie_len;
-+	bool authorized;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 9dbb35f190d1..e6024b013ca5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -428,8 +428,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 			*bool_tmp = false;
+ 		break;
+ 	case BTC_GET_BL_WIFI_4_WAY_PROGRESS:
+-		/* TODO */
+-		*bool_tmp = false;
++		*bool_tmp = rtlpriv->btcoexist.btc_info.in_4way;
+ 		break;
+ 	case BTC_GET_BL_WIFI_UNDER_5G:
+ 		if (rtlhal->current_bandtype == BAND_ON_5G)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 98183dc707aa..fb1ebb01133f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2484,6 +2484,7 @@ struct rtl_btc_info {
+ 	u8 single_ant_path;
+ 
+ 	u8 ap_num;
++	bool in_4way;
  };
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6f139a3..c792234 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -571,6 +571,12 @@
-  *	well to remain backwards compatible.
-  * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
-  *	sent as an event when the card/driver roamed by itself.
-+ *	When used as an event, and the driver roamed in a network that requires
-+ *	802.1X authentication, %NL80211_ATTR_PORT_AUTHORIZED should be set
-+ *	if the 802.1X authentication was done by the driver or if roaming was
-+ *	done using Fast Transition protocol (in which case 802.1X authentication
-+ *	is not needed). If %NL80211_ATTR_PORT_AUTHORIZED is not set, user space
-+ *	is responsible for the 802.1X authentication.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
-@@ -2132,7 +2138,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-  * @NL80211_ATTR_PORT_AUTHORIZED: flag attribute used in %NL80211_CMD_CONNECT
-  *	notification indicating that PTK/GTK handshakes for 802.1X have been
-- *	completed successfully.
-+ *	completed successfully. Also used in %NL80211_CMD_ROAM to indicate
-+ *	that 802.1X authentication was done by the driver or is not needed
-+ *	(because roaming used the Fast Transition protocol).
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0bf6bd..4bcc8d3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13802,7 +13802,9 @@ void nl80211_send_roamed(struct cfg80211_registered_device *rdev,
- 		     info->req_ie)) ||
- 	    (info->resp_ie &&
- 	     nla_put(msg, NL80211_ATTR_RESP_IE, info->resp_ie_len,
--		     info->resp_ie)))
-+		     info->resp_ie)) ||
-+	    (info->authorized &&
-+	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index a46eda8..9eb9234 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -961,6 +961,7 @@ void cfg80211_roamed(struct net_device *dev, struct cfg80211_roam_info *info,
- 	ev->rm.resp_ie_len = info->resp_ie_len;
- 	memcpy((void *)ev->rm.resp_ie, info->resp_ie, info->resp_ie_len);
- 	ev->rm.bss = info->bss;
-+	ev->rm.authorized = info->authorized;
- 
- 	spin_lock_irqsave(&wdev->event_lock, flags);
- 	list_add_tail(&ev->list, &wdev->event_list);
+ struct bt_coexist_info {
 -- 
-1.9.1
+2.12.3
