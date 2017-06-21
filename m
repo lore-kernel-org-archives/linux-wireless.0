@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40716 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752553AbdFUJOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 05:14:47 -0400
-Message-ID: <1498036484.4955.4.camel@sipsolutions.net> (sfid-20170621_111454_942643_596B7B7D)
-Subject: Re: [RFC] mac80211: support non-data TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 21 Jun 2017 11:14:44 +0200
-In-Reply-To: <23cd1255-32a3-84c2-77d1-4cd29bdc81dd@broadcom.com> (sfid-20170621_104829_756192_6F2088F1)
-References: <20170620210309.1193-1-johannes@sipsolutions.net>
-         <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
-         <1498028959.4955.1.camel@sipsolutions.net>
-         <1498034220.4955.3.camel@sipsolutions.net>
-         <23cd1255-32a3-84c2-77d1-4cd29bdc81dd@broadcom.com>
-         (sfid-20170621_104829_756192_6F2088F1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58280 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751798AbdFUQok (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 12:44:40 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,1/6] rsi: add usb RS9113 chipset support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1497623741-2082-2-git-send-email-amit.karwar@redpinesignals.com>
+References: <1497623741-2082-2-git-send-email-amit.karwar@redpinesignals.com>
+To: amit karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Message-Id: <20170621152701.45D1C607E2@smtp.codeaurora.org> (sfid-20170621_184447_230060_308BF4B7)
+Date: Wed, 21 Jun 2017 15:27:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-06-21 at 10:48 +0200, Arend van Spriel wrote:
+amit karwar <amitkarwar@gmail.com> wrote:
+
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 > 
-> So for the sake of ath{9,10}k and possible future drivers you may
-> want  to document it clearly in mac80211.h(?), ie. when driver does
-> not want a  separate non-data txq they should use IEEE80211_NUM_TIDS.
+> usb device id and vendor id for RS9113 chipset are included.
+> So it can be used through usb interface.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Yeah, will do.
+6 patches applied to wireless-drivers-next.git, thanks.
 
-johannes
+d2d1831723df rsi: add usb RS9113 chipset support
+4833c953fd25 rsi: use enum for FSM states
+015e367494c1 rsi: Register interrupt handler before firmware load
+61f2a6fcaab1 rsi: receive path enhancement for RS9113
+1b1bed016509 rsi: configure new boot parameters to device
+9920322ccd8e rsi: add tx frame for common device configuration
+
+-- 
+https://patchwork.kernel.org/patch/9791875/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
