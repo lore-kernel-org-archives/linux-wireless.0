@@ -1,132 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48614 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751563AbdF3SNY (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:33161 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751038AbdFUS1L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 14:13:24 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Wed, 21 Jun 2017 14:27:11 -0400
+Received: by mail-pf0-f169.google.com with SMTP id e7so8903520pfk.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 11:27:11 -0700 (PDT)
+Date: Wed, 21 Jun 2017 11:27:07 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Avinash Patil <patila@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: RE: [EXT] Re: [PATCH] mwifiex: correct channel stat buffer overflows
-Date: Fri, 30 Jun 2017 18:13:19 +0000
-Message-ID: <dd90ad42dfa94b07ac2035c6e20433ec@SC-EXCH02.marvell.com> (sfid-20170630_201353_338084_251515BA)
-References: <20170630012354.98931-1-briannorris@chromium.org>
- <20170630180439.GA40906@dtor-ws>
-In-Reply-To: <20170630180439.GA40906@dtor-ws>
-Content-Type: text/plain; charset="us-ascii"
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+Message-ID: <20170621182706.GB92340@google.com> (sfid-20170621_202746_396916_A7FF1C13)
+References: <20170525001119.64791-1-briannorris@chromium.org>
+ <20170525001119.64791-5-briannorris@chromium.org>
+ <87fufk2hmm.fsf@purkki.adurom.net>
+ <20170601173954.GA138807@google.com>
+ <87inka77md.fsf@codeaurora.org>
+ <1496999018.2424.5.camel@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1496999018.2424.5.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+Hi Johannes,
 
-> ----------------------------------------------------------------------
-> On Thu, Jun 29, 2017 at 06:23:54PM -0700, Brian Norris wrote:
-> > mwifiex records information about various channels as it receives
-> scan
-> > information. It does this by appending to a buffer that was sized to
-> > the max number of supported channels on any band, but there are
-> > numerous problems:
-> >
-> > (a) scans can return info from more than one band (e.g., both 2.4 and
-> 5
-> >     GHz), so the determined "max" is not large enough
-> > (b) some firmware appears to return multiple results for a given
-> >     channel, so the max *really* isn't large enough
-> > (c) there is no bounds checking when stashing these stats, so
-> problems
-> >     (a) and (b) can easily lead to buffer overflows
-> >
-> > Let's patch this by setting a slightly-more-correct max (that
-> accounts
-> > for a combination of both 2.4G and 5G bands) and adding a bounds
-> check
-> > when writing to our statistics buffer.
-> >
-> > Due to problem (b), we still might not properly report all known
-> > survey information (e.g., with "iw <dev> survey dump"), since
-> > duplicate results (or otherwise "larger than expected" results) will
-> > cause some truncation. But that's a problem for a future bugfix.
-> >
-> > (And because of this known deficiency, only log the excess at the
-> WARN
-> > level, since that isn't visible by default in this driver and would
-> > otherwise be a bit too noisy.)
-> >
-> > Fixes: bf35443314ac ("mwifiex: channel statistics support for
-> > mwifiex")
-> > Cc: <stable@vger.kernel.org>
-> > Cc: Avinash Patil <patila@marvell.com>
-> > Cc: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > ---
-> > I've got a ton of other patches still queued up locally, and I hope
-> to
-> > send them soon. But I realized this one is a nasty bug (with a
-> trivial
-> > fix), so it's probably best to get this out the door quickly.
+On Fri, Jun 09, 2017 at 11:03:38AM +0200, Johannes Berg wrote:
+> On Mon, 2017-06-05 at 18:54 +0300, Kalle Valo wrote:
 > 
-> This does make sense to me.
+> > > BTW, since you're taking an interest in this code now, can I
+> > > trouble you with a question? Looking at mwifiex_uninit_sw() (after
+> > > this patchset), you can see a loop like this:
+> > > 
+> > >         /* Stop data */
+> > >         for (i = 0; i < adapter->priv_num; i++) {
+> > >                 priv = adapter->priv[i];
+> > >                 if (priv && priv->netdev) {
+> > >                         mwifiex_stop_net_dev_queue(priv->netdev,
+> > > adapter);
+> > >                         if (netif_carrier_ok(priv->netdev))
+> > >                                 netif_carrier_off(priv->netdev);
+> > >                         netif_device_detach(priv->netdev);
+> > >                 }
+> > >         }
+> > > 
+> > > That seems to be the only attempt to prevent user space from
+> > > talking to the device while we proceed to shut down
+> > > (mwifiex_shutdown_drv()). AIUI, that's wholly insufficient, and we
+> > > need to actually stop all the virtual interfaces (and possibly the
+> > > wiphy as well) first. I'm looking at trying to move the
+> > > mwifiex_del_virtual_intf() loop up much further in this function
+> > > (but there are other bugs preventing me from doing that yet).
+> > > 
+> > > Does that sound like the right approach to you? I'm kinda figuring
+> > > this should better mimic the mac80211 ieee80211_remove_interfaces()
+> > > structure.
+> > 
+> > Johannes is much better person to answer this (CCed).
 > 
-> Reviewed-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> 
-Changes look good.
-Reviewed-by: Ganapathi Bhat <gbhat@marvell.com>
-> >
-> >  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
-> >  drivers/net/wireless/marvell/mwifiex/scan.c     | 6 ++++++
-> >  2 files changed, 7 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> > b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> > index a850ec0054e2..82f4e796ed39 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> > @@ -4219,7 +4219,7 @@ int mwifiex_init_channel_scan_gap(struct
-> mwifiex_adapter *adapter)
-> >  	if (adapter->config_bands & BAND_A)
-> >  		n_channels_a = mwifiex_band_5ghz.n_channels;
-> >
-> > -	adapter->num_in_chan_stats = max_t(u32, n_channels_bg,
-> n_channels_a);
-> > +	adapter->num_in_chan_stats = n_channels_bg + n_channels_a;
-> >  	adapter->chan_stats = vmalloc(sizeof(*adapter->chan_stats) *
-> >  				      adapter->num_in_chan_stats);
-> >
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c
-> > b/drivers/net/wireless/marvell/mwifiex/scan.c
-> > index ae9630b49342..9900855746ac 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/scan.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-> > @@ -2492,6 +2492,12 @@ mwifiex_update_chan_statistics(struct
-> mwifiex_private *priv,
-> >  					      sizeof(struct mwifiex_chan_stats);
-> >
-> >  	for (i = 0 ; i < num_chan; i++) {
-> > +		if (adapter->survey_idx >= adapter->num_in_chan_stats) {
-> > +			mwifiex_dbg(adapter, WARN,
-> > +				    "FW reported too many channel results (max
-> %d)\n",
-> > +				    adapter->num_in_chan_stats);
-> > +			return;
-> > +		}
-> >  		chan_stats.chan_num = fw_chan_stats->chan_num;
-> >  		chan_stats.bandcfg = fw_chan_stats->bandcfg;
-> >  		chan_stats.flags = fw_chan_stats->flags;
-> > --
-> > 2.13.2.725.g09c95d1e9-goog
-> >
-> 
-> --
-> Dmitry
+> Wait, what? You're throwing me into pretty deep water ;-)
 
-Regards,
-Ganapathi
+Regardless, thanks for the help :)
+
+> I'm not sure what you mean by "we need to atually stop all the virtual
+> interfaces ([...]) first".
+
+Judging by your following comments, I may have been completely mistaken.
+(But that's why I asked you folks!)
+
+> There are essentially only two/three ways to reach this - data path,
+> which is getting stopped here, and control path (both nl80211 and
+> perhaps ndo ops like start/stop).
+
+I think I was conflating virtual interfaces with control path (e.g.,
+nl80211 scans, set freq, etc.). The idea is that control operations may
+still get *started* after the above, and it's just plain impossible to
+resolve the races with driver queue teardown if we're queueing up new
+control ops at the same time.
+
+But even if we kill off the wireless_dev's, I suppose there are still
+control interfaces that can talk directly to the wiphy.
+
+> Without checking the code now, it seems entirely plausible that this is
+> holding some lock that would lock out the control path entirely, for
+> the duration until the wiphy is actually unregistered?
+> 
+> Actually, you can't unregister with the relevant locks held (without
+> causing deadlocks), so perhaps it's marking the wiphy as unavailable so
+> that all operations fail?
+
+One of the above two sounds along the right line. But it's something I
+couldn't really figure out how to do quite right.
+
+Dumb question: how would I mark the wiphy as unavailable? Is there
+something I can do at the cfg80211 level? Or would I really have to
+guard all the cfg80211 entry points into mwifiex with a flag or lock?
+
+Also, IIUC, we need to wait for all control paths to complete (or
+cancel) before we can free up the associated resources; so just marking
+"unavailable" isn't enough.
+
+Thanks,
+Brian
