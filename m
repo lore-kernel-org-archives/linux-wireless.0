@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54964 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751635AbdFIK71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 06:59:27 -0400
-Message-ID: <1497005964.2424.10.camel@sipsolutions.net> (sfid-20170609_125930_815238_7D551568)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake
- offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Date: Fri, 09 Jun 2017 12:59:24 +0200
-In-Reply-To: <92d6d845-acd1-078a-9121-ba6eb22fd6fd@broadcom.com> (sfid-20170609_123426_170100_65DB2799)
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1495030794.2442.21.camel@sipsolutions.net>
-         <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
-         <1495099355.2553.1.camel@sipsolutions.net>
-         <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
-         <1495104012.2553.3.camel@sipsolutions.net>
-         <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
-         <1495189263.3274.4.camel@sipsolutions.net>
-         <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
-         <1495448886.2653.12.camel@sipsolutions.net>
-         <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
-         <1496050303.2467.3.camel@sipsolutions.net>
-         <d41f58e9-b12e-9e52-a0fb-b674d278353b@broadcom.com>
-         <1496999284.2424.7.camel@sipsolutions.net>
-         <92d6d845-acd1-078a-9121-ba6eb22fd6fd@broadcom.com>
-         (sfid-20170609_123426_170100_65DB2799)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58276 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752339AbdFUQok (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 12:44:40 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] mwifiex: fixes the unexpected be printed log by default
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1497438416-24665-1-git-send-email-wxt@rock-chips.com>
+References: <1497438416-24665-1-git-send-email-wxt@rock-chips.com>
+To: Caesar Wang <wxt@rock-chips.com>
+Cc: yangzy@marvell.com, jeffy.chen@rock-chips.com,
+        briannorris@chromium.org, linux-kernel@vger.kernel.org,
+        Caesar Wang <wxt@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Message-Id: <20170621152520.5B96060250@smtp.codeaurora.org> (sfid-20170621_184532_019293_B38F128D)
+Date: Wed, 21 Jun 2017 15:25:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-09 at 12:34 +0200, Arend van Spriel wrote:
+Caesar Wang <wxt@rock-chips.com> wrote:
 
-> Not trying to change your opinion ;-). Just getting it all clear. As
-> a matter of fact I already have my wpa_s use the offload without any 
-> debug/config option. As brcmfmac can use override to disable
-> firmware features I also do not need such in wpa_s.
+> This patch uses WARN level is not printed by default.
+> 
+> In some cases, some boards have always met the unused log be printed as
+> follows.
+> ...
+> [23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+> cannot find cfp by band 2    & channel=13 freq=0
+> [23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
+> cannot find cfp by band 2    & channel=13 freq=0
+> 
+> Due to we used the wifi default area was US and didn't support 12~14
+> channels. As Frequencies:
+> * 2412 MHz [1] (30.0 dBm)
+> * 2417 MHz [2] (30.0 dBm)
+> * 2422 MHz [3] (30.0 dBm)
+> * 2427 MHz [4] (30.0 dBm)
+> * 2432 MHz [5] (30.0 dBm)
+> * 2437 MHz [6] (30.0 dBm)
+> * 2442 MHz [7] (30.0 dBm)
+> * 2447 MHz [8] (30.0 dBm)
+> * 2452 MHz [9] (30.0 dBm)
+> * 2457 MHz [10] (30.0 dBm)
+> * 2462 MHz [11] (30.0 dBm)
+> * 2467 MHz [12] (disabled)
+> * 2472 MHz [13] (disabled)
+> * 2484 MHz [14] (disabled)
+> 
+> Also, as the commit 1b499cb72f26b
+> ("mwifiex: disable channel filtering feature in firmware"), it proved to
+> be a feature to get better scan result from overlapping channel.
+> 
+> Even there could be AP from overlapping channel (might be 12/13/14
+> in this case), it will be filtered depend on reg domain rules.
+> e.g:
+> ...
+> if (ch->flags & IEEE80211_CHAN_DISABLED)
+>         continue;
+> 
+> So it should not been an ERROR, use the WARN level to instead it for now.
+> 
+> Signed-off-by: Caesar Wang <wxt@rock-chips.com>
+> Acked-by: Xinming Hu <huxm@marvell.com>
 
-Sounds good to me :)
+Patch applied to wireless-drivers-next.git, thanks.
 
-So I guess we're aligned on this - do you need to respin as a result of
-this discussion, or should I review the patches again?
+421ba82c676b mwifiex: fixes the unexpected be printed log by default
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9786123/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
