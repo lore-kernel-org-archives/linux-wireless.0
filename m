@@ -1,68 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18292 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751577AbdF3Hre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 03:47:34 -0400
-Date: Fri, 30 Jun 2017 09:47:29 +0200
-From: Karel Zak <kzak@redhat.com>
-To: kerolasa@gmail.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless@vger.kernel.org,
-        util-linux <util-linux@vger.kernel.org>
-Subject: Re: rfkill(8) move and improvements
-Message-ID: <20170630074729.s3gknfobabgepk4h@ws.net.home> (sfid-20170630_094738_020040_A2ABA24E)
-References: <alpine.LNX.2.20.1706251339500.25762@imuri>
- <1498745040.3141.6.camel@sipsolutions.net>
- <CAG27Bk0tKzqxkm6qqjGO6GJE7vxReRAQbvYGexjp+PBLo+RK_A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG27Bk0tKzqxkm6qqjGO6GJE7vxReRAQbvYGexjp+PBLo+RK_A@mail.gmail.com>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35195 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752265AbdFURPu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 13:15:50 -0400
+Received: by mail-oi0-f65.google.com with SMTP id v74so16298476oie.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:50 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 6/8] rtlwifi: Add ap_num field for btcoexist
+Date: Wed, 21 Jun 2017 12:15:36 -0500
+Message-Id: <20170621171538.4462-7-Larry.Finger@lwfinger.net> (sfid-20170621_191553_561907_3B589DC1)
+In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 10:23:12PM +0100, Sami Kerola wrote:
-> On 29 June 2017 at 15:04, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >> The otherday I ran powertop and it did rfkill to save battery, which
-> >> was particularly annoying because I had not installed rfkill(8)
-> >> package.
-> >> Fixing the immediate issue was relatively easy, but the ordeal made
-> >> me wonder if this tool could be moved to a package that is installed
-> >> by default to all systems, such as util-linux.
-> >
-> > [...]
-> >
-> >> What do you think, would the move and proposed updates be ok?
-> >
-> > I can't say I mind, and most of your proposed changes seem sensible,
-> > though I haven't reviewed them in enough detail to comment on them.
-> > Something that caught my eye here was comparing a string to _("all")
-> > which seems wrong, since that'd mean you'd have to type the translated
-> > version even on the command line? That seems really awkward (to put it
-> > charitably).
-> >
-> > However, at the same time, I have very little desire to get involved
-> > with util-linux as yet another project, so frankly I'd probably
-> > continue to "maintain" the current rfkill tool - which really hasn't
-> > changed in a very long time, and hope somebody else picks up
-> > maintenance of rfkill included in util-linux.
-> 
-> Hello Johannes,
-> 
-> Thank you for feedback. I removed the rfkill command strings from
-> translations, and gave hint to translators how to deal with them in
-> usage() output. Also in same go updates are rebased on top of
-> most recent upstream to get usage() --help and --version handling
-> done correctly.
-> 
-> What comes  to maintenance I am fairly optimistic util-linux is a
-> good home for the rfkill. Karel, what do you think?
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I have no problem with it, if Johannes agree with this step. We have
-definitely manpower to maintain it.
+If there are many AP (dirty environment), we use another strategy set
+to resolve coex issue.
 
-    Karel
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 5 +----
+ drivers/net/wireless/realtek/rtlwifi/pci.c                    | 1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 2 ++
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index ffa7a517b665..9dbb35f190d1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -503,10 +503,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 		ret = false;
+ 		break;
+ 	case BTC_GET_U1_AP_NUM:
+-		/* driver do not know AP num,
+-		 * so the return value here is not right
+-		 */
+-		*u8_tmp = 1;
++		*u8_tmp = rtlpriv->btcoexist.btc_info.ap_num;
+ 		break;
+ 	case BTC_GET_U1_ANT_TYPE:
+ 		*u8_tmp = (u8)BTC_ANT_TYPE_0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 2e6b888bd417..00a354c85ece 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1826,6 +1826,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 	rtlpci->driver_is_goingto_unload = false;
+ 	if (rtlpriv->cfg->ops->get_btc_status &&
+ 	    rtlpriv->cfg->ops->get_btc_status()) {
++		rtlpriv->btcoexist.btc_info.ap_num = 36;
+ 		rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
+ 		rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 49c0d2229274..2fb83a7061dd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2481,6 +2481,8 @@ struct rtl_btc_info {
+ 	u8 btcoexist;
+ 	u8 ant_num;
+ 	u8 single_ant_path;
++
++	u8 ap_num;
+ };
+ 
+ struct bt_coexist_info {
 -- 
- Karel Zak  <kzak@redhat.com>
- http://karelzak.blogspot.com
+2.12.3
