@@ -1,114 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-18.163.com ([220.181.12.18]:57485 "EHLO m12-18.163.com"
+Received: from mga02.intel.com ([134.134.136.20]:48943 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750954AbdFABGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 21:06:07 -0400
-Message-ID: <592F68D4.5090500@163.com> (sfid-20170601_030639_271014_BF2A97CB)
-Date: Thu, 01 Jun 2017 09:07:32 +0800
-From: Jia-Ju Bai <baijiaju1990@163.com>
+        id S1753618AbdFVWsO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 18:48:14 -0400
+Date: Fri, 23 Jun 2017 00:47:57 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Christophe Ricard <christophe.ricard@gmail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] NFC: nci: Remove an unneeded NULL check
+Message-ID: <20170622224757.GJ21214@zurbaran.ger.intel.com> (sfid-20170623_004818_141248_24E16DB1)
+References: <20170614074945.GA29233@elgon.mountain>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: =?windows-1252?Q?Michael_B=FCsch?= <m@bues.ch>,
-        Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in b43legacy_op_bss_info_changed
-References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com> <877f0xnwyk.fsf@kamboji.qca.qualcomm.com> <20170531173107.25eeda48@wiggum> <284d6d5d-d548-9e05-eafd-a6b521af5a04@lwfinger.net>
-In-Reply-To: <284d6d5d-d548-9e05-eafd-a6b521af5a04@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170614074945.GA29233@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2017 08:07 AM, Larry Finger wrote:
-> On 05/31/2017 10:32 AM, Michael Büsch wrote:
->> On Wed, 31 May 2017 13:26:43 +0300
->> Kalle Valo <kvalo@codeaurora.org> wrote:
->>
->>> Jia-Ju Bai <baijiaju1990@163.com> writes:
->>>
->>>> The driver may sleep under a spin lock, and the function call path is:
->>>> b43legacy_op_bss_info_changed (acquire the lock by spin_lock_irqsave)
->>>>    b43legacy_synchronize_irq
->>>>      synchronize_irq --> may sleep
->>>>
->>>> To fix it, the lock is released before b43legacy_synchronize_irq, 
->>>> and the
->>>> lock is acquired again after this function.
->>>>
->>>> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
->>>> ---
->>>>   drivers/net/wireless/broadcom/b43legacy/main.c |    2 ++
->>>>   1 file changed, 2 insertions(+)
->>>>
->>>> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c 
->>>> b/drivers/net/wireless/broadcom/b43legacy/main.c
->>>> index f1e3dad..31ead21 100644
->>>> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
->>>> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
->>>> @@ -2859,7 +2859,9 @@ static void 
->>>> b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
->>>>       b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
->>>>         if (changed & BSS_CHANGED_BSSID) {
->>>> +        spin_unlock_irqrestore(&wl->irq_lock, flags);
->>>>           b43legacy_synchronize_irq(dev);
->>>> +        spin_lock_irqsave(&wl->irq_lock, flags);
->>>
->>> To me this looks like a fragile workaround and not a real fix. You can
->>> easily add new race conditions with releasing the lock like this.
->>>
->>
->>
->> I think releasing the lock possibly is fine. It certainly is better than
->> sleeping with a lock held.
->> We disabled the device interrupts just before this line.
->>
->> However I think the synchronize_irq should be outside of the
->> conditional right after the write to B43legacy_MMIO_GEN_IRQ_MASK. (So
->> two lines above)
->> I don't think it makes sense to only synchronize if BSS_CHANGED_BSSID
->> is set.
->>
->>
->> On the other hand b43 does not have this irq-disabling foobar anymore.
->> So somebody must have removed it. Maybe you can find the commit that
->> removed this stuff from b43 and port it to b43legacy?
->>
->>
->> So I would vote for moving the synchronize_irq up outside of the
->> conditional and put the unlock/lock sequence around it.
->> And as a second patch on top of that try to remove this stuff
->> altogether like b43 did.
->
-> The patch that removed it in b43 is
->
-> commit 36dbd9548e92268127b0c31b0e121e63e9207108
-> Author: Michael Buesch <mb@bu3sch.de>
-> Date:   Fri Sep 4 22:51:29 2009 +0200
->
->     b43: Use a threaded IRQ handler
->
->     Use a threaded IRQ handler to allow locking the mutex and
->     sleeping while executing an interrupt.
->     This removes usage of the irq_lock spinlock, but introduces
->     a new hardirq_lock, which is _only_ used for the PCI/SSB lowlevel
->     hard-irq handler. Sleeping busses (SDIO) will use mutex instead.
->
->     Signed-off-by: Michael Buesch <mb@bu3sch.de>
->     Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> I vaguely remember this patch. Although it is roughly a 1000-line fix, 
-> I will try to port it to b43legacy. I still have an old BCM4306 PCMCIA 
-> card that I can test in a PowerBook G4.
->
-> I agree with Michael that this is the way to go. Both of Jia-Ju's 
-> patches should be rejected.
->
-> Larry
->
->
+Hi Dan,
 
-It is fine to me to fix the bug by porting this former patch.
+On Wed, Jun 14, 2017 at 10:49:46AM +0300, Dan Carpenter wrote:
+> "conn_info" can't be NULL here.  Also we just dereferenced it a couple
+> lines earlier, so that makes static checkers complain.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+> index 61fff422424f..5542fc72f020 100644
+> --- a/net/nfc/nci/core.c
+> +++ b/net/nfc/nci/core.c
+> @@ -73,11 +73,9 @@ int nci_get_conn_info_by_dest_type_params(struct nci_dev *ndev, u8 dest_type,
+>  		if (conn_info->dest_type == dest_type) {
+>  			if (!params)
+>  				return conn_info->conn_id;
+> -			if (conn_info) {
+> -				if (params->id == conn_info->dest_params->id &&
+> -				    params->protocol == conn_info->dest_params->protocol)
+> -					return conn_info->conn_id;
+> -			}
+> +			if (params->id == conn_info->dest_params->id &&
+> +			    params->protocol == conn_info->dest_params->protocol)
+> +				return conn_info->conn_id;
+A similar patch was sent earlier and is now applied:
+https://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git/commit/?id=03036184e9d4a5b2b42a70b66db9455808dd5da9
 
-Thanks,
-Jia-Ju Bai
+Cheers,
+Samuel.
