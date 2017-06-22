@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52280 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751495AbdF1SgX (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:37533 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752506AbdFVAEC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 14:36:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [v2 11/20] rsi: management frame descriptor preparation cleanup
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-        <1497624881-2315-12-git-send-email-amit.karwar@redpinesignals.com>
-        <87podo2c6v.fsf@purkki.adurom.net>
-Date: Wed, 28 Jun 2017 21:36:19 +0300
-In-Reply-To: <87podo2c6v.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
-        28 Jun 2017 21:34:48 +0300")
-Message-ID: <87lgoc2c4c.fsf@purkki.adurom.net> (sfid-20170628_203626_368551_CD28CF19)
+        Wed, 21 Jun 2017 20:04:02 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.nyi.internal (Postfix) with ESMTP id 4C68C207F7
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 20:03:51 -0400 (EDT)
+Received: from localhost (202-159-179-103.dyn.iinet.net.au [202.159.179.103])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 9C8F07E271
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 20:03:50 -0400 (EDT)
+Date: Thu, 22 Jun 2017 10:03:47 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: linux-wireless@vger.kernel.org
+Subject: cfg80211_ops
+Message-ID: <20170622000347.GA15458@eros> (sfid-20170622_020412_371423_1EC13E2B)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Hi,
 
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
->>
->> Currently this descriptor is prepared with the help of __le16
->> pointer. This patch makes use of a structure to prepare the
->> descriptor in a cleaner way.
->>
->> Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> Pavani's name is in wrong format both in Format and S-o-b lines. 
+Is some one able to please confirm for me that the following
+cfg80211_ops callbacks are enough to implement a minimal functioning
+Wi-Fi driver. Assume that a virtual interface is added during driver
+initialization.
 
-Seems to be in every patch from Pavani in this set.
+scan
+add_key
+get_key
+del_key
+sat_default_key
+connect
+disconnect
+set_wiphy_params
 
--- 
-Kalle Valo
+thanks,
+Tobin
