@@ -1,73 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:28332 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753711AbdFSKJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:09:37 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 02/13] NFC: st21nfca: Add GPIO ACPI mapping table
-Date: Mon, 19 Jun 2017 13:08:47 +0300
-Message-Id: <20170619100858.2655-3-andriy.shevchenko@linux.intel.com> (sfid-20170619_120941_978400_48B3EC85)
-In-Reply-To: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
-References: <20170619100858.2655-1-andriy.shevchenko@linux.intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20364 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdFVIk4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 04:40:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH 03/12] ath10k: QCA6174 hw3.0: update board-2.bin
+Date: Thu, 22 Jun 2017 11:31:59 +0300
+Message-ID: <1498120328-2017-4-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170622_104105_758108_80B7FE68)
+In-Reply-To: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to make GPIO ACPI library stricter prepare users of
-gpiod_get_index() to correctly behave when there no mapping is
-provided by firmware.
-
-Here we add explicit mapping between _CRS GpioIo() resources and
-their names used in the driver.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/nfc/st21nfca/i2c.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ ath10k/QCA6174/hw3.0/board-2.bin | Bin 361924 -> 477060 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 4bff76baa341..3621290807f6 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -501,14 +501,25 @@ static struct nfc_phy_ops i2c_phy_ops = {
- 	.disable = st21nfca_hci_i2c_disable,
- };
- 
-+static const struct acpi_gpio_params enable_gpios = { 1, 0, false };
-+
-+static const struct acpi_gpio_mapping acpi_st21nfca_gpios[] = {
-+	{ "enable-gpios", &enable_gpios, 1 },
-+	{},
-+};
-+
- static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
- 	struct device *dev = &client->dev;
-+	int ret;
-+
-+	ret = devm_acpi_dev_add_driver_gpios(dev, acpi_st21nfca_gpios);
-+	if (ret)
-+		return ret;
- 
- 	/* Get EN GPIO from ACPI */
--	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
--					      GPIOD_OUT_LOW);
-+	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_LOW);
- 	if (IS_ERR(phy->gpiod_ena)) {
- 		nfc_err(dev, "Unable to get ENABLE GPIO\n");
- 		return PTR_ERR(phy->gpiod_ena);
-@@ -523,8 +534,7 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
- 	struct device *dev = &client->dev;
- 
- 	/* Get GPIO from device tree */
--	phy->gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 0,
--					      GPIOD_OUT_HIGH);
-+	phy->gpiod_ena = devm_gpiod_get(dev, ST21NFCA_GPIO_NAME_EN, GPIOD_OUT_HIGH);
- 	if (IS_ERR(phy->gpiod_ena)) {
- 		nfc_err(dev, "Failed to request enable pin\n");
- 		return PTR_ERR(phy->gpiod_ena);
+diff --git a/ath10k/QCA6174/hw3.0/board-2.bin b/ath10k/QCA6174/hw3.0/board-2.bin
+index ea18004951fed49aa9214093fa900427e4960a5d..a442315503bfc70f5a5fbfaa6f04004702d8474c 100644
+GIT binary patch
+delta 261
+zcmX@oE!NU6+t9+;!qmdt!m@?+NbBSeye!ji9AXM%G~N8Zfn8zxwq#~8W^+@+&HfJ&
+zJR=Ct>@kx#lacY}eg&YE*kL9KMk9!(FlJ`)>1R_|csKuQ_#-cwl9;ShT$)r|SzMBu
+ztDBNqmYJMtYhYw*0Z|RsX@=0rWN5MZd;+@yPJNbmrOgZ>4l;YhD9U1NU}OU2f*flI
+Qb?ml8MhV75pu|ym0QL-7P5=M^
+
+delta 19
+acmZqamp#%g*3iP(!qmdt!m@?+NGkwIwFfc)
+
 -- 
-2.11.0
+2.7.4
