@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:34468 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752265AbdFURPw (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41333 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752563AbdFVKBJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 13:15:52 -0400
-Received: by mail-ot0-f195.google.com with SMTP id p48so20324427otc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2017 10:15:52 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 8/8] rtlwifi: Add in_4way field for btcoexist
-Date: Wed, 21 Jun 2017 12:15:38 -0500
-Message-Id: <20170621171538.4462-9-Larry.Finger@lwfinger.net> (sfid-20170621_191557_556296_E31E98B0)
-In-Reply-To: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
-References: <20170621171538.4462-1-Larry.Finger@lwfinger.net>
+        Thu, 22 Jun 2017 06:01:09 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/4] brcm80211: general admin and headroom rework
+Date: Thu, 22 Jun 2017 11:01:00 +0100
+Message-Id: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170622_120114_398402_77D8BCE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+This smallish set contains:
+ * rework headroom handling in .start_xmit() callback.
+ * add Cypress maintainers for brcm80211.
 
-If wifi is in 4way, btcoex give wifi higher priority to use antenna.
+The series apply to the master branch of the wireless-drivers-next
+repository.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +--
- drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Arend van Spriel (4):
+  brcmfmac: cleanup kerneldoc for struct brcmf_bus
+  brcmfmac: use atomic_t for statistic counter in struct brcmf_bus
+  brcmfmac: rework headroom check in .start_xmit()
+  MAINTAINERS: add brcm80211 maintainer info from Cypress
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 9dbb35f190d1..e6024b013ca5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -428,8 +428,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 			*bool_tmp = false;
- 		break;
- 	case BTC_GET_BL_WIFI_4_WAY_PROGRESS:
--		/* TODO */
--		*bool_tmp = false;
-+		*bool_tmp = rtlpriv->btcoexist.btc_info.in_4way;
- 		break;
- 	case BTC_GET_BL_WIFI_UNDER_5G:
- 		if (rtlhal->current_bandtype == BAND_ON_5G)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 98183dc707aa..fb1ebb01133f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2484,6 +2484,7 @@ struct rtl_btc_info {
- 	u8 single_ant_path;
- 
- 	u8 ap_num;
-+	bool in_4way;
- };
- 
- struct bt_coexist_info {
+ MAINTAINERS                                        |  3 +++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 18 +++++++++++++----
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 23 +++++++++++++++-------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 13 +++++++-----
+ 4 files changed, 41 insertions(+), 16 deletions(-)
+
 -- 
-2.12.3
+1.9.1
