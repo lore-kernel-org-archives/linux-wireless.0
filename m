@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34952 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:34254 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751244AbdFYLMl (ORCPT
+        with ESMTP id S1753731AbdFVVVM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:41 -0400
+        Thu, 22 Jun 2017 17:21:12 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:52 +0300
-Message-Id: <20170625111158.1792-21-luca@coelho.fi> (sfid-20170625_131302_396934_8930F0F4)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 20/26] iwlwifi: mvm: document assoc_beacon_arrive_time
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:42 +0300
+Message-Id: <20170622212101.16422-7-luca@coelho.fi> (sfid-20170622_232116_480358_5A1CDA93)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: mvm: remove pointless num_stored condition
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Document the assoc_beacon_arrive_time element in the iwl_mac_data_sta
-struct.
+Since we exit if buf->num_stored is 0, there's no need to
+check it again later.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
-index aa5aaf7c940d..1d970bf0d735 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
-@@ -199,6 +199,7 @@ struct iwl_mac_data_ibss {
-  * @dtim_reciprocal: 2^32 / dtim_interval , applicable only when associated
-  * @listen_interval: in beacon intervals, applicable only when associated
-  * @assoc_id: unique ID assigned by the AP during association
-+ * @assoc_beacon_arrive_time: TSF of first beacon after association
-  */
- struct iwl_mac_data_sta {
- 	__le32 is_assoc;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 966cd7543629..36fd8c87027c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -503,7 +503,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 			     buf->sta_id, sn);
+ 		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
+ 		rcu_read_unlock();
+-	} else if (buf->num_stored) {
++	} else {
+ 		/*
+ 		 * If no frame expired and there are stored frames, index is now
+ 		 * pointing to the first unexpired frame - modify timer
 -- 
 2.11.0
