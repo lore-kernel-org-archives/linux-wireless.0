@@ -1,199 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:47521 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752623AbdFLLrv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34346 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753842AbdFVVVq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 07:47:51 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.12 1/3] brcmfmac: add parameter to pass error code in firmware callback
-Date: Mon, 12 Jun 2017 12:47:32 +0100
-Message-Id: <1497268054-4507-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170612_134754_822352_79F270AC)
-In-Reply-To: <1497268054-4507-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497268054-4507-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 22 Jun 2017 17:21:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:47 +0300
+Message-Id: <20170622212101.16422-12-luca@coelho.fi> (sfid-20170622_232159_781012_0B221837)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 11/25] iwlwifi: mvm: track and report IBSS manager status to mac80211
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend the parameters in the firmware callback so it can be called
-upon success and failure. This allows the caller to properly clear
-all resources in the failure path. Right now the error code is
-always zero, ie. success.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Cc: stable@vger.kernel.org # 4.9.x-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Shaul reported that when iwlmvm was sending beacons, it didn't properly
+also take ownership of the probe responses. This is because the whole
+mac80211 callback (tx_last_beacon) wasn't implemented. Fix that to make
+IBSS discovery work better.
+
+Reported-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 10 +++++-----
- .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.h |  4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 17 ++++++++++++-----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 17 +++++++++++------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c  |  6 ++++--
- 5 files changed, 34 insertions(+), 20 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 3 +++
+ 3 files changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index c7c1e99..ae61a24 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -442,7 +442,7 @@ struct brcmf_fw {
- 	const char *nvram_name;
- 	u16 domain_nr;
- 	u16 bus_nr;
--	void (*done)(struct device *dev, const struct firmware *fw,
-+	void (*done)(struct device *dev, int err, const struct firmware *fw,
- 		     void *nvram_image, u32 nvram_len);
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index d573ac739414..50a71da2e96e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1457,6 +1457,7 @@ void iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
  
-@@ -477,7 +477,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
- 		goto fail;
+ 	beacon_notify_hdr = &beacon->beacon_notify_hdr;
+ 	mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2);
++	mvm->ibss_manager = beacon->ibss_mgr_status != 0;
  
--	fwctx->done(fwctx->dev, fwctx->code, nvram, nvram_length);
-+	fwctx->done(fwctx->dev, 0, fwctx->code, nvram, nvram_length);
- 	kfree(fwctx);
- 	return;
- 
-@@ -499,7 +499,7 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- 
- 	/* only requested code so done here */
- 	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM)) {
--		fwctx->done(fwctx->dev, fw, NULL, 0);
-+		fwctx->done(fwctx->dev, 0, fw, NULL, 0);
- 		kfree(fwctx);
- 		return;
- 	}
-@@ -522,7 +522,7 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
- 
- int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
- 				const char *code, const char *nvram,
--				void (*fw_cb)(struct device *dev,
-+				void (*fw_cb)(struct device *dev, int err,
- 					      const struct firmware *fw,
- 					      void *nvram_image, u32 nvram_len),
- 				u16 domain_nr, u16 bus_nr)
-@@ -555,7 +555,7 @@ int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
- 
- int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
- 			   const char *code, const char *nvram,
--			   void (*fw_cb)(struct device *dev,
-+			   void (*fw_cb)(struct device *dev, int err,
- 					 const struct firmware *fw,
- 					 void *nvram_image, u32 nvram_len))
- {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index d3c9f0d..8fa4b7e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -73,13 +73,13 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
-  */
- int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
- 				const char *code, const char *nvram,
--				void (*fw_cb)(struct device *dev,
-+				void (*fw_cb)(struct device *dev, int err,
- 					      const struct firmware *fw,
- 					      void *nvram_image, u32 nvram_len),
- 				u16 domain_nr, u16 bus_nr);
- int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
- 			   const char *code, const char *nvram,
--			   void (*fw_cb)(struct device *dev,
-+			   void (*fw_cb)(struct device *dev, int err,
- 					 const struct firmware *fw,
- 					 void *nvram_image, u32 nvram_len));
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index f36b96d..f878706 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1650,16 +1650,23 @@ static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
- 	.write32 = brcmf_pcie_buscore_write32,
- };
- 
--static void brcmf_pcie_setup(struct device *dev, const struct firmware *fw,
-+static void brcmf_pcie_setup(struct device *dev, int ret,
-+			     const struct firmware *fw,
- 			     void *nvram, u32 nvram_len)
- {
--	struct brcmf_bus *bus = dev_get_drvdata(dev);
--	struct brcmf_pciedev *pcie_bus_dev = bus->bus_priv.pcie;
--	struct brcmf_pciedev_info *devinfo = pcie_bus_dev->devinfo;
-+	struct brcmf_bus *bus;
-+	struct brcmf_pciedev *pcie_bus_dev;
-+	struct brcmf_pciedev_info *devinfo;
- 	struct brcmf_commonring **flowrings;
--	int ret;
- 	u32 i;
- 
-+	/* check firmware loading result */
-+	if (ret)
-+		goto fail;
-+
-+	bus = dev_get_drvdata(dev);
-+	pcie_bus_dev = bus->bus_priv.pcie;
-+	devinfo = pcie_bus_dev->devinfo;
- 	brcmf_pcie_attach(devinfo);
- 
- 	/* Some of the firmwares have the size of the memory of the device
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index e034500..6e1fcdc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3982,21 +3982,26 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
- 	.get_memdump = brcmf_sdio_bus_get_memdump,
- };
- 
--static void brcmf_sdio_firmware_callback(struct device *dev,
-+static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 					 const struct firmware *code,
- 					 void *nvram, u32 nvram_len)
- {
--	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
--	struct brcmf_sdio *bus = sdiodev->bus;
--	int err = 0;
-+	struct brcmf_bus *bus_if;
-+	struct brcmf_sdio_dev *sdiodev;
-+	struct brcmf_sdio *bus;
- 	u8 saveclk;
- 
--	brcmf_dbg(TRACE, "Enter: dev=%s\n", dev_name(dev));
-+	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
-+	if (err)
-+		goto fail;
- 
-+	bus_if = dev_get_drvdata(dev);
- 	if (!bus_if->drvr)
- 		return;
- 
-+	sdiodev = bus_if->bus_priv.sdio;
-+	bus = sdiodev->bus;
-+
- 	/* try to download image and nvram to the dongle */
- 	bus->alp_only = true;
- 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index e4d545f..9ce3b55 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1159,13 +1159,15 @@ static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
+ 	agg_status = iwl_mvm_get_agg_status(mvm, beacon_notify_hdr);
+ 	status = le16_to_cpu(agg_status->status) & TX_STATUS_MSK;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 05041d37773b..75ec567ab9e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3737,6 +3737,13 @@ static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
  	return ret;
  }
  
--static void brcmf_usb_probe_phase2(struct device *dev,
-+static void brcmf_usb_probe_phase2(struct device *dev, int ret,
- 				   const struct firmware *fw,
- 				   void *nvram, u32 nvlen)
- {
- 	struct brcmf_bus *bus = dev_get_drvdata(dev);
- 	struct brcmf_usbdev_info *devinfo;
--	int ret;
++static int iwl_mvm_tx_last_beacon(struct ieee80211_hw *hw)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
 +
-+	if (ret)
-+		goto error;
++	return mvm->ibss_manager;
++}
++
+ static int iwl_mvm_set_tim(struct ieee80211_hw *hw,
+ 			   struct ieee80211_sta *sta,
+ 			   bool set)
+@@ -4338,6 +4345,8 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.join_ibss = iwl_mvm_start_ap_ibss,
+ 	.leave_ibss = iwl_mvm_stop_ap_ibss,
  
- 	brcmf_dbg(USB, "Start fw downloading\n");
++	.tx_last_beacon = iwl_mvm_tx_last_beacon,
++
+ 	.set_tim = iwl_mvm_set_tim,
+ 
+ 	.channel_switch = iwl_mvm_channel_switch,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index cdd13bc343e6..a4bee9c740e0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1021,6 +1021,9 @@ struct iwl_mvm {
+ 	/* system time of last beacon (for AP/GO interface) */
+ 	u32 ap_last_beacon_gp2;
+ 
++	/* indicates that we transmitted the last beacon */
++	bool ibss_manager;
++
+ 	bool lar_regdom_set;
+ 	enum iwl_mcc_source mcc_src;
  
 -- 
-1.9.1
+2.11.0
