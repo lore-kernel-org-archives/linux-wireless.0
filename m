@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:64204 "EHLO mga04.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:52411 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751180AbdFEUUO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:20:14 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 00/12] NFC: clean up for ACPI GPIO usage
-Date: Mon,  5 Jun 2017 23:19:57 +0300
-Message-Id: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com> (sfid-20170605_222024_154957_B20B10EC)
+        id S1752743AbdFVWRY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 18:17:24 -0400
+Date: Fri, 23 Jun 2017 00:17:14 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Thierry Escande <thierry.escande@collabora.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 0/2] NFC-digital: Adjustments for four function
+ implementations
+Message-ID: <20170622221714.GC21214@zurbaran.ger.intel.com> (sfid-20170623_001754_019275_71C8B14B)
+References: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7e27a76c-de7a-22ec-cf8a-31aee2000e29@users.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This clean up series to NFC drivers that are using GPIOs on ACPI enabled
-platforms. Since GPIO ACPI library goes stricter about requesting
-resources we need to amend drivers for that. Here we are for NFC
-subsystem.
+Hi Markus,
 
-While doing above, get rid of legacy and unused platform data as well as
-some artificial IDs.
+On Mon, May 22, 2017 at 02:57:42PM +0200, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Mon, 22 May 2017 14:50:05 +0200
+> 
+> Two update suggestions were taken into account
+> from static source code analysis.
+> 
+> Markus Elfring (2):
+>   Improve a size determination in four functions
+>   Delete an error message for a failed memory allocation in digital_in_send()
+Both patches applied to nfc-next, thanks.
 
-Changelog v2:
-- add patches 1,4-12
-
-Andy Shevchenko (12):
-  NFC: pn544: Switch to devm_acpi_dev_add_driver_gpios()
-  NFC: st21nfca: Add GPIO ACPI mapping table
-  NFC: st21nfca: Get rid of code duplication in ->probe()
-  NFC: fdp: Convert I2C driver to ->probe_new()
-  NFC: fdp: Convert to use devres API
-  NFC: fdp: Add GPIO ACPI mapping table
-  NFC: st-nci: Get rid of platform data
-  NFC: st-nci: Get rid of "interesting" use of interrupt polarity
-  NFC: st-nci: Covert to use GPIO descriptor
-  NFC: st-nci: Use unified device property API meaningfully
-  NFC: st-nci: Add GPIO ACPI mapping table
-  NFC: st-nci: Get rid of code duplication in ->probe()
-
- drivers/nfc/fdp/fdp.c                |  15 +---
- drivers/nfc/fdp/i2c.c                |  38 ++++----
- drivers/nfc/pn544/i2c.c              |   3 +-
- drivers/nfc/st-nci/i2c.c             | 164 ++++++----------------------------
- drivers/nfc/st-nci/spi.c             | 165 ++++++-----------------------------
- drivers/nfc/st21nfca/i2c.c           |  62 ++++---------
- include/linux/platform_data/st-nci.h |  31 -------
- 7 files changed, 91 insertions(+), 387 deletions(-)
- delete mode 100644 include/linux/platform_data/st-nci.h
-
--- 
-2.11.0
+Cheers,
+Samuel.
