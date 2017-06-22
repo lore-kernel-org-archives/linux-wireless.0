@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34852 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751208AbdFYLMI (ORCPT
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:32768 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750932AbdFVMk6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:36 +0300
-Message-Id: <20170625111158.1792-5-luca@coelho.fi> (sfid-20170625_131218_134037_E331C17B)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 04/26] iwlwifi: mvm: docs: fix enum link, provide TX response link
+        Thu, 22 Jun 2017 08:40:58 -0400
+Received: by mail-ua0-f196.google.com with SMTP id z34so2136574uab.0
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 05:40:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgWE8fbhg1+ccm9U7azioMQ-6bDUqYtUQkHcAq_Za9jurA@mail.gmail.com>
+References: <20170622111655.GA4891@symbol-HP-ZBook-15> <CAGRGNgWE8fbhg1+ccm9U7azioMQ-6bDUqYtUQkHcAq_Za9jurA@mail.gmail.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Thu, 22 Jun 2017 18:10:56 +0530
+Message-ID: <CAFqt6zb-y-W2b_188LYr8259K8PyZX4xp4nc2Cf0cbiy0TwMZg@mail.gmail.com> (sfid-20170622_144101_661403_B22AF72A)
+Subject: Re: [PATCH] rtlwifi: Remove unnecessary conditions
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Julian,
 
-Fix the enum link by adding the missing & and provide the link
-to the TX response documentation.
+On Thu, Jun 22, 2017 at 6:03 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Souptick,
+>
+> On Thu, Jun 22, 2017 at 9:16 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>> As wmm_enable is initialized to false, hence the else condition never
+>> execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
+>> condition can be removed and boundary will be assigned with TX_PAGE_BOUNDARY.
+>>
+>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+>> ---
+>>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 6 ------
+>>  1 file changed, 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+>> index f95a645..e9c5f6a 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+>> @@ -845,13 +845,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+>>                 pr_err("Failed to init power on!\n");
+>>                 return err;
+>>         }
+>> -       if (!wmm_enable) {
+>>                 boundary = TX_PAGE_BOUNDARY;
+>
+> Firstly this isn't indented properly.
+>
+> Secondly, can this be moved up to where boundary is defined?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+Sure. I will modify it and send in v2.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index c30e0e95b0b0..a5a8616dad6f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -488,7 +488,7 @@ enum iwl_tx_agg_status {
- 
- /**
-  * struct agg_tx_status - per packet TX aggregation status
-- * @status: enum iwl_tx_agg_status
-+ * @status: See &enum iwl_tx_agg_status
-  * @sequence: Sequence # for this frame's Tx cmd (not SSN!)
-  */
- struct agg_tx_status {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index cc6af9bd4e10..7a52fb6b4924 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -216,7 +216,8 @@ enum iwl_legacy_cmds {
- 	FW_GET_ITEM_CMD = 0x1a,
- 
- 	/**
--	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2
-+	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2,
-+	 *	response in &struct iwl_mvm_tx_resp
- 	 */
- 	TX_CMD = 0x1c,
- 
--- 
-2.11.0
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+
+-Souptick
