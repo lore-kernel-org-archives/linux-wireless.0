@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35172 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751640AbdFWOK4 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:55366 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751927AbdFVOnG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:56 -0400
-Received: by mail-pf0-f195.google.com with SMTP id s66so7532066pfs.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:56 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 12/17] rsi: update autorate request command frame
-Date: Fri, 23 Jun 2017 19:37:31 +0530
-Message-Id: <1498226856-6305-13-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161100_064003_F26B9E96)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Thu, 22 Jun 2017 10:43:06 -0400
+Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
+ <20170621235022.25362-3-johannes@sipsolutions.net>
+ <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
+ <1498112650.2246.1.camel@sipsolutions.net>
+Cc: nbd@nbd.name
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com> (sfid-20170622_164309_380353_D02C5192)
+Date: Thu, 22 Jun 2017 07:43:04 -0700
+MIME-Version: 1.0
+In-Reply-To: <1498112650.2246.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-When Short Gaurd Interval is enabled bit 9 is set in rate. Otherwise
-it should not be set. Added missing 'else' case in this patch.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 3 +++
- 1 file changed, 3 insertions(+)
+On 06/21/2017 11:24 PM, Johannes Berg wrote:
+> On Wed, 2017-06-21 at 17:02 -0700, Ben Greear wrote:
+>> I think a comment for the above code block would be warranted (and
+>> for ath10k as well).
+>>
+>> I guess this is the part about dequeueing the frames immediately?
+>
+> Yeah, I figured it was pretty obvious, but I can add a comment :)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 538a962..875e323 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1203,6 +1203,9 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 			    conf_is_ht40(&common->priv->hw->conf))
- 				auto_rate->supported_rates[ii++] =
- 					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
-+			else
-+				auto_rate->supported_rates[ii++] =
-+					cpu_to_le16(rsi_mcsrates[kk]);
- 			auto_rate->supported_rates[ii] =
- 				cpu_to_le16(rsi_mcsrates[kk--]);
- 		}
+It is fairly obvious today, but 6 months from now when someone tries yet again
+to figure out WTF is ath10k doing, it will be one more piece of mystery code!
+
+Thanks,
+Ben
+
 -- 
-2.7.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
