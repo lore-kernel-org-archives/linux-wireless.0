@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36858 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753111AbdFRQM6 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:40808 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750967AbdFVAC5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 12:12:58 -0400
-Received: by mail-oi0-f65.google.com with SMTP id g14so7240129oib.3
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2017 09:12:58 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        vincent_fann <vincent_fann@realtek.com>,
-        shaofu <shaofu@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>
-Subject: [PATCH 04/11] rtlwifi: Correct power save capability while init mac80211
-Date: Sun, 18 Jun 2017 11:12:42 -0500
-Message-Id: <20170618161249.6146-5-Larry.Finger@lwfinger.net> (sfid-20170618_181319_722359_FA2E8077)
-In-Reply-To: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
-References: <20170618161249.6146-1-Larry.Finger@lwfinger.net>
+        Wed, 21 Jun 2017 20:02:57 -0400
+Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
+ <20170621235022.25362-3-johannes@sipsolutions.net>
+Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com> (sfid-20170622_020315_396259_A8B9A090)
+Date: Wed, 21 Jun 2017 17:02:51 -0700
+MIME-Version: 1.0
+In-Reply-To: <20170621235022.25362-3-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 06/21/2017 04:50 PM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Some drivers may want to also use the TXQ abstraction with
+> non-data packets that need powersave buffering, so add a
+> hardware flag to allow this.
+>
+> Change ath9k/ath10k to use these by dequeuing the frames
+> immediately and invoking the normal TX path for them.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Since the driver itself will enter power saving mode dynamically
-according to the traffic, we set hw capability SUPPORTS_PS and
-SUPPORTS_DYNAMIC_PS in case of fwctrl_lps.
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -154,8 +154,24 @@ void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue)
+>  {
+>  	struct ath_softc *sc = hw->priv;
+>  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+> -	struct ath_atx_tid *tid = (struct ath_atx_tid *) queue->drv_priv;
+> -	struct ath_txq *txq = tid->txq;
+> +	struct ath_atx_tid *tid;
+> +	struct ath_txq *txq;
+> +
+> +	if (unlikely(queue->tid == IEEE80211_NUM_TIDS)) {
+> +		struct sk_buff *skb = ieee80211_tx_dequeue(hw, queue);
+> +		struct ieee80211_tx_control control = {
+> +			.sta = queue->sta,
+> +		};
+> +
+> +		if (WARN_ON(!skb))
+> +			return;
+> +
+> +		ath9k_tx(hw, &control, skb);
+> +		return;
+> +	}
 
-The process IEEE80211_CONF_CHANGE_PS in op_config is used by
-SW-LPS only, so we add constraints to avoid errors.
+I think a comment for the above code block would be warranted (and for ath10k as well).
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: vincent_fann <vincent_fann@realtek.com>
-Signed-off-by: shaofu <shaofu@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++++
- drivers/net/wireless/realtek/rtlwifi/core.c | 3 ++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+I guess this is the part about dequeueing the frames immediately?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index bdc379178e87..6415ec03008f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -405,6 +405,10 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 		ieee80211_hw_set(hw, SUPPORTS_PS);
- 		ieee80211_hw_set(hw, PS_NULLFUNC_STACK);
- 	}
-+	if (rtlpriv->psc.fwctrl_lps) {
-+		ieee80211_hw_set(hw, SUPPORTS_PS);
-+		ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
-+	}
- 	hw->wiphy->interface_modes =
- 	    BIT(NL80211_IFTYPE_AP) |
- 	    BIT(NL80211_IFTYPE_STATION) |
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index a4f8e326a2bc..5053d8c73e29 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -629,7 +629,8 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 	}
- 
- 	/*For LPS */
--	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+	if ((changed & IEEE80211_CONF_CHANGE_PS) &&
-+	    rtlpriv->psc.swctrl_lps && !rtlpriv->psc.fwctrl_lps) {
- 		cancel_delayed_work(&rtlpriv->works.ps_work);
- 		cancel_delayed_work(&rtlpriv->works.ps_rfon_wq);
- 		if (conf->flags & IEEE80211_CONF_PS) {
+Thanks,
+Ben
+
 -- 
-2.12.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
