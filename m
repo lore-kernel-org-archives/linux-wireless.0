@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slow1-d.mail.gandi.net ([217.70.178.86]:40657 "EHLO
-        slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751393AbdFHIGw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 04:06:52 -0400
-Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
-        by slow1-d.mail.gandi.net (Postfix) with ESMTP id 912DC49603F
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2017 10:01:52 +0200 (CEST)
-Date: Thu, 8 Jun 2017 10:01:41 +0200
-From: Martin Michlmayr <tbm@cyrius.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH] cfg80211: Fix grammar issue in error message
-Message-ID: <20170608080141.rswb2czupjeblqzq@jirafa.cyrius.com> (sfid-20170608_100655_695544_7F406A35)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:57742 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752563AbdFVIsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 04:48:31 -0400
+Message-ID: <1498121308.2246.5.camel@sipsolutions.net> (sfid-20170622_104835_466630_4884114B)
+Subject: Re: [RFC 5/6] mac80211: add a general fallback TXQ
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Thu, 22 Jun 2017 10:48:28 +0200
+In-Reply-To: <20170621235022.25362-5-johannes@sipsolutions.net> (sfid-20170622_015033_568541_05A27CAD)
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
+         <20170621235022.25362-5-johannes@sipsolutions.net>
+         (sfid-20170622_015033_568541_05A27CAD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix grammar issue in error message about ISO3166.
+On Thu, 2017-06-22 at 01:50 +0200, Johannes Berg wrote:
 
-Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+> In a number of cases, like management frames, mac80211 will not
+> put the frame on any TXQ but immediately TX it to the driver.
+> It'd be nicer to be able to use TXQs for all frames, so add a
+> "fallback" TXQ. This will serve as a container to be able to
+> remove all the non-TXQ queueing in mac80211.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cd1d6730eab7..c1ad81f34658 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6767,7 +6767,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 	/* ignore non-ISO3166 country codes */
- 	for (i = 0; i < sizeof(req->alpha2); i++)
- 		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
--			brcmf_err("not a ISO3166 code (0x%02x 0x%02x)\n",
-+			brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
- 				  req->alpha2[0], req->alpha2[1]);
- 			return;
- 		}
+This patch is completely broken right now.
 
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+When TXQs are enabled, there's still buffering of frames that are *not*
+marked with IEEE80211_TX_INTFL_OFFCHAN_TX_OK, and that happens on the
+ieee80211_tx_frags() path, using the queue_stop_reasons etc. In fact,
+even the drivers can still ask to buffer such frames by stopping their
+queues...
+
+I want to move all of that over to the TXQs instead, so that we can get
+rid of that buffering logic.
+
+The way to do that would be to not return any frames from TXQs when
+they're in off-channel state (and drivers can also stop scheduling the
+queues in those cases).
+
+However, if *everything* moves to TXQs, that means we need another TXQ
+for those frames that are marked with IEEE80211_TX_INTFL_OFFCHAN_TX_OK,
+so that they can go out at any time.
+
+So I think the solution is to add *two* new TXQs in this patch, one for
+on-channel frames and one for off-channel frames.
+
+But that's also awkward when you take into account channel contexts,
+since all those frames might still need to go to different ones.
+
+Perhaps then the better solution would be to have a TXQ per channel
+context, and one for more the remaining frames that. Yeah, this feels
+slightly odd - why bother putting frames on a TXQ that shouldn't really
+be buffered - but it fits better with the model (the hybrid push/pull
+model we have now is somewhat awkward), and there are other reasons
+than being off-channel to buffer frames, e.g. if the driver queue got
+full, or the driver is doing something else where it can't easily
+handle data frames etc.
+
+Thoughts, anyone?
+
+johannes
