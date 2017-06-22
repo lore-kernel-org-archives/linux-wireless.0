@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35164 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbdFPO5j (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47622 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752227AbdFVQ6M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:57:39 -0400
-Received: by mail-pg0-f67.google.com with SMTP id f127so6640605pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 07:57:38 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [v2 02/20] rsi: fix sdio card reset problem
-Date: Fri, 16 Jun 2017 20:24:23 +0530
-Message-Id: <1497624881-2315-3-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170616_165741_932377_EFB71282)
-In-Reply-To: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+        Thu, 22 Jun 2017 12:58:12 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Colin Ian King <colin.king@canonical.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rsi: add in missing RSI_FSM_STATES into array fsm_state
+Date: Thu, 22 Jun 2017 17:58:04 +0100
+Message-Id: <20170622165804.24379-1-colin.king@canonical.com> (sfid-20170622_185854_970878_44FED7A7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-card reset is not working with recent kernels. Using
-host->card->ocr instead of host->ocr_avail solved the problem.
+Two recent commits added new RSI_FSM_STATES (namely FSM_FW_NOT_LOADED
+and FSM_COMMON_DEV_PARAMS_SENT) and the corresponding table fsm_state
+was not updated to match. This can lead to an array overrun when
+accessing the latter two states in fsm_state. Fix this by adding in
+the missing states.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Detected by CoverityScan, CID#1398379 ("Illegal address computation")
+
+Fixes: 9920322ccd8e04 ("rsi: add tx frame for common device configuration")
+Fixes: 015e367494c1d5 ("rsi: Register interrupt handler before firmware load")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 26 +++++++++-----------------
- 1 file changed, 9 insertions(+), 17 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index e5ea99b..b5ac503 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -219,26 +219,18 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 	if (err)
- 		rsi_dbg(ERR_ZONE, "%s: CMD0 failed : %d\n", __func__, err);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+index 828a042f903f..4c0a493bd44e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
++++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+@@ -125,7 +125,9 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
+ 	struct rsi_common *common = seq->private;
  
--	if (!host->ocr_avail) {
--		/* Issue CMD5, arg = 0 */
--		err = rsi_issue_sdiocommand(pfunction,
--					    SD_IO_SEND_OP_COND,
--					    0,
--					    (MMC_RSP_R4 | MMC_CMD_BCR),
--					    &resp);
--		if (err)
--			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
--				__func__, err);
--		host->ocr_avail = resp;
--	}
-+	/* Issue CMD5, arg = 0 */
-+	err = rsi_issue_sdiocommand(pfunction,	SD_IO_SEND_OP_COND, 0,
-+				    (MMC_RSP_R4 | MMC_CMD_BCR), &resp);
-+	if (err)
-+		rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n", __func__, err);
-+	card->ocr = resp;
- 
- 	/* Issue CMD5, arg = ocr. Wait till card is ready  */
- 	for (i = 0; i < 100; i++) {
--		err = rsi_issue_sdiocommand(pfunction,
--					    SD_IO_SEND_OP_COND,
--					    host->ocr_avail,
--					    (MMC_RSP_R4 | MMC_CMD_BCR),
--					    &resp);
-+		err = rsi_issue_sdiocommand(pfunction, SD_IO_SEND_OP_COND,
-+					    card->ocr,
-+					    (MMC_RSP_R4 | MMC_CMD_BCR), &resp);
- 		if (err) {
- 			rsi_dbg(ERR_ZONE, "%s: CMD5 failed : %d\n",
- 				__func__, err);
+ 	unsigned char fsm_state[][32] = {
++		"FSM_FW_NOT_LOADED",
+ 		"FSM_CARD_NOT_READY",
++		"FSM_COMMON_DEV_PARAMS_SENT",
+ 		"FSM_BOOT_PARAMS_SENT",
+ 		"FSM_EEPROM_READ_MAC_ADDR",
+ 		"FSM_RESET_MAC_SENT",
 -- 
-2.7.4
+2.11.0
