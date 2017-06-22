@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54544 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751955AbdFMFyt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 01:54:49 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: Fix kernel oops on resume when request firmware fails.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170523180733.26276-1-enric.balletbo@collabora.com>
-References: <20170523180733.26276-1-enric.balletbo@collabora.com>
-To: Enric Balletbo i Serra <enric.balletbo@collabora.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+Received: from s3.sipsolutions.net ([5.9.151.49]:60284 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753179AbdFVNAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 09:00:05 -0400
+Message-ID: <1498136389.2246.7.camel@sipsolutions.net> (sfid-20170622_150030_925075_1FFB4DAF)
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
         linux-kernel@vger.kernel.org,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>
-Message-Id: <20170613055448.C0CD36075B@smtp.codeaurora.org> (sfid-20170613_075552_227775_1355C16B)
-Date: Tue, 13 Jun 2017 05:54:48 +0000 (UTC)
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Thu, 22 Jun 2017 14:59:49 +0200
+In-Reply-To: <20170621174829.GA92340@google.com> (sfid-20170621_194834_481297_88C06BB6)
+References: <20170525001119.64791-1-briannorris@chromium.org>
+         <20170525001119.64791-5-briannorris@chromium.org>
+         <87fufk2hmm.fsf@purkki.adurom.net> <20170601173954.GA138807@google.com>
+         <87inka77md.fsf@codeaurora.org> <20170621174829.GA92340@google.com>
+         (sfid-20170621_194834_481297_88C06BB6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enric Balletbo i Serra <enric.balletbo@collabora.com> wrote:
-
-> When request firmware fails, brcmf_ops_sdio_remove is being called and
-> brcmf_bus freed. In such circumstancies if you do a suspend/resume cycle
-> the kernel hangs on resume due a NULL pointer dereference in resume
-> function.
+On Wed, 2017-06-21 at 10:48 -0700, Brian Norris wrote:
 > 
-> Steps to reproduce the problem:
->  - modprobe brcmfmac without the firmware
->      brcmfmac mmc1:0001:1: Direct firmware load for brcm/brcmfmac4354-sdio.bin
->      failed with error -2
->  - do a suspend/resume cycle (echo mem > /sys/power/state)
-> 
-> Protect against the NULL pointer derefence by checking if dev_get_drvdata
-> returned a valid pointer.
-> 
-> Signed-off-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+> Yes, that all sounds nice. But for my sake, can you describe better
+> what's actually going on there (e.g., can you point me at which code
+> does this)? 
 
-My understanding is that there's a new version of this patch which fixes
-the issue. If not, let me know.
+It's much easier with mac80211, it has all the state. Basically the
+reconfig is in ieee80211_reconfig() :)
 
-Patch set to Superseded.
+> I'm really not familiar with mac80211 (though I was aware of
+> the above general behavior). But to my knowledge, mac80211 drivers
+> keep a lot more state managed in the kernel, so it's a little easier
+> and more natural to get the driver/FW back to "the same state" than
+> it is with a full-MAC driver.
 
--- 
-https://patchwork.kernel.org/patch/9743159/
+Indeed.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
