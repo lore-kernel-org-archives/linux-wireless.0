@@ -1,94 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37518 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751686AbdFAJih (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:38:37 -0400
-Received: by mail-wm0-f45.google.com with SMTP id d127so52462613wmf.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jun 2017 02:38:37 -0700 (PDT)
-Subject: Re: BRCMFMAC OOB interrupt problem
-To: "Hegr, Jiri" <Jiri.Hegr2@Honeywell.com>,
-        "franky.lin@broadcom.com" <franky.lin@broadcom.com>,
-        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>
-Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <BY2PR07MB15534619EB5D533B633CDAF5CEF60@BY2PR07MB1553.namprd07.prod.outlook.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <4c82d08f-60cc-9ef6-4598-81a616782d11@broadcom.com> (sfid-20170601_113913_538653_AE02DA19)
-Date: Thu, 1 Jun 2017 11:38:28 +0200
-MIME-Version: 1.0
-In-Reply-To: <BY2PR07MB15534619EB5D533B633CDAF5CEF60@BY2PR07MB1553.namprd07.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:58526 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753170AbdFVKUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 06:20:35 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name, toke@toke.dk, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
+Date: Thu, 22 Jun 2017 12:20:30 +0200
+Message-Id: <20170622102030.9795-3-johannes@sipsolutions.net> (sfid-20170622_122042_488120_AA0682D2)
+In-Reply-To: <20170622102030.9795-1-johannes@sipsolutions.net>
+References: <20170622102030.9795-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01-06-17 09:44, Hegr, Jiri wrote:
-> Dears,
-> We use small WiFi evaluation board WM-BN-BM-04_EVB_V1.2 with BCM43362 chip (Broadcom).
-> This board is connected to OMAP-L138 via SDIO interface with Linux 4.9.10 containing WiFi driver brcmfmac.
-> Our problem is in OOB interrupt. The driver (and the WiFi chip) works fine if the interrupt is not set in a device tree (SDIO interface is used instead).
-> But if the host-wake interrupt is used, the initialization phase does not pass. We are sure that the OOB interrupt is triggered. We found out that it waits for a control frame (probably) but it gets some event frame only. After about 2.5 seconds the timeout occurs and the initialization fails.
-> Could you help us to solve the problem?
-> There is our device tree settings and terminal output bellow (the "DBG" lines are our own).
-> 
-> There is also problem with WARN_ON(nents > sdiodev->max_segment_count); in bcmsdh.c file, but it seems that it does not influence the driver work because the problem occurs without OOB interrupt setting also and everything works fine.
-> 
-> Regards,
-> 
-> Jiri Hegr
-> 
-> mmc1: mmc@21b000 {
->      #address-cells = <1>;
->      #size-cells = <0>;
->      max-frequency = <25000000>;
->      bus-width = <4>;
->      pinctrl-names = "default";
->      pinctrl-0 = <&mmc1_pins>;
->      status = "okay";
->      non-removable;
-> 
->      brcmf: bcrmf@1 {
-> reg = <1>;
-> compatible = "brcm,bcm4329-fmac";
-> interrupt-parent = <&gpio>;
-> interrupts = <95 0x02>;
-> interrupt-names = "host-wake";
->      };
-> };
-> 
-> [   24.314527] brcmfmac: *** DBG: starting datawork worker thread...
-> [   24.354778] brcmfmac: *** DBG: brcmf_sdio_readframes...
-> [   24.360088] brcmfmac: *** DBG: rd->len check: 0
-> [   24.404232] brcmfmac: *** DBG: rd->channel check: 1
-> [   24.435047] brcmfmac: *** DBG: rd->len check: 0
-> [   24.454977] brcmfmac: *** DBG: brcmf_sdio_readframes - loop break
-> [   27.013900] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-> [   27.019813] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -110
-> [   27.031282] brcmfmac: brcmf_bus_start: failed: -110
-> [   27.046164] brcmfmac: brcmf_sdio_firmware_callback: dongle is not responding
+From: Johannes Berg <johannes.berg@intel.com>
 
-Can you build the driver with CONFIG_BRCMDBG and load the driver with
-debugging:
+With TXQs, the AP_VLAN interfaces are resolved to their owner AP
+interface when enqueuing the frame, which makes sense since the
+frame really goes out on that as far as the driver is concerned.
 
-$ sudo insmod brcmfmac.ko debug=0x31516
+However, this introduces a problem: frames to be encrypted with
+a VLAN-specific GTK will now be encrypted with the AP GTK, since
+the information about which virtual interface to use to select
+the key is taken from the TXQ.
 
-Regards,
-Arend
+Fix this by preserving info->control.vif and using that in the
+dequeue function. This now requires doing the driver-mapping
+in the dequeue as well.
 
->                                           Honeywell  *
-> Jiri Hegr - R&D Scientist III.
-> 
-> Honeywell International s.r.o. - Aerospace Advanced Techonologies
-> V Parku 2325/16
-> Praha 148 00, Czech Republic
-> Office: Turanka 100
-> 627 00 Brno, Czech Republic
-> 
-> Tel:         +420 532 115 564
-> E-mail:    jiri.hegr2@honeywell.com<mailto:jiri.hegr2@honeywell.com>
-> 
-> 
+Since there's no way to filter the frames that are sitting on a
+TXQ, drop all frames, which may affect other interfaces, when an
+AP_VLAN is removed.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 15 ++-------------
+ net/mac80211/iface.c   | 17 +++++++++++++++--
+ net/mac80211/tx.c      | 39 +++++++++++++++++++++++++++++++--------
+ 3 files changed, 48 insertions(+), 23 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b2b5419467cc..263cb30d77c8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -919,21 +919,10 @@ struct ieee80211_tx_info {
+ 				unsigned long jiffies;
+ 			};
+ 			/* NB: vif can be NULL for injected frames */
+-			union {
+-				/* NB: vif can be NULL for injected frames */
+-				struct ieee80211_vif *vif;
+-
+-				/* When packets are enqueued on txq it's easy
+-				 * to re-construct the vif pointer. There's no
+-				 * more space in tx_info so it can be used to
+-				 * store the necessary enqueue time for packet
+-				 * sojourn time computation.
+-				 */
+-				codel_time_t enqueue_time;
+-			};
++			struct ieee80211_vif *vif;
+ 			struct ieee80211_key_conf *hw_key;
+ 			u32 flags;
+-			/* 4 bytes free */
++			codel_time_t enqueue_time;
+ 		} control;
+ 		struct {
+ 			u64 cookie;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index fbf631b330b9..9e1bce27b5ac 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -792,6 +792,7 @@ static int ieee80211_open(struct net_device *dev)
+ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 			      bool going_down)
+ {
++	struct ieee80211_sub_if_data *txq_sdata = sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct fq *fq = &local->fq;
+ 	unsigned long flags;
+@@ -937,6 +938,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
++		txq_sdata = container_of(sdata->bss,
++					 struct ieee80211_sub_if_data, u.ap);
++
+ 		mutex_lock(&local->mtx);
+ 		list_del(&sdata->u.vlan.list);
+ 		mutex_unlock(&local->mtx);
+@@ -1007,8 +1011,17 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+-	if (sdata->vif.txq) {
+-		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
++	if (txq_sdata->vif.txq) {
++		struct txq_info *txqi = to_txq_info(txq_sdata->vif.txq);
++
++		/*
++		 * FIXME FIXME
++		 *
++		 * We really shouldn't purge the *entire* txqi since that
++		 * contains frames for the other AP_VLANs (and possibly
++		 * the AP itself) as well, but there's no API in FQ now
++		 * to be able to filter.
++		 */
+ 
+ 		spin_lock_bh(&fq->lock);
+ 		ieee80211_txq_purge(local, txqi);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8858f4f185e9..bd609326d77c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1276,11 +1276,6 @@ static void ieee80211_set_skb_enqueue_time(struct sk_buff *skb)
+ 	IEEE80211_SKB_CB(skb)->control.enqueue_time = codel_get_time();
+ }
+ 
+-static void ieee80211_set_skb_vif(struct sk_buff *skb, struct txq_info *txqi)
+-{
+-	IEEE80211_SKB_CB(skb)->control.vif = txqi->txq.vif;
+-}
+-
+ static u32 codel_skb_len_func(const struct sk_buff *skb)
+ {
+ 	return skb->len;
+@@ -3414,6 +3409,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_tx_data tx;
+ 	ieee80211_tx_result r;
++	struct ieee80211_vif *vif;
+ 
+ 	spin_lock_bh(&fq->lock);
+ 
+@@ -3430,8 +3426,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	if (!skb)
+ 		goto out;
+ 
+-	ieee80211_set_skb_vif(skb, txqi);
+-
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+@@ -3439,7 +3433,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	__skb_queue_head_init(&tx.skbs);
+ 	tx.local = local;
+ 	tx.skb = skb;
+-	tx.sdata = vif_to_sdata(info->control.vif);
++	if (info->control.vif)
++		tx.sdata = vif_to_sdata(info->control.vif);
+ 
+ 	if (txq->sta)
+ 		tx.sta = container_of(txq->sta, struct sta_info, sta);
+@@ -3488,6 +3483,34 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++	switch (tx.sdata->vif.type) {
++	case NL80211_IFTYPE_MONITOR:
++		if (tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++			vif = &tx.sdata->vif;
++			break;
++		}
++		tx.sdata = rcu_dereference(local->monitor_sdata);
++		if (tx.sdata) {
++			vif = &tx.sdata->vif;
++			info->hw_queue =
++				vif->hw_queue[skb_get_queue_mapping(skb)];
++		} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
++			ieee80211_free_txskb(&local->hw, skb);
++			goto begin;
++		} else {
++			vif = NULL;
++		}
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		tx.sdata = container_of(tx.sdata->bss,
++					struct ieee80211_sub_if_data, u.ap);
++		/* fall through */
++	default:
++		vif = &tx.sdata->vif;
++		break;
++	}
++
++	IEEE80211_SKB_CB(skb)->control.vif = vif;
+ out:
+ 	spin_unlock_bh(&fq->lock);
+ 
+-- 
+2.11.0
