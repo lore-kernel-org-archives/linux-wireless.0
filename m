@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59798 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751353AbdFZK6r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 06:58:47 -0400
-Message-ID: <1498474722.3318.2.camel@sipsolutions.net> (sfid-20170626_125850_908362_45986049)
-Subject: Re: [PATCH] nl80211: Don't verify owner_nlportid on NAN commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+Received: from paleale.coelho.fi ([176.9.41.70]:34386 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753394AbdFVVWN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 17:22:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 26 Jun 2017 12:58:42 +0200
-In-Reply-To: <5680f862-2025-0ff0-59a2-ae50e32cee76@broadcom.com> (sfid-20170623_230337_027084_2D56F2D7)
-References: <20170623092633.23026-1-luca@coelho.fi>
-         <5680f862-2025-0ff0-59a2-ae50e32cee76@broadcom.com>
-         (sfid-20170623_230337_027084_2D56F2D7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Fri, 23 Jun 2017 00:20:58 +0300
+Message-Id: <20170622212101.16422-23-luca@coelho.fi> (sfid-20170622_232216_601717_778972C2)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 22/25] iwlwifi: mvm: document status bits
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-23 at 23:03 +0200, Arend van Spriel wrote:
-> 
-> Also is this not a more fundamental flaw in netlink socket behavior.
-> Should there be some priority imposed on command responses over event
-> messages. Just seems like this patch is a workaround.
+From: Johannes Berg <johannes.berg@intel.com>
 
-In a way, but it's not that easy. ACK messages are really just that,
-messages, and having them bypass the queue might not be reasonable for
-the use case, having them be queued unconditionally would open an
-avenue for memory consumption attacks (send lots of dummy commands and
-let the ACKs accumulate), and deleting already "delivered" message
-could, I think, break semantics because I think delivery can be checked
-by the sender?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Either way, I don't really see a good way to solve this problem in
-netlink.
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index a4bee9c740e0..0b5e92c1483e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1081,6 +1081,18 @@ struct iwl_mvm {
+ #define IWL_MAC80211_GET_MVM(_hw)			\
+ 	IWL_OP_MODE_GET_MVM((struct iwl_op_mode *)((_hw)->priv))
+ 
++/**
++ * enum iwl_mvm_status - MVM status bits
++ * @IWL_MVM_STATUS_HW_RFKILL: HW RF-kill is asserted
++ * @IWL_MVM_STATUS_HW_CTKILL: CT-kill is active
++ * @IWL_MVM_STATUS_ROC_RUNNING: remain-on-channel is running
++ * @IWL_MVM_STATUS_IN_HW_RESTART: HW restart is active
++ * @IWL_MVM_STATUS_IN_D0I3: NIC is in D0i3
++ * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
++ * @IWL_MVM_STATUS_D3_RECONFIG: D3 reconfiguration is being done
++ * @IWL_MVM_STATUS_DUMPING_FW_LOG: FW log is being dumped
++ * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
++ */
+ enum iwl_mvm_status {
+ 	IWL_MVM_STATUS_HW_RFKILL,
+ 	IWL_MVM_STATUS_HW_CTKILL,
+-- 
+2.11.0
