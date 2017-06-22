@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53052 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751507AbdFIJZt (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:36159 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751883AbdFVDq7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 05:25:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 07/11] wireless: ipw2x00: convert to use DRIVER_ATTR_RW
-References: <20170609090314.13991-1-gregkh@linuxfoundation.org>
-        <20170609090314.13991-7-gregkh@linuxfoundation.org>
-Date: Fri, 09 Jun 2017 12:25:44 +0300
-In-Reply-To: <20170609090314.13991-7-gregkh@linuxfoundation.org> (Greg
-        Kroah-Hartman's message of "Fri, 9 Jun 2017 11:03:10 +0200")
-Message-ID: <87h8zp4inb.fsf@codeaurora.org> (sfid-20170609_112610_833651_A1D6BE10)
+        Wed, 21 Jun 2017 23:46:59 -0400
+Date: Thu, 22 Jun 2017 13:46:45 +1000
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: cfg80211_ops
+Message-ID: <20170622034645.GB16262@eros> (sfid-20170622_054712_126664_7C5BBB13)
+References: <20170622000347.GA15458@eros>
+ <a3105fed-a02b-cd0e-1f4a-e3f9a0b7dd1f@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a3105fed-a02b-cd0e-1f4a-e3f9a0b7dd1f@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
+On Wed, Jun 21, 2017 at 05:53:13PM -0700, Igor Mitsyanko wrote:
+> On 06/21/2017 05:03 PM, Tobin C. Harding wrote:
+> >
+> >Hi,
+> >
+> >Is some one able to please confirm for me that the following
+> >cfg80211_ops callbacks are enough to implement a minimal functioning
+> >Wi-Fi driver. Assume that a virtual interface is added during driver
+> >initialization.
+> >
+> >scan
+> >add_key
+> >get_key
+> >del_key
+> >sat_default_key
+> >connect
+> >disconnect
+> >set_wiphy_params
+> 
+> Hi, is this for STA-only? I guess you also need
+> mgmt_frame_register
+> mgmt_tx
 
-> We are trying to get rid of DRIVER_ATTR(), and the ipw2x00 driver's
-> attributes can be trivially changed to use DRIVER_ATTR_RW().
->
-> Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: <linux-wireless@vger.kernel.org>
-> Cc: <netdev@vger.kernel.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Thanks for the response Igor. Yes, infrastructure mode only.
 
-Looks good to me. I assume that I should take this, but let me know if
-you are planning to push this via your trees instead. Either way is fine
-for me, I'm not expecting any conflicts here.
+> and you don't need *_key callbacks in case its fine to operate without
+> encryption.
 
--- 
-Kalle Valo
+Cool, thank you.
+
+Tobin
