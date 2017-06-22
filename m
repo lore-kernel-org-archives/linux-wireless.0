@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0206.hostedemail.com ([216.40.44.206]:42629 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752475AbdFSUSy (ORCPT
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:34185 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753118AbdFVKH6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 16:18:54 -0400
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] realtek: btcoexist: Make the rtl_btc_ops struct const
-Date: Mon, 19 Jun 2017 13:18:17 -0700
-Message-Id: <b71e1465b0ca58d748229392ab1bcdbaf65d762d.1497903396.git.joe@perches.com> (sfid-20170619_221925_712811_5FA92AFA)
-In-Reply-To: <cover.1497903396.git.joe@perches.com>
-References: <cover.1497903396.git.joe@perches.com>
+        Thu, 22 Jun 2017 06:07:58 -0400
+Received: by mail-wr0-f169.google.com with SMTP id 77so16490769wrb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 03:07:57 -0700 (PDT)
+Subject: Re: net_device::destructor patch for brcmfmac
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <3f81fbd3-2896-2b09-1d59-ae5ec88045c9@broadcom.com>
+ <1498124992.2246.6.camel@sipsolutions.net>
+ <871sqctk5l.fsf@kamboji.qca.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <232d7915-f02e-246e-8a98-b0d07346fce5@broadcom.com> (sfid-20170622_120900_844945_D1813E83)
+Date: Thu, 22 Jun 2017 12:07:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <871sqctk5l.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid allowing a write into what should be const.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c | 4 ++--
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h | 2 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c               | 2 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h              | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 3ab0cfe26513..19a95b69255d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -29,7 +29,7 @@
- #include "rtl_btc.h"
- #include "halbt_precomp.h"
- 
--static struct rtl_btc_ops rtl_btc_operation = {
-+static const struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_init_variables = rtl_btc_init_variables,
- 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
- 	.btc_init_hw_config = rtl_btc_init_hw_config,
-@@ -161,7 +161,7 @@ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type)
- 	return exhalbtc_special_packet_notify(&gl_bt_coexist, pkt_type);
- }
- 
--struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
-+const struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
- {
- 	return &rtl_btc_operation;
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index fff5117e1c4e..83c5bb2d6ad8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -44,7 +44,7 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
- void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
- 
--struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
-+const struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
- 
- u8 rtl_get_hwpg_bt_exist(struct rtl_priv *rtlpriv);
- u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index fa93401acdab..8000894c4212 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -1814,7 +1814,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal_ops *ops = rtlpriv->cfg->ops;
--	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
-+	const struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 9a916188a703..d03f0ca92530 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2475,7 +2475,7 @@ struct rtl_btc_info {
- };
- 
- struct bt_coexist_info {
--	struct rtl_btc_ops *btc_ops;
-+	const struct rtl_btc_ops *btc_ops;
- 	struct rtl_btc_info btc_info;
- 	/* EEPROM BT info. */
- 	u8 eeprom_bt_coexist;
--- 
-2.10.0.rc2.1.g053435c
+On 22-06-17 12:02, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+>> On Thu, 2017-06-22 at 11:45 +0200, Arend van Spriel wrote:
+>>> Hi Kalle,
+>>>
+>>> I have a fix for brcmfmac, which is related to a change Dave made in
+>>> struct net_device, ie. commit cf124db566e6 ("net: Fix inconsistent
+>>> teardown and release of private netdev state.").
+> 
+> Is there a report from users or is this more like a theoretical issue?
+
+Well, it a real issue but not reported by users. It only occurs when
+register_netdevice() fails which does not happen often enough(?).
+
+> We are quite late in 4.12 cycle so I would prefer to push this via
+> wireless-drivers-next and stable tree to 4.12.x, unless it's really
+> critical of course.
+
+That was my idea.
+
+>>> This change is not in wireless-drivers-next, but it is in
+>>> mac80211-next and thus in wireless-testing. What should I do? Submit
+>>> to net-next, or mac80211-next, or will you merge net-next into
+>>> wireless-drivers-next?
+>>
+>> Actually, it's even in *net* I believe, so you should submit it to
+>> there, or Kalle should integrate (fast-forward, rebase?) that into
+>> wireless-drivers.
+> 
+> My plan is to send a pull request to Dave this week still (unless
+> Midsummer celebrations last too long, knowing Finland's weather that's
+> unlikely) and I could fast forward then. I have also other patches
+> waiting for stuff in net-next.
+> 
+> Arend, I think the best is that you use wireless-testing as baseline and
+> clearly document what commit your patch depends on. Once I have fast
+> forwarded wireless-drivers-next to latest net-next it _should_ apply
+> just fine.
+
+That works for me. Thanks,
+Arend
