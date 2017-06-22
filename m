@@ -1,88 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35922 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:34412 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751776AbdF1UOg (ORCPT
+        with ESMTP id S1752424AbdFVVW2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:14:36 -0400
+        Thu, 22 Jun 2017 17:22:28 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:12 +0300
-Message-Id: <20170628201330.9432-14-luca@coelho.fi> (sfid-20170628_221455_035248_C66704E0)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 13/31] iwlwifi: mvm: simplify CHECK_MLME_TRIGGER macro
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:49 +0300
+Message-Id: <20170622212101.16422-14-luca@coelho.fi> (sfid-20170622_232232_150549_435E86BE)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 13/25] iwlwifi: mvm: support D0I3_END_CMD at the start of resume
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-There's no reason to pass mvm and trig as parameters to the macro,
-since it will be expanded inside the function itself.  Also remove the
-bogus buf parameter which doesn't exist and is not used.
+New FW versions require the D0I3_END_CMD to be sent as the first
+command to the FW in the resume flow.  If the TLV is set, send that
+command first, otherwise keep the original behavior (i.e. send last).
 
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 24 +++++++++--------------
- 1 file changed, 9 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c      | 22 +++++++++++++++++++---
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d04a88c6c593..b98978d6cb21 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4151,11 +4151,11 @@ static void iwl_mvm_event_mlme_callback(struct iwl_mvm *mvm,
- 					struct ieee80211_vif *vif,
- 					const struct ieee80211_event *event)
- {
--#define CHECK_MLME_TRIGGER(_mvm, _trig, _buf, _cnt, _fmt...)	\
-+#define CHECK_MLME_TRIGGER(_cnt, _fmt...)			\
- 	do {							\
--		if ((_cnt) && --(_cnt))				\
-+		if ((trig_mlme->_cnt) && --(trig_mlme->_cnt))	\
- 			break;					\
--		iwl_mvm_fw_dbg_collect_trig(_mvm, _trig, _fmt);\
-+		iwl_mvm_fw_dbg_collect_trig(mvm, trig, _fmt);	\
- 	} while (0)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 52616f3c0184..a216657b3c60 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -353,6 +353,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_STA_PM_NOTIF			= (__force iwl_ucode_tlv_capa_t)38,
+ 	IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT		= (__force iwl_ucode_tlv_capa_t)39,
+ 	IWL_UCODE_TLV_CAPA_CDB_SUPPORT			= (__force iwl_ucode_tlv_capa_t)40,
++	IWL_UCODE_TLV_CAPA_D0I3_END_FIRST		= (__force iwl_ucode_tlv_capa_t)41,
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
+ 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+ 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index f5b65c1ef42f..0028325fa22d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016   Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016   Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -2075,6 +2075,8 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 	bool keep = false;
+ 	bool unified_image = fw_has_capa(&mvm->fw->ucode_capa,
+ 					 IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
++	bool d0i3_first = fw_has_capa(&mvm->fw->ucode_capa,
++				      IWL_UCODE_TLV_CAPA_D0I3_END_FIRST);
  
- 	struct iwl_fw_dbg_trigger_tlv *trig;
-@@ -4171,31 +4171,25 @@ static void iwl_mvm_event_mlme_callback(struct iwl_mvm *mvm,
+ 	mutex_lock(&mvm->mutex);
  
- 	if (event->u.mlme.data == ASSOC_EVENT) {
- 		if (event->u.mlme.status == MLME_DENIED)
--			CHECK_MLME_TRIGGER(mvm, trig, buf,
--					   trig_mlme->stop_assoc_denied,
-+			CHECK_MLME_TRIGGER(stop_assoc_denied,
- 					   "DENIED ASSOC: reason %d",
- 					    event->u.mlme.reason);
- 		else if (event->u.mlme.status == MLME_TIMEOUT)
--			CHECK_MLME_TRIGGER(mvm, trig, buf,
--					   trig_mlme->stop_assoc_timeout,
-+			CHECK_MLME_TRIGGER(stop_assoc_timeout,
- 					   "ASSOC TIMEOUT");
- 	} else if (event->u.mlme.data == AUTH_EVENT) {
- 		if (event->u.mlme.status == MLME_DENIED)
--			CHECK_MLME_TRIGGER(mvm, trig, buf,
--					   trig_mlme->stop_auth_denied,
-+			CHECK_MLME_TRIGGER(stop_auth_denied,
- 					   "DENIED AUTH: reason %d",
- 					   event->u.mlme.reason);
- 		else if (event->u.mlme.status == MLME_TIMEOUT)
--			CHECK_MLME_TRIGGER(mvm, trig, buf,
--					   trig_mlme->stop_auth_timeout,
-+			CHECK_MLME_TRIGGER(stop_auth_timeout,
- 					   "AUTH TIMEOUT");
- 	} else if (event->u.mlme.data == DEAUTH_RX_EVENT) {
--		CHECK_MLME_TRIGGER(mvm, trig, buf,
--				   trig_mlme->stop_rx_deauth,
-+		CHECK_MLME_TRIGGER(stop_rx_deauth,
- 				   "DEAUTH RX %d", event->u.mlme.reason);
- 	} else if (event->u.mlme.data == DEAUTH_TX_EVENT) {
--		CHECK_MLME_TRIGGER(mvm, trig, buf,
--				   trig_mlme->stop_tx_deauth,
-+		CHECK_MLME_TRIGGER(stop_tx_deauth,
- 				   "DEAUTH TX %d", event->u.mlme.reason);
+@@ -2095,6 +2097,15 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 	/* query SRAM first in case we want event logging */
+ 	iwl_mvm_read_d3_sram(mvm);
+ 
++	if (d0i3_first) {
++		ret = iwl_mvm_send_cmd_pdu(mvm, D0I3_END_CMD, 0, 0, NULL);
++		if (ret < 0) {
++			IWL_ERR(mvm, "Failed to send D0I3_END_CMD first (%d)\n",
++				ret);
++			goto err;
++		}
++	}
++
+ 	/*
+ 	 * Query the current location and source from the D3 firmware so we
+ 	 * can play it back when we re-intiailize the D0 firmware
+@@ -2140,9 +2151,14 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 			iwl_mvm_d3_disconnect_iter, keep ? vif : NULL);
+ 
+ out:
++	/* no need to reset the device in unified images, if successful */
+ 	if (unified_image && !ret) {
++		/* nothing else to do if we already sent D0I3_END_CMD */
++		if (d0i3_first)
++			return 0;
++
+ 		ret = iwl_mvm_send_cmd_pdu(mvm, D0I3_END_CMD, 0, 0, NULL);
+-		if (!ret) /* D3 ended successfully - no need to reset device */
++		if (!ret)
+ 			return 0;
  	}
- #undef CHECK_MLME_TRIGGER
+ 
 -- 
 2.11.0
