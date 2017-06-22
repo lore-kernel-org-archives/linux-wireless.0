@@ -1,124 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35729 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753677AbdFMOwv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34278 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753731AbdFVVVO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:52:51 -0400
-Received: by mail-pf0-f194.google.com with SMTP id s66so7361644pfs.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:51 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 19/20] rsi: use separate mutex lock for receive thread
-Date: Tue, 13 Jun 2017 20:19:07 +0530
-Message-Id: <1497365348-2305-20-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165254_290927_3A5397DD)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Thu, 22 Jun 2017 17:21:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:45 +0300
+Message-Id: <20170622212101.16422-10-luca@coelho.fi> (sfid-20170622_232120_864668_71551FD5)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 09/25] iwlwifi: mvm: use scnprintf() instead of snprintf()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Deadlock issue is observed during our stress tests. The root
-cause for the issue is same lock is used between tx and rx threads.
+It's safer to use scnprintf() here because the buffer might
+be too short for the full format strings. In most cases
+this isn't true because of external limits on the values.
 
-This patch adds a separate mutex lock for rx thread to resolve
-the problem.
+In one case, this fixes a stack data leak.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 10 +++++-----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  6 +++---
- drivers/net/wireless/rsi/rsi_main.h         |  2 ++
- 3 files changed, 10 insertions(+), 8 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index b6d0e2a..b3f7adc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -230,7 +230,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 	dev->rx_info.sdio_int_counter++;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+index 5d475b4850ae..a7ac281e5cde 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1304,11 +1304,11 @@ static ssize_t iwl_dbgfs_low_latency_read(struct file *file,
+ 	char buf[30] = {};
+ 	int len;
  
- 	do {
--		mutex_lock(&common->tx_rxlock);
-+		mutex_lock(&common->rx_lock);
- 		status = rsi_sdio_read_register(common->priv,
- 						RSI_FN1_INT_REGISTER,
- 						&isr_status);
-@@ -238,7 +238,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 			rsi_dbg(ERR_ZONE,
- 				"%s: Failed to Read Intr Status Register\n",
- 				__func__);
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->rx_lock);
- 			return;
- 		}
- 		adapter->interrupt_status = isr_status;
-@@ -246,7 +246,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 		if (isr_status == 0) {
- 			rsi_set_event(&common->tx_thread.event);
- 			dev->rx_info.sdio_intr_status_zero++;
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->rx_lock);
- 			return;
- 		}
- 
-@@ -304,7 +304,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 					rsi_dbg(ERR_ZONE,
- 						"%s: Failed to read pkt\n",
- 						__func__);
--					mutex_unlock(&common->tx_rxlock);
-+					mutex_unlock(&common->rx_lock);
- 					return;
- 				}
- 				break;
-@@ -319,7 +319,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 			}
- 			isr_status ^= BIT(isr_type - 1);
- 		} while (isr_status);
--		mutex_unlock(&common->tx_rxlock);
-+		mutex_unlock(&common->rx_lock);
- 	} while (1);
+-	len = snprintf(buf, sizeof(buf) - 1,
+-		       "traffic=%d\ndbgfs=%d\nvcmd=%d\n",
+-		       mvmvif->low_latency_traffic,
+-		       mvmvif->low_latency_dbgfs,
+-		       mvmvif->low_latency_vcmd);
++	len = scnprintf(buf, sizeof(buf) - 1,
++			"traffic=%d\ndbgfs=%d\nvcmd=%d\n",
++			mvmvif->low_latency_traffic,
++			mvmvif->low_latency_dbgfs,
++			mvmvif->low_latency_vcmd);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
  }
  
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index d3e0a07..465692b 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -37,14 +37,14 @@ void rsi_usb_rx_thread(struct rsi_common *common)
- 		if (atomic_read(&dev->rx_thread.thread_done))
- 			goto out;
+@@ -1385,10 +1385,12 @@ static ssize_t iwl_dbgfs_rx_phyinfo_read(struct file *file,
+ 	struct ieee80211_vif *vif = file->private_data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	char buf[8];
++	int len;
  
--		mutex_lock(&common->tx_rxlock);
-+		mutex_lock(&common->rx_lock);
- 		status = rsi_read_pkt(common, 0);
- 		if (status) {
- 			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->rx_lock);
- 			return;
- 		}
--		mutex_unlock(&common->tx_rxlock);
-+		mutex_unlock(&common->rx_lock);
- 		rsi_reset_event(&dev->rx_thread.event);
- 		if (adapter->rx_urb_submit(adapter)) {
- 			rsi_dbg(ERR_ZONE,
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index febecbd..6d41c9b 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -179,6 +179,8 @@ struct rsi_common {
- 	struct mutex mutex;
- 	/* Mutex used between tx/rx threads */
- 	struct mutex tx_rxlock;
-+	/* Mutex used for rx thread */
-+	struct mutex rx_lock;
- 	u8 endpoint;
+-	snprintf(buf, sizeof(buf), "0x%04x\n", mvmvif->mvm->dbgfs_rx_phyinfo);
++	len = scnprintf(buf, sizeof(buf), "0x%04x\n",
++			mvmvif->mvm->dbgfs_rx_phyinfo);
  
- 	/* Channel/band related */
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, sizeof(buf));
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+ static void iwl_dbgfs_quota_check(void *data, u8 *mac,
+@@ -1439,7 +1441,7 @@ static ssize_t iwl_dbgfs_quota_min_read(struct file *file,
+ 	char buf[10];
+ 	int len;
+ 
+-	len = snprintf(buf, sizeof(buf), "%d\n", mvmvif->dbgfs_quota_min);
++	len = scnprintf(buf, sizeof(buf), "%d\n", mvmvif->dbgfs_quota_min);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
 -- 
-2.7.4
+2.11.0
