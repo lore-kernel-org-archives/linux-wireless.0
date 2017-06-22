@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33881 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752346AbdFNLHU (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36279 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753068AbdFVNXd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 07:07:20 -0400
-From: Caesar Wang <wxt@rock-chips.com>
-To: kvalo@codeaurora.org
-Cc: yangzy@marvell.com, jeffy.chen@rock-chips.com,
-        briannorris@chromium.org, linux-kernel@vger.kernel.org,
-        Caesar Wang <wxt@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev@vger.kernel.org
-Subject: [PATCH v2] mwifiex: fixes the unexpected be printed log by default
-Date: Wed, 14 Jun 2017 19:06:56 +0800
-Message-Id: <1497438416-24665-1-git-send-email-wxt@rock-chips.com> (sfid-20170614_130746_821816_A88AEE19)
+        Thu, 22 Jun 2017 09:23:33 -0400
+Received: by mail-pf0-f195.google.com with SMTP id y7so2928667pfd.3
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 06:23:33 -0700 (PDT)
+Date: Thu, 22 Jun 2017 18:53:29 +0530
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: julian.calaby@gmail.com, Larry.Finger@lwfinger.net,
+        chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] rtlwifi: Remove unnecessary conditions
+Message-ID: <20170622132329.GA4825@symbol-HP-ZBook-15> (sfid-20170622_152337_978800_0282F6A2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses WARN level is not printed by default.
+As wmm_enable is initialized to false, hence the else condition never
+execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
+condition can be removed and boundary will be assigned with
+TX_PAGE_BOUNDARY.
 
-In some cases, some boards have always met the unused log be printed as
-follows.
-...
-[23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-cannot find cfp by band 2    & channel=13 freq=0
-[23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
-cannot find cfp by band 2    & channel=13 freq=0
-
-Due to we used the wifi default area was US and didn't support 12~14
-channels. As Frequencies:
-* 2412 MHz [1] (30.0 dBm)
-* 2417 MHz [2] (30.0 dBm)
-* 2422 MHz [3] (30.0 dBm)
-* 2427 MHz [4] (30.0 dBm)
-* 2432 MHz [5] (30.0 dBm)
-* 2437 MHz [6] (30.0 dBm)
-* 2442 MHz [7] (30.0 dBm)
-* 2447 MHz [8] (30.0 dBm)
-* 2452 MHz [9] (30.0 dBm)
-* 2457 MHz [10] (30.0 dBm)
-* 2462 MHz [11] (30.0 dBm)
-* 2467 MHz [12] (disabled)
-* 2472 MHz [13] (disabled)
-* 2484 MHz [14] (disabled)
-
-Also, as the commit 1b499cb72f26b
-("mwifiex: disable channel filtering feature in firmware"), it proved to
-be a feature to get better scan result from overlapping channel.
-
-Even there could be AP from overlapping channel (might be 12/13/14
-in this case), it will be filtered depend on reg domain rules.
-e.g:
-...
-if (ch->flags & IEEE80211_CHAN_DISABLED)
-        continue;
-
-So it should not been an ERROR, use the WARN level to instead it for now.
-
-Signed-off-by: Caesar Wang <wxt@rock-chips.com>
-Acked-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
 ---
-
 Changes in v2:
-- Fixes the commit and title as Kalle and Xinming comments on
-  https://patchwork.kernel.org/patch/9786047/
-- Add the Acked by "HU Xinming"
+  - Correcting the indent and moving up the change where
+    boundary is defined.
 
- drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-index 1ff2205..6e29943 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-@@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
- 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index f95a645..107c34e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -835,7 +835,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+ 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
+ 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
+ 	int err = 0;
+-	u32	boundary = 0;
++	u32	boundary = TX_PAGE_BOUNDARY;
+ 	u8 wmm_enable = false; /* TODO */
+ 	u8 out_ep_nums = rtlusb->out_ep_nums;
+ 	u8 queue_sel = rtlusb->out_queue_sel;
+@@ -845,13 +845,6 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+ 		pr_err("Failed to init power on!\n");
+ 		return err;
  	}
- 	if (i == sband->n_channels) {
--		mwifiex_dbg(priv->adapter, ERROR,
-+		mwifiex_dbg(priv->adapter, WARN,
- 			    "%s: cannot find cfp by band %d\t"
- 			    "& channel=%d freq=%d\n",
- 			    __func__, band, channel, freq);
--- 
-2.7.4
+-	if (!wmm_enable) {
+-		boundary = TX_PAGE_BOUNDARY;
+-	} else { /* for WMM */
+-		boundary = (IS_NORMAL_CHIP(rtlhal->version))
+-					? WMM_CHIP_B_TX_PAGE_BOUNDARY
+-					: WMM_CHIP_A_TX_PAGE_BOUNDARY;
+-	}
+ 	if (false == rtl92c_init_llt_table(hw, boundary)) {
+ 		pr_err("Failed to init LLT Table!\n");
+ 		return -EINVAL;
+--
+1.9.1
