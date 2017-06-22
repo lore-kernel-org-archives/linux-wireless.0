@@ -1,92 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:63467 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdFZLor (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34216 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753735AbdFVVVI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 07:44:47 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH v2 3/8] staging: wilc1000: WMM classification of data
-Date: Mon, 26 Jun 2017 17:13:25 +0530
-Message-ID: <1498477410-19518-4-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_134451_019902_6465085D)
-In-Reply-To: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 22 Jun 2017 17:21:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:37 +0300
+Message-Id: <20170622212101.16422-2-luca@coelho.fi> (sfid-20170622_232115_362421_965B0EC0)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 01/25] iwlwifi: mvm: remove txq EMPTYING_DELBA state for DQA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new function to classify data to available
-WMM access categories based on the DSCP value in the header.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+In DQA mode, there is no need to wait for the TXQ to
+clear out after getting a DELBA, since traffic can
+continue running on the queue.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 51 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 8c997ba..d1ed3ba8 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -375,6 +375,57 @@ static inline void ac_q_limit(u8 ac, u16 *q_limit)
- 				      sum) + 1;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index bc52739eeb25..c76ffe1476b4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2814,8 +2814,13 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				    "ssn = %d, next_recl = %d\n",
+ 				    tid_data->ssn, tid_data->next_reclaimed);
  
-+static inline u8 ac_classify(struct wilc *wilc, struct txq_entry_t *tqe)
-+{
-+	u8 *eth_hdr_ptr;
-+	u8 *buffer = tqe->buffer;
-+	u8 ac;
-+	u16 h_proto;
-+
-+	spin_lock_irqsave(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
-+
-+	eth_hdr_ptr = &buffer[0];
-+	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
-+	if (h_proto == ETH_P_IP) {
-+		u8 *ip_hdr_ptr;
-+		u32 IHL, DSCP;
-+
-+		ip_hdr_ptr = &buffer[ETHERNET_HDR_LEN];
-+		IHL = (ip_hdr_ptr[0] & 0xf) << 2;
-+		DSCP = (ip_hdr_ptr[1] & 0xfc);
-+
-+		switch (DSCP) {
-+		case 0x20:
-+		case 0x40:
-+		case 0x08:
-+			ac = AC_BK_Q;
-+			break;
-+		case 0x80:
-+		case 0xA0:
-+		case 0x28:
-+			ac = AC_VI_Q;
-+			break;
-+		case 0xC0:
-+		case 0xd0:
-+		case 0xE0:
-+		case 0x88:
-+		case 0xB8:
-+			ac = AC_VO_Q;
-+			break;
-+		default:
-+			ac = AC_BE_Q;
-+			break;
-+		}
-+	} else {
-+		ac  = AC_BE_Q;
-+	}
-+
-+	tqe->q_num = ac;
-+	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
-+
-+	return ac;
-+}
-+
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
- {
+-		/* There are still packets for this RA / TID in the HW */
+-		if (tid_data->ssn != tid_data->next_reclaimed) {
++		/*
++		 * There are still packets for this RA / TID in the HW.
++		 * Not relevant for DQA mode, since there is no need to disable
++		 * the queue.
++		 */
++		if (!iwl_mvm_is_dqa_supported(mvm) &&
++		    tid_data->ssn != tid_data->next_reclaimed) {
+ 			tid_data->state = IWL_EMPTYING_HW_QUEUE_DELBA;
+ 			err = 0;
+ 			break;
 -- 
-2.7.4
+2.11.0
