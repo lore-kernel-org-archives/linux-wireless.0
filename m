@@ -1,116 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56790 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752310AbdFLOPk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 10:15:40 -0400
-Subject: patch "wireless: ipw2x00: convert to use DRIVER_ATTR_RW" added to driver-core-testing
-To: gregkh@linuxfoundation.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        stas.yakovlev@gmail.com
-From: <gregkh@linuxfoundation.org>
-Date: Mon, 12 Jun 2017 16:15:26 +0200
-Message-ID: <1497276926190176@kroah.com> (sfid-20170612_161555_387296_18C3C1FC)
+Received: from mga07.intel.com ([134.134.136.100]:29808 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752832AbdFVWVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 18:21:51 -0400
+Date: Fri, 23 Jun 2017 00:21:47 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Subject: Re: [PATCH 0/3] NFC: Misc. kernel updates and trf7970a erratum
+ handling
+Message-ID: <20170622222147.GD21214@zurbaran.ger.intel.com> (sfid-20170623_002154_470975_16A99C82)
+References: <20170615174617.1817-1-mgreer@animalcreek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170615174617.1817-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Mark,
 
-This is a note to let you know that I've just added the patch titled
+On Thu, Jun 15, 2017 at 10:46:14AM -0700, Mark Greer wrote:
+> Add a couple minor fixups and remove the trf7970a erratum handling
+> in which the last byte in the response to a Type 5 Read Multiple Blocks
+> command is discarded.  That handling is moved to the neard daemon where
+> there is enough context to do it properly.
+> 
+> Mark Greer (3):
+>   NFC: digital: NFC-A SEL_RES must be one byte
+>   NFC: digital: NFC-DEP Target WT(nfcdep,max) is now 14
+>   Revert "NFC: trf7970a: Handle extra byte in response to Type 5 RMB
+>     commands"
+All 3 patches applied, thanks.
 
-    wireless: ipw2x00: convert to use DRIVER_ATTR_RW
-
-to my driver-core git tree which can be found at
-    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git
-in the driver-core-testing branch.
-
-The patch will show up in the next release of the linux-next tree
-(usually sometime within the next 24 hours during the week.)
-
-The patch will be merged to the driver-core-next branch sometime soon,
-after it passes testing, and the merge window is open.
-
-If you have any questions about this process, please let me know.
-
-
->From 0457e1ae0f4b88676b0cea30ef6acff24febbbc0 Mon Sep 17 00:00:00 2001
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Fri, 9 Jun 2017 11:03:10 +0200
-Subject: wireless: ipw2x00: convert to use DRIVER_ATTR_RW
-
-We are trying to get rid of DRIVER_ATTR(), and the ipw2x00 driver's
-attributes can be trivially changed to use DRIVER_ATTR_RW().
-
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <netdev@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 8 +++-----
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++-----
- 2 files changed, 6 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index f922859acf40..aaaca4d08e2b 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -4160,12 +4160,12 @@ static ssize_t show_bssinfo(struct device *d, struct device_attribute *attr,
- static DEVICE_ATTR(bssinfo, S_IRUGO, show_bssinfo, NULL);
- 
- #ifdef CONFIG_IPW2100_DEBUG
--static ssize_t show_debug_level(struct device_driver *d, char *buf)
-+static ssize_t debug_level_show(struct device_driver *d, char *buf)
- {
- 	return sprintf(buf, "0x%08X\n", ipw2100_debug_level);
- }
- 
--static ssize_t store_debug_level(struct device_driver *d,
-+static ssize_t debug_level_store(struct device_driver *d,
- 				 const char *buf, size_t count)
- {
- 	u32 val;
-@@ -4179,9 +4179,7 @@ static ssize_t store_debug_level(struct device_driver *d,
- 
- 	return strnlen(buf, count);
- }
--
--static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO, show_debug_level,
--		   store_debug_level);
-+static DRIVER_ATTR_RW(debug_level);
- #endif				/* CONFIG_IPW2100_DEBUG */
- 
- static ssize_t show_fatal_error(struct device *d,
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index bbc579b647b6..5b79e2ec3a16 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -1195,12 +1195,12 @@ static void ipw_led_shutdown(struct ipw_priv *priv)
-  *
-  * See the level definitions in ipw for details.
-  */
--static ssize_t show_debug_level(struct device_driver *d, char *buf)
-+static ssize_t debug_level_show(struct device_driver *d, char *buf)
- {
- 	return sprintf(buf, "0x%08X\n", ipw_debug_level);
- }
- 
--static ssize_t store_debug_level(struct device_driver *d, const char *buf,
-+static ssize_t debug_level_store(struct device_driver *d, const char *buf,
- 				 size_t count)
- {
- 	char *p = (char *)buf;
-@@ -1221,9 +1221,7 @@ static ssize_t store_debug_level(struct device_driver *d, const char *buf,
- 
- 	return strnlen(buf, count);
- }
--
--static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
--		   show_debug_level, store_debug_level);
-+static DRIVER_ATTR_RW(debug_level);
- 
- static inline u32 ipw_get_event_log_len(struct ipw_priv *priv)
- {
--- 
-2.13.1
+Cheers,
+Samuel.
