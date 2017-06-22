@@ -1,38 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20364 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbdFVIk4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43892 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751988AbdFVBY5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 04:40:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH 03/12] ath10k: QCA6174 hw3.0: update board-2.bin
-Date: Thu, 22 Jun 2017 11:31:59 +0300
-Message-ID: <1498120328-2017-4-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170622_104105_758108_80B7FE68)
-In-Reply-To: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 21 Jun 2017 21:24:57 -0400
+From: miaoqing@codeaurora.org
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        sssa@qti.qualcomm.com, giulio.genovese@gmail.com,
+        Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 1/3] ath9k: fixed an invalid pointer dereference
+Date: Thu, 22 Jun 2017 09:24:27 +0800
+Message-Id: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org> (sfid-20170622_032501_291087_F67A9172)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
+
+The bug was triggered when do suspend/resuming continuously
+on Dell XPS L322X/0PJHXN version 9333 (2013) with kernel
+4.12.0-041200rc4-generic. But can't reproduce on DELL
+E5440 + AR9300 PCIE chips.
+
+The warning is caused by accessing invalid pointer sc->rng_task.
+sc->rng_task is not be cleared after kthread_stop(sc->rng_task)
+be called in ath9k_rng_stop(). Because the kthread is stopped
+before ath9k_rng_kthread() be scheduled.
+
+So set sc->rng_task to null after kthread_stop(sc->rng_task) to
+resolve this issue.
+
+WARNING: CPU: 0 PID: 984 at linux/kernel/kthread.c:71 kthread_stop+0xf1/0x100
+CPU: 0 PID: 984 Comm: NetworkManager Not tainted 4.12.0-041200rc4-generic #201706042031
+Hardware name: Dell Inc.          Dell System XPS L322X/0PJHXN, BIOS A09 05/15/2013
+task: ffff950170fdda00 task.stack: ffffa22c01538000
+RIP: 0010:kthread_stop+0xf1/0x100
+RSP: 0018:ffffa22c0153b5b0 EFLAGS: 00010246
+RAX: ffffffffa6257800 RBX: ffff950171b79560 RCX: 0000000000000000
+RDX: 0000000080000000 RSI: 000000007fffffff RDI: ffff9500ac9a9680
+RBP: ffffa22c0153b5c8 R08: 0000000000000000 R09: 0000000000000000
+R10: ffffa22c0153b648 R11: ffff9501768004b8 R12: ffff9500ac9a9680
+R13: ffff950171b79f70 R14: ffff950171b78780 R15: ffff9501749dc018
+FS:  00007f0d6bfd5540(0000) GS:ffff95017f200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fc190161a08 CR3: 0000000232906000 CR4: 00000000001406f0
+Call Trace:
+  ath9k_rng_stop+0x1a/0x20 [ath9k]
+  ath9k_stop+0x3b/0x1d0 [ath9k]
+  drv_stop+0x33/0xf0 [mac80211]
+  ieee80211_stop_device+0x43/0x50 [mac80211]
+  ieee80211_do_stop+0x4f2/0x810 [mac80211]
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=196043
+Reported-by: Giulio Genovese <giulio.genovese@gmail.com>
+Tested-by: Giulio Genovese <giulio.genovese@gmail.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- ath10k/QCA6174/hw3.0/board-2.bin | Bin 361924 -> 477060 bytes
- 1 file changed, 0 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/rng.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/ath10k/QCA6174/hw3.0/board-2.bin b/ath10k/QCA6174/hw3.0/board-2.bin
-index ea18004951fed49aa9214093fa900427e4960a5d..a442315503bfc70f5a5fbfaa6f04004702d8474c 100644
-GIT binary patch
-delta 261
-zcmX@oE!NU6+t9+;!qmdt!m@?+NbBSeye!ji9AXM%G~N8Zfn8zxwq#~8W^+@+&HfJ&
-zJR=Ct>@kx#lacY}eg&YE*kL9KMk9!(FlJ`)>1R_|csKuQ_#-cwl9;ShT$)r|SzMBu
-ztDBNqmYJMtYhYw*0Z|RsX@=0rWN5MZd;+@yPJNbmrOgZ>4l;YhD9U1NU}OU2f*flI
-Qb?ml8MhV75pu|ym0QL-7P5=M^
-
-delta 19
-acmZqamp#%g*3iP(!qmdt!m@?+NGkwIwFfc)
-
+diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
+index 568b1c6..73f46fb 100644
+--- a/drivers/net/wireless/ath/ath9k/rng.c
++++ b/drivers/net/wireless/ath/ath9k/rng.c
+@@ -120,6 +120,8 @@ void ath9k_rng_start(struct ath_softc *sc)
+ 
+ void ath9k_rng_stop(struct ath_softc *sc)
+ {
+-	if (sc->rng_task)
++	if (sc->rng_task) {
+ 		kthread_stop(sc->rng_task);
++		sc->rng_task = NULL;
++	}
+ }
 -- 
-2.7.4
+1.9.1
