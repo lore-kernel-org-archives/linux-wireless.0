@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slow1-d.mail.gandi.net ([217.70.178.86]:43976 "EHLO
-        slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751890AbdFJKmU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 06:42:20 -0400
-Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
-        by slow1-d.mail.gandi.net (Postfix) with ESMTP id 1F75447B24A
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2017 11:22:54 +0200 (CEST)
-Date: Sat, 10 Jun 2017 11:22:47 +0200
-From: Martin Michlmayr <tbm@cyrius.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH] brcmfmac: iso cfg80211: Fix grammar issue in error message
-Message-ID: <20170610092247.2gz6sydytp5pomq6@jirafa.cyrius.com> (sfid-20170610_124236_434526_A09704A7)
-References: <20170608080141.rswb2czupjeblqzq@jirafa.cyrius.com>
- <3bf898aa-c890-32ec-aa83-c7a1e7f56729@broadcom.com>
+Received: from mail-cys01nam02on0070.outbound.protection.outlook.com ([104.47.37.70]:48800
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751098AbdFVAyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Jun 2017 20:54:13 -0400
+Subject: Re: cfg80211_ops
+To: "Tobin C. Harding" <me@tobin.cc>, linux-wireless@vger.kernel.org
+References: <20170622000347.GA15458@eros>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <a3105fed-a02b-cd0e-1f4a-e3f9a0b7dd1f@quantenna.com> (sfid-20170622_025419_012718_7F9D64F7)
+Date: Wed, 21 Jun 2017 17:53:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3bf898aa-c890-32ec-aa83-c7a1e7f56729@broadcom.com>
+In-Reply-To: <20170622000347.GA15458@eros>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix grammar issue in error message about ISO3166.
+On 06/21/2017 05:03 PM, Tobin C. Harding wrote:
+> 
+> Hi,
+> 
+> Is some one able to please confirm for me that the following
+> cfg80211_ops callbacks are enough to implement a minimal functioning
+> Wi-Fi driver. Assume that a virtual interface is added during driver
+> initialization.
+> 
+> scan
+> add_key
+> get_key
+> del_key
+> sat_default_key
+> connect
+> disconnect
+> set_wiphy_params
 
-Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Hi, is this for STA-only? I guess you also need
+mgmt_frame_register
+mgmt_tx
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cd1d6730eab7..c1ad81f34658 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6767,7 +6767,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 	/* ignore non-ISO3166 country codes */
- 	for (i = 0; i < sizeof(req->alpha2); i++)
- 		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
--			brcmf_err("not a ISO3166 code (0x%02x 0x%02x)\n",
-+			brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
- 				  req->alpha2[0], req->alpha2[1]);
- 			return;
- 		}
+and you don't need *_key callbacks in case its fine to operate without 
+encryption.
 
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+> 
+> thanks,
+> Tobin
+> 
