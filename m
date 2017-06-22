@@ -1,36 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12178 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754972AbdFLPiF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34270 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753812AbdFVVVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 11:38:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/1] Add per chain RSSI reporting.
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <CAAV6Hgmjq9DDpcUUTZtDwodUjKrkzjnKSNZ+sK8U=M_AQgr-iQ@mail.gmail.com>
-References: <CAAV6Hgmjq9DDpcUUTZtDwodUjKrkzjnKSNZ+sK8U=M_AQgr-iQ@mail.gmail.com>
-To: Norik Dzhandzhapanyan <norikd@gmail.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <866823ed4ac64b8dae61f791aeb7e6f9@eusanexr01a.eu.qualcomm.com> (sfid-20170612_173816_249892_AE70A7AC)
-Date: Mon, 12 Jun 2017 08:37:56 -0700
+        Thu, 22 Jun 2017 17:21:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:44 +0300
+Message-Id: <20170622212101.16422-9-luca@coelho.fi> (sfid-20170622_232153_972749_1C0E0834)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 08/25] iwlwifi: mvm: avoid variable shadowing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Norik Dzhandzhapanyan <norikd@gmail.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Report per chain RSSI to mac80211.
-> 
-> Signed-off-by: Norik Dzhandzhapanyan <norikd@gmail.com>
-> [kvalo@qca.qualcomm.com: fix conflicts and style]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Avoid one kind of symbol shadowing another in iwl_mvm_flush_sta()
+by renaming the function parameter.
 
-This failed to apply and had quite a few checkpatch warnings. So I recreted the
-patch manually:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c  | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=5df110e3a093771f23001be2012ab6fa4d87089b
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 9a9163f64553..cdd13bc343e6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1370,7 +1370,7 @@ const char *iwl_mvm_get_tx_fail_reason(u32 status);
+ static inline const char *iwl_mvm_get_tx_fail_reason(u32 status) { return ""; }
+ #endif
+ int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags);
+-int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool int_sta, u32 flags);
++int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags);
+ 
+ void iwl_mvm_async_handlers_purge(struct iwl_mvm *mvm);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 63b938028144..da05801c9ca1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1904,11 +1904,11 @@ int iwl_mvm_flush_tx_path(struct iwl_mvm *mvm, u32 tfd_msk, u32 flags)
+ 	return ret;
+ }
+ 
+-int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool int_sta, u32 flags)
++int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
+ {
+ 	u32 mask;
+ 
+-	if (int_sta) {
++	if (internal) {
+ 		struct iwl_mvm_int_sta *int_sta = sta;
+ 
+ 		mask = int_sta->tfd_queue_msk;
 -- 
-https://patchwork.kernel.org/patch/9760887/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
