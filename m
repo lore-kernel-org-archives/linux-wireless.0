@@ -1,367 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42944 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751763AbdFIMJD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34262 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753770AbdFVVVN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 08:09:03 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 6/9] brcmfmac: support 4-way handshake offloading for WPA/WPA2-PSK
-Date: Fri,  9 Jun 2017 13:08:47 +0100
-Message-Id: <1497010130-16186-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140927_368036_56005C63)
-In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 22 Jun 2017 17:21:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:43 +0300
+Message-Id: <20170622212101.16422-8-luca@coelho.fi> (sfid-20170622_232154_568908_5949DF5C)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 07/25] iwlwifi: pcie: fix TVQM queue ID range check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The firmware may have supplicant code built-in. This is detected
-by the driver and indicated in the wiphy features flags. User-space
-can use this flag to determine whether or not to provide the
-pre-shared key material in the nl80211 CONNECT command.
+The queue ID should never be 512 either, so correct the check
+to be >= instead of just >.
 
-Reviewed-by: Gautam (Gautam Kumar) Shukla <gautams@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Fixes: 310181ec34e2 ("iwlwifi: move to TVQM mode")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 75 ++++++++++++++++++++--
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         | 14 +++-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  1 +
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +-
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    | 30 +++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  1 +
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 16 +++++
- 7 files changed, 134 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cd1d673..27a89dc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1344,6 +1344,27 @@ static u16 brcmf_map_fw_linkdown_reason(const struct brcmf_event_msg *e)
- 	return reason;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 6e186501f43c..8f00019cd3b4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -1076,7 +1076,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 	rsp = (void *)hcmd.resp_pkt->data;
+ 	qid = le16_to_cpu(rsp->queue_number);
  
-+static int brcmf_set_pmk(struct brcmf_if *ifp, const u8 *pmk_data, u16 pmk_len)
-+{
-+	struct brcmf_wsec_pmk_le pmk;
-+	int i, err;
-+
-+	/* convert to firmware key format */
-+	pmk.key_len = cpu_to_le16(pmk_len << 1);
-+	pmk.flags = cpu_to_le16(BRCMF_WSEC_PASSPHRASE);
-+	for (i = 0; i < pmk_len; i++)
-+		snprintf(&pmk.key[2 * i], 3, "%02x", pmk_data[i]);
-+
-+	/* store psk in firmware */
-+	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_WSEC_PMK,
-+				     &pmk, sizeof(pmk));
-+	if (err < 0)
-+		brcmf_err("failed to change PSK in firmware (len=%u)\n",
-+			  pmk_len);
-+
-+	return err;
-+}
-+
- static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(vif->wdev.wiphy);
-@@ -1366,6 +1387,10 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif, u16 reason)
- 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
- 	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
- 	brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_ENABLED, 0);
-+	if (vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_NONE) {
-+		brcmf_set_pmk(vif->ifp, NULL, 0);
-+		vif->profile.use_fwsup = BRCMF_PROFILE_FWSUP_NONE;
-+	}
- 	brcmf_dbg(TRACE, "Exit\n");
- }
- 
-@@ -1999,6 +2024,23 @@ static void brcmf_set_join_pref(struct brcmf_if *ifp,
- 		goto done;
- 	}
- 
-+	if (sme->crypto.psk) {
-+		brcmf_dbg(INFO, "using PSK offload\n");
-+
-+		/* enable firmware supplicant for this interface */
-+		err = brcmf_fil_iovar_int_set(ifp, "sup_wpa", 1);
-+		if (err < 0) {
-+			brcmf_err("failed to enable fw supplicant\n");
-+			goto done;
-+		}
-+		ifp->vif->profile.use_fwsup = BRCMF_PROFILE_FWSUP_PSK;
-+
-+		err = brcmf_set_pmk(ifp, sme->crypto.psk,
-+				    BRCMF_WSEC_MAX_PSK_LEN);
-+		if (err)
-+			goto done;
-+	}
-+
- 	/* Join with specific BSSID and cached SSID
- 	 * If SSID is zero join based on BSSID only
- 	 */
-@@ -5228,16 +5270,30 @@ void brcmf_cfg80211_free_netdev(struct net_device *ndev)
- 	free_netdev(ndev);
- }
- 
--static bool brcmf_is_linkup(const struct brcmf_event_msg *e)
-+static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
-+			    const struct brcmf_event_msg *e)
- {
- 	u32 event = e->event_code;
- 	u32 status = e->status;
- 
-+	if (event == BRCMF_E_PSK_SUP &&
-+	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
-+		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
- 	if (event == BRCMF_E_SET_SSID && status == BRCMF_E_STATUS_SUCCESS) {
- 		brcmf_dbg(CONN, "Processing set ssid\n");
--		return true;
-+		memcpy(vif->profile.bssid, e->addr, ETH_ALEN);
-+		if (vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_PSK)
-+			return true;
-+
-+		set_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state);
- 	}
- 
-+	if (test_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state) &&
-+	    test_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state)) {
-+		clear_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
-+		clear_bit(BRCMF_VIF_STATUS_ASSOC_SUCCESS, &vif->sme_state);
-+		return true;
-+	}
- 	return false;
- }
- 
-@@ -5272,6 +5328,13 @@ static bool brcmf_is_nonetwork(struct brcmf_cfg80211_info *cfg,
- 		return true;
- 	}
- 
-+	if (event == BRCMF_E_PSK_SUP &&
-+	    status != BRCMF_E_STATUS_FWSUP_COMPLETED) {
-+		brcmf_dbg(CONN, "Processing failed supplicant state: %u\n",
-+			  status);
-+		return true;
-+	}
-+
- 	return false;
- }
- 
-@@ -5429,7 +5492,6 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
- 			       &ifp->vif->sme_state)) {
- 		if (completed) {
- 			brcmf_get_assoc_ies(cfg, ifp);
--			memcpy(profile->bssid, e->addr, ETH_ALEN);
- 			brcmf_update_bss_info(cfg, ifp);
- 			set_bit(BRCMF_VIF_STATUS_CONNECTED,
- 				&ifp->vif->sme_state);
-@@ -5508,7 +5570,7 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
- 
- 	if (brcmf_is_apmode(ifp->vif)) {
- 		err = brcmf_notify_connect_status_ap(cfg, ndev, e, data);
--	} else if (brcmf_is_linkup(e)) {
-+	} else if (brcmf_is_linkup(ifp->vif, e)) {
- 		brcmf_dbg(CONN, "Linkup\n");
- 		if (brcmf_is_ibssmode(ifp->vif)) {
- 			brcmf_inform_ibss(cfg, ndev, e->addr);
-@@ -5676,6 +5738,8 @@ static void brcmf_register_event_handlers(struct brcmf_cfg80211_info *cfg)
- 			    brcmf_p2p_notify_action_tx_complete);
- 	brcmf_fweh_register(cfg->pub, BRCMF_E_ACTION_FRAME_OFF_CHAN_COMPLETE,
- 			    brcmf_p2p_notify_action_tx_complete);
-+	brcmf_fweh_register(cfg->pub, BRCMF_E_PSK_SUP,
-+			    brcmf_notify_connect_status);
- }
- 
- static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_info *cfg)
-@@ -6481,6 +6545,9 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	if (!ifp->drvr->settings->roamoff)
- 		wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM;
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_FWSUP))
-+		wiphy_ext_feature_set(wiphy,
-+				      NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK);
- 	wiphy->mgmt_stypes = brcmf_txrx_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 8f19d95..779e9b5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -113,6 +113,11 @@ struct brcmf_cfg80211_security {
- 	u32 cipher_group;
- };
- 
-+enum brcmf_profile_fwsup {
-+	BRCMF_PROFILE_FWSUP_NONE,
-+	BRCMF_PROFILE_FWSUP_PSK
-+};
-+
- /**
-  * struct brcmf_cfg80211_profile - profile information.
-  *
-@@ -124,6 +129,7 @@ struct brcmf_cfg80211_profile {
- 	u8 bssid[ETH_ALEN];
- 	struct brcmf_cfg80211_security sec;
- 	struct brcmf_wsec_key key[BRCMF_MAX_DEFAULT_KEYS];
-+	enum brcmf_profile_fwsup use_fwsup;
- };
- 
- /**
-@@ -131,16 +137,20 @@ struct brcmf_cfg80211_profile {
-  *
-  * @BRCMF_VIF_STATUS_READY: ready for operation.
-  * @BRCMF_VIF_STATUS_CONNECTING: connect/join in progress.
-- * @BRCMF_VIF_STATUS_CONNECTED: connected/joined succesfully.
-+ * @BRCMF_VIF_STATUS_CONNECTED: connected/joined successfully.
-  * @BRCMF_VIF_STATUS_DISCONNECTING: disconnect/disable in progress.
-  * @BRCMF_VIF_STATUS_AP_CREATED: AP operation started.
-+ * @BRCMF_VIF_STATUS_EAP_SUCCUSS: EAPOL handshake successful.
-+ * @BRCMF_VIF_STATUS_ASSOC_SUCCESS: successful SET_SSID received.
-  */
- enum brcmf_vif_status {
- 	BRCMF_VIF_STATUS_READY,
- 	BRCMF_VIF_STATUS_CONNECTING,
- 	BRCMF_VIF_STATUS_CONNECTED,
- 	BRCMF_VIF_STATUS_DISCONNECTING,
--	BRCMF_VIF_STATUS_AP_CREATED
-+	BRCMF_VIF_STATUS_AP_CREATED,
-+	BRCMF_VIF_STATUS_EAP_SUCCESS,
-+	BRCMF_VIF_STATUS_ASSOC_SUCCESS,
- };
- 
- /**
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 62985f2..05bd939 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -175,6 +175,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 			  drvr->settings->feature_disable);
- 		ifp->drvr->feat_flags &= ~drvr->settings->feature_disable;
- 	}
-+	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
- 
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-index db4733a..a0a846b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-@@ -31,6 +31,7 @@
-  * WOWL_GTK: (WOWL) GTK rekeying offload
-  * WOWL_ARP_ND: ARP and Neighbor Discovery offload support during WOWL.
-  * MFP: 802.11w Management Frame Protection.
-+ * FWSUP: Firmware supplicant.
-  */
- #define BRCMF_FEAT_LIST \
- 	BRCMF_FEAT_DEF(MBSS) \
-@@ -44,7 +45,8 @@
- 	BRCMF_FEAT_DEF(WOWL_ND) \
- 	BRCMF_FEAT_DEF(WOWL_GTK) \
- 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
--	BRCMF_FEAT_DEF(MFP)
-+	BRCMF_FEAT_DEF(MFP) \
-+	BRCMF_FEAT_DEF(FWSUP)
- 
- /*
-  * Quirks:
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-index 5fba4b4..816f80e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-@@ -142,6 +142,16 @@ enum brcmf_fweh_event_code {
- #define BRCMF_E_STATUS_CS_ABORT			15
- #define BRCMF_E_STATUS_ERROR			16
- 
-+/* status field values for PSK_SUP event */
-+#define BRCMF_E_STATUS_FWSUP_WAIT_M1		4
-+#define BRCMF_E_STATUS_FWSUP_PREP_M2		5
-+#define BRCMF_E_STATUS_FWSUP_COMPLETED		6
-+#define BRCMF_E_STATUS_FWSUP_TIMEOUT		7
-+#define BRCMF_E_STATUS_FWSUP_WAIT_M3		8
-+#define BRCMF_E_STATUS_FWSUP_PREP_M4		9
-+#define BRCMF_E_STATUS_FWSUP_WAIT_G1		10
-+#define BRCMF_E_STATUS_FWSUP_PREP_G2		11
-+
- /* reason field values in struct brcmf_event_msg */
- #define BRCMF_E_REASON_INITIAL_ASSOC		0
- #define BRCMF_E_REASON_LOW_RSSI			1
-@@ -161,6 +171,26 @@ enum brcmf_fweh_event_code {
- #define BRCMF_E_REASON_TDLS_PEER_CONNECTED	1
- #define BRCMF_E_REASON_TDLS_PEER_DISCONNECTED	2
- 
-+/* reason field values for PSK_SUP event */
-+#define BRCMF_E_REASON_FWSUP_OTHER		0
-+#define BRCMF_E_REASON_FWSUP_DECRYPT_KEY_DATA	1
-+#define BRCMF_E_REASON_FWSUP_BAD_UCAST_WEP128	2
-+#define BRCMF_E_REASON_FWSUP_BAD_UCAST_WEP40	3
-+#define BRCMF_E_REASON_FWSUP_UNSUP_KEY_LEN	4
-+#define BRCMF_E_REASON_FWSUP_PW_KEY_CIPHER	5
-+#define BRCMF_E_REASON_FWSUP_MSG3_TOO_MANY_IE	6
-+#define BRCMF_E_REASON_FWSUP_MSG3_IE_MISMATCH	7
-+#define BRCMF_E_REASON_FWSUP_NO_INSTALL_FLAG	8
-+#define BRCMF_E_REASON_FWSUP_MSG3_NO_GTK	9
-+#define BRCMF_E_REASON_FWSUP_GRP_KEY_CIPHER	10
-+#define BRCMF_E_REASON_FWSUP_GRP_MSG1_NO_GTK	11
-+#define BRCMF_E_REASON_FWSUP_GTK_DECRYPT_FAIL	12
-+#define BRCMF_E_REASON_FWSUP_SEND_FAIL		13
-+#define BRCMF_E_REASON_FWSUP_DEAUTH		14
-+#define BRCMF_E_REASON_FWSUP_WPA_PSK_TMO	15
-+#define BRCMF_E_REASON_FWSUP_WPA_PSK_M1_TMO	16
-+#define BRCMF_E_REASON_FWSUP_WPA_PSK_M3_TMO	17
-+
- /* action field values for brcmf_ifevent */
- #define BRCMF_E_IF_ADD				1
- #define BRCMF_E_IF_DEL				2
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-index 3a9a76d..63b1287 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-@@ -85,6 +85,7 @@
- #define BRCMF_C_SET_SCAN_PASSIVE_TIME		258
- #define BRCMF_C_GET_VAR				262
- #define BRCMF_C_SET_VAR				263
-+#define BRCMF_C_SET_WSEC_PMK			268
- 
- s32 brcmf_fil_cmd_data_set(struct brcmf_if *ifp, u32 cmd, void *data, u32 len);
- s32 brcmf_fil_cmd_data_get(struct brcmf_if *ifp, u32 cmd, void *data, u32 len);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 9a1eb5a..8b89507 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -45,6 +45,9 @@
- #define BRCMF_SCAN_PARAMS_COUNT_MASK	0x0000ffff
- #define BRCMF_SCAN_PARAMS_NSSID_SHIFT	16
- 
-+#define BRCMF_WSEC_MAX_PSK_LEN		32
-+#define	BRCMF_WSEC_PASSPHRASE		BIT(0)
-+
- /* primary (ie tx) key */
- #define BRCMF_PRIMARY_KEY		(1 << 1)
- #define DOT11_BSSTYPE_ANY		2
-@@ -470,6 +473,19 @@ struct brcmf_wsec_key_le {
- 	u8 ea[ETH_ALEN];	/* per station */
- };
- 
-+/**
-+ * struct brcmf_wsec_pmk_le - firmware pmk material.
-+ *
-+ * @key_len: number of octets in key material.
-+ * @flags: key handling qualifiers.
-+ * @key: PMK key material.
-+ */
-+struct brcmf_wsec_pmk_le {
-+	__le16  key_len;
-+	__le16  flags;
-+	u8 key[2 * BRCMF_WSEC_MAX_PSK_LEN + 1];
-+};
-+
- /* Used to get specific STA parameters */
- struct brcmf_scb_val_le {
- 	__le32 val;
+-	if (qid > ARRAY_SIZE(trans_pcie->txq)) {
++	if (qid >= ARRAY_SIZE(trans_pcie->txq)) {
+ 		WARN_ONCE(1, "queue index %d unsupported", qid);
+ 		ret = -EIO;
+ 		goto error_free_resp;
 -- 
-1.9.1
+2.11.0
