@@ -1,82 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35904 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751815AbdF1UOY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:14:24 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Tzipi Peres <tzipi.peres@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:13 +0300
-Message-Id: <20170628201330.9432-15-luca@coelho.fi> (sfid-20170628_221453_603730_C3411B26)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 14/31] iwlwifi: add the new a000_2ax series
+Received: from s3.sipsolutions.net ([5.9.151.49]:60328 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751835AbdFVNCt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 09:02:49 -0400
+Message-ID: <1498136554.2246.9.camel@sipsolutions.net> (sfid-20170622_150316_936238_96684186)
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Thu, 22 Jun 2017 15:02:34 +0200
+In-Reply-To: <20170621182706.GB92340@google.com> (sfid-20170621_202711_931649_388915DF)
+References: <20170525001119.64791-1-briannorris@chromium.org>
+         <20170525001119.64791-5-briannorris@chromium.org>
+         <87fufk2hmm.fsf@purkki.adurom.net> <20170601173954.GA138807@google.com>
+         <87inka77md.fsf@codeaurora.org> <1496999018.2424.5.camel@sipsolutions.net>
+         <20170621182706.GB92340@google.com> (sfid-20170621_202711_931649_388915DF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tzipi Peres <tzipi.peres@intel.com>
+On Wed, 2017-06-21 at 11:27 -0700, Brian Norris wrote:
+> 
+> > I'm not sure what you mean by "we need to atually stop all the
+> > virtual interfaces ([...]) first".
+> 
+> Judging by your following comments, I may have been completely
+> mistaken.
+> (But that's why I asked you folks!)
 
-Add a new config struct for the new a000 2ax series and add
-the five PCI ID for it.
+:)
 
-Signed-off-by: Tzipi Peres <tzipi.peres@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-a000.c   | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  5 +++++
- 3 files changed, 16 insertions(+)
+> > There are essentially only two/three ways to reach this - data
+> > path,
+> > which is getting stopped here, and control path (both nl80211 and
+> > perhaps ndo ops like start/stop).
+> 
+> I think I was conflating virtual interfaces with control path (e.g.,
+> nl80211 scans, set freq, etc.). The idea is that control operations
+> may still get *started* after the above, and it's just plain
+> impossible to resolve the races with driver queue teardown if we're
+> queueing up new control ops at the same time.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-index 4634c46d1eb4..2940c0a6c3d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-@@ -158,5 +158,15 @@ const struct iwl_cfg iwla000_2ac_cfg_jf = {
- 		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- };
- 
-+const struct iwl_cfg iwla000_2ax_cfg_hr = {
-+		.name = "Intel(R) Dual Band Wireless AX a000",
-+		.fw_name_pre = IWL_A000_HR_FW_PRE,
-+		IWL_DEVICE_A000,
-+		.ht_params = &iwl_a000_ht_params,
-+		.nvm_ver = IWL_A000_NVM_VERSION,
-+		.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
-+		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
-+
- MODULE_FIRMWARE(IWL_A000_HR_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_A000_JF_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 127017efdd87..c52623cb7c2a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -462,6 +462,7 @@ extern const struct iwl_cfg iwl9560_2ac_cfg;
- extern const struct iwl_cfg iwla000_2ac_cfg_hr;
- extern const struct iwl_cfg iwla000_2ac_cfg_hr_cdb;
- extern const struct iwl_cfg iwla000_2ac_cfg_jf;
-+extern const struct iwl_cfg iwla000_2ax_cfg_hr;
- #endif /* CONFIG_IWLMVM */
- 
- #endif /* __IWL_CONFIG_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index a8fb77483313..e995b055be4e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -539,6 +539,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- /* a000 Series */
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwla000_2ac_cfg_jf)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0000, iwla000_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwla000_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0078, iwla000_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0070, iwla000_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x2720, 0x1080, iwla000_2ax_cfg_hr)},
- #endif /* CONFIG_IWLMVM */
- 
- 	{0}
--- 
-2.11.0
+Agree.
+
+> But even if we kill off the wireless_dev's, I suppose there are still
+> control interfaces that can talk directly to the wiphy.
+
+Yeah, only a few.
+
+> > Without checking the code now, it seems entirely plausible that
+> > this is
+> > holding some lock that would lock out the control path entirely,
+> > for
+> > the duration until the wiphy is actually unregistered?
+> > 
+> > Actually, you can't unregister with the relevant locks held
+> > (without
+> > causing deadlocks), so perhaps it's marking the wiphy as
+> > unavailable so
+> > that all operations fail?
+> 
+> One of the above two sounds along the right line. But it's something
+> I couldn't really figure out how to do quite right.
+> 
+> Dumb question: how would I mark the wiphy as unavailable? Is there
+> something I can do at the cfg80211 level? Or would I really have to
+> guard all the cfg80211 entry points into mwifiex with a flag or lock?
+
+There isn't really a good way to do this. You can, of course, call
+wiphy_unregister(), but if you could do that you'd already have the
+problem solved, I think?
+
+I'm not really familiar enough with the context this happens in - can't
+you let all the operations that try to talk to the firmware fail
+(because the firmware is dead, or whatever) and then call
+wiphy_unregister()?
+
+> Also, IIUC, we need to wait for all control paths to complete (or
+> cancel) before we can free up the associated resources; so just
+> marking "unavailable" isn't enough.
+
+Yeah, I suppose so. Though if you just do all the freeing after
+wiphy_unregister() it'll do that for you?
+
+johannes
