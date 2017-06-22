@@ -1,211 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0076.outbound.protection.outlook.com ([104.47.34.76]:26048
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750832AbdFUETx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 00:19:53 -0400
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: Re: [RFC] mac80211: support non-data TXQs
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20170620210309.1193-1-johannes@sipsolutions.net>
-Message-ID: <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com> (sfid-20170621_062001_036442_2C8272E5)
-Date: Tue, 20 Jun 2017 21:19:45 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170620210309.1193-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from paleale.coelho.fi ([176.9.41.70]:34436 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753513AbdFVVWj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 17:22:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:20:51 +0300
+Message-Id: <20170622212101.16422-16-luca@coelho.fi> (sfid-20170622_232253_494569_F553ED5E)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 15/25] iwlwifi: mvm: make iwl_mvm_update_mcc() easier to follow
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/2017 02:03 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> 
-> Some drivers may want to also use the TXQ abstraction with
-> non-data packets, so add a hardware flag to allow this.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> ---
->   include/net/mac80211.h     |  9 +++++++--
->   net/mac80211/debugfs.c     |  1 +
->   net/mac80211/debugfs_sta.c |  4 +++-
->   net/mac80211/sta_info.c    | 15 ++++++++++++---
->   net/mac80211/tx.c          | 20 ++++++++++++++------
->   5 files changed, 37 insertions(+), 12 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 13c59e6f88d4..b64148c49db0 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1908,7 +1908,7 @@ struct ieee80211_sta {
->   	bool support_p2p_ps;
->   	u16 max_rc_amsdu_len;
->   
-> -	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
-> +	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
+From: Johannes Berg <johannes.berg@intel.com>
 
-Isn't that a little confusing? Wouldn't it be better to have a separate 
-member for non-data txq and name it accordingly (something like 
-txq_nodata). You have to handle it specially in most cases anyway I guess.
-With this approach you won't have to replace ARRAY_SIZE(sta->txq) by 
-IEEE80211_NUM_TIDS anywhere.
+Some static checkers (e.g. smatch) complain about the logic, saying that
+resp_cp might be leaked. Clearly that isn't true, but making the logic
+easier to follow does not result in any significant code changes and makes
+the code more readable by moving the NULL check closer to its source.
 
->   
->   	/* must be last */
->   	u8 drv_priv[0] __aligned(sizeof(void *));
-> @@ -1942,7 +1942,8 @@ struct ieee80211_tx_control {
->    *
->    * @vif: &struct ieee80211_vif pointer from the add_interface callback.
->    * @sta: station table entry, %NULL for per-vif queue
-> - * @tid: the TID for this queue (unused for per-vif queue)
-> + * @tid: the TID for this queue (unused for per-vif queue),
-> + *	%IEEE80211_NUM_TIDS for non-data (if enabled)
->    * @ac: the AC for this queue
->    * @drv_priv: driver private area, sized by hw->txq_data_size
->    *
-> @@ -2141,6 +2142,9 @@ struct ieee80211_txq {
->    *	The stack will not do fragmentation.
->    *	The callback for @set_frag_threshold should be set as well.
->    *
-> + * @IEEE80211_HW_WANT_NONDATA_TXQ: The driver/hardware wants to have a TXQ
-> + *	(&struct ieee80211_txq) for non-data frames
-> + *
->    * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
->    */
->   enum ieee80211_hw_flags {
-> @@ -2183,6 +2187,7 @@ enum ieee80211_hw_flags {
->   	IEEE80211_HW_TX_FRAG_LIST,
->   	IEEE80211_HW_REPORTS_LOW_ACK,
->   	IEEE80211_HW_SUPPORTS_TX_FRAG,
-> +	IEEE80211_HW_WANT_NONDATA_TXQ,
->   
->   	/* keep last, obviously */
->   	NUM_IEEE80211_HW_FLAGS
-> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-> index d40ec17829a9..d754dc9ff56f 100644
-> --- a/net/mac80211/debugfs.c
-> +++ b/net/mac80211/debugfs.c
-> @@ -791,6 +791,7 @@ static const char *hw_flag_names[] = {
->   	FLAG(TX_FRAG_LIST),
->   	FLAG(REPORTS_LOW_ACK),
->   	FLAG(SUPPORTS_TX_FRAG),
-> +	FLAG(WANT_NONDATA_TXQ),
->   #undef FLAG
->   };
->   
-> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-> index 0f122a554d2e..48984f6cabd9 100644
-> --- a/net/mac80211/debugfs_sta.c
-> +++ b/net/mac80211/debugfs_sta.c
-> @@ -171,7 +171,9 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
->   		       bufsz+buf-p,
->   		       "tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets\n");
->   
-> -	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-> +	for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-> +		if (!sta->sta.txq[i])
-> +			continue;
->   		txqi = to_txq_info(sta->sta.txq[i]);
->   		p += scnprintf(p, bufsz+buf-p,
->   			       "%d %d %u %u %u %u %u %u %u %u %u\n",
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index 0297f544e0cc..8b71960eb2a0 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -112,7 +112,12 @@ static void __cleanup_single_sta(struct sta_info *sta)
->   
->   	if (sta->sta.txq[0]) {
->   		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-> -			struct txq_info *txqi = to_txq_info(sta->sta.txq[i]);
-> +			struct txq_info *txqi;
-> +
-> +			if (!sta->sta.txq[i])
-> +				continue;
-> +
-> +			txqi = to_txq_info(sta->sta.txq[i]);
->   
->   			spin_lock_bh(&fq->lock);
->   			ieee80211_txq_purge(local, txqi);
-> @@ -384,15 +389,19 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->   		ewma_signal_init(&sta->rx_stats_avg.chain_signal[i]);
->   
->   	if (local->ops->wake_tx_queue) {
-> +		int num_queues = IEEE80211_NUM_TIDS;
->   		void *txq_data;
->   		int size = sizeof(struct txq_info) +
->   			   ALIGN(hw->txq_data_size, sizeof(void *));
->   
-> -		txq_data = kcalloc(ARRAY_SIZE(sta->sta.txq), size, gfp);
-> +		if (ieee80211_hw_check(&local->hw, WANT_NONDATA_TXQ))
-> +			num_queues++;
-> +
-> +		txq_data = kcalloc(num_queues, size, gfp);
->   		if (!txq_data)
->   			goto free;
->   
-> -		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-> +		for (i = 0; i < num_queues; i++) {
->   			struct txq_info *txq = txq_data + i * size;
->   
->   			ieee80211_txq_init(sdata, sta, txq, i);
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 3d3e37f29bcb..d1cef5ad91ee 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -4,6 +4,7 @@
->    * Copyright 2006-2007	Jiri Benc <jbenc-AlSwsSmVLrQ@public.gmane.org>
->    * Copyright 2007	Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
->    * Copyright 2013-2014  Intel Mobile Communications GmbH
-> + * Copyright 2017	Intel Deutschland GmbH
->    *
->    * This program is free software; you can redistribute it and/or modify
->    * it under the terms of the GNU General Public License version 2 as
-> @@ -1245,24 +1246,28 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
->   {
->   	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
->   	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> -	struct ieee80211_txq *txq = NULL;
-> +	struct ieee80211_txq *txq;
->   
->   	if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
->   	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
->   		return NULL;
->   
-> -	if (!ieee80211_is_data(hdr->frame_control))
-> +	if (!vif) {
->   		return NULL;
-> +	} else if (!sta) {
-> +		txq = vif->txq;
-> +	} else if (!ieee80211_is_data(hdr->frame_control)) {
-> +		if (!sta->uploaded)
-> +			return NULL;
->   
-> -	if (sta) {
-> +		txq = sta->sta.txq[IEEE80211_NUM_TIDS];
-> +	} else {
->   		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
->   
->   		if (!sta->uploaded)
->   			return NULL;
->   
->   		txq = sta->sta.txq[tid];
-> -	} else if (vif) {
-> -		txq = vif->txq;
->   	}
->   
->   	if (!txq)
-> @@ -1417,7 +1422,10 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
->   		txqi->txq.sta = &sta->sta;
->   		sta->sta.txq[tid] = &txqi->txq;
->   		txqi->txq.tid = tid;
-> -		txqi->txq.ac = ieee80211_ac_from_tid(tid);
-> +		if (tid == IEEE80211_NUM_TIDS + 1)
-> +			txqi->txq.ac = IEEE80211_AC_VO;
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 29 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
 
-Why voice, maybe commit message should mention it?
-
-> +		else
-> +			txqi->txq.ac = ieee80211_ac_from_tid(tid);
->   	} else {
->   		sdata->vif.txq = &txqi->txq;
->   		txqi->txq.tid = 0;
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index beead0bc08c9..ad8bd90deed2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -779,6 +779,10 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 		resp_len = sizeof(struct iwl_mcc_update_resp) +
+ 			   n_channels * sizeof(__le32);
+ 		resp_cp = kmemdup(mcc_resp, resp_len, GFP_KERNEL);
++		if (!resp_cp) {
++			resp_cp = ERR_PTR(-ENOMEM);
++			goto exit;
++		}
+ 	} else {
+ 		struct iwl_mcc_update_resp_v1 *mcc_resp_v1 = (void *)pkt->data;
+ 
+@@ -786,21 +790,18 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 		resp_len = sizeof(struct iwl_mcc_update_resp) +
+ 			   n_channels * sizeof(__le32);
+ 		resp_cp = kzalloc(resp_len, GFP_KERNEL);
+-
+-		if (resp_cp) {
+-			resp_cp->status = mcc_resp_v1->status;
+-			resp_cp->mcc = mcc_resp_v1->mcc;
+-			resp_cp->cap = mcc_resp_v1->cap;
+-			resp_cp->source_id = mcc_resp_v1->source_id;
+-			resp_cp->n_channels = mcc_resp_v1->n_channels;
+-			memcpy(resp_cp->channels, mcc_resp_v1->channels,
+-			       n_channels * sizeof(__le32));
++		if (!resp_cp) {
++			resp_cp = ERR_PTR(-ENOMEM);
++			goto exit;
+ 		}
+-	}
+ 
+-	if (!resp_cp) {
+-		ret = -ENOMEM;
+-		goto exit;
++		resp_cp->status = mcc_resp_v1->status;
++		resp_cp->mcc = mcc_resp_v1->mcc;
++		resp_cp->cap = mcc_resp_v1->cap;
++		resp_cp->source_id = mcc_resp_v1->source_id;
++		resp_cp->n_channels = mcc_resp_v1->n_channels;
++		memcpy(resp_cp->channels, mcc_resp_v1->channels,
++		       n_channels * sizeof(__le32));
+ 	}
+ 
+ 	status = le32_to_cpu(resp_cp->status);
+@@ -820,8 +821,6 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 
+ exit:
+ 	iwl_free_resp(&cmd);
+-	if (ret)
+-		return ERR_PTR(ret);
+ 	return resp_cp;
+ }
+ 
+-- 
+2.11.0
