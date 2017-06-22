@@ -1,84 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:32922 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751916AbdFKNtw (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34428 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753513AbdFVVWe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Jun 2017 09:49:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <801f5209-f5a0-7414-f8f4-1500178a680b@broadcom.com>
-References: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
- <1496442569-11307-1-git-send-email-housel@acm.org> <CAHp75VcfK5V42vzsh=L+CnX2ZnF=8UORbOf+f2WfmcNH1DbAsw@mail.gmail.com>
- <801f5209-f5a0-7414-f8f4-1500178a680b@broadcom.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sun, 11 Jun 2017 16:49:50 +0300
-Message-ID: <CAHp75VfSagtTco5qnMLyNRcmWMcf7h3RAAa9wmgKGCfB3ees_Q@mail.gmail.com> (sfid-20170611_155036_822273_9AA899C4)
-Subject: Re: [PATCH v2] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: "Peter S. Housel" <housel@acm.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Florian Westphal <fw@strlen.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 22 Jun 2017 17:22:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jun 2017 00:21:00 +0300
+Message-Id: <20170622212101.16422-25-luca@coelho.fi> (sfid-20170622_232240_770950_46676928)
+In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
+References: <20170622212101.16422-1-luca@coelho.fi>
+Subject: [PATCH 24/25] iwlwifi: pcie: use kstrtou32_from_user()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 10, 2017 at 10:27 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 03-06-17 17:36, Andy Shevchenko wrote:
->> On Sat, Jun 3, 2017 at 1:29 AM, Peter S. Housel <housel@acm.org> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-The following looks good to me.
-Feel free to add
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Use kstrtou32_from_user() in debugfs instead of open-coding it.
 
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -705,7 +705,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev
-> *sdiodev, struct sk_buff *pkt)
->  int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
->                            struct sk_buff_head *pktq, uint totlen)
->  {
-> -       struct sk_buff *glom_skb;
-> +       struct sk_buff *glom_skb = NULL;
->         struct sk_buff *skb;
->         u32 addr = sdiodev->sbwad;
->         int err = 0;
-> @@ -726,10 +726,8 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev
-> *sdiodev,
->                         return -ENOMEM;
->                 err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
->                                          glom_skb);
-> -               if (err) {
-> -                       brcmu_pkt_buf_free_skb(glom_skb);
-> +               if (err)
->                         goto done;
-> -               }
->
->                 skb_queue_walk(pktq, skb) {
->                         memcpy(skb->data, glom_skb->data, skb->len);
-> @@ -740,6 +738,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev
-> *sdiodev,
->                                             pktq);
->
->  done:
-> +       brcmu_pkt_buf_free_skb(glom_skb);
->         return err;
->  }
->
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 280b14ace175..67343b10b0da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2428,17 +2428,12 @@ static ssize_t iwl_dbgfs_interrupt_write(struct file *file,
+ 	struct iwl_trans *trans = file->private_data;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
+-
+-	char buf[8];
+-	int buf_size;
+ 	u32 reset_flag;
++	int ret;
+ 
+-	memset(buf, 0, sizeof(buf));
+-	buf_size = min(count, sizeof(buf) -  1);
+-	if (copy_from_user(buf, user_buf, buf_size))
+-		return -EFAULT;
+-	if (sscanf(buf, "%x", &reset_flag) != 1)
+-		return -EFAULT;
++	ret = kstrtou32_from_user(user_buf, count, 16, &reset_flag);
++	if (ret)
++		return ret;
+ 	if (reset_flag == 0)
+ 		memset(isr_stats, 0, sizeof(*isr_stats));
+ 
 -- 
-With Best Regards,
-Andy Shevchenko
+2.11.0
