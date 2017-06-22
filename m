@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60844 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751147AbdFBL1B (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51188 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752188AbdFVKCg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:27:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:42 +0300
-Message-Id: <20170602112553.2466-15-luca@coelho.fi> (sfid-20170602_132705_470444_D4DAB19A)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 14/25] iwlwifi: update device ID for a000 family
+        Thu, 22 Jun 2017 06:02:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: net_device::destructor patch for brcmfmac
+References: <3f81fbd3-2896-2b09-1d59-ae5ec88045c9@broadcom.com>
+        <1498124992.2246.6.camel@sipsolutions.net>
+Date: Thu, 22 Jun 2017 13:02:30 +0300
+In-Reply-To: <1498124992.2246.6.camel@sipsolutions.net> (Johannes Berg's
+        message of "Thu, 22 Jun 2017 11:49:52 +0200")
+Message-ID: <871sqctk5l.fsf@kamboji.qca.qualcomm.com> (sfid-20170622_120240_435287_087368F6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Three configurations will share device ID 2720, and will
-be differentiated by RF ID.
+> On Thu, 2017-06-22 at 11:45 +0200, Arend van Spriel wrote:
+>> Hi Kalle,
+>> 
+>> I have a fix for brcmfmac, which is related to a change Dave made in
+>> struct net_device, ie. commit cf124db566e6 ("net: Fix inconsistent
+>> teardown and release of private netdev state.").
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  3 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 12 +++++++-----
- 2 files changed, 9 insertions(+), 6 deletions(-)
+Is there a report from users or is this more like a theoretical issue?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index fa120fb55373..c9481b23b1a7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -348,7 +348,8 @@ enum {
- 
- /* RF_ID value */
- #define CSR_HW_RF_ID_TYPE_JF		(0x00105000)
--#define CSR_HW_RF_ID_TYPE_HR		(0x00109000)
-+#define CSR_HW_RF_ID_TYPE_HR		(0x0010A000)
-+#define CSR_HW_RF_ID_TYPE_HRCDB		(0x00109000)
- 
- /* EEPROM REG */
- #define CSR_EEPROM_REG_READ_VALID_MSK	(0x00000001)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index e51760e752d4..2d92d3708619 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -538,7 +538,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 
- /* a000 Series */
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
--	{IWL_PCI_DEVICE(0x2722, 0x0A10, iwla000_2ac_cfg_hr)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwla000_2ac_cfg_jf)},
- #endif /* CONFIG_IWLMVM */
- 
- 	{0}
-@@ -672,10 +672,12 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		iwl_trans->cfg = cfg_7265d;
- 	}
- 
--	if (iwl_trans->cfg->rf_id &&
--	    (cfg == &iwla000_2ac_cfg_hr || cfg == &iwla000_2ac_cfg_hr_cdb) &&
--	     iwl_trans->hw_rf_id == CSR_HW_RF_ID_TYPE_JF) {
--		cfg = &iwla000_2ac_cfg_jf;
-+	if (iwl_trans->cfg->rf_id && cfg == &iwla000_2ac_cfg_hr_cdb) {
-+		if (iwl_trans->hw_rf_id == CSR_HW_RF_ID_TYPE_JF)
-+			cfg = &iwla000_2ac_cfg_jf;
-+		else if (iwl_trans->hw_rf_id == CSR_HW_RF_ID_TYPE_HR)
-+			cfg = &iwla000_2ac_cfg_hr;
-+
- 		iwl_trans->cfg = cfg;
- 	}
- #endif
+We are quite late in 4.12 cycle so I would prefer to push this via
+wireless-drivers-next and stable tree to 4.12.x, unless it's really
+critical of course.
+
+>> This change is not in wireless-drivers-next, but it is in
+>> mac80211-next and thus in wireless-testing. What should I do? Submit
+>> to net-next, or mac80211-next, or will you merge net-next into
+>> wireless-drivers-next?
+>
+> Actually, it's even in *net* I believe, so you should submit it to
+> there, or Kalle should integrate (fast-forward, rebase?) that into
+> wireless-drivers.
+
+My plan is to send a pull request to Dave this week still (unless
+Midsummer celebrations last too long, knowing Finland's weather that's
+unlikely) and I could fast forward then. I have also other patches
+waiting for stuff in net-next.
+
+Arend, I think the best is that you use wireless-testing as baseline and
+clearly document what commit your patch depends on. Once I have fast
+forwarded wireless-drivers-next to latest net-next it _should_ apply
+just fine.
+
 -- 
-2.11.0
+Kalle Valo
