@@ -1,190 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34872 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751327AbdFYLMK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51640 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdFVIlO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:38 +0300
-Message-Id: <20170625111158.1792-7-luca@coelho.fi> (sfid-20170625_131300_106430_B6E864E9)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 06/26] iwlwifi: mvm: disentangle union in TX status struct
+        Thu, 22 Jun 2017 04:41:14 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH 05/12] ath10k: QCA9377 hw1.0: update board-2.bin
+Date: Thu, 22 Jun 2017 11:32:01 +0300
+Message-ID: <1498120328-2017-6-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170622_104117_875345_D3B5B2B8)
+In-Reply-To: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-This improves documentation, since kernel-doc can't deal with the
-union well.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 73 ++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |  3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  9 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  3 +-
- 4 files changed, 69 insertions(+), 19 deletions(-)
+ ath10k/QCA9377/hw1.0/board-2.bin | Bin 427668 -> 304308 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index a5a8616dad6f..0562ce406249 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -513,7 +513,7 @@ struct agg_tx_status {
- #define IWL_MVM_TX_RES_GET_RA(_ra_tid) ((_ra_tid) >> 4)
- 
- /**
-- * struct iwl_mvm_tx_resp - notifies that fw is TXing a packet
-+ * struct iwl_mvm_tx_resp_v3 - notifies that fw is TXing a packet
-  * ( REPLY_TX = 0x1c )
-  * @frame_count: 1 no aggregation, >1 aggregation
-  * @bt_kill_count: num of times blocked by bluetooth (unused for agg)
-@@ -540,7 +540,63 @@ struct agg_tx_status {
-  * @tx_queue: TX queue for this response
-  * @status: for non-agg:  frame status TX_STATUS_*
-  *	for agg: status of 1st frame, AGG_TX_STATE_*; other frame status fields
-- *	follow this one, up to frame_count.
-+ *	follow this one, up to frame_count. Length in @frame_count.
-+ *
-+ * After the array of statuses comes the SSN of the SCD. Look at
-+ * %iwl_mvm_get_scd_ssn for more details.
-+ */
-+struct iwl_mvm_tx_resp_v3 {
-+	u8 frame_count;
-+	u8 bt_kill_count;
-+	u8 failure_rts;
-+	u8 failure_frame;
-+	__le32 initial_rate;
-+	__le16 wireless_media_time;
-+
-+	u8 pa_status;
-+	u8 pa_integ_res_a[3];
-+	u8 pa_integ_res_b[3];
-+	u8 pa_integ_res_c[3];
-+	__le16 measurement_req_id;
-+	u8 reduced_tpc;
-+	u8 reserved;
-+
-+	__le32 tfd_info;
-+	__le16 seq_ctl;
-+	__le16 byte_cnt;
-+	u8 tlc_info;
-+	u8 ra_tid;
-+	__le16 frame_ctrl;
-+	struct agg_tx_status status[];
-+} __packed; /* TX_RSP_API_S_VER_3 */
-+
-+/**
-+ * struct iwl_mvm_tx_resp - notifies that fw is TXing a packet
-+ * ( REPLY_TX = 0x1c )
-+ * @frame_count: 1 no aggregation, >1 aggregation
-+ * @bt_kill_count: num of times blocked by bluetooth (unused for agg)
-+ * @failure_rts: num of failures due to unsuccessful RTS
-+ * @failure_frame: num failures due to no ACK (unused for agg)
-+ * @initial_rate: for non-agg: rate of the successful Tx. For agg: rate of the
-+ *	Tx of all the batch. RATE_MCS_*
-+ * @wireless_media_time: for non-agg: RTS + CTS + frame tx attempts time + ACK.
-+ *	for agg: RTS + CTS + aggregation tx time + block-ack time.
-+ *	in usec.
-+ * @pa_status: tx power info
-+ * @pa_integ_res_a: tx power info
-+ * @pa_integ_res_b: tx power info
-+ * @pa_integ_res_c: tx power info
-+ * @measurement_req_id: tx power info
-+ * @reduced_tpc: transmit power reduction used
-+ * @reserved: reserved
-+ * @tfd_info: TFD information set by the FH
-+ * @seq_ctl: sequence control from the Tx cmd
-+ * @byte_cnt: byte count from the Tx cmd
-+ * @tlc_info: TLC rate info
-+ * @ra_tid: bits [3:0] = ra, bits [7:4] = tid
-+ * @frame_ctrl: frame control
-+ * @tx_queue: TX queue for this response
-+ * @status: for non-agg:  frame status TX_STATUS_*
-  *	For version 6 TX response isn't received for aggregation at all.
-  *
-  * After the array of statuses comes the SSN of the SCD. Look at
-@@ -568,16 +624,9 @@ struct iwl_mvm_tx_resp {
- 	u8 tlc_info;
- 	u8 ra_tid;
- 	__le16 frame_ctrl;
--	union {
--		struct {
--			struct agg_tx_status status;
--		} v3;/* TX_RSP_API_S_VER_3 */
--		struct {
--			__le16 tx_queue;
--			__le16 reserved2;
--			struct agg_tx_status status;
--		} v6;
--	};
-+	__le16 tx_queue;
-+	__le16 reserved2;
-+	struct agg_tx_status status;
- } __packed; /* TX_RSP_API_S_VER_6 */
- 
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 7a52fb6b4924..dc613b604914 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -217,7 +217,8 @@ enum iwl_legacy_cmds {
- 
- 	/**
- 	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2,
--	 *	response in &struct iwl_mvm_tx_resp
-+	 *	response in &struct iwl_mvm_tx_resp or
-+	 *	&struct iwl_mvm_tx_resp_v3
- 	 */
- 	TX_CMD = 0x1c,
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 0b5e92c1483e..e616472afd45 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1296,14 +1296,13 @@ static inline bool iwl_mvm_is_cdb_supported(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_CDB_SUPPORT);
- }
- 
--static inline struct agg_tx_status*
--iwl_mvm_get_agg_status(struct iwl_mvm *mvm,
--		       struct iwl_mvm_tx_resp *tx_resp)
-+static inline struct agg_tx_status *
-+iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
- {
- 	if (iwl_mvm_has_new_tx_api(mvm))
--		return &tx_resp->v6.status;
-+		return &((struct iwl_mvm_tx_resp *)tx_resp)->status;
- 	else
--		return &tx_resp->v3.status;
-+		return ((struct iwl_mvm_tx_resp_v3 *)tx_resp)->status;
- }
- 
- static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 288505114153..02f293b711fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1331,6 +1331,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	struct ieee80211_sta *sta;
- 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
- 	int txq_id = SEQ_TO_QUEUE(sequence);
-+	/* struct iwl_mvm_tx_resp_v3 is almost the same */
- 	struct iwl_mvm_tx_resp *tx_resp = (void *)pkt->data;
- 	int sta_id = IWL_MVM_TX_RES_GET_RA(tx_resp->ra_tid);
- 	int tid = IWL_MVM_TX_RES_GET_TID(tx_resp->ra_tid);
-@@ -1348,7 +1349,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	__skb_queue_head_init(&skbs);
- 
- 	if (iwl_mvm_has_new_tx_api(mvm))
--		txq_id = le16_to_cpu(tx_resp->v6.tx_queue);
-+		txq_id = le16_to_cpu(tx_resp->tx_queue);
- 
- 	seq_ctl = le16_to_cpu(tx_resp->seq_ctl);
- 
+diff --git a/ath10k/QCA9377/hw1.0/board-2.bin b/ath10k/QCA9377/hw1.0/board-2.bin
+index 841456c9e982599fb4c3552d0ab28c62abc6f63f..a92e8cbd168ead02d829d9fa80e7ef4599b9a44b 100644
+GIT binary patch
+delta 168
+zcmV;Z09XH%jT*Gc60n*ew;G}W{2#Yg0|U6Aw{8RkC_uM%ApwM7w;H4a{2#aWp#gSa
+zw~QtRDnPf^f&y1Sw@u>$2_U!jqXTzfx6Nb($>6v4r3ICMx65V*$sduh1eds>0Y4=&
+zI4pB@Vsm+ObY*QVWMy_~V`V)tI59A70RR91ydMAnydOdQmmH!29|8sulMx#mw^*V9
+W^c)AA9|8cJ-vP7ngwX+$gdecERza}<
+
+delta 618
+zcmdmTQfNxA)P`9KOiwZ<*2ptS2u_};BE9*B!UM+5GnjNmHa|7H%E|P29!O3cEH`mS
+z&*l`x1jfxvm^|1#lz>1H3m{b-XzQ-+eXAL-^K3pUcABwXYG8pNhV`2#s$62+Y!tnM
+z6<0{9mIFfyM<}{Z$1Rt-{VM0isz36R%^s?3pQXqsq%b{)k&zF=+}@+en3n)z|B>JR
+zZ6RY>!t@>$7Cs#IY=3ISg43eyOMfupmOLuKgj@2d1rvwY=3WI(h3(gxm=qK?PjlF@
+zU_0Mpruc--z7I7WwqI*xR8ZI+#?1WS0mzjJ3ERz{Fi&mRp3TIh?XZ1Y3d=ot0K9Iq
+Aj{pDw
+
 -- 
-2.11.0
+2.7.4
