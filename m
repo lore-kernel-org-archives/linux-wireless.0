@@ -1,144 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34354 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753760AbdFVVVx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:21:53 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:54 +0300
-Message-Id: <20170622212101.16422-19-luca@coelho.fi> (sfid-20170622_232208_607253_10302CA1)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: pcie: add fake RF-kill to debugfs
+Received: from mga05.intel.com ([192.55.52.43]:38995 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753846AbdFVW10 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Jun 2017 18:27:26 -0400
+Date: Fri, 23 Jun 2017 00:27:17 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Mateusz Jurczyk <mjurczyk@google.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, security@kernel.org
+Subject: Re: [PATCH] nfc: Fix the sockaddr length sanitization in
+ llcp_sock_connect
+Message-ID: <20170622222717.GE21214@zurbaran.ger.intel.com> (sfid-20170623_002756_186595_1D5CA1EC)
+References: <20170524102620.13806-1-mjurczyk@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170524102620.13806-1-mjurczyk@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Mateusz,
 
-In order to debug "hardware" RF-kill flows, add a low-level hook to
-allow changing the "hardware" RF-kill from debugfs.
+On Wed, May 24, 2017 at 12:26:20PM +0200, Mateusz Jurczyk wrote:
+> Fix the sockaddr length verification in the connect() handler of NFC/LLCP
+> sockets, to compare against the size of the actual structure expected on
+> input (sockaddr_nfc_llcp) instead of its shorter version (sockaddr_nfc).
+> 
+> Both structures are defined in include/uapi/linux/nfc.h. The fields
+> specific to the _llcp extended struct are as follows:
+> 
+>    276		__u8 dsap; /* Destination SAP, if known */
+>    277		__u8 ssap; /* Source SAP to be bound to */
+>    278		char service_name[NFC_LLCP_MAX_SERVICE_NAME]; /* Service name URI */;
+>    279		size_t service_name_len;
+> 
+> If the caller doesn't provide a sufficiently long sockaddr buffer, these
+> fields remain uninitialized (and they currently originate from the stack
+> frame of the top-level sys_connect handler). They are then copied by
+> llcp_sock_connect() into internal storage (nfc_llcp_sock structure), and
+> could be subsequently read back through the user-mode getsockname()
+> function (handled by llcp_sock_getname()). This would result in the
+> disclosure of up to ~70 uninitialized bytes from the kernel stack to
+> user-mode clients capable of creating AFC_NFC sockets.
+> 
+> Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
+> ---
+>  net/nfc/llcp_sock.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+Applied to nfc-next, thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 10 +++++-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 40 ++++++++++++++++++++++
- 3 files changed, 50 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 4b7be7ba9780..17bd95614483 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -404,6 +404,7 @@ struct iwl_trans_pcie {
- 	int ict_index;
- 	bool use_ict;
- 	bool is_down;
-+	bool debug_rfkill;
- 	struct isr_statistics isr_stats;
- 
- 	spinlock_t irq_lock;
-@@ -675,6 +676,8 @@ static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
- 	}
- }
- 
-+void iwl_pcie_handle_rfkill_irq(struct iwl_trans *trans);
-+
- static inline void iwl_wake_queue(struct iwl_trans *trans,
- 				  struct iwl_txq *txq)
- {
-@@ -713,7 +716,12 @@ static inline u8 get_cmd_index(struct iwl_txq *q, u32 index)
- 
- static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
- {
--	lockdep_assert_held(&IWL_TRANS_GET_PCIE_TRANS(trans)->mutex);
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	lockdep_assert_held(&trans_pcie->mutex);
-+
-+	if (trans_pcie->debug_rfkill)
-+		return true;
- 
- 	return !(iwl_read32(trans, CSR_GP_CNTRL) &
- 		CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index c27d6f711abf..b6b04e72521e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1509,7 +1509,7 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 	return inta;
- }
- 
--static void iwl_pcie_handle_rfkill_irq(struct iwl_trans *trans)
-+void iwl_pcie_handle_rfkill_irq(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index a3c5d3b195ad..6c4f8e377fb9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2461,11 +2461,50 @@ static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
- 	return ret;
- }
- 
-+static ssize_t iwl_dbgfs_rfkill_read(struct file *file,
-+				     char __user *user_buf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct iwl_trans *trans = file->private_data;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	char buf[100];
-+	int pos;
-+
-+	pos = scnprintf(buf, sizeof(buf), "debug: %d\nhw: %d\n",
-+			trans_pcie->debug_rfkill,
-+			!(iwl_read32(trans, CSR_GP_CNTRL) &
-+				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW));
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+}
-+
-+static ssize_t iwl_dbgfs_rfkill_write(struct file *file,
-+				      const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct iwl_trans *trans = file->private_data;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	bool old = trans_pcie->debug_rfkill;
-+	int ret;
-+
-+	ret = kstrtobool_from_user(user_buf, count, &trans_pcie->debug_rfkill);
-+	if (ret)
-+		return ret;
-+	if (old == trans_pcie->debug_rfkill)
-+		return count;
-+	IWL_WARN(trans, "changing debug rfkill %d->%d\n",
-+		 old, trans_pcie->debug_rfkill);
-+	iwl_pcie_handle_rfkill_irq(trans);
-+
-+	return count;
-+}
-+
- DEBUGFS_READ_WRITE_FILE_OPS(interrupt);
- DEBUGFS_READ_FILE_OPS(fh_reg);
- DEBUGFS_READ_FILE_OPS(rx_queue);
- DEBUGFS_READ_FILE_OPS(tx_queue);
- DEBUGFS_WRITE_FILE_OPS(csr);
-+DEBUGFS_READ_WRITE_FILE_OPS(rfkill);
- 
- /* Create the debugfs files and directories */
- int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans)
-@@ -2477,6 +2516,7 @@ int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans)
- 	DEBUGFS_ADD_FILE(interrupt, dir, S_IWUSR | S_IRUSR);
- 	DEBUGFS_ADD_FILE(csr, dir, S_IWUSR);
- 	DEBUGFS_ADD_FILE(fh_reg, dir, S_IRUSR);
-+	DEBUGFS_ADD_FILE(rfkill, dir, S_IWUSR | S_IRUSR);
- 	return 0;
- 
- err:
--- 
-2.11.0
+Cheers,
+Samuel.
