@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:47622 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752227AbdFVQ6M (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:41336 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752711AbdFVKBJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 12:58:12 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rsi: add in missing RSI_FSM_STATES into array fsm_state
-Date: Thu, 22 Jun 2017 17:58:04 +0100
-Message-Id: <20170622165804.24379-1-colin.king@canonical.com> (sfid-20170622_185854_970878_44FED7A7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Thu, 22 Jun 2017 06:01:09 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/4] brcmfmac: use atomic_t for statistic counter in struct brcmf_bus
+Date: Thu, 22 Jun 2017 11:01:02 +0100
+Message-Id: <1498125664-25980-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170622_120113_651614_82B8FC81)
+In-Reply-To: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+The statistic counter is used in common layer and in the bus layer
+in different thread contexts so change to use atomic operations.
 
-Two recent commits added new RSI_FSM_STATES (namely FSM_FW_NOT_LOADED
-and FSM_COMMON_DEV_PARAMS_SENT) and the corresponding table fsm_state
-was not updated to match. This can lead to an array overrun when
-accessing the latter two states in fsm_state. Fix this by adding in
-the missing states.
-
-Detected by CoverityScan, CID#1398379 ("Illegal address computation")
-
-Fixes: 9920322ccd8e04 ("rsi: add tx frame for common device configuration")
-Fixes: 015e367494c1d5 ("rsi: Register interrupt handler before firmware load")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_debugfs.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h  | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-index 828a042f903f..4c0a493bd44e 100644
---- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-@@ -125,7 +125,9 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
- 	struct rsi_common *common = seq->private;
- 
- 	unsigned char fsm_state[][32] = {
-+		"FSM_FW_NOT_LOADED",
- 		"FSM_CARD_NOT_READY",
-+		"FSM_COMMON_DEV_PARAMS_SENT",
- 		"FSM_BOOT_PARAMS_SENT",
- 		"FSM_EEPROM_READ_MAC_ADDR",
- 		"FSM_RESET_MAC_SENT",
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index e2c895b..e1a4d9e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -138,7 +138,7 @@ struct brcmf_bus {
+ 	struct brcmf_pub *drvr;
+ 	enum brcmf_bus_state state;
+ 	uint maxctl;
+-	unsigned long tx_realloc;
++	atomic_t tx_realloc;
+ 	u32 chip;
+ 	u32 chiprev;
+ 	bool always_use_fws_queue;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 81f9594..a280536 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2046,7 +2046,7 @@ static int brcmf_sdio_txpkt_hdalign(struct brcmf_sdio *bus, struct sk_buff *pkt)
+ 	head_pad = ((unsigned long)dat_buf % bus->head_align);
+ 	if (head_pad) {
+ 		if (skb_headroom(pkt) < head_pad) {
+-			bus->sdiodev->bus_if->tx_realloc++;
++			atomic_inc(&bus->sdiodev->bus_if->tx_realloc);
+ 			head_pad = 0;
+ 			if (skb_cow(pkt, head_pad))
+ 				return -ENOMEM;
 -- 
-2.11.0
+1.9.1
