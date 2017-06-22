@@ -1,32 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38728 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44050 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751515AbdFIIMv (ORCPT
+        with ESMTP id S1751148AbdFVBZH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 04:12:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: wlcore: spi: remove unnecessary variable
-References: <20170609032430.GA7432@embeddedgus>
-Date: Fri, 09 Jun 2017 11:12:31 +0300
-In-Reply-To: <20170609032430.GA7432@embeddedgus> (Gustavo A. R. Silva's
-        message of "Thu, 8 Jun 2017 22:24:30 -0500")
-Message-ID: <87ink5d1g0.fsf@kamboji.qca.qualcomm.com> (sfid-20170609_101336_847576_02684CAD)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 21 Jun 2017 21:25:07 -0400
+From: miaoqing@codeaurora.org
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        sssa@qti.qualcomm.com, giulio.genovese@gmail.com,
+        Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 3/3] ath9k: Use mutex_lock to avoid potential race in start/stop rng
+Date: Thu, 22 Jun 2017 09:24:29 +0800
+Message-Id: <1498094669-6510-3-git-send-email-miaoqing@codeaurora.org> (sfid-20170622_032510_851174_C4612DDA)
+In-Reply-To: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
+References: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <garsilva@embeddedor.com> writes:
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-> Remove unnecessary variable and refactor the code.
->
-> Addresses-Coverity-ID: 1365000
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+Move ath9k_rng_stop/ath9k_rng_start pair into critical section,
+use mutex_lock to void potential race accessing.
 
-I'll remove "wireless:" from the prefix.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9e65d14..8b4ac7f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -731,12 +731,12 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
++	ath9k_rng_start(sc);
++
+ 	mutex_unlock(&sc->mutex);
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-	ath9k_rng_start(sc);
+-
+ 	return 0;
+ }
+ 
+@@ -826,10 +826,10 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	ath9k_deinit_channel_context(sc);
+ 
+-	ath9k_rng_stop(sc);
+-
+ 	mutex_lock(&sc->mutex);
+ 
++	ath9k_rng_stop(sc);
++
+ 	ath_cancel_work(sc);
+ 
+ 	if (test_bit(ATH_OP_INVALID, &common->op_flags)) {
 -- 
-Kalle Valo
+1.9.1
