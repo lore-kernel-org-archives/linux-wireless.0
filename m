@@ -1,117 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:36644 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752652AbdFTAc3 (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34312 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753820AbdFWOLN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 20:32:29 -0400
-Received: by mail-ot0-f194.google.com with SMTP id r67so13317905ota.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:29 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/10] rtlwifi: Update some cases in btc_get function -- roam, 5G, AP mode, and return value.
-Date: Mon, 19 Jun 2017 19:32:12 -0500
-Message-Id: <20170620003218.17010-5-Larry.Finger@lwfinger.net> (sfid-20170620_023248_503188_E988A2CC)
-In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
-References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+        Fri, 23 Jun 2017 10:11:13 -0400
+Received: by mail-pf0-f194.google.com with SMTP id d5so7550006pfe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:11:12 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 17/17] rsi: regulatory enhancements
+Date: Fri, 23 Jun 2017 19:37:36 +0530
+Message-Id: <1498226856-6305-18-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161117_765810_F85F0127)
+In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Return value may be false in some situations.
+Below regulatory changes are included this patch
+* Country code is saved as it will be used in bgscan.
+* Region codes are mapped according to RSI region codes.
+* Radar flag settings are moved under the check if 5GHZ band
+  is enabled.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 24 +++++++++++++++-------
- 1 file changed, 17 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 49 ++++++++++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_main.h         |  8 +++++
+ 2 files changed, 45 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index eaa916a0727b..d8fb2442f795 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -381,6 +381,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 	u32 *u32_tmp = (u32 *)out_buf;
- 	u8 *u8_tmp = (u8 *)out_buf;
- 	bool tmp = false;
-+	bool ret = true;
- 
- 	if (!halbtc_is_bt_coexist_available(btcoexist))
- 		return false;
-@@ -388,9 +389,11 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 	switch (get_type) {
- 	case BTC_GET_BL_HS_OPERATION:
- 		*bool_tmp = false;
-+		ret = false;
- 		break;
- 	case BTC_GET_BL_HS_CONNECTING:
- 		*bool_tmp = false;
-+		ret = false;
- 		break;
- 	case BTC_GET_BL_WIFI_CONNECTED:
- 		if (rtlpriv->mac80211.opmode == NL80211_IFTYPE_STATION &&
-@@ -429,11 +432,16 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 		*bool_tmp = false;
- 		break;
- 	case BTC_GET_BL_WIFI_UNDER_5G:
--		/* TODO */
--		*bool_tmp = false;
-+		if (rtlhal->current_bandtype == BAND_ON_5G)
-+			*bool_tmp = true;
-+		else
-+			*bool_tmp = false;
- 		break;
- 	case BTC_GET_BL_WIFI_AP_MODE_ENABLE:
--		*bool_tmp = false;
-+		if (mac->opmode == NL80211_IFTYPE_AP)
-+			*bool_tmp = true;
-+		else
-+			*bool_tmp = false;
- 		break;
- 	case BTC_GET_BL_WIFI_ENABLE_ENCRYPTION:
- 		if (NO_ENCRYPTION == rtlpriv->sec.pairwise_enc_algorithm)
-@@ -460,8 +468,8 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
- 		break;
- 	case BTC_GET_S4_HS_RSSI:
--		/* TODO */
--		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
-+		*s32_tmp = 0;
-+		ret = false;
- 		break;
- 	case BTC_GET_U4_WIFI_BW:
- 		*u32_tmp = halbtc_get_wifi_bw(btcoexist);
-@@ -491,7 +499,8 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 		*u8_tmp = halbtc_get_wifi_central_chnl(btcoexist);
- 		break;
- 	case BTC_GET_U1_WIFI_HS_CHNL:
--		*u8_tmp = 1;
-+		*u8_tmp = 0;
-+		ret = false;
- 		break;
- 	case BTC_GET_U1_AP_NUM:
- 		/* driver do not know AP num,
-@@ -512,10 +521,11 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 		break;
- 
- 	default:
-+		ret = false;
- 		break;
- 	}
- 
--	return true;
-+	return ret;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index d094b0a..c91d6ef 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1163,6 +1163,21 @@ static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
+ 	return 0;	
  }
  
- static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
++static int rsi_map_region_code(enum nl80211_dfs_regions region_code)
++{
++	switch (region_code) {
++	case NL80211_DFS_FCC:
++		return RSI_REGION_FCC;
++	case NL80211_DFS_ETSI:
++		return RSI_REGION_ETSI;
++	case NL80211_DFS_JP:
++		return RSI_REGION_TELEC;
++	case NL80211_DFS_UNSET:
++		return RSI_REGION_WORLD;
++	}
++	return RSI_REGION_WORLD;
++}
++
+ static void rsi_reg_notify(struct wiphy *wiphy,
+ 			   struct regulatory_request *request)
+ {
+@@ -1170,23 +1185,33 @@ static void rsi_reg_notify(struct wiphy *wiphy,
+ 	struct ieee80211_channel *ch;
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct rsi_hw * adapter = hw->priv; 
++	struct rsi_common *common = adapter->priv;
+ 	int i;
+-
+-	sband = wiphy->bands[NL80211_BAND_5GHZ];
+ 	
+-	for (i = 0; i < sband->n_channels; i++) {
+-		ch = &sband->channels[i];
+-		if (ch->flags & IEEE80211_CHAN_DISABLED)
+-			continue;
++	mutex_lock(&common->mutex);
++
++	rsi_dbg(INFO_ZONE, "country = %s dfs_region = %d\n",
++		request->alpha2, request->dfs_region);
++
++	if (common->num_supp_bands > 1) {
++		sband = wiphy->bands[NL80211_BAND_5GHZ];
+ 
+-		if (ch->flags & IEEE80211_CHAN_RADAR)
+-			ch->flags |= IEEE80211_CHAN_NO_IR;
++		for (i = 0; i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++			if (ch->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++
++			if (ch->flags & IEEE80211_CHAN_RADAR)
++				ch->flags |= IEEE80211_CHAN_NO_IR;
++		}
+ 	}
++	adapter->dfs_region = rsi_map_region_code(request->dfs_region);
++	rsi_dbg(INFO_ZONE, "RSI region code = %d\n", adapter->dfs_region);
+ 	
+-	rsi_dbg(INFO_ZONE,
+-		"country = %s dfs_region = %d\n",
+-		request->alpha2, request->dfs_region);
+-	adapter->dfs_region = request->dfs_region;
++	adapter->country[0] = request->alpha2[0];
++	adapter->country[1] = request->alpha2[1];
++
++	mutex_unlock(&common->mutex);
+ }
+ 
+ static struct ieee80211_ops mac80211_ops = {
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 2b661af..3d4eaf5 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -168,6 +168,13 @@ struct xtended_desc {
+ 	u16 reserved;
+ };
+ 
++enum rsi_dfs_regions {
++	RSI_REGION_FCC = 0,
++	RSI_REGION_ETSI,
++	RSI_REGION_TELEC,
++	RSI_REGION_WORLD
++};
++
+ struct rsi_hw;
+ 
+ struct rsi_common {
+@@ -285,6 +292,7 @@ struct rsi_hw {
+ 	struct eepromrw_info eeprom;
+ 	u32 interrupt_status;
+ 	u8 dfs_region;
++	char country[2];
+ 	void *rsi_dev;
+ 	struct rsi_host_intf_ops *host_intf_ops;
+ 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
 -- 
-2.12.3
+2.7.4
