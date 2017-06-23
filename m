@@ -1,105 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36166 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751974AbdFLPD1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 11:03:27 -0400
-Received: by mail-lf0-f67.google.com with SMTP id x81so9673592lfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 08:03:26 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 07/10] ath10k: dma fixes for high latency devices
-Date: Mon, 12 Jun 2017 17:03:08 +0200
-Message-Id: <1497279791-9598-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20170612_170346_577114_AD68CAEF)
-In-Reply-To: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from mx2.astracom.cz ([52.28.180.220]:36265 "EHLO mx2.astracom.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754141AbdFWOFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Jun 2017 10:05:40 -0400
+Received: from localhost ([127.0.0.1])
+        by mx2.astracom.cz
+        (using TLSv1/SSLv3 with cipher AES256-SHA (256 bits))
+        for linux-wireless@vger.kernel.org;
+        Fri, 23 Jun 2017 13:27:18 +0000
+Received: from wondra by trosca.trosc with local (Exim 4.89)
+        (envelope-from <wondra@volny.cz>)
+        id 1dOOkI-00069b-9R
+        for linux-wireless@vger.kernel.org; Fri, 23 Jun 2017 15:35:34 +0200
+Date: Fri, 23 Jun 2017 15:35:33 +0200
+From: Tomas Vondra <wondra@volny.cz>
+To: linux-wireless@vger.kernel.org
+Subject: ath9k does not select legacy rates in 802.11n mode
+Message-ID: <20170623133533.pacb6ic2rk4id6dq@trosca.trosc> (sfid-20170623_160551_636032_7F5BF068)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several DMA related functions (such as the dma_map_xxx functions)
-are not used with high latency devices and don't need to be invoked
-in this case.
+Dear list,
+I am currently trying to tune my R52n ath9k minipci card for maximum performance in a high interference city environment. Mode is 802.11n in the 5 GHz band.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c    | 13 ++++++++-----
- drivers/net/wireless/ath/ath10k/htt_rx.c |  3 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +++
- drivers/net/wireless/ath/ath10k/txrx.c   |  5 +++--
- 4 files changed, 16 insertions(+), 8 deletions(-)
+What I see is better download compared to an R52 ath5k in 802.11a mode, but worse upload. I suspect either that the 802.11n modulation is less robust to noise OR that AMSDU aggregation is in use and is worsening resiliency to interference. See this monitoring screenshot: https://pasteboard.co/o8ykSMG.png The first part is 802.11a, the second is 802.11n, and the third was obtained by limiting the uplink to legacy rates by:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index e5c80f5..232740c 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -137,11 +137,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	ath10k_htc_prepare_tx_skb(ep, skb);
- 
- 	skb_cb->eid = eid;
--	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
--	ret = dma_mapping_error(dev, skb_cb->paddr);
--	if (ret) {
--		ret = -EIO;
--		goto err_credits;
-+	if (!ar->is_high_latency) {
-+		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
-+					       DMA_TO_DEVICE);
-+		ret = dma_mapping_error(dev, skb_cb->paddr);
-+		if (ret) {
-+			ret = -EIO;
-+			goto err_credits;
-+		}
- 	}
- 
- 	sg_item.transfer_id = ep->eid;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 5833c08..972c21c 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2492,7 +2492,8 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
--		ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
-+		if (!ar->is_high_latency)
-+			ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
- 		break;
- 	case HTT_T2H_MSG_TYPE_SEC_IND: {
- 		struct ath10k *ar = htt->ar;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index e3b820d..27bbc3e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -409,6 +409,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
- 	if (htt->tx_mem_allocated)
- 		return 0;
- 
-+	if (ar->is_high_latency)
-+		return 0;
-+
- 	ret = ath10k_htt_tx_alloc_buf(htt);
- 	if (ret)
- 		goto free_idr_pending_tx;
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index d4986f6..fae143e 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -90,11 +90,12 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt);
--	if (htt->num_pending_tx == 0)
-+	if (!ar->is_high_latency && (htt->num_pending_tx == 0))
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
--	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-+	if (!ar->is_high_latency)
-+		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
- 	ath10k_report_offchan_tx(htt->ar, msdu);
- 
--- 
-2.7.4
+iw dev wlan0 set bitrates legacy-5 6 9 12 18 ht-mcs-5
+
+The problem: Unfortunately, the result of that is that only the 6 Mb/s rate is used. When I allow any ht-mcs-5 rate, none of the legacy rates is ever selected and the throughput is worse. It seems that the wandering minstrel algorithm is failing. The other side is a Mikrotik router and it freely mixes legacy and mcs rates to get optimal throughput, the Linux driver does not.
+1. How would I debug this? Last time I did it in Madwifi, minstrel had some debug stats in procfs.
+2. How to find out if AMSDU aggregation is in use and to disable it to see if that is the thing hurting performance?
+
+The kernel version is 4.9.0 from Debian.
+
+Thanks for your insights, Tomas Vondra
