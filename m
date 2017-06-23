@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway31.websitewelcome.com ([192.185.143.31]:42397 "EHLO
-        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751802AbdFMQ61 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:32841 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754080AbdFWOLG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 12:58:27 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway31.websitewelcome.com (Postfix) with ESMTP id CA4B3899E6B
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 11:37:19 -0500 (CDT)
-Date: Tue, 13 Jun 2017 11:37:18 -0500
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH] nfc: nci: remove unnecessary null check
-Message-ID: <20170613163718.GA5375@embeddedgus> (sfid-20170613_185831_324480_FF7E8D42)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <28317503-e721-2564-a9ff-82182aa0644a@roeck-us.net>
+        Fri, 23 Jun 2017 10:11:06 -0400
+Received: by mail-pf0-f196.google.com with SMTP id w12so7547662pfk.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:11:06 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 15/17] rsi: Remove internal header from Tx status skb
+Date: Fri, 23 Jun 2017 19:37:34 +0530
+Message-Id: <1498226856-6305-16-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161116_922764_5F317217)
+In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary NULL check for pointer conn_info.
-conn_info is set in list_for_each_entry() using container_of(),
-which is never NULL.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Addresses-Coverity-ID: 1362349
-Cc: Guenter Roeck <linux@roeck-us.net>
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+Device specific descriptor for each TX packet is prepared on top of
+skb data address. This descriptor should be pulled out before
+indicating the TX status to mac80211.
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- net/nfc/nci/core.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 61fff42..c15cb88 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -73,11 +73,10 @@ int nci_get_conn_info_by_dest_type_params(struct nci_dev *ndev, u8 dest_type,
- 		if (conn_info->dest_type == dest_type) {
- 			if (!params)
- 				return conn_info->conn_id;
--			if (conn_info) {
--				if (params->id == conn_info->dest_params->id &&
--				    params->protocol == conn_info->dest_params->protocol)
--					return conn_info->conn_id;
--			}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 021e5ac..36303ae 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -229,12 +229,20 @@ void rsi_indicate_tx_status(struct rsi_hw *adapter,
+ 			    int status)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct skb_info *tx_params;
+ 
+-	memset(info->driver_data, 0, IEEE80211_TX_INFO_DRIVER_DATA_SIZE);
++	if (!adapter->hw) {
++		rsi_dbg(ERR_ZONE, "##### No MAC #####\n");
++		return;
++	}
+ 
+ 	if (!status)
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 
++	tx_params = (struct skb_info *)info->driver_data;
++	skb_pull(skb, tx_params->internal_hdr_size);
++	memset(info->driver_data, 0, IEEE80211_TX_INFO_DRIVER_DATA_SIZE);
 +
-+			if (params->id == conn_info->dest_params->id &&
-+			    params->protocol == conn_info->dest_params->protocol)
-+				return conn_info->conn_id;
- 		}
- 	}
+ 	ieee80211_tx_status_irqsafe(adapter->hw, skb);
+ }
  
 -- 
-2.5.0
+2.7.4
