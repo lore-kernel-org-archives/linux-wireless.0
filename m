@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36836 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751072AbdF3TDM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 15:03:12 -0400
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER
-        (BCMA))
-Subject: [PATCH] bcma: gpio: Correct number of GPIOs for BCM53573
-Date: Fri, 30 Jun 2017 12:02:57 -0700
-Message-Id: <20170630190257.15016-1-f.fainelli@gmail.com> (sfid-20170630_210350_099540_1D95F051)
+Received: from s3.sipsolutions.net ([5.9.151.49]:44892 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753694AbdFWJVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Jun 2017 05:21:42 -0400
+Message-ID: <1498209700.2595.2.camel@sipsolutions.net> (sfid-20170623_112146_910532_78699D24)
+Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Fri, 23 Jun 2017 11:21:40 +0200
+In-Reply-To: <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
+         <20170621235022.25362-3-johannes@sipsolutions.net>
+         <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
+         <1498112650.2246.1.camel@sipsolutions.net>
+         <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom BCM53573 SoCs actually have 32 GPIOs, and not 16.
+On Thu, 2017-06-22 at 07:43 -0700, Ben Greear wrote:
+> 
+> On 06/21/2017 11:24 PM, Johannes Berg wrote:
+> > On Wed, 2017-06-21 at 17:02 -0700, Ben Greear wrote:
+> > > I think a comment for the above code block would be warranted
+> > > (and
+> > > for ath10k as well).
+> > > 
+> > > I guess this is the part about dequeueing the frames immediately?
+> > 
+> > Yeah, I figured it was pretty obvious, but I can add a comment :)
+> 
+> It is fairly obvious today, but 6 months from now when someone tries
+> yet again to figure out WTF is ath10k doing, it will be one more
+> piece of mystery code!
 
-Fixes: 3f37ec79dd21 ("bcma: support BCM53573 series of wireless SoCs")
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/bcma/driver_gpio.c | 1 +
- 1 file changed, 1 insertion(+)
+:-)
 
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 7bde8d7a2816..982d5781d3ce 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -191,6 +191,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 	case BCMA_CHIP_ID_BCM4707:
- 	case BCMA_CHIP_ID_BCM5357:
- 	case BCMA_CHIP_ID_BCM53572:
-+	case BCMA_CHIP_ID_BCM53573:
- 	case BCMA_CHIP_ID_BCM47094:
- 		chip->ngpio	= 32;
- 		break;
--- 
-2.9.3
+Turns out this won't work well, I had misunderstood the TXQ code.
+
+We do need queueing for these frames, we just do it on the pending
+thing in mac80211... that's rather awful, and means we have to
+integrate much deeper with ath9k/ath10k to make any progress here.
+
+johannes
