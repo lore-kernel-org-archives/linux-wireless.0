@@ -1,47 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0070.outbound.protection.outlook.com ([104.47.37.70]:48800
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751098AbdFVAyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 20:54:13 -0400
-Subject: Re: cfg80211_ops
-To: "Tobin C. Harding" <me@tobin.cc>, linux-wireless@vger.kernel.org
-References: <20170622000347.GA15458@eros>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <a3105fed-a02b-cd0e-1f4a-e3f9a0b7dd1f@quantenna.com> (sfid-20170622_025419_012718_7F9D64F7)
-Date: Wed, 21 Jun 2017 17:53:13 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170622000347.GA15458@eros>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35064 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751231AbdFWOKP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Jun 2017 10:10:15 -0400
+Received: by mail-pg0-f65.google.com with SMTP id f127so6274875pgc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:15 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 01/17] rsi: add common structures needed for command packets
+Date: Fri, 23 Jun 2017 19:37:20 +0530
+Message-Id: <1498226856-6305-2-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161019_579007_AFA06432)
+In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2017 05:03 PM, Tobin C. Harding wrote:
-> 
-> Hi,
-> 
-> Is some one able to please confirm for me that the following
-> cfg80211_ops callbacks are enough to implement a minimal functioning
-> Wi-Fi driver. Assume that a virtual interface is added during driver
-> initialization.
-> 
-> scan
-> add_key
-> get_key
-> del_key
-> sat_default_key
-> connect
-> disconnect
-> set_wiphy_params
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Hi, is this for STA-only? I guess you also need
-mgmt_frame_register
-mgmt_tx
+All internal management packets (command packets) use some common
+fields and some packet specific fields for packet descriptors.
+This patch adds some common structures which are needed for all
+command packets.
 
-and you don't need *_key callbacks in case its fine to operate without 
-encryption.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_mgmt.h | 38 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-> 
-> thanks,
-> Tobin
-> 
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index a8a195e..63360c2 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -221,6 +221,44 @@ struct rsi_mac_frame {
+ 	__le16 desc_word[8];
+ } __packed;
+ 
++#define PWR_SAVE_WAKEUP_IND		BIT(0)
++#define TCP_CHECK_SUM_OFFLOAD		BIT(1)
++#define CONFIRM_REQUIRED_TO_HOST	BIT(2)
++#define ADD_DELTA_TSF			BIT(3)
++#define FETCH_RETRY_CNT_FROM_HOST_DESC	BIT(4)
++#define EOSP_INDICATION			BIT(5)
++#define REQUIRE_TSF_SYNC_CONFIRM	BIT(6)
++#define ENCAP_MGMT_PKT			BIT(7)
++
++struct rsi_cmd_desc_dword0 {
++	__le16 len_qno;
++	u8 frame_type;
++	u8 misc_flags;
++};
++
++struct rsi_cmd_desc_dword1 {
++	u8 xtend_desc_size;
++	u8 reserved1;
++	__le16 reserved2;
++};
++
++struct rsi_cmd_desc_dword2 {
++	__le32 pkt_info; /* Packet specific data */
++};
++
++struct rsi_cmd_desc_dword3 {
++	__le16 token;
++	u8 qid_tid;
++	u8 sta_id;
++};
++
++struct rsi_cmd_desc {
++	struct rsi_cmd_desc_dword0 desc_dword0;
++	struct rsi_cmd_desc_dword1 desc_dword1;
++	struct rsi_cmd_desc_dword2 desc_dword2;
++	struct rsi_cmd_desc_dword3 desc_dword3;
++};
++
+ struct rsi_boot_params {
+ 	__le16 desc_word[8];
+ 	struct bootup_params bootup_params;
+-- 
+2.7.4
