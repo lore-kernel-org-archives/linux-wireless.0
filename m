@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:35754 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751225AbdF1E3E (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33808 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751231AbdFWOKW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 00:29:04 -0400
-Received: by mail-ua0-f196.google.com with SMTP id j53so3666484uaa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 21:29:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <80d08513-9da0-2840-dd15-0a3deace3dc7@lwfinger.net>
-References: <20170622120004.GA5783@symbol-HP-ZBook-15> <80d08513-9da0-2840-dd15-0a3deace3dc7@lwfinger.net>
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Date: Wed, 28 Jun 2017 09:59:03 +0530
-Message-ID: <CAFqt6zZRJOgFkTmWtmsROx3yg91avpAZ2Xsmd+S1-UjFxBXSYg@mail.gmail.com> (sfid-20170628_062908_334838_8177469B)
-Subject: Re: [PATCH v2] rtlwifi: Replace hardcode value with macro
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 23 Jun 2017 10:10:22 -0400
+Received: by mail-pf0-f194.google.com with SMTP id d5so7546988pfe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:21 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: [PATCH 02/17] rsi: immediate wakeup bit and priority for TX command packets
+Date: Fri, 23 Jun 2017 19:37:21 +0530
+Message-Id: <1498226856-6305-3-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161025_661543_55E47A67)
+In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-On Thu, Jun 22, 2017 at 7:05 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 06/22/2017 07:00 AM, Souptick Joarder wrote:
->>
->> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->> and hw->max_rate_tries are replaced by macro.
->>
->> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->> ---
->> Changes in v2:
->>     - Signed-off was missing in previous one.
->
->
-> This patch includes a comment that is not needed, but it is OK.
->
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->
-> Larry
+For all TX command packets immediate wakeup bit needs to be
+set in descriptor. This will make sure device will wakeup if it
+is in any sleep state. Priority of the packet is also set.
 
-Any further review is required for this patch or it will be merged to
-maintainer tree ?
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 3 +++
+ drivers/net/wireless/rsi/rsi_mgmt.h     | 1 +
+ 2 files changed, 4 insertions(+)
 
->
->
->>
->>   drivers/net/wireless/realtek/rtlwifi/base.c | 6 +++---
->>   drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
->>   2 files changed, 5 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c
->> b/drivers/net/wireless/realtek/rtlwifi/base.c
->> index bdc3791..f45d093 100644
->> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
->> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
->> @@ -422,9 +422,9 @@ static void _rtl_init_mac80211(struct ieee80211_hw
->> *hw)
->>         hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
->>
->>         /* TODO: Correct this value for our hw */
->> -       /* TODO: define these hard code value */
->> -       hw->max_listen_interval = 10;
->> -       hw->max_rate_tries = 4;
->> +       /* defined these hard code values */
->> +       hw->max_listen_interval = MAX_LISTEN_INTERVAL;
->> +       hw->max_rate_tries = MAX_RATE_TRIES;
->>         /* hw->max_rates = 1; */
->>         hw->sta_data_size = sizeof(struct rtl_sta_info);
->>
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h
->> b/drivers/net/wireless/realtek/rtlwifi/base.h
->> index 02ff0c5..d03e198 100644
->> --- a/drivers/net/wireless/realtek/rtlwifi/base.h
->> +++ b/drivers/net/wireless/realtek/rtlwifi/base.h
->> @@ -65,6 +65,8 @@ enum ap_peer {
->>   #define FRAME_OFFSET_ADDRESS3         16
->>   #define FRAME_OFFSET_SEQUENCE         22
->>   #define FRAME_OFFSET_ADDRESS4         24
->> +#define MAX_LISTEN_INTERVAL             10
->> +#define MAX_RATE_TRIES                  4
->>
->>   #define SET_80211_HDR_FRAME_CONTROL(_hdr, _val)               \
->>         WRITEEF2BYTE(_hdr, _val)
->> --
->> 1.9.1
->>
->>
->
-
--Souptick
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 816c2e0..c1782a2 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -266,11 +266,14 @@ static int rsi_send_internal_mgmt_frame(struct rsi_common *common,
+ 					struct sk_buff *skb)
+ {
+ 	struct skb_info *tx_params;
++	struct rsi_cmd_desc *desc;
+ 
+ 	if (skb == NULL) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to allocate skb\n", __func__);
+ 		return -ENOMEM;
+ 	}
++	desc->desc_dword0.len_qno |= cpu_to_le16(DESC_IMMEDIATE_WAKEUP);
++	skb->priority = MGMT_SOFT_Q;
+ 	tx_params = (struct skb_info *)&IEEE80211_SKB_CB(skb)->driver_data;
+ 	tx_params->flags |= INTERNAL_MGMT_PKT;
+ 	skb_queue_tail(&common->tx_queue[MGMT_SOFT_Q], skb);
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 63360c2..6f7f181 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -229,6 +229,7 @@ struct rsi_mac_frame {
+ #define EOSP_INDICATION			BIT(5)
+ #define REQUIRE_TSF_SYNC_CONFIRM	BIT(6)
+ #define ENCAP_MGMT_PKT			BIT(7)
++#define DESC_IMMEDIATE_WAKEUP		BIT(15)
+ 
+ struct rsi_cmd_desc_dword0 {
+ 	__le16 len_qno;
+-- 
+2.7.4
