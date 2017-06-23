@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33712 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752238AbdFLFDf (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36086 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751251AbdFWM1N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 01:03:35 -0400
+        Fri, 23 Jun 2017 08:27:13 -0400
+Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
+ <20170621235022.25362-3-johannes@sipsolutions.net>
+ <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
+ <1498112650.2246.1.camel@sipsolutions.net>
+ <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
+ <1498209700.2595.2.camel@sipsolutions.net>
+Cc: nbd@nbd.name
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <89353e7a-5c61-eba3-fe34-0e7eadf7588e@candelatech.com> (sfid-20170623_142716_754235_75C67B9D)
+Date: Fri, 23 Jun 2017 05:27:12 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAO1O6see6yDr-hDVNPi9Kv9wO6p-98w7YhsnnwnVOVCSEGVksw@mail.gmail.com>
-References: <20170610025912.6499-1-Jason@zx2c4.com> <878tkzq6wi.fsf@purkki.adurom.net>
- <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com>
- <CANUX_P2b0Bx+-E_OBQ0reGW0=d6819qc=r83K0kTv0xMo8mtLQ@mail.gmail.com> <CAO1O6see6yDr-hDVNPi9Kv9wO6p-98w7YhsnnwnVOVCSEGVksw@mail.gmail.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Mon, 12 Jun 2017 08:03:33 +0300
-Message-ID: <CANUX_P1n0=rK+biS7M0-vxP5Uhk5rU+qj4_9jtdRF9Yh219PVA@mail.gmail.com> (sfid-20170612_070413_412094_3FFB8BBF)
-Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
-To: Emil Lenngren <emil.lenngren@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "kernel-hardening@lists.openwall.com"
-        <kernel-hardening@lists.openwall.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        David Howells <dhowells@redhat.com>,
-        David Safford <safford@us.ibm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Gilad Ben-Yossef <gilad@benyossef.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        keyrings@vger.kernel.org,
-        Bluez mailing list <linux-bluetooth@vger.kernel.org>,
-        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1498209700.2595.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 12:30 AM, Emil Lenngren <emil.lenngren@gmail.com> wrote:
-> 2017-06-11 22:48 GMT+02:00 Emmanuel Grumbach <egrumbach@gmail.com>:
->> On Sun, Jun 11, 2017 at 4:36 PM, Kees Cook <keescook@chromium.org> wrote:
->>>
->>> On Sun, Jun 11, 2017 at 1:13 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> > "Jason A. Donenfeld" <Jason@zx2c4.com> writes:
->>> >
->>> >> Whenever you're comparing two MACs, it's important to do this using
->>> >> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
->>> >> which could then be used to iteratively forge a MAC.
->>> >
->>> > Do you have any pointers where I could learn more about this?
->>>
->>> While not using C specifically, this talks about the problem generally:
->>> https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
->>>
->>
->> Sorry for the stupid question, but the MAC address is in plaintext in
->> the air anyway or easily accessible via user space tools. I fail to
->> see what it is so secret about a MAC address in that code where that
->> same MAC address is accessible via myriads of ways.
->
-> I think you're mixing up Media Access Control (MAC) addresses with
-> Message Authentication Code (MAC). The second one is a cryptographic
-> signature of a message.
 
-Obviously... Sorry for the noise.
+
+On 06/23/2017 02:21 AM, Johannes Berg wrote:
+> On Thu, 2017-06-22 at 07:43 -0700, Ben Greear wrote:
+>>
+>> On 06/21/2017 11:24 PM, Johannes Berg wrote:
+>>> On Wed, 2017-06-21 at 17:02 -0700, Ben Greear wrote:
+>>>> I think a comment for the above code block would be warranted
+>>>> (and
+>>>> for ath10k as well).
+>>>>
+>>>> I guess this is the part about dequeueing the frames immediately?
+>>>
+>>> Yeah, I figured it was pretty obvious, but I can add a comment :)
+>>
+>> It is fairly obvious today, but 6 months from now when someone tries
+>> yet again to figure out WTF is ath10k doing, it will be one more
+>> piece of mystery code!
+>
+> :-)
+>
+> Turns out this won't work well, I had misunderstood the TXQ code.
+>
+> We do need queueing for these frames, we just do it on the pending
+> thing in mac80211... that's rather awful, and means we have to
+> integrate much deeper with ath9k/ath10k to make any progress here.
+
+I don't understand the code well enough to know if this matters or not,
+but the ath10k wave-2 stuff has some txq prefetch logic in the firmware
+(and support in the driver).  But, it doesn't prefetch for the mgt tid
+as far as I can tell.  It somehow all mostly works anyway, but possibly this
+would have some effect on your changes.  wave-1 (QCA 9880, etc) doesn't
+do txq prefetch at all.  Any tricky changes to this logic would need to
+test with both chipsets.
+
+There are also NAPI deadlocks possible when firmware crashes at a bad time.
+I am not sure there is anyone left working on ath10k with knowledge and time
+to really dig into this in detail.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
