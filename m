@@ -1,139 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34444 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753374AbdFVVWn (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:35428 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754525AbdFXCzo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:43 -0400
-From: Luca Coelho <luca@coelho.fi>
+        Fri, 23 Jun 2017 22:55:44 -0400
+Received: by mail-qt0-f170.google.com with SMTP id f92so46780415qtb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 19:55:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABWe71zX=UMML+cCoWbwkwcP1fewT7i+VGL-TEO_79wnd=WM7w@mail.gmail.com>
+References: <CABWe71yk2NfAgw21men=uxoUZ5+CcetkKDLP3vE9v_yT=+F_Bw@mail.gmail.com>
+ <CABWe71zX=UMML+cCoWbwkwcP1fewT7i+VGL-TEO_79wnd=WM7w@mail.gmail.com>
+From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
+Date: Sat, 24 Jun 2017 10:55:42 +0800
+Message-ID: <CABWe71wAzCQKJ3rCE1pfVaxYxqucSUU0u3qwJYAUJ9xOmuz_bA@mail.gmail.com> (sfid-20170624_045559_904658_C308FC17)
+Subject: Re: ath9k wds mode station break off
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:53 +0300
-Message-Id: <20170622212101.16422-18-luca@coelho.fi> (sfid-20170622_232254_045689_352C7F5F)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 17/25] iwlwifi: pcie: pull out common rfkill IRQ handling code
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-There's no point in duplicating exactly the same code here
-for legacy and MSI-X interrupts, so pull it out into a new
-function to call in both places.
+Why ap send deauth packet?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 82 +++++++++++-----------------
- 1 file changed, 33 insertions(+), 49 deletions(-)
+I grep the source find deauth in ieee80211_rx_mgmt_deauth.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 293f4b2c1955..c27d6f711abf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1509,6 +1509,36 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 	return inta;
- }
- 
-+static void iwl_pcie_handle_rfkill_irq(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
-+	bool hw_rfkill;
-+
-+	mutex_lock(&trans_pcie->mutex);
-+	hw_rfkill = iwl_is_rfkill_set(trans);
-+	if (hw_rfkill)
-+		set_bit(STATUS_RFKILL, &trans->status);
-+
-+	IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
-+		 hw_rfkill ? "disable radio" : "enable radio");
-+
-+	isr_stats->rfkill++;
-+
-+	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	mutex_unlock(&trans_pcie->mutex);
-+
-+	if (hw_rfkill) {
-+		if (test_and_clear_bit(STATUS_SYNC_HCMD_ACTIVE,
-+				       &trans->status))
-+			IWL_DEBUG_RF_KILL(trans,
-+					  "Rfkill while SYNC HCMD in flight\n");
-+		wake_up(&trans_pcie->wait_command_queue);
-+	} else {
-+		clear_bit(STATUS_RFKILL, &trans->status);
-+	}
-+}
-+
- irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- {
- 	struct iwl_trans *trans = dev_id;
-@@ -1632,30 +1662,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 
- 	/* HW RF KILL switch toggled */
- 	if (inta & CSR_INT_BIT_RF_KILL) {
--		bool hw_rfkill;
--
--		mutex_lock(&trans_pcie->mutex);
--		hw_rfkill = iwl_is_rfkill_set(trans);
--		if (hw_rfkill)
--			set_bit(STATUS_RFKILL, &trans->status);
--
--		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
--			 hw_rfkill ? "disable radio" : "enable radio");
--
--		isr_stats->rfkill++;
--
--		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
--		mutex_unlock(&trans_pcie->mutex);
--		if (hw_rfkill) {
--			if (test_and_clear_bit(STATUS_SYNC_HCMD_ACTIVE,
--					       &trans->status))
--				IWL_DEBUG_RF_KILL(trans,
--						  "Rfkill while SYNC HCMD in flight\n");
--			wake_up(&trans_pcie->wait_command_queue);
--		} else {
--			clear_bit(STATUS_RFKILL, &trans->status);
--		}
--
-+		iwl_pcie_handle_rfkill_irq(trans);
- 		handled |= CSR_INT_BIT_RF_KILL;
- 	}
- 
-@@ -1982,31 +1989,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 	}
- 
- 	/* HW RF KILL switch toggled */
--	if (inta_hw & MSIX_HW_INT_CAUSES_REG_RF_KILL) {
--		bool hw_rfkill;
--
--		mutex_lock(&trans_pcie->mutex);
--		hw_rfkill = iwl_is_rfkill_set(trans);
--		if (hw_rfkill)
--			set_bit(STATUS_RFKILL, &trans->status);
--
--		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
--			 hw_rfkill ? "disable radio" : "enable radio");
--
--		isr_stats->rfkill++;
--
--		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
--		mutex_unlock(&trans_pcie->mutex);
--		if (hw_rfkill) {
--			if (test_and_clear_bit(STATUS_SYNC_HCMD_ACTIVE,
--					       &trans->status))
--				IWL_DEBUG_RF_KILL(trans,
--						  "Rfkill while SYNC HCMD in flight\n");
--			wake_up(&trans_pcie->wait_command_queue);
--		} else {
--			clear_bit(STATUS_RFKILL, &trans->status);
--		}
--	}
-+	if (inta_hw & MSIX_HW_INT_CAUSES_REG_RF_KILL)
-+		iwl_pcie_handle_rfkill_irq(trans);
- 
- 	if (inta_hw & MSIX_HW_INT_CAUSES_REG_HW_ERR) {
- 		IWL_ERR(trans,
--- 
-2.11.0
+On Sat, Jun 24, 2017 at 10:40 AM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@gm=
+ail.com> wrote:
+> All:
+>
+> Add some debug info in mac80211, i can get data packet in
+> __ieee80211_rx_handle_packet
+>
+> 4053         if (ieee80211_is_mgmt(fc)) {
+> 4054                 mac80211_dbg(local, RX, "mac80211 mgmt
+> packet\n");
+> 4055                 /* drop frame if too short for header */
+>
+> 4083         } else if (ieee80211_is_data(fc)) {
+> 4084                 mac80211_dbg(local, RX, "mac80211 data
+> packet\n");
+> 4085                 struct sta_info *sta, *prev_sta;
+>
+> with ping packet log:
+>
+> [ 8996.617367] mac80211 data packet
+> [ 8996.622783] mac80211 mgmt packet
+> [ 8996.725036] mac80211 mgmt packet
+> [ 8996.820829] mac80211 data packet
+> [ 8996.829383] mac80211 mgmt packet
+> [ 8996.931682] mac80211 mgmt packet
+> [ 8997.033052] mac80211 mgmt packet
+> [ 8997.135956] mac80211 mgmt packet
+>
+>
+> And station will deauth from ap with PRE_AUTH_NOT_VALID:
+>
+> [ 8998.621385] wlan0: deauthenticated from c8:ee:a6:2d:cc:6c (Reason:
+> 2=3DPREV_AUTH_NOT_VALID)
+> [ 8998.629537] br-lan: port 2(wlan0) entered disabled state
+> [ 9003.635631] wlan0: authenticate with c8:ee:a6:2d:cc:6c
+> [ 9003.651230] wlan0: send auth to c8:ee:a6:2d:cc:6c (try 1/3)
+> [ 9003.670365] wlan0: associate with c8:ee:a6:2d:cc:6c (try 1/3)
+> [ 9003.681735] wlan0: RX AssocResp from c8:ee:a6:2d:cc:6c (capab=3D0x431
+> status=3D0 aid=3D1)
+> [ 9003.815829] br-lan: port 2(wlan0) entered forwarding state
+>
+>
+> I think some bug in auth cause data packet drop.
+>
+> On Sat, Jun 3, 2017 at 4:09 PM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@gm=
+ail.com> wrote:
+>> wds ap:
+>>
+>>         config wifi-device 'radio0'
+>>                 option type 'mac80211'
+>>                 option hwmode '11g'
+>>                 option path 'platform/ar933x_wmac'
+>>                 option distance '3000'
+>>                 option txpower '18'
+>>                 option country '00'
+>>                 option channel '1'
+>>                 option htmode 'HT40'
+>>
+>>         config wifi-iface
+>>                 option device 'radio0'
+>>                 option network 'lan'
+>>                 option mode 'ap'
+>>                 option encryption 'psk2'
+>>                 option key '12345600'
+>>                option max_inactivity '20'
+>>                 option wds '1'
+>>                 option ssid 'LK-M2-Jianxi'
+>>
+>> wds station:
+>>
+>>         config wifi-device 'radio0'
+>>                 option type 'mac80211'
+>>                 option channel '1'
+>>                 option hwmode '11g'
+>>                 option path 'platform/ar933x_wmac'
+>>                 option htmode 'HT20'
+>>                 option distance '3000'
+>>                 option txpower '19'
+>>                option country '00'
+>>
+>>         config wifi-iface
+>>                 option device 'radio0'
+>>                 option network 'lan'
+>>                 option encryption 'psk2'
+>>                 option key '12345600'
+>>                 option max_inactivity '20'
+>>                 option wds '1'
+>>                 option mode 'sta'
+>>                 option ssid 'LK-M2-Jianxi'
+>>
+>>  When the station break off, ping can not reach ap. wifi still
+>> connect. kernel have no error info. iwinfo signal still change.
+>>
+>> ap with the other station still alive.
+>>
+>> Use wpa_cli scan command, will awake station, and ping alive.
+>> wifi command also work.
+>>
+>> /proc/interrupts ath9k still alive.
