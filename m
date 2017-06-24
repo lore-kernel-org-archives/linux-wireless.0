@@ -1,85 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36200 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751941AbdF2Sag (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36264 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751377AbdFXQRD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:30:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:12 +0300
-Message-Id: <20170629183027.15408-1-luca@coelho.fi> (sfid-20170629_203045_193262_C5E13298)
-Subject: [PATCH 00/15] iwlwifi: updates intended for v4.13 2017-06-29
+        Sat, 24 Jun 2017 12:17:03 -0400
+Received: by mail-qk0-f173.google.com with SMTP id p21so54596573qke.3
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jun 2017 09:17:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABWe71wAzCQKJ3rCE1pfVaxYxqucSUU0u3qwJYAUJ9xOmuz_bA@mail.gmail.com>
+References: <CABWe71yk2NfAgw21men=uxoUZ5+CcetkKDLP3vE9v_yT=+F_Bw@mail.gmail.com>
+ <CABWe71zX=UMML+cCoWbwkwcP1fewT7i+VGL-TEO_79wnd=WM7w@mail.gmail.com> <CABWe71wAzCQKJ3rCE1pfVaxYxqucSUU0u3qwJYAUJ9xOmuz_bA@mail.gmail.com>
+From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
+Date: Sun, 25 Jun 2017 00:17:01 +0800
+Message-ID: <CABWe71wRDY1Bq6UTmexzwfvDw4w_WGGY2jYXK=VRubbq3jDQjQ@mail.gmail.com> (sfid-20170624_181707_225569_A28B3876)
+Subject: Re: ath9k wds mode station break off
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+I catched the bug position:
 
-Hi,
+in mac80211 ieee80211_sta_manage_reorder_buf function:
 
-This is the final patchset that I'd like to get in for v4.13.  In this
-one, I concentrated on the changes needed to support version 33 of our
-firmware API, which is the version we are going to release for a new
-hardware family (the so called 9000 series).  Without this, we won't
-be able to support this soon-to-be-made-available HW family in v4.13.
-
-I also included a few important fixes for previous hardware families.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a comnined pull-request with the previous bunch later.
-
-It would be really awesome if we could still include this in v4.13.
-
-Please review.
-
-Cheers,
-Luca.
+/* frame with out of date sequence number */
+if (ieee80211_sn_less(mpdu_seq_num, head_seq_num)) {
 
 
-Emmanuel Grumbach (4):
-  iwlwifi: mvm: don't send fetch the TID from a non-QoS packet in TSO
-  iwlwifi: mvm: don't mess the SNAP header in TSO for non-QoS packets
-  iwlwifi: pcie: propagate iwl_pcie_apm_init's status
-  iwlwifi: pcie: wait longer after device reset
+ieee80211_sn_less will check seq_num. But in ath9k wds mode, I found
+some time mpdu_seq_num will less than head_seq_num.  Then all recvieve
+data packet will drop.
 
-Johannes Berg (9):
-  iwlwifi: mvm: quietly accept non-sta assoc response frames
-  iwlwifi: pcie: add MSI-X interrupt tracing
-  iwlwifi: mvm: properly enable IP header checksumming
-  iwlwifi: mvm: fix mac80211 queue tracking
-  iwlwifi: mvm: map cab_queue to real one earlier
-  iwlwifi: mvm: fix mac80211's hw_queue in DQA mode
-  iwlwifi: pcie: reconfigure MSI-X HW on resume
-  iwlwifi: mvm: remove DQA non-STA client mode special case
-  iwlwifi: mvm: quietly accept non-sta disassoc frames
+my log:
 
-Liad Kaufman (1):
-  iwlwifi: mvm: update rx statistics cmd api
+[ 8137.201050] mac80211 with out of date seq number: 3843 3890
 
-Luca Coelho (1):
-  iwlwifi: bump MAX API for 8000/9000/A000 to 33
 
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |   4 +
- .../net/wireless/intel/iwlwifi/iwl-devtrace-io.h   |  26 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   | 235 +++++++++++++--------
- .../net/wireless/intel/iwlwifi/mvm/fw-api-stats.h  | 167 +++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  32 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  13 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  83 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  73 ++++---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  10 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |   3 +
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   7 +
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   4 +
- .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |   8 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  44 ++--
- 19 files changed, 512 insertions(+), 221 deletions(-)
-
--- 
-2.11.0
+On Sat, Jun 24, 2017 at 10:55 AM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@gm=
+ail.com> wrote:
+> Hi,
+>
+> Why ap send deauth packet?
+>
+> I grep the source find deauth in ieee80211_rx_mgmt_deauth.
+>
+> On Sat, Jun 24, 2017 at 10:40 AM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@=
+gmail.com> wrote:
+>> All:
+>>
+>> Add some debug info in mac80211, i can get data packet in
+>> __ieee80211_rx_handle_packet
+>>
+>> 4053         if (ieee80211_is_mgmt(fc)) {
+>> 4054                 mac80211_dbg(local, RX, "mac80211 mgmt
+>> packet\n");
+>> 4055                 /* drop frame if too short for header */
+>>
+>> 4083         } else if (ieee80211_is_data(fc)) {
+>> 4084                 mac80211_dbg(local, RX, "mac80211 data
+>> packet\n");
+>> 4085                 struct sta_info *sta, *prev_sta;
+>>
+>> with ping packet log:
+>>
+>> [ 8996.617367] mac80211 data packet
+>> [ 8996.622783] mac80211 mgmt packet
+>> [ 8996.725036] mac80211 mgmt packet
+>> [ 8996.820829] mac80211 data packet
+>> [ 8996.829383] mac80211 mgmt packet
+>> [ 8996.931682] mac80211 mgmt packet
+>> [ 8997.033052] mac80211 mgmt packet
+>> [ 8997.135956] mac80211 mgmt packet
+>>
+>>
+>> And station will deauth from ap with PRE_AUTH_NOT_VALID:
+>>
+>> [ 8998.621385] wlan0: deauthenticated from c8:ee:a6:2d:cc:6c (Reason:
+>> 2=3DPREV_AUTH_NOT_VALID)
+>> [ 8998.629537] br-lan: port 2(wlan0) entered disabled state
+>> [ 9003.635631] wlan0: authenticate with c8:ee:a6:2d:cc:6c
+>> [ 9003.651230] wlan0: send auth to c8:ee:a6:2d:cc:6c (try 1/3)
+>> [ 9003.670365] wlan0: associate with c8:ee:a6:2d:cc:6c (try 1/3)
+>> [ 9003.681735] wlan0: RX AssocResp from c8:ee:a6:2d:cc:6c (capab=3D0x431
+>> status=3D0 aid=3D1)
+>> [ 9003.815829] br-lan: port 2(wlan0) entered forwarding state
+>>
+>>
+>> I think some bug in auth cause data packet drop.
+>>
+>> On Sat, Jun 3, 2017 at 4:09 PM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@g=
+mail.com> wrote:
+>>> wds ap:
+>>>
+>>>         config wifi-device 'radio0'
+>>>                 option type 'mac80211'
+>>>                 option hwmode '11g'
+>>>                 option path 'platform/ar933x_wmac'
+>>>                 option distance '3000'
+>>>                 option txpower '18'
+>>>                 option country '00'
+>>>                 option channel '1'
+>>>                 option htmode 'HT40'
+>>>
+>>>         config wifi-iface
+>>>                 option device 'radio0'
+>>>                 option network 'lan'
+>>>                 option mode 'ap'
+>>>                 option encryption 'psk2'
+>>>                 option key '12345600'
+>>>                option max_inactivity '20'
+>>>                 option wds '1'
+>>>                 option ssid 'LK-M2-Jianxi'
+>>>
+>>> wds station:
+>>>
+>>>         config wifi-device 'radio0'
+>>>                 option type 'mac80211'
+>>>                 option channel '1'
+>>>                 option hwmode '11g'
+>>>                 option path 'platform/ar933x_wmac'
+>>>                 option htmode 'HT20'
+>>>                 option distance '3000'
+>>>                 option txpower '19'
+>>>                option country '00'
+>>>
+>>>         config wifi-iface
+>>>                 option device 'radio0'
+>>>                 option network 'lan'
+>>>                 option encryption 'psk2'
+>>>                 option key '12345600'
+>>>                 option max_inactivity '20'
+>>>                 option wds '1'
+>>>                 option mode 'sta'
+>>>                 option ssid 'LK-M2-Jianxi'
+>>>
+>>>  When the station break off, ping can not reach ap. wifi still
+>>> connect. kernel have no error info. iwinfo signal still change.
+>>>
+>>> ap with the other station still alive.
+>>>
+>>> Use wpa_cli scan command, will awake station, and ping alive.
+>>> wifi command also work.
+>>>
+>>> /proc/interrupts ath9k still alive.
