@@ -1,57 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:60931 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751667AbdFPD5b (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:58691 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754804AbdFXVIh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 23:57:31 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 2/4] adapter: Add call indicating whether constant poll is enabled
-Date: Thu, 15 Jun 2017 20:57:26 -0700
-Message-Id: <20170616035728.19415-3-mgreer@animalcreek.com> (sfid-20170616_055745_658754_74DA5389)
-In-Reply-To: <20170616035728.19415-1-mgreer@animalcreek.com>
-References: <20170616035728.19415-1-mgreer@animalcreek.com>
+        Sat, 24 Jun 2017 17:08:37 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] brcmfmac: fix double free upon register_netdevice() failure
+Date: Sat, 24 Jun 2017 22:08:27 +0100
+Message-Id: <1498338507-3432-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170624_230853_666092_EF3E6B20)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a routine that returns a boolean indicating whether the adapter
-constant poll option is enabled or not.
+The function brcmf_net_attach() can only fail when register_netdevice()
+fails. When this happens register_netdevice() calls priv_destructor, ie.
+brcmf_cfg80211_free_netdev() freeing the vif instance. Also upon this
+failure brcmf_net_attach() calls free_netdev(). However, callers are also
+doing cleanup resulting in double free. In some places they need netdev
+private space as it holds parameters to communicate with the device. So
+we want to do the cleanup only in callers of brcmf_net_attach() by making
+the following changes:
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+ - set priv_destructor after register_netdevice() succeeds.
+ - remove call to free_netdev() in brcmf_net_attach().
+ - call free_netdev() in brcmf_net_detach() for unregistered netdev.
+ - add free_netdev() if brcmf_net_attach() fails for a created interface.
+
+Fixes: cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- src/adapter.c | 5 +++++
- src/near.h    | 1 +
- 2 files changed, 6 insertions(+)
+Hi Kalle,
 
-diff --git a/src/adapter.c b/src/adapter.c
-index e8c7c61..9c483ca 100644
---- a/src/adapter.c
-+++ b/src/adapter.c
-@@ -578,6 +578,11 @@ void __near_adapter_destroy(struct near_adapter *adapter)
- 	free_adapter(adapter);
+Here the patch to fix double free in brcmfmac. The patch is intended
+for 4.13 and applies on top of following commit in the wireless-testing
+tree:
+
+  commit bd688e1cf6760af92562a5cac9b580338ebad62e (tag: wt-2017-06-21)
+  Author: Stephen Rothwell <sfr@canb.auug.org.au>
+  Date:   Thu Jun 8 12:24:08 2017 +1000
+
+      Add localversion to identify builds from this tree
+
+Regards,
+Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 5 ++---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 1 +
+ 3 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2443c71..63e7683 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -625,6 +625,7 @@ struct wireless_dev *brcmf_ap_add_vif(struct wiphy *wiphy, const char *name,
+ 	err = brcmf_net_attach(ifp, true);
+ 	if (err) {
+ 		brcmf_err("Registering netdevice failed\n");
++		free_netdev(ifp->ndev);
+ 		goto fail;
+ 	}
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index c60b897..b4c8643 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -485,13 +485,13 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
+ 		goto fail;
+ 	}
+ 
++	ndev->priv_destructor = brcmf_cfg80211_free_netdev;
+ 	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
+ 	return 0;
+ 
+ fail:
+ 	drvr->iflist[ifp->bsscfgidx] = NULL;
+ 	ndev->netdev_ops = NULL;
+-	free_netdev(ndev);
+ 	return -EBADE;
  }
  
-+bool __near_adapter_is_constant_poll(struct near_adapter *adapter)
-+{
-+	return adapter->constant_poll;
-+}
-+
- const char *__near_adapter_get_path(struct near_adapter *adapter)
- {
- 	return adapter->path;
-diff --git a/src/near.h b/src/near.h
-index 7795e61..50a4c8b 100644
---- a/src/near.h
-+++ b/src/near.h
-@@ -78,6 +78,7 @@ void __near_manager_cleanup(void);
- struct near_adapter *__near_adapter_create(uint32_t idx,
- 		const char *name, uint32_t protocols, bool powered);
- void __near_adapter_destroy(struct near_adapter *adapter);
-+bool __near_adapter_is_constant_poll(struct near_adapter *adapter);
- const char *__near_adapter_get_path(struct near_adapter *adapter);
- struct near_adapter *__near_adapter_get(uint32_t idx);
- int __near_adapter_add(struct near_adapter *adapter);
+@@ -504,6 +504,7 @@ static void brcmf_net_detach(struct net_device *ndev, bool rtnl_locked)
+ 			unregister_netdev(ndev);
+ 	} else {
+ 		brcmf_cfg80211_free_netdev(ndev);
++		free_netdev(ndev);
+ 	}
+ }
+ 
+@@ -580,7 +581,6 @@ static int brcmf_net_p2p_attach(struct brcmf_if *ifp)
+ fail:
+ 	ifp->drvr->iflist[ifp->bsscfgidx] = NULL;
+ 	ndev->netdev_ops = NULL;
+-	free_netdev(ndev);
+ 	return -EBADE;
+ }
+ 
+@@ -626,7 +626,6 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+ 			return ERR_PTR(-ENOMEM);
+ 
+ 		ndev->needs_free_netdev = true;
+-		ndev->priv_destructor = brcmf_cfg80211_free_netdev;
+ 		ifp = netdev_priv(ndev);
+ 		ifp->ndev = ndev;
+ 		/* store mapping ifidx to bsscfgidx */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index aa299c4..2ce675a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2208,6 +2208,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 	err = brcmf_net_attach(ifp, true);
+ 	if (err) {
+ 		brcmf_err("Registering netdevice failed\n");
++		free_netdev(ifp->ndev);
+ 		goto fail;
+ 	}
+ 
 -- 
-2.13.0
+1.9.1
