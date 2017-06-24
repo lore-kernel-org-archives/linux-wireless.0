@@ -1,44 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38491 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752640AbdFOSZY (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:35130 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754162AbdFXBxX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:24 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 02/23] ndef: Fix use of uninitialized variable in property_get_type()
-Date: Thu, 15 Jun 2017 11:24:55 -0700
-Message-Id: <20170615182516.4508-3-mgreer@animalcreek.com> (sfid-20170615_202537_273548_4E6E7398)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+        Fri, 23 Jun 2017 21:53:23 -0400
+Received: by mail-ot0-f193.google.com with SMTP id z48so6486846otz.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 18:53:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
+Date: Fri, 23 Jun 2017 20:53:07 -0500
+Message-Id: <20170624015309.28099-9-Larry.Finger@lwfinger.net> (sfid-20170624_035338_027460_22AD1A91)
+In-Reply-To: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
+References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'type' variable in property_get_type() is never set when the
-record type is invalid.  This means that the check for NULL doesn't
-work as it should and a bogus string can be appended.  Fix this by
-adding a default case to the switch statement that checks the record
-type ensuring that 'type' is set to NULL when the record type is
-invalid.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
+the same definitions.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- src/ndef.c | 1 +
- 1 file changed, 1 insertion(+)
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
+ 3 files changed, 19 insertions(+), 42 deletions(-)
 
-diff --git a/src/ndef.c b/src/ndef.c
-index b90205b..99f3bc3 100644
---- a/src/ndef.c
-+++ b/src/ndef.c
-@@ -342,6 +342,7 @@ static gboolean property_get_type(const GDBusPropertyTable *property,
- 	case RECORD_TYPE_WKT_ERROR:
- 	case RECORD_TYPE_UNKNOWN:
- 	case RECORD_TYPE_ERROR:
-+	default:
- 		type = NULL;
- 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 2ac989a4b2bb..02dff4c3f664 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -43,22 +43,6 @@
+ #define RT_SDIO_INTERFACE	3
+ #define DEV_BUS_TYPE		RT_PCI_INTERFACE
  
+-/* IC type */
+-#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
+-
+-#define IS_NEW_GENERATION_IC(adapter)		\
+-			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
+-#define IS_HARDWARE_TYPE_8812(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
+-#define IS_HARDWARE_TYPE_8821(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
+-#define IS_HARDWARE_TYPE_8723A(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
+-#define IS_HARDWARE_TYPE_8723B(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
+-#define IS_HARDWARE_TYPE_8192E(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
+-
+ #include "halbtc8192e2ant.h"
+ #include "halbtc8723b1ant.h"
+ #include "halbtc8723b2ant.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index 1b124eade846..5657b1e34ad0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
+ void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 
+-	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
++	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
+ 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
+ 				0xFFFFFFFF);
+ 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 4c6d01eb065d..f77acd329e0e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -314,35 +314,29 @@ enum hardware_type {
+ 	HARDWARE_TYPE_RTL8192EE,
+ 	HARDWARE_TYPE_RTL8821AE,
+ 	HARDWARE_TYPE_RTL8812AE,
++	HARDWARE_TYPE_RTL8822BE,
+ 
+ 	/* keep it last */
+ 	HARDWARE_TYPE_NUM
+ };
+ 
+-#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
+-#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+-#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
+-#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
+-#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
+-#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
+-#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
+-#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
+-#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
+-(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
++#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
++#define IS_NEW_GENERATION_IC(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
++#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
++#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
++#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
++#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
++#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
+ 
+ #define RX_HAL_IS_CCK_RATE(rxmcs)			\
+ 	((rxmcs) == DESC_RATE1M ||			\
 -- 
-2.13.0
+2.12.3
