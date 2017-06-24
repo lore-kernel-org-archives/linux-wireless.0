@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36279 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753068AbdFVNXd (ORCPT
+Received: from smtprelay0186.hostedemail.com ([216.40.44.186]:39554 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751281AbdFXMBU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 09:23:33 -0400
-Received: by mail-pf0-f195.google.com with SMTP id y7so2928667pfd.3
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 06:23:33 -0700 (PDT)
-Date: Thu, 22 Jun 2017 18:53:29 +0530
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: julian.calaby@gmail.com, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] rtlwifi: Remove unnecessary conditions
-Message-ID: <20170622132329.GA4825@symbol-HP-ZBook-15> (sfid-20170622_152337_978800_0282F6A2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Sat, 24 Jun 2017 08:01:20 -0400
+Message-ID: <1498305676.24295.27.camel@perches.com> (sfid-20170624_140124_112984_ECBE46C2)
+Subject: Re: [PATCH 10/10] rtlwifi: btcoex: Use seq_file to dump btcoex
+ status
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Date: Sat, 24 Jun 2017 05:01:16 -0700
+In-Reply-To: <20170624015309.28099-11-Larry.Finger@lwfinger.net>
+References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
+         <20170624015309.28099-11-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As wmm_enable is initialized to false, hence the else condition never
-execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
-condition can be removed and boundary will be assigned with
-TX_PAGE_BOUNDARY.
+On Fri, 2017-06-23 at 20:53 -0500, Larry Finger wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> If we use seq_file to dump status, then we can use 'cat' to access
+> debugfs.  Other related changes are
+> 1. implement btc_disp_dbg_msg() to access btcoex's common status.
+> 2. remove obsolete field bt_exist
+[]
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+[]
+> @@ -2719,75 +2719,64 @@ void ex_btc8192e2ant_display_coex_info(struct btc_coexist *btcoexist)
+>  	u8 wifi_dot11_chnl, wifi_hs_chnl;
+>  	u32 fw_ver = 0, bt_patch_ver = 0;
+>  
+> -	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+> -		 "\r\n ============[BT Coexist info]============");
+> +	seq_puts(m, "\r\n ============[BT Coexist info]============");
+>  
+>  	if (btcoexist->manual_control) {
+> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+> -			 "\r\n ===========[Under Manual Control]===========");
+> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+> -			 "\r\n ==========================================");
+> -	}
+> -
+> -	if (!board_info->bt_exist) {
+> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "\r\n BT not exists !!!");
+> -		return;
+> +		seq_puts(m, "\r\n ===========[Under Manual Control]===========");
+> +		seq_puts(m, "\r\n ==========================================");
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
----
-Changes in v2:
-  - Correcting the indent and moving up the change where
-    boundary is defined.
+All the \r uses should probably be removed.
 
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+>  	}
+>  
+> -	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+> -		 "\r\n %-35s = %d/ %d ", "Ant PG number/ Ant mechanism:",
+> +	seq_printf(m, "\r\n %-35s = %d/ %d ", "Ant PG number/ Ant mechanism:",
+>  		   board_info->pg_ant_num, board_info->btdm_ant_num);
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index f95a645..107c34e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -835,7 +835,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 	struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
- 	int err = 0;
--	u32	boundary = 0;
-+	u32	boundary = TX_PAGE_BOUNDARY;
- 	u8 wmm_enable = false; /* TODO */
- 	u8 out_ep_nums = rtlusb->out_ep_nums;
- 	u8 queue_sel = rtlusb->out_queue_sel;
-@@ -845,13 +845,6 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 		pr_err("Failed to init power on!\n");
- 		return err;
- 	}
--	if (!wmm_enable) {
--		boundary = TX_PAGE_BOUNDARY;
--	} else { /* for WMM */
--		boundary = (IS_NORMAL_CHIP(rtlhal->version))
--					? WMM_CHIP_B_TX_PAGE_BOUNDARY
--					: WMM_CHIP_A_TX_PAGE_BOUNDARY;
--	}
- 	if (false == rtl92c_init_llt_table(hw, boundary)) {
- 		pr_err("Failed to init LLT Table!\n");
- 		return -EINVAL;
---
-1.9.1
+etc...
