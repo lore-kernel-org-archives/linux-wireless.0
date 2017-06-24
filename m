@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36206 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752385AbdFPIo1 (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:34099 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750988AbdFXRtz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 04:44:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2()
-References: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
-Date: Fri, 16 Jun 2017 11:44:22 +0300
-In-Reply-To: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com>
-        (Arend van Spriel's message of "Fri, 16 Jun 2017 09:36:35 +0100")
-Message-ID: <87shj0z5i1.fsf@kamboji.qca.qualcomm.com> (sfid-20170616_104431_125723_CA2E5973)
+        Sat, 24 Jun 2017 13:49:55 -0400
+Received: by mail-qk0-f182.google.com with SMTP id d78so21824034qkb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jun 2017 10:49:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABWe71xWAruWUurYeLV=+G=tagnSmohS3KG0m-M+G9eBjrG_Ow@mail.gmail.com>
+References: <CABWe71xWAruWUurYeLV=+G=tagnSmohS3KG0m-M+G9eBjrG_Ow@mail.gmail.com>
+From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
+Date: Sun, 25 Jun 2017 01:49:53 +0800
+Message-ID: <CABWe71xq3h42Ho3iwA8yi-xfA5eu5r_gnOr03M9n2zLgoFTV6A@mail.gmail.com> (sfid-20170624_195010_512624_AD4C592E)
+Subject: Re: mac80211: out of date seq number cause network stall
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Hi,
 
-> This fixes the following warning:
+I found `head seq number` bigger than all seq num:
+
+[ 3887.972639] ma80211 with out of date seq number: 1296 1297 1889
+[ 3887.977134] ma80211 with out of date seq number: 1296 1298 1889
+[ 3887.983082] ma80211 with out of date seq number: 1296 1299 1889
+[ 3887.988929] ma80211 with out of date seq number: 1296 1300 1889
+[ 3887.994861] ma80211 with out of date seq number: 1296 1301 1889
+[ 3888.000764] ma80211 with out of date seq number: 1296 1302 1889
+[ 3888.006638] ma80211 with out of date seq number: 1296 1303 1889
+[ 3888.012576] ma80211 with out of date seq number: 1296 1304 1889
+
+On Sun, Jun 25, 2017 at 1:21 AM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@gma=
+il.com> wrote:
+> Hi,
 >
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function
->   'brcmf_usb_probe_phase2':
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2:
->   warning: 'devinfo' may be used uninitialized in this function
->   [-Wmaybe-uninitialized]
->     mutex_unlock(&devinfo->dev_init_lock);
+> I first find this bug in wds ath9k mode.
 >
-> Fixes: 6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
-> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> Reported-by: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
-> Hi Kalle,
+> When use iperf3, so many out of date seq number, in mac80211 function
+> ieee80211_sta_manage_reorder_buf:
 >
-> Here it is. Was indeed a valid warning.
-
-Thanks for the quick fix.
-
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> @@ -1164,14 +1164,13 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
->  				   void *nvram, u32 nvlen)
->  {
->  	struct brcmf_bus *bus = dev_get_drvdata(dev);
-> -	struct brcmf_usbdev_info *devinfo;
-> +	struct brcmf_usbdev_info *devinfo = bus->bus_priv.usb->devinfo;;
-
-But an extra semicolon :) I'll try to edit it out during commit.
-
--- 
-Kalle Valo
+> [ 1248.968407] mac80211 with out of date seq number: 2551 2547 2552
+> [ 1248.972972] mac80211 with out of date seq number: 2551 2548 2552
+> [ 1248.978800] mac80211 with out of date seq number: 2551 2549 2552
+> [ 1248.984760] mac80211 with out of date seq number: 2551 2550 2552
+> [ 1248.990636] mac80211 with out of date seq number: 2551 2551 2552
+>
+>
+> `previous seq number` `current seq number` `head seq num`.
+>
+>
+> when `head seq number` - `current seq num` > 200 . Iperf3 will block.
