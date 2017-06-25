@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35142 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751979AbdFVNfw (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34852 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751208AbdFYLMI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 09:35:52 -0400
-Received: by mail-oi0-f66.google.com with SMTP id f189so1477637oig.2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2017 06:35:51 -0700 (PDT)
-Subject: Re: [PATCH v2] rtlwifi: Replace hardcode value with macro
-To: Souptick Joarder <jrdr.linux@gmail.com>, chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-References: <20170622120004.GA5783@symbol-HP-ZBook-15>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <80d08513-9da0-2840-dd15-0a3deace3dc7@lwfinger.net> (sfid-20170622_153555_389297_51090BB1)
-Date: Thu, 22 Jun 2017 08:35:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170622120004.GA5783@symbol-HP-ZBook-15>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 25 Jun 2017 07:12:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:36 +0300
+Message-Id: <20170625111158.1792-5-luca@coelho.fi> (sfid-20170625_131218_134037_E331C17B)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 04/26] iwlwifi: mvm: docs: fix enum link, provide TX response link
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/22/2017 07:00 AM, Souptick Joarder wrote:
-> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
-> and hw->max_rate_tries are replaced by macro.
-> 
-> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
-> ---
-> Changes in v2:
->     - Signed-off was missing in previous one.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch includes a comment that is not needed, but it is OK.
+Fix the enum link by adding the missing & and provide the link
+to the TX response documentation.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-Larry
-
-> 
->   drivers/net/wireless/realtek/rtlwifi/base.c | 6 +++---
->   drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
->   2 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-> index bdc3791..f45d093 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-> @@ -422,9 +422,9 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
->   	hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
-> 
->   	/* TODO: Correct this value for our hw */
-> -	/* TODO: define these hard code value */
-> -	hw->max_listen_interval = 10;
-> -	hw->max_rate_tries = 4;
-> +	/* defined these hard code values */
-> +	hw->max_listen_interval = MAX_LISTEN_INTERVAL;
-> +	hw->max_rate_tries = MAX_RATE_TRIES;
->   	/* hw->max_rates = 1; */
->   	hw->sta_data_size = sizeof(struct rtl_sta_info);
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
-> index 02ff0c5..d03e198 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/base.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/base.h
-> @@ -65,6 +65,8 @@ enum ap_peer {
->   #define FRAME_OFFSET_ADDRESS3		16
->   #define FRAME_OFFSET_SEQUENCE		22
->   #define FRAME_OFFSET_ADDRESS4		24
-> +#define MAX_LISTEN_INTERVAL             10
-> +#define MAX_RATE_TRIES                  4
-> 
->   #define SET_80211_HDR_FRAME_CONTROL(_hdr, _val)		\
->   	WRITEEF2BYTE(_hdr, _val)
-> --
-> 1.9.1
-> 
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index c30e0e95b0b0..a5a8616dad6f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -488,7 +488,7 @@ enum iwl_tx_agg_status {
+ 
+ /**
+  * struct agg_tx_status - per packet TX aggregation status
+- * @status: enum iwl_tx_agg_status
++ * @status: See &enum iwl_tx_agg_status
+  * @sequence: Sequence # for this frame's Tx cmd (not SSN!)
+  */
+ struct agg_tx_status {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index cc6af9bd4e10..7a52fb6b4924 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -216,7 +216,8 @@ enum iwl_legacy_cmds {
+ 	FW_GET_ITEM_CMD = 0x1a,
+ 
+ 	/**
+-	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2
++	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2,
++	 *	response in &struct iwl_mvm_tx_resp
+ 	 */
+ 	TX_CMD = 0x1c,
+ 
+-- 
+2.11.0
