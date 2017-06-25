@@ -1,125 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:63227 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751189AbdFEUUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:20:17 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 08/12] NFC: st-nci: Get rid of "interesting" use of interrupt polarity
-Date: Mon,  5 Jun 2017 23:20:05 +0300
-Message-Id: <20170605202009.78561-9-andriy.shevchenko@linux.intel.com> (sfid-20170605_222025_858246_D442CF37)
-In-Reply-To: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
-References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:34894 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751189AbdFYLMM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 25 Jun 2017 07:12:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:41 +0300
+Message-Id: <20170625111158.1792-10-luca@coelho.fi> (sfid-20170625_131218_698846_C2C2AA0C)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 09/26] iwlwifi: remove useless iwl_free_nvm_data() function
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I2C and SPI frameworks followed by IRQ framework do set
-interrupt polarity correctly if it's properly specified in firmware
-(ACPI or DT).
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Get rid of the redundant trick when requesting interrupt.
+This function just calls kfree(), so it only obscures the code without
+bringing any benefits.  Remove it.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/nfc/st-nci/i2c.c | 8 +-------
- drivers/nfc/st-nci/spi.c | 8 +-------
- 2 files changed, 2 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c         | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h | 9 ---------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c          | 2 +-
+ 3 files changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
-index 6d3d8e43fa50..bdfbd543e671 100644
---- a/drivers/nfc/st-nci/i2c.c
-+++ b/drivers/nfc/st-nci/i2c.c
-@@ -21,7 +21,6 @@
- #include <linux/i2c.h>
- #include <linux/gpio.h>
- #include <linux/gpio/consumer.h>
--#include <linux/of_irq.h>
- #include <linux/of_gpio.h>
- #include <linux/acpi.h>
- #include <linux/interrupt.h>
-@@ -51,7 +50,6 @@ struct st_nci_i2c_phy {
- 	bool irq_active;
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index b49848683587..4c8f9f1a5532 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1513,7 +1513,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ out_free_eeprom_blob:
+ 	kfree(priv->eeprom_blob);
+ out_free_eeprom:
+-	iwl_free_nvm_data(priv->nvm_data);
++	kfree(priv->nvm_data);
+ out_free_hw:
+ 	ieee80211_free_hw(priv->hw);
+ out:
+@@ -1532,7 +1532,7 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
+ 	iwl_tt_exit(priv);
  
- 	unsigned int gpio_reset;
--	unsigned int irq_polarity;
+ 	kfree(priv->eeprom_blob);
+-	iwl_free_nvm_data(priv->nvm_data);
++	kfree(priv->nvm_data);
  
- 	struct st_nci_se_status se_status;
- };
-@@ -225,8 +223,6 @@ static int st_nci_i2c_acpi_request_resources(struct i2c_client *client)
+ 	/*netif_stop_queue(dev); */
+ 	flush_workqueue(priv->workqueue);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+index e04a91d70a15..b33888991b94 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+@@ -121,15 +121,6 @@ struct iwl_nvm_data *
+ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
+ 		      const u8 *eeprom, size_t eeprom_size);
  
- 	phy->gpio_reset = desc_to_gpio(gpiod_reset);
- 
--	phy->irq_polarity = irq_get_trigger_type(client->irq);
+-/**
+- * iwl_free_nvm_data - free NVM data
+- * @data: the data to free
+- */
+-static inline void iwl_free_nvm_data(struct iwl_nvm_data *data)
+-{
+-	kfree(data);
+-}
 -
- 	phy->se_status.is_ese_present = false;
- 	phy->se_status.is_uicc_present = false;
+ int iwl_nvm_check_version(struct iwl_nvm_data *data,
+ 			  struct iwl_trans *trans);
  
-@@ -271,8 +267,6 @@ static int st_nci_i2c_of_request_resources(struct i2c_client *client)
- 	}
- 	phy->gpio_reset = gpio;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 4e66cc662120..fc2c607013fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -849,7 +849,7 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 	iwl_phy_db_free(mvm->phy_db);
+ 	mvm->phy_db = NULL;
  
--	phy->irq_polarity = irq_get_trigger_type(client->irq);
--
- 	phy->se_status.is_ese_present =
- 				of_property_read_bool(pp, "ese-present");
- 	phy->se_status.is_uicc_present =
-@@ -333,7 +327,7 @@ static int st_nci_i2c_probe(struct i2c_client *client,
- 	phy->irq_active = true;
- 	r = devm_request_threaded_irq(&client->dev, client->irq, NULL,
- 				st_nci_irq_thread_fn,
--				phy->irq_polarity | IRQF_ONESHOT,
-+				IRQF_ONESHOT,
- 				ST_NCI_DRIVER_NAME, phy);
- 	if (r < 0)
- 		nfc_err(&client->dev, "Unable to register IRQ handler\n");
-diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
-index ee8ea708d5b7..4585e205778b 100644
---- a/drivers/nfc/st-nci/spi.c
-+++ b/drivers/nfc/st-nci/spi.c
-@@ -21,7 +21,6 @@
- #include <linux/spi/spi.h>
- #include <linux/gpio.h>
- #include <linux/gpio/consumer.h>
--#include <linux/of_irq.h>
- #include <linux/of_gpio.h>
- #include <linux/acpi.h>
- #include <linux/interrupt.h>
-@@ -52,7 +51,6 @@ struct st_nci_spi_phy {
- 	bool irq_active;
+-	iwl_free_nvm_data(mvm->nvm_data);
++	kfree(mvm->nvm_data);
+ 	for (i = 0; i < NVM_MAX_NUM_SECTIONS; i++)
+ 		kfree(mvm->nvm_sections[i].data);
  
- 	unsigned int gpio_reset;
--	unsigned int irq_polarity;
- 
- 	struct st_nci_se_status se_status;
- };
-@@ -240,8 +238,6 @@ static int st_nci_spi_acpi_request_resources(struct spi_device *spi_dev)
- 
- 	phy->gpio_reset = desc_to_gpio(gpiod_reset);
- 
--	phy->irq_polarity = irq_get_trigger_type(spi_dev->irq);
--
- 	phy->se_status.is_ese_present = false;
- 	phy->se_status.is_uicc_present = false;
- 
-@@ -286,8 +282,6 @@ static int st_nci_spi_of_request_resources(struct spi_device *dev)
- 	}
- 	phy->gpio_reset = gpio;
- 
--	phy->irq_polarity = irq_get_trigger_type(dev->irq);
--
- 	phy->se_status.is_ese_present =
- 				of_property_read_bool(pp, "ese-present");
- 	phy->se_status.is_uicc_present =
-@@ -349,7 +343,7 @@ static int st_nci_spi_probe(struct spi_device *dev)
- 	phy->irq_active = true;
- 	r = devm_request_threaded_irq(&dev->dev, dev->irq, NULL,
- 				st_nci_irq_thread_fn,
--				phy->irq_polarity | IRQF_ONESHOT,
-+				IRQF_ONESHOT,
- 				ST_NCI_SPI_DRIVER_NAME, phy);
- 	if (r < 0)
- 		nfc_err(&dev->dev, "Unable to register IRQ handler\n");
 -- 
 2.11.0
