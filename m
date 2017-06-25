@@ -1,192 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58526 "EHLO sipsolutions.net"
+Received: from mga02.intel.com ([134.134.136.20]:48206 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753170AbdFVKUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 06:20:35 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name, toke@toke.dk, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
-Date: Thu, 22 Jun 2017 12:20:30 +0200
-Message-Id: <20170622102030.9795-3-johannes@sipsolutions.net> (sfid-20170622_122042_488120_AA0682D2)
-In-Reply-To: <20170622102030.9795-1-johannes@sipsolutions.net>
-References: <20170622102030.9795-1-johannes@sipsolutions.net>
+        id S1751394AbdFYXEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 25 Jun 2017 19:04:41 -0400
+Date: Mon, 26 Jun 2017 01:04:30 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Shikha Singh <shikha.singh@st.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        raunaque.quaiser@st.com, manoj.kumar@st.com,
+        sylvain.fidelis@st.com, raphael.collado@st.com
+Subject: Re: [[linux-nfc][PATCH v1] 2/6] NFC: nfcst: Add ST NFC Transceiver
+ core framework
+Message-ID: <20170625225926.GK21214@zurbaran.ger.intel.com> (sfid-20170626_010450_494701_237738CE)
+References: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
+ <1493705023-8710-3-git-send-email-shikha.singh@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1493705023-8710-3-git-send-email-shikha.singh@st.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Shikha,
 
-With TXQs, the AP_VLAN interfaces are resolved to their owner AP
-interface when enqueuing the frame, which makes sense since the
-frame really goes out on that as far as the driver is concerned.
+On Tue, May 02, 2017 at 02:03:39AM -0400, Shikha Singh wrote:
+> +static int nfcst_in_send_cmd(struct nfc_digital_dev *ddev,
+> +			     struct sk_buff *skb,
+> +			     u16 timeout,
+> +			     nfc_digital_cmd_complete_t cb,
+> +			     void *arg)
+> +{
+> +	struct nfcst_context *context = nfc_digital_get_drvdata(ddev);
+> +	int rc;
+> +	int len_data_to_tag = 0;
+> +
+> +	if (!context->nfcst_power)
+> +		return -EIO;
+> +
+> +	/*
+> +	 * down the semaphore to indicate that last nfcst_in_send_cmd()
+> +	 * call is pending, If interrupted, WARN and return !
+> +	 */
+> +	rc = down_killable(&context->exchange_lock);
+> +	if (rc) {
+> +		WARN(1, "Semaphore wait is interrupted in nfcst_in_send_cmd\n");
+> +		return rc;
+> +	}
+> +
+> +	if (context->trig_config) {
+> +		context->trig_config = false;
+> +		rc = nfcst_handle_config_fdt(context, false);
+> +		if (rc) {
+> +			dev_err(&context->nfcdev->dev, "config fdt failed from nfcst_in_send_cmd %d\n",
+> +				rc);
+> +			return rc;
+> +		}
+> +	}
+> +
+> +	switch (context->current_rf_tech) {
+> +	case NFC_DIGITAL_RF_TECH_106A:
+> +		len_data_to_tag = skb->len + 1;
+> +		*skb_put(skb, 1) = context->sendrcv_trflag;
+You can't dereference a void pointer. Please fix that as it will most
+likely break the build.
 
-However, this introduces a problem: frames to be encrypted with
-a VLAN-specific GTK will now be encrypted with the AP GTK, since
-the information about which virtual interface to use to select
-the key is taken from the TXQ.
-
-Fix this by preserving info->control.vif and using that in the
-dequeue function. This now requires doing the driver-mapping
-in the dequeue as well.
-
-Since there's no way to filter the frames that are sitting on a
-TXQ, drop all frames, which may affect other interfaces, when an
-AP_VLAN is removed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h | 15 ++-------------
- net/mac80211/iface.c   | 17 +++++++++++++++--
- net/mac80211/tx.c      | 39 +++++++++++++++++++++++++++++++--------
- 3 files changed, 48 insertions(+), 23 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b2b5419467cc..263cb30d77c8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -919,21 +919,10 @@ struct ieee80211_tx_info {
- 				unsigned long jiffies;
- 			};
- 			/* NB: vif can be NULL for injected frames */
--			union {
--				/* NB: vif can be NULL for injected frames */
--				struct ieee80211_vif *vif;
--
--				/* When packets are enqueued on txq it's easy
--				 * to re-construct the vif pointer. There's no
--				 * more space in tx_info so it can be used to
--				 * store the necessary enqueue time for packet
--				 * sojourn time computation.
--				 */
--				codel_time_t enqueue_time;
--			};
-+			struct ieee80211_vif *vif;
- 			struct ieee80211_key_conf *hw_key;
- 			u32 flags;
--			/* 4 bytes free */
-+			codel_time_t enqueue_time;
- 		} control;
- 		struct {
- 			u64 cookie;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index fbf631b330b9..9e1bce27b5ac 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -792,6 +792,7 @@ static int ieee80211_open(struct net_device *dev)
- static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			      bool going_down)
- {
-+	struct ieee80211_sub_if_data *txq_sdata = sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	struct fq *fq = &local->fq;
- 	unsigned long flags;
-@@ -937,6 +938,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
-+		txq_sdata = container_of(sdata->bss,
-+					 struct ieee80211_sub_if_data, u.ap);
-+
- 		mutex_lock(&local->mtx);
- 		list_del(&sdata->u.vlan.list);
- 		mutex_unlock(&local->mtx);
-@@ -1007,8 +1011,17 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
--	if (sdata->vif.txq) {
--		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
-+	if (txq_sdata->vif.txq) {
-+		struct txq_info *txqi = to_txq_info(txq_sdata->vif.txq);
-+
-+		/*
-+		 * FIXME FIXME
-+		 *
-+		 * We really shouldn't purge the *entire* txqi since that
-+		 * contains frames for the other AP_VLANs (and possibly
-+		 * the AP itself) as well, but there's no API in FQ now
-+		 * to be able to filter.
-+		 */
- 
- 		spin_lock_bh(&fq->lock);
- 		ieee80211_txq_purge(local, txqi);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8858f4f185e9..bd609326d77c 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1276,11 +1276,6 @@ static void ieee80211_set_skb_enqueue_time(struct sk_buff *skb)
- 	IEEE80211_SKB_CB(skb)->control.enqueue_time = codel_get_time();
- }
- 
--static void ieee80211_set_skb_vif(struct sk_buff *skb, struct txq_info *txqi)
--{
--	IEEE80211_SKB_CB(skb)->control.vif = txqi->txq.vif;
--}
--
- static u32 codel_skb_len_func(const struct sk_buff *skb)
- {
- 	return skb->len;
-@@ -3414,6 +3409,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_tx_data tx;
- 	ieee80211_tx_result r;
-+	struct ieee80211_vif *vif;
- 
- 	spin_lock_bh(&fq->lock);
- 
-@@ -3430,8 +3426,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	if (!skb)
- 		goto out;
- 
--	ieee80211_set_skb_vif(skb, txqi);
--
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	info = IEEE80211_SKB_CB(skb);
- 
-@@ -3439,7 +3433,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	__skb_queue_head_init(&tx.skbs);
- 	tx.local = local;
- 	tx.skb = skb;
--	tx.sdata = vif_to_sdata(info->control.vif);
-+	if (info->control.vif)
-+		tx.sdata = vif_to_sdata(info->control.vif);
- 
- 	if (txq->sta)
- 		tx.sta = container_of(txq->sta, struct sta_info, sta);
-@@ -3488,6 +3483,34 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	switch (tx.sdata->vif.type) {
-+	case NL80211_IFTYPE_MONITOR:
-+		if (tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
-+			vif = &tx.sdata->vif;
-+			break;
-+		}
-+		tx.sdata = rcu_dereference(local->monitor_sdata);
-+		if (tx.sdata) {
-+			vif = &tx.sdata->vif;
-+			info->hw_queue =
-+				vif->hw_queue[skb_get_queue_mapping(skb)];
-+		} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
-+			ieee80211_free_txskb(&local->hw, skb);
-+			goto begin;
-+		} else {
-+			vif = NULL;
-+		}
-+		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		tx.sdata = container_of(tx.sdata->bss,
-+					struct ieee80211_sub_if_data, u.ap);
-+		/* fall through */
-+	default:
-+		vif = &tx.sdata->vif;
-+		break;
-+	}
-+
-+	IEEE80211_SKB_CB(skb)->control.vif = vif;
- out:
- 	spin_unlock_bh(&fq->lock);
- 
--- 
-2.11.0
+Cheers,
+Samuel.
