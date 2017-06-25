@@ -1,39 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36530 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751287AbdFEJu0 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:48052 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751354AbdFYV3h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 05:50:26 -0400
-Received: by mail-pg0-f66.google.com with SMTP id v18so5900254pgb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 02:50:26 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org, Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>, tanbo@marvell.com,
-        xwang4@marvell.com, qshhuang@marvell.com
-Subject: pull-request mwifiex-firmware 2017-06-05
-Date: Mon,  5 Jun 2017 09:50:20 +0000
-Message-Id: <1496656220-20549-1-git-send-email-huxinming820@gmail.com> (sfid-20170605_115035_236547_720BADBF)
+        Sun, 25 Jun 2017 17:29:37 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH][-next] ath10k: fix a bunch of spelling mistakes in messages
+Date: Sun, 25 Jun 2017 22:29:32 +0100
+Message-Id: <20170625212932.29787-1-colin.king@canonical.com> (sfid-20170625_233003_878329_3204DB33)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 47afd9950fbcadeb7cefc093b21d6123bdc76f79:
+From: Colin Ian King <colin.king@canonical.com>
 
-  linux-firmware: add Marvell USB8997 firmware image (2017-05-02 12:28:34 +0530)
+Fix the following spelling mistakes in messages:
+  syncronise -> synchronize
+  unusally -> unusually
+  addrress -> address
+  inverval -> interval
 
-are available in the git repository at:
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c     | 2 +-
+ drivers/net/wireless/ath/ath10k/pci.c     | 2 +-
+ drivers/net/wireless/ath/ath10k/sdio.c    | 4 ++--
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-  git://git.marvell.com/mwifiex-firmware.git 
-
-for you to fetch changes up to 11db1311bff6fed84d11b03fbfb142209c1239ab:
-
-  linux-firmware: update Marvell PCIe-USB8897-A2 firmware image (2017-06-05 02:19:40 -0700)
-
-----------------------------------------------------------------
-Xinming Hu (1):
-      linux-firmware: update Marvell PCIe-USB8897-A2 firmware image
-
- WHENCE                   |   2 +-
- mrvl/pcie8897_uapsta.bin | Bin 820212 -> 836540 bytes
- 2 files changed, 1 insertion(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 4a71815490ae..55c808f03a84 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1392,7 +1392,7 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize setup for vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
+ 		return ret;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 4f3f513dac4f..7ebfc409018d 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -469,7 +469,7 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
+ 	while (tot_delay < PCIE_WAKE_TIMEOUT) {
+ 		if (ath10k_pci_is_awake(ar)) {
+ 			if (tot_delay > PCIE_WAKE_LATE_US)
+-				ath10k_warn(ar, "device wakeup took %d ms which is unusally long, otherwise it works normally.\n",
++				ath10k_warn(ar, "device wakeup took %d ms which is unusually long, otherwise it works normally.\n",
+ 					    tot_delay / 1000);
+ 			return 0;
+ 		}
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 9e78fbae8413..859ed870bd97 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -1553,7 +1553,7 @@ static int ath10k_sdio_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
+ 	/* read the data */
+ 	ret = ath10k_sdio_read(ar, MBOX_WINDOW_DATA_ADDRESS, buf, buf_len);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to read from mbox window data addrress: %d\n",
++		ath10k_warn(ar, "failed to read from mbox window data address: %d\n",
+ 			    ret);
+ 		return ret;
+ 	}
+@@ -1592,7 +1592,7 @@ static int ath10k_sdio_hif_diag_write_mem(struct ath10k *ar, u32 address,
+ 	ret = ath10k_sdio_write(ar, MBOX_WINDOW_DATA_ADDRESS, data, nbytes);
+ 	if (ret) {
+ 		ath10k_warn(ar,
+-			    "failed to write 0x%p to mbox window data addrress: %d\n",
++			    "failed to write 0x%p to mbox window data address: %d\n",
+ 			    data, ret);
+ 		return ret;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index f9188027a6f6..7616c1c4bbd3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2022,7 +2022,7 @@ ath10k_wmi_tlv_op_gen_sta_keepalive(struct ath10k *ar,
+ 	arp->dest_ip4_addr = arg->dest_ip4_addr;
+ 	ether_addr_copy(arp->dest_mac_addr.addr, arg->dest_mac_addr);
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv sta keepalive vdev %d enabled %d method %d inverval %d\n",
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv sta keepalive vdev %d enabled %d method %d interval %d\n",
+ 		   arg->vdev_id, arg->enabled, arg->method, arg->interval);
+ 	return skb;
+ }
+-- 
+2.11.0
