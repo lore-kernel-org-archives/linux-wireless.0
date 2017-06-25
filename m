@@ -1,107 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34145 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752162AbdF3SEn (ORCPT
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:36799 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751050AbdFYNEx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 14:04:43 -0400
-Date: Fri, 30 Jun 2017 11:04:39 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-kernel@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-        Avinash Patil <patila@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH] mwifiex: correct channel stat buffer overflows
-Message-ID: <20170630180439.GA40906@dtor-ws> (sfid-20170630_200507_127754_6C22031C)
-References: <20170630012354.98931-1-briannorris@chromium.org>
+        Sun, 25 Jun 2017 09:04:53 -0400
+Date: Sun, 25 Jun 2017 14:04:37 +0100 (BST)
+From: Sami Kerola <kerolasa@iki.fi>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Tim Gardner <tim.gardner@canonical.com>,
+        Karel Zak <kzak@redhat.com>
+cc: linux-wireless@vger.kernel.org, util-linux@vger.kernel.org
+Subject: rfkill(8) move and improvements
+Message-ID: <alpine.LNX.2.20.1706251339500.25762@imuri> (sfid-20170625_150517_301357_F56411D4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170630012354.98931-1-briannorris@chromium.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 06:23:54PM -0700, Brian Norris wrote:
-> mwifiex records information about various channels as it receives scan
-> information. It does this by appending to a buffer that was sized
-> to the max number of supported channels on any band, but there are
-> numerous problems:
-> 
-> (a) scans can return info from more than one band (e.g., both 2.4 and 5
->     GHz), so the determined "max" is not large enough
-> (b) some firmware appears to return multiple results for a given
->     channel, so the max *really* isn't large enough
-> (c) there is no bounds checking when stashing these stats, so problems
->     (a) and (b) can easily lead to buffer overflows
-> 
-> Let's patch this by setting a slightly-more-correct max (that accounts
-> for a combination of both 2.4G and 5G bands) and adding a bounds check
-> when writing to our statistics buffer.
-> 
-> Due to problem (b), we still might not properly report all known survey
-> information (e.g., with "iw <dev> survey dump"), since duplicate results
-> (or otherwise "larger than expected" results) will cause some
-> truncation. But that's a problem for a future bugfix.
-> 
-> (And because of this known deficiency, only log the excess at the WARN
-> level, since that isn't visible by default in this driver and would
-> otherwise be a bit too noisy.)
-> 
-> Fixes: bf35443314ac ("mwifiex: channel statistics support for mwifiex")
-> Cc: <stable@vger.kernel.org>
-> Cc: Avinash Patil <patila@marvell.com>
-> Cc: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> I've got a ton of other patches still queued up locally, and I hope to send
-> them soon. But I realized this one is a nasty bug (with a trivial fix), so it's
-> probably best to get this out the door quickly.
+Hello maintainers and other,
 
-This does make sense to me.
+The otherday I ran powertop and it did rfkill to save battery, which was 
+particularly annoying because I had not installed rfkill(8) package.  
+Fixing the immediate issue was relatively easy, but the ordeal made me 
+wonder if this tool could be moved to a package that is installed by 
+default to all systems, such as util-linux.
 
-Reviewed-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To put money where my mouth is I have done the time consuming bits of the 
+move.  Notice that full history of the rfkill project is saved in the git 
+branch below, with attribution to original authors and no change to 
+copyleft statement.
 
-> 
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
->  drivers/net/wireless/marvell/mwifiex/scan.c     | 6 ++++++
->  2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index a850ec0054e2..82f4e796ed39 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -4219,7 +4219,7 @@ int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter)
->  	if (adapter->config_bands & BAND_A)
->  		n_channels_a = mwifiex_band_5ghz.n_channels;
->  
-> -	adapter->num_in_chan_stats = max_t(u32, n_channels_bg, n_channels_a);
-> +	adapter->num_in_chan_stats = n_channels_bg + n_channels_a;
->  	adapter->chan_stats = vmalloc(sizeof(*adapter->chan_stats) *
->  				      adapter->num_in_chan_stats);
->  
-> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-> index ae9630b49342..9900855746ac 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-> @@ -2492,6 +2492,12 @@ mwifiex_update_chan_statistics(struct mwifiex_private *priv,
->  					      sizeof(struct mwifiex_chan_stats);
->  
->  	for (i = 0 ; i < num_chan; i++) {
-> +		if (adapter->survey_idx >= adapter->num_in_chan_stats) {
-> +			mwifiex_dbg(adapter, WARN,
-> +				    "FW reported too many channel results (max %d)\n",
-> +				    adapter->num_in_chan_stats);
-> +			return;
-> +		}
->  		chan_stats.chan_num = fw_chan_stats->chan_num;
->  		chan_stats.bandcfg = fw_chan_stats->bandcfg;
->  		chan_stats.flags = fw_chan_stats->flags;
-> -- 
-> 2.13.2.725.g09c95d1e9-goog
-> 
+https://github.com/kerolasa/lelux-utiliteetit/tree/rfkill
+
+But it would not be sufficient to do just the minimal, so I took liberty 
+to make few additional changes. These include libsmartcols output, 
+bash-completion file, add syslog message when state changes happen, and 
+converting unix timestamps in event output to human readable format. 
+Perhaps the easiest is to simply to see what I have done something like:
+
+git clone https://github.com/kerolasa/lelux-utiliteetit.git rfkill-proposal
+cd rfkill-proposal
+./autogen.sh && ./configure && make -j4
+git checkout rfkill
+./rfkill
+./rfkill --help
+./rfkill event
+man ./sys-utils/rfkill.8
+. bash-completion/rfkill
+PATH="$PWD:$PATH"
+rfkill <tab tab>
+git show origin/rfkill-master..origin/rfkill
+
+What do you think, would the move and proposed updates be ok?
 
 -- 
-Dmitry
+Sami Kerola
+http://www.iki.fi/kerolasa/
