@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12858 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751116AbdFVIcz (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34952 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751244AbdFYLMl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 04:32:55 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: [PATCH 00/12] ath10k: firmware update 20170621
-Date: Thu, 22 Jun 2017 11:31:56 +0300
-Message-ID: <1498120328-2017-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170622_103300_065285_D971DD17)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 25 Jun 2017 07:12:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:52 +0300
+Message-Id: <20170625111158.1792-21-luca@coelho.fi> (sfid-20170625_131302_396934_8930F0F4)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 20/26] iwlwifi: mvm: document assoc_beacon_arrive_time
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-here's a set of firmware and board file updates for ath10k.
+Document the assoc_beacon_arrive_time element in the iwl_mac_data_sta
+struct.
 
-Kalle
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Kalle Valo (12):
-  ath10k: QCA4019 hw1.0: update board-2.bin
-  ath10k: QCA4019 hw1.0: update firmware to 10.4-3.4-00082
-  ath10k: QCA6174 hw3.0: update board-2.bin
-  ath10k: QCA6174 hw3.0: add WLAN.RM.4.4-00022-QCARMSWPZ-2
-  ath10k: QCA9377 hw1.0: update board-2.bin
-  ath10k: QCA9887 hw1.0: update firmware to 10.2.4-1.0-00029
-  ath10k: QCA9888 hw2.0: update board-2.bin
-  ath10k: QCA9888 hw2.0: update firmware to 10.4-3.5.1-00014
-  ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2
-  ath10k: QCA9984 hw1.0: update board-2.bin
-  ath10k: QCA9984 hw1.0: update firmware to 10.4-3.4-00082
-  ath10k: update year in license
-
- LICENSE.QualcommAtheros_ath10k                    |    2 +-
- WHENCE                                            |   13 +-
- ath10k/QCA4019/hw1.0/board-2.bin                  |  Bin 72788 -> 109172 bytes
- ath10k/QCA4019/hw1.0/firmware-5.bin               |  Bin 512520 -> 535412 bytes
- ath10k/QCA6174/hw3.0/board-2.bin                  |  Bin 361924 -> 477060 bytes
- ath10k/QCA6174/hw3.0/firmware-6.bin               |  Bin 0 -> 711408 bytes
- ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt | 1781 +++++++++++++++++++++
- ath10k/QCA9377/hw1.0/board-2.bin                  |  Bin 427668 -> 304308 bytes
- ath10k/QCA9887/hw1.0/firmware-5.bin               |  Bin 234560 -> 235880 bytes
- ath10k/QCA9888/hw2.0/board-2.bin                  |  Bin 12148 -> 72788 bytes
- ath10k/QCA9888/hw2.0/firmware-5.bin               |  Bin 565168 -> 647460 bytes
- ath10k/QCA988X/hw2.0/firmware-5.bin               |  Bin 248188 -> 249384 bytes
- ath10k/QCA9984/hw1.0/board-2.bin                  |  Bin 12144 -> 121264 bytes
- ath10k/QCA9984/hw1.0/firmware-5.bin               |  Bin 591308 -> 622060 bytes
- 14 files changed, 1790 insertions(+), 6 deletions(-)
- create mode 100644 ath10k/QCA6174/hw3.0/firmware-6.bin
- create mode 100644 ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
+index aa5aaf7c940d..1d970bf0d735 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
+@@ -199,6 +199,7 @@ struct iwl_mac_data_ibss {
+  * @dtim_reciprocal: 2^32 / dtim_interval , applicable only when associated
+  * @listen_interval: in beacon intervals, applicable only when associated
+  * @assoc_id: unique ID assigned by the AP during association
++ * @assoc_beacon_arrive_time: TSF of first beacon after association
+  */
+ struct iwl_mac_data_sta {
+ 	__le32 is_assoc;
 -- 
-2.7.4
+2.11.0
