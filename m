@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33601 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753744AbdFMOwE (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35024 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751134AbdFYLNT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:52:04 -0400
-Received: by mail-pf0-f196.google.com with SMTP id w12so11947232pfk.0
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:52:03 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 10/20] rsi: set immediate wakeup bit
-Date: Tue, 13 Jun 2017 20:18:58 +0530
-Message-Id: <1497365348-2305-11-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_170119_647113_7183FB0E)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Sun, 25 Jun 2017 07:13:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:46 +0300
+Message-Id: <20170625111158.1792-15-luca@coelho.fi> (sfid-20170625_131322_700236_7127717D)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 14/26] iwlwifi: mvm: don't mark TIDs that are not idle wrt BA as inactive
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-immediate wakeup bit is set while sending internal management
-frame to the firmware.
+A TID may not have traffic but still have a BA agreement
+active (or being setup / torn down) since a BA agreement
+can be triggered by a debugfs hook.
+Just avoid to consider such a TID as inactive to make the
+logic safer.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_hal.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index c230359..7c9224f 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -149,6 +149,7 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 	extnd_size = ((uintptr_t)skb->data & 0x3);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index e7cc8e05615a..8ba8b71dd1a4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1215,6 +1215,10 @@ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
+ 		/* If some TFDs are still queued - don't mark TID as inactive */
+ 		if (iwl_mvm_tid_queued(mvm, &mvmsta->tid_data[tid]))
+ 			tid_bitmap &= ~BIT(tid);
++
++		/* Don't mark as inactive any TID that has an active BA */
++		if (mvmsta->tid_data[tid].state != IWL_AGG_OFF)
++			tid_bitmap &= ~BIT(tid);
+ 	}
  
- 	if (tx_params->flags & INTERNAL_MGMT_PKT) {
-+		skb->data[1] |= BIT(7); /* Immediate Wakeup bit*/
- 		if ((extnd_size) > skb_headroom(skb)) {
- 			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
- 			dev_kfree_skb(skb);
+ 	/* If all TIDs in the queue are inactive - mark queue as inactive. */
 -- 
-2.7.4
+2.11.0
