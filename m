@@ -1,145 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36052 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:35054 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751501AbdF1UQ0 (ORCPT
+        with ESMTP id S1751134AbdFYLNi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:16:26 -0400
+        Sun, 25 Jun 2017 07:13:38 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:30 +0300
-Message-Id: <20170628201330.9432-32-luca@coelho.fi> (sfid-20170628_221639_989990_6935BB73)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 31/31] iwlwifi: mvm: remove version 2 of paging command
+Date: Sun, 25 Jun 2017 14:11:47 +0300
+Message-Id: <20170625111158.1792-16-luca@coelho.fi> (sfid-20170625_131342_588464_EB0FCF69)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 15/26] iwlwifi: add a W/A for a scheduler hardware bug
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Only a000-series devices were going to use this, but actually
-initialize using the context info, which includes paging, so
-this code is never invoked; remove it.
+In case we need to move the scheduler write pointer by
+steps of 0x40, 0x80 or 0xc0, the scheduler gets stuck.
+This leads to hardware error interrupts with status:
+0x5A5A5A5A or alike.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+In order to work around this, detect in the transport
+layer that we are going to hit this case and tell iwlmvm
+to increment the sequence number of the packets. This
+allows to keep the requirement that the WiFi sequence
+number is in sync with the index in the scheduler Tx queue
+and it also allows to avoid the problematic sequence.
+This means that from time to time, we will start a queue
+from ssn + 1, but that shouldn't be a problem since we
+don't switch to new queues for AMPDU now that we have
+DQA which allows to keep the same queue while toggling
+the AMPDU state.
+
+This bug has been fixed on 9000 devices and up.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 25 ++--------------
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 39 ++++++++-----------------
- 2 files changed, 15 insertions(+), 49 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 13 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 17 ++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 50 ++++++++++++----------
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 22 +++++++++-
+ 6 files changed, 72 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index f3ca61ff9f58..3e297c95e8ff 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -326,7 +326,7 @@ enum iwl_legacy_cmds {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 2e975c0be045..57db6250a329 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -482,7 +482,9 @@ struct iwl_trans_txq_scd_cfg {
+  *	iwl_trans_ac_txq_enable wrapper. fw_alive must have been called before
+  *	this one. The op_mode must not configure the HCMD queue. The scheduler
+  *	configuration may be %NULL, in which case the hardware will not be
+- *	configured. May sleep.
++ *	configured. If true is returned, the operation mode needs to increment
++ *	the sequence number of the packets routed to this queue because of a
++ *	hardware scheduler bug. May sleep.
+  * @txq_disable: de-configure a Tx queue to send AMPDUs
+  *	Must be atomic
+  * @txq_set_shared_mode: change Tx queue shared/unshared marking
+@@ -544,7 +546,7 @@ struct iwl_trans_ops {
+ 	void (*reclaim)(struct iwl_trans *trans, int queue, int ssn,
+ 			struct sk_buff_head *skbs);
  
- 	/**
- 	 * @FW_PAGING_BLOCK_CMD:
--	 * &struct iwl_fw_paging_cmd or &struct iwl_fw_paging_cmd_v1
-+	 * &struct iwl_fw_paging_cmd
- 	 */
- 	FW_PAGING_BLOCK_CMD = 0x4f,
- 
-@@ -999,25 +999,6 @@ struct iwl_nvm_access_cmd {
- #define NUM_OF_FW_PAGING_BLOCKS	33 /* 32 for data and 1 block for CSS */
- 
- /**
-- * struct iwl_fw_paging_cmd_v1 - paging layout
-- *
-- * (FW_PAGING_BLOCK_CMD = 0x4f)
-- *
-- * Send to FW the paging layout in the driver.
-- *
-- * @flags: various flags for the command
-- * @block_size: the block size in powers of 2
-- * @block_num: number of blocks specified in the command.
-- * @device_phy_addr: virtual addresses from device side
-- */
--struct iwl_fw_paging_cmd_v1 {
--	__le32 flags;
--	__le32 block_size;
--	__le32 block_num;
--	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
--} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
--
--/**
-  * struct iwl_fw_paging_cmd - paging layout
-  *
-  * (FW_PAGING_BLOCK_CMD = 0x4f)
-@@ -1033,8 +1014,8 @@ struct iwl_fw_paging_cmd {
- 	__le32 flags;
- 	__le32 block_size;
- 	__le32 block_num;
--	__le64 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
--} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_2 */
-+	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
-+} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
- 
- /*
-  * Fw items ID's
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 80c42ef981c0..79e7a7a285dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -384,44 +384,29 @@ static int iwl_save_fw_paging(struct iwl_mvm *mvm,
- /* send paging cmd to FW in case CPU2 has paging image */
- static int iwl_send_paging_cmd(struct iwl_mvm *mvm, const struct fw_img *fw)
- {
--	union {
--		struct iwl_fw_paging_cmd v2;
--		struct iwl_fw_paging_cmd_v1 v1;
--	} paging_cmd = {
--		.v2.flags =
--			cpu_to_le32(PAGING_CMD_IS_SECURED |
--				    PAGING_CMD_IS_ENABLED |
--				    (mvm->num_of_pages_in_last_blk <<
--				    PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
--		.v2.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
--		.v2.block_num = cpu_to_le32(mvm->num_of_paging_blk),
-+	struct iwl_fw_paging_cmd paging_cmd = {
-+		.flags = cpu_to_le32(PAGING_CMD_IS_SECURED |
-+				     PAGING_CMD_IS_ENABLED |
-+				     (mvm->num_of_pages_in_last_blk <<
-+				      PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
-+		.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
-+		.block_num = cpu_to_le32(mvm->num_of_paging_blk),
- 	};
--	int blk_idx, size = sizeof(paging_cmd.v2);
--
--	/* A bit hard coded - but this is the old API and will be deprecated */
--	if (!iwl_mvm_has_new_tx_api(mvm))
--		size = sizeof(paging_cmd.v1);
-+	int blk_idx;
- 
- 	/* loop for for all paging blocks + CSS block */
- 	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
- 		dma_addr_t addr = mvm->fw_paging_db[blk_idx].fw_paging_phys;
-+		__le32 phy_addr;
- 
- 		addr = addr >> PAGE_2_EXP_SIZE;
--
--		if (iwl_mvm_has_new_tx_api(mvm)) {
--			__le64 phy_addr = cpu_to_le64(addr);
--
--			paging_cmd.v2.device_phy_addr[blk_idx] = phy_addr;
--		} else {
--			__le32 phy_addr = cpu_to_le32(addr);
--
--			paging_cmd.v1.device_phy_addr[blk_idx] = phy_addr;
--		}
-+		phy_addr = cpu_to_le32(addr);
-+		paging_cmd.device_phy_addr[blk_idx] = phy_addr;
- 	}
- 
- 	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(FW_PAGING_BLOCK_CMD,
- 						    IWL_ALWAYS_LONG_GROUP, 0),
--				    0, size, &paging_cmd);
-+				    0, sizeof(paging_cmd), &paging_cmd);
+-	void (*txq_enable)(struct iwl_trans *trans, int queue, u16 ssn,
++	bool (*txq_enable)(struct iwl_trans *trans, int queue, u16 ssn,
+ 			   const struct iwl_trans_txq_scd_cfg *cfg,
+ 			   unsigned int queue_wdg_timeout);
+ 	void (*txq_disable)(struct iwl_trans *trans, int queue,
+@@ -952,7 +954,7 @@ static inline void iwl_trans_txq_disable(struct iwl_trans *trans, int queue,
+ 	trans->ops->txq_disable(trans, queue, configure_scd);
  }
  
- /*
+-static inline void
++static inline bool
+ iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
+ 			 const struct iwl_trans_txq_scd_cfg *cfg,
+ 			 unsigned int queue_wdg_timeout)
+@@ -961,10 +963,11 @@ iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
+ 
+ 	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
+ 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
+-		return;
++		return false;
+ 	}
+ 
+-	trans->ops->txq_enable(trans, queue, ssn, cfg, queue_wdg_timeout);
++	return trans->ops->txq_enable(trans, queue, ssn,
++				      cfg, queue_wdg_timeout);
+ }
+ 
+ static inline void
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index e616472afd45..7171928872de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1744,7 +1744,7 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
+ }
+ 
+ /* hw scheduler queue config */
+-void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
++bool iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			u16 ssn, const struct iwl_trans_txq_scd_cfg *cfg,
+ 			unsigned int wdg_timeout);
+ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm, int mac80211_queue,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 0249300c4600..aa41ee8ed916 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -758,7 +758,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	bool using_inactive_queue = false, same_sta = false;
+ 	unsigned long disable_agg_tids = 0;
+ 	enum iwl_mvm_agg_state queue_state;
+-	bool shared_queue = false;
++	bool shared_queue = false, inc_ssn;
+ 	int ssn;
+ 	unsigned long tfd_queue_mask;
+ 	int ret;
+@@ -885,8 +885,12 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	ssn = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+-	iwl_mvm_enable_txq(mvm, queue, mac_queue, ssn, &cfg,
+-			   wdg_timeout);
++	inc_ssn = iwl_mvm_enable_txq(mvm, queue, mac_queue,
++				     ssn, &cfg, wdg_timeout);
++	if (inc_ssn) {
++		ssn = (ssn + 1) & IEEE80211_SCTL_SEQ;
++		le16_add_cpu(&hdr->seq_ctrl, 0x10);
++	}
+ 
+ 	/*
+ 	 * Mark queue as shared in transport if shared
+@@ -898,6 +902,13 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
+ 
+ 	spin_lock_bh(&mvmsta->lock);
++	/*
++	 * This looks racy, but it is not. We have only one packet for
++	 * this ra/tid in our Tx path since we stop the Qdisc when we
++	 * need to allocate a new TFD queue.
++	 */
++	if (inc_ssn)
++		mvmsta->tid_data[tid].seq_number += 0x10;
+ 	mvmsta->tid_data[tid].txq_id = queue;
+ 	mvmsta->tid_data[tid].is_tid_active = true;
+ 	mvmsta->tfd_queue_msk |= BIT(queue);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 8ba8b71dd1a4..0093e78dd571 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -757,35 +757,39 @@ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm, int mac80211_queue,
+ 	return queue;
+ }
+ 
+-void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
++bool iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			u16 ssn, const struct iwl_trans_txq_scd_cfg *cfg,
+ 			unsigned int wdg_timeout)
+ {
++	struct iwl_scd_txq_cfg_cmd cmd = {
++		.scd_queue = queue,
++		.action = SCD_CFG_ENABLE_QUEUE,
++		.window = cfg->frame_limit,
++		.sta_id = cfg->sta_id,
++		.ssn = cpu_to_le16(ssn),
++		.tx_fifo = cfg->fifo,
++		.aggregate = cfg->aggregate,
++		.tid = cfg->tid,
++	};
++	bool inc_ssn;
++
+ 	if (WARN_ON(iwl_mvm_has_new_tx_api(mvm)))
+-		return;
++		return false;
+ 
+ 	/* Send the enabling command if we need to */
+-	if (iwl_mvm_update_txq_mapping(mvm, queue, mac80211_queue,
+-				       cfg->sta_id, cfg->tid)) {
+-		struct iwl_scd_txq_cfg_cmd cmd = {
+-			.scd_queue = queue,
+-			.action = SCD_CFG_ENABLE_QUEUE,
+-			.window = cfg->frame_limit,
+-			.sta_id = cfg->sta_id,
+-			.ssn = cpu_to_le16(ssn),
+-			.tx_fifo = cfg->fifo,
+-			.aggregate = cfg->aggregate,
+-			.tid = cfg->tid,
+-		};
+-
+-		iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn, NULL,
+-					 wdg_timeout);
+-		WARN(iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0,
+-					  sizeof(struct iwl_scd_txq_cfg_cmd),
+-					  &cmd),
+-		     "Failed to configure queue %d on FIFO %d\n", queue,
+-		     cfg->fifo);
+-	}
++	if (!iwl_mvm_update_txq_mapping(mvm, queue, mac80211_queue,
++					cfg->sta_id, cfg->tid))
++		return false;
++
++	inc_ssn = iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn,
++					   NULL, wdg_timeout);
++	if (inc_ssn)
++		le16_add_cpu(&cmd.ssn, 1);
++
++	WARN(iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd),
++	     "Failed to configure queue %d on FIFO %d\n", queue, cfg->fifo);
++
++	return inc_ssn;
+ }
+ 
+ int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 644c0e583f32..4295b8409720 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -516,7 +516,7 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans);
+ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr);
+ int iwl_pcie_tx_stop(struct iwl_trans *trans);
+ void iwl_pcie_tx_free(struct iwl_trans *trans);
+-void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int queue, u16 ssn,
++bool iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int queue, u16 ssn,
+ 			       const struct iwl_trans_txq_scd_cfg *cfg,
+ 			       unsigned int wdg_timeout);
+ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int queue,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 6b19ccc0ae41..9087b1fccaee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1277,13 +1277,14 @@ static int iwl_pcie_txq_set_ratid_map(struct iwl_trans *trans, u16 ra_tid,
+  * combined with Traffic ID (QOS priority), in format used by Tx Scheduler */
+ #define BUILD_RAxTID(sta_id, tid)	(((sta_id) << 4) + (tid))
+ 
+-void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
++bool iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 			       const struct iwl_trans_txq_scd_cfg *cfg,
+ 			       unsigned int wdg_timeout)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
+ 	int fifo = -1;
++	bool scd_bug = false;
+ 
+ 	if (test_and_set_bit(txq_id, trans_pcie->queue_used))
+ 		WARN_ONCE(1, "queue %d already used - expect issues", txq_id);
+@@ -1324,6 +1325,23 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 
+ 			ssn = txq->read_ptr;
+ 		}
++	} else {
++		/*
++		 * If we need to move the SCD write pointer by steps of
++		 * 0x40, 0x80 or 0xc0, it gets stuck. Avoids this and let
++		 * the op_mode know by returning true later.
++		 * Do this only in case cfg is NULL since this trick can
++		 * be done only if we have DQA enabled which is true for mvm
++		 * only. And mvm never sets a cfg pointer.
++		 * This is really ugly, but this is the easiest way out for
++		 * this sad hardware issue.
++		 * This bug has been fixed on devices 9000 and up.
++		 */
++		scd_bug = !trans->cfg->mq_rx_supported &&
++			!((ssn - txq->write_ptr) & 0x3f) &&
++			(ssn != txq->write_ptr);
++		if (scd_bug)
++			ssn++;
+ 	}
+ 
+ 	/* Place first TFD at index corresponding to start sequence number.
+@@ -1367,6 +1385,8 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 				    "Activate queue %d WrPtr: %d\n",
+ 				    txq_id, ssn & 0xff);
+ 	}
++
++	return scd_bug;
+ }
+ 
+ void iwl_trans_pcie_txq_set_shared_mode(struct iwl_trans *trans, u32 txq_id,
 -- 
 2.11.0
