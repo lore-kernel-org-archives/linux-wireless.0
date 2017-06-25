@@ -1,83 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35823 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751294AbdFEPaI (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:34234 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751195AbdFYPnu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 11:30:08 -0400
-Received: by mail-oi0-f65.google.com with SMTP id f206so12649609oig.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:07 -0700 (PDT)
+        Sun, 25 Jun 2017 11:43:50 -0400
+Received: by mail-ot0-f193.google.com with SMTP id p48so9379121otc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:49 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 4/9] rtlwifi: btcoex: hook external PnP notify by chip for wifi driver
-Date: Mon,  5 Jun 2017 10:29:54 -0500
-Message-Id: <20170605152959.27439-5-Larry.Finger@lwfinger.net> (sfid-20170605_173035_878464_16BA6D81)
-In-Reply-To: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
-References: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH v2 00/10] Set 3 of changes related to updates of btcoexist
+Date: Sun, 25 Jun 2017 10:43:34 -0500
+Message-Id: <20170625154344.19213-1-Larry.Finger@lwfinger.net> (sfid-20170625_174354_125800_A43C4698)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+To get maximum benefit of the recent changes in btcoexist, changes need
+to be made in the drivers for the NIC. This is set 3 of those changes.
 
-Hook the chip-specific PnP notify functions for the wifi driver to
-notify btcoexistence.
+v2 - remove \r characters as suggested by Joe Perches
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h        |  1 +
- .../wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c  | 18 ++++++++++++++++++
- 2 files changed, 19 insertions(+)
+Ping-Ke Shih (10):
+  rtlwifi: Fill in_4way field by driver
+  rtlwifi: Add BT_MP_INFO to c2h handler.
+  rtlwifi: Add board type for 8723be and 8192ee
+  rtlwifi: add amplifier type for 8812ae
+  rtlwifi: Update 8723be new phy parameters and its parser.
+  rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
+  rtlwifi: Uses addr1 instead DA to determine broadcast and multicast
+    addr.
+  rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
+  rtlwifi: use debugfs to debug.
+  rtlwifi: btcoex: Use seq_file to dump btcoex status
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-index a98b9548c3c7..ae3e450c5966 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
-@@ -196,6 +196,7 @@ void ex_btc8723b2ant_bt_info_notify(struct btc_coexist *btcoexist,
- void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist);
- void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist);
- void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist);
-+void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
- void ex_btc8723b2ant_pre_load_firmware(struct btc_coexist *btcoexist);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 0cd4926c1ed7..5e6e14fd8c85 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -916,6 +916,24 @@ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- {
- 	if (!halbtc_is_bt_coexist_available(btcoexist))
- 		return;
-+
-+	/* currently only 1ant we have to do the notification,
-+	 * once pnp is notified to sleep state, we have to leave LPS that
-+	 * we can sleep normally.
-+	 */
-+
-+	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8723b1ant_pnp_notify(btcoexist, pnp_state);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8723b2ant_pnp_notify(btcoexist, pnp_state);
-+	} else if (IS_HARDWARE_TYPE_8821(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8821a1ant_pnp_notify(btcoexist, pnp_state);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8821a2ant_pnp_notify(btcoexist, pnp_state);
-+	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
-+	}
- }
- 
- void exhalbtc_periodical(struct btc_coexist *btcoexist)
+ drivers/net/wireless/realtek/rtlwifi/base.c        |  21 +-
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  16 -
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 202 +++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 269 ++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 206 +++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 285 ++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 177 ++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 150 ++++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  14 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  34 ++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   2 +
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   2 +
+ drivers/net/wireless/realtek/rtlwifi/debug.c       | 439 +++++++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/debug.h       |  12 +
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |   6 +
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   5 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   7 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 365 ++++++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8723be/table.c | 192 +++++----
+ .../net/wireless/realtek/rtlwifi/rtl8723be/table.h |  10 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  13 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  41 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  58 +--
+ 31 files changed, 1588 insertions(+), 974 deletions(-)
+
 -- 
-2.13.0
+2.12.3
