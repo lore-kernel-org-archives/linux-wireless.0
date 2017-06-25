@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56923 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751470AbdFHIbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 04:31:09 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Seraphime Kirkovski <kirkseraph@gmail.com>
-CC: "luca@coelho.fi" <luca@coelho.fi>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
-        <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [linuxwifi] [PATCH] net: wireless: intel: iwlwifi: dvm: fix tid
- mask
-Date: Thu, 8 Jun 2017 08:31:02 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3E55212B0@hasmsx107.ger.corp.intel.com> (sfid-20170608_103142_643328_52E308B6)
-References: <20170607223354.22399-1-kirkseraph@gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3E5520A41@hasmsx107.ger.corp.intel.com>
- <20170608074954.qihkavvqdtwn4zmp@macchiaveli>
-In-Reply-To: <20170608074954.qihkavvqdtwn4zmp@macchiaveli>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:33124 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdFYPnx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 25 Jun 2017 11:43:53 -0400
+Received: by mail-ot0-f195.google.com with SMTP id q16so9327901otb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:52 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 03/10] rtlwifi: Add board type for 8723be and 8192ee
+Date: Sun, 25 Jun 2017 10:43:37 -0500
+Message-Id: <20170625154344.19213-4-Larry.Finger@lwfinger.net> (sfid-20170625_174358_862726_ECF1E26A)
+In-Reply-To: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Thu, Jun 08, 2017 at 06:31:01AM +0000, Grumbach, Emmanuel wrote:
-> > Hi,
-> 
-> Hi,
-> 
-> > True, OTOH we need tid to be 8 sometimes. We *just* need to make sure
-> > that we don't index tid_data with this. Hence I think the proper fix is:
-> >
-> > diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-> > b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-> > index 06ac3f1..16a8646 100644
-> > --- a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-> > +++ b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-> > @@ -1190,11 +1190,11 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv,
-> struct iwl_rx_cmd_buffer *rxb)
-> >                                 next_reclaimed;
-> >                         IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
-> >                                                   next_reclaimed);
-> > +                       iwlagn_check_ratid_empty(priv, sta_id, tid);
-> >                 }
-> >
-> >                 iwl_trans_reclaim(priv->trans, txq_id, ssn, &skbs);
-> >
-> > -               iwlagn_check_ratid_empty(priv, sta_id, tid);
-> >                 freed = 0;
-> >
-> >                 /* process frames */
-> 
-> I can confirm it works. You can add my Tested-By.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Patch in review in our internal tree. It'll be upstreamed through the regular process.
-Thanks for your report and debug work.
+With correct board_type, the phy praser can choose correct parameters.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 5 +++++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 7 +++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index d84ac7adfd82..ef9394be7016 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -2133,7 +2133,12 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
+ 	if ((*(u8 *)&hwinfo[EEPROM_RF_BOARD_OPTION_92E]) == 0xFF)
+ 		rtlefuse->board_type = 0;
+ 
++	if (rtlpriv->btcoexist.btc_info.btcoexist == 1)
++		rtlefuse->board_type |= BIT(2); /* ODM_BOARD_BT */
++
+ 	rtlhal->board_type = rtlefuse->board_type;
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++		 "board_type = 0x%x\n", rtlefuse->board_type);
+ 	/*parse xtal*/
+ 	rtlefuse->crystalcap = hwinfo[EEPROM_XTAL_92E];
+ 	if (hwinfo[EEPROM_XTAL_92E] == 0xFF)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 2a7ad5ffe997..0b9366e7acbd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2114,6 +2114,13 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 						 rtlefuse->autoload_failflag,
+ 						 hwinfo);
+ 
++	if (rtlpriv->btcoexist.btc_info.btcoexist == 1)
++		rtlefuse->board_type |= BIT(2); /* ODM_BOARD_BT */
++
++	rtlhal->board_type = rtlefuse->board_type;
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++		 "board_type = 0x%x\n", rtlefuse->board_type);
++
+ 	rtlhal->package_type = _rtl8723be_read_package_type(hw);
+ 
+ 	/* set channel plan from efuse */
+-- 
+2.12.3
