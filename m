@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35030 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbdFWOKM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34846 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751189AbdFYLMH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:12 -0400
-Received: by mail-pg0-f66.google.com with SMTP id f127so6274702pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:11 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 00/17] rsi: station enhancements
-Date: Fri, 23 Jun 2017 19:37:19 +0530
-Message-Id: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161015_988160_FE1B4636)
+        Sun, 25 Jun 2017 07:12:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:35 +0300
+Message-Id: <20170625111158.1792-4-luca@coelho.fi> (sfid-20170625_131219_309744_26DD88AC)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 03/26] iwlwifi: pcie: fix command completion name debug
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have internal management frames(commands) sent to firmware for
-various configurations. This patch defines some common structures
-which can be shared by those frames. Key handling and regulatory
-enhancements are also includesd. With this patch series included,
-station can connect to security enabled AP and send/receive data. 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Prameela Rani Garnepudi (17):
-  rsi: add common structures needed for command packets
-  rsi: immediate wakeup bit and priority for TX command packets
-  rsi: Update in tx command frame radio capabilities
-  rsi: remove unnecessary check for 802.11 management packet
-  rsi: Update peer notify command frame
-  rsi: Update aggregation parameters command frame
-  rsi: Update baseband RF programming frame
-  rsi: update set_channel command frame
-  rsi: update vap capabilities command frame
-  rsi: update set_key command frame
-  rsi: set_key enhancements
-  rsi: update autorate request command frame
-  rsi: block/unblock data queues as per connection status
-  rsi: update tx command frame block/unblock data
-  rsi: Remove internal header from Tx status skb
-  rsi: Send rx filter frame to device when interface is down
-  rsi: regulatory enhancements
+When the command name is printed on command completion, the wrong
+group is used, leading to the wrong name being printed. Fix this
+by using the group ID without inappropriately mangling it through
+iwl_cmd_groupid() - it's already a u8. Also, while at it, use it
+from the same place as the command ID, everything else is just
+confusing.
 
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  63 ++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 382 ++++++++++++++--------------
- drivers/net/wireless/rsi/rsi_main.h         |  18 +-
- drivers/net/wireless/rsi/rsi_mgmt.h         | 143 ++++++++++-
- 4 files changed, 399 insertions(+), 207 deletions(-)
+Fixes: ab02165ccec4 ("iwlwifi: add wide firmware command infrastructure for TX")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index be38dd3a6d93..6b19ccc0ae41 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1706,7 +1706,7 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
+-	u8 group_id = iwl_cmd_groupid(pkt->hdr.group_id);
++	u8 group_id;
+ 	u32 cmd_id;
+ 	int txq_id = SEQ_TO_QUEUE(sequence);
+ 	int index = SEQ_TO_INDEX(sequence);
+@@ -1732,6 +1732,7 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ 	cmd_index = get_cmd_index(txq, index);
+ 	cmd = txq->entries[cmd_index].cmd;
+ 	meta = &txq->entries[cmd_index].meta;
++	group_id = cmd->hdr.group_id;
+ 	cmd_id = iwl_cmd_id(cmd->hdr.cmd, group_id, 0);
+ 
+ 	iwl_pcie_tfd_unmap(trans, meta, txq, index);
 -- 
-2.7.4
+2.11.0
