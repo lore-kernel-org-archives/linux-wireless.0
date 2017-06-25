@@ -1,94 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:36694 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751125AbdFBLTh (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34872 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751327AbdFYLMK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:19:37 -0400
-Received: by mail-qk0-f172.google.com with SMTP id p66so40445029qkf.3
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2017 04:19:32 -0700 (PDT)
-Subject: Re: [PATCH V2 0/9] nl80211: add support for PTK/GTK handshake offload
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "hostap@lists.infradead.org" <hostap@lists.infradead.org>
-References: <1493808134-4074-1-git-send-email-arend.vanspriel@broadcom.com>
- <1495030794.2442.21.camel@sipsolutions.net>
- <1de42f39-1912-349b-e20d-4b5c3c44909f@broadcom.com>
- <1495099355.2553.1.camel@sipsolutions.net>
- <4e0672aa-51bc-115f-32b7-b1a8eb747e5b@broadcom.com>
- <1495104012.2553.3.camel@sipsolutions.net>
- <adcf52eb-cc8f-82de-3820-3f96a0d1f8d3@broadcom.com>
- <1495189263.3274.4.camel@sipsolutions.net>
- <c3c14002-c9c5-490a-2e8f-826d601d0d84@broadcom.com>
- <1495448886.2653.12.camel@sipsolutions.net>
- <29d43b7d-6cb6-0734-6a52-31fa98e9c1bc@broadcom.com>
- <1496050303.2467.3.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <8c101115-1038-ddc0-463f-c38344f740db@broadcom.com> (sfid-20170602_132010_755082_B97A1D50)
-Date: Fri, 2 Jun 2017 13:19:13 +0200
-MIME-Version: 1.0
-In-Reply-To: <1496050303.2467.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 25 Jun 2017 07:12:10 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:38 +0300
+Message-Id: <20170625111158.1792-7-luca@coelho.fi> (sfid-20170625_131300_106430_B6E864E9)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 06/26] iwlwifi: mvm: disentangle union in TX status struct
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/29/2017 11:31 AM, Johannes Berg wrote:
-> Hi Arend,
-> 
->>> Note that this (checking NEW_KEY) only works when you don't have
->>> any split between AP/client cases. Not sure what's the case for
->>> you.
->>
->> Late response so hopefully you recall, but what do you mean by "any
->> split between AP/client cases"?
-> 
-> I meant the capability split - let's say you support 4-way-HS only for
-> client, but not for AP. Then you have to support the NEW_KEY command
-> for the AP case, even if you might not support non-offloaded 4-way-HS
-> for the client case.
-> 
-> So if something supports the following:
-> 
->   * client: offloaded 4-way-HS only
->   * AP: not offloaded 4-way-HS only
-> 
-> Then you have to support NEW_KEY (AP case) and then using NEW_KEY to
-> detect whether or not a wpa_s configuration option to not use offloaded
-> 4-way-HS can be used will not work correctly.
-> 
-> I don't really see that this is a sensible configuration, but I could
-> imagine it existing if somebody "bolted on" AP functionality for a
-> client-side chipset or something like that.
-> 
-> Again, I think I'm happy to leave this up to you - this kind of
-> configuration option should really only be used for debugging anyway,
-> so just getting errors later is probably fine.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Johannes,
+This improves documentation, since kernel-doc can't deal with the
+union well.
 
-I was thinking about adding a DOC section in nl80211.h:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 73 ++++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  9 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  3 +-
+ 4 files changed, 69 insertions(+), 19 deletions(-)
 
-/**
-  * DOC: WPA/WPA2 temporal key exchange offload
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index a5a8616dad6f..0562ce406249 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -513,7 +513,7 @@ struct agg_tx_status {
+ #define IWL_MVM_TX_RES_GET_RA(_ra_tid) ((_ra_tid) >> 4)
+ 
+ /**
+- * struct iwl_mvm_tx_resp - notifies that fw is TXing a packet
++ * struct iwl_mvm_tx_resp_v3 - notifies that fw is TXing a packet
+  * ( REPLY_TX = 0x1c )
+  * @frame_count: 1 no aggregation, >1 aggregation
+  * @bt_kill_count: num of times blocked by bluetooth (unused for agg)
+@@ -540,7 +540,63 @@ struct agg_tx_status {
+  * @tx_queue: TX queue for this response
+  * @status: for non-agg:  frame status TX_STATUS_*
+  *	for agg: status of 1st frame, AGG_TX_STATE_*; other frame status fields
+- *	follow this one, up to frame_count.
++ *	follow this one, up to frame_count. Length in @frame_count.
++ *
++ * After the array of statuses comes the SSN of the SCD. Look at
++ * %iwl_mvm_get_scd_ssn for more details.
++ */
++struct iwl_mvm_tx_resp_v3 {
++	u8 frame_count;
++	u8 bt_kill_count;
++	u8 failure_rts;
++	u8 failure_frame;
++	__le32 initial_rate;
++	__le16 wireless_media_time;
++
++	u8 pa_status;
++	u8 pa_integ_res_a[3];
++	u8 pa_integ_res_b[3];
++	u8 pa_integ_res_c[3];
++	__le16 measurement_req_id;
++	u8 reduced_tpc;
++	u8 reserved;
++
++	__le32 tfd_info;
++	__le16 seq_ctl;
++	__le16 byte_cnt;
++	u8 tlc_info;
++	u8 ra_tid;
++	__le16 frame_ctrl;
++	struct agg_tx_status status[];
++} __packed; /* TX_RSP_API_S_VER_3 */
++
++/**
++ * struct iwl_mvm_tx_resp - notifies that fw is TXing a packet
++ * ( REPLY_TX = 0x1c )
++ * @frame_count: 1 no aggregation, >1 aggregation
++ * @bt_kill_count: num of times blocked by bluetooth (unused for agg)
++ * @failure_rts: num of failures due to unsuccessful RTS
++ * @failure_frame: num failures due to no ACK (unused for agg)
++ * @initial_rate: for non-agg: rate of the successful Tx. For agg: rate of the
++ *	Tx of all the batch. RATE_MCS_*
++ * @wireless_media_time: for non-agg: RTS + CTS + frame tx attempts time + ACK.
++ *	for agg: RTS + CTS + aggregation tx time + block-ack time.
++ *	in usec.
++ * @pa_status: tx power info
++ * @pa_integ_res_a: tx power info
++ * @pa_integ_res_b: tx power info
++ * @pa_integ_res_c: tx power info
++ * @measurement_req_id: tx power info
++ * @reduced_tpc: transmit power reduction used
++ * @reserved: reserved
++ * @tfd_info: TFD information set by the FH
++ * @seq_ctl: sequence control from the Tx cmd
++ * @byte_cnt: byte count from the Tx cmd
++ * @tlc_info: TLC rate info
++ * @ra_tid: bits [3:0] = ra, bits [7:4] = tid
++ * @frame_ctrl: frame control
++ * @tx_queue: TX queue for this response
++ * @status: for non-agg:  frame status TX_STATUS_*
+  *	For version 6 TX response isn't received for aggregation at all.
   *
-  * By setting @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK flag drivers
-  * can indicate offload support of EAPOL handshakes for WPA/WPA2
-  * preshared key authentication. In %NL80211_CMD_CONNECT the preshared
-  * key should be specified using %NL80211_ATTR_PMK. Drivers supporting
-  * this offload may reject the %NL80211_CMD_CONNECT when no preshared
-  * key material is provided. For example when that driver does not
-  * support setting the temporal keys through %NL80211_CMD_NEW_KEY.
-  *
-  * Similarly @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X flag can be
-  * set by drivers indicating offload support of the PTK/GTK EAPOL
-  * handshakes during 802.1X authentication. In order to use the offload
-  * the %NL80211_CMD_CONNECT should have %NL80211_ATTR_WANT_1X_4WAY_HS
-  * attribute flag. Drivers supporting this offload may reject the
-  * %NL80211_CMD_CONNECT when the attribute flag is not present.
-  */
-
-Could add description for FT, ie. PMK-R0 handling as well. Do you think 
-this change warrants a separate section or not. Any comments on the text 
-itself are welcome.
-
-Regards,
-Arend
+  * After the array of statuses comes the SSN of the SCD. Look at
+@@ -568,16 +624,9 @@ struct iwl_mvm_tx_resp {
+ 	u8 tlc_info;
+ 	u8 ra_tid;
+ 	__le16 frame_ctrl;
+-	union {
+-		struct {
+-			struct agg_tx_status status;
+-		} v3;/* TX_RSP_API_S_VER_3 */
+-		struct {
+-			__le16 tx_queue;
+-			__le16 reserved2;
+-			struct agg_tx_status status;
+-		} v6;
+-	};
++	__le16 tx_queue;
++	__le16 reserved2;
++	struct agg_tx_status status;
+ } __packed; /* TX_RSP_API_S_VER_6 */
+ 
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 7a52fb6b4924..dc613b604914 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -217,7 +217,8 @@ enum iwl_legacy_cmds {
+ 
+ 	/**
+ 	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2,
+-	 *	response in &struct iwl_mvm_tx_resp
++	 *	response in &struct iwl_mvm_tx_resp or
++	 *	&struct iwl_mvm_tx_resp_v3
+ 	 */
+ 	TX_CMD = 0x1c,
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 0b5e92c1483e..e616472afd45 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1296,14 +1296,13 @@ static inline bool iwl_mvm_is_cdb_supported(struct iwl_mvm *mvm)
+ 			   IWL_UCODE_TLV_CAPA_CDB_SUPPORT);
+ }
+ 
+-static inline struct agg_tx_status*
+-iwl_mvm_get_agg_status(struct iwl_mvm *mvm,
+-		       struct iwl_mvm_tx_resp *tx_resp)
++static inline struct agg_tx_status *
++iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
+ {
+ 	if (iwl_mvm_has_new_tx_api(mvm))
+-		return &tx_resp->v6.status;
++		return &((struct iwl_mvm_tx_resp *)tx_resp)->status;
+ 	else
+-		return &tx_resp->v3.status;
++		return ((struct iwl_mvm_tx_resp_v3 *)tx_resp)->status;
+ }
+ 
+ static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 288505114153..02f293b711fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1331,6 +1331,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 	struct ieee80211_sta *sta;
+ 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
+ 	int txq_id = SEQ_TO_QUEUE(sequence);
++	/* struct iwl_mvm_tx_resp_v3 is almost the same */
+ 	struct iwl_mvm_tx_resp *tx_resp = (void *)pkt->data;
+ 	int sta_id = IWL_MVM_TX_RES_GET_RA(tx_resp->ra_tid);
+ 	int tid = IWL_MVM_TX_RES_GET_TID(tx_resp->ra_tid);
+@@ -1348,7 +1349,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 	__skb_queue_head_init(&skbs);
+ 
+ 	if (iwl_mvm_has_new_tx_api(mvm))
+-		txq_id = le16_to_cpu(tx_resp->v6.tx_queue);
++		txq_id = le16_to_cpu(tx_resp->tx_queue);
+ 
+ 	seq_ctl = le16_to_cpu(tx_resp->seq_ctl);
+ 
+-- 
+2.11.0
