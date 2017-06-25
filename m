@@ -1,50 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59940 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751652AbdF3GrO (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:33139 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751208AbdFYPn6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 02:47:14 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] nl80211: Don't verify owner_nlportid on NAN commands
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170626165230.13971-1-luca@coelho.fi>
-References: <20170626165230.13971-1-luca@coelho.fi>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        arend.vanspriel@broadcom.com,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Message-Id: <20170630064713.5F0EE607EA@smtp.codeaurora.org> (sfid-20170630_084717_533445_5B269D10)
-Date: Fri, 30 Jun 2017 06:47:13 +0000 (UTC)
+        Sun, 25 Jun 2017 11:43:58 -0400
+Received: by mail-ot0-f195.google.com with SMTP id q16so9328002otb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:57 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
+Date: Sun, 25 Jun 2017 10:43:42 -0500
+Message-Id: <20170625154344.19213-9-Larry.Finger@lwfinger.net> (sfid-20170625_174410_504614_B831393E)
+In-Reply-To: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luca@coelho.fi> wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> 
-> If NAN interface is created with NL80211_ATTR_SOCKET_OWNER, the socket
-> that is used to create the interface is used for all NAN operations and
-> reporting NAN events.
-> However, it turns out that sending commands and receiving events on
-> the same socket is not possible in a completely race-free way:
-> If the socket buffer is overflowed by the events, the command response
-> will not be sent. In that case the caller will block forever on recv.
-> Using non-blocking socket for commands is more complicated and still
-> the command response or ack may not be received.
-> So, keep unicasting NAN events to the interface creator, but allow
-> using a different socket for commands.
-> 
-> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
+the same definitions.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
+ 3 files changed, 19 insertions(+), 42 deletions(-)
 
-36a554cec119 nl80211: Don't verify owner_nlportid on NAN commands
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 2ac989a4b2bb..02dff4c3f664 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -43,22 +43,6 @@
+ #define RT_SDIO_INTERFACE	3
+ #define DEV_BUS_TYPE		RT_PCI_INTERFACE
+ 
+-/* IC type */
+-#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
+-
+-#define IS_NEW_GENERATION_IC(adapter)		\
+-			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
+-#define IS_HARDWARE_TYPE_8812(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
+-#define IS_HARDWARE_TYPE_8821(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
+-#define IS_HARDWARE_TYPE_8723A(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
+-#define IS_HARDWARE_TYPE_8723B(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
+-#define IS_HARDWARE_TYPE_8192E(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
+-
+ #include "halbtc8192e2ant.h"
+ #include "halbtc8723b1ant.h"
+ #include "halbtc8723b2ant.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index 1b124eade846..5657b1e34ad0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
+ void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 
+-	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
++	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
+ 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
+ 				0xFFFFFFFF);
+ 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 4c6d01eb065d..f77acd329e0e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -314,35 +314,29 @@ enum hardware_type {
+ 	HARDWARE_TYPE_RTL8192EE,
+ 	HARDWARE_TYPE_RTL8821AE,
+ 	HARDWARE_TYPE_RTL8812AE,
++	HARDWARE_TYPE_RTL8822BE,
+ 
+ 	/* keep it last */
+ 	HARDWARE_TYPE_NUM
+ };
+ 
+-#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
+-#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+-#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
+-#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
+-#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
+-#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
+-#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
+-#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
+-#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
+-(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
++#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
++#define IS_NEW_GENERATION_IC(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
++#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
++#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
++#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
++#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
++#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
+ 
+ #define RX_HAL_IS_CCK_RATE(rxmcs)			\
+ 	((rxmcs) == DESC_RATE1M ||			\
 -- 
-https://patchwork.kernel.org/patch/9810107/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.12.3
