@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37312 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751396AbdFAJvn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35072 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751128AbdFYLNo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:51:43 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: uap: process remain on channel expired event
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1495781833-25585-1-git-send-email-huxinming820@gmail.com>
-References: <1495781833-25585-1-git-send-email-huxinming820@gmail.com>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Message-Id: <20170601095142.4895C60720@smtp.codeaurora.org> (sfid-20170601_115146_402968_FC2A1548)
-Date: Thu,  1 Jun 2017 09:51:42 +0000 (UTC)
+        Sun, 25 Jun 2017 07:13:44 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:42 +0300
+Message-Id: <20170625111158.1792-11-luca@coelho.fi> (sfid-20170625_131347_783484_B53E496F)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 10/26] iwlwifi: mvm: fix nvm_data leak
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxinming820@gmail.com> wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> AP interface need process remain-on-channel firmware event and notify
-> cfg80211, this will be used in the listen-stage of p2p find procedure.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
+We allocate nvm_data in iwl_mvm_nvm_get_from_fw().  If something goes
+wrong after the allocation (i.e. if no valid MAC address is valid), we
+should free nvm_data before returning an error.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-1f7171995142 mwifiex: uap: process remain on channel expired event
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index ad8bd90deed2..efdcffbaac6f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -596,7 +596,7 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
+ 	if (!is_valid_ether_addr(mvm->nvm_data->hw_addr)) {
+ 		IWL_ERR(trans, "no valid mac address was found\n");
+ 		ret = -EINVAL;
+-		goto out;
++		goto err_free;
+ 	}
+ 
+ 	/* Initialize general data */
+@@ -628,7 +628,11 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
+ 			mvm->nvm_data->valid_rx_ant & mvm->fw->valid_rx_ant,
+ 			rsp->regulatory.lar_enabled && lar_fw_supported);
+ 
+-	ret = 0;
++	iwl_free_resp(&hcmd);
++	return 0;
++
++err_free:
++	kfree(mvm->nvm_data);
+ out:
+ 	iwl_free_resp(&hcmd);
+ 	return ret;
 -- 
-https://patchwork.kernel.org/patch/9749789/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
