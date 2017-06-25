@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:36241 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751141AbdFPKzD (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:34924 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750748AbdFYOlJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 06:55:03 -0400
-Received: by mail-io0-f174.google.com with SMTP id y77so28254429ioe.3
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2017 03:55:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABWe71weMrbEA=htjdRpUBofKo04jeQ9B56xvUzq2zF1YBmQFg@mail.gmail.com>
-References: <CABWe71weMrbEA=htjdRpUBofKo04jeQ9B56xvUzq2zF1YBmQFg@mail.gmail.com>
-From: =?UTF-8?B?5a2Z5bu65biM?= <ycsunjane@gmail.com>
-Date: Fri, 16 Jun 2017 18:55:02 +0800
-Message-ID: <CABWe71yir2pdRPW40SMG3fh6DHwNqm2YgPNg43jCix-of6SCKA@mail.gmail.com> (sfid-20170616_125507_670429_65A5746C)
-Subject: Re: ath9k: wds mode can not recieve any packets.
-To: linux-wireless@vger.kernel.org, nbd@openwrt.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 25 Jun 2017 10:41:09 -0400
+Received: by mail-qt0-f195.google.com with SMTP id w12so10827126qta.2
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 07:41:09 -0700 (PDT)
+From: "Guillermo O. Freschi" <kedrot@gmail.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        linux-wireless@vger.kernel.org
+Cc: "Guillermo O. Freschi" <kedrot@gmail.com>
+Subject: [PATCH] drivers: staging: wilc1000/host_interface.c Fix sparse warning: right shift by bigger than source value
+Date: Sun, 25 Jun 2017 11:40:51 -0300
+Message-Id: <20170625144051.28873-1-kedrot@gmail.com> (sfid-20170625_164113_850582_46337F06)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-all:
+Shifting by equal to or bigger than the width of a type results in
+undefined behavior. By using a wide enough temporary variable the issue
+can be avoided.
 
-I have  catched the error info when rx error  with:
+Signed-off-by: Guillermo O. Freschi <kedrot@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-echo 0xffffffff > /sys/kernel/debug/ieee80211/phy0/ath9k/debug
-
-error info:
-
-[  524.921114] ath: phy0: enable IER
-[  524.924315] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.000052] ath: phy0: listenTime=3D183359 OFDM:2 errs=3D46/s CCK:7
-errs=3D308/s ofdm_turn=3D1
-[  525.006532] ath: phy0: Calibration @22499 finished:   ani, caldone: true
-[  525.021461] ath: phy0: disable IER
-[  525.023486] ath: phy0: enable IER
-[  525.026712] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.123859] ath: phy0: disable IER
-[  525.125887] ath: phy0: enable IER
-[  525.129115] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.226269] ath: phy0: disable IER
-[  525.228315] ath: phy0: enable IER
-[  525.231562] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.310052] ath: phy0: listenTime=3D183613 OFDM:2 errs=3D46/s CCK:7
-errs=3D308/s ofdm_turn=3D1
-[  525.316533] ath: phy0: Calibration @22530 finished:   ani, caldone: true
-[  525.328660] ath: phy0: disable IER
-[  525.330732] ath: phy0: enable IER
-[  525.333910] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.431133] ath: phy0: disable IER
-[  525.433165] ath: phy0: enable IER
-[  525.436392] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.533664] ath: phy0: disable IER
-[  525.535690] ath: phy0: enable IER
-[  525.538918] ath: phy0: AR_IMR 0x81840175 IER 0x1
-[  525.620053] ath: phy0: listenTime=3D183874 OFDM:2 errs=3D46/s CCK:7
-errs=3D308/s ofdm_tu
-
-On Tue, Jun 13, 2017 at 3:38 PM, =E5=AD=99=E5=BB=BA=E5=B8=8C <ycsunjane@gma=
-il.com> wrote:
-> Ath9k in 4addr wds mode. After a while the station will break off.
-> Station connectivity remains. But `ifconfig` cannot see any recv
-> packet.
->
-> wlan0     Link encap:Ethernet  HWaddr C8:EE:A6:2E:60:D8
->           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->           RX packets:17402577 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:33065526 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:1165838023 (1.0 GiB)  TX bytes:51166664044 (47.6 GiB)
->
-> RX packets count stop increase.
->
->
-> /sys/kernel/debug/ieee80211/phy0/ath9k/recv
->          PKTS-ALL :   21445223
->          BYTES-ALL : 2458906640
->
->
->   PKTS-ALL still increase.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f7c22d7b28d1..ed614698c22c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2416,10 +2416,12 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = wid.val;
+-	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
++
++	u32 enabled = strHostIfSetMulti->enabled;
++	*pu8CurrByte++ = (enabled & 0xFF);
++	*pu8CurrByte++ = ((enabled >> 8) & 0xFF);
++	*pu8CurrByte++ = ((enabled >> 16) & 0xFF);
++	*pu8CurrByte++ = ((enabled >> 24) & 0xFF);
+ 
+ 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+ 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+-- 
+2.11.0
