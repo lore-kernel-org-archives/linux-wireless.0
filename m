@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:46136 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752168AbdFMRxP (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35016 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751134AbdFYLNJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 13:53:15 -0400
-Date: Tue, 13 Jun 2017 13:53:13 -0400 (EDT)
-Message-Id: <20170613.135313.1195087934000612946.davem@davemloft.net> (sfid-20170613_195320_214098_7AA2B957)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2017-06-13
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170613122223.2386-1-johannes@sipsolutions.net>
-References: <20170613122223.2386-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Sun, 25 Jun 2017 07:13:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 25 Jun 2017 14:11:56 +0300
+Message-Id: <20170625111158.1792-25-luca@coelho.fi> (sfid-20170625_131314_090445_3F1010E3)
+In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
+References: <20170625111158.1792-1-luca@coelho.fi>
+Subject: [PATCH 24/26] iwlwifi: mvm: fix typo in CTDP_CMD_OPERATION_REPORT description
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 13 Jun 2017 14:22:21 +0200
+From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 
-> Looks like I haven't sent you anything for a long time, so here
-> we go. There isn't a ton of things, but in particular the 4-way-
-> handshake offload has been a long time in the making.
+Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looks good, pulled, thanks Johannes.
-
-> I'll send you the conversion for more skb_put_zero() users in a
-> separate patch after this.
-
-Ok.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 224d10b1b076..b84e8ddbbbc9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -2130,7 +2130,7 @@ struct ct_kill_notif {
+ * enum ctdp_cmd_operation - CTDP command operations
+ * @CTDP_CMD_OPERATION_START: update the current budget
+ * @CTDP_CMD_OPERATION_STOP: stop ctdp
+-* @CTDP_CMD_OPERATION_REPORT: get the avgerage budget
++* @CTDP_CMD_OPERATION_REPORT: get the average budget
+ */
+ enum iwl_mvm_ctdp_cmd_operation {
+ 	CTDP_CMD_OPERATION_START	= 0x1,
+-- 
+2.11.0
