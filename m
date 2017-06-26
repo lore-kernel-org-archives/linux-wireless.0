@@ -1,87 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36320 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753351AbdF2Sbh (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:50906 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751419AbdFZLoo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:31:37 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:22 +0300
-Message-Id: <20170629183027.15408-11-luca@coelho.fi> (sfid-20170629_203151_453682_60F8B767)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 10/15] iwlwifi: mvm: remove DQA non-STA client mode special case
+        Mon, 26 Jun 2017 07:44:44 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH v2 2/8] staging: wilc1000: Add function to calculate ac queue limit
+Date: Mon, 26 Jun 2017 17:13:24 +0530
+Message-ID: <1498477410-19518-3-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_134450_424665_028A5044)
+In-Reply-To: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
+References: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch adds a function which calculates the queue limit
+for a given access category queue.
 
-When we get a non-STA frame to transmit in client mode, we try to use
-the IWL_MVM_DQA_BSS_CLIENT_QUEUE queue (queue #4). However, at this
-point, the queue might not be allocated at all, causing warnings. The
-scenario on which this happened was a race condition between mac80211
-and our queue allocation work:
- * mac80211 sends auth
- * we stop mac80211 queues to allocate a hw queue
- * authentication is aborted
- * we allocate HW queue and start mac80211 queues
- * mac80211 removes station
- * mac80211 hands us the auth frame from the pending queue
-
-At this point, since mac80211 has already removed the station, we try
-to transmit the frame through this special non-station case on queue
-4 anyway.
-
-In order to really use it properly, we'd have to again go through the
-hw queue allocation work, and attach it to a station, etc. In this
-case that isn't possible (there's no station anymore), but if this
-special case were needed, then we'd have to do it this way.
-
-However, the special case is documented to exist for TDLS, but can't
-trigger there because the TDLS setup frames etc. are normal to-DS
-frames going to the peer through the AP. Testing also confirms that
-this code path isn't triggered in TDLS.
-
-Therefore, remove the code path to avoid using an unused queue. The
-erroneous frame described above will still be transmitted on the AUX
-queue, but arguably that's a mac80211 problem, which will eventually
-be fixed by moving everything there to TXQs.
-
-Fixes: e3118ad74d7e ("iwlwifi: mvm: support tdls in dqa mode")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 42 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 584ddc39d5f7..73967790f7e4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -631,10 +631,6 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 	 * (this is not possible for unicast packets as a TLDS discovery
- 	 * response are sent without a station entry); otherwise use the
- 	 * AUX station.
--	 * In DQA mode, if vif is of type STATION and frames are not multicast
--	 * or offchannel, they should be sent from the BSS queue.
--	 * For example, TDLS setup frames should be sent on this queue,
--	 * as they go through the AP.
- 	 */
- 	sta_id = mvm->aux_sta.sta_id;
- 	if (info.control.vif) {
-@@ -656,10 +652,6 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 			if (ap_sta_id != IWL_MVM_INVALID_STA)
- 				sta_id = ap_sta_id;
- 		} else if (iwl_mvm_is_dqa_supported(mvm) &&
--			   info.control.vif->type == NL80211_IFTYPE_STATION &&
--			   queue != mvm->aux_queue) {
--			queue = IWL_MVM_DQA_BSS_CLIENT_QUEUE;
--		} else if (iwl_mvm_is_dqa_supported(mvm) &&
- 			   info.control.vif->type == NL80211_IFTYPE_MONITOR) {
- 			queue = mvm->aux_queue;
- 		}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 9addef1..8c997ba 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -333,6 +333,48 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
+ 	return 1;
+ }
+ 
++static inline void ac_q_limit(u8 ac, u16 *q_limit)
++{
++	static bool initialized;
++	static u8 buffer[AC_BUFFER_SIZE];
++	static u16 cnt[NQUEUES];
++	u8 factors[NQUEUES] = {1, 1, 1, 1};
++	static u16 sum;
++	u16 i;
++	static u16 end_index;
++
++	if (!initialized) {
++		for (i = 0; i < AC_BUFFER_SIZE; i++)
++			buffer[i] = i % NQUEUES;
++
++		for (i = 0; i < NQUEUES; i++) {
++			cnt[i] = AC_BUFFER_SIZE * factors[i] / NQUEUES;
++			sum += cnt[i];
++		}
++		end_index = AC_BUFFER_SIZE - 1;
++		initialized = 1;
++	}
++	if (end_index > AC_BUFFER_SIZE - 1)
++		end_index = AC_BUFFER_SIZE - 1;
++
++	cnt[buffer[end_index]] -= factors[buffer[end_index]];
++	cnt[ac] += factors[ac];
++	sum += (factors[ac] - factors[buffer[end_index]]);
++
++	buffer[end_index] = ac;
++	if (end_index > 0)
++		end_index--;
++	else
++		end_index = AC_BUFFER_SIZE - 1;
++
++	for (i = 0; i < NQUEUES; i++)
++		if (!sum)
++			q_limit[i] = 1;
++		else
++			q_limit[i] = (cnt[i] * FLOW_CONTROL_UPPER_THRESHOLD /
++				      sum) + 1;
++}
++
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func)
+ {
 -- 
-2.11.0
+2.7.4
