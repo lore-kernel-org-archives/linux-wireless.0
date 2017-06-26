@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60220 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751999AbdFJKw5 (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:63467 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751419AbdFZLoj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Jun 2017 06:52:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 10 Jun 2017 13:52:46 +0300
-Message-Id: <20170610105246.26455-5-luca@coelho.fi> (sfid-20170610_125401_690810_6C93809D)
-In-Reply-To: <20170610105246.26455-1-luca@coelho.fi>
-References: <20170610105246.26455-1-luca@coelho.fi>
-Subject: [PATCH 4/4] mac80211: add the action to the drv_ampdu_action tracepoint
+        Mon, 26 Jun 2017 07:44:39 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH v2 0/8] Enable access category classification on Tx path
+Date: Mon, 26 Jun 2017 17:13:22 +0530
+Message-ID: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_134448_819188_309E611A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This patch series adds changes made to implement access
+category based data classification and manages buffers allocation
+between different access categories on the Tx path.
 
-It is very useful to know what ampdu action is currently
-happening. Add this information to the tracepoint.
+Aditya Shankar (8):
+  staging: wilc1000: Add support for AC classification.
+  staging: wilc1000: Add function to calculate ac queue limit
+  staging: wilc1000: WMM classification of data
+  staging: wilc1000: Add function to balance packet count
+  staging: wilc1000: Add new variable for ac queue management
+  staging: wilc1000: Get packet count from firmware
+  staging: wilc1000: Change ac based on acm status
+  staging: wilc1000: Update ACM bit status
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/trace.h | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Change in v2:
+Add a missing patch in the patchset
 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 0d645bc148d0..3d9ac17af407 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -92,16 +92,19 @@
- 				__field(u16, ssn)					\
- 				__field(u8, buf_size)					\
- 				__field(bool, amsdu)					\
--				__field(u16, timeout)
-+				__field(u16, timeout)					\
-+				__field(u16, action)
- #define AMPDU_ACTION_ASSIGN	STA_NAMED_ASSIGN(params->sta);				\
- 				__entry->tid = params->tid;				\
- 				__entry->ssn = params->ssn;				\
- 				__entry->buf_size = params->buf_size;			\
- 				__entry->amsdu = params->amsdu;				\
--				__entry->timeout = params->timeout;
--#define AMPDU_ACTION_PR_FMT	STA_PR_FMT " tid %d, ssn %d, buf_size %u, amsdu %d, timeout %d"
-+				__entry->timeout = params->timeout;			\
-+				__entry->action = params->action;
-+#define AMPDU_ACTION_PR_FMT	STA_PR_FMT " tid %d, ssn %d, buf_size %u, amsdu %d, timeout %d action %d"
- #define AMPDU_ACTION_PR_ARG	STA_PR_ARG, __entry->tid, __entry->ssn,			\
--				__entry->buf_size, __entry->amsdu, __entry->timeout
-+				__entry->buf_size, __entry->amsdu, __entry->timeout,	\
-+				__entry->action
- 
- /*
-  * Tracing for driver callbacks.
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |   1 +
+ drivers/staging/wilc1000/wilc_wlan.c          | 136 ++++++++++++++++++++++++++
+ drivers/staging/wilc1000/wilc_wlan.h          |  25 +++++
+ 3 files changed, 162 insertions(+)
+
 -- 
-2.11.0
+2.7.4
