@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0086.outbound.protection.outlook.com ([104.47.40.86]:5536
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751069AbdFUHic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 03:38:32 -0400
-Subject: Re: [RFC] mac80211: support non-data TXQs
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20170620210309.1193-1-johannes@sipsolutions.net>
- <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
- <1498028959.4955.1.camel@sipsolutions.net>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <b4a28e42-bc8c-57ff-0bc0-e0b1eed6a6c1@quantenna.com> (sfid-20170621_093837_558074_5BDFC7AA)
-Date: Wed, 21 Jun 2017 00:38:16 -0700
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdFZHEc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Jun 2017 03:04:32 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH 0/7] Enable access category classification on Tx path
+Date: Mon, 26 Jun 2017 12:33:31 +0530
+Message-ID: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090435_141321_A333B04B)
 MIME-Version: 1.0
-In-Reply-To: <1498028959.4955.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2017 12:09 AM, Johannes Berg wrote:
-> 
->> [snip]
-> [please trim the amount of text you quote]
-> 
->>> -           txqi->txq.ac = ieee80211_ac_from_tid(tid);
->>> +           if (tid == IEEE80211_NUM_TIDS + 1)
->>> +                   txqi->txq.ac = IEEE80211_AC_VO;
->>
->> Why voice, maybe commit message should mention it?
-> 
-> That's standard for management frames, I really didn't think that'd
-> need any comment?
+This patch series adds changes made to implement access
+category based data classification and manages buffers allocation
+between different access categories on the Tx path.
 
-You're right, for some reason I thought about "null data" frames instead 
-of "no data" frames.
+Aditya Shankar (7):
+  staging: wilc1000: Add support for AC classification.
+  staging: wilc1000: Add function to calculate ac queue limit
+  staging: wilc1000: WMM classification of data
+  staging: wilc1000: Add function to balance packet count
+  staging: wilc1000: Get packet count from firmware
+  staging: wilc1000: Change ac based on acm status
+  staging: wilc1000: Update ACM bit status
 
-> 
-> johannes
-> 
+ drivers/staging/wilc1000/wilc_wlan.c | 136 +++++++++++++++++++++++++++++++++++
+ drivers/staging/wilc1000/wilc_wlan.h |  25 +++++++
+ 2 files changed, 161 insertions(+)
+
+-- 
+2.7.4
