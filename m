@@ -1,111 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35296 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753379AbdFWOKj (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35256 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751456AbdFZQwp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:39 -0400
-Received: by mail-pg0-f66.google.com with SMTP id f127so6276214pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:39 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 07/17] rsi: Update baseband RF programming frame
-Date: Fri, 23 Jun 2017 19:37:26 +0530
-Message-Id: <1498226856-6305-8-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161043_678557_8C10F3B5)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Mon, 26 Jun 2017 12:52:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 26 Jun 2017 19:52:30 +0300
+Message-Id: <20170626165230.13971-1-luca@coelho.fi> (sfid-20170626_185309_264202_D66A09AC)
+Subject: [PATCH v2] nl80211: Don't verify owner_nlportid on NAN commands
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Baseband RF programming frame configured to device is modified
-to use common descriptor structure.
+If NAN interface is created with NL80211_ATTR_SOCKET_OWNER, the socket
+that is used to create the interface is used for all NAN operations and
+reporting NAN events.
+However, it turns out that sending commands and receiving events on
+the same socket is not possible in a completely race-free way:
+If the socket buffer is overflowed by the events, the command response
+will not be sent. In that case the caller will block forever on recv.
+Using non-blocking socket for commands is more complicated and still
+the command response or ack may not be received.
+So, keep unicasting NAN events to the interface creator, but allow
+using a different socket for commands.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 24 +++++++++++++-----------
- drivers/net/wireless/rsi/rsi_mgmt.h     | 12 ++++++++++++
- 2 files changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index c2f814b..a1616d7 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -581,34 +581,36 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
- static int rsi_program_bb_rf(struct rsi_common *common)
- {
- 	struct sk_buff *skb;
--	struct rsi_mac_frame *mgmt_frame;
-+	struct rsi_bb_rf_prog *bb_rf_prog;
-+	u16 frame_len = sizeof(struct rsi_bb_rf_prog);
+In v2:
+   * Andrei fixed the documentation.
+
+include/uapi/linux/nl80211.h | 9 ++++-----
+ net/wireless/nl80211.c       | 8 --------
+ 2 files changed, 4 insertions(+), 13 deletions(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 828aa4703e22..51626b4175c0 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1909,11 +1909,10 @@ enum nl80211_commands {
+  *	that configured the indoor setting, and the indoor operation would be
+  *	cleared when the socket is closed.
+  *	If set during NAN interface creation, the interface will be destroyed
+- *	if the socket is closed just like any other interface. Moreover, only
+- *	the netlink socket that created the interface will be allowed to add
+- *	and remove functions. NAN notifications will be sent in unicast to that
+- *	socket. Without this attribute, any socket can add functions and the
+- *	notifications will be sent to the %NL80211_MCGRP_NAN multicast group.
++ *	if the socket is closed just like any other interface. Moreover, NAN
++ *	notifications will be sent in unicast to that socket. Without this
++ *	attribute, the notifications will be sent to the %NL80211_MCGRP_NAN
++ *	multicast group.
+  *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
+  *	station will deauthenticate when the socket is closed.
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5487cd775b6f..45ba3d0872cc 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11206,10 +11206,6 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
+ 	if (!info->attrs[NL80211_ATTR_NAN_FUNC])
+ 		return -EINVAL;
  
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending program BB/RF frame\n", __func__);
+-	if (wdev->owner_nlportid &&
+-	    wdev->owner_nlportid != info->snd_portid)
+-		return -ENOTCONN;
+-
+ 	err = nla_parse_nested(tb, NL80211_NAN_FUNC_ATTR_MAX,
+ 			       info->attrs[NL80211_ATTR_NAN_FUNC],
+ 			       nl80211_nan_func_policy, info->extack);
+@@ -11441,10 +11437,6 @@ static int nl80211_nan_del_func(struct sk_buff *skb,
+ 	if (!info->attrs[NL80211_ATTR_COOKIE])
+ 		return -EINVAL;
  
--	skb = dev_alloc_skb(FRAME_DESC_SZ);
-+	skb = dev_alloc_skb(frame_len);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
- 			__func__);
- 		return -ENOMEM;
- 	}
+-	if (wdev->owner_nlportid &&
+-	    wdev->owner_nlportid != info->snd_portid)
+-		return -ENOTCONN;
+-
+ 	cookie = nla_get_u64(info->attrs[NL80211_ATTR_COOKIE]);
  
--	memset(skb->data, 0, FRAME_DESC_SZ);
--	mgmt_frame = (struct rsi_mac_frame *)skb->data;
-+	memset(skb->data, 0, frame_len);
-+	bb_rf_prog = (struct rsi_bb_rf_prog *)skb->data;
- 
--	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
--	mgmt_frame->desc_word[1] = cpu_to_le16(BBP_PROG_IN_TA);
--	mgmt_frame->desc_word[4] = cpu_to_le16(common->endpoint);
-+	rsi_set_len_qno(&bb_rf_prog->desc_dword0.len_qno, 0, RSI_WIFI_MGMT_Q);
-+	bb_rf_prog->desc_dword0.frame_type = BBP_PROG_IN_TA;
-+	bb_rf_prog->endpoint = common->endpoint;
-+	bb_rf_prog->rf_power_mode = common->wlan_rf_power_mode;
- 
- 	if (common->rf_reset) {
--		mgmt_frame->desc_word[7] =  cpu_to_le16(RF_RESET_ENABLE);
-+		bb_rf_prog->flags =  cpu_to_le16(RF_RESET_ENABLE);
- 		rsi_dbg(MGMT_TX_ZONE, "%s: ===> RF RESET REQUEST SENT <===\n",
- 			__func__);
- 		common->rf_reset = 0;
- 	}
- 	common->bb_rf_prog_count = 1;
--	mgmt_frame->desc_word[7] |= cpu_to_le16(PUT_BBP_RESET |
--				     BBP_REG_WRITE | (RSI_RF_TYPE << 4));
--	skb_put(skb, FRAME_DESC_SZ);
-+	bb_rf_prog->flags |= cpu_to_le16(PUT_BBP_RESET | BBP_REG_WRITE |
-+					 (RSI_RF_TYPE << 4));
-+	skb_put(skb, frame_len);
- 
- 	return rsi_send_internal_mgmt_frame(common, skb);
- }
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 68863c8..d44c79f 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -294,6 +294,18 @@ struct rsi_aggr_params {
- 	u8 peer_id;
- } __packed;
- 
-+struct rsi_bb_rf_prog {
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	__le16 reserved1;
-+	u8 rf_power_mode;
-+	u8 reserved2;
-+	u8 endpoint;
-+	u8 reserved3;
-+	__le16 reserved4;
-+	__le16 reserved5;
-+	__le16 flags;
-+} __packed;
-+
- struct rsi_vap_caps {
- 	__le16 desc_word[8];
- 	u8 mac_addr[6];
+ 	rdev_del_nan_func(rdev, wdev, cookie);
 -- 
-2.7.4
+2.11.0
