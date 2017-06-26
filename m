@@ -1,95 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:60743 "EHLO
-        bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752501AbdFMAb7 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751460AbdFZHEq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 20:31:59 -0400
-Subject: Re: nfc: nci: fix potential NULL pointer dereference
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20170612220223.GA6326@embeddedgus>
- <20170612222155.GA18302@roeck-us.net>
- <20170612172805.Horde.AUST5RGJfhNVnchxoXV3U2C@gator4166.hostgator.com>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <28317503-e721-2564-a9ff-82182aa0644a@roeck-us.net> (sfid-20170613_023219_623986_CE561DA6)
-Date: Mon, 12 Jun 2017 17:31:54 -0700
+        Mon, 26 Jun 2017 03:04:46 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH 5/7] staging: wilc1000: Get packet count from firmware
+Date: Mon, 26 Jun 2017 12:33:36 +0530
+Message-ID: <1498460618-22187-6-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090448_886215_38CF2ADE)
+In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
+References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20170612172805.Horde.AUST5RGJfhNVnchxoXV3U2C@gator4166.hostgator.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/12/2017 03:28 PM, Gustavo A. R. Silva wrote:
-> Hi Guenter,
-> 
-> Please, see my comments below
-> 
-> Quoting Guenter Roeck <linux@roeck-us.net>:
-> 
->> On Mon, Jun 12, 2017 at 05:02:23PM -0500, Gustavo A. R. Silva wrote:
->>> NULL check at line 76: if (conn_info) {, implies that pointer conn_info
->>> might be NULL, but this pointer is being previously dereferenced,
->>> which might cause a NULL pointer dereference.
->>>
->>> Add NULL check before dereferencing pointer conn_info in order to
->>> avoid a potential NULL pointer dereference.
->>>
->>> Addresses-Coverity-ID: 1362349
->>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->>> ---
->>>  net/nfc/nci/core.c | 11 +++++------
->>>  1 file changed, 5 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
->>> index 61fff42..d2198ce 100644
->>> --- a/net/nfc/nci/core.c
->>> +++ b/net/nfc/nci/core.c
->>> @@ -70,14 +70,13 @@ int nci_get_conn_info_by_dest_type_params(struct nci_dev *ndev, u8 dest_type,
->>>      struct nci_conn_info *conn_info;
->>>
->>>      list_for_each_entry(conn_info, &ndev->conn_info_list, list) {
->>
->> conn_info is set in list_for_each_entry() using container_of(),
->> which is never NULL. Plus, it is dereferenced there as well.
->> The check is unnecessary.
->>
-> 
-> Thanks for clarifying.
-> 
->> Guenter
->>
->>> -        if (conn_info->dest_type == dest_type) {
->>> +        if (conn_info && conn_info->dest_type == dest_type) {
->>>              if (!params)
->>>                  return conn_info->conn_id;
->>> -            if (conn_info) {
-> 
-> So, this NULL check could be removed as it seems it is not useful at all ?
-> 
-Exactly.
+Add a new function to get packet count from the firmware.
 
->>> -                if (params->id == conn_info->dest_params->id &&
->>> -                    params->protocol == conn_info->dest_params->protocol)
->>> -                    return conn_info->conn_id;
->>> -            }
->>> +
->>> +            if (params->id == conn_info->dest_params->id &&
->>> +                params->protocol == conn_info->dest_params->protocol)
->>> +                return conn_info->conn_id;
->>>          }
->>>      }
->>>
-> 
-> Thank you
-> -- 
-> Gustavo A. R. Silva
-> 
-> 
-> 
-> 
-> 
-> 
-> 
+31:25       24      23:17   16      15:9    8       7:2     1       0
+VO CNT      VO ACM  VI CNT  VI ACM  BE CNT  BE ACM  BK CNT  BK ACM  VMM ready
+
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 655f229..b3e1136 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -443,6 +443,14 @@ static inline int ac_balance(u8 *count, u8 *ratio)
+ 	return 0;
+ }
+ 
++static inline void ac_pkt_count(u32 reg, u8 *pkt_count)
++{
++	pkt_count[AC_BK_Q] = (reg & 0x000000fa) >> BK_AC_COUNT_POS;
++	pkt_count[AC_BE_Q] = (reg & 0x0000fe00) >> BE_AC_COUNT_POS;
++	pkt_count[AC_VI_Q] = (reg & 0x00fe0000) >> VI_AC_COUNT_POS;
++	pkt_count[AC_VO_Q] = (reg & 0xfe000000) >> VO_AC_COUNT_POS;
++}
++
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func)
+ {
+-- 
+2.7.4
