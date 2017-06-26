@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45335 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdFOG0y (ORCPT
+Received: from gateway31.websitewelcome.com ([192.185.144.29]:23113 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751424AbdFZXsx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 02:26:54 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 1/3] wil6210: prevent platform callbacks after uninit
-Date: Thu, 15 Jun 2017 09:26:46 +0300
-Message-Id: <1497508008-9536-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170615_082657_657242_C04352CF)
-In-Reply-To: <1497508008-9536-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1497508008-9536-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Mon, 26 Jun 2017 19:48:53 -0400
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id 411FC2FD9F
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jun 2017 18:27:00 -0500 (CDT)
+Date: Mon, 26 Jun 2017 18:26:58 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] ath9k: remove useless variable assignment in ath_mci_intr()
+Message-ID: <20170626232658.GA17483@embeddedgus> (sfid-20170627_014857_084039_B7A99330)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Value assigned to variable offset at line 551 is overwritten at line 562,
+before it can be used. This makes such variable assignment useless.
 
-After calling platform_ops.uninit() it is still possible to invoke
-platform callbacks.
-To prevent this, zero platform_ops right after invoking uninit.
-
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Addresses-Coverity-ID: 1226941
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/mci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index bf9f265..a874d8d 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -191,6 +191,13 @@ static int wil_platform_rop_fw_recovery(void *wil_handle)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 66596b9..cf23fd8 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -548,7 +548,7 @@ void ath_mci_intr(struct ath_softc *sc)
  
-+static void wil_platform_ops_uninit(struct wil6210_priv *wil)
-+{
-+	if (wil->platform_ops.uninit)
-+		wil->platform_ops.uninit(wil->platform_handle);
-+	memset(&wil->platform_ops, 0, sizeof(wil->platform_ops));
-+}
-+
- static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	struct wil6210_priv *wil;
-@@ -327,8 +334,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- err_disable_pdev:
- 	pci_disable_device(pdev);
- err_plat:
--	if (wil->platform_ops.uninit)
--		wil->platform_ops.uninit(wil->platform_handle);
-+	wil_platform_ops_uninit(wil);
- if_free:
- 	wil_if_free(wil);
+ 	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO) {
+ 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO;
+-		offset = ar9003_mci_state(ah, MCI_STATE_LAST_SCHD_MSG_OFFSET);
++		ar9003_mci_state(ah, MCI_STATE_LAST_SCHD_MSG_OFFSET);
+ 	}
  
-@@ -357,8 +363,7 @@ static void wil_pcie_remove(struct pci_dev *pdev)
- 	pci_iounmap(pdev, csr);
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
--	if (wil->platform_ops.uninit)
--		wil->platform_ops.uninit(wil->platform_handle);
-+	wil_platform_ops_uninit(wil);
- 	wil_if_free(wil);
- }
- 
+ 	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_GPM) {
 -- 
-1.9.1
+2.5.0
