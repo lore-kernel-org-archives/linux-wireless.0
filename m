@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35930 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751580AbdF1UOk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:14:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:18 +0300
-Message-Id: <20170628201330.9432-20-luca@coelho.fi> (sfid-20170628_221455_559124_251646AA)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 19/31] iwlwifi: pcie: improve debug in iwl_pcie_rx_handle_rb()
+Received: from s3.sipsolutions.net ([5.9.151.49]:59814 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751387AbdFZLAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Jun 2017 07:00:30 -0400
+Message-ID: <1498474826.3318.4.camel@sipsolutions.net> (sfid-20170626_130032_820041_677B4537)
+Subject: Re: [RFC 3/6] mac80211: add a TXQ for other powersave-buffered
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Mon, 26 Jun 2017 13:00:26 +0200
+In-Reply-To: <89353e7a-5c61-eba3-fe34-0e7eadf7588e@candelatech.com>
+References: <20170621235022.25362-1-johannes@sipsolutions.net>
+         <20170621235022.25362-3-johannes@sipsolutions.net>
+         <63c97c53-af93-107a-a28e-59cebcf01fd6@candelatech.com>
+         <1498112650.2246.1.camel@sipsolutions.net>
+         <3735eb1d-89b5-b4ad-6657-d0d4e9642574@candelatech.com>
+         <1498209700.2595.2.camel@sipsolutions.net>
+         <89353e7a-5c61-eba3-fe34-0e7eadf7588e@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2017-06-23 at 05:27 -0700, Ben Greear wrote:
 
-Print the queue for the existing debug message and add a new
-debug message indicating where the RB ended.
+> I don't understand the code well enough to know if this matters or
+> not, but the ath10k wave-2 stuff has some txq prefetch logic in the
+> firmware (and support in the driver).  But, it doesn't prefetch for
+> the mgt tid as far as I can tell.  It somehow all mostly works
+> anyway, but possibly this would have some effect on your
+> changes.  wave-1 (QCA 9880, etc) doesn't do txq prefetch at all.  Any
+> tricky changes to this logic would need to test with both chipsets.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+I don't think this matters. The issue at hand is that the driver still
+relies on mac80211 buffering.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 6544facc2e0c..1618a59a8a2f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1126,8 +1126,12 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 
- 		pkt = rxb_addr(&rxcb);
- 
--		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID))
-+		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID)) {
-+			IWL_DEBUG_RX(trans,
-+				     "Q %d: RB end marker at offset %d\n",
-+				     rxq->id, offset);
- 			break;
-+		}
- 
- 		WARN((le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_RXQ_MASK) >>
- 			FH_RSCSR_RXQ_POS != rxq->id,
-@@ -1137,8 +1141,8 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 			FH_RSCSR_RXQ_POS);
- 
- 		IWL_DEBUG_RX(trans,
--			     "cmd at offset %d: %s (%.2x.%2x, seq 0x%x)\n",
--			     rxcb._offset,
-+			     "Q %d: cmd at offset %d: %s (%.2x.%2x, seq 0x%x)\n",
-+			     rxq->id, offset,
- 			     iwl_get_cmd_string(trans,
- 						iwl_cmd_id(pkt->hdr.cmd,
- 							   pkt->hdr.group_id,
--- 
-2.11.0
+This *can* be solved, even in this piece of code I inserted here, but
+it'd have to keep state about the queues and then insert some hooks
+elsewhere. I'm pretty sure I can solve that, but don't have the time
+(or even hardware) to test this (easily, I have ath10k in a few
+routers, but ...).
+
+johannes
