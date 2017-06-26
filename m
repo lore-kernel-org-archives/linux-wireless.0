@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-18.163.com ([220.181.12.18]:48332 "EHLO m12-18.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750977AbdFABDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2017 21:03:42 -0400
-Message-ID: <592F6843.9000204@163.com> (sfid-20170601_030416_224926_845EF037)
-Date: Thu, 01 Jun 2017 09:05:07 +0800
-From: Jia-Ju Bai <baijiaju1990@163.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in b43legacy_attr_interfmode_store
-References: <1496226547-5921-1-git-send-email-baijiaju1990@163.com> <85905124-7167-aeb0-8aff-4ceec09e9542@lwfinger.net>
-In-Reply-To: <85905124-7167-aeb0-8aff-4ceec09e9542@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:34366 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751405AbdFZLrI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Jun 2017 07:47:08 -0400
+Received: by mail-qk0-f196.google.com with SMTP id 91so8181294qkq.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jun 2017 04:47:08 -0700 (PDT)
+From: "Guillermo O. Freschi" <kedrot@gmail.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        linux-wireless@vger.kernel.org
+Cc: "Guillermo O. Freschi" <kedrot@gmail.com>
+Subject: [PATCH v2] drivers: staging: wilc1000/host_interface.c Fix sparse warning: right shift by bigger than source value
+Date: Mon, 26 Jun 2017 08:47:01 -0300
+Message-Id: <20170626114701.9769-1-kedrot@gmail.com> (sfid-20170626_134714_146808_C75E5363)
+In-Reply-To: <20170625144051.28873-1-kedrot@gmail.com>
+References: <20170625144051.28873-1-kedrot@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2017 01:33 AM, Larry Finger wrote:
-> On 05/31/2017 05:29 AM, Jia-Ju Bai wrote:
->> The driver may sleep under a spin lock, and the function call path is:
->> b43legacy_attr_interfmode_store (acquire the lock by spin_lock_irqsave)
->>    b43legacy_radio_set_interference_mitigation
->>      b43legacy_radio_interference_mitigation_disable
->>        b43legacy_calc_nrssi_slope
->>          b43legacy_synth_pu_workaround
->>            might_sleep and msleep --> may sleep
->>
->> Fixing it may be complex, and a possible way is to remove
->> spin_lock_irqsave and spin_lock_irqrestore in
->> b43legacy_attr_interfmode_store, and the code has been protected by
->> mutex_lock and mutex_unlock.
->>
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
->> ---
->>   drivers/net/wireless/broadcom/b43legacy/sysfs.c |    2 --
->>   1 file changed, 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/b43legacy/sysfs.c 
->> b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
->> index 2a1da15..9ede143 100644
->> --- a/drivers/net/wireless/broadcom/b43legacy/sysfs.c
->> +++ b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
->> @@ -137,14 +137,12 @@ static ssize_t 
->> b43legacy_attr_interfmode_store(struct device *dev,
->>       }
->>         mutex_lock(&wldev->wl->mutex);
->> -    spin_lock_irqsave(&wldev->wl->irq_lock, flags);
->>         err = b43legacy_radio_set_interference_mitigation(wldev, mode);
->>       if (err)
->>           b43legacyerr(wldev->wl, "Interference Mitigation not "
->>                  "supported by device\n");
->>       mmiowb();
->> -    spin_unlock_irqrestore(&wldev->wl->irq_lock, flags);
->>       mutex_unlock(&wldev->wl->mutex);
->>         return err ? err : count;
->>
->
-> Jia-Ju,
->
-> Did you actually observe the attempt to sleep under the spin lock, or 
-> did you discover this using some tool? In other words, have either of 
-> your patches been tested?
->
-> Larry
->
-Hi,
+Shifting by equal to or bigger than the width of a type results in
+undefined behavior. By using a wide enough temporary variable the issue
+can be avoided.
 
-In fact, my reported bugs are found by a static analysis tool written by 
-me, and they are checked by my review of the driver code.
-I admit my patches are not well tested, and they may not well fix the bugs.
-I am looking forward to opinions and suggestions :)
+Signed-off-by: Guillermo O. Freschi <kedrot@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-Thanks,
-Jia-Ju Bai
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f7c22d7b28d1..4591b1452df4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2407,6 +2407,7 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 	s32 result = 0;
+ 	struct wid wid;
+ 	u8 *pu8CurrByte;
++	u32 enabled;
+ 
+ 	wid.id = (u16)WID_SETUP_MULTICAST_FILTER;
+ 	wid.type = WID_BIN;
+@@ -2416,10 +2417,12 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = wid.val;
+-	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
++
++	enabled = strHostIfSetMulti->enabled;
++	*pu8CurrByte++ = (enabled & 0xFF);
++	*pu8CurrByte++ = ((enabled >> 8) & 0xFF);
++	*pu8CurrByte++ = ((enabled >> 16) & 0xFF);
++	*pu8CurrByte++ = ((enabled >> 24) & 0xFF);
+ 
+ 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+ 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+-- 
+2.11.0
