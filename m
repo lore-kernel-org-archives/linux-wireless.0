@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39274 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750816AbdFOQR7 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:25037 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751491AbdFZLo7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 12:17:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for-4.12 1/3] brcmfmac: add parameter to pass error code in firmware callback
-References: <1497268054-4507-1-git-send-email-arend.vanspriel@broadcom.com>
-        <1497268054-4507-2-git-send-email-arend.vanspriel@broadcom.com>
-Date: Thu, 15 Jun 2017 19:17:49 +0300
-In-Reply-To: <1497268054-4507-2-git-send-email-arend.vanspriel@broadcom.com>
-        (Arend van Spriel's message of "Mon, 12 Jun 2017 12:47:32 +0100")
-Message-ID: <87vanxns2a.fsf@purkki.adurom.net> (sfid-20170615_181821_361770_955DEFA3)
+        Mon, 26 Jun 2017 07:44:59 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH v2 8/8] staging: wilc1000: Update ACM bit status
+Date: Mon, 26 Jun 2017 17:13:30 +0530
+Message-ID: <1498477410-19518-9-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_134507_478564_C7DCD479)
+In-Reply-To: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
+References: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Add a new function to update ACM bit status for a queue
+for all access categories.
 
-> Extend the parameters in the firmware callback so it can be called
-> upon success and failure. This allows the caller to properly clear
-> all resources in the failure path. Right now the error code is
-> always zero, ie. success.
->
-> Cc: stable@vger.kernel.org # 4.9.x-
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-[...]
-
-> -static void brcmf_usb_probe_phase2(struct device *dev,
-> +static void brcmf_usb_probe_phase2(struct device *dev, int ret,
->  				   const struct firmware *fw,
->  				   void *nvram, u32 nvlen)
->  {
->  	struct brcmf_bus *bus =3D dev_get_drvdata(dev);
->  	struct brcmf_usbdev_info *devinfo;
-> -	int ret;
-> +
-> +	if (ret)
-> +		goto error;
-
-This introduces a new warning:
-
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2: warning:
-=E2=80=98devinfo=E2=80=99 may be used uninitialized in this function
-[-Wmaybe-uninitialized]
-
->From a quick look I think it's valid, but due to my mistake I only
-noticed it after I had applied the patch. So can you send a small
-followup patch to fix this, please?
-
---=20
-Kalle Valo
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index e323fd4..929166a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -461,6 +461,14 @@ static inline u8 ac_change(struct wilc *wilc, u8 *ac)
+ 	return 1;
+ }
+ 
++static inline void ac_acm_bit(struct wilc *wilc, u32 reg)
++{
++	wilc->txq[AC_BK_Q].acm = (reg & 0x00000002) >> BK_AC_ACM_STAT_POS;
++	wilc->txq[AC_BE_Q].acm = (reg & 0x00000100) >> BE_AC_ACM_STAT_POS;
++	wilc->txq[AC_VI_Q].acm = (reg & 0x00010000) >> VI_AC_ACM_STAT_POS;
++	wilc->txq[AC_VO_Q].acm = (reg & 0x01000000) >> VO_AC_ACM_STAT_POS;
++}
++
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func)
+ {
+-- 
+2.7.4
