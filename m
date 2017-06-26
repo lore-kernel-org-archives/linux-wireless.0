@@ -1,99 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36338 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753432AbdF2ScB (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:50906 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751491AbdFZLpE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:32:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:25 +0300
-Message-Id: <20170629183027.15408-14-luca@coelho.fi> (sfid-20170629_203210_867108_63B28B37)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 13/15] iwlwifi: pcie: propagate iwl_pcie_apm_init's status
+        Mon, 26 Jun 2017 07:45:04 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH v2 6/8] staging: wilc1000: Get packet count from firmware
+Date: Mon, 26 Jun 2017 17:13:28 +0530
+Message-ID: <1498477410-19518-7-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_134508_037626_FCB87B30)
+In-Reply-To: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
+References: <1498477410-19518-1-git-send-email-aditya.shankar@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Add a new function to get packet count from the firmware.
 
-iwl_pcie_apm_init can fail so make sure that the caller
-takes the status into account.
-Also, ensure that the error that iwl_pcie_apm_init can emit
-will appear in the kernel log by default.
+31:25       24      23:17   16      15:9    8       7:2     1       0
+VO CNT      VO ACM  VI CNT  VI ACM  BE CNT  BE ACM  BK CNT  BK ACM  VMM ready
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index a7d0b5c5e4a0..cac584cc07b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -236,7 +236,8 @@ void iwl_pcie_apm_config(struct iwl_trans *trans)
-  */
- static int iwl_pcie_apm_init(struct iwl_trans *trans)
- {
--	int ret = 0;
-+	int ret;
-+
- 	IWL_DEBUG_INFO(trans, "Init card's basic functions\n");
- 
- 	/*
-@@ -287,8 +288,8 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
- 			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
- 			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (ret < 0) {
--		IWL_DEBUG_INFO(trans, "Failed to init the card\n");
--		goto out;
-+		IWL_ERR(trans, "Failed to init the card\n");
-+		return ret;
- 	}
- 
- 	if (trans->cfg->host_interrupt_operation_mode) {
-@@ -336,8 +337,7 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
- 
- 	set_bit(STATUS_DEVICE_ENABLED, &trans->status);
- 
--out:
--	return ret;
-+	return 0;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 655f229..b3e1136 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -443,6 +443,14 @@ static inline int ac_balance(u8 *count, u8 *ratio)
+ 	return 0;
  }
  
- /*
-@@ -514,13 +514,16 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
- static int iwl_pcie_nic_init(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int ret;
- 
- 	/* nic_init */
- 	spin_lock(&trans_pcie->irq_lock);
--	iwl_pcie_apm_init(trans);
--
-+	ret = iwl_pcie_apm_init(trans);
- 	spin_unlock(&trans_pcie->irq_lock);
- 
-+	if (ret)
-+		return ret;
++static inline void ac_pkt_count(u32 reg, u8 *pkt_count)
++{
++	pkt_count[AC_BK_Q] = (reg & 0x000000fa) >> BK_AC_COUNT_POS;
++	pkt_count[AC_BE_Q] = (reg & 0x0000fe00) >> BE_AC_COUNT_POS;
++	pkt_count[AC_VI_Q] = (reg & 0x00fe0000) >> VI_AC_COUNT_POS;
++	pkt_count[AC_VO_Q] = (reg & 0xfe000000) >> VO_AC_COUNT_POS;
++}
 +
- 	iwl_pcie_set_pwr(trans, false);
- 
- 	iwl_op_mode_nic_config(trans->op_mode);
-@@ -1658,7 +1661,9 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
- 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
- 	usleep_range(1000, 2000);
- 
--	iwl_pcie_apm_init(trans);
-+	err = iwl_pcie_apm_init(trans);
-+	if (err)
-+		return err;
- 
- 	iwl_pcie_init_msix(trans_pcie);
- 
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func)
+ {
 -- 
-2.11.0
+2.7.4
