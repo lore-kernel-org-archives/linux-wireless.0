@@ -1,47 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55476 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751225AbdF1HV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 03:21:58 -0400
-Message-ID: <1498634512.12531.1.camel@sipsolutions.net> (sfid-20170628_092240_947951_23386F85)
-Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 28 Jun 2017 09:21:52 +0200
-In-Reply-To: <20170627195003.GA93674@google.com> (sfid-20170627_215010_204503_7ACDE0D1)
-References: <20170525001119.64791-1-briannorris@chromium.org>
-         <20170525001119.64791-5-briannorris@chromium.org>
-         <87fufk2hmm.fsf@purkki.adurom.net> <20170601173954.GA138807@google.com>
-         <87inka77md.fsf@codeaurora.org> <20170621174829.GA92340@google.com>
-         <1498136389.2246.7.camel@sipsolutions.net>
-         <20170627195003.GA93674@google.com> (sfid-20170627_215010_204503_7ACDE0D1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdFZHEk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Jun 2017 03:04:40 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH 3/7] staging: wilc1000: WMM classification of data
+Date: Mon, 26 Jun 2017 12:33:34 +0530
+Message-ID: <1498460618-22187-4-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090443_415054_BC8482DA)
+In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
+References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+This patch adds a new function to classify data to available
+WMM access categories based on the DSCP value in the header.
 
-> Wow, that's not exactly simple code; I expect it could be pretty
-> difficult to get that right today on mwifiex. 
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 51 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-Yeah, I have no doubt. You'd probably have to track a lot of state that
-you just pass down to the firmware too, and possibly can't even track
-some state that the firmware derives itself (like for example PNs for
-keys)
-
-> The current approach
-> actually should be *easier* (for the kernel side) to avoid bugs, as
-> it should be basically the same thing as 'rmmod'. Nonetheless, there
-> are plenty of bugs.
-
-:-)
-
-johannes
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 8c997ba..d1ed3ba8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -375,6 +375,57 @@ static inline void ac_q_limit(u8 ac, u16 *q_limit)
+ 				      sum) + 1;
+ }
+ 
++static inline u8 ac_classify(struct wilc *wilc, struct txq_entry_t *tqe)
++{
++	u8 *eth_hdr_ptr;
++	u8 *buffer = tqe->buffer;
++	u8 ac;
++	u16 h_proto;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
++
++	eth_hdr_ptr = &buffer[0];
++	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
++	if (h_proto == ETH_P_IP) {
++		u8 *ip_hdr_ptr;
++		u32 IHL, DSCP;
++
++		ip_hdr_ptr = &buffer[ETHERNET_HDR_LEN];
++		IHL = (ip_hdr_ptr[0] & 0xf) << 2;
++		DSCP = (ip_hdr_ptr[1] & 0xfc);
++
++		switch (DSCP) {
++		case 0x20:
++		case 0x40:
++		case 0x08:
++			ac = AC_BK_Q;
++			break;
++		case 0x80:
++		case 0xA0:
++		case 0x28:
++			ac = AC_VI_Q;
++			break;
++		case 0xC0:
++		case 0xd0:
++		case 0xE0:
++		case 0x88:
++		case 0xB8:
++			ac = AC_VO_Q;
++			break;
++		default:
++			ac = AC_BE_Q;
++			break;
++		}
++	} else {
++		ac  = AC_BE_Q;
++	}
++
++	tqe->q_num = ac;
++	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
++
++	return ac;
++}
++
+ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			      u32 buffer_size, wilc_tx_complete_func_t func)
+ {
+-- 
+2.7.4
