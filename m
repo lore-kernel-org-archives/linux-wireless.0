@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59472 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751373AbdFEUoP (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:33162 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752010AbdF0WHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 16:44:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Mordechai Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon,  5 Jun 2017 23:42:16 +0300
-Message-Id: <20170605204218.30151-24-luca@coelho.fi> (sfid-20170605_224445_411576_B5BDF0F2)
-In-Reply-To: <20170605204218.30151-1-luca@coelho.fi>
-References: <20170605204218.30151-1-luca@coelho.fi>
-Subject: [PATCH 23/25] iwlwifi: fw-api: cleanup cycle includes
+        Tue, 27 Jun 2017 18:07:14 -0400
+Received: by mail-qk0-f181.google.com with SMTP id r62so37254303qkf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 15:07:14 -0700 (PDT)
+Subject: Re: [PATCH 3/4] brcmfmac: rework headroom check in .start_xmit()
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        James Hughes <james.hughes@raspberrypi.org>
+References: <1498125664-25980-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1498125664-25980-4-git-send-email-arend.vanspriel@broadcom.com>
+ <874lv15xp9.fsf@purkki.adurom.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0d8f0be4-4487-5f0d-c903-c87656c96bac@broadcom.com> (sfid-20170628_000718_742408_DE28A8F3)
+Date: Wed, 28 Jun 2017 00:07:10 +0200
+MIME-Version: 1.0
+In-Reply-To: <874lv15xp9.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechai Goodstein <mordechay.goodstein@intel.com>
+On 27-06-17 16:09, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+>> Since commit 9cc4b7cb86cb ("brcmfmac: Make skb header writable
+>> before use") the headroom usage has been fixed. However, the
+>> driver was keeping statistics that got lost. So reworking the
+>> code so we get those driver statistics back for debugging.
+>>
+>> Cc: James Hughes <james.hughes@raspberrypi.org>
+>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> ---
+>>  .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 15 ++++++++++++--
+>>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 23 +++++++++++++++-------
+>>  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 13 +++++++-----
+>>  3 files changed, 37 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+>> index e1a4d9e..163ddc4 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+>> @@ -113,6 +113,17 @@ struct brcmf_bus_msgbuf {
+>>  
+>>  
+>>  /**
+>> + * struct brcmf_bus_stats - bus statistic counters.
+>> + *
+>> + * @pktcowed: packets cowed for extra headroom/unorphan.
+>> + * @pktcow_failed: packets dropped due to failed cow-ing.
+>> + */
+>> +struct brcmf_bus_stats {
+>> +	atomic_t pktcowed;
+>> +	atomic_t pktcow_failed;
+>> +};
+> 
+> Same question as in the previous patch. I only see updates for these
+> variables, but nobody reading them?
 
-The include in the deleted file are included in the fw-api.h file.
-Which caused a cycle include in the dependencies.
+Hi Kalle,
 
-Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h | 2 --
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h  | 2 --
- 2 files changed, 4 deletions(-)
+You are right. My intention was to expose these to debugfs, but clearly
+did not include it in this patch series. So how do you want to handle
+this. Feel free to drop patch 2 and 3. I can resubmit them with
+subsequent patches dealing with exposing it to debugfs if that makes
+more sense.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
-index dded91d7eb96..d27c67b67015 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
-@@ -68,8 +68,6 @@
- #ifndef __fw_api_scan_h__
- #define __fw_api_scan_h__
- 
--#include "fw-api.h"
--
- /* Scan Commands, Responses, Notifications */
- 
- /* Max number of IEs for direct SSID scans in a command */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-index eae036af880e..e2acf39f784d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tof.h
-@@ -63,8 +63,6 @@
- #ifndef __fw_api_tof_h__
- #define __fw_api_tof_h__
- 
--#include "fw-api.h"
--
- /* ToF sub-group command IDs */
- enum iwl_mvm_tof_sub_grp_ids {
- 	TOF_RANGE_REQ_CMD = 0x1,
--- 
-2.11.0
+Regards,
+Arend
