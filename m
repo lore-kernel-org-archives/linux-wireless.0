@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54485 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751373AbdFEKYt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42418 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752637AbdF0Rgx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 06:24:49 -0400
-Date: Mon, 5 Jun 2017 20:24:44 +1000
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-wireless@vger.kernel.org,
-        driverdev-devel@linuxdriverproject.org,
-        kernelnewbies@kernelnewbies.org
-Subject: Re: ks7010 firmware upload fail
-Message-ID: <20170605102444.GA31446@eros> (sfid-20170605_122452_926366_7C89F92A)
-References: <20170605025637.GA23011@eros>
- <20170605072212.GB1495@katana>
+        Tue, 27 Jun 2017 13:36:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 21/26] iwlwifi: mvm: print base HW address during init
+References: <20170625111158.1792-1-luca@coelho.fi>
+        <20170625111158.1792-22-luca@coelho.fi>
+        <87a84tbbsh.fsf@codeaurora.org>
+        <CAOMZO5D4v1aYC4jQ=y4ci_axuaX6s8vwcvfrMcOOz7=Ph5isEA@mail.gmail.com>
+Date: Tue, 27 Jun 2017 20:36:33 +0300
+In-Reply-To: <CAOMZO5D4v1aYC4jQ=y4ci_axuaX6s8vwcvfrMcOOz7=Ph5isEA@mail.gmail.com>
+        (Fabio Estevam's message of "Tue, 27 Jun 2017 14:17:13 -0300")
+Message-ID: <8760fhbae6.fsf@codeaurora.org> (sfid-20170627_193719_104979_0C3B98E0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170605072212.GB1495@katana>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 05, 2017 at 09:22:12AM +0200, Wolfram Sang wrote:
-> Tobin,
-> 
-> > My question is should I be digging further into the MMC code or be doing
-> > something else with the driver code?
-> 
-> So, you haven't found any branch that worked? No plain v4.9 or the
-> gen3-sdio branch from my tree?
+Fabio Estevam <festevam@gmail.com> writes:
 
-I have not tried cloning your tree. I am using the Rasperry Pi kernel
-source
+> On Tue, Jun 27, 2017 at 2:06 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+>> "crouded sniffer logs", what's that?
+>
+> I think Luca meant 'crowded'.
 
-https://github.com/raspberrypi/linux
+Ah, makes sense. Thanks.
 
-which is v4.9.29
-
-I checked out the last commit you made to the mainline then cross
-compiled the driver from within the Rpi tree, copied the module over
-to the Pi and insmod'd it.
-
-To debug I was making code changes on my desktop, re cross compiling
-the module and scp'ing it over (then rmmod'ing and insmod'ing the new module).
-
-I'll try using a vanilla 4.9 kernel, and if that fails I'll try cloning your tree.
-
-Thanks for getting back to me.
-
-Will report my progress.
-
-thanks,
-Tobin.
+-- 
+Kalle Valo
