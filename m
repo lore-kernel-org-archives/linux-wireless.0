@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39538 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750987AbdFUHJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 03:09:37 -0400
-Message-ID: <1498028959.4955.1.camel@sipsolutions.net> (sfid-20170621_090940_331939_95828741)
-Subject: Re: [RFC] mac80211: support non-data TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 21 Jun 2017 09:09:19 +0200
-In-Reply-To: <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
-References: <20170620210309.1193-1-johannes@sipsolutions.net>
-         <c8637109-0292-23af-8bc6-8a7ba8e19595@quantenna.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:32819 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbdF0J30 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jun 2017 05:29:26 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix spelling mistake: "dissconect" -> "disconnect"
+Date: Tue, 27 Jun 2017 10:29:06 +0100
+Message-Id: <20170627092906.15375-1-colin.king@canonical.com> (sfid-20170627_112957_201336_C336E483)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-06-20 at 21:19 -0700, Igor Mitsyanko wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> > -	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
-> > +	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
-> 
-> Isn't that a little confusing? Wouldn't it be better to have a
-> separate  member for non-data txq and name it accordingly (something
-> like  txq_nodata). 
+Trivial fix to spelling mistake in netdev_err error message
 
-We do this trick in quite a number of places, so it shouldn't really
-come as a surprise.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> You have to handle it specially in most cases anyway I guess.
-> With this approach you won't have to replace ARRAY_SIZE(sta->txq) by 
-> IEEE80211_NUM_TIDS anywhere.
-
-Yeah, that would indeed be a good reason - I didn't realize the
-ARRAY_SIZE() when I originally wrote the patch. And yes, I do need to
-treat it specially - except then if it's separate I also have to
-initialize it separately, so it's a bit of a trade-off.
-
-> [snip]
-[please trim the amount of text you quote]
-
-> > -		txqi->txq.ac = ieee80211_ac_from_tid(tid);
-> > +		if (tid == IEEE80211_NUM_TIDS + 1)
-> > +			txqi->txq.ac = IEEE80211_AC_VO;
-> 
-> Why voice, maybe commit message should mention it?
-
-That's standard for management frames, I really didn't think that'd
-need any comment?
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f7c22d7b28d1..2568dfc15181 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1216,7 +1216,7 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		netdev_err(vif->ndev, "Failed to send dissconect\n");
++		netdev_err(vif->ndev, "Failed to send disconnect\n");
+ 
+ 	hif_drv->usr_conn_req.ssid_len = 0;
+ 	kfree(hif_drv->usr_conn_req.ssid);
+-- 
+2.11.0
