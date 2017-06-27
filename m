@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35760 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751545AbdF1UNu (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:56957 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753485AbdF0PZh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:13:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Tue, 27 Jun 2017 11:25:37 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Jun 2017 23:13:02 +0300
-Message-Id: <20170628201330.9432-4-luca@coelho.fi> (sfid-20170628_221359_056962_C31E483B)
-In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
-References: <20170628201330.9432-1-luca@coelho.fi>
-Subject: [PATCH 03/31] iwlwifi: mvm: remove some CamelCase from firmware API
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Golan Ben-Ami <golan.ben.ami@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] iwlwifi: mvm: fix iwl_mvm_sar_find_wifi_pkg corner case
+Date: Tue, 27 Jun 2017 17:24:17 +0200
+Message-Id: <20170627152458.1103403-1-arnd@arndb.de> (sfid-20170627_172741_443008_CD1C9598)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+gcc warns about what it thinks is an uninitialized variable
+access:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+drivers/net/wireless/intel/iwlwifi/mvm/fw.c: In function 'iwl_mvm_sar_find_wifi_pkg.isra.14':
+drivers/net/wireless/intel/iwlwifi/mvm/fw.c:1102:5: error: 'wifi_pkg' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+
+That problem cannot really happen, as we check data->package.count
+to ensure that the loop is entered at least once.
+However, something that can indeed happen is returning an incorrect
+wifi_pkg pointer in case none of the elements are what we are looking
+for.
+
+This modifies the loop again, to only return a correct object, and
+to shut up that warning.
+
+Fixes: c386dacb4ed6 ("iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
-index edde49202786..3463d1c577e8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
-@@ -164,7 +164,7 @@ struct iwl_proto_offload_cmd_v2 {
- 	u8 solicited_node_ipv6_addr[16];
- 	u8 target_ipv6_addr[IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS_V2][16];
- 	u8 ndp_mac_addr[ETH_ALEN];
--	u8 numValidIPv6Addresses;
-+	u8 num_valid_ipv6_addrs;
- 	u8 reserved2[3];
- } __packed; /* PROT_OFFLOAD_CONFIG_CMD_DB_S_VER_2 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 24cc406d87ef..730c7f68c0b3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1094,14 +1094,12 @@ static union acpi_object *iwl_mvm_sar_find_wifi_pkg(struct iwl_mvm *mvm,
+ 		domain = &wifi_pkg->package.elements[0];
+ 		if (domain->type == ACPI_TYPE_INTEGER &&
+ 		    domain->integer.value == ACPI_WIFI_DOMAIN)
+-			break;
+-
+-		wifi_pkg = NULL;
++			goto found;
+ 	}
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index b84e8ddbbbc9..7588b93f835a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -1748,8 +1748,8 @@ enum iwl_mvm_marker_id {
-  * @metadata: additional meta data that will be written to the unsiffer log
-  */
- struct iwl_mvm_marker {
--	u8 dwLen;
--	u8 markerId;
-+	u8 dw_len;
-+	u8 marker_id;
- 	__le16 reserved;
- 	__le64 timestamp;
- 	__le32 metadata[0];
+-	if (!wifi_pkg)
+-		return ERR_PTR(-ENOENT);
++	return ERR_PTR(-ENOENT);
+ 
++found:
+ 	return wifi_pkg;
+ }
+ 
 -- 
-2.11.0
+2.9.0
