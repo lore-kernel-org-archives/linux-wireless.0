@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34428 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752787AbdF1PMn (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43826 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753153AbdF0MuX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 11:12:43 -0400
-Received: by mail-oi0-f65.google.com with SMTP id d77so5797681oig.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 08:12:38 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v3 03/10] rtlwifi: Add board type for 8723be and 8192ee
-Date: Wed, 28 Jun 2017 10:12:18 -0500
-Message-Id: <20170628151225.22190-4-Larry.Finger@lwfinger.net> (sfid-20170628_171434_561690_F3E879CE)
-In-Reply-To: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
-References: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
+        Tue, 27 Jun 2017 08:50:23 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.18 16/16] mac80211/wpa: use constant time memory comparison for MACs
+Date: Tue, 27 Jun 2017 14:49:53 +0200
+Message-Id: <20170627124439.174584655@linuxfoundation.org> (sfid-20170627_145055_694050_A1EBA5DA)
+In-Reply-To: <20170627124436.634493038@linuxfoundation.org>
+References: <20170627124436.634493038@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+3.18-stable review patch.  If anyone has any objections, please let me know.
 
-With correct board_type, the phy praser can choose correct parameters.
+------------------
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+From: Jason A. Donenfeld <Jason@zx2c4.com>
+
+commit 98c67d187db7808b1f3c95f2110dd4392d034182 upstream.
+
+Otherwise, we enable all sorts of forgeries via timing attack.
+
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+
 ---
-v2 - no changes
-v3 - no changes
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 5 +++++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 7 +++++++
- 2 files changed, 12 insertions(+)
+ net/mac80211/wpa.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index d84ac7adfd82..ef9394be7016 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -2133,7 +2133,12 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
- 	if ((*(u8 *)&hwinfo[EEPROM_RF_BOARD_OPTION_92E]) == 0xFF)
- 		rtlefuse->board_type = 0;
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -16,6 +16,7 @@
+ #include <asm/unaligned.h>
+ #include <net/mac80211.h>
+ #include <crypto/aes.h>
++#include <crypto/algapi.h>
  
-+	if (rtlpriv->btcoexist.btc_info.btcoexist == 1)
-+		rtlefuse->board_type |= BIT(2); /* ODM_BOARD_BT */
-+
- 	rtlhal->board_type = rtlefuse->board_type;
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		 "board_type = 0x%x\n", rtlefuse->board_type);
- 	/*parse xtal*/
- 	rtlefuse->crystalcap = hwinfo[EEPROM_XTAL_92E];
- 	if (hwinfo[EEPROM_XTAL_92E] == 0xFF)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 2a7ad5ffe997..0b9366e7acbd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -2114,6 +2114,13 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
- 						 rtlefuse->autoload_failflag,
- 						 hwinfo);
+ #include "ieee80211_i.h"
+ #include "michael.h"
+@@ -150,7 +151,7 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
+ 		goto mic_fail;
  
-+	if (rtlpriv->btcoexist.btc_info.btcoexist == 1)
-+		rtlefuse->board_type |= BIT(2); /* ODM_BOARD_BT */
-+
-+	rtlhal->board_type = rtlefuse->board_type;
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		 "board_type = 0x%x\n", rtlefuse->board_type);
-+
- 	rtlhal->package_type = _rtl8723be_read_package_type(hw);
- 
- 	/* set channel plan from efuse */
--- 
-2.12.3
+ 	/* remove Michael MIC from payload */
+@@ -771,7 +772,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
+ 				   skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
