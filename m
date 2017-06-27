@@ -1,62 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34882 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751342AbdFYLMK (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36556 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751453AbdF0NvQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:39 +0300
-Message-Id: <20170625111158.1792-8-luca@coelho.fi> (sfid-20170625_131300_704321_8B3F0F8F)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 07/26] iwlwifi: mvm: add documentation for enum iwl_debug_cmds
+        Tue, 27 Jun 2017 09:51:16 -0400
+Received: by mail-oi0-f65.google.com with SMTP id p66so2336887oia.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 06:51:16 -0700 (PDT)
+Subject: Re: [PATCH v2] rtlwifi: Remove unnecessary conditions
+To: Souptick Joarder <jrdr.linux@gmail.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        julian.calaby@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <20170622132329.GA4825@symbol-HP-ZBook-15>
+ <CAFqt6zadBtGgagJ0B1RYR6Ny7izTqfuQS5aGQsPqw4k5vQJRaA@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <353a53a0-4d7c-84c4-a2f3-7b2848c983fc@lwfinger.net> (sfid-20170627_155120_307730_3916CA09)
+Date: Tue, 27 Jun 2017 08:51:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAFqt6zadBtGgagJ0B1RYR6Ny7izTqfuQS5aGQsPqw4k5vQJRaA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/26/2017 09:41 PM, Souptick Joarder wrote:
+> Any further comment on this patch ?
+> 
+> On 22-Jun-2017 6:53 PM, "Souptick Joarder" <jrdr.linux@gmail.com 
+> <mailto:jrdr.linux@gmail.com>> wrote:
+>  >
+>  > As wmm_enable is initialized to false, hence the else condition never
+>  > execute and boundary is assigned with TX_PAGE_BOUNDARY. So the if-else
+>  > condition can be removed and boundary will be assigned with
+>  > TX_PAGE_BOUNDARY.
+>  >
+>  > Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com 
+> <mailto:jrdr.linux@gmail.com>>
+>  > ---
+>  > Changes in v2:
+>  >   - Correcting the indent and moving up the change where
+>  >     boundary is defined.
+>  >
+>  >  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 9 +--------
+>  >  1 file changed, 1 insertion(+), 8 deletions(-)
+>  >
+>  > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c 
+> b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+>  > index f95a645..107c34e 100644
+>  > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+>  > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+>  > @@ -835,7 +835,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+>  >         struct rtl_usb_priv *usb_priv = rtl_usbpriv(hw);
+>  >         struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
+>  >         int err = 0;
+>  > -       u32     boundary = 0;
+>  > +       u32     boundary = TX_PAGE_BOUNDARY;
+>  >         u8 wmm_enable = false; /* TODO */
+>  >         u8 out_ep_nums = rtlusb->out_ep_nums;
+>  >         u8 queue_sel = rtlusb->out_queue_sel;
+>  > @@ -845,13 +845,6 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+>  >                 pr_err("Failed to init power on!\n");
+>  >                 return err;
+>  >         }
+>  > -       if (!wmm_enable) {
+>  > -               boundary = TX_PAGE_BOUNDARY;
+>  > -       } else { /* for WMM */
+>  > -               boundary = (IS_NORMAL_CHIP(rtlhal->version))
+>  > -                                       ? WMM_CHIP_B_TX_PAGE_BOUNDARY
+>  > -                                       : WMM_CHIP_A_TX_PAGE_BOUNDARY;
+>  > -       }
+>  >         if (false == rtl92c_init_llt_table(hw, boundary)) {
+>  >                 pr_err("Failed to init LLT Table!\n");
+>  >                 return -EINVAL;
 
-Add kernel-doc documentation for enum iwl_debug_cmds, linking the
-structures used by the commands.
+This patch troubles me. I have no idea why the original author placed a TODO on 
+the assignent of wmm_enable. You, however, have left the TODO in place but 
+removed the actual place where it would make a difference. As a result, it would 
+become impossible to reconstruct that author's intentions. For that reason
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+NACK.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index dc613b604914..224d10b1b076 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -554,9 +554,26 @@ enum iwl_regulatory_and_nvm_subcmd_ids {
- 	NVM_GET_INFO = 0x2,
- };
- 
-+/**
-+ * enum iwl_debug_cmds - debug commands
-+ */
- enum iwl_debug_cmds {
-+	/**
-+	 * @LMAC_RD_WR:
-+	 * LMAC memory read/write, using &struct iwl_dbg_mem_access_cmd and
-+	 * &struct iwl_dbg_mem_access_rsp
-+	 */
- 	LMAC_RD_WR = 0x0,
-+	/**
-+	 * @UMAC_RD_WR:
-+	 * UMAC memory read/write, using &struct iwl_dbg_mem_access_cmd and
-+	 * &struct iwl_dbg_mem_access_rsp
-+	 */
- 	UMAC_RD_WR = 0x1,
-+	/**
-+	 * @MFU_ASSERT_DUMP_NTF:
-+	 * &struct iwl_mfu_assert_dump_notif
-+	 */
- 	MFU_ASSERT_DUMP_NTF = 0xFE,
- };
- 
--- 
-2.11.0
+Note that these changes make no difference in the object code and the optimizer 
+will remove that code anyway.
+
+Larry
