@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40793 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751893AbdFORqW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33040 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751716AbdF0R1l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 13:46:22 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 2/3] NFC: digital: NFC-DEP Target WT(nfcdep,max) is now 14
-Date: Thu, 15 Jun 2017 10:46:16 -0700
-Message-Id: <20170615174617.1817-3-mgreer@animalcreek.com> (sfid-20170615_194627_474805_B1F73DF6)
-In-Reply-To: <20170615174617.1817-1-mgreer@animalcreek.com>
-References: <20170615174617.1817-1-mgreer@animalcreek.com>
+        Tue, 27 Jun 2017 13:27:41 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 8/8] qtnfmac: implement scan timeout
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+        <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com>
+Date: Tue, 27 Jun 2017 20:27:37 +0300
+In-Reply-To: <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Tue, 20 Jun 2017 22:55:17 +0300")
+Message-ID: <87o9t949yu.fsf@purkki.adurom.net> (sfid-20170627_192744_949694_792D5982)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Version 1.1 of the NFC Forum's NFC Digital Protocol Technical
-Specification dated 2014-07-14 specifies that the NFC-DEP Protocol's
-Target WT(nfcdep,max) value is 14.  In version 1.0 it was 8 so change
-the value in the Linux NFC-DEP Protocol code accordingly.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
----
- net/nfc/digital_dep.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Userspace tools may hang on scan in the case when scan completion event
+> is not returned by firmware. This patch implements the scan timeout
+> to avoid such situation.
+>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-diff --git a/net/nfc/digital_dep.c b/net/nfc/digital_dep.c
-index f864ce19e13d..5bb241bb3490 100644
---- a/net/nfc/digital_dep.c
-+++ b/net/nfc/digital_dep.c
-@@ -151,7 +151,7 @@ static const u8 digital_payload_bits_map[4] = {
-  *  0 <= wt <= 14 (given by the target by the TO field of ATR_RES response)
-  */
- #define DIGITAL_NFC_DEP_IN_MAX_WT 14
--#define DIGITAL_NFC_DEP_TG_MAX_WT 8
-+#define DIGITAL_NFC_DEP_TG_MAX_WT 14
- static const u16 digital_rwt_map[DIGITAL_NFC_DEP_IN_MAX_WT + 1] = {
- 	100,  101,  101,  102,  105,
- 	110,  119,  139,  177,  255,
+[...]
+
+> +static __always_inline void qtnf_wmac_lock(struct qtnf_wmac *mac)
+> +{
+> +	mutex_lock(&mac->mac_lock);
+> +}
+> +
+> +static __always_inline void qtnf_wmac_unlock(struct qtnf_wmac *mac)
+> +{
+> +	mutex_unlock(&mac->mac_lock);
+> +}
+
+Why? These look pointless to me.
+
 -- 
-2.13.0
+Kalle Valo
