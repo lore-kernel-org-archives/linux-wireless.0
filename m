@@ -1,58 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55272 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753030AbdF0O07 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 10:26:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [PATCH 00/17] rsi: station enhancements
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-Date: Tue, 27 Jun 2017 17:26:44 +0300
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-        (Amitkumar Karwar's message of "Fri, 23 Jun 2017 19:37:19 +0530")
-Message-ID: <87h8z1bj6j.fsf@codeaurora.org> (sfid-20170627_162724_996488_2FD816BA)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:44824 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751569AbdF0Iht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jun 2017 04:37:49 -0400
+Message-ID: <1498552666.24675.6.camel@sipsolutions.net> (sfid-20170627_104132_978618_8D50BC55)
+Subject: Re: mac80211: out of date seq number cause network stall
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?=E5=AD=99=E5=BB=BA=E5=B8=8C?= <ycsunjane@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 27 Jun 2017 10:37:46 +0200
+In-Reply-To: <CABWe71y4CWD+OQDk6mCyv4DawiQd4P3CrvWp7mweQ7peJgZ+1Q@mail.gmail.com> (sfid-20170627_100706_933915_26F10D4B)
+References: <CABWe71xWAruWUurYeLV=+G=tagnSmohS3KG0m-M+G9eBjrG_Ow@mail.gmail.com>
+         <CABWe71xq3h42Ho3iwA8yi-xfA5eu5r_gnOr03M9n2zLgoFTV6A@mail.gmail.com>
+         <CABWe71ww6Yt8dt_nrzenACZrNx8ooCp9_Ss+pwvDK8sgKDBaKA@mail.gmail.com>
+         <CABWe71y4CWD+OQDk6mCyv4DawiQd4P3CrvWp7mweQ7peJgZ+1Q@mail.gmail.com>
+         (sfid-20170627_100706_933915_26F10D4B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+-davem, he's really not concerned with this
 
-> We have internal management frames(commands) sent to firmware for
-> various configurations. This patch defines some common structures
-> which can be shared by those frames. Key handling and regulatory
-> enhancements are also includesd. With this patch series included,
-> station can connect to security enabled AP and send/receive data.
+Hi,
 
-Are you saying that before rsi driver was not able to connect a security
-enabled AP? Just trying to understand the status.
+I really don't think that you're looking at the right thing - you
+should look at the transmitter.
 
-> Prameela Rani Garnepudi (17):
->   rsi: add common structures needed for command packets
->   rsi: immediate wakeup bit and priority for TX command packets
->   rsi: Update in tx command frame radio capabilities
->   rsi: remove unnecessary check for 802.11 management packet
->   rsi: Update peer notify command frame
->   rsi: Update aggregation parameters command frame
->   rsi: Update baseband RF programming frame
->   rsi: update set_channel command frame
->   rsi: update vap capabilities command frame
->   rsi: update set_key command frame
->   rsi: set_key enhancements
->   rsi: update autorate request command frame
->   rsi: block/unblock data queues as per connection status
->   rsi: update tx command frame block/unblock data
->   rsi: Remove internal header from Tx status skb
->   rsi: Send rx filter frame to device when interface is down
->   rsi: regulatory enhancements
+Please provide a sniffer capture showing the problem.
 
-Also in the future please try to keep the size of patchsets in
-reasonable sizes. Something like max 10-12 patches per set is usually
-ok, dependinging on the size of patches of course. But anything more
-than that and the review becomes too annoying.
-
--- 
-Kalle Valo
+johannes
