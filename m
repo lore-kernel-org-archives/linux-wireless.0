@@ -1,95 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49284 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751135AbdFAF3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 01:29:43 -0400
-Date: Thu, 1 Jun 2017 07:29:15 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Jia-Ju Bai <baijiaju1990@163.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] b43legacy: Fix a sleep-in-atomic bug in
- b43legacy_op_bss_info_changed
-Message-ID: <20170601072839.2ca1b791@wiggum> (sfid-20170601_073013_823843_885748BC)
-In-Reply-To: <878tlcmixj.fsf@kamboji.qca.qualcomm.com>
-References: <1496225353-5544-1-git-send-email-baijiaju1990@163.com>
- <877f0xnwyk.fsf@kamboji.qca.qualcomm.com>
- <20170531173107.25eeda48@wiggum>
- <878tlcmixj.fsf@kamboji.qca.qualcomm.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39790 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751659AbdF0Lcx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jun 2017 07:32:53 -0400
+Date: Tue, 27 Jun 2017 13:32:52 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH v2 3.18-stable] mac80211/wpa: use constant time memory
+ comparison for MACs
+Message-ID: <20170627113252.GJ10609@kroah.com> (sfid-20170627_133256_862159_F36DED7F)
+References: <1497818656.2259.1.camel@sipsolutions.net>
+ <20170619164406.23738-1-Jason@zx2c4.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/Fy4IExmBx0Pu=.YHT.z005I"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170619164406.23738-1-Jason@zx2c4.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/Fy4IExmBx0Pu=.YHT.z005I
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 19, 2017 at 06:44:06PM +0200, Jason A. Donenfeld wrote:
+> Otherwise, we enable all sorts of forgeries via timing attack.
+> 
+> Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> This is for 3.18. Tested this, and it works as intended.
 
-On Thu, 01 Jun 2017 07:27:20 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Thanks, now applied.
 
-> Michael B=C3=BCsch <m@bues.ch> writes:
->=20
-> >> > --- a/drivers/net/wireless/broadcom/b43legacy/main.c
-> >> > +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-> >> > @@ -2859,7 +2859,9 @@ static void b43legacy_op_bss_info_changed(stru=
-ct ieee80211_hw *hw,
-> >> >  	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
-> >> > =20
-> >> >  	if (changed & BSS_CHANGED_BSSID) {
-> >> > +		spin_unlock_irqrestore(&wl->irq_lock, flags);
-> >> >  		b43legacy_synchronize_irq(dev);
-> >> > +		spin_lock_irqsave(&wl->irq_lock, flags);   =20
-> >>=20
-> >> To me this looks like a fragile workaround and not a real fix. You can
-> >> easily add new race conditions with releasing the lock like this.
-> >>  =20
-> >
-> >
-> > I think releasing the lock possibly is fine. It certainly is better than
-> > sleeping with a lock held. =20
->=20
-> Sure, but IMHO in general I think the practise of releasing the lock
-> like this in a middle of function is dangerous as one can easily miss
-> that upper and lower halves of the function are not actually atomic
-> anymore. And in this case that it's under a conditional makes it even
-> worse.
->=20
-
-
-Yes in general I agree. Releasing and re-acquiring a lock is dangerous.
-But I think in this special case here it might be harmless.
-The irq_lock is used mostly (if not exclusively; I don't fully
-remember) to protect against the IRQ top and bottom half.
-But we disabled the device IRQs a line above and the purpose of this
-synchronize is to make sure the handler will finish and thus make
-dropping the lock save.
-Of course it does not make sense to do this with the lock held :)
-
---=20
-Michael
-
---Sig_/Fy4IExmBx0Pu=.YHT.z005I
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlkvpisACgkQ9TK+HZCN
-iw4B2xAAq9OX19qlK1kp+DCJaqkipfO2eyNPOay9FK959w3IW5hJ60F/t9KHQLlK
-Xf2rThwvyjgawfg2Ep3Dd3Vr8BLLMo4XA3F3MmUd0+79nDugLah3zKD5bfmFoOz+
-rOhChMtU0gwPMvxwqitJAnCbxASekGQ9fvD4bqkXyQnXvqpNWzXBjw/sxkmeMOcD
-nJsgsh+1PMLmLhSNmdwcy/Xd1rWzARNkSZrbyFpJ3na/6VBif9luIQ4nuvTIs1fB
-Z9CSKB+t1r081e3QHalLH6m0Wi/eeZs0q2ro2QotHmSTajZIeDmZr6jknm8r2tcA
-ednfzCLNvNdvRXm7CRqPqu4nz6O5lFZkkQxIKH1++sJd+Ox7LKbwKKGBmABZOTL9
-ySUNi29F4sLtz6SVDsPU3nIxrhy4tY44SCANqzIB/dtVH0dC1S9+QtubaQVlJmKg
-rVAWjF/NYA+iXQxbXB7XdJq+wXRDsgPR0zqtydMM2N388g3+/u952ewEG8IoYuWB
-VWHUyI+o9RyTyiMiQTTlaUji8Bpu/CeLlW7twWM2MopepbRXK3HbowvjZISbvwy8
-klv9MfMJp3wqOXA/vDRhRCBXOrKOJUPh6XcA5gr1eG7o39K1/ElGKcevg4KN74np
-o+XWorgnCQJCI8KeQM4hBwOL2Ohs/bCz+cgfffZJyQvlnH8ZjZA=
-=6iBW
------END PGP SIGNATURE-----
-
---Sig_/Fy4IExmBx0Pu=.YHT.z005I--
+greg k-h
