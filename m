@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:36768 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754336AbdFXBxR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58234 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751576AbdF0RUm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 21:53:17 -0400
-Received: by mail-ot0-f196.google.com with SMTP id r67so6466359ota.3
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 18:53:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/10] rtlwifi: Add board type for 8723be and 8192ee
-Date: Fri, 23 Jun 2017 20:53:02 -0500
-Message-Id: <20170624015309.28099-4-Larry.Finger@lwfinger.net> (sfid-20170624_035335_361947_B5138DB3)
-In-Reply-To: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
-References: <20170624015309.28099-1-Larry.Finger@lwfinger.net>
+        Tue, 27 Jun 2017 13:20:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 1/8] qtnfmac: updates and fixes for regulatory support
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+        <20170620195517.18373-2-sergey.matyukevich.os@quantenna.com>
+Date: Tue, 27 Jun 2017 20:20:38 +0300
+In-Reply-To: <20170620195517.18373-2-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Tue, 20 Jun 2017 22:55:10 +0300")
+Message-ID: <87wp7x4aah.fsf@purkki.adurom.net> (sfid-20170627_192046_544588_EAF6F37D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-With correct board_type, the phy praser can choose correct parameters.
+> This patch introduces several changes for regulatory support
+> in qtnfmac driver:
+>
+> * Introduce support for setting regdomain from host
+> New command is implemented to notify firmware about regdomain changes
+> performed by host. Firmware is supposed to check requested regdomain
+> changes. On success firmware enables updated hardware channel
+> configuration and then host driver updates channel info for each band.
+>
+> * Introduce support of custom regulatory rules
+> Obtain custom regulatory rules from the firmware and
+> enable them during wiphy registration
+>
+> * Regulatory for self-managed setup
+> Regdomain information needs to be registered with cfg80211
+> for devices with REGULATORY_WIPHY_SELF_MANAGED flag set.
+>
+> * Misc fixes in regulatory code paths
+>   - add missing lock in qtnf_cmd_get_mac_chan_info
+>   - do not free band channel structure if channel count is the same
+>   - free allocated regdomain hw_info.rd structure on detach
+>
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 5 +++++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 7 +++++++
- 2 files changed, 12 insertions(+)
+Each patch should contain one logical change, but here you are listing
+multiple changes in the commit log which is a clear indication that's
+not the case here. Is there a specific reason why you did it like this?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index d84ac7adfd82..ef9394be7016 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -2133,7 +2133,12 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
- 	if ((*(u8 *)&hwinfo[EEPROM_RF_BOARD_OPTION_92E]) == 0xFF)
- 		rtlefuse->board_type = 0;
- 
-+	if (rtlpriv->btcoexist.btc_info.btcoexist == 1)
-+		rtlefuse->board_type |= BIT(2); /* ODM_BOARD_BT */
-+
- 	rtlhal->board_type = rtlefuse->board_type;
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		 "board_type = 0x%x\n", rtlefuse->board_type);
- 	/*parse xtal*/
- 	rtlefuse->crystalcap = hwinfo[EEPROM_XTAL_92E];
- 	if (hwinfo[EEPROM_XTAL_92E] == 0xFF)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 2a7ad5ffe997..0b9366e7acbd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -2114,6 +2114,13 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
- 						 rtlefuse->autoload_failflag,
- 						 hwinfo);
- 
-+	if (rtlpriv->btcoexist.btc_info.btcoexist == 1)
-+		rtlefuse->board_type |= BIT(2); /* ODM_BOARD_BT */
-+
-+	rtlhal->board_type = rtlefuse->board_type;
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		 "board_type = 0x%x\n", rtlefuse->board_type);
-+
- 	rtlhal->package_type = _rtl8723be_read_package_type(hw);
- 
- 	/* set channel plan from efuse */
 -- 
-2.12.3
+Kalle Valo
