@@ -1,89 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34436 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753513AbdFVVWj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:51 +0300
-Message-Id: <20170622212101.16422-16-luca@coelho.fi> (sfid-20170622_232253_494569_F553ED5E)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 15/25] iwlwifi: mvm: make iwl_mvm_update_mcc() easier to follow
+Received: from mga03.intel.com ([134.134.136.65]:64185 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752311AbdF0STn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jun 2017 14:19:43 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "festevam@gmail.com" <festevam@gmail.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 21/26] iwlwifi: mvm: print base HW address during init
+Date: Tue, 27 Jun 2017 18:19:40 +0000
+Message-ID: <1498587578.22048.81.camel@intel.com> (sfid-20170627_201947_260033_2613C35C)
+References: <20170625111158.1792-1-luca@coelho.fi>
+         <20170625111158.1792-22-luca@coelho.fi> <87a84tbbsh.fsf@codeaurora.org>
+         <CAOMZO5D4v1aYC4jQ=y4ci_axuaX6s8vwcvfrMcOOz7=Ph5isEA@mail.gmail.com>
+         <8760fhbae6.fsf@codeaurora.org>
+In-Reply-To: <8760fhbae6.fsf@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Some static checkers (e.g. smatch) complain about the logic, saying that
-resp_cp might be leaked. Clearly that isn't true, but making the logic
-easier to follow does not result in any significant code changes and makes
-the code more readable by moving the NULL check closer to its source.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 29 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index beead0bc08c9..ad8bd90deed2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -779,6 +779,10 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 		resp_len = sizeof(struct iwl_mcc_update_resp) +
- 			   n_channels * sizeof(__le32);
- 		resp_cp = kmemdup(mcc_resp, resp_len, GFP_KERNEL);
-+		if (!resp_cp) {
-+			resp_cp = ERR_PTR(-ENOMEM);
-+			goto exit;
-+		}
- 	} else {
- 		struct iwl_mcc_update_resp_v1 *mcc_resp_v1 = (void *)pkt->data;
- 
-@@ -786,21 +790,18 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 		resp_len = sizeof(struct iwl_mcc_update_resp) +
- 			   n_channels * sizeof(__le32);
- 		resp_cp = kzalloc(resp_len, GFP_KERNEL);
--
--		if (resp_cp) {
--			resp_cp->status = mcc_resp_v1->status;
--			resp_cp->mcc = mcc_resp_v1->mcc;
--			resp_cp->cap = mcc_resp_v1->cap;
--			resp_cp->source_id = mcc_resp_v1->source_id;
--			resp_cp->n_channels = mcc_resp_v1->n_channels;
--			memcpy(resp_cp->channels, mcc_resp_v1->channels,
--			       n_channels * sizeof(__le32));
-+		if (!resp_cp) {
-+			resp_cp = ERR_PTR(-ENOMEM);
-+			goto exit;
- 		}
--	}
- 
--	if (!resp_cp) {
--		ret = -ENOMEM;
--		goto exit;
-+		resp_cp->status = mcc_resp_v1->status;
-+		resp_cp->mcc = mcc_resp_v1->mcc;
-+		resp_cp->cap = mcc_resp_v1->cap;
-+		resp_cp->source_id = mcc_resp_v1->source_id;
-+		resp_cp->n_channels = mcc_resp_v1->n_channels;
-+		memcpy(resp_cp->channels, mcc_resp_v1->channels,
-+		       n_channels * sizeof(__le32));
- 	}
- 
- 	status = le32_to_cpu(resp_cp->status);
-@@ -820,8 +821,6 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 
- exit:
- 	iwl_free_resp(&cmd);
--	if (ret)
--		return ERR_PTR(ret);
- 	return resp_cp;
- }
- 
--- 
-2.11.0
+T24gVHVlLCAyMDE3LTA2LTI3IGF0IDIwOjM2ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBG
+YWJpbyBFc3RldmFtIDxmZXN0ZXZhbUBnbWFpbC5jb20+IHdyaXRlczoNCj4gDQo+ID4gT24gVHVl
+LCBKdW4gMjcsIDIwMTcgYXQgMjowNiBQTSwgS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5v
+cmc+IHdyb3RlOg0KPiA+IA0KPiA+ID4gImNyb3VkZWQgc25pZmZlciBsb2dzIiwgd2hhdCdzIHRo
+YXQ/DQo+ID4gDQo+ID4gSSB0aGluayBMdWNhIG1lYW50ICdjcm93ZGVkJy4NCj4gDQo+IEFoLCBt
+YWtlcyBzZW5zZS4gVGhhbmtzLg0KDQpIdWgsIG9idmlvdXNseSBhIHR5cG8sIHNvcnJ5ISBTaGFs
+bCBJIGZpeCBpdCBiZWZvcmUgbXkgcHVsbC1yZXE/DQoNCi0tDQpDaGVlcnMsDQpMdWNhLg==
