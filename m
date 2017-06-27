@@ -1,88 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52468 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751884AbdFMJPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 05:15:46 -0400
-Message-ID: <1497345344.6068.10.camel@sipsolutions.net> (sfid-20170613_111550_145750_B81E6FA9)
-Subject: Re: LINKMODE & OPERSTATE thoughts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: j@w1.fi
-Date: Tue, 13 Jun 2017 11:15:44 +0200
-In-Reply-To: <ad95b6e5-9220-3eca-bf93-8ba1d89bde3b@gmail.com> (sfid-20170609_234205_953285_C41D8028)
-References: <4982156c-5325-8021-dcd3-f13e02c63c72@candelatech.com>
-         <11de85e9-6028-e2f8-376b-3188ff1b95a5@gmail.com>
-         <2cfd1160-f9b4-5f04-e20f-8d7f9be54f95@candelatech.com>
-         <a0e8bd3f-ac25-9619-3f83-1b1debb36a4f@gmail.com>
-         <1496993334.2424.1.camel@sipsolutions.net>
-         <08fb9e64-a01e-54ea-7627-a0664d350710@gmail.com>
-         <1497038197.12088.4.camel@sipsolutions.net>
-         <ad95b6e5-9220-3eca-bf93-8ba1d89bde3b@gmail.com>
-         (sfid-20170609_234205_953285_C41D8028)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:35118 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751974AbdF0Ra1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jun 2017 13:30:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 5/8] qtnfmac: enable reporting the current operating channel
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+        <20170620195517.18373-6-sergey.matyukevich.os@quantenna.com>
+Date: Tue, 27 Jun 2017 20:30:17 +0300
+In-Reply-To: <20170620195517.18373-6-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Tue, 20 Jun 2017 22:55:14 +0300")
+Message-ID: <87fuel49ue.fsf@purkki.adurom.net> (sfid-20170627_193041_788810_B36CCEF8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-09 at 16:42 -0500, Denis Kenzior wrote:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-> > I'm not convinced that it does have that information in all cases,
-> > and I don't see how that causes race conditions or much latency,
-> > since for client mode userspace would probably just set that
-> > together with the NL80211_STA_FLAG_AUTHORIZED flag?
-> 
-> Well right there is a race condition.  You have 2 sockets and both 
-> conveying the same information?
+> This patch implements all the necessary features needed to keep
+> operating channel information in sync between firmware and driver:
+>
+> - implement cfg80211 qtnf_get_channel handler
+> - implement QLINK_EVENT_FREQ_CHANGE event handling
+>   using this event firmware notifies host when operating channel is changed
+> - update qtnf_dump_survey
+>   specify current channel in use in survey report
+> - update qtnf_connect
+>   pass to firmware channel number rather than frequency
+>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-There's no race because we wait for the nl80211 operation to return
-before even starting the rtnetlink operation.
+[...]
 
-> If we can optimize away an extra kernel trap, isn't that worthwhile 
-> thing to do?
+> +static int
+> +qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+> +			      const struct qlink_event_freq_change *data,
+> +			      u16 len)
+> +{
+> +	struct wiphy *wiphy = priv_to_wiphy(mac);
+> +	struct cfg80211_chan_def chandef;
+> +	struct ieee80211_channel *chan;
+> +	struct qtnf_bss_config *bss_cfg;
+> +	struct qtnf_vif *vif;
+> +	int freq;
+> +	int i;
+> +
+> +	if (len < sizeof(*data)) {
+> +		pr_err("payload is too short\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	freq = le32_to_cpu(data->freq);
+> +	chan = ieee80211_get_channel(wiphy, freq);
+> +	if (!chan) {
+> +		pr_err("channel at %d MHz not found\n", freq);
+> +		return -EINVAL;
+> +	}
+> +
+> +	pr_info("MAC%d switch to new channel %u MHz\n", mac->macid, freq);
 
-In itself, for something as rare as this? I don't really see it that
-way.
+Should this be a debug message? I don't see why the driver would need to
+spam this every time.
 
-> The most common case is issuing Dormant + UP after setting keys & 
-> issuing the set_station command.  Isn't setting STA_FLAG_AUTHORIZED
-> and operstate to IF_OPER_UP in effect equivalent?
-
-Not entirely, since STA_FLAG_AUTHORIZED also applies to stations in
-modes other than client mode, i.e. to stations other than the AP. In
-almost all of those cases, the interface itself is already ready much
-earlier.
-
-> Oh, by the way, some drivers don't implement set_station for normal 
-> links (e.g. setting STA_FLAG_AUTHORIZED returns an error), should
-> they?
-
-If they support encryption they probably should, but they might hook it
-from getting the keys or so?
-
-> The only other cases where we mess with setting linkmode I can think
-> of are:
-> 
-> 1. After connecting to an open network
-> 2. After a fast transition
-> 
-> For 1, it would seem that the kernel can easily infer that the 
-> IF_OPER_UP flag should be tweaked.
-
-Userspace should still set the AUTHORIZED flag in this case, just
-possibly earlier and obviously without any key negotiation. The same is
-true for WEP.
-
-> For 2, this needs to be done after the new TK is installed.  Can we 
-> combine these steps somehow?
-
-I'm just not convinced it's worth it.
-
-
-What I think we *can* do, with new EAPOL-over-nl80211 API, would be to
-mandate that drivers supporting that, and when it's used, must only set
-the carrier state after the controlled port is opened (AUTHORIZED
-flag). That way, wpa_s wouldn't have to play with IF_OPER_DORMANT and
-IF_OPER_UP at all.
-
-johannes
+-- 
+Kalle Valo
