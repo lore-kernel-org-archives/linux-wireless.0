@@ -1,126 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33845 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751976AbdFLPDX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 11:03:23 -0400
-Received: by mail-lf0-f68.google.com with SMTP id o28so9678921lfk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 08:03:22 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 02/10] ath10k: htt: RX ring config HL support
-Date: Mon, 12 Jun 2017 17:03:03 +0200
-Message-Id: <1497279791-9598-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170612_170326_697600_2F9BAAA4)
-In-Reply-To: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1497279791-9598-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:10629 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752566AbdF0SWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Jun 2017 14:22:42 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "festevam@gmail.com" <festevam@gmail.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 21/26] iwlwifi: mvm: print base HW address during init
+Date: Tue, 27 Jun 2017 18:22:13 +0000
+Message-ID: <1498587731.22048.83.camel@intel.com> (sfid-20170627_202246_161350_0A9E61C5)
+References: <20170625111158.1792-1-luca@coelho.fi>
+         <20170625111158.1792-22-luca@coelho.fi> <87a84tbbsh.fsf@codeaurora.org>
+         <CAOMZO5D4v1aYC4jQ=y4ci_axuaX6s8vwcvfrMcOOz7=Ph5isEA@mail.gmail.com>
+         <8760fhbae6.fsf@codeaurora.org> <1498587578.22048.81.camel@intel.com>
+In-Reply-To: <1498587578.22048.81.camel@intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Special HTT RX ring config message used by high latency
-devices.
-
-The main difference between HL and LL is that HL devices
-do not use shared memory between device and host and thus,
-no host paddr's are added to the RX config message.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
- drivers/net/wireless/ath/ath10k/htt.h    |  1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
- 3 files changed, 56 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index cd160b1..29ed4af 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 	if (status)
- 		return status;
- 
--	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
-+	if (ar->is_high_latency)
-+		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
-+	else
-+		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
- 	if (status) {
- 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
- 			    status);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 6305308..7ffa1d4 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1805,6 +1805,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
- int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
- int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
- int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 685faac..8d85f82 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -693,6 +693,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	return 0;
- }
- 
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct sk_buff *skb;
-+	struct htt_cmd *cmd;
-+	struct htt_rx_ring_setup_ring *ring;
-+	const int num_rx_ring = 1;
-+	u16 flags;
-+	int len;
-+	int ret;
-+
-+	/*
-+	 * the HW expects the buffer to be an integral number of 4-byte
-+	 * "words"
-+	 */
-+	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
-+	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
-+
-+	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
-+	    + (sizeof(*ring) * num_rx_ring);
-+	skb = ath10k_htc_alloc_skb(ar, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_put(skb, len);
-+
-+	cmd = (struct htt_cmd *)skb->data;
-+	ring = &cmd->rx_setup.rings[0];
-+
-+	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
-+	cmd->rx_setup.hdr.num_rings = 1;
-+
-+	flags = 0;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
-+	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
-+	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
-+
-+	memset(ring, 0, sizeof(*ring));
-+	ring->rx_ring_len = __cpu_to_le16(HTT_RX_RING_SIZE_MIN);
-+	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
-+	ring->flags = __cpu_to_le16(flags);
-+
-+	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
-+	if (ret) {
-+		dev_kfree_skb_any(skb);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu)
--- 
-2.7.4
+T24gVHVlLCAyMDE3LTA2LTI3IGF0IDE4OjE5ICswMDAwLCBDb2VsaG8sIEx1Y2lhbm8gd3JvdGU6
+DQo+IE9uIFR1ZSwgMjAxNy0wNi0yNyBhdCAyMDozNiArMDMwMCwgS2FsbGUgVmFsbyB3cm90ZToN
+Cj4gPiBGYWJpbyBFc3RldmFtIDxmZXN0ZXZhbUBnbWFpbC5jb20+IHdyaXRlczoNCj4gPiANCj4g
+PiA+IE9uIFR1ZSwgSnVuIDI3LCAyMDE3IGF0IDI6MDYgUE0sIEthbGxlIFZhbG8gPGt2YWxvQGNv
+ZGVhdXJvcmEub3JnPiB3cm90ZToNCj4gPiA+IA0KPiA+ID4gPiAiY3JvdWRlZCBzbmlmZmVyIGxv
+Z3MiLCB3aGF0J3MgdGhhdD8NCj4gPiA+IA0KPiA+ID4gSSB0aGluayBMdWNhIG1lYW50ICdjcm93
+ZGVkJy4NCj4gPiANCj4gPiBBaCwgbWFrZXMgc2Vuc2UuIFRoYW5rcy4NCj4gDQo+IEh1aCwgb2J2
+aW91c2x5IGEgdHlwbywgc29ycnkhIFNoYWxsIEkgZml4IGl0IGJlZm9yZSBteSBwdWxsLXJlcT8N
+Cg0KQW5kLCBvZiBjb3Vyc2UsIHdoYXQgSSBtZWFuIGhlcmUgaXMgdGhhdCBzb21ldGltZXMgeW91
+IGdldCBzbmlmZmVyIGxvZ3MNCmZyb20gdmVyeSBjcm93ZGVkIGFyZWFzIHdpdGggZ2F6aWxsaW9u
+cyBvZiBkaWZmZXJlbnQgTUFDIGFkZHJlc3Nlcy4gDQpUaGlzIHdheSB3ZSBjYW4gbWF0Y2ggdGhl
+IGxvZ3Mgd2l0aCB0aGUgc25pZmZlciBhIGJpdCBtb3JlIGVhc2lseS4NCg0KLS0NCkNoZWVycywN
+Ckx1Y2Eu
