@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44824 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751569AbdF0Iht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 04:37:49 -0400
-Message-ID: <1498552666.24675.6.camel@sipsolutions.net> (sfid-20170627_104132_978618_8D50BC55)
-Subject: Re: mac80211: out of date seq number cause network stall
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?=E5=AD=99=E5=BB=BA=E5=B8=8C?= <ycsunjane@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 27 Jun 2017 10:37:46 +0200
-In-Reply-To: <CABWe71y4CWD+OQDk6mCyv4DawiQd4P3CrvWp7mweQ7peJgZ+1Q@mail.gmail.com> (sfid-20170627_100706_933915_26F10D4B)
-References: <CABWe71xWAruWUurYeLV=+G=tagnSmohS3KG0m-M+G9eBjrG_Ow@mail.gmail.com>
-         <CABWe71xq3h42Ho3iwA8yi-xfA5eu5r_gnOr03M9n2zLgoFTV6A@mail.gmail.com>
-         <CABWe71ww6Yt8dt_nrzenACZrNx8ooCp9_Ss+pwvDK8sgKDBaKA@mail.gmail.com>
-         <CABWe71y4CWD+OQDk6mCyv4DawiQd4P3CrvWp7mweQ7peJgZ+1Q@mail.gmail.com>
-         (sfid-20170627_100706_933915_26F10D4B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:36768 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751505AbdF1THO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 15:07:14 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix spelling mistake: "secuirty" -> "security"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170628155054.27885-1-colin.king@canonical.com>
+References: <20170628155054.27885-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20170628190713.9EF2260389@smtp.codeaurora.org> (sfid-20170628_210748_776605_D9631491)
+Date: Wed, 28 Jun 2017 19:07:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--davem, he's really not concerned with this
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Hi,
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Trivial fix to spelling mistake in mwifiex_dbg message
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-I really don't think that you're looking at the right thing - you
-should look at the transmitter.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Please provide a sniffer capture showing the problem.
+3334c28ec56c mwifiex: fix spelling mistake: "secuirty" -> "security"
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9814767/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
