@@ -1,464 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34460 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:35962 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753618AbdFVVWv (ORCPT
+        with ESMTP id S1751557AbdF1UPM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:51 -0400
+        Wed, 28 Jun 2017 16:15:12 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:56 +0300
-Message-Id: <20170622212101.16422-21-luca@coelho.fi> (sfid-20170622_232256_250417_10F49A2B)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 20/25] iwlwifi: pcie: don't report RF-kill enabled while shutting down
+Date: Wed, 28 Jun 2017 23:13:17 +0300
+Message-Id: <20170628201330.9432-19-luca@coelho.fi> (sfid-20170628_221554_511564_87DF0323)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 18/31] iwlwifi: mvm: support aggs of 64 frames in A000 family
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-When toggling the RF-kill pin quickly in succession, the driver can
-get rather confused because it might be in the process of shutting
-down, expecting all commands to go through quickly due to rfkill,
-but the transport already thinks the device is accessible again,
-even though it previously shut it down. This leads to bugs, and I
-even observed a kernel panic.
+A SCD bug was fixed in the A000 family, allowing to
+support aggregations of 64 frames (rather than 63).
 
-Avoid this by making the PCIe code only report that the radio is
-enabled again after the higher layers actually decided to shut it
-off.
-
-This also pulls out this common RF-kill checking code into a common
-function called by both transport generations and also moves it to
-the direct method - in the internal helper we don't really care
-about the RF-kill status anymore since we won't report it up until
-the stop anyway.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c     |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  6 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      | 12 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  4 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 20 ++++--
- .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   | 28 ++------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 82 ++++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  4 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  4 +-
- 9 files changed, 88 insertions(+), 74 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c  |  6 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h  |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 11 +++++++++--
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index dcf596217d9e..784bdd0ed233 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -117,7 +117,7 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index a02dda8d9ea3..65beca3a457a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3233,7 +3233,11 @@ static void rs_build_rates_table_from_fixed(struct iwl_mvm *mvm,
+ 	if (num_of_ant(ant) == 1)
+ 		lq_cmd->single_stream_ant_msk = ant;
  
- 	if (unlikely(!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--		     test_bit(STATUS_RFKILL, &trans->status)))
-+		     test_bit(STATUS_RFKILL_OPMODE, &trans->status)))
- 		return -ERFKILL;
- 
- 	if (unlikely(test_bit(STATUS_FW_ERROR, &trans->status)))
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index a150da3c824b..2e975c0be045 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -322,7 +322,8 @@ enum iwl_d3_status {
-  * @STATUS_DEVICE_ENABLED: APM is enabled
-  * @STATUS_TPOWER_PMI: the device might be asleep (need to wake it up)
-  * @STATUS_INT_ENABLED: interrupts are enabled
-- * @STATUS_RFKILL: the HW RFkill switch is in KILL position
-+ * @STATUS_RFKILL_HW: the actual HW state of the RF-kill switch
-+ * @STATUS_RFKILL_OPMODE: RF-kill state reported to opmode
-  * @STATUS_FW_ERROR: the fw is in error state
-  * @STATUS_TRANS_GOING_IDLE: shutting down the trans, only special commands
-  *	are sent
-@@ -334,7 +335,8 @@ enum iwl_trans_status {
- 	STATUS_DEVICE_ENABLED,
- 	STATUS_TPOWER_PMI,
- 	STATUS_INT_ENABLED,
--	STATUS_RFKILL,
-+	STATUS_RFKILL_HW,
-+	STATUS_RFKILL_OPMODE,
- 	STATUS_FW_ERROR,
- 	STATUS_TRANS_GOING_IDLE,
- 	STATUS_TRANS_IDLE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 2d92d3708619..a8fb77483313 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -766,7 +766,6 @@ static int iwl_pci_resume(struct device *device)
- 	struct pci_dev *pdev = to_pci_dev(device);
- 	struct iwl_trans *trans = pci_get_drvdata(pdev);
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	bool hw_rfkill;
- 
- 	/* Before you put code here, think about WoWLAN. You cannot check here
- 	 * whether WoWLAN is enabled or not, and your code will run even if
-@@ -783,16 +782,13 @@ static int iwl_pci_resume(struct device *device)
- 		return 0;
- 
- 	/*
--	 * Enable rfkill interrupt (in order to keep track of
--	 * the rfkill status). Must be locked to avoid processing
--	 * a possible rfkill interrupt between reading the state
--	 * and calling iwl_trans_pcie_rf_kill() with it.
-+	 * Enable rfkill interrupt (in order to keep track of the rfkill
-+	 * status). Must be locked to avoid processing a possible rfkill
-+	 * interrupt while in iwl_trans_check_hw_rf_kill().
- 	 */
- 	mutex_lock(&trans_pcie->mutex);
- 	iwl_enable_rfkill_int(trans);
--
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	iwl_trans_check_hw_rf_kill(trans);
- 	mutex_unlock(&trans_pcie->mutex);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 17bd95614483..644c0e583f32 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -403,7 +403,7 @@ struct iwl_trans_pcie {
- 	dma_addr_t ict_tbl_dma;
- 	int ict_index;
- 	bool use_ict;
--	bool is_down;
-+	bool is_down, opmode_down;
- 	bool debug_rfkill;
- 	struct isr_statistics isr_stats;
- 
-@@ -775,6 +775,8 @@ void iwl_pcie_apm_config(struct iwl_trans *trans);
- int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
- void iwl_pcie_synchronize_irqs(struct iwl_trans *trans);
- bool iwl_trans_check_hw_rf_kill(struct iwl_trans *trans);
-+void iwl_trans_pcie_handle_stop_rfkill(struct iwl_trans *trans,
-+				       bool was_in_rfkill);
- void iwl_pcie_txq_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq);
- int iwl_queue_space(const struct iwl_txq *q);
- int iwl_pcie_apm_stop_master(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index b6b04e72521e..6eef2e789426 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1513,19 +1513,27 @@ void iwl_pcie_handle_rfkill_irq(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
--	bool hw_rfkill;
-+	bool hw_rfkill, prev, report;
- 
- 	mutex_lock(&trans_pcie->mutex);
-+	prev = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
- 	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
-+	if (hw_rfkill) {
-+		set_bit(STATUS_RFKILL_OPMODE, &trans->status);
-+		set_bit(STATUS_RFKILL_HW, &trans->status);
-+	}
-+	if (trans_pcie->opmode_down)
-+		report = hw_rfkill;
+-	lq_cmd->agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
++	if (!mvm->trans->cfg->gen2)
++		lq_cmd->agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
 +	else
-+		report = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
- 
- 	IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
- 		 hw_rfkill ? "disable radio" : "enable radio");
- 
- 	isr_stats->rfkill++;
- 
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	if (prev != report)
-+		iwl_trans_pcie_rf_kill(trans, report);
- 	mutex_unlock(&trans_pcie->mutex);
- 
- 	if (hw_rfkill) {
-@@ -1535,7 +1543,9 @@ void iwl_pcie_handle_rfkill_irq(struct iwl_trans *trans)
- 					  "Rfkill while SYNC HCMD in flight\n");
- 		wake_up(&trans_pcie->wait_command_queue);
- 	} else {
--		clear_bit(STATUS_RFKILL, &trans->status);
-+		clear_bit(STATUS_RFKILL_HW, &trans->status);
-+		if (trans_pcie->opmode_down)
-+			clear_bit(STATUS_RFKILL_OPMODE, &trans->status);
- 	}
++		lq_cmd->agg_frame_cnt_limit =
++			LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF;
  }
+ #endif /* CONFIG_MAC80211_DEBUGFS */
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index ac60a282d6de..e84c5ff389a8 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -150,7 +150,6 @@ static void iwl_pcie_gen2_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
- void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	bool hw_rfkill, was_hw_rfkill;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index 3abde1cb0303..32b4d66debea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -145,6 +145,8 @@ enum {
  
- 	lockdep_assert_held(&trans_pcie->mutex);
+ #define LINK_QUAL_AGG_FRAME_LIMIT_DEF	(63)
+ #define LINK_QUAL_AGG_FRAME_LIMIT_MAX	(63)
++#define LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF	(64)
++#define LINK_QUAL_AGG_FRAME_LIMIT_GEN2_MAX	(64)
+ #define LINK_QUAL_AGG_FRAME_LIMIT_MIN	(0)
  
-@@ -159,8 +158,6 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ #define LQ_SIZE		2	/* 2 mode tables:  "Active" and "Search" */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 9ec427966533..ee7c978fe5ab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1354,7 +1354,10 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	mvm_sta->mac_id_n_color = FW_CMD_ID_AND_COLOR(mvmvif->id,
+ 						      mvmvif->color);
+ 	mvm_sta->vif = vif;
+-	mvm_sta->max_agg_bufsize = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
++	if (!mvm->trans->cfg->gen2)
++		mvm_sta->max_agg_bufsize = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
++	else
++		mvm_sta->max_agg_bufsize = LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF;
+ 	mvm_sta->tx_protection = 0;
+ 	mvm_sta->tt_tx_protection = false;
+ 	mvm_sta->sta_type = sta->tdls ? IWL_STA_TDLS_LINK : IWL_STA_LINK;
+@@ -2677,7 +2680,11 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	BUILD_BUG_ON((sizeof(mvmsta->agg_tids) * BITS_PER_BYTE)
+ 		     != IWL_MAX_TID_COUNT);
  
- 	trans_pcie->is_down = true;
+-	buf_size = min_t(int, buf_size, LINK_QUAL_AGG_FRAME_LIMIT_DEF);
++	if (!mvm->trans->cfg->gen2)
++		buf_size = min_t(int, buf_size, LINK_QUAL_AGG_FRAME_LIMIT_DEF);
++	else
++		buf_size = min_t(int, buf_size,
++				 LINK_QUAL_AGG_FRAME_LIMIT_GEN2_DEF);
  
--	was_hw_rfkill = iwl_is_rfkill_set(trans);
--
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
- 
-@@ -217,7 +214,6 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 	clear_bit(STATUS_INT_ENABLED, &trans->status);
- 	clear_bit(STATUS_TPOWER_PMI, &trans->status);
--	clear_bit(STATUS_RFKILL, &trans->status);
- 
- 	/*
- 	 * Even if we stop the HW, we still want the RF kill
-@@ -225,26 +221,6 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 	 */
- 	iwl_enable_rfkill_int(trans);
- 
--	/*
--	 * Check again since the RF kill state may have changed while
--	 * all the interrupts were disabled, in this case we couldn't
--	 * receive the RF kill interrupt and update the state in the
--	 * op_mode.
--	 * Don't call the op_mode if the rkfill state hasn't changed.
--	 * This allows the op_mode to call stop_device from the rfkill
--	 * notification without endless recursion. Under very rare
--	 * circumstances, we might have a small recursion if the rfkill
--	 * state changed exactly now while we were called from stop_device.
--	 * This is very unlikely but can happen and is supported.
--	 */
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
--	if (hw_rfkill != was_hw_rfkill)
--		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
--
- 	/* re-take ownership to prevent other users from stealing the device */
- 	iwl_pcie_prepare_card_hw(trans);
- }
-@@ -252,9 +228,13 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	bool was_in_rfkill;
- 
- 	mutex_lock(&trans_pcie->mutex);
-+	trans_pcie->opmode_down = true;
-+	was_in_rfkill = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
- 	_iwl_trans_pcie_gen2_stop_device(trans, low_power);
-+	iwl_trans_pcie_handle_stop_rfkill(trans, was_in_rfkill);
- 	mutex_unlock(&trans_pcie->mutex);
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 6c4f8e377fb9..959a3d5ece67 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -996,14 +996,24 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
- 
- bool iwl_trans_check_hw_rf_kill(struct iwl_trans *trans)
- {
-+	struct iwl_trans_pcie *trans_pcie =  IWL_TRANS_GET_PCIE_TRANS(trans);
- 	bool hw_rfkill = iwl_is_rfkill_set(trans);
-+	bool prev = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
-+	bool report;
- 
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
-+	if (hw_rfkill) {
-+		set_bit(STATUS_RFKILL_HW, &trans->status);
-+		set_bit(STATUS_RFKILL_OPMODE, &trans->status);
-+	} else {
-+		clear_bit(STATUS_RFKILL_HW, &trans->status);
-+		if (trans_pcie->opmode_down)
-+			clear_bit(STATUS_RFKILL_OPMODE, &trans->status);
-+	}
-+
-+	report = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
- 
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	if (prev != report)
-+		iwl_trans_pcie_rf_kill(trans, report);
- 
- 	return hw_rfkill;
- }
-@@ -1128,7 +1138,6 @@ static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
- static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	bool hw_rfkill, was_hw_rfkill;
- 
- 	lockdep_assert_held(&trans_pcie->mutex);
- 
-@@ -1137,8 +1146,6 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 
- 	trans_pcie->is_down = true;
- 
--	was_hw_rfkill = iwl_is_rfkill_set(trans);
--
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
- 
-@@ -1199,7 +1206,6 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 	clear_bit(STATUS_INT_ENABLED, &trans->status);
- 	clear_bit(STATUS_TPOWER_PMI, &trans->status);
--	clear_bit(STATUS_RFKILL, &trans->status);
- 
- 	/*
- 	 * Even if we stop the HW, we still want the RF kill
-@@ -1207,26 +1213,6 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	 */
- 	iwl_enable_rfkill_int(trans);
- 
--	/*
--	 * Check again since the RF kill state may have changed while
--	 * all the interrupts were disabled, in this case we couldn't
--	 * receive the RF kill interrupt and update the state in the
--	 * op_mode.
--	 * Don't call the op_mode if the rkfill state hasn't changed.
--	 * This allows the op_mode to call stop_device from the rfkill
--	 * notification without endless recursion. Under very rare
--	 * circumstances, we might have a small recursion if the rfkill
--	 * state changed exactly now while we were called from stop_device.
--	 * This is very unlikely but can happen and is supported.
--	 */
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
--	if (hw_rfkill != was_hw_rfkill)
--		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
--
- 	/* re-take ownership to prevent other users from stealing the device */
- 	iwl_pcie_prepare_card_hw(trans);
- }
-@@ -1339,12 +1325,45 @@ static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- 	iwl_pcie_tx_start(trans, scd_addr);
- }
- 
-+void iwl_trans_pcie_handle_stop_rfkill(struct iwl_trans *trans,
-+				       bool was_in_rfkill)
-+{
-+	bool hw_rfkill;
-+
-+	/*
-+	 * Check again since the RF kill state may have changed while
-+	 * all the interrupts were disabled, in this case we couldn't
-+	 * receive the RF kill interrupt and update the state in the
-+	 * op_mode.
-+	 * Don't call the op_mode if the rkfill state hasn't changed.
-+	 * This allows the op_mode to call stop_device from the rfkill
-+	 * notification without endless recursion. Under very rare
-+	 * circumstances, we might have a small recursion if the rfkill
-+	 * state changed exactly now while we were called from stop_device.
-+	 * This is very unlikely but can happen and is supported.
-+	 */
-+	hw_rfkill = iwl_is_rfkill_set(trans);
-+	if (hw_rfkill) {
-+		set_bit(STATUS_RFKILL_HW, &trans->status);
-+		set_bit(STATUS_RFKILL_OPMODE, &trans->status);
-+	} else {
-+		clear_bit(STATUS_RFKILL_HW, &trans->status);
-+		clear_bit(STATUS_RFKILL_OPMODE, &trans->status);
-+	}
-+	if (hw_rfkill != was_in_rfkill)
-+		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+}
-+
- static void iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	bool was_in_rfkill;
- 
- 	mutex_lock(&trans_pcie->mutex);
-+	trans_pcie->opmode_down = true;
-+	was_in_rfkill = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
- 	_iwl_trans_pcie_stop_device(trans, low_power);
-+	iwl_trans_pcie_handle_stop_rfkill(trans, was_in_rfkill);
- 	mutex_unlock(&trans_pcie->mutex);
- }
- 
-@@ -1355,6 +1374,8 @@ void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state)
- 
- 	lockdep_assert_held(&trans_pcie->mutex);
- 
-+	IWL_WARN(trans, "reporting RF_KILL (radio %s)\n",
-+		 state ? "disabled" : "enabled");
- 	if (iwl_op_mode_hw_rf_kill(trans->op_mode, state)) {
- 		if (trans->cfg->gen2)
- 			_iwl_trans_pcie_gen2_stop_device(trans, true);
-@@ -1646,6 +1667,8 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
- 	/* From now on, the op_mode will be kept updated about RF kill state */
- 	iwl_enable_rfkill_int(trans);
- 
-+	trans_pcie->opmode_down = false;
-+
- 	/* Set is_down to false here so that...*/
- 	trans_pcie->is_down = false;
- 
-@@ -3005,6 +3028,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	trans_pcie->trans = trans;
-+	trans_pcie->opmode_down = true;
- 	spin_lock_init(&trans_pcie->irq_lock);
- 	spin_lock_init(&trans_pcie->reg_lock);
- 	mutex_init(&trans_pcie->mutex);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 8f00019cd3b4..464a435a4440 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -863,7 +863,7 @@ static int iwl_pcie_gen2_send_hcmd_sync(struct iwl_trans *trans,
- 	}
- 
- 	if (!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--	    test_bit(STATUS_RFKILL, &trans->status)) {
-+	    test_bit(STATUS_RFKILL_OPMODE, &trans->status)) {
- 		IWL_DEBUG_RF_KILL(trans, "RFKILL in SYNC CMD... no rsp\n");
- 		ret = -ERFKILL;
- 		goto cancel;
-@@ -900,7 +900,7 @@ int iwl_trans_pcie_gen2_send_hcmd(struct iwl_trans *trans,
- 				  struct iwl_host_cmd *cmd)
- {
- 	if (!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--	    test_bit(STATUS_RFKILL, &trans->status)) {
-+	    test_bit(STATUS_RFKILL_OPMODE, &trans->status)) {
- 		IWL_DEBUG_RF_KILL(trans, "Dropping CMD 0x%x: RF KILL\n",
- 				  cmd->id);
- 		return -ERFKILL;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 94ab01164f66..0a6e36a8a0bf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1874,7 +1874,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	}
- 
- 	if (!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--	    test_bit(STATUS_RFKILL, &trans->status)) {
-+	    test_bit(STATUS_RFKILL_OPMODE, &trans->status)) {
- 		IWL_DEBUG_RF_KILL(trans, "RFKILL in SYNC CMD... no rsp\n");
- 		ret = -ERFKILL;
- 		goto cancel;
-@@ -1911,7 +1911,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- int iwl_trans_pcie_send_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- {
- 	if (!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--	    test_bit(STATUS_RFKILL, &trans->status)) {
-+	    test_bit(STATUS_RFKILL_OPMODE, &trans->status)) {
- 		IWL_DEBUG_RF_KILL(trans, "Dropping CMD 0x%x: RF KILL\n",
- 				  cmd->id);
- 		return -ERFKILL;
+ 	spin_lock_bh(&mvmsta->lock);
+ 	ssn = tid_data->ssn;
 -- 
 2.11.0
