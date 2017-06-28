@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:36339 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751587AbdF1UQg (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20450 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751541AbdF1Q41 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:16:36 -0400
-Received: by mail-qt0-f177.google.com with SMTP id i2so59004418qta.3
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 13:16:36 -0700 (PDT)
-Subject: Re: [PATCH] ieee80211: update public action codes
-To: peter.oh@bowerswilkins.com, linux-wireless@vger.kernel.org,
-        johannes@sipsolutions.net
-Cc: johannes.berg@intel.com
-References: <1498601249-8372-1-git-send-email-peter.oh@bowerswilkins.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d9aaa85b-49ac-494e-7979-afc42d309dc4@broadcom.com> (sfid-20170628_221640_598558_FEC4B153)
-Date: Wed, 28 Jun 2017 22:16:22 +0200
+        Wed, 28 Jun 2017 12:56:27 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1498601249-8372-1-git-send-email-peter.oh@bowerswilkins.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [-next] ath10k: fix a bunch of spelling mistakes in messages
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170625212932.29787-1-colin.king@canonical.com>
+References: <20170625212932.29787-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <f7e1341ee16942ae9482e26d0387b579@euamsexm01a.eu.qualcomm.com> (sfid-20170628_185700_253026_CA12A99C)
+Date: Wed, 28 Jun 2017 18:56:08 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28-06-17 00:07, peter.oh@bowerswilkins.com wrote:
-> From: Peter Oh <peter.oh@bowerswilkins.com>
+Colin Ian King <colin.king@canonical.com> wrote:
+
+> Fix the following spelling mistakes in messages:
+>   syncronise -> synchronize
+>   unusally -> unusually
+>   addrress -> address
+>   inverval -> interval
 > 
-> Update Public Action field values as updated in IEEE Std 802.11-2016,
-> so that modules/drivers can refer it.
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Hi Peter,
+Patch applied to ath-next branch of ath.git, thanks.
 
-I am pretty sure there are a lot of other definitions in the 802.11 spec
-that are not in a linux header file. So are you planning on submitting
-driver patches using the added definitions. Stuff is mostly added as needed.
+23de57975f14 ath10k: fix a bunch of spelling mistakes in messages
 
-Regards,
-Arend
+-- 
+https://patchwork.kernel.org/patch/9808405/
 
-> Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
-> ---
->  include/linux/ieee80211.h | 35 ++++++++++++++++++++++++++++++++++-
->  1 file changed, 34 insertions(+), 1 deletion(-)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
