@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34428 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753513AbdFVVWe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:34 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:21:00 +0300
-Message-Id: <20170622212101.16422-25-luca@coelho.fi> (sfid-20170622_232240_770950_46676928)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 24/25] iwlwifi: pcie: use kstrtou32_from_user()
+Received: from mx1.redhat.com ([209.132.183.28]:54816 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751500AbdF1KHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 06:07:38 -0400
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: brcmfmac4356-pci device not seeing 2.4Ghz channel 12 and 13
+Message-ID: <f1a4e94b-1fb8-f1dc-ad64-d7de3533d64b@redhat.com> (sfid-20170628_120742_309448_B9EBD996)
+Date: Wed, 28 Jun 2017 12:07:35 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Use kstrtou32_from_user() in debugfs instead of open-coding it.
+I noticed today that my GPD Win (x86 clamshell mini laptop)
+which uses a brcmfmac4356-pci wifi does not see an APs which
+is using channel 13.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+I've tried updating brcmfmac4356-pci.txt changing "ccode=US"
+to "ccode=EU" and then rebooted, but that does not help.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 280b14ace175..67343b10b0da 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2428,17 +2428,12 @@ static ssize_t iwl_dbgfs_interrupt_write(struct file *file,
- 	struct iwl_trans *trans = file->private_data;
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
--
--	char buf[8];
--	int buf_size;
- 	u32 reset_flag;
-+	int ret;
- 
--	memset(buf, 0, sizeof(buf));
--	buf_size = min(count, sizeof(buf) -  1);
--	if (copy_from_user(buf, user_buf, buf_size))
--		return -EFAULT;
--	if (sscanf(buf, "%x", &reset_flag) != 1)
--		return -EFAULT;
-+	ret = kstrtou32_from_user(user_buf, count, 16, &reset_flag);
-+	if (ret)
-+		return ret;
- 	if (reset_flag == 0)
- 		memset(isr_stats, 0, sizeof(*isr_stats));
- 
--- 
-2.11.0
+I believe that the Linux wifi stack is supposed to automatically
+figure out the country settings based on AP provided info ?
+
+But that does not seem to be working here ? Any hints on howto
+debug this further would be appreciated.
+
+Regards,
+
+Hans
