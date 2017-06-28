@@ -1,145 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35326 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdFWOKn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36034 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752092AbdF1UPz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 10:10:43 -0400
-Received: by mail-pg0-f68.google.com with SMTP id f127so6276403pgc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jun 2017 07:10:43 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Wed, 28 Jun 2017 16:15:55 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 08/17] rsi: update set_channel command frame
-Date: Fri, 23 Jun 2017 19:37:27 +0530
-Message-Id: <1498226856-6305-9-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170623_161047_137811_12532317)
-In-Reply-To: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1498226856-6305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:28 +0300
+Message-Id: <20170628201330.9432-30-luca@coelho.fi> (sfid-20170628_224510_518519_2F0A7989)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 29/31] iwlwifi: move notification wait into fw/
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-TX command frame set_channel is modified to use common
-descriptor structure. Also DFS channel indication to firmware
-is added in the descriptor for dfs channels configuration.
+Move the notification wait code into the new fw interaction directory.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 47 +++++++++++++++------------------
- drivers/net/wireless/rsi/rsi_mgmt.h     | 13 +++++++++
- 2 files changed, 35 insertions(+), 25 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/Makefile                             | 2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/dev.h                            | 2 +-
+ .../net/wireless/intel/iwlwifi/{iwl-notif-wait.c => fw/notif-wait.c}    | 2 +-
+ .../net/wireless/intel/iwlwifi/{iwl-notif-wait.h => fw/notif-wait.h}    | 0
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h                            | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c                            | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c                     | 2 +-
+ 7 files changed, 6 insertions(+), 6 deletions(-)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-notif-wait.c => fw/notif-wait.c} (99%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-notif-wait.h => fw/notif-wait.h} (100%)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index a1616d7..c7945ea 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -969,12 +969,13 @@ int rsi_set_channel(struct rsi_common *common,
- 		    struct ieee80211_channel *channel)
- {
- 	struct sk_buff *skb = NULL;
--	struct rsi_mac_frame *mgmt_frame;
-+	struct rsi_chan_config *chan_cfg;
-+	u16 frame_len = sizeof(struct rsi_chan_config);
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index 411cb91c102f..7733fc41ce98 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -3,7 +3,6 @@ obj-$(CONFIG_IWLWIFI)	+= iwlwifi.o
+ iwlwifi-objs		+= iwl-io.o
+ iwlwifi-objs		+= iwl-drv.o
+ iwlwifi-objs		+= iwl-debug.o
+-iwlwifi-objs		+= iwl-notif-wait.o
+ iwlwifi-objs		+= iwl-eeprom-read.o iwl-eeprom-parse.o
+ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+ iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+@@ -11,6 +10,7 @@ iwlwifi-objs		+= pcie/ctxt-info.o pcie/trans-gen2.o pcie/tx-gen2.o
+ iwlwifi-$(CONFIG_IWLDVM) += iwl-1000.o iwl-2000.o iwl-5000.o iwl-6000.o
+ iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o iwl-9000.o iwl-a000.o
+ iwlwifi-objs		+= iwl-trans.o
++iwlwifi-objs		+= fw/notif-wait.o
  
- 	rsi_dbg(MGMT_TX_ZONE,
- 		"%s: Sending scan req frame\n", __func__);
+ iwlwifi-objs += $(iwlwifi-m)
  
--	skb = dev_alloc_skb(FRAME_DESC_SZ);
-+	skb = dev_alloc_skb(frame_len);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
- 			__func__);
-@@ -985,37 +986,33 @@ int rsi_set_channel(struct rsi_common *common,
- 		dev_kfree_skb(skb);
- 		return 0;
- 	}
--	memset(skb->data, 0, FRAME_DESC_SZ);
--	mgmt_frame = (struct rsi_mac_frame *)skb->data;
--
--	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
--	mgmt_frame->desc_word[1] = cpu_to_le16(SCAN_REQUEST);
--	mgmt_frame->desc_word[4] = cpu_to_le16(channel->hw_value);
--
--	mgmt_frame->desc_word[4] |=
--		cpu_to_le16(((char)(channel->max_antenna_gain)) << 8);
--	mgmt_frame->desc_word[5] =
--		cpu_to_le16((char)(channel->max_antenna_gain));
--
--	mgmt_frame->desc_word[7] = cpu_to_le16(PUT_BBP_RESET |
--					       BBP_REG_WRITE |
--					       (RSI_RF_TYPE << 4));
--
--	if (!(channel->flags & IEEE80211_CHAN_NO_IR) &&
--	       !(channel->flags & IEEE80211_CHAN_RADAR)) {
-+	memset(skb->data, 0, frame_len);
-+	chan_cfg = (struct rsi_chan_config *)skb->data;
-+
-+	rsi_set_len_qno(&chan_cfg->desc_dword0.len_qno, 0, RSI_WIFI_MGMT_Q);
-+	chan_cfg->desc_dword0.frame_type = SCAN_REQUEST;
-+	chan_cfg->channel_number = channel->hw_value;
-+	chan_cfg->antenna_gain_offset_2g = channel->max_antenna_gain;
-+	chan_cfg->antenna_gain_offset_5g = channel->max_antenna_gain;
-+	chan_cfg->region_rftype = (RSI_RF_TYPE & 0xf) << 4;
-+
-+	if ((channel->flags & IEEE80211_CHAN_NO_IR) ||
-+	    (channel->flags & IEEE80211_CHAN_RADAR)) {
-+		chan_cfg->antenna_gain_offset_2g |= RSI_CHAN_RADAR;
-+	} else {
- 		if (common->tx_power < channel->max_power)
--			mgmt_frame->desc_word[6] = cpu_to_le16(common->tx_power);
-+			chan_cfg->tx_power = cpu_to_le16(common->tx_power);
- 		else
--			mgmt_frame->desc_word[6] = cpu_to_le16(channel->max_power);
-+			chan_cfg->tx_power = cpu_to_le16(channel->max_power);
- 	}
--	mgmt_frame->desc_word[7] = cpu_to_le16(common->priv->dfs_region);
-+	chan_cfg->region_rftype |= (common->priv->dfs_region & 0xf);
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
+index 025db135b63c..cceb4cd8e501 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
+@@ -44,7 +44,7 @@
+ #include "iwl-debug.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-op-mode.h"
+-#include "iwl-notif-wait.h"
++#include "fw/notif-wait.h"
+ #include "iwl-trans.h"
  
- 	if (common->channel_width == BW_40MHZ)
--		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
-+		chan_cfg->channel_width = 0x1;
+ #include "led.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+similarity index 99%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
+rename to drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+index 68412ff2112e..29bb92e3df59 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+@@ -65,7 +65,7 @@
+ #include <linux/export.h>
  
- 	common->channel = channel->hw_value;
+ #include "iwl-drv.h"
+-#include "iwl-notif-wait.h"
++#include "notif-wait.h"
  
--	skb_put(skb, FRAME_DESC_SZ);
-+	skb_put(skb, frame_len);
  
- 	return rsi_send_internal_mgmt_frame(common, skb);
- }
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index d44c79f..2f49e55 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -166,6 +166,7 @@
- #define DISALLOW_BROADCAST_DATA		BIT(6)
+ void iwl_notification_wait_init(struct iwl_notif_wait_data *notif_wait)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.h
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.h
+rename to drivers/net/wireless/intel/iwlwifi/fw/notif-wait.h
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 33979b48ac0a..0f0cd6c9ce8b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -79,7 +79,7 @@
  
- #define RSI_MPDU_DENSITY		0x8
-+#define RSI_CHAN_RADAR			BIT(7)
+ #include "iwl-op-mode.h"
+ #include "iwl-trans.h"
+-#include "iwl-notif-wait.h"
++#include "fw/notif-wait.h"
+ #include "iwl-eeprom-parse.h"
+ #include "fw/file.h"
+ #include "iwl-config.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index d93f1fcdf879..32233cba6786 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -68,7 +68,7 @@
+ #include <linux/vmalloc.h>
+ #include <net/mac80211.h>
  
- enum opmode {
- 	STA_OPMODE = 1,
-@@ -306,6 +307,18 @@ struct rsi_bb_rf_prog {
- 	__le16 flags;
- } __packed;
+-#include "iwl-notif-wait.h"
++#include "fw/notif-wait.h"
+ #include "iwl-trans.h"
+ #include "iwl-op-mode.h"
+ #include "fw/img.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 3e4fa853b44d..5a682722adce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -66,7 +66,7 @@
+ #include <linux/jiffies.h>
+ #include <net/mac80211.h>
  
-+struct rsi_chan_config {
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	struct rsi_cmd_desc_dword1 desc_dword1;
-+	u8 channel_number;
-+	u8 antenna_gain_offset_2g;
-+	u8 antenna_gain_offset_5g;
-+	u8 channel_width;
-+	__le16 tx_power;
-+	u8 region_rftype;
-+	u8 flags;
-+} __packed;
-+
- struct rsi_vap_caps {
- 	__le16 desc_word[8];
- 	u8 mac_addr[6];
+-#include "iwl-notif-wait.h"
++#include "fw/notif-wait.h"
+ #include "iwl-trans.h"
+ #include "fw-api.h"
+ #include "time-event.h"
 -- 
-2.7.4
+2.11.0
