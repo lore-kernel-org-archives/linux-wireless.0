@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:51827 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753025AbdFPIgi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48702 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751941AbdF1SSy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 04:36:38 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [PATCH] brcmfmac: fix uninitialized warning in brcmf_usb_probe_phase2()
-Date: Fri, 16 Jun 2017 09:36:35 +0100
-Message-Id: <1497602195-29895-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170616_103641_930733_E20148CA)
+        Wed, 28 Jun 2017 14:18:54 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: wl18xx: add checks on wl18xx_top_reg_write() return value
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170626230619.GA14831@embeddedgus>
+References: <20170626230619.GA14831@embeddedgus>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Message-Id: <20170628181853.7BFC460AD2@smtp.codeaurora.org> (sfid-20170628_201930_329874_FAC8D6C0)
+Date: Wed, 28 Jun 2017 18:18:53 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the following warning:
+"Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
 
-  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c: In function
-  'brcmf_usb_probe_phase2':
-  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c:1198:2:
-  warning: 'devinfo' may be used uninitialized in this function
-  [-Wmaybe-uninitialized]
-    mutex_unlock(&devinfo->dev_init_lock);
+> Check return value from call to wl18xx_top_reg_write(),
+> so in case of error jump to goto label out and return.
+> 
+> Also, remove unnecessary value check before goto label out.
+> 
+> Addresses-Coverity-ID: 1226938
+> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 
-Fixes: 6d0507a777fb ("brcmfmac: add parameter to pass error code in firmware callback")
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Reported-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Hi Kalle,
+Patch applied to wireless-drivers-next.git, thanks.
 
-Here it is. Was indeed a valid warning.
+059c98599b1a wl18xx: add checks on wl18xx_top_reg_write() return value
 
-Thanks,
-Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 9ce3b55..8b16387 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1164,14 +1164,13 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
- 				   void *nvram, u32 nvlen)
- {
- 	struct brcmf_bus *bus = dev_get_drvdata(dev);
--	struct brcmf_usbdev_info *devinfo;
-+	struct brcmf_usbdev_info *devinfo = bus->bus_priv.usb->devinfo;;
- 
- 	if (ret)
- 		goto error;
- 
- 	brcmf_dbg(USB, "Start fw downloading\n");
- 
--	devinfo = bus->bus_priv.usb->devinfo;
- 	ret = check_file(fw->data);
- 	if (ret < 0) {
- 		brcmf_err("invalid firmware\n");
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9810591/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
