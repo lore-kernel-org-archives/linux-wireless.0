@@ -1,136 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751050AbdFYLMH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56780 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751630AbdF1Rwp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:34 +0300
-Message-Id: <20170625111158.1792-3-luca@coelho.fi> (sfid-20170625_131301_257547_09A075AC)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 02/26] iwlwifi: fix TX tracing for non-linear SKBs
+        Wed, 28 Jun 2017 13:52:45 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: Do not change bss_type in change_virtual_intf
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1498114972-25712-1-git-send-email-gbhat@marvell.com>
+References: <1498114972-25712-1-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20170628175243.AB6CC60AD0@smtp.codeaurora.org> (sfid-20170628_195313_905166_7BCA2C06)
+Date: Wed, 28 Jun 2017 17:52:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-When sending non-linear SKBs that should be included in the regular
-TX tracing completely (and not be pushed into the tx_data tracing),
-the (tracing) code didn't correctly take the fact that they were
-non-linear into account and added only the skb head portion.
+> When user adds a virtual interface driver will set the
+> bss_type to the iface_type given by the user. When
+> supplicant is started on the same interface, a call to
+> change_virtual_intf will be triggered if if_type is not
+> NL80211_IFTYPE_STATION. Here driver should not update
+> it's bss_type, because bss_type is intended to indicate
+> the original iface_type and changing the same will defeat
+> the purpose of creating this interface.
+> 
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-This probably never really triggered, since those frames we want
-traced fully are most likely linear anyway, but the code gets easier
-to understand and we lose an argument to the tracing function, so
-overall fixing this is better.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Fixes: 206eea783385 ("iwlwifi: pcie: support frag SKBs")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h | 19 ++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c     |  5 ++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c          |  5 ++---
- 3 files changed, 16 insertions(+), 13 deletions(-)
+4d7ab36f0c47 mwifiex: Do not change bss_type in change_virtual_intf
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-index f02e2c89abbb..7f16dcce0995 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-@@ -2,7 +2,7 @@
-  *
-  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -91,8 +91,8 @@ TRACE_EVENT(iwlwifi_dev_tx,
- 	TP_PROTO(const struct device *dev, struct sk_buff *skb,
- 		 void *tfd, size_t tfdlen,
- 		 void *buf0, size_t buf0_len,
--		 void *buf1, size_t buf1_len),
--	TP_ARGS(dev, skb, tfd, tfdlen, buf0, buf0_len, buf1, buf1_len),
-+		 int hdr_len),
-+	TP_ARGS(dev, skb, tfd, tfdlen, buf0, buf0_len, hdr_len),
- 	TP_STRUCT__entry(
- 		DEV_ENTRY
- 
-@@ -105,15 +105,20 @@ TRACE_EVENT(iwlwifi_dev_tx,
- 		 * for the possible padding).
- 		 */
- 		__dynamic_array(u8, buf0, buf0_len)
--		__dynamic_array(u8, buf1, iwl_trace_data(skb) ? 0 : buf1_len)
-+		__dynamic_array(u8, buf1, hdr_len > 0 && iwl_trace_data(skb) ?
-+						0 : skb->len - hdr_len)
- 	),
- 	TP_fast_assign(
- 		DEV_ASSIGN;
--		__entry->framelen = buf0_len + buf1_len;
-+		__entry->framelen = buf0_len;
-+		if (hdr_len > 0)
-+			__entry->framelen += skb->len - hdr_len;
- 		memcpy(__get_dynamic_array(tfd), tfd, tfdlen);
- 		memcpy(__get_dynamic_array(buf0), buf0, buf0_len);
--		if (!iwl_trace_data(skb))
--			memcpy(__get_dynamic_array(buf1), buf1, buf1_len);
-+		if (hdr_len > 0 && !iwl_trace_data(skb))
-+			skb_copy_bits(skb, hdr_len,
-+				      __get_dynamic_array(buf1),
-+				      skb->len - hdr_len);
- 	),
- 	TP_printk("[%s] TX %.2x (%zu bytes)",
- 		  __get_str(dev), ((u8 *)__get_dynamic_array(buf0))[0],
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index a0b237b58b3d..a3795ba0d7b9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -249,7 +249,7 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
- 		IEEE80211_CCMP_HDR_LEN : 0;
- 
- 	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd),
--			     &dev_cmd->hdr, start_len, NULL, 0);
-+			     &dev_cmd->hdr, start_len, 0);
- 
- 	ip_hdrlen = skb_transport_header(skb) - skb_network_header(skb);
- 	snap_ip_tcp_hdrlen = 8 + ip_hdrlen + tcp_hdrlen(skb);
-@@ -467,8 +467,7 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 	}
- 
- 	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd), &dev_cmd->hdr,
--			     IWL_FIRST_TB_SIZE + tb1_len,
--			     skb->data + hdr_len, tb2_len);
-+			     IWL_FIRST_TB_SIZE + tb1_len, hdr_len);
- 	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
- 
- 	return tfd;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 98cccaeeecdd..be38dd3a6d93 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1978,7 +1978,7 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
- 			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
- 			     trans_pcie->tfd_size,
- 			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
--			     skb->data + hdr_len, tb2_len);
-+			     hdr_len);
- 	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
- 	return 0;
- }
-@@ -2051,8 +2051,7 @@ static int iwl_fill_data_tbs_amsdu(struct iwl_trans *trans, struct sk_buff *skb,
- 	trace_iwlwifi_dev_tx(trans->dev, skb,
- 			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
- 			     trans_pcie->tfd_size,
--			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
--			     NULL, 0);
-+			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len, 0);
- 
- 	ip_hdrlen = skb_transport_header(skb) - skb_network_header(skb);
- 	snap_ip_tcp_hdrlen = 8 + ip_hdrlen + tcp_hdrlen(skb);
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9803591/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
