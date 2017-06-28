@@ -1,51 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59483 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751460AbdFZHEt (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36042 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751583AbdF1UQE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:04:49 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <Ganesh.Krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH 6/7] staging: wilc1000: Change ac based on acm status
-Date: Mon, 26 Jun 2017 12:33:37 +0530
-Message-ID: <1498460618-22187-7-git-send-email-aditya.shankar@microchip.com> (sfid-20170626_090452_147128_C44E6BF9)
-In-Reply-To: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-References: <1498460618-22187-1-git-send-email-aditya.shankar@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 28 Jun 2017 16:16:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:29 +0300
+Message-Id: <20170628201330.9432-31-luca@coelho.fi> (sfid-20170628_221627_566650_20667E7D)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 30/31] iwlwifi: move configuration into sub-directory
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new function to check and alter the ac if needed
-based on the acm status for a particular queue.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+Since we now support 8 device families, move their configuration
+files into a new subdirectory "cfg".
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/Makefile                   | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/{iwl-1000.c => cfg/1000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-2000.c => cfg/2000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-5000.c => cfg/5000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-6000.c => cfg/6000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-7000.c => cfg/7000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-8000.c => cfg/8000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-9000.c => cfg/9000.c} | 0
+ drivers/net/wireless/intel/iwlwifi/{iwl-a000.c => cfg/a000.c} | 0
+ 9 files changed, 2 insertions(+), 2 deletions(-)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-1000.c => cfg/1000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-2000.c => cfg/2000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-5000.c => cfg/5000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-6000.c => cfg/6000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-7000.c => cfg/7000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-8000.c => cfg/8000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-9000.c => cfg/9000.c} (100%)
+ rename drivers/net/wireless/intel/iwlwifi/{iwl-a000.c => cfg/a000.c} (100%)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index b3e1136..e323fd4 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -451,6 +451,16 @@ static inline void ac_pkt_count(u32 reg, u8 *pkt_count)
- 	pkt_count[AC_VO_Q] = (reg & 0xfe000000) >> VO_AC_COUNT_POS;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index 7733fc41ce98..20bd261223af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -7,8 +7,8 @@ iwlwifi-objs		+= iwl-eeprom-read.o iwl-eeprom-parse.o
+ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+ iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+ iwlwifi-objs		+= pcie/ctxt-info.o pcie/trans-gen2.o pcie/tx-gen2.o
+-iwlwifi-$(CONFIG_IWLDVM) += iwl-1000.o iwl-2000.o iwl-5000.o iwl-6000.o
+-iwlwifi-$(CONFIG_IWLMVM) += iwl-7000.o iwl-8000.o iwl-9000.o iwl-a000.o
++iwlwifi-$(CONFIG_IWLDVM) += cfg/1000.o cfg/2000.o cfg/5000.o cfg/6000.o
++iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
+ iwlwifi-objs		+= iwl-trans.o
+ iwlwifi-objs		+= fw/notif-wait.o
  
-+static inline u8 ac_change(struct wilc *wilc, u8 *ac)
-+{
-+	do {
-+		if (wilc->txq[*ac].acm == 0)
-+			return 0;
-+		(*ac)++;
-+	} while (*ac < NQUEUES);
-+	return 1;
-+}
-+
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 			      u32 buffer_size, wilc_tx_complete_func_t func)
- {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-1000.c b/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-1000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/1000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-2000.c b/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-2000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/2000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-5000.c b/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-5000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/5000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/6000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-7000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/7000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+similarity index 100%
+rename from drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+rename to drivers/net/wireless/intel/iwlwifi/cfg/a000.c
 -- 
-2.7.4
+2.11.0
