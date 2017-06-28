@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34972 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751339AbdFYLM4 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35504 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752138AbdF1PMr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:56 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:49 +0300
-Message-Id: <20170625111158.1792-18-luca@coelho.fi> (sfid-20170625_131303_620690_C794D4CE)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 17/26] iwlwifi: mvm: set assoc_beacon_arrive_time
+        Wed, 28 Jun 2017 11:12:47 -0400
+Received: by mail-oi0-f65.google.com with SMTP id l130so5799708oib.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 08:12:42 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 07/10] rtlwifi: Uses addr1 instead DA to determine broadcast and multicast addr.
+Date: Wed, 28 Jun 2017 10:12:22 -0500
+Message-Id: <20170628151225.22190-8-Larry.Finger@lwfinger.net> (sfid-20170628_171353_454643_49D889AD)
+In-Reply-To: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
+References: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-When updating the mac context after association,
-assoc_beacon_arrive_time is not being set, which causes the FW to
-set a wrong TSF to the MAC.
+We should check addr1 to indicate a packet as broadcast or multicast
+in tx desc. An obvious example, a STA transmit an *unicast* ARP packet
+where addr1 and DA are the addresses of AP and broadcast respectively.
 
-Fix this by setting the assoc_beacon_arrive_time when updating the
-mac context after association.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 2 ++
- 1 file changed, 2 insertions(+)
+v2 - no changes
+v3 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 50a71da2e96e..f06751598fb8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -846,6 +846,8 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 			cpu_to_le64(vif->bss_conf.sync_tsf + dtim_offs);
- 		ctxt_sta->dtim_time =
- 			cpu_to_le32(vif->bss_conf.sync_device_ts + dtim_offs);
-+		ctxt_sta->assoc_beacon_arrive_time =
-+			cpu_to_le32(vif->bss_conf.sync_device_ts);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 7aa3c39c9c5c..464f14450f75 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1166,9 +1166,9 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 			}
+ 		}
  
- 		IWL_DEBUG_INFO(mvm, "DTIM TBTT is 0x%llx/0x%x, offset %d\n",
- 			       le64_to_cpu(ctxt_sta->dtim_tsf),
+-		if (is_multicast_ether_addr(ieee80211_get_DA(hdr)))
++		if (is_multicast_ether_addr(hdr->addr1))
+ 			tcb_desc->multicast = 1;
+-		else if (is_broadcast_ether_addr(ieee80211_get_DA(hdr)))
++		else if (is_broadcast_ether_addr(hdr->addr1))
+ 			tcb_desc->broadcast = 1;
+ 
+ 		_rtl_txrate_selectmode(hw, sta, tcb_desc);
 -- 
-2.11.0
+2.12.3
