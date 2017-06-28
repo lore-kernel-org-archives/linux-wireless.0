@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:32875 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752302AbdFLHd1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56390 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751659AbdF1Rvn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 03:33:27 -0400
-Received: by mail-wr0-f176.google.com with SMTP id v104so85708974wrb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 00:33:27 -0700 (PDT)
-Subject: Re: [PATCH 0/6] Constant Time Memory Comparisons Are Important
-To: Emil Lenngren <emil.lenngren@gmail.com>,
-        Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "kernel-hardening@lists.openwall.com"
-        <kernel-hardening@lists.openwall.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>,
-        David Howells <dhowells@redhat.com>,
-        David Safford <safford@us.ibm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Gilad Ben-Yossef <gilad@benyossef.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        keyrings@vger.kernel.org,
-        Bluez mailing list <linux-bluetooth@vger.kernel.org>,
-        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>
-References: <20170610025912.6499-1-Jason@zx2c4.com>
- <878tkzq6wi.fsf@purkki.adurom.net>
- <CAGXu5jKp=X7-eKo+HgzS3uqncx5yy-u=tJNqV9K8GOgJ=-C7iA@mail.gmail.com>
- <CANUX_P2b0Bx+-E_OBQ0reGW0=d6819qc=r83K0kTv0xMo8mtLQ@mail.gmail.com>
- <CAO1O6see6yDr-hDVNPi9Kv9wO6p-98w7YhsnnwnVOVCSEGVksw@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5595d4bc-a43e-7a89-eb86-fa77556cd7af@broadcom.com> (sfid-20170612_093411_447427_741273E8)
-Date: Mon, 12 Jun 2017 09:33:24 +0200
+        Wed, 28 Jun 2017 13:51:43 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAO1O6see6yDr-hDVNPi9Kv9wO6p-98w7YhsnnwnVOVCSEGVksw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v2,
+ 1/8] rtlwifi: Fix a2dp choppy while BT RSSI stays on threshold.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170621171538.4462-2-Larry.Finger@lwfinger.net>
+References: <20170621171538.4462-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170628175143.4B0D260AD5@smtp.codeaurora.org> (sfid-20170628_195159_311050_3FB7AEEE)
+Date: Wed, 28 Jun 2017 17:51:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/11/2017 11:30 PM, Emil Lenngren wrote:
-> 2017-06-11 22:48 GMT+02:00 Emmanuel Grumbach <egrumbach@gmail.com>:
->> On Sun, Jun 11, 2017 at 4:36 PM, Kees Cook <keescook@chromium.org> wrote:
->>>
->>> On Sun, Jun 11, 2017 at 1:13 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>> "Jason A. Donenfeld" <Jason@zx2c4.com> writes:
->>>>
->>>>> Whenever you're comparing two MACs, it's important to do this using
->>>>> crypto_memneq instead of memcmp. With memcmp, you leak timing information,
->>>>> which could then be used to iteratively forge a MAC.
->>>>
->>>> Do you have any pointers where I could learn more about this?
->>>
->>> While not using C specifically, this talks about the problem generally:
->>> https://www.chosenplaintext.ca/articles/beginners-guide-constant-time-cryptography.html
->>>
->>
->> Sorry for the stupid question, but the MAC address is in plaintext in
->> the air anyway or easily accessible via user space tools. I fail to
->> see what it is so secret about a MAC address in that code where that
->> same MAC address is accessible via myriads of ways.
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> I think you're mixing up Media Access Control (MAC) addresses with
-> Message Authentication Code (MAC). The second one is a cryptographic
-> signature of a message.
+> In this case, BTC asks to enter/leave PS mode frequently to cause A2DP
+> choppy.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-While this may be obvious to those who are in the know this mixup is 
-easily made outside the crypto domain and especially in the (wireless) 
-networking domain (my mind wandered towards the same error path). As 
-this series is touching stuff outside crypto it is good to be explicit 
-and not use such abbreviations that can be misinterpreted. The article 
-Kees referred to is also useful to get into the proper context here and 
-at least worth mentioning this or other useful references in the cover 
-letter.
+8 patches applied to wireless-drivers-next.git, thanks.
 
-Regards,
-Arend
+135f4fbd75d7 rtlwifi: Fix a2dp choppy while BT RSSI stays on threshold.
+a70883920ea1 rtlwifi: Do IQK only once to reduce wifi occupy antenna
+1024b31629bd rtlwifi: Modify power mode parameters of 8723be and 8821ae.
+838dd0d3ffe6 rtlwifi: Update some cases in btc_get function -- roam, 5G, AP mode, and return value.
+8488e211d665 rtlwifi: Add return value to btc_set.
+f1cb27eda3a6 rtlwifi: Add ap_num field for btcoexist
+c76ab8e75442 rtlwifi: Fill ap_num field by driver
+76f146b6645b rtlwifi: Add in_4way field for btcoexist
+
+-- 
+https://patchwork.kernel.org/patch/9802331/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
