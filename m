@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60900 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751140AbdFBL14 (ORCPT
+Received: from gateway23.websitewelcome.com ([192.185.49.104]:49739 "EHLO
+        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751495AbdF1XUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 07:27:56 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Jun 2017 14:25:46 +0300
-Message-Id: <20170602112553.2466-19-luca@coelho.fi> (sfid-20170602_132801_526761_F24ADE01)
-In-Reply-To: <20170602112553.2466-1-luca@coelho.fi>
-References: <20170602112553.2466-1-luca@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: mvm: remove wrt support of page dumps in gen2
+        Wed, 28 Jun 2017 19:20:07 -0400
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway23.websitewelcome.com (Postfix) with ESMTP id 885A615CE0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 17:57:53 -0500 (CDT)
+Date: Wed, 28 Jun 2017 17:57:53 -0500
+Message-ID: <20170628175753.Horde.jKsLaGOBj8-15rZyu1j0ooC@gator4166.hostgator.com> (sfid-20170629_012010_530443_905AE87F)
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: ti: wl18xx: add checks on wl18xx_top_reg_write() return value
+References: <20170626230619.GA14831@embeddedgus>
+ <20170628163844.56F26601EA@smtp.codeaurora.org>
+In-Reply-To: <20170628163844.56F26601EA@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
 
-In gen2, page dumping should be done in transport
-layer, since the addresses needed for the paging
-mechanism reside there.
+Quoting Kalle Valo <kvalo@codeaurora.org>:
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> "Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
+>
+>> Check return value from call to wl18xx_top_reg_write(),
+>> so in case of error jump to goto label out and return.
+>>
+>> Also, remove unnecessary value check before goto label out.
+>>
+>> Addresses-Coverity-ID: 1226938
+>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>
+> The prefix should be "wl18xx:", I'll fix that.
+>
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 7b86a4f1b574..d8b592aa362c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -691,7 +691,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	}
- 
- 	/* Make room for fw's virtual image pages, if it exists */
--	if (mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
-+	if (!mvm->trans->cfg->gen2 &&
-+	    mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
- 	    mvm->fw_paging_db[0].fw_paging_block)
- 		file_len += mvm->num_of_paging_blk *
- 			(sizeof(*dump_data) +
-@@ -850,7 +851,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	}
- 
- 	/* Dump fw's virtual image */
--	if (mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
-+	if (!mvm->trans->cfg->gen2 &&
-+	    mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
- 	    mvm->fw_paging_db[0].fw_paging_block) {
- 		for (i = 1; i < mvm->num_of_paging_blk + 1; i++) {
- 			struct iwl_fw_error_dump_paging *paging;
--- 
-2.11.0
+Thanks, Kalle.
+--
+Gustavo A. R. Silva
