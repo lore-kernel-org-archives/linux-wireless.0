@@ -1,105 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34741 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753704AbdFMOvu (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63637 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751538AbdF1Q5P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 10:51:50 -0400
-Received: by mail-pg0-f68.google.com with SMTP id v14so19227486pgn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 07:51:50 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Alexey.Brodkin@synopsys.com,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: [PATCH 06/20] rsi: USB tx headroom cleanup
-Date: Tue, 13 Jun 2017 20:18:54 +0530
-Message-Id: <1497365348-2305-7-git-send-email-amit.karwar@redpinesignals.com> (sfid-20170613_165153_268626_A19D75BA)
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
+        Wed, 28 Jun 2017 12:57:15 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath9k: remove useless variable assignment in ath_mci_intr()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170626232658.GA17483@embeddedgus>
+References: <20170626232658.GA17483@embeddedgus>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Message-ID: <36c24b8f739a44adbad3a2b5487cc184@euamsexm01a.eu.qualcomm.com> (sfid-20170628_185752_410465_0014CB54)
+Date: Wed, 28 Jun 2017 18:57:07 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+"Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
 
-USB headroom is added while submitting the data to URB as per
-firmware's requirement. This logic is moved to rsi_usb_card_write() so
-that caller need not worry about it.
+> Value assigned to variable offset at line 551 is overwritten at line 562,
+> before it can be used. This makes such variable assignment useless.
+> 
+> Addresses-Coverity-ID: 1226941
+> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 41 +++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 1d7bb9d..25f6195 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -29,19 +29,24 @@
-  * Return: status: 0 on success, a negative error code on failure.
-  */
- static int rsi_usb_card_write(struct rsi_hw *adapter,
--			      void *buf,
-+			      u8 *buf,
- 			      u16 len,
- 			      u8 endpoint)
- {
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
- 	int status;
--	s32 transfer;
-+	u8 *seg = dev->tx_buffer;
-+	int transfer;
-+	int ep = dev->bulkout_endpoint_addr[endpoint - 1];
- 
-+	memset(seg, 0, len + RSI_USB_TX_HEAD_ROOM);
-+	memcpy(seg + RSI_USB_TX_HEAD_ROOM, buf, len);
-+	len += RSI_USB_TX_HEAD_ROOM;
-+	transfer = len;
- 	status = usb_bulk_msg(dev->usbdev,
--			      usb_sndbulkpipe(dev->usbdev,
--			      dev->bulkout_endpoint_addr[endpoint - 1]),
--			      buf,
--			      len,
-+			      usb_sndbulkpipe(dev->usbdev, ep),
-+			      (void *)seg,
-+			      (int)len,
- 			      &transfer,
- 			      HZ * 5);
- 
-@@ -68,23 +73,19 @@ static int rsi_write_multiple(struct rsi_hw *adapter,
- 			      u8 *data,
- 			      u32 count)
- {
--	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
--	u8 *seg = dev->tx_buffer;
-+	struct rsi_91x_usbdev *dev =
-+		(struct rsi_91x_usbdev *)adapter->rsi_dev;
- 
--	if (dev->write_fail)
--		return 0;
-+	if (!adapter)
-+		return -ENODEV;
- 
--	if (endpoint == MGMT_EP) {
--		memset(seg, 0, RSI_USB_TX_HEAD_ROOM);
--		memcpy(seg + RSI_USB_TX_HEAD_ROOM, data, count);
--	} else {
--		seg = ((u8 *)data - RSI_USB_TX_HEAD_ROOM);
--	}
-+	if (endpoint == 0)
-+		return -EINVAL;
-+
-+	if (dev->write_fail)
-+		return -ENETDOWN;
- 
--	return rsi_usb_card_write(adapter,
--				  seg,
--				  count + RSI_USB_TX_HEAD_ROOM,
--				  endpoint);
-+	return rsi_usb_card_write(adapter, data, count, endpoint);
- }
- 
- /**
+6788a3832c70 ath9k: remove useless variable assignment in ath_mci_intr()
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9810609/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
