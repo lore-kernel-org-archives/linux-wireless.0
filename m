@@ -1,92 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35917 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752475AbdFTAcf (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35968 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751557AbdF1UPO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 20:32:35 -0400
-Received: by mail-oi0-f65.google.com with SMTP id g14so10724185oib.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jun 2017 17:32:35 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+        Wed, 28 Jun 2017 16:15:14 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 10/10] rtlwifi: Fill in_4way field by vendor command
-Date: Mon, 19 Jun 2017 19:32:18 -0500
-Message-Id: <20170620003218.17010-11-Larry.Finger@lwfinger.net> (sfid-20170620_023240_690290_79892656)
-In-Reply-To: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
-References: <20170620003218.17010-1-Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:16 +0300
+Message-Id: <20170628201330.9432-18-luca@coelho.fi> (sfid-20170628_221555_076191_E75CD59B)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 17/31] iwlwifi: pcie: improve "invalid queue" warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The in_4way can be filled by wpa_cli's VENDOR command.
+Print out both queue IDs to be able to see what went wrong.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 574f9943d70e..1b81bfa083ed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -319,6 +319,7 @@ static void _rtl_init_hw_vht_capab(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index cd109740632d..6544facc2e0c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1129,8 +1129,12 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID))
+ 			break;
  
- enum {
- 	RTL_VENDOR_SCMD_COEX_AP_NUM	= 2000,
-+	RTL_VENDOR_SCMD_COEX_4WAY	= 2001,
- };
+-		WARN_ON((le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_RXQ_MASK) >>
+-			FH_RSCSR_RXQ_POS != rxq->id);
++		WARN((le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_RXQ_MASK) >>
++			FH_RSCSR_RXQ_POS != rxq->id,
++		     "frame on invalid queue - is on %d and indicates %d\n",
++		     rxq->id,
++		     (le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_RXQ_MASK) >>
++			FH_RSCSR_RXQ_POS);
  
- static u32 rtl_data_to_int(struct rtl_priv *rtlpriv, const void *data, int len)
-@@ -364,6 +365,24 @@ static int rtl_cfgvendor_coex_ap_num(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static int rtl_cfgvendor_coex_4way(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev,
-+				   const void *data, int len)
-+{
-+	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	bool tmp;
-+
-+	tmp = (rtl_data_to_int(rtlpriv, data, len) ? true : false);
-+
-+	rtlpriv->btcoexist.btc_info.in_4way = tmp;
-+
-+	RT_TRACE(rtlpriv, COMP_VENDOR_CMD, DBG_DMESG,
-+		 "cfgvendor 4way is %d\n", rtlpriv->btcoexist.btc_info.in_4way);
-+
-+	return 0;
-+}
-+
- static const struct wiphy_vendor_command rtl_vendor_cmds[] = {
- 	{
- 		{
-@@ -374,6 +393,15 @@ static const struct wiphy_vendor_command rtl_vendor_cmds[] = {
- 			 WIPHY_VENDOR_CMD_NEED_NETDEV,
- 		.doit = rtl_cfgvendor_coex_ap_num,
- 	},
-+	{
-+		{
-+			.vendor_id = OUI_REALTEK,
-+			.subcmd = RTL_VENDOR_SCMD_COEX_4WAY
-+		},
-+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-+			 WIPHY_VENDOR_CMD_NEED_NETDEV,
-+		.doit = rtl_cfgvendor_coex_4way,
-+	},
- };
- 
- static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 		IWL_DEBUG_RX(trans,
+ 			     "cmd at offset %d: %s (%.2x.%2x, seq 0x%x)\n",
 -- 
-2.12.3
+2.11.0
