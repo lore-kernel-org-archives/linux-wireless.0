@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway30.websitewelcome.com ([192.185.160.12]:18598 "EHLO
-        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752666AbdFLWsM (ORCPT
+Received: from smtprelay0159.hostedemail.com ([216.40.44.159]:35967 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751642AbdF1Nhs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 18:48:12 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway30.websitewelcome.com (Postfix) with ESMTP id E36F520B2C
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 17:02:29 -0500 (CDT)
-Date: Mon, 12 Jun 2017 17:02:23 -0500
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] nfc: nci: fix potential NULL pointer dereference
-Message-ID: <20170612220223.GA6326@embeddedgus> (sfid-20170613_004815_937442_20D20A65)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 28 Jun 2017 09:37:48 -0400
+Message-ID: <1498657062.8633.1.camel@perches.com> (sfid-20170628_153752_922516_EA6A55F6)
+Subject: Re: [PATCH] mac80211_hwsim: use dyndbg for debug messages
+From: Joe Perches <joe@perches.com>
+To: Lubomir Rintel <lkundrak@v3.sk>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 28 Jun 2017 06:37:42 -0700
+In-Reply-To: <20170628131726.15528-1-lkundrak@v3.sk>
+References: <20170628131726.15528-1-lkundrak@v3.sk>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NULL check at line 76: if (conn_info) {, implies that pointer conn_info
-might be NULL, but this pointer is being previously dereferenced,
-which might cause a NULL pointer dereference.
+On Wed, 2017-06-28 at 15:17 +0200, Lubomir Rintel wrote:
+> The mac80211_hwsim doesn't offer a way to disable the debugging output.
+> Unfortunately, it's pretty chatty, dumping a  lot of stuff into the message
+> buffer.
+> 
+> This patch changes it to use dyndbg for controlling the debug output.
+> It's disabled by default, but can be enabled by a module parameter (1),
+> at runtime (2) or persisted in modprobe.conf (3).
+> 
+>   (1) modprobe mac80211_hwsim dyndbg=+p
+>   (2) echo "module mac80211_hwsim +p" >/sys/kernel/debug/dynamic_debug/control
+>   (3) echo "options mac80211_hwsim dyndbg=+p" >>/etc/modprobe.d/my.conf
 
-Add NULL check before dereferencing pointer conn_info in order to
-avoid a potential NULL pointer dereference.
+I wonder about the value at all of the 2 forms:
 
-Addresses-Coverity-ID: 1362349
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
- net/nfc/nci/core.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+wiphy_dbg	-> only with #define DEBUG or dynamic_debug
+wiphy_debug	-> always emitted at KERN_DEBUG
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 61fff42..d2198ce 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -70,14 +70,13 @@ int nci_get_conn_info_by_dest_type_params(struct nci_dev *ndev, u8 dest_type,
- 	struct nci_conn_info *conn_info;
- 
- 	list_for_each_entry(conn_info, &ndev->conn_info_list, list) {
--		if (conn_info->dest_type == dest_type) {
-+		if (conn_info && conn_info->dest_type == dest_type) {
- 			if (!params)
- 				return conn_info->conn_id;
--			if (conn_info) {
--				if (params->id == conn_info->dest_params->id &&
--				    params->protocol == conn_info->dest_params->protocol)
--					return conn_info->conn_id;
--			}
-+
-+			if (params->id == conn_info->dest_params->id &&
-+			    params->protocol == conn_info->dest_params->protocol)
-+				return conn_info->conn_id;
- 		}
- 	}
- 
--- 
-2.5.0
+Is there any real value in wiphy_debug?
+
+Should it just be converted to
+
+#define wiphy_debug	wiphy_dbg
+
+or maybe a global sed to remove it completely?
