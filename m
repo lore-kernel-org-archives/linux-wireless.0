@@ -1,146 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:59153 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751536AbdFILTc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 07:19:32 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V5 2/3] brcmfmac: add mutex to protect pno requests
-Date: Fri,  9 Jun 2017 12:19:21 +0100
-Message-Id: <1497007162-13013-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_131937_834274_A0C6A2C7)
-In-Reply-To: <1497007162-13013-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497007162-13013-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mail-eopbgr00066.outbound.protection.outlook.com ([40.107.0.66]:12501
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751515AbdF1UYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 16:24:19 -0400
+Subject: Re: [PATCH] ieee80211: update public action codes
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <1498601249-8372-1-git-send-email-peter.oh@bowerswilkins.com>
+ <d9aaa85b-49ac-494e-7979-afc42d309dc4@broadcom.com>
+Cc: johannes.berg@intel.com
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <ccd3208a-8235-ffbc-79cd-422115f5f3ab@bowerswilkins.com> (sfid-20170628_222425_338464_4AD4A57C)
+Date: Wed, 28 Jun 2017 13:24:06 -0700
+MIME-Version: 1.0
+In-Reply-To: <d9aaa85b-49ac-494e-7979-afc42d309dc4@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-The request references kept in pno are accessed in user-space context
-and in firmware event handler context. As such we need to protect it
-with a lock. As both context allow sleep a mutex seems appropriate.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 33 ++++++++++++++++------
- 1 file changed, 25 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index a420775..e488beb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -43,6 +43,7 @@
- struct brcmf_pno_info {
- 	int n_reqs;
- 	struct cfg80211_sched_scan_request *reqs[BRCMF_PNO_MAX_BUCKETS];
-+	struct mutex req_lock;
- };
- 
- #define ifp_to_pno(_ifp)	((_ifp)->drvr->config->pno)
-@@ -55,13 +56,17 @@ static int brcmf_pno_store_request(struct brcmf_pno_info *pi,
- 		return -ENOSPC;
- 
- 	brcmf_dbg(SCAN, "reqid=%llu\n", req->reqid);
-+	mutex_lock(&pi->req_lock);
- 	pi->reqs[pi->n_reqs++] = req;
-+	mutex_unlock(&pi->req_lock);
- 	return 0;
- }
- 
- static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- {
--	int i;
-+	int i, err = 0;
-+
-+	mutex_lock(&pi->req_lock);
- 
- 	/* find request */
- 	for (i = 0; i < pi->n_reqs; i++) {
-@@ -70,7 +75,8 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 	}
- 	/* request not found */
- 	if (WARN(i == pi->n_reqs, "reqid not found\n")) {
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto done;
- 	}
- 
- 	brcmf_dbg(SCAN, "reqid=%llu\n", reqid);
-@@ -78,14 +84,17 @@ static int brcmf_pno_remove_request(struct brcmf_pno_info *pi, u64 reqid)
- 
- 	/* if last we are done */
- 	if (!pi->n_reqs || i == pi->n_reqs)
--		return 0;
-+		goto done;
- 
- 	/* fill the gap with remaining requests */
- 	while (i <= pi->n_reqs - 1) {
- 		pi->reqs[i] = pi->reqs[i + 1];
- 		i++;
- 	}
--	return 0;
-+
-+done:
-+	mutex_unlock(&pi->req_lock);
-+	return err;
- }
- 
- static int brcmf_pno_channel_config(struct brcmf_if *ifp,
-@@ -488,6 +497,7 @@ int brcmf_pno_attach(struct brcmf_cfg80211_info *cfg)
- 		return -ENOMEM;
- 
- 	cfg->pno = pi;
-+	mutex_init(&pi->req_lock);
- 	return 0;
- }
- 
-@@ -500,6 +510,7 @@ void brcmf_pno_detach(struct brcmf_cfg80211_info *cfg)
- 	cfg->pno = NULL;
- 
- 	WARN_ON(pi->n_reqs);
-+	mutex_destroy(&pi->req_lock);
- 	kfree(pi);
- }
- 
-@@ -515,11 +526,15 @@ void brcmf_pno_wiphy_params(struct wiphy *wiphy, bool gscan)
- 
- u64 brcmf_pno_find_reqid_by_bucket(struct brcmf_pno_info *pi, u32 bucket)
- {
--	/* bucket appears to be gone */
--	if (bucket >= pi->n_reqs)
--		return 0;
-+	u64 reqid = 0;
-+
-+	mutex_lock(&pi->req_lock);
-+
-+	if (bucket < pi->n_reqs)
-+		reqid = pi->reqs[bucket]->reqid;
- 
--	return pi->reqs[bucket]->reqid;
-+	mutex_unlock(&pi->req_lock);
-+	return reqid;
- }
- 
- u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
-@@ -530,6 +545,7 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 	u32 bucket_map = 0;
- 	int i, j;
- 
-+	mutex_lock(&pi->req_lock);
- 	for (i = 0; i < pi->n_reqs; i++) {
- 		req = pi->reqs[i];
- 
-@@ -544,5 +560,6 @@ u32 brcmf_pno_get_bucket_map(struct brcmf_pno_info *pi,
- 			}
- 		}
- 	}
-+	mutex_unlock(&pi->req_lock);
- 	return bucket_map;
- }
--- 
-1.9.1
+On 06/28/2017 01:16 PM, Arend van Spriel wrote:
+> On 28-06-17 00:07, peter.oh@bowerswilkins.com wrote:
+>> From: Peter Oh <peter.oh@bowerswilkins.com>
+>>
+>> Update Public Action field values as updated in IEEE Std 802.11-2016,
+>> so that modules/drivers can refer it.
+> Hi Peter,
+>
+> I am pretty sure there are a lot of other definitions in the 802.11 spec
+> that are not in a linux header file. So are you planning on submitting
+> driver patches using the added definitions. Stuff is mostly added as needed.
+I have extra patches that uses the new values, but doubt if it's fit to 
+be upstream.
+> Regards,
+> Arend
