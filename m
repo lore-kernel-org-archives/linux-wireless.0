@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14892 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750859AbdFUNSc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35828 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751661AbdF1UN6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 09:18:32 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,
- 1/3] ath10k: Use complete VHT chan width for 160MHz workaround
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
-References: <20170609110750.14950-1-sven.eckelmann@openmesh.com>
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-CC: <ath10k@lists.infradead.org>, Ben Greear <greearb@candelatech.com>,
-        <linux-wireless@vger.kernel.org>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Message-ID: <afa6ec98d286450687ed30267026d7a8@euamsexm01a.eu.qualcomm.com> (sfid-20170621_151845_607195_5C23239A)
-Date: Wed, 21 Jun 2017 15:18:09 +0200
+        Wed, 28 Jun 2017 16:13:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:09 +0300
+Message-Id: <20170628201330.9432-11-luca@coelho.fi> (sfid-20170628_221414_072082_540895DE)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 10/31] iwlwifi: pcie: only apply retention workaround on 9000-series A-step
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> The ath10k firmware doesn't announce its VHT channel width capabilities in
-> the vht_cap information from the "service ready event" arguments. The
-> driver must therefore check whether the 160MHz short GI bit is set and
-> whether the driver still doesn't set the bits for the 160/80+80 MHz
-> capabilities.
-> 
-> The two bits for the channel width are a two bit integer and not two
-> separate bits which cannot be parsed without the knowledge of the other
-> bit. Using IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ (b10..) as a
-> mask for this task doesn't make any sense. The correct mask for the VHT
-> channel width should be used instead to make this check more readable.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> [sven.eckelmann@openmesh.com: separate 160Mhz workaround cleanup, add commit
->  message]
-> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Due to a hardware issue, certain power saving had to be
+disabled. However, this issue was fixed in B-step, so the
+workaround only needs to apply to A-step.
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-e509e5947708 ath10k: use complete VHT chan width for 160MHz workaround
-cc914a55006e ath10k: configure rxnss_override for QCA9984
-6824834946a6 ath10k: set rxnss_override for QCA9888
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index a5c0f69423d2..cd109740632d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -761,6 +761,15 @@ static void iwl_pcie_rx_hw_init(struct iwl_trans *trans, struct iwl_rxq *rxq)
+ 
+ void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable)
+ {
++	if (trans->cfg->device_family != IWL_DEVICE_FAMILY_9000)
++		return;
++
++	if (CSR_HW_REV_STEP(trans->hw_rev) != SILICON_A_STEP)
++		return;
++
++	if (!trans->cfg->integrated)
++		return;
++
+ 	/*
+ 	 * Turn on the chicken-bits that cause MAC wakeup for RX-related
+ 	 * values.
+@@ -768,12 +777,10 @@ void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable)
+ 	 * bug where shadow registers are not in the retention list and their
+ 	 * value is lost when NIC powers down
+ 	 */
+-	if (trans->cfg->integrated) {
+-		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
+-			    CSR_MAC_SHADOW_REG_CTRL_RX_WAKE);
+-		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTL2,
+-			    CSR_MAC_SHADOW_REG_CTL2_RX_WAKE);
+-	}
++	iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
++		    CSR_MAC_SHADOW_REG_CTRL_RX_WAKE);
++	iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTL2,
++		    CSR_MAC_SHADOW_REG_CTL2_RX_WAKE);
+ }
+ 
+ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
 -- 
-https://patchwork.kernel.org/patch/9778085/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
