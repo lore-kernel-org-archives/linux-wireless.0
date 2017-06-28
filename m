@@ -1,157 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdFUQjl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2017 12:39:41 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from ozlabs.org ([103.22.144.67]:52075 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751523AbdF1WFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 18:05:42 -0400
+Date: Thu, 29 Jun 2017 08:05:37 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux Next Mailing List <linux-next@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Linux NFC List <linux-nfc@lists.01.org>
+Subject: Re: Adding nfc-next to linux-next
+Message-ID: <20170629080537.2970e966@canb.auug.org.au> (sfid-20170629_000557_177766_30145252)
+In-Reply-To: <20170628072531.GM21214@zurbaran.ger.intel.com>
+References: <20170628072531.GM21214@zurbaran.ger.intel.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: fix REG_USTIME_TSF register definition
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170519150240.GA47825@ns.kevlo.org>
-References: <20170519150240.GA47825@ns.kevlo.org>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org
-Message-Id: <20170621152428.E3552607E4@smtp.codeaurora.org> (sfid-20170621_183947_273981_F87A6009)
-Date: Wed, 21 Jun 2017 15:24:28 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kevin Lo <kevlo@kevlo.org> wrote:
+Hi Samuel,
 
-> The REG_USTIME_TSF (US Time Tuning for TSF) definition of Realtek chips
-> should be 0x55C.
+On Wed, 28 Jun 2017 09:25:31 +0200 Samuel Ortiz <sameo@linux.intel.com> wrote:
+>
+> Could you please add the nfc-next tree to linux-next?
 > 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+> It's here:
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> index 15400ee6c04b..0c0d64aea651 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/reg.h
-> @@ -248,7 +248,6 @@
->  #define REG_RD_NAV_NXT				0x0544
->  #define REG_NAV_PROT_LEN			0x0546
->  #define REG_BCN_CTRL				0x0550
-> -#define REG_USTIME_TSF				0x0551
->  #define REG_MBID_NUM				0x0552
->  #define REG_DUAL_TSF_RST			0x0553
->  #define REG_BCN_INTERVAL			0x0554
-> @@ -256,6 +255,7 @@
->  #define REG_DRVERLYINT				0x0558
->  #define REG_BCNDMATIM				0x0559
->  #define REG_ATIMWND					0x055A
-> +#define REG_USTIME_TSF				0x055C
->  #define REG_BCN_MAX_ERR				0x055D
->  #define REG_RXTSF_OFFSET_CCK		0x055E
->  #define REG_RXTSF_OFFSET_OFDM		0x055F
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> index 1bb7ed35812d..9e3b58a5d2bb 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-> @@ -227,7 +227,6 @@
->  #define REG_RD_NAV_NXT				0x0544
->  #define REG_NAV_PROT_LEN			0x0546
->  #define REG_BCN_CTRL				0x0550
-> -#define REG_USTIME_TSF				0x0551
->  #define REG_MBID_NUM				0x0552
->  #define REG_DUAL_TSF_RST			0x0553
->  #define REG_BCN_INTERVAL			0x0554
-> @@ -235,6 +234,7 @@
->  #define REG_DRVERLYINT				0x0558
->  #define REG_BCNDMATIM				0x0559
->  #define REG_ATIMWND				0x055A
-> +#define REG_USTIME_TSF				0x055C
->  #define REG_BCN_MAX_ERR				0x055D
->  #define REG_RXTSF_OFFSET_CCK			0x055E
->  #define REG_RXTSF_OFFSET_OFDM			0x055F
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> index b354b95936e2..d4c4e76a9244 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/reg.h
-> @@ -255,7 +255,6 @@
->  #define REG_RD_NAV_NXT			0x0544
->  #define REG_NAV_PROT_LEN		0x0546
->  #define REG_BCN_CTRL			0x0550
-> -#define REG_USTIME_TSF			0x0551
->  #define REG_MBID_NUM			0x0552
->  #define REG_DUAL_TSF_RST		0x0553
->  #define REG_BCN_INTERVAL		0x0554
-> @@ -263,6 +262,7 @@
->  #define REG_DRVERLYINT			0x0558
->  #define REG_BCNDMATIM			0x0559
->  #define REG_ATIMWND			0x055A
-> +#define REG_USTIME_TSF			0x055C
->  #define REG_BCN_MAX_ERR			0x055D
->  #define REG_RXTSF_OFFSET_CCK		0x055E
->  #define REG_RXTSF_OFFSET_OFDM		0x055F
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> index 306059f9b9cc..30938cd9fce5 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/reg.h
-> @@ -217,7 +217,6 @@
->  #define REG_RD_NAV_NXT				0x0544
->  #define REG_NAV_PROT_LEN			0x0546
->  #define REG_BCN_CTRL				0x0550
-> -#define REG_USTIME_TSF				0x0551
->  #define REG_MBID_NUM				0x0552
->  #define REG_DUAL_TSF_RST			0x0553
->  #define REG_BCN_INTERVAL			0x0554
-> @@ -225,6 +224,7 @@
->  #define REG_DRVERLYINT				0x0558
->  #define REG_BCNDMATIM				0x0559
->  #define REG_ATIMWND					0x055A
-> +#define REG_USTIME_TSF				0x055C
->  #define REG_BCN_MAX_ERR				0x055D
->  #define REG_RXTSF_OFFSET_CCK		0x055E
->  #define REG_RXTSF_OFFSET_OFDM		0x055F
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> index 03581d2a5da0..95c4f8e206c7 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/reg.h
-> @@ -261,7 +261,6 @@
->  #define REG_RD_NAV_NXT				0x0544
->  #define REG_NAV_PROT_LEN			0x0546
->  #define REG_BCN_CTRL				0x0550
-> -#define REG_USTIME_TSF				0x0551
->  #define REG_MBID_NUM				0x0552
->  #define REG_DUAL_TSF_RST			0x0553
->  #define REG_BCN_INTERVAL			0x0554
-> @@ -269,6 +268,7 @@
->  #define REG_DRVERLYINT				0x0558
->  #define REG_BCNDMATIM				0x0559
->  #define REG_ATIMWND				0x055A
-> +#define REG_USTIME_TSF				0x055C
->  #define REG_BCN_MAX_ERR				0x055D
->  #define REG_RXTSF_OFFSET_CCK			0x055E
->  #define REG_RXTSF_OFFSET_OFDM			0x055F
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> index ed69dbe178ff..db8bc8a2de61 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/reg.h
-> @@ -267,7 +267,6 @@
->  #define REG_RD_NAV_NXT				0x0544
->  #define REG_NAV_PROT_LEN			0x0546
->  #define REG_BCN_CTRL				0x0550
-> -#define REG_USTIME_TSF				0x0551
->  #define REG_MBID_NUM				0x0552
->  #define REG_DUAL_TSF_RST			0x0553
->  #define REG_BCN_INTERVAL			0x0554
-> @@ -275,6 +274,7 @@
->  #define REG_DRVERLYINT				0x0558
->  #define REG_BCNDMATIM				0x0559
->  #define REG_ATIMWND				0x055A
-> +#define REG_USTIME_TSF				0x055C
->  #define REG_BCN_MAX_ERR				0x055D
->  #define REG_RXTSF_OFFSET_CCK			0x055E
->  #define REG_RXTSF_OFFSET_OFDM			0x055F
+> https://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git/
+> 
+> and the branch is the master one.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Added from today.
 
-9da96c5e7edd rtlwifi: fix REG_USTIME_TSF register definition
+Thanks for adding your subsystem tree as a participant of linux-next.  As
+you may know, this is not a judgement of your code.  The purpose of
+linux-next is for integration testing and to lower the impact of
+conflicts between subsystems in the next merge window. 
+
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+        Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and 
+     * destined for the current or next Linux merge window.
+
+Basically, this should be just what you would send to Linus (or ask him
+to fetch).  It is allowed to be rebased if you deem it necessary.
 
 -- 
-https://patchwork.kernel.org/patch/9737421/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+Stephen Rothwell 
+sfr@canb.auug.org.au
