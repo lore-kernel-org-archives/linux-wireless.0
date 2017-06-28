@@ -1,99 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:40783 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750899AbdFMPnc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 11:43:32 -0400
-From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
-To: "amitkarwar@gmail.com" <amitkarwar@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>
-Subject: Re: [PATCH 00/20] rsi driver enhancements
-Date: Tue, 13 Jun 2017 15:43:28 +0000
-Message-ID: <1497368606.32032.17.camel@synopsys.com> (sfid-20170613_174335_838662_43D5725A)
-References: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-In-Reply-To: <1497365348-2305-1-git-send-email-amit.karwar@redpinesignals.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga05.intel.com ([192.55.52.43]:33897 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751479AbdF1HXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 03:23:43 -0400
+Date: Wed, 28 Jun 2017 09:23:38 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfc@lists.01.org, devicetree@vger.kernel.org,
+        mgreer@animalcreek.com, colin.king@canonical.com, justin@kuvee.com
+Subject: Re: [PATCH v4] NFC: trf7970a: Correct register settings for 27MHz
+ clock
+Message-ID: <20170628071746.GL21214@zurbaran.ger.intel.com> (sfid-20170628_092416_763754_1D10407F)
+References: <1493328526-28395-1-git-send-email-geoff@kuvee.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1493328526-28395-1-git-send-email-geoff@kuvee.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGnCoEFtaXRrdW1hciwNCg0KT24gVHVlLCAyMDE3LTA2LTEzIGF0IDIwOjE4ICswNTMwLCBBbWl0
-a3VtYXIgS2Fyd2FyIHdyb3RlOg0KPiBUaGlzIHBhdGNoIHNlcmllcyBpbmNsdWRlcyBzb21lIGZp
-eGVzIGFuZCBlbmhhbmNlbWVudHMgaW4gVHggYW5kIFJ4DQo+IGRhdGEgcGF0aHMuIENvbm5lY3Rp
-b24gaW4gb3BlbiBzZWN1cml0eSBhbmQgZGF0YSB0cmFmZmljIGhhcyBiZWVuDQo+IHZlcmlmaWVk
-IHdpdGggU0RJTyBhbmQgVVNCIHZhcmlhbnRzIG9mIDkxMTMgY2hpcHNldC4NCj4gDQo+IEFtaXRr
-dW1hciBLYXJ3YXIgKDEpOg0KPiDCoCByc2k6IGNvcnJlY3QgdGhlIGxvZ2ljIG9mIGRlcml2aW5n
-IHF1ZXVlIG51bWJlcg0KPiANCj4gS2FydW4gRWFnYWxhcGF0aSAoMTQpOg0KPiDCoCByc2k6IGZp
-eCBzZGlvIGNhcmQgcmVzZXQgcHJvYmxlbQ0KPiDCoCByc2k6IGNoaXAgcmVzZXQgZm9yIFNESU8g
-aW50ZXJmYWNlDQo+IMKgIHJzaTogY29ycmVjdCBTRElPIGRpc2Nvbm5lY3QgcGF0aCBoYW5kbGlu
-Zw0KPiDCoCByc2k6IGNhcmQgcmVzZXQgZm9yIFVTQiBpbnRlcmZhY2UNCj4gwqAgcnNpOiBVU0Ig
-dHggaGVhZHJvb20gY2xlYW51cA0KPiDCoCByc2k6IHJlbmFtZSBVU0IgZW5kcG9pbnQgbWFjcm9z
-DQo+IMKgIHJzaTogY2hvb3NlIGNvcnJlY3QgZW5kcG9pbnQgYmFzZWQgb24gcXVldWUuDQo+IMKg
-IHJzaTogc2V0IGltbWVkaWF0ZSB3YWtldXAgYml0DQo+IMKgIHJzaTogc2VwYXJhdGUgZnVuY3Rp
-b24gZm9yIG1hbmFnZW1lbnQgcGFja2V0IGRlc2NyaXB0b3INCj4gwqAgcnNpOiByZW5hbWUgdmFy
-aWFibGUgaW5fc2Rpb19saXRlZmlfaXJxDQo+IMKgIHJzaTogT3B0aW1pc2Ugc2RpbyBjbGFpbSBh
-bmQgcmVsZWFzZSBob3N0DQo+IMKgIHJzaTogU0RJTyBSeCBwYWNrZXQgcHJvY2Vzc2luZyBlbmhh
-bmNlbWVudA0KPiDCoCByc2k6IHVzZSBzZXBhcmF0ZSBtdXRleCBsb2NrIGZvciByZWNlaXZlIHRo
-cmVhZA0KPiDCoCByc2k6IFJlbmFtZSBtdXRleCB0eF9yeGxvY2sgdG8gdGhlIHR4X2xvY2suDQo+
-IA0KPiBQcmFtZWVsYSBSYW5pIEdhcm5lcHVkaSAoMSk6DQo+IMKgIHJzaTogY2hhbmdlcyBpbiBl
-ZXByb20gcmVhZCBmcmFtZQ0KPiANCj4gcGF2YW5pLm11dGh5YWxhICg0KToNCj4gwqAgcnNpOiBt
-YW5hZ2VtZW50IGZyYW1lIGRlc2NyaXB0b3IgcHJlcGFyYXRpb24gY2xlYW51cA0KPiDCoCByc2k6
-IGRhdGEgcGFja2V0IGRlc2NyaXB0b3IgY29kZSBjbGVhbnVwDQo+IMKgIHJzaTogZGF0YSBwYWNr
-ZXQgZGVzY3JpcHRvciBlbmhhbmNlbWVudHMNCj4gwqAgcnNpOiBzZXBhcmF0ZSBmdW5jdGlvbiBm
-b3IgZGF0YSBwYWNrZXQgZGVzY3JpcHRvcg0KDQpGaW5hbGx5IHdpdGggdGhpcyBwYXRjaC1zZXQg
-SSBnb3QgbmV3IGZpcm13YXJlIFsxXSBzdWNjZXNzZnVsbHkgbG9hZGVkDQppbiByczkxMTMgbW9k
-dWxlIHZpYSBTRElPIChidXQgbm90IHZpYSBVU0IsIHJlYWQtb24pLg0KLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KcnNpXzkxeDogKioqKiog
-RmlybXdhcmUgTG9hZGluZyBzdWNjZXNzZnVsICoqKioqDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0+OC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCkFsc28gSSBtYXkgbm93IGV4ZWN1
-dGUgImlmY29uZmlnIHdsYW4wIHVwIiBzdWNjZXNmdWxseToNCi0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiMgaWZjb25maWcgd2xhbjANCnds
-YW4wwqDCoMKgwqDCoExpbmsgZW5jYXA6RXRoZXJuZXTCoMKgSFdhZGRyIDAwOjIzOkE3OjkwOjNG
-OjJDwqDCoA0KwqDCoMKgwqDCoMKgwqDCoMKgwqBVUCBCUk9BRENBU1QgTVVMVElDQVNUwqDCoE1U
-VToxNTAwwqDCoE1ldHJpYzoxDQrCoMKgwqDCoMKgwqDCoMKgwqDCoFJYIHBhY2tldHM6MCBlcnJv
-cnM6MCBkcm9wcGVkOjAgb3ZlcnJ1bnM6MCBmcmFtZTowDQrCoMKgwqDCoMKgwqDCoMKgwqDCoFRY
-IHBhY2tldHM6MCBlcnJvcnM6MCBkcm9wcGVkOjAgb3ZlcnJ1bnM6MCBjYXJyaWVyOjANCsKgwqDC
-oMKgwqDCoMKgwqDCoMKgY29sbGlzaW9uczowIHR4cXVldWVsZW46MTAwMMKgDQrCoMKgwqDCoMKg
-wqDCoMKgwqDCoFJYIGJ5dGVzOjAgKDAuMCBCKcKgwqBUWCBieXRlczowICgwLjAgQikNCi0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0KTmV4
-dCB0aGluZyBJIHRyaWVkIChhbmQgdGhhdCdzIHdoYXQgSSBkbyB3aXRoIGFueSBvdGhlciB3aXJl
-bGVzcw0KYWRhcHRlciB0aGF0IHN1cHBvcnRzIEFQIG1vZGUpIGlzIGFkZGluZyB3bGFuMCB0byBh
-IGJyaWRnZSB3aXRoIGV0aDANCndpdGggc3Vic2VxdWVudCBleGVjdXRpb24gb2YgaG9zdGFwZCB0
-byBnZXQgbWUgc28tY2FsbGVkIGR1bWIgQVAuDQoNClVzdWFsbHkgdGhhdCdzIHdoYXQgSSBkbzoN
-Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0N
-CmlmY29uZmlnIHdsYW4wIHVwDQppZmNvbmZpZyBldGgwIHVwDQpicmN0bCBhZGRiciBicjANCmJy
-Y3RsIGFkZGlmIGJyMCBldGgwDQppdyBkZXYgd2xhbjAgc2V0IDRhZGRyIG9uDQpicmN0bCBhZGRp
-ZiBicjAgd2xhbjANCmJyY3RsIHNob3cNCmlmY29uZmlnIGJyMCB1cA0KdWRoY3BjIC1pIGJyMA0K
-aG9zdGFwZCAtQiAvZXRjL2hvc3RhcGQuY29uZg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-PjgtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQpCdXQgbm93IHdpdGggcnM5MTEzIEkgZ290
-Og0KMSkNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0NCiMgaXcgZGV2IHdsYW4wIHNldCA0YWRkciBvbg0KY29tbWFuZCBmYWlsZWQ6IE9wZXJh
-dGlvbiBub3Qgc3VwcG9ydGVkICgtOTUpDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0+OC0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCjIpDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0+OC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQojIGhvc3RhcGQgLUIgL2V0Yy9ob3N0YXBk
-LmNvbmYNCkNvbmZpZ3VyYXRpb24gZmlsZTogL2V0Yy9ob3N0YXBkLmNvbmYNCm5sODAyMTE6IENv
-dWxkIG5vdCBjb25maWd1cmUgZHJpdmVyIG1vZGUNCm5sODAyMTE6IGRlaW5pdCBpZm5hbWU9d2xh
-bjAgZGlzYWJsZWRfMTFiX3JhdGVzPTANCm5sODAyMTEgZHJpdmVyIGluaXRpYWxpemF0aW9uIGZh
-aWxlZC4NCndsYW4wOiBpbnRlcmZhY2Ugc3RhdGUgVU5JTklUSUFMSVpFRC0+RElTQUJMRUQNCnds
-YW4wOiBBUC1ESVNBQkxFRMKgDQpob3N0YXBkX2ZyZWVfaGFwZF9kYXRhOiBJbnRlcmZhY2Ugd2xh
-bjAgd2Fzbid0IHN0YXJ0ZWQNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0NCg0KRm9yIGV4YW1wbGUgZXhhY3RseSB0aGUgc2FtZSBwcm9jZWR1
-cmUgd29ya3MgcGVyZmVjdGx5IGZpbmUgZm9yDQphdGg5a19odGMtYmFzZWQgVVNCIGRvbmdsZXMu
-DQoNCk5vdyBmb3IgVVNCLWNhc2UgdGhlcmUgc2VlbXMgdG8gcmVtYWluIHNpbWlsYXIgcHJvYmxl
-bSB3aXRoIGZpcm13YXJlIGxvYWRpbmc6DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0+OC0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQp1c2IgMS0xOiBuZXcgaGlnaC1zcGVlZCBVU0IgZGV2
-aWNlIG51bWJlciAyIHVzaW5nIGVoY2ktcGxhdGZvcm0NCnVzYiAxLTE6IGNvbmZpZyAxIGludGVy
-ZmFjZSAwIGFsdHNldHRpbmcgMCBlbmRwb2ludCAweDgzIGhhcyBhbiBpbnZhbGlkIGJJbnRlcnZh
-bCAyNTUsIGNoYW5naW5nIHRvIDExDQpyc2lfOTF4OiByc2lfcHJvYmU6IEluaXRpYWxpemVkIG9z
-IGludGYgb3BzDQpyc2lfOTF4OiByc2lfbG9hZF9maXJtd2FyZTogUkVHT1VUIHJlYWQgdGltZWRv
-dXQNCnJzaV85MXg6IHJzaV9sb2FkX2Zpcm13YXJlOiBTb2Z0IGJvb3QgbG9hZGVyIG5vdCBwcmVz
-ZW50DQpyc2lfOTF4OiByc2lfaGFsX2RldmljZV9pbml0OiBGYWlsZWQgdG8gbG9hZCBUQSBpbnN0
-cnVjdGlvbnMNCnJzaV85MXg6IHJzaV9wcm9iZTogRmFpbGVkIGluIGRldmljZSBpbml0DQpyc2lf
-OTF4OiByc2lfcHJvYmU6IEZhaWxlZCBpbiBwcm9iZS4uLkV4aXRpbmcNClJTSS1VU0IgV0xBTjog
-cHJvYmUgb2YgMS0xOjEuMCBmYWlsZWQgd2l0aCBlcnJvciAtMjINCi0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0KQW55IHRob3VnaHRzPw0K
-DQotQWxleGV5DQoNClsxXcKgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tl
-cm5lbC9naXQvZmlybXdhcmUvbGludXgtZmlybXdhcmUuZ2l0L3RyZWUvcnNpL3JzOTExM193bGFu
-X3FzcGkucnBz
+Hi Geoff,
+
+On Thu, Apr 27, 2017 at 05:28:46PM -0400, Geoff Lansberry wrote:
+> In prior commits the selected clock frequency does not propagate
+> correctly to what is written to the TRF7970A_MODULATOR_SYS_CLK_CTRL
+> register.
+> 
+> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+> ---
+>  drivers/nfc/trf7970a.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+Applied to nfc-next, thanks.
+
+Cheers,
+Samuel.
