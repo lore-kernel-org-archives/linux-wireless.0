@@ -1,32 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:1778 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751885AbdFMInb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 04:43:31 -0400
-Message-ID: <1497343318.22624.127.camel@linux.intel.com> (sfid-20170613_104334_979861_278C57BA)
-Subject: Re: [PATCH v2 00/12] NFC: clean up for ACPI GPIO usage
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Jun 2017 11:41:58 +0300
-In-Reply-To: <20170612205620.GC6272@zurbaran.ger.intel.com>
-References: <20170605202009.78561-1-andriy.shevchenko@linux.intel.com>
-         <1497281772.22624.124.camel@linux.intel.com>
-         <20170612205620.GC6272@zurbaran.ger.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:36052 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751501AbdF1UQ0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 16:16:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:30 +0300
+Message-Id: <20170628201330.9432-32-luca@coelho.fi> (sfid-20170628_221639_989990_6935BB73)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 31/31] iwlwifi: mvm: remove version 2 of paging command
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-06-12 at 22:56 +0200, Samuel Ortiz wrote:
-> On Mon, Jun 12, 2017 at 06:36:12PM +0300, Andy Shevchenko wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > Samuel, anything to comment?
-> 
-> I will get to my pending NFC patches during the week.
+Only a000-series devices were going to use this, but actually
+initialize using the context info, which includes paging, so
+this code is never invoked; remove it.
 
-Thanks!
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 25 ++--------------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 39 ++++++++-----------------
+ 2 files changed, 15 insertions(+), 49 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index f3ca61ff9f58..3e297c95e8ff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -326,7 +326,7 @@ enum iwl_legacy_cmds {
+ 
+ 	/**
+ 	 * @FW_PAGING_BLOCK_CMD:
+-	 * &struct iwl_fw_paging_cmd or &struct iwl_fw_paging_cmd_v1
++	 * &struct iwl_fw_paging_cmd
+ 	 */
+ 	FW_PAGING_BLOCK_CMD = 0x4f,
+ 
+@@ -999,25 +999,6 @@ struct iwl_nvm_access_cmd {
+ #define NUM_OF_FW_PAGING_BLOCKS	33 /* 32 for data and 1 block for CSS */
+ 
+ /**
+- * struct iwl_fw_paging_cmd_v1 - paging layout
+- *
+- * (FW_PAGING_BLOCK_CMD = 0x4f)
+- *
+- * Send to FW the paging layout in the driver.
+- *
+- * @flags: various flags for the command
+- * @block_size: the block size in powers of 2
+- * @block_num: number of blocks specified in the command.
+- * @device_phy_addr: virtual addresses from device side
+- */
+-struct iwl_fw_paging_cmd_v1 {
+-	__le32 flags;
+-	__le32 block_size;
+-	__le32 block_num;
+-	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
+-} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
+-
+-/**
+  * struct iwl_fw_paging_cmd - paging layout
+  *
+  * (FW_PAGING_BLOCK_CMD = 0x4f)
+@@ -1033,8 +1014,8 @@ struct iwl_fw_paging_cmd {
+ 	__le32 flags;
+ 	__le32 block_size;
+ 	__le32 block_num;
+-	__le64 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
+-} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_2 */
++	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
++} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
+ 
+ /*
+  * Fw items ID's
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 80c42ef981c0..79e7a7a285dc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -384,44 +384,29 @@ static int iwl_save_fw_paging(struct iwl_mvm *mvm,
+ /* send paging cmd to FW in case CPU2 has paging image */
+ static int iwl_send_paging_cmd(struct iwl_mvm *mvm, const struct fw_img *fw)
+ {
+-	union {
+-		struct iwl_fw_paging_cmd v2;
+-		struct iwl_fw_paging_cmd_v1 v1;
+-	} paging_cmd = {
+-		.v2.flags =
+-			cpu_to_le32(PAGING_CMD_IS_SECURED |
+-				    PAGING_CMD_IS_ENABLED |
+-				    (mvm->num_of_pages_in_last_blk <<
+-				    PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
+-		.v2.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
+-		.v2.block_num = cpu_to_le32(mvm->num_of_paging_blk),
++	struct iwl_fw_paging_cmd paging_cmd = {
++		.flags = cpu_to_le32(PAGING_CMD_IS_SECURED |
++				     PAGING_CMD_IS_ENABLED |
++				     (mvm->num_of_pages_in_last_blk <<
++				      PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
++		.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
++		.block_num = cpu_to_le32(mvm->num_of_paging_blk),
+ 	};
+-	int blk_idx, size = sizeof(paging_cmd.v2);
+-
+-	/* A bit hard coded - but this is the old API and will be deprecated */
+-	if (!iwl_mvm_has_new_tx_api(mvm))
+-		size = sizeof(paging_cmd.v1);
++	int blk_idx;
+ 
+ 	/* loop for for all paging blocks + CSS block */
+ 	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
+ 		dma_addr_t addr = mvm->fw_paging_db[blk_idx].fw_paging_phys;
++		__le32 phy_addr;
+ 
+ 		addr = addr >> PAGE_2_EXP_SIZE;
+-
+-		if (iwl_mvm_has_new_tx_api(mvm)) {
+-			__le64 phy_addr = cpu_to_le64(addr);
+-
+-			paging_cmd.v2.device_phy_addr[blk_idx] = phy_addr;
+-		} else {
+-			__le32 phy_addr = cpu_to_le32(addr);
+-
+-			paging_cmd.v1.device_phy_addr[blk_idx] = phy_addr;
+-		}
++		phy_addr = cpu_to_le32(addr);
++		paging_cmd.device_phy_addr[blk_idx] = phy_addr;
+ 	}
+ 
+ 	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(FW_PAGING_BLOCK_CMD,
+ 						    IWL_ALWAYS_LONG_GROUP, 0),
+-				    0, size, &paging_cmd);
++				    0, sizeof(paging_cmd), &paging_cmd);
+ }
+ 
+ /*
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.11.0
