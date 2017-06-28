@@ -1,37 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44526 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752320AbdFMG7X (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35770 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751574AbdF1UNw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 02:59:23 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [V3] brcmfmac: Fix grammar issue in error message
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170610094004.5agrd2w35cxy7eil@jirafa.cyrius.com>
-References: <20170610094004.5agrd2w35cxy7eil@jirafa.cyrius.com>
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Message-Id: <20170613065922.CC52F607CC@smtp.codeaurora.org> (sfid-20170613_085943_407134_73031F93)
-Date: Tue, 13 Jun 2017 06:59:22 +0000 (UTC)
+        Wed, 28 Jun 2017 16:13:52 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:03 +0300
+Message-Id: <20170628201330.9432-5-luca@coelho.fi> (sfid-20170628_221401_433836_81F22E31)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 04/31] iwlwifi: mvm: fix various "Excess ... description" kernel-doc warnings
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Michlmayr <tbm@cyrius.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Fix grammar issue in error message about ISO3166.
-> 
-> Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Fix various "Excess struct/union/enum/typedef member '...' description
+in '...'" warnings from kernel-doc, mostly caused by typos.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h   | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h  | 3 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h   | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h | 8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h   | 1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h      | 5 ++---
+ 6 files changed, 10 insertions(+), 13 deletions(-)
 
-a9507d5cfd52 brcmfmac: Fix grammar issue in error message
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+index 3463d1c577e8..2bfe4de6ac5a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+@@ -183,7 +183,7 @@ struct iwl_targ_addr {
+ /**
+  * struct iwl_proto_offload_cmd_v3_small - ARP/NS offload configuration
+  * @common: common/IPv4 configuration
+- * @target_ipv6_addr: target IPv6 addresses
++ * @targ_addrs: target IPv6 addresses
+  * @ns_config: NS offload configurations
+  */
+ struct iwl_proto_offload_cmd_v3_small {
+@@ -196,7 +196,7 @@ struct iwl_proto_offload_cmd_v3_small {
+ /**
+  * struct iwl_proto_offload_cmd_v3_large - ARP/NS offload configuration
+  * @common: common/IPv4 configuration
+- * @target_ipv6_addr: target IPv6 addresses
++ * @targ_addrs: target IPv6 addresses
+  * @ns_config: NS offload configurations
+  */
+ struct iwl_proto_offload_cmd_v3_large {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
+index 1d970bf0d735..932adaf575eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-mac.h
+@@ -331,7 +331,7 @@ struct iwl_ac_qos {
+  * @id_and_color: ID and color of the MAC
+  * @action: action to perform, one of FW_CTXT_ACTION_*
+  * @mac_type: one of &enum iwl_mac_types
+- * @tsd_id: TSF HW timer, one of &enum iwl_tsf_id
++ * @tsf_id: TSF HW timer, one of &enum iwl_tsf_id
+  * @node_addr: MAC address
+  * @bssid_addr: BSSID
+  * @cck_rates: basic rates available for CCK
+@@ -342,7 +342,6 @@ struct iwl_ac_qos {
+  * @filter_flags: combination of &enum iwl_mac_filter_flags
+  * @qos_flags: from &enum iwl_mac_qos_flags
+  * @ac: one iwl_mac_qos configuration for each AC
+- * @mac_specific: one of struct iwl_mac_data_*, according to mac_type
+  */
+ struct iwl_mac_ctx_cmd {
+ 	/* COMMON_INDEX_HDR_API_S_VER_1 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index ad7ab6dd86cb..02c321738e1e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -96,7 +96,7 @@ enum iwl_mac_context_info {
+  * @beacon_time_stamp: beacon at on-air rise
+  * @phy_flags: general phy flags: band, modulation, ...
+  * @channel: channel number
+- * @non_cfg_phy_buf: for various implementations of non_cfg_phy
++ * @non_cfg_phy: for various implementations of non_cfg_phy
+  * @rate_n_flags: RATE_MCS_*
+  * @byte_count: frame's byte-count
+  * @frame_time: frame's time on the air, based on byte count and frame rate
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
+index f8e92026bdc6..e752359841b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h
+@@ -137,7 +137,7 @@ enum iwl_scan_offload_band_selection {
+  * struct iwl_scan_offload_profile - SCAN_OFFLOAD_PROFILE_S
+  * @ssid_index:		index to ssid list in fixed part
+  * @unicast_cipher:	encryption algorithm to match - bitmap
+- * @aut_alg:		authentication algorithm to match - bitmap
++ * @auth_alg:		authentication algorithm to match - bitmap
+  * @network_type:	enum iwl_scan_offload_network_type
+  * @band_selection:	enum iwl_scan_offload_band_selection
+  * @client_bitmap:	clients waiting for match - enum scan_framework_client
+@@ -221,7 +221,7 @@ enum iwl_scan_channel_flags_lmac {
+  * struct iwl_scan_channel_cfg_lmac - SCAN_CHANNEL_CFG_S_VER2
+  * @flags:		bits 1-20: directed scan to i'th ssid
+  *			other bits &enum iwl_scan_channel_flags_lmac
+- * @channel_number:	channel number 1-13 etc
++ * @channel_num:	channel number 1-13 etc
+  * @iter_count:		scan iteration on this channel
+  * @iter_interval:	interval in seconds between iterations on one channel
+  */
+@@ -320,13 +320,13 @@ enum iwl_scan_priority_ext {
+ /**
+  * struct iwl_scan_req_lmac - SCAN_REQUEST_CMD_API_S_VER_1
+  * @reserved1: for alignment and future use
+- * @channel_num: num of channels to scan
++ * @n_channels: num of channels to scan
+  * @active-dwell: dwell time for active channels
+  * @passive-dwell: dwell time for passive channels
+  * @fragmented-dwell: dwell time for fragmented passive scan
+  * @extended_dwell: dwell time for channels 1, 6 and 11 (in certain cases)
+  * @reserved2: for alignment and future use
+- * @rx_chain_selct: PHY_RX_CHAIN_* flags
++ * @rx_chain_select: PHY_RX_CHAIN_* flags
+  * @scan_flags: &enum iwl_mvm_lmac_scan_flags
+  * @max_out_time: max time (in TU) to be out of associated channel
+  * @suspend_time: pause scan this long (TUs) when returning to service channel
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index a37c584b0b48..4a6b919f13de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -537,7 +537,6 @@ struct agg_tx_status {
+  * @tlc_info: TLC rate info
+  * @ra_tid: bits [3:0] = ra, bits [7:4] = tid
+  * @frame_ctrl: frame control
+- * @tx_queue: TX queue for this response
+  * @status: for non-agg:  frame status TX_STATUS_*
+  *	for agg: status of 1st frame, AGG_TX_STATE_*; other frame status fields
+  *	follow this one, up to frame_count. Length in @frame_count.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 7588b93f835a..612546334545 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -2184,7 +2184,7 @@ enum iwl_tdls_channel_switch_type {
+  *	200TU and the TDLS peer is to be given 25% of the time, the value
+  *	given will be 50TU, or 50 * 1024 if translated into microseconds.
+  * @switch_time: switch time the peer sent in its channel switch timing IE
+- * @switch_timout: switch timeout the peer sent in its channel switch timing IE
++ * @switch_timeout: switch timeout the peer sent in its channel switch timing IE
+  */
+ struct iwl_tdls_channel_switch_timing {
+ 	__le32 frame_timestamp; /* GP2 time of peer packet Rx */
+@@ -2456,7 +2456,7 @@ enum iwl_lqm_status {
+ 
+ /**
+  * struct iwl_link_qual_msrmnt_cmd - Link Quality Measurement command
+- * @cmd_operatrion: command operation to be performed (start or stop)
++ * @cmd_operation: command operation to be performed (start or stop)
+  *	as defined above.
+  * @mac_id: MAC ID the measurement applies to.
+  * @measurement_time: time of the total measurement to be performed, in uSec.
+@@ -2633,7 +2633,6 @@ struct iwl_nvm_get_info_phy {
+  * struct iwl_nvm_get_info_regulatory - regulatory information
+  * @lar_enabled: is LAR enabled
+  * @channel_profile: regulatory data of this channel
+- * @regulatory: regulatory data, see &enum iwl_nvm_channel_flags for data
+  */
+ struct iwl_nvm_get_info_regulatory {
+ 	__le32 lar_enabled;
 -- 
-https://patchwork.kernel.org/patch/9779763/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
