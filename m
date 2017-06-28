@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.135]:53572 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752774AbdFMGyi (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4565 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751516AbdF1QzO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 02:54:38 -0400
-Subject: Re: [PATCH] mwifiex: fixes the trivial print
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: amitkarwar@gmail.com, huxm@marvell.com, nishants@marvell.com,
-        gbhat@marvell.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        briannorris@chromium.org, jeffy.chen@rock-chips.com
-References: <1497008411-15223-1-git-send-email-wxt@rock-chips.com>
- <87poe8pfjs.fsf@purkki.adurom.net>
-From: Caesar Wang <wxt@rock-chips.com>
-Message-ID: <b5621250-c9c8-b413-0dae-88b326c729bf@rock-chips.com> (sfid-20170613_085554_833633_0DC667A3)
-Date: Tue, 13 Jun 2017 14:54:15 +0800
+        Wed, 28 Jun 2017 12:55:14 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87poe8pfjs.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=gbk; format=flowed
+Subject: Re: [1/3] ath9k: fixed an invalid pointer dereference
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
+References: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
+To: miaoqing pan <miaoqing@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+        <sssa@qti.qualcomm.com>, <giulio.genovese@gmail.com>,
+        Miaoqing Pan <miaoqing@codeaurora.org>
+Message-ID: <7b8401607efc4a26825013c283ad52fa@euamsexm01a.eu.qualcomm.com> (sfid-20170628_185518_032959_55A3F8A3)
+Date: Wed, 28 Jun 2017 18:55:06 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle,
+miaoqing pan <miaoqing@codeaurora.org> wrote:
 
-在 2017年06月13日 14:28, Kalle Valo 写道:
-> Caesar Wang <wxt@rock-chips.com> writes:
->
->> We have always met the unused log be printed as following.
->>
->> ...
->> [23193.523182] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
->> cannot find cfp by band 2    & channel=13 freq=0
->> [23378.633684] mwifiex_pcie 0000:01:00.0: mwifiex_get_cfp:
->> cannot find cfp by band 2    & channel=13 freq=0
->>
->> Maybe that's related to wifi regdom, since wifi default area
->> was US and didn't support 12~14 channels.
->>
->> As Frequencies:
->> * 2412 MHz [1] (30.0 dBm)
->> * 2417 MHz [2] (30.0 dBm)
->> * 2422 MHz [3] (30.0 dBm)
->> * 2427 MHz [4] (30.0 dBm)
->> * 2432 MHz [5] (30.0 dBm)
->> * 2437 MHz [6] (30.0 dBm)
->> * 2442 MHz [7] (30.0 dBm)
->> * 2447 MHz [8] (30.0 dBm)
->> * 2452 MHz [9] (30.0 dBm)
->> * 2457 MHz [10] (30.0 dBm)
->> * 2462 MHz [11] (30.0 dBm)
->> * 2467 MHz [12] (disabled)
->> * 2472 MHz [13] (disabled)
->> * 2484 MHz [14] (disabled)
->>
->> Signed-off-by: Caesar Wang <wxt@rock-chips.com>
->> ---
->>
->>   drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
->> index 1ff2205..6e29943 100644
->> --- a/drivers/net/wireless/marvell/mwifiex/cfp.c
->> +++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
->> @@ -350,7 +350,7 @@ mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
->>   		}
->>   	}
->>   	if (i == sband->n_channels) {
->> -		mwifiex_dbg(priv->adapter, ERROR,
->> +		mwifiex_dbg(priv->adapter, WARN,
->>   			    "%s: cannot find cfp by band %d\t"
->>   			    "& channel=%d freq=%d\n",
->>   			    __func__, band, channel, freq);
-> I don't see how this fixes anything, care to explain? And the title is
-> quite vague.
+> The bug was triggered when do suspend/resuming continuously
+> on Dell XPS L322X/0PJHXN version 9333 (2013) with kernel
+> 4.12.0-041200rc4-generic. But can't reproduce on DELL
+> E5440 + AR9300 PCIE chips.
+> 
+> The warning is caused by accessing invalid pointer sc->rng_task.
+> sc->rng_task is not be cleared after kthread_stop(sc->rng_task)
+> be called in ath9k_rng_stop(). Because the kthread is stopped
+> before ath9k_rng_kthread() be scheduled.
+> 
+> So set sc->rng_task to null after kthread_stop(sc->rng_task) to
+> resolve this issue.
+> 
+> WARNING: CPU: 0 PID: 984 at linux/kernel/kthread.c:71 kthread_stop+0xf1/0x100
+> CPU: 0 PID: 984 Comm: NetworkManager Not tainted 4.12.0-041200rc4-generic #201706042031
+> Hardware name: Dell Inc.          Dell System XPS L322X/0PJHXN, BIOS A09 05/15/2013
+> task: ffff950170fdda00 task.stack: ffffa22c01538000
+> RIP: 0010:kthread_stop+0xf1/0x100
+> RSP: 0018:ffffa22c0153b5b0 EFLAGS: 00010246
+> RAX: ffffffffa6257800 RBX: ffff950171b79560 RCX: 0000000000000000
+> RDX: 0000000080000000 RSI: 000000007fffffff RDI: ffff9500ac9a9680
+> RBP: ffffa22c0153b5c8 R08: 0000000000000000 R09: 0000000000000000
+> R10: ffffa22c0153b648 R11: ffff9501768004b8 R12: ffff9500ac9a9680
+> R13: ffff950171b79f70 R14: ffff950171b78780 R15: ffff9501749dc018
+> FS:  00007f0d6bfd5540(0000) GS:ffff95017f200000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007fc190161a08 CR3: 0000000232906000 CR4: 00000000001406f0
+> Call Trace:
+>   ath9k_rng_stop+0x1a/0x20 [ath9k]
+>   ath9k_stop+0x3b/0x1d0 [ath9k]
+>   drv_stop+0x33/0xf0 [mac80211]
+>   ieee80211_stop_device+0x43/0x50 [mac80211]
+>   ieee80211_do_stop+0x4f2/0x810 [mac80211]
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=196043
+> Reported-by: Giulio Genovese <giulio.genovese@gmail.com>
+> Tested-by: Giulio Genovese <giulio.genovese@gmail.com>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Sorry for the description maybe unclear.
-I'm assuming the print log is expected for marvel wifi driver. Do we 
-should use 'WARN' to instead of the 'ERROR' here.
+3 patches applied to ath-next branch of ath.git, thanks.
 
->
-> And I would rather fix the root cause, mwifiex folks please comment.
+07246c115801 ath9k: fix an invalid pointer dereference in ath9k_rng_stop()
+473becac4b31 ath9k: avoid potential freezing during random generator read
+f23cdfb3fe8f ath9k: Use mutex_lock to avoid potential race in start/stop rng
 
-Indeed, that's my expected.
+-- 
+https://patchwork.kernel.org/patch/9803211/
 
-
--Caesar
->
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
