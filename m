@@ -1,89 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40514 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751097AbdFSPQd (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33283 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752728AbdF1PMo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 11:16:33 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4.11 10/78] mac80211/wpa: use constant time memory comparison for MACs
-Date: Mon, 19 Jun 2017 23:15:10 +0800
-Message-Id: <20170619151029.781306005@linuxfoundation.org> (sfid-20170619_182013_134034_6A51AB45)
-In-Reply-To: <20170619151029.408399976@linuxfoundation.org>
-References: <20170619151029.408399976@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Wed, 28 Jun 2017 11:12:44 -0400
+Received: by mail-oi0-f67.google.com with SMTP id l83so5758920oif.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 08:12:43 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
+Date: Wed, 28 Jun 2017 10:12:23 -0500
+Message-Id: <20170628151225.22190-9-Larry.Finger@lwfinger.net> (sfid-20170628_171435_116646_590132B6)
+In-Reply-To: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
+References: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.11-stable review patch.  If anyone has any objections, please let me know.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-------------------
+Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
+the same definitions.
 
-From: Jason A. Donenfeld <Jason@zx2c4.com>
-
-commit 98c67d187db7808b1f3c95f2110dd4392d034182 upstream.
-
-Otherwise, we enable all sorts of forgeries via timing attack.
-
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- net/mac80211/wpa.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+v2 - no changes
+v3 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
+ 3 files changed, 19 insertions(+), 42 deletions(-)
 
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -17,6 +17,7 @@
- #include <asm/unaligned.h>
- #include <net/mac80211.h>
- #include <crypto/aes.h>
-+#include <crypto/algapi.h>
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 2ac989a4b2bb..02dff4c3f664 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -43,22 +43,6 @@
+ #define RT_SDIO_INTERFACE	3
+ #define DEV_BUS_TYPE		RT_PCI_INTERFACE
  
- #include "ieee80211_i.h"
- #include "michael.h"
-@@ -153,7 +154,7 @@ ieee80211_rx_h_michael_mic_verify(struct
- 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
- 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
- 	michael_mic(key, hdr, data, data_len, mic);
--	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-+	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
- 		goto mic_fail;
+-/* IC type */
+-#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
+-
+-#define IS_NEW_GENERATION_IC(adapter)		\
+-			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
+-#define IS_HARDWARE_TYPE_8812(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
+-#define IS_HARDWARE_TYPE_8821(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
+-#define IS_HARDWARE_TYPE_8723A(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
+-#define IS_HARDWARE_TYPE_8723B(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
+-#define IS_HARDWARE_TYPE_8192E(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
+-
+ #include "halbtc8192e2ant.h"
+ #include "halbtc8723b1ant.h"
+ #include "halbtc8723b2ant.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index 1b124eade846..5657b1e34ad0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
+ void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
  
- 	/* remove Michael MIC from payload */
-@@ -1048,7 +1049,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
- 				   skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
-@@ -1098,7 +1099,7 @@ ieee80211_crypto_aes_cmac_256_decrypt(st
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac_256(key->u.aes_cmac.tfm, aad,
- 				       skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
-@@ -1202,7 +1203,7 @@ ieee80211_crypto_aes_gmac_decrypt(struct
- 		if (ieee80211_aes_gmac(key->u.aes_gmac.tfm, aad, nonce,
- 				       skb->data + 24, skb->len - 24,
- 				       mic) < 0 ||
--		    memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		    crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_gmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
+-	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
++	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
+ 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
+ 				0xFFFFFFFF);
+ 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 4c6d01eb065d..f77acd329e0e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -314,35 +314,29 @@ enum hardware_type {
+ 	HARDWARE_TYPE_RTL8192EE,
+ 	HARDWARE_TYPE_RTL8821AE,
+ 	HARDWARE_TYPE_RTL8812AE,
++	HARDWARE_TYPE_RTL8822BE,
+ 
+ 	/* keep it last */
+ 	HARDWARE_TYPE_NUM
+ };
+ 
+-#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
+-#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+-#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
+-#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
+-#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
+-#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
+-#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
+-#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
+-#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
+-(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
++#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
++#define IS_NEW_GENERATION_IC(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
++#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
++#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
++#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
++#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
++#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
+ 
+ #define RX_HAL_IS_CCK_RATE(rxmcs)			\
+ 	((rxmcs) == DESC_RATE1M ||			\
+-- 
+2.12.3
