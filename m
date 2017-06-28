@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31634 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753447AbdFWPSk (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35604 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751652AbdF1L7o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Jun 2017 11:18:40 -0400
-Date: Fri, 23 Jun 2017 18:17:38 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@codeaurora.org>, Jingoo Han <jg1.han@samsung.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] libertas: Fix lbs_prb_rsp_limit_set()
-Message-ID: <20170623151738.qxncismrvd4yzzfr@mwanda> (sfid-20170623_171847_321623_F7F63582)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 28 Jun 2017 07:59:44 -0400
+Message-ID: <1498651173.22048.111.camel@coelho.fi> (sfid-20170628_140016_460473_D7AB2CAC)
+From: Luca Coelho <luca@coelho.fi>
+To: Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Golan Ben-Ami <golan.ben.ami@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 28 Jun 2017 14:59:33 +0300
+In-Reply-To: <20170627152458.1103403-1-arnd@arndb.de>
+References: <20170627152458.1103403-1-arnd@arndb.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: mvm: fix iwl_mvm_sar_find_wifi_pkg corner case
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kstrtoul() test was reversed so this always returned -ENOTSUPP.
+On Tue, 2017-06-27 at 17:24 +0200, Arnd Bergmann wrote:
+> gcc warns about what it thinks is an uninitialized variable
+> access:
+> 
+> drivers/net/wireless/intel/iwlwifi/mvm/fw.c: In function 'iwl_mvm_sar_find_wifi_pkg.isra.14':
+> drivers/net/wireless/intel/iwlwifi/mvm/fw.c:1102:5: error: 'wifi_pkg' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> That problem cannot really happen, as we check data->package.count
+> to ensure that the loop is entered at least once.
+> However, something that can indeed happen is returning an incorrect
+> wifi_pkg pointer in case none of the elements are what we are looking
+> for.
+> 
+> This modifies the loop again, to only return a correct object, and
+> to shut up that warning.
+> 
+> Fixes: c386dacb4ed6 ("iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-Fixes: 27d7f47756f4 ("net: wireless: replace strict_strtoul() with kstrtoul()")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Thanks, Arnd!
 
-diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-index eeeb892219aa..37ace5cb309d 100644
---- a/drivers/net/wireless/marvell/libertas/mesh.c
-+++ b/drivers/net/wireless/marvell/libertas/mesh.c
-@@ -233,8 +233,9 @@ static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
- 	memset(&mesh_access, 0, sizeof(mesh_access));
- 	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
- 
--	if (!kstrtoul(buf, 10, &retry_limit))
--		return -ENOTSUPP;
-+	ret = kstrtoul(buf, 10, &retry_limit);
-+	if (ret)
-+		return ret;
- 	if (retry_limit > 15)
- 		return -ENOTSUPP;
- 
+I've pushed this to our internal tree and it will eventually reach the
+mainline, via our normal upstreaming process.
+
+
+--
+Cheers,
+Luca.
