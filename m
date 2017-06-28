@@ -1,104 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33004 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751294AbdFEPaM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41617 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751489AbdF1QuK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 11:30:12 -0400
-Received: by mail-oi0-f65.google.com with SMTP id h4so22371182oib.0
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2017 08:30:12 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 8/9] rtlwifi: btcoex: remove unused display functions
-Date: Mon,  5 Jun 2017 10:29:58 -0500
-Message-Id: <20170605152959.27439-9-Larry.Finger@lwfinger.net> (sfid-20170605_173038_284312_95EBC1AB)
-In-Reply-To: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
-References: <20170605152959.27439-1-Larry.Finger@lwfinger.net>
+        Wed, 28 Jun 2017 12:50:10 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] ath9k: fixed an invalid pointer dereference
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
+References: <1498094669-6510-1-git-send-email-miaoqing@codeaurora.org>
+To: miaoqing pan <miaoqing@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+        <sssa@qti.qualcomm.com>, <giulio.genovese@gmail.com>,
+        Miaoqing Pan <miaoqing@codeaurora.org>
+Message-ID: <d8b3531d198b444db4735965f1dba877@euamsexm01a.eu.qualcomm.com> (sfid-20170628_185014_070507_2B736EB0)
+Date: Wed, 28 Jun 2017 18:49:53 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+miaoqing pan <miaoqing@codeaurora.org> wrote:
 
-These display functions are useless and will not be called in the
-future.
+> The bug was triggered when do suspend/resuming continuously
+> on Dell XPS L322X/0PJHXN version 9333 (2013) with kernel
+> 4.12.0-041200rc4-generic. But can't reproduce on DELL
+> E5440 + AR9300 PCIE chips.
+> 
+> The warning is caused by accessing invalid pointer sc->rng_task.
+> sc->rng_task is not be cleared after kthread_stop(sc->rng_task)
+> be called in ath9k_rng_stop(). Because the kthread is stopped
+> before ath9k_rng_kthread() be scheduled.
+> 
+> So set sc->rng_task to null after kthread_stop(sc->rng_task) to
+> resolve this issue.
+> 
+> WARNING: CPU: 0 PID: 984 at linux/kernel/kthread.c:71 kthread_stop+0xf1/0x100
+> CPU: 0 PID: 984 Comm: NetworkManager Not tainted 4.12.0-041200rc4-generic #201706042031
+> Hardware name: Dell Inc.          Dell System XPS L322X/0PJHXN, BIOS A09 05/15/2013
+> task: ffff950170fdda00 task.stack: ffffa22c01538000
+> RIP: 0010:kthread_stop+0xf1/0x100
+> RSP: 0018:ffffa22c0153b5b0 EFLAGS: 00010246
+> RAX: ffffffffa6257800 RBX: ffff950171b79560 RCX: 0000000000000000
+> RDX: 0000000080000000 RSI: 000000007fffffff RDI: ffff9500ac9a9680
+> RBP: ffffa22c0153b5c8 R08: 0000000000000000 R09: 0000000000000000
+> R10: ffffa22c0153b648 R11: ffff9501768004b8 R12: ffff9500ac9a9680
+> R13: ffff950171b79f70 R14: ffff950171b78780 R15: ffff9501749dc018
+> FS:  00007f0d6bfd5540(0000) GS:ffff95017f200000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007fc190161a08 CR3: 0000000232906000 CR4: 00000000001406f0
+> Call Trace:
+>   ath9k_rng_stop+0x1a/0x20 [ath9k]
+>   ath9k_stop+0x3b/0x1d0 [ath9k]
+>   drv_stop+0x33/0xf0 [mac80211]
+>   ieee80211_stop_device+0x43/0x50 [mac80211]
+>   ieee80211_do_stop+0x4f2/0x810 [mac80211]
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=196043
+> Reported-by: Giulio Genovese <giulio.genovese@gmail.com>
+> Tested-by: Giulio Genovese <giulio.genovese@gmail.com>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 38 ----------------------
- 1 file changed, 38 deletions(-)
+I Cced stable and improved the title a bit.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 5ad9c180bc28..53a43dfdecba 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -485,22 +485,6 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
- 	return true;
- }
- 
--static void halbtc_display_coex_statistics(struct btc_coexist *btcoexist)
--{
--}
--
--static void halbtc_display_bt_link_info(struct btc_coexist *btcoexist)
--{
--}
--
--static void halbtc_display_bt_fw_info(struct btc_coexist *btcoexist)
--{
--}
--
--static void halbtc_display_fw_pwr_mode_cmd(struct btc_coexist *btcoexist)
--{
--}
--
- /************************************************************
-  *		IO related function
-  ************************************************************/
-@@ -619,27 +603,6 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
- 					cmd_len, cmd_buf);
- }
- 
--static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type)
--{
--	struct btc_coexist *btcoexist =	(struct btc_coexist *)bt_context;
--	switch (disp_type) {
--	case BTC_DBG_DISP_COEX_STATISTICS:
--		halbtc_display_coex_statistics(btcoexist);
--		break;
--	case BTC_DBG_DISP_BT_LINK_INFO:
--		halbtc_display_bt_link_info(btcoexist);
--		break;
--	case BTC_DBG_DISP_BT_FW_VER:
--		halbtc_display_bt_fw_info(btcoexist);
--		break;
--	case BTC_DBG_DISP_FW_PWR_MODE_CMD:
--		halbtc_display_fw_pwr_mode_cmd(btcoexist);
--		break;
--	default:
--		break;
--	}
--}
--
- bool halbtc_under_ips(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -696,7 +659,6 @@ bool exhalbtc_initlize_variables(struct rtl_priv *adapter)
- 	btcoexist->btc_get_rf_reg = halbtc_get_rfreg;
- 
- 	btcoexist->btc_fill_h2c = halbtc_fill_h2c_cmd;
--	btcoexist->btc_disp_dbg_msg = halbtc_display_dbg_msg;
- 
- 	btcoexist->btc_get = halbtc_get;
- 	btcoexist->btc_set = halbtc_set;
 -- 
-2.13.0
+https://patchwork.kernel.org/patch/9803211/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
