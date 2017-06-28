@@ -1,79 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51008 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752088AbdFONc4 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35754 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751540AbdF1UNu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 09:32:56 -0400
-Subject: Re: Question on flushing and deauth frames
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-References: <10e690bb-b201-13e2-8c4d-1708bab37106@candelatech.com>
- <CANUX_P2LrrNzLWRtOERnSyu0q=C4u26V+iJbpxqUssYb80PzEg@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <485de26b-87ae-6977-dbb2-bc98378d3aeb@candelatech.com> (sfid-20170615_153324_169065_DC16E2ED)
-Date: Thu, 15 Jun 2017 06:32:54 -0700
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2LrrNzLWRtOERnSyu0q=C4u26V+iJbpxqUssYb80PzEg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 28 Jun 2017 16:13:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:01 +0300
+Message-Id: <20170628201330.9432-3-luca@coelho.fi> (sfid-20170628_221357_230011_3C3FD62B)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 02/31] iwlwifi: mvm: Add debugfs entry to retrieve SAR geographic profile
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
+Add a debugfs entry to get a verbose description of the power settings
+used in each band with the currently selected SAR geographic profile.
 
-On 06/14/2017 11:18 PM, Emmanuel Grumbach wrote:
->> ath10k is a bit weird about flushing frames, and at least my variant of the wave-2
->> firmware does not always put the deauth frame on the air when deleting stations.
->>
->> It will likely not be much fun to fix this.  I was wondering if the code below
->> from ieee80211_set_disassoc() could (easily?) be made to wait for a tx-status of the deauth frame
->> instead of trying to force a flush?
->
-> That's exactly what it does:
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 50 ++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-Well, the end effect is supposed to be the same, at least...
-
->>        /*
->>          * drop any frame before deauth/disassoc, this can be data or
->>          * management frame. Since we are disconnecting, we should not
->>          * insist sending these frames which can take time and delay
->>          * the disconnection and possible the roaming.
->>          */
->>         if (tx)
->>                 ieee80211_flush_queues(local, sdata, true);
->
-> Remove all the pending data frames from the queues to clear the way
-> for the deauth.
-> Note the drop=true
->
->>
->>         /* deauthenticate/disassociate now */
->>         if (tx || frame_buf)
->>                 ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
->>                                                reason, tx, frame_buf);
->>
->
-> Send the deauth.
->
->>         /* flush out frame - make sure the deauth was actually sent */
->>         if (tx)
->>                 ieee80211_flush_queues(local, sdata, false);
->>
->
-> Wait for the deauth (drop=false).
-> The question here is how ath10k implements the flush(, drop=false)
-
-Not well, it seems.  I don't think it has a good way to flush (drop=false)
-an individual vdev, though probably I could implement it.  And, I think that
-the packets in the mac80211 txqs might be difficult to flush.
-
-But, mac80211 gets a txstatus when the deauth is sent, so if it simply
-waited on that, it would not matter how flush is implemented.  And, it might
-try to re-send a time or two if getting the deauth through was worth the
-wait and the initial attempt(s) got a false txstatus.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index c2a1aeef74ec..c3ab13ee4097 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -336,6 +336,49 @@ static ssize_t iwl_dbgfs_nic_temp_read(struct file *file,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
++#ifdef CONFIG_ACPI
++static ssize_t iwl_dbgfs_sar_geo_profile_read(struct file *file,
++					      char __user *user_buf,
++					      size_t count, loff_t *ppos)
++{
++	struct iwl_mvm *mvm = file->private_data;
++	char buf[256];
++	int pos = 0;
++	int bufsz = sizeof(buf);
++	int tbl_idx;
++	u8 *value;
++
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
++	mutex_lock(&mvm->mutex);
++	tbl_idx = iwl_mvm_get_sar_geo_profile(mvm);
++	if (tbl_idx < 0) {
++		mutex_unlock(&mvm->mutex);
++		return tbl_idx;
++	}
++
++	if (!tbl_idx) {
++		pos = scnprintf(buf, bufsz,
++				"SAR geographic profile disabled\n");
++	} else {
++		value = &mvm->geo_profiles[tbl_idx - 1].values[0];
++
++		pos += scnprintf(buf + pos, bufsz - pos,
++				 "Use geographic profile %d\n", tbl_idx);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				 "2.4GHz:\n\tChain A offset: %hhd dBm\n\tChain B offset: %hhd dBm\n\tmax tx power: %hhd dBm\n",
++				 value[1], value[2], value[0]);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				 "5.2GHz:\n\tChain A offset: %hhd dBm\n\tChain B offset: %hhd dBm\n\tmax tx power: %hhd dBm\n",
++				 value[4], value[5], value[3]);
++	}
++	mutex_unlock(&mvm->mutex);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++#endif
++
+ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
+ 				       size_t count, loff_t *ppos)
+ {
+@@ -1572,6 +1615,9 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters_macs, 256);
+ #ifdef CONFIG_PM_SLEEP
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(d3_sram, 8);
+ #endif
++#ifdef CONFIG_ACPI
++MVM_DEBUGFS_READ_FILE_OPS(sar_geo_profile);
++#endif
+ 
+ static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
+ 				  size_t count, loff_t *ppos)
+@@ -1744,6 +1790,10 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	MVM_DEBUGFS_ADD_FILE(cont_recording, mvm->debugfs_dir, S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(indirection_tbl, mvm->debugfs_dir, S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(inject_packet, mvm->debugfs_dir, S_IWUSR);
++#ifdef CONFIG_ACPI
++	MVM_DEBUGFS_ADD_FILE(sar_geo_profile, dbgfs_dir, S_IRUSR);
++#endif
++
+ 	if (!debugfs_create_bool("enable_scan_iteration_notif",
+ 				 S_IRUSR | S_IWUSR,
+ 				 mvm->debugfs_dir,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.11.0
