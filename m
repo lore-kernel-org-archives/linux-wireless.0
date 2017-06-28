@@ -1,68 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56818 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751595AbdFHPlB (ORCPT
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:35754 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751225AbdF1E3E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 11:41:01 -0400
-Subject: Re: Wifi-Event for when initial 4-way completes?
-To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
-References: <854f7995-2cc0-3649-2c94-9ef3c219fb73@candelatech.com>
- <f1334e7f-1d86-00fd-cfba-7ce56b8a9f81@neratec.com>
- <bbf39c69-66a5-1e23-77df-1945d0036719@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <f46b90e9-5281-b9d5-d335-3ec4eb4c5c22@candelatech.com> (sfid-20170608_174104_567698_87011660)
-Date: Thu, 8 Jun 2017 08:41:00 -0700
+        Wed, 28 Jun 2017 00:29:04 -0400
+Received: by mail-ua0-f196.google.com with SMTP id j53so3666484uaa.2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 21:29:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <bbf39c69-66a5-1e23-77df-1945d0036719@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <80d08513-9da0-2840-dd15-0a3deace3dc7@lwfinger.net>
+References: <20170622120004.GA5783@symbol-HP-ZBook-15> <80d08513-9da0-2840-dd15-0a3deace3dc7@lwfinger.net>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Wed, 28 Jun 2017 09:59:03 +0530
+Message-ID: <CAFqt6zZRJOgFkTmWtmsROx3yg91avpAZ2Xsmd+S1-UjFxBXSYg@mail.gmail.com> (sfid-20170628_062908_334838_8177469B)
+Subject: Re: [PATCH v2] rtlwifi: Replace hardcode value with macro
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/2017 08:21 AM, Ben Greear wrote:
-> On 06/07/2017 12:25 AM, Wojciech Dubowik wrote:
->> Hello Ben,
+Hi Larry,
+
+On Thu, Jun 22, 2017 at 7:05 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 06/22/2017 07:00 AM, Souptick Joarder wrote:
 >>
->> I have been using this part of wpa_supplicant to notify that 4-Way handshake is completed.
+>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+>> and hw->max_rate_tries are replaced by macro.
 >>
->> around line 868 in wpa_supplicant.c
->>
->> #if defined(CONFIG_CTRL_IFACE) || !defined(CONFIG_NO_STDOUT_DEBUG)
->>                 wpa_msg(wpa_s, MSG_INFO, WPA_EVENT_CONNECTED "- Connection to "
->>                         MACSTR " completed [id=%d id_str=%s%s]",
->>                         MAC2STR(wpa_s->bssid),
->>                         ssid ? ssid->id : -1,
->>                         ssid && ssid->id_str ? ssid->id_str : "",
->>                         fils_hlp_sent ? " FILS_HLP_SENT" : "");
->> #endif /* CONFIG_CTRL_IFACE || !CONFIG_NO_STDOUT_DEBUG */
->>
->> You can pack whatever notification message inside the if statement.
->
-> I'm not sure that actually is correct?  For instance, I see this in a case where
-> WPA-2 was not succesfully negotiated (note the reason-2 disconnect)
->
-> IFNAME=sta9 <3>SME: Trying to authenticate with 00:0e:8e:f8:73:96 (SSID='ota-9k-2 space' freq=5180 MHz)
-> IFNAME=sta9 <3>Trying to associate with 00:0e:8e:f8:73:96 (SSID='ota-9k-2 space' freq=5180 MHz)
-> IFNAME=sta9 <3>Associated with 00:0e:8e:f8:73:96
-> IFNAME=sta9 <3>CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
-> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
-> IFNAME=sta9 <3>CTRL-EVENT-CONNECTED - Connection to 00:0e:8e:f8:73:96 completed [id=0 id_str=]
-> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
-> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
-> IFNAME=sta9 <3>WPA: Key negotiation completed with 00:0e:8e:f8:73:96 [PTK=CCMP GTK=CCMP]
-> IFNAME=sta9 <3>CTRL-EVENT-DISCONNECTED bssid=00:0e:8e:f8:73:96 reason=2
+>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+>> ---
+>> Changes in v2:
+>>     - Signed-off was missing in previous one.
 >
 >
-> Looks like I might need to add another message about EAPOL 4-way completing?
+> This patch includes a comment that is not needed, but it is OK.
+>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+> Larry
 
-Based on a sniff, it seems that the 3/4 was sent in this case, but the 4/4 was not
-received from the AP.  Maybe the 3/4 is (re)sent incorrectly sometimes....I have run into similar
-bugs in the past.
+Any further review is required for this patch or it will be merged to
+maintainer tree ?
 
-Thanks,
-Ben
+>
+>
+>>
+>>   drivers/net/wireless/realtek/rtlwifi/base.c | 6 +++---
+>>   drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
+>>   2 files changed, 5 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c
+>> b/drivers/net/wireless/realtek/rtlwifi/base.c
+>> index bdc3791..f45d093 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+>> @@ -422,9 +422,9 @@ static void _rtl_init_mac80211(struct ieee80211_hw
+>> *hw)
+>>         hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
+>>
+>>         /* TODO: Correct this value for our hw */
+>> -       /* TODO: define these hard code value */
+>> -       hw->max_listen_interval = 10;
+>> -       hw->max_rate_tries = 4;
+>> +       /* defined these hard code values */
+>> +       hw->max_listen_interval = MAX_LISTEN_INTERVAL;
+>> +       hw->max_rate_tries = MAX_RATE_TRIES;
+>>         /* hw->max_rates = 1; */
+>>         hw->sta_data_size = sizeof(struct rtl_sta_info);
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h
+>> b/drivers/net/wireless/realtek/rtlwifi/base.h
+>> index 02ff0c5..d03e198 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/base.h
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+>> @@ -65,6 +65,8 @@ enum ap_peer {
+>>   #define FRAME_OFFSET_ADDRESS3         16
+>>   #define FRAME_OFFSET_SEQUENCE         22
+>>   #define FRAME_OFFSET_ADDRESS4         24
+>> +#define MAX_LISTEN_INTERVAL             10
+>> +#define MAX_RATE_TRIES                  4
+>>
+>>   #define SET_80211_HDR_FRAME_CONTROL(_hdr, _val)               \
+>>         WRITEEF2BYTE(_hdr, _val)
+>> --
+>> 1.9.1
+>>
+>>
+>
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+-Souptick
