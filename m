@@ -1,54 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:34251 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751250AbdFYPn4 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35780 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751605AbdF1UNx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 11:43:56 -0400
-Received: by mail-ot0-f193.google.com with SMTP id p48so9379232otc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jun 2017 08:43:55 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+        Wed, 28 Jun 2017 16:13:53 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 06/10] rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
-Date: Sun, 25 Jun 2017 10:43:40 -0500
-Message-Id: <20170625154344.19213-7-Larry.Finger@lwfinger.net> (sfid-20170625_174403_592963_F83F3EEF)
-In-Reply-To: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
-References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Jun 2017 23:13:04 +0300
+Message-Id: <20170628201330.9432-6-luca@coelho.fi> (sfid-20170628_221408_751247_3C9D2225)
+In-Reply-To: <20170628201330.9432-1-luca@coelho.fi>
+References: <20170628201330.9432-1-luca@coelho.fi>
+Subject: [PATCH 05/31] iwlwifi: mvm: remove various unused command IDs/structs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is a common enumeration, so we use a common name.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v2 - no changes
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 28 -------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 11 ----------
+ 2 files changed, 39 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 77c3b186900e..4c6d01eb065d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -592,7 +592,7 @@ enum rtl_hal_state {
- 	_HAL_STATE_START = 1,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 612546334545..60f86997f8cf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -295,7 +295,6 @@ enum iwl_legacy_cmds {
+ 	HOT_SPOT_CMD = 0x53,
+ 	SCAN_OFFLOAD_COMPLETE = 0x6D,
+ 	SCAN_OFFLOAD_UPDATE_PROFILES_CMD = 0x6E,
+-	SCAN_OFFLOAD_CONFIG_CMD = 0x6f,
+ 	MATCH_FOUND_NOTIFICATION = 0xd9,
+ 	SCAN_ITERATION_COMPLETE = 0xe7,
+ 
+@@ -329,8 +328,6 @@ enum iwl_legacy_cmds {
+ 	 */
+ 	NVM_ACCESS_CMD = 0x88,
+ 
+-	SET_CALIB_DEFAULT_CMD = 0x8e,
+-
+ 	BEACON_NOTIFICATION = 0x90,
+ 	/**
+ 	 * @BEACON_TEMPLATE_CMD:
+@@ -364,8 +361,6 @@ enum iwl_legacy_cmds {
+ 	 */
+ 	REDUCE_TX_POWER_CMD = 0x9f,
+ 
+-	/* RF-KILL commands and notifications */
+-	CARD_STATE_CMD = 0xa0,
+ 	CARD_STATE_NOTIFICATION = 0xa1,
+ 
+ 	MISSED_BEACONS_NOTIFICATION = 0xa2,
+@@ -411,9 +406,6 @@ enum iwl_legacy_cmds {
+ 
+ 	MARKER_CMD = 0xcb,
+ 
+-	/* BT Coex */
+-	BT_COEX_PRIO_TABLE = 0xcc,
+-	BT_COEX_PROT_ENV = 0xcd,
+ 	/**
+ 	 * @BT_PROFILE_NOTIFICATION: &struct iwl_bt_coex_profile_notif
+ 	 */
+@@ -422,7 +414,6 @@ enum iwl_legacy_cmds {
+ 	 * @BT_CONFIG: &struct iwl_bt_coex_cmd
+ 	 */
+ 	BT_CONFIG = 0x9b,
+-	BT_COEX_UPDATE_SW_BOOST = 0x5a,
+ 	BT_COEX_UPDATE_CORUN_LUT = 0x5b,
+ 	BT_COEX_UPDATE_REDUCED_TXP = 0x5c,
+ 	/**
+@@ -439,11 +430,8 @@ enum iwl_legacy_cmds {
+ 	 */
+ 	REPLY_BEACON_FILTERING_CMD = 0xd2,
+ 
+-	/* DTS measurements */
+-	CMD_DTS_MEASUREMENT_TRIGGER = 0xdc,
+ 	DTS_MEASUREMENT_NOTIFICATION = 0xdd,
+ 
+-	REPLY_DEBUG_CMD = 0xf0,
+ 	LDBG_CONFIG_CMD = 0xf6,
+ 	DEBUG_LOG_MSG = 0xf7,
+ 
+@@ -484,12 +472,9 @@ enum iwl_legacy_cmds {
+ 	 * @WOWLAN_GET_STATUSES: response in &struct iwl_wowlan_status
+ 	 */
+ 	WOWLAN_GET_STATUSES = 0xe5,
+-	WOWLAN_TX_POWER_PER_DB = 0xe6,
+ 
+ 	/* and for NetDetect */
+ 	SCAN_OFFLOAD_PROFILES_QUERY_CMD = 0x56,
+-	SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD = 0x58,
+-	SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD = 0x59,
  };
  
--enum rtl_desc92_rate {
-+enum rtl_desc_rate {
- 	DESC_RATE1M = 0x00,
- 	DESC_RATE2M = 0x01,
- 	DESC_RATE5_5M = 0x02,
+ /* Please keep this enum *SORTED* by hex value.
+@@ -1580,19 +1565,6 @@ struct iwl_mfu_assert_dump_notif {
+ 	__le32   data[0];
+ } __packed; /*MFU_DUMP_ASSERT_API_S_VER_1*/
+ 
+-/**
+- * struct iwl_set_calib_default_cmd - set default value for calibration.
+- * ( SET_CALIB_DEFAULT_CMD = 0x8e )
+- * @calib_index: the calibration to set value for
+- * @length: of data
+- * @data: the value to set for the calibration result
+- */
+-struct iwl_set_calib_default_cmd {
+-	__le16 calib_index;
+-	__le16 length;
+-	u8 data[0];
+-} __packed; /* PHY_CALIB_OVERRIDE_VALUES_S */
+-
+ #define MAX_PORT_ID_NUM	2
+ #define MAX_MCAST_FILTERING_ADDRESSES 256
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 2e4bfe9f07ec..695d1aead89f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -357,9 +357,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(SCAN_OFFLOAD_ABORT_CMD),
+ 	HCMD_NAME(HOT_SPOT_CMD),
+ 	HCMD_NAME(SCAN_OFFLOAD_PROFILES_QUERY_CMD),
+-	HCMD_NAME(SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD),
+-	HCMD_NAME(SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD),
+-	HCMD_NAME(BT_COEX_UPDATE_SW_BOOST),
+ 	HCMD_NAME(BT_COEX_UPDATE_CORUN_LUT),
+ 	HCMD_NAME(BT_COEX_UPDATE_REDUCED_TXP),
+ 	HCMD_NAME(BT_COEX_CI),
+@@ -368,13 +365,11 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(PHY_DB_CMD),
+ 	HCMD_NAME(SCAN_OFFLOAD_COMPLETE),
+ 	HCMD_NAME(SCAN_OFFLOAD_UPDATE_PROFILES_CMD),
+-	HCMD_NAME(SCAN_OFFLOAD_CONFIG_CMD),
+ 	HCMD_NAME(POWER_TABLE_CMD),
+ 	HCMD_NAME(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION),
+ 	HCMD_NAME(REPLY_THERMAL_MNG_BACKOFF),
+ 	HCMD_NAME(DC2DC_CONFIG_CMD),
+ 	HCMD_NAME(NVM_ACCESS_CMD),
+-	HCMD_NAME(SET_CALIB_DEFAULT_CMD),
+ 	HCMD_NAME(BEACON_NOTIFICATION),
+ 	HCMD_NAME(BEACON_TEMPLATE_CMD),
+ 	HCMD_NAME(TX_ANT_CONFIGURATION_CMD),
+@@ -383,7 +378,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(STATISTICS_NOTIFICATION),
+ 	HCMD_NAME(EOSP_NOTIFICATION),
+ 	HCMD_NAME(REDUCE_TX_POWER_CMD),
+-	HCMD_NAME(CARD_STATE_CMD),
+ 	HCMD_NAME(CARD_STATE_NOTIFICATION),
+ 	HCMD_NAME(MISSED_BEACONS_NOTIFICATION),
+ 	HCMD_NAME(TDLS_CONFIG_CMD),
+@@ -398,8 +392,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(MCC_UPDATE_CMD),
+ 	HCMD_NAME(MCC_CHUB_UPDATE_CMD),
+ 	HCMD_NAME(MARKER_CMD),
+-	HCMD_NAME(BT_COEX_PRIO_TABLE),
+-	HCMD_NAME(BT_COEX_PROT_ENV),
+ 	HCMD_NAME(BT_PROFILE_NOTIFICATION),
+ 	HCMD_NAME(BCAST_FILTER_CMD),
+ 	HCMD_NAME(MCAST_FILTER_CMD),
+@@ -410,7 +402,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(OFFLOADS_QUERY_CMD),
+ 	HCMD_NAME(REMOTE_WAKE_CONFIG_CMD),
+ 	HCMD_NAME(MATCH_FOUND_NOTIFICATION),
+-	HCMD_NAME(CMD_DTS_MEASUREMENT_TRIGGER),
+ 	HCMD_NAME(DTS_MEASUREMENT_NOTIFICATION),
+ 	HCMD_NAME(WOWLAN_PATTERNS),
+ 	HCMD_NAME(WOWLAN_CONFIGURATION),
+@@ -418,11 +409,9 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(WOWLAN_TKIP_PARAM),
+ 	HCMD_NAME(WOWLAN_KEK_KCK_MATERIAL),
+ 	HCMD_NAME(WOWLAN_GET_STATUSES),
+-	HCMD_NAME(WOWLAN_TX_POWER_PER_DB),
+ 	HCMD_NAME(SCAN_ITERATION_COMPLETE),
+ 	HCMD_NAME(D0I3_END_CMD),
+ 	HCMD_NAME(LTR_CONFIG),
+-	HCMD_NAME(REPLY_DEBUG_CMD),
+ };
+ 
+ /* Please keep this array *SORTED* by hex value.
 -- 
-2.12.3
+2.11.0
