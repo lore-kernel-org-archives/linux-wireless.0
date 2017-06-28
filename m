@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43732 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750914AbdFHMHG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2017 08:07:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
-References: <20170608122759.7ffda0c3@canb.auug.org.au>
-        <3594bd0d-e2b4-a380-ba06-8dedbbcbe11f@quantenna.com>
-        <20170608125737.1e09c36d@canb.auug.org.au>
-Date: Thu, 08 Jun 2017 15:07:00 +0300
-In-Reply-To: <20170608125737.1e09c36d@canb.auug.org.au> (Stephen Rothwell's
-        message of "Thu, 8 Jun 2017 12:57:37 +1000")
-Message-ID: <87lgp24ra3.fsf@codeaurora.org> (sfid-20170608_140800_848204_D96688C0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:55476 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751225AbdF1HV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Jun 2017 03:21:58 -0400
+Message-ID: <1498634512.12531.1.camel@sipsolutions.net> (sfid-20170628_092240_947951_23386F85)
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 28 Jun 2017 09:21:52 +0200
+In-Reply-To: <20170627195003.GA93674@google.com> (sfid-20170627_215010_204503_7ACDE0D1)
+References: <20170525001119.64791-1-briannorris@chromium.org>
+         <20170525001119.64791-5-briannorris@chromium.org>
+         <87fufk2hmm.fsf@purkki.adurom.net> <20170601173954.GA138807@google.com>
+         <87inka77md.fsf@codeaurora.org> <20170621174829.GA92340@google.com>
+         <1498136389.2246.7.camel@sipsolutions.net>
+         <20170627195003.GA93674@google.com> (sfid-20170627_215010_204503_7ACDE0D1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+Hi Brian,
 
-> Hi Igor,
->
-> On Wed, 7 Jun 2017 19:43:18 -0700 Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
->>
->> thanks. As I understand, you've applied this patch during a merge and no 
->> further actions are required, correct?
->
-> Dave Miller will need to apply that patch (or something similar) when
-> he merges the wireless-drivers-next tree into the net-next tree.  I
-> will keep applying the patch each day until then.
+> Wow, that's not exactly simple code; I expect it could be pretty
+> difficult to get that right today on mwifiex. 
 
-Thanks, I'll remind Dave about this when i submit the pull request (very
-soon now).
+Yeah, I have no doubt. You'd probably have to track a lot of state that
+you just pass down to the firmware too, and possibly can't even track
+some state that the firmware derives itself (like for example PNs for
+keys)
 
--- 
-Kalle Valo
+> The current approach
+> actually should be *easier* (for the kernel side) to avoid bugs, as
+> it should be basically the same thing as 'rmmod'. Nonetheless, there
+> are plenty of bugs.
+
+:-)
+
+johannes
