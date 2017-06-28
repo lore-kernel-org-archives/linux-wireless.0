@@ -1,79 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fed1rmfepo202.cox.net ([68.230.241.147]:57107 "EHLO
-        fed1rmfepo202.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751135AbdFBWd5 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35487 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752759AbdF1PMo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2017 18:33:57 -0400
-Received: from fed1rmimpo109.cox.net ([68.230.241.158])
-          by fed1rmfepo202.cox.net
-          (InterMail vM.8.01.05.28 201-2260-151-171-20160122) with ESMTP
-          id <20170602223356.UJQZ26070.fed1rmfepo202.cox.net@fed1rmimpo109.cox.net>
-          for <linux-wireless@vger.kernel.org>;
-          Fri, 2 Jun 2017 18:33:56 -0400
-From: "Peter S. Housel" <housel@acm.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Christian Daudt <csd@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Florian Westphal <fw@strlen.de>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        "Peter S. Housel" <housel@acm.org>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2] brcmfmac: Fix glom_skb leak in brcmf_sdiod_recv_chain
-Date: Fri,  2 Jun 2017 15:29:25 -0700
-Message-Id: <1496442569-11307-1-git-send-email-housel@acm.org> (sfid-20170603_003427_823479_8C56F7CF)
-In-Reply-To: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
-References: <CA+8PC_e8HdkBw4DfGUPO0BbM-W5wftK=i6_vjwFTmS7=axyFUw@mail.gmail.com>
+        Wed, 28 Jun 2017 11:12:44 -0400
+Received: by mail-oi0-f65.google.com with SMTP id l130so5799588oib.2
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 08:12:44 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v3 04/10] rtlwifi: add amplifier type for 8812ae
+Date: Wed, 28 Jun 2017 10:12:19 -0500
+Message-Id: <20170628151225.22190-5-Larry.Finger@lwfinger.net> (sfid-20170628_171351_598861_9EB8221E)
+In-Reply-To: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
+References: <20170628151225.22190-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An earlier change to this function (3bdae810721b) fixed a leak in the
-case of an unsuccessful call to brcmf_sdiod_buffrw(). However, the
-glom_skb buffer, used for emulating a scattering read, is never used
-or referenced after its contents are copied into the destination
-buffers, and therefore always needs to be freed by the end of the
-function.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Fixes: 3bdae810721b ("brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain")
-Fixes: a413e39a38573 ("brcmfmac: fix brcmf_sdcard_recv_chain() for host without sg support")
-Signed-off-by: Peter S. Housel <housel@acm.org>
+With correct amplifier_type, the phy praser can choose correct parameters.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+v2 - no changes
+v3 - no changes
+---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 41 +++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9b970dc..30fb54e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -727,15 +727,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 			return -ENOMEM;
- 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
- 					 glom_skb);
--		if (err) {
--			brcmu_pkt_buf_free_skb(glom_skb);
--			goto done;
--		}
--
--		skb_queue_walk(pktq, skb) {
--			memcpy(skb->data, glom_skb->data, skb->len);
--			skb_pull(glom_skb, skb->len);
-+		if (!err) {
-+			skb_queue_walk(pktq, skb) {
-+				memcpy(skb->data, glom_skb->data, skb->len);
-+				skb_pull(glom_skb, skb->len);
-+			}
- 		}
-+		brcmu_pkt_buf_free_skb(glom_skb);
- 	} else
- 		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, false, addr,
- 					    pktq);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 2bc6bace069c..8f4abb3d7669 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -2966,6 +2966,44 @@ static void _rtl8812ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 	}
+ }
+ 
++static void _rtl8812ae_read_amplifier_type(struct ieee80211_hw *hw, u8 *hwinfo,
++					   bool autoload_fail)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
++
++	u8 ext_type_pa_2g_a  = (hwinfo[0xBD] & BIT(2))      >> 2; /* 0xBD[2] */
++	u8 ext_type_pa_2g_b  = (hwinfo[0xBD] & BIT(6))      >> 6; /* 0xBD[6] */
++	u8 ext_type_pa_5g_a  = (hwinfo[0xBF] & BIT(2))      >> 2; /* 0xBF[2] */
++	u8 ext_type_pa_5g_b  = (hwinfo[0xBF] & BIT(6))      >> 6; /* 0xBF[6] */
++	/* 0xBD[1:0] */
++	u8 ext_type_lna_2g_a = (hwinfo[0xBD] & (BIT(1) | BIT(0))) >> 0;
++	/* 0xBD[5:4] */
++	u8 ext_type_lna_2g_b = (hwinfo[0xBD] & (BIT(5) | BIT(4))) >> 4;
++	/* 0xBF[1:0] */
++	u8 ext_type_lna_5g_a = (hwinfo[0xBF] & (BIT(1) | BIT(0))) >> 0;
++	/* 0xBF[5:4] */
++	u8 ext_type_lna_5g_b = (hwinfo[0xBF] & (BIT(5) | BIT(4))) >> 4;
++
++	_rtl8812ae_read_pa_type(hw, hwinfo, autoload_fail);
++
++	/* [2.4G] Path A and B are both extPA */
++	if ((rtlhal->pa_type_2g & (BIT(5) | BIT(4))) == (BIT(5) | BIT(4)))
++		rtlhal->type_gpa  = ext_type_pa_2g_b  << 2 | ext_type_pa_2g_a;
++
++	/* [5G] Path A and B are both extPA */
++	if ((rtlhal->pa_type_5g & (BIT(1) | BIT(0))) == (BIT(1) | BIT(0)))
++		rtlhal->type_apa  = ext_type_pa_5g_b  << 2 | ext_type_pa_5g_a;
++
++	/* [2.4G] Path A and B are both extLNA */
++	if ((rtlhal->lna_type_2g & (BIT(7) | BIT(3))) == (BIT(7) | BIT(3)))
++		rtlhal->type_glna = ext_type_lna_2g_b << 2 | ext_type_lna_2g_a;
++
++	/* [5G] Path A and B are both extLNA */
++	if ((rtlhal->lna_type_5g & (BIT(7) | BIT(3))) == (BIT(7) | BIT(3)))
++		rtlhal->type_alna = ext_type_lna_5g_b << 2 | ext_type_lna_5g_a;
++}
++
+ static void _rtl8821ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
+ 				    bool autoload_fail)
+ {
+@@ -3114,7 +3152,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
+ 					       hwinfo);
+ 
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
+-		_rtl8812ae_read_pa_type(hw, hwinfo, rtlefuse->autoload_failflag);
++		_rtl8812ae_read_amplifier_type(hw, hwinfo,
++					       rtlefuse->autoload_failflag);
+ 		_rtl8812ae_read_bt_coexist_info_from_hwpg(hw,
+ 				rtlefuse->autoload_failflag, hwinfo);
+ 	} else {
 -- 
-2.7.4
+2.12.3
