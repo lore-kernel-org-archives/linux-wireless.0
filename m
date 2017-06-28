@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:35600 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750993AbdFTN0J (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48520 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751551AbdF1SS2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2017 09:26:09 -0400
-Received: by mail-qk0-f177.google.com with SMTP id a199so57130724qkb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2017 06:26:09 -0700 (PDT)
+        Wed, 28 Jun 2017 14:18:28 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87vansxax3.fsf@kamboji.qca.qualcomm.com>
-References: <1496412785-8720-1-git-send-email-amit.karwar@redpinesignals.com>
- <1496412785-8720-3-git-send-email-amit.karwar@redpinesignals.com>
- <87lgowpeno.fsf@purkki.adurom.net> <CAEhWJFmzEotu+MpKaHqtXFnWyQWsekk23+Pj-3z8oEVmy2Z2DQ@mail.gmail.com>
- <87zidb2aq5.fsf@kamboji.qca.qualcomm.com> <CAEhWJFmXJSJNJxppNtfK-vTRaq1vCZckWChW++TCfj8j8-ZwAg@mail.gmail.com>
- <87r2yle2en.fsf@codeaurora.org> <CAEhWJFkxg1FnW65E3k-i6sWe1S67gQhr8=9zAZCiyNo4b6Ag6A@mail.gmail.com>
- <87vansxax3.fsf@kamboji.qca.qualcomm.com>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Tue, 20 Jun 2017 18:56:08 +0530
-Message-ID: <CAEhWJFmdMKU88e6zMPkE2xiQhL+RrfoU6PQdxw8oTf4=Sn8P8Q@mail.gmail.com> (sfid-20170620_152613_859044_A0D2B3E8)
-Subject: Re: [PATCH 2/6] rsi: use enum for FSM states
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: libertas: Fix lbs_prb_rsp_limit_set()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170623151738.qxncismrvd4yzzfr@mwanda>
+References: <20170623151738.qxncismrvd4yzzfr@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Jingoo Han <jg1.han@samsung.com>, libertas-dev@lists.infradead.org,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20170628181822.742BF60AD6@smtp.codeaurora.org> (sfid-20170628_201841_215195_344DCFFE)
+Date: Wed, 28 Jun 2017 18:18:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 19, 2017 at 8:49 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> On Thu, Jun 15, 2017 at 8:14 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->>>
->>>> On Wed, Jun 14, 2017 at 2:43 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>>> amit karwar <amitkarwar@gmail.com> writes:
->>>>>
->>>>>> On Tue, Jun 13, 2017 at 12:17 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>>>>
->>>>>>> Also your name in patchwork is not capitalised (patchwork is idiotic and
->>>>>>> takes the name from patchwork user data and not from the patch):
->>>>>>>
->>>>>>>       [1/6] rsi: add usb RS9113 chipset support 2017-06-02 amit
->>>>>>> karwar New
->>>>>>>       [2/6] rsi: use enum for FSM states 2017-06-02 amit karwar New
->>>>>>>       [3/6] rsi: Register interrupt handler before firmware load
->>>>>>> 2017-06-02 amit karwar New
->>>>>>>       [4/6] rsi: receive path enhancement for RS9113 2017-06-02 amit
->>>>>>> karwar New
->>>>>>>       [5/6] rsi: configure new boot parameters to device 2017-06-02
->>>>>>> amit karwar New
->>>>>>>       [6/6] rsi: add tx frame for common device configuration
->>>>>>> 2017-06-02 amit karwar New
->>>>>>>
->>>>>>> To fix that could you please register to patchwork and capitalise your
->>>>>>> name correctly? You have only one chance, patchwork doesn't allow users
->>>>>>> edit the name afterwards, so don't do any typos :)
->>>>>>
->>>>>> Thanks. I have registered with patchwork and corrected my name.
->>>>>
->>>>> What address did you use? Patchwork still shows your name all lower:
->>>>>
->>>>> https://patchwork.kernel.org/project/linux-wireless/list/?submitter=173645
->>>>>
->>>>> I suspect you didn't register with gmail.com, but with some other
->>>>> address. I recommend that you link all your email addresses, including
->>>>> gmail.com, to the same patchwork account and hopefully that fixes it.
->>>>> You should be able to do that from the profile page in patchwork.
->>>>
->>>> I had registered with my gmail id. Also, other email id has also been
->>>> linked to patchwork. But still patchwork took previous user name.
->>>> I could not find a way to check my name in patchwork database after
->>>> login. I have now corrected my display name in gmail's setting.
->>>
->>> Good, thanks. This name format bug in patchwork is really annoying, I'm
->>> suffering from frequently. Let's see how your next submission goes and
->>> hopefully we can sort it out.
->>
->> I just submitted a patch series. But patchwork is still showing older name.
->
-> I think the best is that you now report this to kernel.org admins:
->
-> https://korg.wiki.kernel.org/userdoc/support
->
-> Hopefully they can easily fix it directly in the database.
->
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-Thanks for the pointers. I have dropped an email to helpdesk for this issue.
+> The kstrtoul() test was reversed so this always returned -ENOTSUPP.
+> 
+> Fixes: 27d7f47756f4 ("net: wireless: replace strict_strtoul() with kstrtoul()")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Reviewed-by: James Cameron <quozl@laptop.org>
+> 
+> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+> index eeeb892219aa..37ace5cb309d 100644
+> --- a/drivers/net/wireless/marvell/libertas/mesh.c
+> +++ b/drivers/net/wireless/marvell/libertas/mesh.c
+> @@ -233,8 +233,9 @@ static ssize_t lbs_prb_rsp_limit_set(struct device *dev,
+>  	memset(&mesh_access, 0, sizeof(mesh_access));
+>  	mesh_access.data[0] = cpu_to_le32(CMD_ACT_SET);
+>  
+> -	if (!kstrtoul(buf, 10, &retry_limit))
+> -		return -ENOTSUPP;
+> +	ret = kstrtoul(buf, 10, &retry_limit);
+> +	if (ret)
+> +		return ret;
+>  	if (retry_limit > 15)
+>  		return -ENOTSUPP;
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+69551f5f370c libertas: Fix lbs_prb_rsp_limit_set()
+
+-- 
+https://patchwork.kernel.org/patch/9806775/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
