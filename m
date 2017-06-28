@@ -1,76 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55198 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbdFAJPu (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47120 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750934AbdF1G7x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 05:15:50 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Wed, 28 Jun 2017 02:59:53 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v5S6ntXs002888
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 23:59:52 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2b9negs0ff-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2017 23:59:52 -0700
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
-References: <20170525001119.64791-1-briannorris@chromium.org>
-        <20170525001119.64791-5-briannorris@chromium.org>
-Date: Thu, 01 Jun 2017 12:15:45 +0300
-In-Reply-To: <20170525001119.64791-5-briannorris@chromium.org> (Brian Norris's
-        message of "Wed, 24 May 2017 17:11:10 -0700")
-Message-ID: <87fufk2hmm.fsf@purkki.adurom.net> (sfid-20170601_111618_794676_51BF559C)
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: don not update MCS set from hostapd
+Date: Wed, 28 Jun 2017 12:26:58 +0530
+Message-ID: <1498633018-9059-1-git-send-email-gbhat@marvell.com> (sfid-20170628_085956_802146_2FF0A9BE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+We should not copy the MCS set from hostapd RX-STBC. We
+have to just use the MCS set supported by the hardware.
+This fixes an issue, where mwifiex is advertising wrong
+MCS sets in beacons.
 
-> In general, it's helpful to use the same code for device removal as for
-> device reset, as this tends to have fewer bugs. Let's move the wiphy
-> unregistration code into the common reset and removal code.
->
-> In particular, it's very hard to properly handle the reset sequence when
-> something fails. Currently, if mwifiex_reinit_sw() fails, we've failed
-> to unregister the associated wiphy, and so running something as simple
-> as "iw phy" can trigger an OOPS, as the wiphy still has hooks back into
-> freed mwifiex data structures. For example, KASAN complained:
->
-> [... see reset fail for other reasons ...]
-> [ 1184.821158] mwifiex_pcie 0000:01:00.0: info: dnld wifi firmware from 174948 bytes
-> [ 1186.870914] mwifiex_pcie 0000:01:00.0: info: FW download over, size 608396 bytes
-> [ 1187.685990] mwifiex_pcie 0000:01:00.0: WLAN FW is active
-> [ 1187.692673] mwifiex_pcie 0000:01:00.0: cmd_wait_q terminated: -512
-> [ 1187.699075] mwifiex_pcie 0000:01:00.0: info: _mwifiex_fw_dpc: unregister device
-> [ 1187.713476] mwifiex: Failed to bring up adapter: -5
-> [ 1187.718644] mwifiex_pcie 0000:01:00.0: reinit failed: -5
->
-> [... run `iw phy` ...]
-> [ 1212.902419] ==================================================================
-> [ 1212.909806] BUG: KASAN: use-after-free in mwifiex_cfg80211_get_antenna+0x54/0xfc [mwifiex] at addr ffffffc0ad1a8028
-> [ 1212.920246] Read of size 1 by task iw/3127
-> [...]
-> [ 1212.934946] page dumped because: kasan: bad access detected
-> [...]
-> [ 1212.950665] Call trace:
-> [ 1212.953148] [<ffffffc00020a69c>] dump_backtrace+0x0/0x190
-> [ 1212.958572] [<ffffffc00020a96c>] show_stack+0x20/0x28
-> [ 1212.963648] [<ffffffc0005ce18c>] dump_stack+0xa4/0xcc
-> [ 1212.968723] [<ffffffc0003c4430>] kasan_report+0x378/0x500
-> [ 1212.974140] [<ffffffc0003c3358>] __asan_load1+0x44/0x4c
-> [ 1212.979462] [<ffffffbffc2e8360>] mwifiex_cfg80211_get_antenna+0x54/0xfc [mwifiex]
-> [ 1212.987131] [<ffffffbffc084fc4>] nl80211_send_wiphy+0x75c/0x2de0 [cfg80211]
-> [ 1212.994246] [<ffffffbffc094f60>] nl80211_dump_wiphy+0x32c/0x438 [cfg80211]
-> [ 1213.001149] [<ffffffc000ab6404>] genl_lock_dumpit+0x48/0x64
-> [ 1213.006746] [<ffffffc000ab3474>] netlink_dump+0x178/0x398
-> [ 1213.012171] [<ffffffc000ab3d18>] __netlink_dump_start+0x1bc/0x260
-> [...]
->
-> This all goes away if we just tear down the wiphy on the way down, and
-> set it back up if/when we bring the device back up.
+Fixes: 474a41e94 ("mwifiex: update MCS set as per RX-STBC bit from hostapd")
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h      |  5 -----
+ drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 22 ----------------------
+ 2 files changed, 27 deletions(-)
 
-I don't know exactly what kind of reset this is about, but isn't this a
-quite intrusive solution? For example, phy name changes because of this?
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 4a848e8..07d3a0a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -247,11 +247,6 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ 
+ #define MWIFIEX_DEF_AMPDU	IEEE80211_HT_AMPDU_PARM_FACTOR
+ 
+-#define GET_RXSTBC(x) (x & IEEE80211_HT_CAP_RX_STBC)
+-#define MWIFIEX_RX_STBC1	0x0100
+-#define MWIFIEX_RX_STBC12	0x0200
+-#define MWIFIEX_RX_STBC123	0x0300
+-
+ /* dev_cap bitmap
+  * BIT
+  * 0-16		reserved
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+index 35d8636..477c29c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+@@ -160,7 +160,6 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ 		      struct cfg80211_ap_settings *params)
+ {
+ 	const u8 *ht_ie;
+-	u16 cap_info;
+ 
+ 	if (!ISSUPP_11NENABLED(priv->adapter->fw_cap_info))
+ 		return;
+@@ -170,27 +169,6 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ 	if (ht_ie) {
+ 		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
+ 		       sizeof(struct ieee80211_ht_cap));
+-		cap_info = le16_to_cpu(bss_cfg->ht_cap.cap_info);
+-		memset(&bss_cfg->ht_cap.mcs, 0,
+-		       priv->adapter->number_of_antenna);
+-		switch (GET_RXSTBC(cap_info)) {
+-		case MWIFIEX_RX_STBC1:
+-			/* HT_CAP 1X1 mode */
+-			bss_cfg->ht_cap.mcs.rx_mask[0] = 0xff;
+-			break;
+-		case MWIFIEX_RX_STBC12:	/* fall through */
+-		case MWIFIEX_RX_STBC123:
+-			/* HT_CAP 2X2 mode */
+-			bss_cfg->ht_cap.mcs.rx_mask[0] = 0xff;
+-			bss_cfg->ht_cap.mcs.rx_mask[1] = 0xff;
+-			break;
+-		default:
+-			mwifiex_dbg(priv->adapter, WARN,
+-				    "Unsupported RX-STBC, default to 2x2\n");
+-			bss_cfg->ht_cap.mcs.rx_mask[0] = 0xff;
+-			bss_cfg->ht_cap.mcs.rx_mask[1] = 0xff;
+-			break;
+-		}
+ 		priv->ap_11n_enabled = 1;
+ 	} else {
+ 		memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
 -- 
-Kalle Valo
+1.9.1
