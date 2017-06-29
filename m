@@ -1,107 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:52815 "EHLO
-        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751930AbdFLJyn (ORCPT
+Received: from smtprelay0025.hostedemail.com ([216.40.44.25]:44351 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753299AbdF2PmF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 05:54:43 -0400
-Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
-        by mx08-00252a01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5C9sgs9010803
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 10:54:42 +0100
-Received: from mail-wr0-f200.google.com (mail-wr0-f200.google.com [209.85.128.200])
-        by mx08-00252a01.pphosted.com with ESMTP id 2b058es2vh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 10:54:42 +0100
-Received: by mail-wr0-f200.google.com with SMTP id n18so21833569wra.11
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2017 02:54:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE_XsMJoCQdBOU9Ky233sqfrgv5xqBg_o1Hy5Q3MHCSsDheTYg@mail.gmail.com>
-References: <CAE_XsMKBQJDVbiH1RN_9zvOtToQgA74wbZWmnfXLbDAATua_kA@mail.gmail.com>
- <8ec01afb-7c9d-2cde-0007-b4d9fd2dbdbd@broadcom.com> <CAE_XsMJ8DxHUEpegYzc-9KOAsQveYxKzRea+KJ2Jfk3VQTzT7w@mail.gmail.com>
- <CAE_XsMJoCQdBOU9Ky233sqfrgv5xqBg_o1Hy5Q3MHCSsDheTYg@mail.gmail.com>
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Mon, 12 Jun 2017 10:54:40 +0100
-Message-ID: <CAE_XsMKLp16LE-GOApSkfaTDbBFnf3YFeHGs-CmLaxs6MFDsiA@mail.gmail.com> (sfid-20170612_115448_244982_48328D6D)
-Subject: Re: brcmfmac: brcm43430 Invalid mailbox value issue
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 29 Jun 2017 11:42:05 -0400
+From: Joe Perches <joe@perches.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: Neaten refresh_scan - remove always 1 argument
+Date: Thu, 29 Jun 2017 08:42:00 -0700
+Message-Id: <322381310d985c391c32d1919144b098ebb1b6d0.1498750174.git.joe@perches.com> (sfid-20170629_174210_470714_B1DDC211)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 May 2017 at 16:14, James Hughes <james.hughes@raspberrypi.org> wrote:
-> On 24 May 2017 at 14:16, James Hughes <james.hughes@raspberrypi.org> wrote:
->> On 24 May 2017 at 14:13, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
->>> On 24-05-17 14:50, James Hughes wrote:
->>>> We are seeing an issue on Raspberry Pi which uses the bcm43430 chip. It's
->>>> been tested up to 4.9 which still shows the issue (it's been there for some
->>>> time, > 1yr). I'm trying to find someone who can test on 4.11 as I cannot
->>>> replicate  (The latest kernel we have that works on a Pi)
->>>>
->>>> It exhibits as a log entry, and subsequent death of wireless connectivity.
->>>>
->>>> "Unknown mailbox data content: 0x40012"
->>>>
->>>> Look at the driver code, it appears to be checking the return
->>>> value from a mailbox (presumably the one to the chip firmware), which
->>>> has the 0x4 in the top word which shouldn't be there.
->>>>
->>>> The driver simply adds a log entry, but otherwise ignores the situation.
->>>> However, we see wireless failure from this point.
->>>>
->>>> Since I believe this value is being returned from the chip, I cannot
->>>> investigate much further. The public datasheet is of no help. We do appear
->>>> to be using the latest firmware file.
->>>>
->>>> I'm not sure how to proceed on this one. It would be interesting to know
->>>> under what circumstances that value can be returned from the mailbox.
->>>>
->>>> More details can be found at the end of this github issue.
->>>>
->>>> https://github.com/raspberrypi/linux/issues/1342
->>>
->>> Hi James,
->>>
->>> I looked through the issue on github and it seems you are getting -110
->>> (-ETIMEDOUT) on SDIO transfers. This could be a signal integrity issue
->>> of the SDIO bus signals, which may happen if the RPi3 power supply can
->>> not provide enough amps. So you could try to replicate it by
->>> deliberately use a power supply below specs.
->>>
->>> I did not get my RPi3 going yet, but I can try next monday or so. Office
->>> closed due to Ascension day. Do you know what SDIO host controller is
->>> used on RPi3? I can check myself, but if you know the answer up front
->>> let me know.
->>>
->>> Regards,
->>> Arend
->>
->> Hi Arend,
->>
->> It's the one built in to the SoC (the bcm2835) and I believe is an
->> Arasan device. If you need anything else (HW etc) please let me know.
->>
->> I'll try the low power setup you suggest. Might be the reason why I
->> cannot replicate, I always use decent power supplies.
->>
->> James
->
-> Spent an hour or so trying the low power situation. Got to the point
-> where USB devices were dropping out, but didn't see any SDIO timeouts
-> or mailbox errors in dmesg. Will keep looking though - absence of
-> evidence is not evidence of absence etc etc.
->
-> James
+All uses of refresh_scan() have a constant 1 as the second argument.
+Remove it and neaten the function declaration.
 
-Hi Arend, all,
+Miscellanea:
 
-Is there anything I can do to help track this down? Further low power
-testing didn't provoke the issue. We are continually getting reports
-on this issue, the github issue has some more, perhaps relevant, data
-now. There is a possibility it may be channel related.
+o Remove overly deep indentation by using continue;
+o Remove unnecessary test of the address of a static array as it's
+  always non-zero
+o Rename and use proper type for the first void * argument as it's
+  always the struct wilc_priv *
+o Move variables into loop where used
 
-https://github.com/raspberrypi/linux/issues/1342
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 65 ++++++++++-------------
+ 1 file changed, 28 insertions(+), 37 deletions(-)
 
-James, Raspberry Pi.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 68fd5b3b8b2d..ac5aaafa461c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -214,48 +214,39 @@ static u32 get_rssi_avg(struct network_info *network_info)
+ 	return rssi_v;
+ }
+ 
+-static void refresh_scan(void *user_void, u8 all, bool direct_scan)
++static void refresh_scan(struct wilc_priv *priv, bool direct_scan)
+ {
+-	struct wilc_priv *priv;
+-	struct wiphy *wiphy;
+-	struct cfg80211_bss *bss = NULL;
++	struct wiphy *wiphy = priv->dev->ieee80211_ptr->wiphy;
+ 	int i;
+-	int rssi = 0;
+-
+-	priv = user_void;
+-	wiphy = priv->dev->ieee80211_ptr->wiphy;
+ 
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+ 		struct network_info *network_info;
++		s32 freq;
++		struct ieee80211_channel *channel;
++		int rssi;
++		struct cfg80211_bss *bss;
+ 
+ 		network_info = &last_scanned_shadow[i];
+ 
+-		if (!network_info->found || all) {
+-			s32 freq;
+-			struct ieee80211_channel *channel;
+-
+-			if (network_info) {
+-				freq = ieee80211_channel_to_frequency((s32)network_info->ch, NL80211_BAND_2GHZ);
+-				channel = ieee80211_get_channel(wiphy, freq);
+-
+-				rssi = get_rssi_avg(network_info);
+-				if (memcmp("DIRECT-", network_info->ssid, 7) ||
+-				    direct_scan) {
+-					bss = cfg80211_inform_bss(wiphy,
+-								  channel,
+-								  CFG80211_BSS_FTYPE_UNKNOWN,
+-								  network_info->bssid,
+-								  network_info->tsf_hi,
+-								  network_info->cap_info,
+-								  network_info->beacon_period,
+-								  (const u8 *)network_info->ies,
+-								  (size_t)network_info->ies_len,
+-								  (s32)rssi * 100,
+-								  GFP_KERNEL);
+-					cfg80211_put_bss(wiphy, bss);
+-				}
+-			}
+-		}
++		if (!memcmp("DIRECT-", network_info->ssid, 7) && !direct_scan)
++			continue;
++
++		freq = ieee80211_channel_to_frequency((s32)network_info->ch,
++						      NL80211_BAND_2GHZ);
++		channel = ieee80211_get_channel(wiphy, freq);
++		rssi = get_rssi_avg(network_info);
++		bss = cfg80211_inform_bss(wiphy,
++					  channel,
++					  CFG80211_BSS_FTYPE_UNKNOWN,
++					  network_info->bssid,
++					  network_info->tsf_hi,
++					  network_info->cap_info,
++					  network_info->beacon_period,
++					  (const u8 *)network_info->ies,
++					  (size_t)network_info->ies_len,
++					  (s32)rssi * 100,
++					  GFP_KERNEL);
++		cfg80211_put_bss(wiphy, bss);
+ 	}
+ }
+ 
+@@ -442,7 +433,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 				}
+ 			}
+ 		} else if (scan_event == SCAN_EVENT_DONE) {
+-			refresh_scan(priv, 1, false);
++			refresh_scan(priv, false);
+ 
+ 			mutex_lock(&priv->scan_req_lock);
+ 
+@@ -466,7 +457,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 				};
+ 
+ 				update_scan_time();
+-				refresh_scan(priv, 1, false);
++				refresh_scan(priv, false);
+ 
+ 				cfg80211_scan_done(priv->pstrScanReq, &info);
+ 				priv->bCfgScanning = false;
+@@ -540,7 +531,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			}
+ 
+ 			if (bNeedScanRefresh)
+-				refresh_scan(priv, 1, true);
++				refresh_scan(priv, true);
+ 		}
+ 
+ 		cfg80211_connect_result(dev, pstrConnectInfo->bssid,
+-- 
+2.10.0.rc2.1.g053435c
