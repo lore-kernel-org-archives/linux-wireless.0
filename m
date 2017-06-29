@@ -1,92 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34834 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:36244 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751186AbdFYLMH (ORCPT
+        with ESMTP id S1753157AbdF2Sak (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Jun 2017 07:12:07 -0400
+        Thu, 29 Jun 2017 14:30:40 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 25 Jun 2017 14:11:33 +0300
-Message-Id: <20170625111158.1792-2-luca@coelho.fi> (sfid-20170625_131216_565089_072C6D2C)
-In-Reply-To: <20170625111158.1792-1-luca@coelho.fi>
-References: <20170625111158.1792-1-luca@coelho.fi>
-Subject: [PATCH 01/26] iwlwifi: simplify data tracepoint
+Date: Thu, 29 Jun 2017 21:30:18 +0300
+Message-Id: <20170629183027.15408-7-luca@coelho.fi> (sfid-20170629_203059_475354_EA7B133D)
+In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
+References: <20170629183027.15408-1-luca@coelho.fi>
+Subject: [PATCH 06/15] iwlwifi: mvm: fix mac80211's hw_queue in DQA mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's no need to calculate the data_len outside of the tracepoint,
-since it's always skb->len - hdr_len, which are both available inside.
-Simplify the callers and move the calculation in.
+When in non-DQA mode, mac80211 actually gets a pretty much perfect
+idea (in vif->hw_queue/cab_queue) of which queues we're using. But
+in DQA mode, this isn't true - nonetheless, we were adding all the
+queues, even the ones stations are using, to the queue allocation
+bitmap.
+
+Fix this, we should only add the queues we really are using in DQA
+mode:
+ * IWL_MVM_OFFCHANNEL_QUEUE, as we use this in both modes
+ * mvm->aux_queue, as we use this in both modes - mac80211
+   never really knows about it but we use it as a cookie
+   internally, so can't reuse it
+ * possibly the GCAST queue (cab_queue)
+ * all the "queues" we told mac80211 about we were using on each
+   interface (vif->hw_queue), these are entirely virtual in this
+   mode
+
+Also add back the failure now when we can't allocate any more of
+these - now virtual - queues; this was skipped in DQA mode and
+would lead to having multiple ACs or even interfaces use the same
+queue number in mac80211 (10, since that's the limit), which would
+stop far too many queues if stopped.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h | 11 ++++++-----
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c      |  3 +--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c           |  3 +--
- 3 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 32 ++++++++++++++++++-----
+ 1 file changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-index d80312b46f16..a80e4202cd03 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-@@ -35,19 +35,20 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 71f23ac608eb..dc631b23e189 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -257,7 +257,7 @@ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
+ 	};
  
- TRACE_EVENT(iwlwifi_dev_tx_data,
- 	TP_PROTO(const struct device *dev,
--		 struct sk_buff *skb,
--		 u8 hdr_len, size_t data_len),
--	TP_ARGS(dev, skb, hdr_len, data_len),
-+		 struct sk_buff *skb, u8 hdr_len),
-+	TP_ARGS(dev, skb, hdr_len),
- 	TP_STRUCT__entry(
- 		DEV_ENTRY
+ 	if (iwl_mvm_is_dqa_supported(mvm))
+-		data.used_hw_queues |= BIT(IWL_MVM_DQA_CMD_QUEUE);
++		data.used_hw_queues |= BIT(IWL_MVM_DQA_GCAST_QUEUE);
+ 	else
+ 		data.used_hw_queues |= BIT(IWL_MVM_CMD_QUEUE);
  
--		__dynamic_array(u8, data, iwl_trace_data(skb) ? data_len : 0)
-+		__dynamic_array(u8, data,
-+				iwl_trace_data(skb) ? skb->len - hdr_len : 0)
- 	),
- 	TP_fast_assign(
- 		DEV_ASSIGN;
- 		if (iwl_trace_data(skb))
- 			skb_copy_bits(skb, hdr_len,
--				      __get_dynamic_array(data), data_len);
-+				      __get_dynamic_array(data),
-+				      skb->len - hdr_len);
- 	),
- 	TP_printk("[%s] TX frame data", __get_str(dev))
- );
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 464a435a4440..a0b237b58b3d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -469,8 +469,7 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd), &dev_cmd->hdr,
- 			     IWL_FIRST_TB_SIZE + tb1_len,
- 			     skb->data + hdr_len, tb2_len);
--	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len,
--				  skb->len - hdr_len);
-+	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
+@@ -268,6 +268,14 @@ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
+ 		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+ 		iwl_mvm_iface_hw_queues_iter, &data);
  
- 	return tfd;
++	/*
++	 * for DQA, the hw_queue in mac80211 is never really used for
++	 * real traffic (only the few queue IDs covered above), so
++	 * we can reuse the real HW queue IDs the stations use
++	 */
++	if (iwl_mvm_is_dqa_supported(mvm))
++		return data.used_hw_queues;
++
+ 	/* don't assign the same hw queues as TDLS stations */
+ 	ieee80211_iterate_stations_atomic(mvm->hw,
+ 					  iwl_mvm_mac_sta_hw_queues_iter,
+@@ -344,7 +352,7 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		.found_vif = false,
+ 	};
+ 	u32 ac;
+-	int ret, i;
++	int ret, i, queue_limit;
+ 	unsigned long used_hw_queues;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 0a6e36a8a0bf..98cccaeeecdd 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1979,8 +1979,7 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
- 			     trans_pcie->tfd_size,
- 			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
- 			     skb->data + hdr_len, tb2_len);
--	trace_iwlwifi_dev_tx_data(trans->dev, skb,
--				  hdr_len, skb->len - hdr_len);
-+	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
- 	return 0;
- }
+ 	/*
+@@ -430,17 +438,29 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		return 0;
+ 	}
  
++	if (iwl_mvm_is_dqa_supported(mvm)) {
++		/*
++		 * queues in mac80211 almost entirely independent of
++		 * the ones here - no real limit
++		 */
++		queue_limit = IEEE80211_MAX_QUEUES;
++		BUILD_BUG_ON(IEEE80211_MAX_QUEUES >
++			     BITS_PER_BYTE *
++			     sizeof(mvm->hw_queue_to_mac80211[0]));
++	} else {
++		/* need to not use too many in this case */
++		queue_limit = mvm->first_agg_queue;
++	}
++
+ 	/*
+ 	 * Find available queues, and allocate them to the ACs. When in
+ 	 * DQA-mode they aren't really used, and this is done only so the
+ 	 * mac80211 ieee80211_check_queues() function won't fail
+ 	 */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+-		u8 queue = find_first_zero_bit(&used_hw_queues,
+-					       mvm->first_agg_queue);
++		u8 queue = find_first_zero_bit(&used_hw_queues, queue_limit);
+ 
+-		if (!iwl_mvm_is_dqa_supported(mvm) &&
+-		    queue >= mvm->first_agg_queue) {
++		if (queue >= queue_limit) {
+ 			IWL_ERR(mvm, "Failed to allocate queue\n");
+ 			ret = -EIO;
+ 			goto exit_fail;
 -- 
 2.11.0
