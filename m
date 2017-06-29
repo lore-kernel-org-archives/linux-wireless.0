@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [91.227.64.183] ([91.227.64.183]:60008 "EHLO rere.qmqm.pl"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1750780AbdFSQk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Jun 2017 12:40:26 -0400
-Date: Mon, 19 Jun 2017 18:40:20 +0200
-From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: brcmfmac: initialize oob irq data before
- request_irq()
-Message-ID: <20170619164020.wgfzt6vvg3fmnkf6@qmqm.qmqm.pl> (sfid-20170619_184031_065822_9D6FC413)
-References: <b6d30eb2d883c011d50200cfdb8c44462e1939a4.1497369605.git.mirq-linux@rere.qmqm.pl>
- <87poe74138.fsf@kamboji.qca.qualcomm.com>
- <20170614112925.d3j3l5bam5gwhj7h@qmqm.qmqm.pl>
- <87vanxe2m6.fsf@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <87vanxe2m6.fsf@codeaurora.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:43416 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752852AbdF2OEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Jun 2017 10:04:05 -0400
+Message-ID: <1498745040.3141.6.camel@sipsolutions.net> (sfid-20170629_160408_781060_43208FED)
+Subject: Re: rfkill(8) move and improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sami Kerola <kerolasa@iki.fi>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Tim Gardner <tim.gardner@canonical.com>,
+        Karel Zak <kzak@redhat.com>
+Cc: linux-wireless@vger.kernel.org, util-linux@vger.kernel.org
+Date: Thu, 29 Jun 2017 16:04:00 +0200
+In-Reply-To: <alpine.LNX.2.20.1706251339500.25762@imuri> (sfid-20170625_150452_207599_1328128A)
+References: <alpine.LNX.2.20.1706251339500.25762@imuri>
+         (sfid-20170625_150452_207599_1328128A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resending reply to linux-wireless]
+Hi Sami, all,
 
-On Thu, Jun 15, 2017 at 05:40:01PM +0300, Kalle Valo wrote:
-> Micha³ Miros³aw <mirq-linux@rere.qmqm.pl> writes:
-> 
-> > On Wed, Jun 14, 2017 at 07:58:35AM +0300, Kalle Valo wrote:
-> >> Micha³ Miros³aw <mirq-linux@rere.qmqm.pl> writes:
-> >> > This fixes spin-forever in irq handler when IRQ is already asserted
-> >> > at request_irq() time.
-> >> >
-> >> > Signed-off-by: Micha³ Miros³aw <mirq-linux@rere.qmqm.pl>
-> >> 
-> >> Your name in patchwork is broken:
-> >> 
-> >> https://patchwork.kernel.org/patch/9784251/
-> >> 
-> >> You could try to fix it by registering as then you have (onetime) option
-> >> to provide your full name.
-> >
-> > Doesn't like UTF-8?
-> 
-> patchwork.kernel.org was updated something like a year ago to get proper
-> UTF-8 support and I have been succesfully applied patches from Rafal who
-> also uses UTF-8 with his name:
-> 
-> git log --author rafal@milecki.pl drivers/net/wireless/
-> 
-> You could always compare his posts with yours and see what you do
-> differently. Here's one example:
-> 
-> https://patchwork.kernel.org/patch/9640743/
-> 
-> > Registration didn't help though.
-> 
-> Darn. This time I can manually apply the patch but for the future we
-> should try to solve this.
+> The otherday I ran powertop and it did rfkill to save battery, which
+> wasÂ particularly annoying because I had not installed rfkill(8)
+> package.Â Â 
+> Fixing the immediate issue was relatively easy, but the ordeal made
+> meÂ wonder if this tool could be moved to a package that is installed
+> byÂ default to all systems, such as util-linux.
 
-Looks like my name, as known by Patchwork, got doubly UTF-8-encoded:
+[...]
 
-# this is how it is in From header in Patchwork:
-$ echo TWljaGHDheKAmiBNaXJvc8OF4oCaYXc=|base64 -d|hexdump -C
-00000000  4d 69 63 68 61 c3 85 e2  80 9a 20 4d 69 72 6f 73  |Micha.....
-Miros|
-00000010  c3 85 e2 80 9a 61 77                              |.....aw|
-00000017
+> What do you think, would the move and proposed updates be ok?
 
-# this is how it should look like:
-$ echo -n 'Micha³ Miros³aw'|hexdump -C
-00000000  4d 69 63 68 61 c5 82 20  4d 69 72 6f 73 c5 82 61  |Micha..
-Miros..a|
-00000010  77                                                |w|
+I can't say I mind, and most of your proposed changes seem sensible,
+though I haven't reviewed them in enough detail to comment on them.
+Something that caught my eye here was comparing a string to _("all")
+which seems wrong, since that'd mean you'd have to type the translated
+version even on the command line? That seems really awkward (to put it
+charitably).
 
-Best Regards,
-Micha³ Miros³aw
+However, at the same time, I have very little desire to get involved
+with util-linux as yet another project, so frankly I'd probably
+continue to "maintain" the current rfkill tool - which really hasn't
+changed in a very long time, and hope somebody else picks up
+maintenance of rfkill included in util-linux.
+
+johannes
