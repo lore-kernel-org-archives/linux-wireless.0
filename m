@@ -1,106 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34412 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:36230 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752424AbdFVVW2 (ORCPT
+        with ESMTP id S1751941AbdF2Saj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:22:28 -0400
+        Thu, 29 Jun 2017 14:30:39 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 23 Jun 2017 00:20:49 +0300
-Message-Id: <20170622212101.16422-14-luca@coelho.fi> (sfid-20170622_232232_150549_435E86BE)
-In-Reply-To: <20170622212101.16422-1-luca@coelho.fi>
-References: <20170622212101.16422-1-luca@coelho.fi>
-Subject: [PATCH 13/25] iwlwifi: mvm: support D0I3_END_CMD at the start of resume
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 29 Jun 2017 21:30:16 +0300
+Message-Id: <20170629183027.15408-5-luca@coelho.fi> (sfid-20170629_203049_473137_7240839B)
+In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
+References: <20170629183027.15408-1-luca@coelho.fi>
+Subject: [PATCH 04/15] iwlwifi: mvm: fix mac80211 queue tracking
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-New FW versions require the D0I3_END_CMD to be sent as the first
-command to the FW in the resume flow.  If the TLV is set, send that
-command first, otherwise keep the original behavior (i.e. send last).
+In the driver, we track which hardware queue is associated with
+which mac80211 "hw_queue", in order to be able to stop and wake
+it. When moving these bitmaps out of the queue_info structures,
+the type of the bitmap was erroneously changed from u32 to u8,
+presumably in order to save memory.
 
+Turns out that u32 isn't needed, because the highest queue we
+can ever tell mac80211 is always < 16, but a u16 definitely is
+needed, queues >=8 do happen.
+
+While at it, throw a BUILD_BUG_ON() into the place where we set
+the limit (mvm->first_agg_queue) and a warning when it actually
+gets put into the bitmap.
+
+The consequence of this bug is that full HW queues associated
+with such a too-high mac80211 number never stop higher layer
+queues when full, and thus would simply drop all packets that
+couldn't be enqueued to the hardware queue.
+
+Fixes: 34e10860ae8d ("iwlwifi: mvm: remove references to queue_info in new TX path")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c      | 22 +++++++++++++++++++---
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c   | 4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 8 +++++++-
+ 3 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 52616f3c0184..a216657b3c60 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -353,6 +353,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_STA_PM_NOTIF			= (__force iwl_ucode_tlv_capa_t)38,
- 	IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT		= (__force iwl_ucode_tlv_capa_t)39,
- 	IWL_UCODE_TLV_CAPA_CDB_SUPPORT			= (__force iwl_ucode_tlv_capa_t)40,
-+	IWL_UCODE_TLV_CAPA_D0I3_END_FIRST		= (__force iwl_ucode_tlv_capa_t)41,
- 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
- 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
- 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index f5b65c1ef42f..0028325fa22d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016   Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,7 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2016   Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -2075,6 +2075,8 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
- 	bool keep = false;
- 	bool unified_image = fw_has_capa(&mvm->fw->ucode_capa,
- 					 IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
-+	bool d0i3_first = fw_has_capa(&mvm->fw->ucode_capa,
-+				      IWL_UCODE_TLV_CAPA_D0I3_END_FIRST);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 0f0cd6c9ce8b..6b8f7817391d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -789,7 +789,7 @@ struct iwl_mvm {
+ 		u64 on_time_scan;
+ 	} radio_stats, accu_radio_stats;
  
- 	mutex_lock(&mvm->mutex);
+-	u8 hw_queue_to_mac80211[IWL_MAX_TVQM_QUEUES];
++	u16 hw_queue_to_mac80211[IWL_MAX_TVQM_QUEUES];
  
-@@ -2095,6 +2097,15 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
- 	/* query SRAM first in case we want event logging */
- 	iwl_mvm_read_d3_sram(mvm);
+ 	struct {
+ 		u8 hw_queue_refcount;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 32233cba6786..1799a3d367f9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -602,9 +602,13 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		if (mvm->cfg->base_params->num_of_queues == 16) {
+ 			mvm->aux_queue = 11;
+ 			mvm->first_agg_queue = 12;
++			BUILD_BUG_ON(BITS_PER_BYTE *
++				     sizeof(mvm->hw_queue_to_mac80211[0]) < 12);
+ 		} else {
+ 			mvm->aux_queue = 15;
+ 			mvm->first_agg_queue = 16;
++			BUILD_BUG_ON(BITS_PER_BYTE *
++				     sizeof(mvm->hw_queue_to_mac80211[0]) < 16);
+ 		}
+ 	} else {
+ 		mvm->aux_queue = IWL_MVM_DQA_AUX_QUEUE;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 0093e78dd571..bd2596fdafda 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -698,7 +698,13 @@ static bool iwl_mvm_update_txq_mapping(struct iwl_mvm *mvm, int queue,
+ 	if (mvm->queue_info[queue].hw_queue_refcount > 0)
+ 		enable_queue = false;
  
-+	if (d0i3_first) {
-+		ret = iwl_mvm_send_cmd_pdu(mvm, D0I3_END_CMD, 0, 0, NULL);
-+		if (ret < 0) {
-+			IWL_ERR(mvm, "Failed to send D0I3_END_CMD first (%d)\n",
-+				ret);
-+			goto err;
-+		}
+-	mvm->hw_queue_to_mac80211[queue] |= BIT(mac80211_queue);
++	if (mac80211_queue != IEEE80211_INVAL_HW_QUEUE) {
++		WARN(mac80211_queue >=
++		     BITS_PER_BYTE * sizeof(mvm->hw_queue_to_mac80211[0]),
++		     "cannot track mac80211 queue %d (queue %d, sta %d, tid %d)\n",
++		     mac80211_queue, queue, sta_id, tid);
++		mvm->hw_queue_to_mac80211[queue] |= BIT(mac80211_queue);
 +	}
-+
- 	/*
- 	 * Query the current location and source from the D3 firmware so we
- 	 * can play it back when we re-intiailize the D0 firmware
-@@ -2140,9 +2151,14 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
- 			iwl_mvm_d3_disconnect_iter, keep ? vif : NULL);
  
- out:
-+	/* no need to reset the device in unified images, if successful */
- 	if (unified_image && !ret) {
-+		/* nothing else to do if we already sent D0I3_END_CMD */
-+		if (d0i3_first)
-+			return 0;
-+
- 		ret = iwl_mvm_send_cmd_pdu(mvm, D0I3_END_CMD, 0, 0, NULL);
--		if (!ret) /* D3 ended successfully - no need to reset device */
-+		if (!ret)
- 			return 0;
- 	}
- 
+ 	mvm->queue_info[queue].hw_queue_refcount++;
+ 	mvm->queue_info[queue].tid_bitmap |= BIT(tid);
 -- 
 2.11.0
