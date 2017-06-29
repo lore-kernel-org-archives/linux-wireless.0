@@ -1,172 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43834 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751153AbdFEPyZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36222 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752787AbdF2Sai (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2017 11:54:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
-References: <20170525001119.64791-1-briannorris@chromium.org>
-        <20170525001119.64791-5-briannorris@chromium.org>
-        <87fufk2hmm.fsf@purkki.adurom.net>
-        <20170601173954.GA138807@google.com>
-Date: Mon, 05 Jun 2017 18:54:18 +0300
-In-Reply-To: <20170601173954.GA138807@google.com> (Brian Norris's message of
-        "Thu, 1 Jun 2017 10:39:56 -0700")
-Message-ID: <87inka77md.fsf@codeaurora.org> (sfid-20170605_175448_575451_BBED11BA)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 29 Jun 2017 14:30:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 29 Jun 2017 21:30:15 +0300
+Message-Id: <20170629183027.15408-4-luca@coelho.fi> (sfid-20170629_203046_237074_5995A564)
+In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
+References: <20170629183027.15408-1-luca@coelho.fi>
+Subject: [PATCH 03/15] iwlwifi: mvm: properly enable IP header checksumming
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Thu, Jun 01, 2017 at 12:15:45PM +0300, Kalle Valo wrote:
->> Brian Norris <briannorris@chromium.org> writes:
->> 
->> > In general, it's helpful to use the same code for device removal as for
->> > device reset, as this tends to have fewer bugs. Let's move the wiphy
->> > unregistration code into the common reset and removal code.
->> >
->> > In particular, it's very hard to properly handle the reset sequence when
->> > something fails. Currently, if mwifiex_reinit_sw() fails, we've failed
->> > to unregister the associated wiphy, and so running something as simple
->> > as "iw phy" can trigger an OOPS, as the wiphy still has hooks back into
->> > freed mwifiex data structures. For example, KASAN complained:
->> >
->> > [... see reset fail for other reasons ...]
->> > [ 1184.821158] mwifiex_pcie 0000:01:00.0: info: dnld wifi firmware from 174948 bytes
->> > [ 1186.870914] mwifiex_pcie 0000:01:00.0: info: FW download over, size 608396 bytes
->> > [ 1187.685990] mwifiex_pcie 0000:01:00.0: WLAN FW is active
->> > [ 1187.692673] mwifiex_pcie 0000:01:00.0: cmd_wait_q terminated: -512
->> > [ 1187.699075] mwifiex_pcie 0000:01:00.0: info: _mwifiex_fw_dpc: unregister device
->> > [ 1187.713476] mwifiex: Failed to bring up adapter: -5
->> > [ 1187.718644] mwifiex_pcie 0000:01:00.0: reinit failed: -5
->> >
->> > [... run `iw phy` ...]
->> > [ 1212.902419] ==================================================================
->> > [ 1212.909806] BUG: KASAN: use-after-free in mwifiex_cfg80211_get_antenna+0x54/0xfc [mwifiex] at addr ffffffc0ad1a8028
->> > [ 1212.920246] Read of size 1 by task iw/3127
->> > [...]
->> > [ 1212.934946] page dumped because: kasan: bad access detected
->> > [...]
->> > [ 1212.950665] Call trace:
->> > [ 1212.953148] [<ffffffc00020a69c>] dump_backtrace+0x0/0x190
->> > [ 1212.958572] [<ffffffc00020a96c>] show_stack+0x20/0x28
->> > [ 1212.963648] [<ffffffc0005ce18c>] dump_stack+0xa4/0xcc
->> > [ 1212.968723] [<ffffffc0003c4430>] kasan_report+0x378/0x500
->> > [ 1212.974140] [<ffffffc0003c3358>] __asan_load1+0x44/0x4c
->> > [ 1212.979462] [<ffffffbffc2e8360>] mwifiex_cfg80211_get_antenna+0x54/0xfc [mwifiex]
->> > [ 1212.987131] [<ffffffbffc084fc4>] nl80211_send_wiphy+0x75c/0x2de0 [cfg80211]
->> > [ 1212.994246] [<ffffffbffc094f60>] nl80211_dump_wiphy+0x32c/0x438 [cfg80211]
->> > [ 1213.001149] [<ffffffc000ab6404>] genl_lock_dumpit+0x48/0x64
->> > [ 1213.006746] [<ffffffc000ab3474>] netlink_dump+0x178/0x398
->> > [ 1213.012171] [<ffffffc000ab3d18>] __netlink_dump_start+0x1bc/0x260
->> > [...]
->> >
->> > This all goes away if we just tear down the wiphy on the way down, and
->> > set it back up if/when we bring the device back up.
->> 
->> I don't know exactly what kind of reset this is about,
->
-> Marvell firmwares are known to be quite buggy, and there are plenty of
-> situations in which they crash (often resulting in a command timeout).
+The code was intended to enable IP header checksumming on AMSDUs, but
+failed to really do so because the A-MSDU bit was set after all the
+checksumming bits, and thus checking for A-MSDU could never be true.
 
-That is a common problem with firmwares :/
+Fix this by setting the A-MSDU bit before the offload bits.
 
-> The current best workaround for these is to essentially unwind the
-> whole driver, reset the card, and reprobe the whole thing. See
-> anywhere that the ->card_reset() callback is called.
->
-> This has been around for a long time on SDIO, and you recently merged my
-> changes to enable this for PCIe:
->
-> 6d7d579a8243 mwifiex: pcie: add card_reset() support
->
->> but isn't this a
->> quite intrusive solution? For example, phy name changes because of this?
->
-> Yes, it is a bit intrusive. But the whole process is intrusive, as it
-> deletes all the virtual interfaces and loses your settings. This all
-> relies on user space being prepared to clean up and reinitialize
-> everything afterward.
->
-> And yes, this causes a phy name change.
->
-> In favor: this is what the SDIO reset code *used* to do, before this
-> commit:
->
-> c742e623e941 mwifiex: sdio card reset enhancement
->
-> where the SDIO driver started using the half-baked reset solution
-> written for PCIe.
->
-> Lastly, I still need to analyze a few more things in this driver, but
-> AFAICT, if we *don't* unregister the wiphy, we are exposed to quite a
-> few more race conditions -- not just the easy-to-notice condition
-> described above. What happens if the wiphy still processes cfg80211
-> operations while we're still resetting the firmware? Much of the driver
-> may not be prepared for this. At the moment, I can't find anything
-> terribly wrong; if I slow down the reset (e.g., with msleep()s) I can
-> just trigger complaints about "cmd node not available" or "card is
-> removed", but I haven't yet found a true bug.
->
-> That's not to say that there aren't such bugs out there. I'd still be
-> willing to bet there are. And IMO, it seems wise to just do the same
-> teardown/setup as one would do for (e.g.) 'rmmod', to prevent exposing
-> *too* many new permutations of "wiphy is available but rest of the
-> driver is torn down".
+Fixes: 5e6a98dc4863 ("iwlwifi: mvm: enable TCP/UDP checksum support for 9000 family")
+Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-This feels like a sledge hammer approach causing all sort of problems
-for user space and I really like the mac80211 approach more. For
-example, if an ath10k firmware crash happens user only sees a few second
-pause in data traffic and a warning in kernel log, otherwise everything
-happens behind the scenes. Of course there are very likely races
-somewhere but at least I haven't seen that many reports related to
-firmware restart functionality.
-
-> But if none of this is convincing to you, I can take a stab at a
-> different solution.
-
-I don't have any problem applying this patch but more about being
-curious why doing it like this. And hopefully finding a less intrusive
-solution in the future.
-
-> BTW, since you're taking an interest in this code now, can I trouble you
-> with a question? Looking at mwifiex_uninit_sw() (after this patchset),
-> you can see a loop like this:
->
->         /* Stop data */
->         for (i = 0; i < adapter->priv_num; i++) {
->                 priv = adapter->priv[i];
->                 if (priv && priv->netdev) {
->                         mwifiex_stop_net_dev_queue(priv->netdev, adapter);
->                         if (netif_carrier_ok(priv->netdev))
->                                 netif_carrier_off(priv->netdev);
->                         netif_device_detach(priv->netdev);
->                 }
->         }
->
-> That seems to be the only attempt to prevent user space from talking to
-> the device while we proceed to shut down (mwifiex_shutdown_drv()). AIUI,
-> that's wholly insufficient, and we need to actually stop all the virtual
-> interfaces (and possibly the wiphy as well) first. I'm looking at trying
-> to move the mwifiex_del_virtual_intf() loop up much further in this
-> function (but there are other bugs preventing me from doing that yet).
->
-> Does that sound like the right approach to you? I'm kinda figuring this
-> should better mimic the mac80211 ieee80211_remove_interfaces()
-> structure.
-
-Johannes is much better person to answer this (CCed).
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 214829e5a860..419d0351e0ef 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -105,9 +105,9 @@ iwl_mvm_bar_check_trigger(struct iwl_mvm *mvm, const u8 *addr,
+ 
+ static u16 iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			   struct ieee80211_hdr *hdr,
+-			   struct ieee80211_tx_info *info)
++			   struct ieee80211_tx_info *info,
++			   u16 offload_assist)
+ {
+-	u16 offload_assist = 0;
+ #if IS_ENABLED(CONFIG_INET)
+ 	u16 mh_len = ieee80211_hdrlen(hdr->frame_control);
+ 	u8 protocol = 0;
+@@ -207,6 +207,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	__le16 fc = hdr->frame_control;
+ 	u32 tx_flags = le32_to_cpu(tx_cmd->tx_flags);
+ 	u32 len = skb->len + FCS_LEN;
++	u16 offload_assist = 0;
+ 	u8 ac;
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+@@ -225,8 +226,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		tx_cmd->tid_tspec = qc[0] & 0xf;
+ 		tx_flags &= ~TX_CMD_FLG_SEQ_CTL;
+ 		if (*qc & IEEE80211_QOS_CTL_A_MSDU_PRESENT)
+-			tx_cmd->offload_assist |=
+-				cpu_to_le16(BIT(TX_CMD_OFFLD_AMSDU));
++			offload_assist |= BIT(TX_CMD_OFFLD_AMSDU);
+ 	} else if (ieee80211_is_back_req(fc)) {
+ 		struct ieee80211_bar *bar = (void *)skb->data;
+ 		u16 control = le16_to_cpu(bar->control);
+@@ -291,11 +291,12 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	/* padding is inserted later in transport */
+ 	if (ieee80211_hdrlen(fc) % 4 &&
+-	    !(tx_cmd->offload_assist & cpu_to_le16(BIT(TX_CMD_OFFLD_AMSDU))))
+-		tx_cmd->offload_assist |= cpu_to_le16(BIT(TX_CMD_OFFLD_PAD));
++	    !(offload_assist & BIT(TX_CMD_OFFLD_AMSDU)))
++		offload_assist |= BIT(TX_CMD_OFFLD_PAD);
+ 
+ 	tx_cmd->offload_assist |=
+-		cpu_to_le16(iwl_mvm_tx_csum(mvm, skb, hdr, info));
++		cpu_to_le16(iwl_mvm_tx_csum(mvm, skb, hdr, info,
++					    offload_assist));
+ }
+ 
+ static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
+@@ -481,7 +482,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	if (iwl_mvm_has_new_tx_api(mvm)) {
+ 		struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
+-		u16 offload_assist = iwl_mvm_tx_csum(mvm, skb, hdr, info);
++		u16 offload_assist = 0;
+ 
+ 		if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
+@@ -490,6 +491,9 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 				offload_assist |= BIT(TX_CMD_OFFLD_AMSDU);
+ 		}
+ 
++		offload_assist = iwl_mvm_tx_csum(mvm, skb, hdr, info,
++						 offload_assist);
++
+ 		/* padding is inserted later in transport */
+ 		if (ieee80211_hdrlen(hdr->frame_control) % 4 &&
+ 		    !(offload_assist & BIT(TX_CMD_OFFLD_AMSDU)))
 -- 
-Kalle Valo
+2.11.0
