@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:56957 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753485AbdF0PZh (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36190 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752407AbdF2RIM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2017 11:25:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Golan Ben-Ami <golan.ben.ami@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Thu, 29 Jun 2017 13:08:12 -0400
+Message-ID: <1498756084.22048.143.camel@coelho.fi> (sfid-20170629_190854_257142_7709F16A)
+From: Luca Coelho <luca@coelho.fi>
+To: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
+        johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        linuxwifi@intel.com, kvalo@codeaurora.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: mvm: fix iwl_mvm_sar_find_wifi_pkg corner case
-Date: Tue, 27 Jun 2017 17:24:17 +0200
-Message-Id: <20170627152458.1103403-1-arnd@arndb.de> (sfid-20170627_172741_443008_CD1C9598)
+Date: Thu, 29 Jun 2017 20:08:04 +0300
+In-Reply-To: <1498650587.22048.110.camel@coelho.fi>
+References: <1498034442-17664-1-git-send-email-bhumirks@gmail.com>
+         <1498650587.22048.110.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: mvm: add const to thermal_cooling_device_ops
+ structure
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc warns about what it thinks is an uninitialized variable
-access:
+On Wed, 2017-06-28 at 14:49 +0300, Luca Coelho wrote:
+> On Wed, 2017-06-21 at 14:10 +0530, Bhumika Goyal wrote:
+> > Declare thermal_cooling_device_ops structure as const as it is only passed
+> > as an argument to the function thermal_cooling_device_register and this
+> > argument is of type const. So, declare the structure as const.
+> > 
+> > Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> > ---
+> 
+> Thanks, we're reviewing this internally.  It looks fine, but I need to
+> assess whether this will have any impacts in our backports project
+> before we can apply it.
 
-drivers/net/wireless/intel/iwlwifi/mvm/fw.c: In function 'iwl_mvm_sar_find_wifi_pkg.isra.14':
-drivers/net/wireless/intel/iwlwifi/mvm/fw.c:1102:5: error: 'wifi_pkg' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+This has been applied in our internal tree and will eventually land in
+the mainline.
 
-That problem cannot really happen, as we check data->package.count
-to ensure that the loop is entered at least once.
-However, something that can indeed happen is returning an incorrect
-wifi_pkg pointer in case none of the elements are what we are looking
-for.
+Thanks!
 
-This modifies the loop again, to only return a correct object, and
-to shut up that warning.
-
-Fixes: c386dacb4ed6 ("iwlwifi: mvm: refactor SAR init to prepare for dynamic SAR")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 24cc406d87ef..730c7f68c0b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1094,14 +1094,12 @@ static union acpi_object *iwl_mvm_sar_find_wifi_pkg(struct iwl_mvm *mvm,
- 		domain = &wifi_pkg->package.elements[0];
- 		if (domain->type == ACPI_TYPE_INTEGER &&
- 		    domain->integer.value == ACPI_WIFI_DOMAIN)
--			break;
--
--		wifi_pkg = NULL;
-+			goto found;
- 	}
- 
--	if (!wifi_pkg)
--		return ERR_PTR(-ENOENT);
-+	return ERR_PTR(-ENOENT);
- 
-+found:
- 	return wifi_pkg;
- }
- 
--- 
-2.9.0
+--
+Cheers,
+Luca.
