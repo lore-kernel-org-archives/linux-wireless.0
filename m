@@ -1,57 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:50449 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750749AbdFOSZY (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36310 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753171AbdF2Sb1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2017 14:25:24 -0400
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: [PATCH 01/23] ndef: Add default language ("en") for Text records
-Date: Thu, 15 Jun 2017 11:24:54 -0700
-Message-Id: <20170615182516.4508-2-mgreer@animalcreek.com> (sfid-20170615_202633_865633_44D9EC1E)
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+        Thu, 29 Jun 2017 14:31:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 29 Jun 2017 21:30:26 +0300
+Message-Id: <20170629183027.15408-15-luca@coelho.fi> (sfid-20170629_203150_874906_90FAD4A1)
+In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
+References: <20170629183027.15408-1-luca@coelho.fi>
+Subject: [PATCH 14/15] iwlwifi: pcie: wait longer after device reset
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Despite section 3.3 of the NFC Forum RTD-Text 1.0 Technical
-Specification stating in part, "The language code MAY NOT be
-omitted", some tags have a 0-length language field.  A 0-length
-language field currently causes neard to exit which isn't ideal
-so choose a default language (generic English) which will be
-used in these situations.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-There is no particular reason to choose English other than it
-is the native language of the patch author and it is the
-language neard is coded in.
+The newest devices need a longer time to reset because of
+their more complex hardware. Wait 5ms after device reset.
+Consolidate all the places that reset the device in the
+PCIe transport to avoid future bugs.
 
-Signed-off-by: Mark Greer <mgreer@animalcreek.com>
+While at it, unify the flow to use set_bit instead of full
+write as requested by the hardware designers.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-This is identical to an earlier patch submitted to the linux-nfc
-mail list in October (link below) so that patch can be discarded.
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  7 +++++++
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |  8 ++------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 23 +++++-----------------
+ 4 files changed, 15 insertions(+), 25 deletions(-)
 
-https://lists.01.org/pipermail/linux-nfc/2016-October/004292.html
----
- src/ndef.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/src/ndef.c b/src/ndef.c
-index 5656baf..b90205b 100644
---- a/src/ndef.c
-+++ b/src/ndef.c
-@@ -409,7 +409,10 @@ static const char *get_text_payload(const GDBusPropertyTable *property,
- 	if (!strcmp(property->name, "Encoding"))
- 		return text->encoding;
- 	else if (!strcmp(property->name, "Language"))
--		return text->language_code;
-+		if (!text->language_code)
-+			return "en";
-+		else
-+			return text->language_code;
- 	else if (!strcmp(property->name, "Representation"))
- 		return text->data;
- 	else
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index bd2596fdafda..fc5a490880d0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -526,7 +526,7 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+ 
+ 		/* reset the device */
+ 		iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-		usleep_range(1000, 2000);
++		usleep_range(5000, 6000);
+ 
+ 		/* set INIT_DONE flag */
+ 		iwl_set_bit(trans, CSR_GP_CNTRL,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 7ec2d96ccceb..fa315d84e98e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -654,6 +654,13 @@ static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
+ 	}
+ }
+ 
++static inline void iwl_pcie_sw_reset(struct iwl_trans *trans)
++{
++	/* Reset entire device - do controller reset (results in SHRD_HW_RST) */
++	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++	usleep_range(5000, 6000);
++}
++
+ static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
+ 				     struct iwl_txq *txq, int idx)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index e84c5ff389a8..b84b78293e7b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -136,9 +136,7 @@ static void iwl_pcie_gen2_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ 	/* Stop device's DMA activity */
+ 	iwl_pcie_apm_stop_master(trans);
+ 
+-	/* Reset the entire device */
+-	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	/*
+ 	 * Clear "initialization complete" bit to move adapter from
+@@ -188,9 +186,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 	/* Stop the device, and put it in low power state */
+ 	iwl_pcie_gen2_apm_stop(trans, false);
+ 
+-	/* stop and reset the on-board processor */
+-	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	/*
+ 	 * Upon stop, the IVAR table gets erased, so msi-x won't
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index cac584cc07b6..92b3a55d0fbc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -358,9 +358,7 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 	__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
+ 				 CSR_GP_CNTRL_REG_FLAG_XTAL_ON);
+ 
+-	/* Reset entire device - do controller reset (results in SHRD_HW_RST) */
+-	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	/*
+ 	 * Set "initialization complete" bit to move adapter from
+@@ -401,12 +399,7 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 				 apmg_xtal_cfg_reg |
+ 				 SHR_APMG_XTAL_CFG_XTAL_ON_REQ);
+ 
+-	/*
+-	 * Reset entire device again - do controller reset (results in
+-	 * SHRD_HW_RST). Turn MAC off before proceeding.
+-	 */
+-	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	/* Enable LP XTAL by indirect access through CSR */
+ 	apmg_gp1_reg = iwl_trans_pcie_read_shr(trans, SHR_APMG_GP1_REG);
+@@ -499,9 +492,7 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ 		return;
+ 	}
+ 
+-	/* Reset the entire device */
+-	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	/*
+ 	 * Clear "initialization complete" bit to move adapter from
+@@ -1181,9 +1172,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 	/* Stop the device, and put it in low power state */
+ 	iwl_pcie_apm_stop(trans, false);
+ 
+-	/* stop and reset the on-board processor */
+-	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	/*
+ 	 * Upon stop, the IVAR table gets erased, so msi-x won't
+@@ -1657,9 +1646,7 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
+ 		return err;
+ 	}
+ 
+-	/* Reset the entire device */
+-	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	usleep_range(1000, 2000);
++	iwl_pcie_sw_reset(trans);
+ 
+ 	err = iwl_pcie_apm_init(trans);
+ 	if (err)
 -- 
-2.13.0
+2.11.0
