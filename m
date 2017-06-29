@@ -1,49 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:33899 "EHLO
-        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752156AbdFMLjB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36200 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751941AbdF2Sag (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2017 07:39:01 -0400
-Received: by mail-lf0-f48.google.com with SMTP id v20so68720284lfa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2017 04:39:00 -0700 (PDT)
-Subject: Re: [for-4.12] brcmfmac: fix brcmf_fws_add_interface() for USB
- devices
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-References: <1497268595-4836-1-git-send-email-arend.vanspriel@broadcom.com>
- <20170613061312.8B39C607C4@smtp.codeaurora.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <611a8144-0adb-87d2-a5c0-8cc88bc5f1c6@broadcom.com> (sfid-20170613_133904_728498_06CD8C3B)
-Date: Tue, 13 Jun 2017 13:38:58 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170613061312.8B39C607C4@smtp.codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+        Thu, 29 Jun 2017 14:30:36 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 29 Jun 2017 21:30:12 +0300
+Message-Id: <20170629183027.15408-1-luca@coelho.fi> (sfid-20170629_203045_193262_C5E13298)
+Subject: [PATCH 00/15] iwlwifi: updates intended for v4.13 2017-06-29
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Luca Coelho <luciano.coelho@intel.com>
+
+Hi,
+
+This is the final patchset that I'd like to get in for v4.13.  In this
+one, I concentrated on the changes needed to support version 33 of our
+firmware API, which is the version we are going to release for a new
+hardware family (the so called 9000 series).  Without this, we won't
+be able to support this soon-to-be-made-available HW family in v4.13.
+
+I also included a few important fixes for previous hardware families.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a comnined pull-request with the previous bunch later.
+
+It would be really awesome if we could still include this in v4.13.
+
+Please review.
+
+Cheers,
+Luca.
 
 
-On 13-06-17 08:13, Kalle Valo wrote:
-> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> 
->> USB devices rely on queuing functionality provided by the fwsignal
->> module regardless the mode fwsignal is operating in. For this some
->> data structure needs to be reserved which is tied to the interface,
->> which is done by brcmf_fws_add_interface(). However, it checks the
->> mode. Replace that by checking result from brcmf_fws_queue_skbs().
+Emmanuel Grumbach (4):
+  iwlwifi: mvm: don't send fetch the TID from a non-QoS packet in TSO
+  iwlwifi: mvm: don't mess the SNAP header in TSO for non-QoS packets
+  iwlwifi: pcie: propagate iwl_pcie_apm_init's status
+  iwlwifi: pcie: wait longer after device reset
 
-Ok. Please add:
-"""
-Otherwise the driver will crash in a null pointer dereference when data
-is transmitted on the interface.
-"""
+Johannes Berg (9):
+  iwlwifi: mvm: quietly accept non-sta assoc response frames
+  iwlwifi: pcie: add MSI-X interrupt tracing
+  iwlwifi: mvm: properly enable IP header checksumming
+  iwlwifi: mvm: fix mac80211 queue tracking
+  iwlwifi: mvm: map cab_queue to real one earlier
+  iwlwifi: mvm: fix mac80211's hw_queue in DQA mode
+  iwlwifi: pcie: reconfigure MSI-X HW on resume
+  iwlwifi: mvm: remove DQA non-STA client mode special case
+  iwlwifi: mvm: quietly accept non-sta disassoc frames
 
-Regards,
-Arend
+Liad Kaufman (1):
+  iwlwifi: mvm: update rx statistics cmd api
 
->> Fixes: fc0471e3e884 ("brcmfmac: ignore interfaces when fwsignal is disabled")
->> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> 
-> Same here, a short description of the bug would be nice.
-> 
+Luca Coelho (1):
+  iwlwifi: bump MAX API for 8000/9000/A000 to 33
+
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |   4 +
+ .../net/wireless/intel/iwlwifi/iwl-devtrace-io.h   |  26 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   | 235 +++++++++++++--------
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-stats.h  | 167 +++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  32 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  13 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  10 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |  83 +++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  73 ++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  10 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |   3 +
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   7 +
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   4 +
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |   8 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  44 ++--
+ 19 files changed, 512 insertions(+), 221 deletions(-)
+
+-- 
+2.11.0
