@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0013.hostedemail.com ([216.40.44.13]:41280 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752647AbdFPMEr (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:35967 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751776AbdF2VXN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 08:04:47 -0400
-Message-ID: <1497614684.10546.9.camel@perches.com> (sfid-20170616_140450_615428_DECB47D9)
-Subject: Re: [RFC] networking: add and use skb_put_u8()
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 16 Jun 2017 05:04:44 -0700
-In-Reply-To: <1497608566.2622.7.camel@sipsolutions.net>
-References: <20170616090300.13805-1-johannes@sipsolutions.net>
-         <b7ba5145-b4f0-0f86-e93d-ad8700483ff2@broadcom.com>
-         (sfid-20170616_121658_816680_06914E8C) <1497608566.2622.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Thu, 29 Jun 2017 17:23:13 -0400
+MIME-Version: 1.0
+Reply-To: kerolasa@gmail.com
+In-Reply-To: <1498745040.3141.6.camel@sipsolutions.net>
+References: <alpine.LNX.2.20.1706251339500.25762@imuri> <1498745040.3141.6.camel@sipsolutions.net>
+From: Sami Kerola <kerolasa@iki.fi>
+Date: Thu, 29 Jun 2017 22:23:12 +0100
+Message-ID: <CAG27Bk0tKzqxkm6qqjGO6GJE7vxReRAQbvYGexjp+PBLo+RK_A@mail.gmail.com> (sfid-20170629_232335_924485_436B2EF3)
+Subject: Re: rfkill(8) move and improvements
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>, Karel Zak <kzak@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        util-linux <util-linux@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-06-16 at 12:22 +0200, Johannes Berg wrote:
-> On Fri, 2017-06-16 at 12:16 +0200, Arend van Spriel wrote:
-> > 
-> > >      @@
-> > >      expression SKB, C, S;
-> > >      typedef u8;
-> > >      identifier fn = {skb_put};
-> > >      fresh identifier fn2 = fn ## "_u8";
-> > >      @@
-> > >      - *(u8 *)fn(SKB, S) = C;
-> > >      + fn2(SKB, C);
-> > > 
-> > > Note that due to the "C", the spatch isn't perfect, it should
-> > > have checked that C is 1, but there's also places that use a
-> > 
-> > Don't you mean "S" here?
-> 
-> Indeed, I mean S, will fix.
+On 29 June 2017 at 15:04, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> The otherday I ran powertop and it did rfkill to save battery, which
+>> was particularly annoying because I had not installed rfkill(8)
+>> package.
+>> Fixing the immediate issue was relatively easy, but the ordeal made
+>> me wonder if this tool could be moved to a package that is installed
+>> by default to all systems, such as util-linux.
+>
+> [...]
+>
+>> What do you think, would the move and proposed updates be ok?
+>
+> I can't say I mind, and most of your proposed changes seem sensible,
+> though I haven't reviewed them in enough detail to comment on them.
+> Something that caught my eye here was comparing a string to _("all")
+> which seems wrong, since that'd mean you'd have to type the translated
+> version even on the command line? That seems really awkward (to put it
+> charitably).
+>
+> However, at the same time, I have very little desire to get involved
+> with util-linux as yet another project, so frankly I'd probably
+> continue to "maintain" the current rfkill tool - which really hasn't
+> changed in a very long time, and hope somebody else picks up
+> maintenance of rfkill included in util-linux.
 
-Perhaps
+Hello Johannes,
 
-	skb_put_data(skb, &c, sizeof(c))
+Thank you for feedback. I removed the rfkill command strings from
+translations, and gave hint to translators how to deal with them in
+usage() output. Also in same go updates are rebased on top of
+most recent upstream to get usage() --help and --version handling
+done correctly.
 
-as that avoids api expansion.
+What comes  to maintenance I am fairly optimistic util-linux is a
+good home for the rfkill. Karel, what do you think?
 
-Optimizing the indirections and the size in a macro front-end
-in skb_put_data may be better as it's would be completely
-consistent for all use styles.
+-- 
+Sami Kerola
+http://www.iki.fi/kerolasa/
