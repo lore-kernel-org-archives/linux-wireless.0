@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53892 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43028 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753611AbdFVWlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2017 18:41:15 -0400
-Date: Fri, 23 Jun 2017 00:41:11 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Mateusz Jurczyk <mjurczyk@google.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        id S1752787AbdF2NIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Jun 2017 09:08:22 -0400
+Message-ID: <1498741697.3141.2.camel@sipsolutions.net> (sfid-20170629_150839_071297_004694AE)
+Subject: Re: [PATCH] mac80211_hwsim: use dyndbg for debug messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lubomir Rintel <lkundrak@v3.sk>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] nfc: Add sockaddr length checks before accessing
- sa_family in bind handlers
-Message-ID: <20170622224111.GI21214@zurbaran.ger.intel.com> (sfid-20170623_004235_883165_941A9E4E)
-References: <20170613164428.3643-1-mjurczyk@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170613164428.3643-1-mjurczyk@google.com>
+Date: Thu, 29 Jun 2017 15:08:17 +0200
+In-Reply-To: <1498677005.21787.1.camel@v3.sk>
+References: <20170628131726.15528-1-lkundrak@v3.sk>
+         <1498662178.12531.6.camel@sipsolutions.net>
+         <1498677005.21787.1.camel@v3.sk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 06:44:28PM +0200, Mateusz Jurczyk wrote:
-> Verify that the caller-provided sockaddr structure is large enough to
-> contain the sa_family field, before accessing it in bind() handlers of the
-> AF_NFC socket. Since the syscall doesn't enforce a minimum size of the
-> corresponding memory region, very short sockaddrs (zero or one byte long)
-> result in operating on uninitialized memory while referencing .sa_family.
+On Wed, 2017-06-28 at 21:10 +0200, Lubomir Rintel wrote:
 > 
-> Signed-off-by: Mateusz Jurczyk <mjurczyk@google.com>
-> ---
->  net/nfc/llcp_sock.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-Applied to nfc-next, thanks.
+> I do use it as a development tool. I find it very convenient to
+> always have a bunch of libvirt-managed LXC containers, some running
+> hostapd instances with various access point configurations and some
+> used for NetworkManager development and a mac80211_hwsim radio in
+> each of them.
 
-Cheers,
-Samuel.
+Hah. Ok, I usually run it in a VM, so the output doesn't bother me at
+all.
+
+I guess I can live with this, but can you please reindent things
+properly? Also, we'll have to update the wpa_supplicant hwsim testing
+scripting to turn this on I guess.
+
+johannes
