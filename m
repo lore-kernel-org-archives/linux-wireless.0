@@ -1,62 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36254 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753211AbdF2Sal (ORCPT
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:32888 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751420AbdF2ENj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:30:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Jun 2017 21:30:19 +0300
-Message-Id: <20170629183027.15408-8-luca@coelho.fi> (sfid-20170629_203052_514880_1BD94EAA)
-In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
-References: <20170629183027.15408-1-luca@coelho.fi>
-Subject: [PATCH 07/15] iwlwifi: mvm: don't send fetch the TID from a non-QoS packet in TSO
+        Thu, 29 Jun 2017 00:13:39 -0400
+Received: by mail-ua0-f195.google.com with SMTP id w19so5883764uac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2017 21:13:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87zics2ijg.fsf@purkki.adurom.net>
+References: <20170622120004.GA5783@symbol-HP-ZBook-15> <87zics2ijg.fsf@purkki.adurom.net>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Thu, 29 Jun 2017 09:43:37 +0530
+Message-ID: <CAFqt6zY7eLc7k5E8rAXL1NRjAaEswNDJ0E8vJB42DtHTjqt2PA@mail.gmail.com> (sfid-20170629_061343_367084_A3B863C6)
+Subject: Re: [PATCH v2] rtlwifi: Replace hardcode value with macro
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi Kalle,
 
-Getting the TID of a packet before we know it is a QoS data
-packet isn't a good idea. Delay the TID retrieval until
-we know the packet is a QoS data packet.
+On Wed, Jun 28, 2017 at 9:47 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Souptick Joarder <jrdr.linux@gmail.com> writes:
+>
+>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+>> and hw->max_rate_tries are replaced by macro.
+>>
+>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+>> ---
+>> Changes in v2:
+>>    - Signed-off was missing in previous one.
 
-Fixes: bb81bb68f472 ("iwlwifi: mvm: add Tx A-MSDU inside A-MPDU")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+As Signed-off was missing in first patch, so I send v2 with change
+logs mentioned the same.
+Just for clarification, shall I replace the comment mentioned in
+change log with "no change"?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 12a35af66918..172f0aa8d019 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -715,11 +715,6 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	snap_ip_tcp = 8 + skb_transport_header(skb) - skb_network_header(skb) +
- 		tcp_hdrlen(skb);
- 
--	qc = ieee80211_get_qos_ctl(hdr);
--	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
--	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
--		return -EINVAL;
--
- 	dbg_max_amsdu_len = ACCESS_ONCE(mvm->max_amsdu_len);
- 
- 	if (!sta->max_amsdu_len ||
-@@ -730,6 +725,11 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		goto segment;
- 	}
- 
-+	qc = ieee80211_get_qos_ctl(hdr);
-+	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
-+	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
-+		return -EINVAL;
-+
- 	/*
- 	 * Do not build AMSDU for IPv6 with extension headers.
- 	 * ask stack to segment and checkum the generated MPDUs for us.
--- 
-2.11.0
+>>
+>>  drivers/net/wireless/realtek/rtlwifi/base.c | 6 +++---
+>>  drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
+>>  2 files changed, 5 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+>> index bdc3791..f45d093 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+>> @@ -422,9 +422,9 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+>>       hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
+>>
+>>       /* TODO: Correct this value for our hw */
+>> -     /* TODO: define these hard code value */
+>> -     hw->max_listen_interval = 10;
+>> -     hw->max_rate_tries = 4;
+>> +     /* defined these hard code values */
+>> +     hw->max_listen_interval = MAX_LISTEN_INTERVAL;
+>> +     hw->max_rate_tries = MAX_RATE_TRIES;
+>
+> Like Larry said, the comment does not make any sense. Please remove it
+> and send v3.
+>
+> --
+> Kalle Valo
+
+Souptick
