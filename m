@@ -1,485 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:42891 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751621AbdFIMJA (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36338 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753432AbdF2ScB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2017 08:09:00 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+        Thu, 29 Jun 2017 14:32:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 2/9] cfg80211: support 4-way handshake offloading for 802.1X
-Date: Fri,  9 Jun 2017 13:08:43 +0100
-Message-Id: <1497010130-16186-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170609_140947_595342_EE94CC93)
-In-Reply-To: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 29 Jun 2017 21:30:25 +0300
+Message-Id: <20170629183027.15408-14-luca@coelho.fi> (sfid-20170629_203210_867108_63B28B37)
+In-Reply-To: <20170629183027.15408-1-luca@coelho.fi>
+References: <20170629183027.15408-1-luca@coelho.fi>
+Subject: [PATCH 13/15] iwlwifi: pcie: propagate iwl_pcie_apm_init's status
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Add API for setting the PMK to the driver. For FT support, allow
-setting also the PMK-R0 Name.
+iwl_pcie_apm_init can fail so make sure that the caller
+takes the status into account.
+Also, ensure that the error that iwl_pcie_apm_init can emit
+will appear in the kernel log by default.
 
-This can be used by drivers that support 4-Way handshake offload
-while IEEE802.1X authentication is managed by upper layers.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[arend.vanspriel@broadcom.com: add WANT_1X_4WAY_HS attribute]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- V2:
- - rename ATTR_WANT_1X_OFFLOAD to ATTR_WANT_1X_4WAY_HS.
- - add remarks about driver dealing with PMK clearing upon disconnect.
- V3:
- - - added documentation about EAPOL handshake offload for 802.1X.
----
- include/linux/ieee80211.h    |   3 ++
- include/net/cfg80211.h       |  32 +++++++++++++
- include/uapi/linux/nl80211.h |  38 +++++++++++++++-
- net/wireless/core.c          |   5 +++
- net/wireless/nl80211.c       | 105 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |  25 +++++++++++
- net/wireless/trace.h         |  60 +++++++++++++++++++++++++
- 7 files changed, 267 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index e97ca3a..34e1bcd 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2400,8 +2400,11 @@ enum ieee80211_sa_query_action {
- 
- #define WLAN_MAX_KEY_LEN		32
- 
-+#define WLAN_PMK_NAME_LEN		16
- #define WLAN_PMKID_LEN			16
-+#define WLAN_PMK_LEN_EAP_LEAP		16
- #define WLAN_PMK_LEN			32
-+#define WLAN_PMK_LEN_SUITE_B_192	48
- 
- #define WLAN_OUI_WFA			0x506f9a
- #define WLAN_OUI_TYPE_WFA_P2P		9
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1b288ba..2174e51 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2112,6 +2112,8 @@ struct cfg80211_bss_selection {
-  * @fils_erp_rrk: ERP re-authentication Root Key (rRK) used to derive additional
-  *	keys in FILS or %NULL if not specified.
-  * @fils_erp_rrk_len: Length of @fils_erp_rrk in octets.
-+ * @want_1x: indicates user-space supports and wants to use 802.1X driver
-+ *	offload of 4-way handshake.
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index a7d0b5c5e4a0..cac584cc07b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -236,7 +236,8 @@ void iwl_pcie_apm_config(struct iwl_trans *trans)
   */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-@@ -2144,6 +2146,7 @@ struct cfg80211_connect_params {
- 	u16 fils_erp_next_seq_num;
- 	const u8 *fils_erp_rrk;
- 	size_t fils_erp_rrk_len;
-+	bool want_1x;
- };
- 
- /**
-@@ -2566,6 +2569,23 @@ struct cfg80211_nan_func {
- };
- 
- /**
-+ * struct cfg80211_pmk_conf - PMK configuration
-+ *
-+ * @aa: authenticator address
-+ * @pmk_len: PMK length in bytes.
-+ * @pmk: the PMK material
-+ * @pmk_r0_name: PMK-R0 Name. NULL if not applicable (i.e., the PMK
-+ *	is not PMK-R0). When pmk_r0_name is not NULL, the pmk field
-+ *	holds PMK-R0.
-+ */
-+struct cfg80211_pmk_conf {
-+	const u8 *aa;
-+	u8 pmk_len;
-+	const u8 *pmk;
-+	const u8 *pmk_r0_name;
-+};
+ static int iwl_pcie_apm_init(struct iwl_trans *trans)
+ {
+-	int ret = 0;
++	int ret;
 +
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -2881,6 +2901,13 @@ struct cfg80211_nan_func {
-  *	All other parameters must be ignored.
-  *
-  * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
-+ *
-+ * @set_pmk: configure the PMK to be used for offloaded 802.1X 4-Way handshake.
-+ *	If not deleted through @del_pmk the PMK remains valid until disconnect
-+ *	upon which the driver should clear it.
-+ *	(invoked with the wireless_dev mutex held)
-+ * @del_pmk: delete the previously configured PMK for the given authenticator.
-+ *	(invoked with the wireless_dev mutex held)
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3169,6 +3196,11 @@ struct cfg80211_ops {
- 	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    const bool enabled);
-+
-+	int	(*set_pmk)(struct wiphy *wiphy, struct net_device *dev,
-+			   const struct cfg80211_pmk_conf *conf);
-+	int	(*del_pmk)(struct wiphy *wiphy, struct net_device *dev,
-+			   const u8 *aa);
- };
+ 	IWL_DEBUG_INFO(trans, "Init card's basic functions\n");
+ 
+ 	/*
+@@ -287,8 +288,8 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
+ 			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+ 			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
+ 	if (ret < 0) {
+-		IWL_DEBUG_INFO(trans, "Failed to init the card\n");
+-		goto out;
++		IWL_ERR(trans, "Failed to init the card\n");
++		return ret;
+ 	}
+ 
+ 	if (trans->cfg->host_interrupt_operation_mode) {
+@@ -336,8 +337,7 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
+ 
+ 	set_bit(STATUS_DEVICE_ENABLED, &trans->status);
+ 
+-out:
+-	return ret;
++	return 0;
+ }
  
  /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fc244c3..2f49275 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -182,6 +182,17 @@
-  * this offload may reject the %NL80211_CMD_CONNECT when no preshared
-  * key material is provided, for example when that driver does not
-  * support setting the temporal keys through %CMD_NEW_KEY.
-+ *
-+ * Similarly @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X flag can be
-+ * set by drivers indicating offload support of the PTK/GTK EAPOL
-+ * handshakes during 802.1X authentication. In order to use the offload
-+ * the %NL80211_CMD_CONNECT should have %NL80211_ATTR_WANT_1X_4WAY_HS
-+ * attribute flag. Drivers supporting this offload may reject the
-+ * %NL80211_CMD_CONNECT when the attribute flag is not present.
-+ *
-+ * For 802.1X the PMK or PMK-R0 are set by providing %NL80211_ATTR_PMK
-+ * using %NL80211_CMD_SET_PMK. For offloaded FT support also
-+ * %NL80211_ATTR_PMKR0_NAME must be provided.
-  */
- 
- /**
-@@ -959,6 +970,14 @@
-  *	does not result in a change for the current association. Currently,
-  *	only the %NL80211_ATTR_IE data is used and updated with this command.
-  *
-+ * @NL80211_CMD_SET_PMK: For offloaded 4-Way handshake, set the PMK or PMK-R0
-+ *	for the given authenticator address (specified with &NL80211_ATTR_MAC).
-+ *	When &NL80211_ATTR_PMKR0_NAME is set, &NL80211_ATTR_PMK specifies the
-+ *	PMK-R0, otherwise it specifies the PMK.
-+ * @NL80211_CMD_DEL_PMK: For offloaded 4-Way handshake, delete the previously
-+ *	configured PMK for the authenticator address identified by
-+ *	&NL80211_ATTR_MAC.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1158,6 +1177,9 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_UPDATE_CONNECT_PARAMS,
- 
-+	NL80211_CMD_SET_PMK,
-+	NL80211_CMD_DEL_PMK,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2095,13 +2117,20 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMK: attribute for passing PMK key material. Used with
-  *	%NL80211_CMD_SET_PMKSA for the PMKSA identified by %NL80211_ATTR_PMKID.
-  *	For %NL80211_CMD_CONNECT it is used to provide PSK for offloading 4-way
-- *	handshake for WPA/WPA2-PSK networks.
-+ *	handshake for WPA/WPA2-PSK networks. For 802.1X authentication it is
-+ *	used with %NL80211_CMD_SET_PMK. For offloaded FT support this attribute
-+ *	specifies the PMK-R0 if NL80211_ATTR_PMKR0_NAME is included as well.
-  *
-  * @NL80211_ATTR_SCHED_SCAN_MULTI: flag attribute which user-space shall use to
-  *	indicate that it supports multiple active scheduled scan requests.
-  * @NL80211_ATTR_SCHED_SCAN_MAX_REQS: indicates maximum number of scheduled
-  *	scan request that may be active for the device (u32).
-  *
-+ * @NL80211_ATTR_WANT_1X_4WAY_HS: flag attribute which user-space can include
-+ *	in %NL80211_CMD_CONNECT to indicate that for 802.1X authentication it
-+ *	wants to use the supported offload of the 4-way handshake.
-+ * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2524,6 +2553,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_SCHED_SCAN_MULTI,
- 	NL80211_ATTR_SCHED_SCAN_MAX_REQS,
- 
-+	NL80211_ATTR_WANT_1X_4WAY_HS,
-+	NL80211_ATTR_PMKR0_NAME,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4869,6 +4901,9 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK: Device supports doing 4-way
-  *	handshake with PSK in station mode (PSK is passed as part of the connect
-  *	and associate commands).
-+ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X: Device supports doing 4-way
-+ *	handshake with 802.1X in station mode (needs to pass EAP frames to
-+ *	the host and accept the set_pmk/del_pmk commands).
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4890,6 +4925,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_CQM_RSSI_LIST,
- 	NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
- 	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
-+	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 83ea164..7b33e8c 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -711,6 +711,11 @@ int wiphy_register(struct wiphy *wiphy)
- 		    (wiphy->bss_select_support & ~(BIT(__NL80211_BSS_SELECT_ATTR_AFTER_LAST) - 2))))
- 		return -EINVAL;
- 
-+	if (WARN_ON(wiphy_ext_feature_isset(&rdev->wiphy,
-+					    NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X) &&
-+		    (!rdev->ops->set_pmk || !rdev->ops->del_pmk)))
-+		return -EINVAL;
-+
- 	if (wiphy->addresses)
- 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2c6863a..8148b01 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8881,6 +8881,12 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 
- 	connect.privacy = info->attrs[NL80211_ATTR_PRIVACY];
- 
-+	if (info->attrs[NL80211_ATTR_WANT_1X_4WAY_HS] &&
-+	    !wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X))
-+		return -EINVAL;
-+	connect.want_1x = info->attrs[NL80211_ATTR_WANT_1X_4WAY_HS];
-+
- 	err = nl80211_crypto_settings(rdev, info, &connect.crypto,
- 				      NL80211_MAX_NR_CIPHER_SUITES);
- 	if (err)
-@@ -12265,6 +12271,90 @@ static int nl80211_set_multicast_to_unicast(struct sk_buff *skb,
- 	return rdev_set_multicast_to_unicast(rdev, dev, enabled);
- }
- 
-+static int nl80211_set_pmk(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_pmk_conf pmk_conf = {};
+@@ -514,13 +514,16 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ static int iwl_pcie_nic_init(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
 +	int ret;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+		return -EOPNOTSUPP;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X))
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC] || !info->attrs[NL80211_ATTR_PMK])
-+		return -EINVAL;
-+
-+	wdev_lock(wdev);
-+	if (!wdev->current_bss) {
-+		ret = -ENOTCONN;
-+		goto out;
-+	}
-+
-+	pmk_conf.aa = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	if (memcmp(pmk_conf.aa, wdev->current_bss->pub.bssid, ETH_ALEN)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	pmk_conf.pmk = nla_data(info->attrs[NL80211_ATTR_PMK]);
-+	pmk_conf.pmk_len = nla_len(info->attrs[NL80211_ATTR_PMK]);
-+	if (pmk_conf.pmk_len != WLAN_PMK_LEN &&
-+	    pmk_conf.pmk_len != WLAN_PMK_LEN_SUITE_B_192) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_PMKR0_NAME]) {
-+		int r0_name_len = nla_len(info->attrs[NL80211_ATTR_PMKR0_NAME]);
-+
-+		if (r0_name_len != WLAN_PMK_NAME_LEN) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		pmk_conf.pmk_r0_name =
-+			nla_data(info->attrs[NL80211_ATTR_PMKR0_NAME]);
-+	}
-+
-+	ret = rdev_set_pmk(rdev, dev, &pmk_conf);
-+out:
-+	wdev_unlock(wdev);
-+	return ret;
-+}
-+
-+static int nl80211_del_pmk(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	const u8 *aa;
-+	int ret;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+		return -EOPNOTSUPP;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X))
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
-+	wdev_lock(wdev);
-+	aa = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	ret = rdev_del_pmk(rdev, dev, aa);
-+	wdev_unlock(wdev);
-+
-+	return ret;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13140,6 +13230,21 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_PMK,
-+		.doit = nl80211_set_pmk,
-+		.policy = nl80211_policy,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_DEL_PMK,
-+		.doit = nl80211_del_pmk,
-+		.policy = nl80211_policy,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+
- };
  
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 0598c1e..ce23d7d 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1164,4 +1164,29 @@ static inline int rdev_set_qos_map(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
-+static inline int rdev_set_pmk(struct cfg80211_registered_device *rdev,
-+			       struct net_device *dev,
-+			       struct cfg80211_pmk_conf *pmk_conf)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_rdev_set_pmk(&rdev->wiphy, dev, pmk_conf);
-+	if (rdev->ops->set_pmk)
-+		ret = rdev->ops->set_pmk(&rdev->wiphy, dev, pmk_conf);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
-+static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
-+			       struct net_device *dev, const u8 *aa)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_rdev_del_pmk(&rdev->wiphy, dev, aa);
-+	if (rdev->ops->del_pmk)
-+		ret = rdev->ops->del_pmk(&rdev->wiphy, dev, aa);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ca8b205..0f8db41 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2258,6 +2258,66 @@
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(addr))
- );
+ 	/* nic_init */
+ 	spin_lock(&trans_pcie->irq_lock);
+-	iwl_pcie_apm_init(trans);
+-
++	ret = iwl_pcie_apm_init(trans);
+ 	spin_unlock(&trans_pcie->irq_lock);
  
-+TRACE_EVENT(rdev_set_pmk,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 struct cfg80211_pmk_conf *pmk_conf),
++	if (ret)
++		return ret;
 +
-+	TP_ARGS(wiphy, netdev, pmk_conf),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(aa)
-+		__field(u8, pmk_len)
-+		__field(u8, pmk_r0_name_len)
-+		__dynamic_array(u8, pmk, pmk_conf->pmk_len)
-+		__dynamic_array(u8, pmk_r0_name, WLAN_PMK_NAME_LEN)
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(aa, pmk_conf->aa);
-+		__entry->pmk_len = pmk_conf->pmk_len;
-+		__entry->pmk_r0_name_len =
-+		pmk_conf->pmk_r0_name ? WLAN_PMK_NAME_LEN : 0;
-+		memcpy(__get_dynamic_array(pmk), pmk_conf->pmk,
-+		       pmk_conf->pmk_len);
-+		memcpy(__get_dynamic_array(pmk_r0_name), pmk_conf->pmk_r0_name,
-+		       pmk_conf->pmk_r0_name ? WLAN_PMK_NAME_LEN : 0);
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT
-+		  "pmk_len=%u, pmk: %s pmk_r0_name: %s", WIPHY_PR_ARG,
-+		  NETDEV_PR_ARG, MAC_PR_ARG(aa), __entry->pmk_len,
-+		  __print_array(__get_dynamic_array(pmk),
-+				__get_dynamic_array_len(pmk), 1),
-+		  __entry->pmk_r0_name_len ?
-+		  __print_array(__get_dynamic_array(pmk_r0_name),
-+				__get_dynamic_array_len(pmk_r0_name), 1) : "")
-+);
-+
-+TRACE_EVENT(rdev_del_pmk,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, const u8 *aa),
-+
-+	TP_ARGS(wiphy, netdev, aa),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(aa)
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(aa, aa);
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(aa))
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
+ 	iwl_pcie_set_pwr(trans, false);
+ 
+ 	iwl_op_mode_nic_config(trans->op_mode);
+@@ -1658,7 +1661,9 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
+ 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+ 	usleep_range(1000, 2000);
+ 
+-	iwl_pcie_apm_init(trans);
++	err = iwl_pcie_apm_init(trans);
++	if (err)
++		return err;
+ 
+ 	iwl_pcie_init_msix(trans_pcie);
+ 
 -- 
-1.9.1
+2.11.0
