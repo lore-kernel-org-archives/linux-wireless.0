@@ -1,90 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:33169 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751608AbdFNJOs (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:51744 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751817AbdF3Hyg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2017 05:14:48 -0400
-Received: by mail-wr0-f180.google.com with SMTP id v104so169309537wrb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2017 02:14:48 -0700 (PDT)
-Subject: Re: [PATCH V3 3/9] nl80211: add authorized flag to CONNECT event
-To: Johannes Berg <johannes@sipsolutions.net>
+        Fri, 30 Jun 2017 03:54:36 -0400
+Date: Fri, 30 Jun 2017 10:52:40 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: pkshih@realtek.com
 Cc: linux-wireless@vger.kernel.org
-References: <1497010130-16186-1-git-send-email-arend.vanspriel@broadcom.com>
- <1497010130-16186-4-git-send-email-arend.vanspriel@broadcom.com>
- <1497344524.6068.5.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6e0ab1a9-04c3-6840-bab2-119624087e21@broadcom.com> (sfid-20170614_111455_093482_9E9680A8)
-Date: Wed, 14 Jun 2017 11:14:44 +0200
+Subject: [bug report] rtlwifi: Add rx ampdu cfg for btcoexist.
+Message-ID: <20170628134840.wabf6j6m6aneljy5@mwanda> (sfid-20170630_095440_549660_1D2FC5AF)
 MIME-Version: 1.0
-In-Reply-To: <1497344524.6068.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Ping-Ke Shih,
+
+The patch 2635664e6e4a: "rtlwifi: Add rx ampdu cfg for btcoexist."
+from Jun 18, 2017, leads to the following static checker warning:
+
+	drivers/net/wireless/realtek/rtlwifi/base.c:1664 rtl_rx_ampdu_apply()
+	error: uninitialized symbol 'reject_agg'.
+
+drivers/net/wireless/realtek/rtlwifi/base.c
+  1655  void rtl_rx_ampdu_apply(struct rtl_priv *rtlpriv)
+  1656  {
+  1657          struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+  1658          u8 reject_agg, ctrl_agg_size = 0, agg_size;
+  1659  
+  1660          if (rtlpriv->cfg->ops->get_btc_status())
+  1661                  btc_ops->btc_get_ampdu_cfg(rtlpriv, &reject_agg,
+  1662                                             &ctrl_agg_size, &agg_size);
+  1663  
+  1664          RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+  1665                   "Set RX AMPDU: coex - reject=%d, ctrl_agg_size=%d, size=%d",
+  1666                   reject_agg, ctrl_agg_size, agg_size);
+                         ^^^^^^^^^^                 ^^^^^^^^
+potentially uninitialized.
+
+  1667  
+  1668          rtlpriv->hw->max_rx_aggregation_subframes =
+  1669                  (ctrl_agg_size ? agg_size : IEEE80211_MAX_AMPDU_BUF);
+  1670  }
+  1671  EXPORT_SYMBOL(rtl_rx_ampdu_apply);
 
 
-On 6/13/2017 11:02 AM, Johannes Berg wrote:
-> On Fri, 2017-06-09 at 13:08 +0100, Arend van Spriel wrote:
->> When the driver supports offloading of the PTK/GTK handshakes
->> completion of that during connect changes the layer 2 control
->> port state to authorized. This patch allows the driver to pass
->> that state in cfg80211_connect_done() resulting in adding the
->> new flag NL80211_ATTR_PORT_AUTHORIZED in the NL80211_CMD_CONNECT
->> notification. For 802.1X the driver is expected to issue the
->> NL80211_CMD_CONNECT notification twice. First without the new
->> attribute to inform user-space that 802.1X authentication can
->> start and a second one with the new attribute to indicate the
->> completion of the handshakes.
-> 
-> So I was going to apply this, but now I'm no longer sure.
-
-Not sure if this means you can be convinced, but let me try anyway ;-)
-
-> First of all, I'm concerned it could confuse older tools that don't
-> expect to see the notification twice. OTOH, they'd get the connected
-> notification now and not really know whether or not data can be passed,
-> so it seems unlikely they'd rely on it - but are we really sure about
-> that?
-
-Not sure what should be considered under the term "older tools". For 
-what it is worth, in wpa_supplicant both nl80211 CONNECT and ROAMED 
-event result in wpa_supplicant ASSOC event handled in 
-wpa_supplicant/events.c. This event already deals with authorized flag 
-to support QCA vendor stuff which typed it as u8 attribute iso flag.
-
-> Additionally, I just discussed this with Avi, and it's not clear to us
-> what the second notification is actually useful for? If you were going
-> to say maybe it makes sense for when you can't send ROAMED, but still
-> connected again to the same network so you've already done the 4-way-HS
-> at the time of the first notification - that I think makes sense.
-> 
-> But it seems that wpa_s moves all state machines to COMPLETE when it
-> sends the PMK to the device for offload, so it won't really care about
-> when that finished?
-> 
-> However, I think this might actually be a BAD thing, because it would
-> leave higher layers trying to do DHCP when the link isn't actually
-> ready yet.
-
-Indeed. It introduces a window where the link is not ready. When I 
-stumbled on that in wpa_s it made sense to me to have the second 
-notification.
-
-> (This, btw, is another problem we can solve with the EAPOL-over-nl80211
-> since then we can set the carrier later when the port is authorized.)
-
-Agree. I did see that thread. However I kinda missed the whole 
-EAPOL-over-nl80211 idea. Was that result of summit discussion?
-
-> So - I have no objections to this patch, but I think the double
-> notification needs to be revised, and if needed a separate notification
-> for "4-way-HS is done now" can be added.
-
-The separate notification was suggested, but as you guys already added a 
-flag in the ROAMED event we decided to do the same for CONNECT event. If 
-you still have concerns about the double CONNECT we can revisit that or 
-leave it for now and deal with it through carrier state with 
-EAPOL-over-nl80211.
-
-Regards,
-Arend
+regards,
+dan carpenter
