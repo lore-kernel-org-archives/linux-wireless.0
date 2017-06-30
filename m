@@ -1,91 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33368 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751014AbdFRUby (ORCPT
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:43923 "EHLO
+        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751333AbdF3Esv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2017 16:31:54 -0400
+        Fri, 30 Jun 2017 00:48:51 -0400
+From: Shikha SINGH <shikha.singh@st.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-nfc@lists.01.org" <linux-nfc@lists.01.org>,
+        Raunaque Mujeeb QUAISER <raunaque.quaiser@st.com>,
+        Manoj KUMAR <manoj.kumar@st.com>,
+        Sylvain FIDELIS <sylvain.fidelis@st.com>,
+        Raphael COLLADO <Raphael.COLLADO@st.com>
+Subject: RE: [[linux-nfc][PATCH v1] 2/6] NFC: nfcst: Add ST NFC Transceiver
+ core framework
+Date: Fri, 30 Jun 2017 04:46:41 +0000
+Message-ID: <d46103b672f14bd9a14918c1d2369ebd@SFHDAG2NODE3.st.com> (sfid-20170630_064924_896931_47835AB0)
+References: <1493705023-8710-1-git-send-email-shikha.singh@st.com>
+ <1493705023-8710-3-git-send-email-shikha.singh@st.com>
+ <20170625225926.GK21214@zurbaran.ger.intel.com>
+In-Reply-To: <20170625225926.GK21214@zurbaran.ger.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20170618191854.17767-1-Jason@zx2c4.com>
-References: <1497720871224217@kroah.com> <20170618191854.17767-1-Jason@zx2c4.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Sun, 18 Jun 2017 23:31:52 +0300
-Message-ID: <CANUX_P1=8R5E8uk7VsqyAXQvRD52J1XdcL1R6R6GJeM_dv85vw@mail.gmail.com> (sfid-20170618_223208_904867_4E6579DD)
-Subject: Re: [PATCH] mac80211/wpa: use constant time memory comparison for MACs
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 18, 2017 at 10:18 PM, Jason A. Donenfeld <Jason@zx2c4.com> wrote:
-> Otherwise, we enable all sorts of forgeries via timing attack.
+Hello Samuel,
+            Skb_put()  returns pointer of type unsigned char  (unsigned char *).
+ So here we are dereferencing unsigned char pointer not a void pointer. It should not create any issue.
 
-crypto_memneq's description says:
+Let me know your view.
+Thanks & Regards,
+Shikha
+ 
 
-Returns 0 when data is equal, 1 otherwise.
-
-Clearly this is not suitable here. You are allowing replay attacks...
-For network drivers, this is worse than timing attacks. You still need
-to explain how you can exploit timing attacks *on a remote system*. On
-your local system, threads are impacted etc... Fine. On a remote
-system (you are in Rx path here..) how do you exploit them?
-
-
+>-----Original Message-----
+>From: Samuel Ortiz [mailto:sameo@linux.intel.com]
+>Sent: Monday, June 26, 2017 4:35 AM
+>To: Shikha SINGH <shikha.singh@st.com>
+>Cc: linux-wireless@vger.kernel.org; linux-nfc@lists.01.org; Raunaque Mujeeb
+>QUAISER <raunaque.quaiser@st.com>; Manoj KUMAR
+><manoj.kumar@st.com>; Sylvain FIDELIS <sylvain.fidelis@st.com>; Raphael
+>COLLADO <Raphael.COLLADO@st.com>
+>Subject: Re: [[linux-nfc][PATCH v1] 2/6] NFC: nfcst: Add ST NFC Transceiver
+>core framework
 >
-> Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> Here's the backport for 3.18.
+>Hi Shikha,
 >
->  net/mac80211/wpa.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+>On Tue, May 02, 2017 at 02:03:39AM -0400, Shikha Singh wrote:
+>> +static int nfcst_in_send_cmd(struct nfc_digital_dev *ddev,
+>> +			     struct sk_buff *skb,
+>> +			     u16 timeout,
+>> +			     nfc_digital_cmd_complete_t cb,
+>> +			     void *arg)
+>> +{
+>> +	struct nfcst_context *context = nfc_digital_get_drvdata(ddev);
+>> +	int rc;
+>> +	int len_data_to_tag = 0;
+>> +
+>> +	if (!context->nfcst_power)
+>> +		return -EIO;
+>> +
+>> +	/*
+>> +	 * down the semaphore to indicate that last nfcst_in_send_cmd()
+>> +	 * call is pending, If interrupted, WARN and return !
+>> +	 */
+>> +	rc = down_killable(&context->exchange_lock);
+>> +	if (rc) {
+>> +		WARN(1, "Semaphore wait is interrupted in
+>nfcst_in_send_cmd\n");
+>> +		return rc;
+>> +	}
+>> +
+>> +	if (context->trig_config) {
+>> +		context->trig_config = false;
+>> +		rc = nfcst_handle_config_fdt(context, false);
+>> +		if (rc) {
+>> +			dev_err(&context->nfcdev->dev, "config fdt failed
+>from nfcst_in_send_cmd %d\n",
+>> +				rc);
+>> +			return rc;
+>> +		}
+>> +	}
+>> +
+>> +	switch (context->current_rf_tech) {
+>> +	case NFC_DIGITAL_RF_TECH_106A:
+>> +		len_data_to_tag = skb->len + 1;
+>> +		*skb_put(skb, 1) = context->sendrcv_trflag;
+>You can't dereference a void pointer. Please fix that as it will most likely break
+>the build.
 >
-> diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-> index 983527a4c1ab..49592c7e4199 100644
-> --- a/net/mac80211/wpa.c
-> +++ b/net/mac80211/wpa.c
-> @@ -16,6 +16,7 @@
->  #include <asm/unaligned.h>
->  #include <net/mac80211.h>
->  #include <crypto/aes.h>
-> +#include <crypto/algapi.h>
->
->  #include "ieee80211_i.h"
->  #include "michael.h"
-> @@ -150,7 +151,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
->         data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
->         key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
->         michael_mic(key, hdr, data, data_len, mic);
-> -       if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-> +       if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
->                 goto mic_fail;
->
->         /* remove Michael MIC from payload */
-> @@ -520,7 +521,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
->
->         queue = rx->security_idx;
->
-> -       if (memcmp(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <= 0) {
-> +       if (crypto_memneq(pn, key->u.ccmp.rx_pn[queue], IEEE80211_CCMP_PN_LEN) <= 0) {
->                 key->u.ccmp.replays++;
->                 return RX_DROP_UNUSABLE;
->         }
-> @@ -771,7 +772,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
->                 bip_aad(skb, aad);
->                 ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
->                                    skb->data + 24, skb->len - 24, mic);
-> -               if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-> +               if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
->                         key->u.aes_cmac.icverrors++;
->                         return RX_DROP_UNUSABLE;
->                 }
-> --
-> 2.13.1
->
+>Cheers,
+>Samuel.
