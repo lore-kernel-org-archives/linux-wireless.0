@@ -1,85 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:51084 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751076AbdFAOTT (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36550 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751751AbdF3M40 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2017 10:19:19 -0400
-From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
-To: "amitkarwar@gmail.com" <amitkarwar@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "prameela.j04cs@gmail.com" <prameela.j04cs@gmail.com>,
-        "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>,
-        "linux-snps-arc@lists.infradead.org"
-        <linux-snps-arc@lists.infradead.org>
-Subject: Re: git repo with Redpine changes
-Date: Thu, 1 Jun 2017 14:19:14 +0000
-Message-ID: <1496326752.28487.27.camel@synopsys.com> (sfid-20170601_161922_537142_1C677B93)
-References: <1495008675.2606.72.camel@synopsys.com>
-         <CAEhWJFkVe1C9jtxH9zeeMeJiAs86sJGOKSoqMku0qRqNAQujxg@mail.gmail.com>
-         <1495560381.22203.29.camel@synopsys.com>
-         <CAEhWJFkqCWE1QLJCRvkQEo0YokfzcW1sVFitwY_Q+OUcMBYSGg@mail.gmail.com>
-In-Reply-To: <CAEhWJFkqCWE1QLJCRvkQEo0YokfzcW1sVFitwY_Q+OUcMBYSGg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Fri, 30 Jun 2017 08:56:26 -0400
+Message-ID: <1498827382.22048.163.camel@coelho.fi> (sfid-20170630_150019_523500_6830B0C8)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 30 Jun 2017 15:56:22 +0300
+In-Reply-To: <874luxn3de.fsf@kamboji.qca.qualcomm.com>
+References: <1498817319.22048.161.camel@coelho.fi>
+         <874luxn3de.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi-next 2017-06-30
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQW1pdCENCg0KT24gVGh1LCAyMDE3LTA2LTAxIGF0IDE5OjI0ICswNTMwLCBhbWl0IGthcndh
-ciB3cm90ZToNCj4gT24gVHVlLCBNYXkgMjMsIDIwMTcgYXQgMTA6NTYgUE0sIEFsZXhleSBCcm9k
-a2luDQo+IDxBbGV4ZXkuQnJvZGtpbkBzeW5vcHN5cy5jb20+IHdyb3RlOg0KPiANCj4gSSBoYXZl
-IHBvc3RlZCBhIGZpcm13YXJlIGltYWdlIGZvciBuZXcgZmlybXdhcmUgbG9hZGluZyBtZWNoYW5p
-c20gdG8NCj4gY29tbXVuaXR5LiBUaGVyZSBhcmUgc29tZSBwYXRjaGVzIGZvciBTRElPIHNwZWNp
-ZmljIGRyaXZlcg0KPiBlbmhhbmNlbWVudHMgYW5kIGZpeGVzLiBJIGFtIHNlbmRpbmcgdGhlbSBp
-biBjb3VwbGUgb2YgZGF5cy4gV2l0aA0KPiB0aG9zZSBwYXRjaGVzIHlvdSB3aWxsIGJlIGFibGUg
-dG8gc2VlIHdpcmVsZXNzIGludGVyZmFjZSBicmluZyB1cCwNCj4gY29ubmVjdGlvbiBpbiBvcGVu
-IG5ldHdvcmsgYW5kIGRhdGEgcGF0aCB3b3JraW5nLg0KDQpNYXkgSSBoYXZlIGFueSByZWZlcmVu
-Y2UgdG8gdGhhdCBwb3N0L2ltYWdlPw0KDQo+ID4gDQo+ID4gDQo+ID4gPiANCj4gPiA+ID4gDQo+
-ID4gPiA+IHJzaV85MXg6IHJzaV9zZGlvX21hc3Rlcl9yZWdfcmVhZDogQUhCIHJlZ2lzdGVyIHJl
-YWQgZmFpbGVkDQo+ID4gPiA+IHJzaV85MXg6IHJzaV9sb2FkX2Zpcm13YXJlOiBSRUdPVVQgcmVh
-ZCBmYWlsZWQNCj4gPiA+ID4gcnNpXzkxeDogcnNpX2hhbF9kZXZpY2VfaW5pdDogRmFpbGVkIHRv
-IGxvYWQgVEEgaW5zdHJ1Y3Rpb25zDQo+ID4gPiA+IHJzaV85MXg6IHJzaV9wcm9iZTogRmFpbGVk
-IGluIGRldmljZSBpbml0DQo+ID4gPiA+IHJzaV85MXg6IHJzaV85MXhfZGVpbml0OiBQZXJmb3Jt
-aW5nIGRlaW5pdCBvcyBvcHMNCj4gPiA+ID4gcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3Nv
-cjogUXVldWUgbnVtYmVyID0gMjU1DQo+ID4gPiA+IHJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9j
-ZXNzb3I6IE5vIE1vcmUgUGt0DQo+ID4gPiA+IHJzaV85MXg6IHJzaV9wcm9iZTogRmFpbGVkIGlu
-IHByb2JlLi4uRXhpdGluZw0KPiA+ID4gPiBSU0ktU0RJTyBXTEFOOiBwcm9iZSBvZiBtbWMwOmZm
-ZmQ6MSBmYWlsZWQgd2l0aCBlcnJvciAxDQo+ID4gPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-PjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ID4gPiANCj4gPiA+ID4gwqAyKSBJbiBjYXNlIG9m
-IFVTQiBJIGp1c3Qgc2VlOg0KPiA+ID4gPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCj4gPiA+ID4gdXNiIDEtMTogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmlj
-ZSBudW1iZXIgNiB1c2luZyBlaGNpLXBsYXRmb3JtDQo+ID4gPiA+IHVzYiAxLTE6IGNvbmZpZyAx
-IGludGVyZmFjZSAwIGFsdHNldHRpbmcgMCBlbmRwb2ludCAweDgzIGhhcyBhbiBpbnZhbGlkIGJJ
-bnRlcnZhbCAyNTUsIGNoYW5naW5nIHRvIDExDQo+ID4gPiA+IHVzYiAxLTE6IE5ldyBVU0IgZGV2
-aWNlIGZvdW5kLCBpZFZlbmRvcj0xNjE4LCBpZFByb2R1Y3Q9OTExMw0KPiA+ID4gPiB1c2IgMS0x
-OiBOZXcgVVNCIGRldmljZSBzdHJpbmdzOiBNZnI9MSwgUHJvZHVjdD0yLCBTZXJpYWxOdW1iZXI9
-MA0KPiA+ID4gPiB1c2IgMS0xOiBQcm9kdWN0OiBXaXJlbGVzcyBVU0ItQ0RDIE5ldHdvcmsgTW9k
-dWxlDQo+ID4gPiA+IHVzYiAxLTE6IE1hbnVmYWN0dXJlcjogUmVkcGluZSBTaWduYWxzLCBJbmMu
-DQo+ID4gPiA+IGNkY19hY20gMS0xOjEuMDogdHR5QUNNMDogVVNCIEFDTSBkZXZpY2UNCj4gPiA+
-ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0+OC0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gPiA+
-IA0KPiA+ID4gPiBJIG5vdGljZWQgdGhhdCB0aGVyZSdyZSBxdWl0ZSBzb21lIHBhdGNoZXMgZmxv
-YXRpbmcgb24gbGludXgtd2lyZWxlc3MgbWFpbGluZyBsaXN0IHdoaWNoDQo+ID4gPiA+IHdlcmUg
-bm90IHlldCBtZXJnZWQgaW4gdXBzdHJlYW0ga2VybmVsIChldmVuIGluIGxpbnV4LW5leHQgb3Ig
-d2lyZWxlc3MtdGVzdGluZykuDQo+ID4gPiA+IA0KPiA+ID4gPiBTbyBhdCB0aGlzIHBvaW50IEkn
-bSBub3QgcmVhbGx5IHN1cmUgd2hhdCBjb3VsZCBiZSBhIHNhZmUgYmFzZWxpbmUgZm9yIG15IGV4
-cGVyaW1lbnRzOg0KPiA+ID4gPiDCoC0gaWYgZXhpc3RpbmcgdmFuaWxsYSBzYXkgNC4xMSBrZXJu
-ZWwgaXMgZ29vZCBlbm91Z2ggYW5kIHRoaW5ncyB0aGF0IGRvZXNuJ3Qgd29yayBhcmUgY2F1c2Vk
-DQo+ID4gPiA+IMKgwqDCoGJ5IG90aGVyIHByb2JsZW1zIG5vdCByZWxhdGVkIHRvIFJlZHBpbmUg
-bW9kdWxlICh0aGF0IHdvdWxkIGJlIHN0cmFuZ2UgYmVjYXVzZSBib3RoIFVTQiBhYmQgU0QtY2Fy
-ZA0KPiA+ID4gPiDCoMKgwqBzbG90IGFyZSBwcm92ZW4gdG8gd29yayBwcmV0dHkgd2VsbCB3aXRo
-IG90aGVyIGRldmljZXMpDQo+ID4gPiA+IMKgLSBpZiBJIG5lZWQgYW4gYXJiaXRyYXJ5IHNldCBv
-ZiBwYXRjaGVzIHRvIGdldCB0aGluZ3MgdXAgYW5kIHJ1bm5pbmcgZXRjDQo+ID4gPiA+IA0KPiA+
-ID4gPiBUaGF0IHNhaWQgaWYgdGhlcmUncyBhIHB1YmxpYyBnaXQgcmVwbyB3aGljaCBjb250YWlu
-cyBldmVyeXRoaW5nIHJlcXVpcmVkIGZvciBSZWRwaW5lIG1vZHVsZSB0bw0KPiA+ID4gPiB3b3Jr
-IFtwcmVmZXJhYmx5IGJhc2VkIG9uIHRoZSBsYXRlc3Qga2VybmVsIHNvdXJjZXNdIEknZCBsaWtl
-IHRvIGdldCBhIHJlZmVyZW5jZSB0byBpdC4NCj4gPiA+ID4gDQo+ID4gPiA+IEFueSBoaW50cyBo
-ZXJlIGFyZSBtdWNoIGFwcHJlY2lhdGVkLg0KPiA+ID4gDQo+ID4gPiBXZSBkb24ndCBoYXZlIGEg
-cHVibGljIGdpdCByZXBvIG1haW50YWluZWQuIFdlIGhhdmUgMiBwYXRjaHNldHMgcmVhZHkNCj4g
-PiA+IGZvciBzdWJtaXNzaW9uLiBXZSBhcmUgd29ya2luZyBvbiBjb2RlIGNsZWFudXAgZm9yIG90
-aGVyIHBlbmRpbmcNCj4gPiA+IGNoYW5nZXMuIEkgd291bGQgc3VnZ2VzdCB5b3UgdG8gd2FpdCB0
-aWxsIHRoZXNlIHBhdGNoZXMgYXJlIHBvc3RlZC4NCj4gPiANCj4gPiBPaywgd2lsbCBkby4gQnV0
-IHBsZWFzZSBhZGQgbWUgaW4gQ2MgbGlzdCBpbiB5b3VyIHVwY29taW5nIHBhdGNoZXMgYXMgSSdt
-IHZlcnkgaW50ZXJlc3RlZA0KPiA+IGluIGdldHRpbmcgUmVkcGluZSBtb2R1bGUgd29ya2luZyBv
-biBvdXIgbmV3IGJvYXJkIGFuZCB3aWxsIGJlIGhhcHB5IHRvIHJldmlldyB0aGVtIGFzIHdlbGwg
-YXMgdGVzdCBvbg0KPiA+IG15IHBsYXRmb3JtLg0KPiA+IA0KPiANCj4gU3VyZS4gSSB3aWxsIGFk
-ZCB5b3UgaW4gQ0MgZm9yIHRob3NlIHBhdGNoZXMuDQoNClRoYW5rcyBhIGxvdCENCklcbGwga2Vl
-cCBhbiBleWUgb24gdGhvc2UgY2hhbmdlcyBvbmNlIHRoZXkgYXBwZWFyLg0KDQotQWxleGV5
+On Fri, 2017-06-30 at 14:04 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > Hi Kalle,
+> > 
+> > Here's my final pull-request intended for v4.13.  Again, this pull-
+> > request includes the last two patchsets I sent out.  Most importantly,
+> > it contains critical fixes and FW API changes to support the upcoming FW
+> > that we will release publicly for the 9000 HW family.  More details in
+> > the tag description.
+> > 
+> > I have sent this out before, and kbuildbot reported success.
+> > 
+> > Please let me know if there are any issues.
+> > 
+> > Cheers,
+> > Luca.
+> > 
+> > 
+> > The following changes since commit fdcbe65d618af080ee23229f0137ffd37f2de36b:
+> > 
+> >   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2017-06-28 22:10:48 +0300)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-06-30
+> > 
+> > for you to fetch changes up to ba320dd61ec91bbe98730f3407a486facc174d63:
+> > 
+> >   iwlwifi: bump MAX API for 8000/9000/A000 to 33 (2017-06-29 21:09:58 +0300)
+> > 
+> > ----------------------------------------------------------------
+> > Final set of patches for 4.13
+> > 
+> > * Some important fixes for 9000 HW;
+> > * FW API changes for the upcoming -30 ucode release;
+> > * A few new PCI IDs for 9000 series;
+> > * Reorganization of common files;
+> > * Some more fixes and improvements here and there
+> > * Initialization and other important fixes for 9000 series;
+> > * Support for version 30 of the FW API for 8000 and 9000 series;
+> > 
+> > ----------------------------------------------------------------
+> 
+> Pulled, thanks.
+> 
+> Let's see if I can squeeze these into 4.13 still. But in the future
+> please submit patches early, for various reasons (extra work, higher
+> chance of regressions etc) I really dislike having last minute patches
+> for new features.
+
+Thanks!
+
+And ack, I will take care of the backlog now and start sending patches
+probably already early next week and use the merge window to catch up.
+;) After that, if I send weekly pulls, it won't back up.
+
+--
+Luca.
