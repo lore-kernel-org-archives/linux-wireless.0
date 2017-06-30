@@ -1,61 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36135 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdFPUij (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34145 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752162AbdF3SEn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2017 16:38:39 -0400
-Subject: Re: [PATCH] rtlwifi: rtl8821ae: remove unused variable
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20170613204259.GA9189@embeddedgus>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <07125d75-90a5-5255-d270-2ab8c6522b39@lwfinger.net> (sfid-20170616_223912_151655_1AF81626)
-Date: Fri, 16 Jun 2017 15:38:36 -0500
+        Fri, 30 Jun 2017 14:04:43 -0400
+Date: Fri, 30 Jun 2017 11:04:39 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-kernel@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+        Avinash Patil <patila@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] mwifiex: correct channel stat buffer overflows
+Message-ID: <20170630180439.GA40906@dtor-ws> (sfid-20170630_200507_127754_6C22031C)
+References: <20170630012354.98931-1-briannorris@chromium.org>
 MIME-Version: 1.0
-In-Reply-To: <20170613204259.GA9189@embeddedgus>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170630012354.98931-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/13/2017 03:42 PM, Gustavo A. R. Silva wrote:
-> Remove unused variable rtlhal.
+On Thu, Jun 29, 2017 at 06:23:54PM -0700, Brian Norris wrote:
+> mwifiex records information about various channels as it receives scan
+> information. It does this by appending to a buffer that was sized
+> to the max number of supported channels on any band, but there are
+> numerous problems:
 > 
-> Addresses-Coverity-ID: 1248810
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+> (a) scans can return info from more than one band (e.g., both 2.4 and 5
+>     GHz), so the determined "max" is not large enough
+> (b) some firmware appears to return multiple results for a given
+>     channel, so the max *really* isn't large enough
+> (c) there is no bounds checking when stashing these stats, so problems
+>     (a) and (b) can easily lead to buffer overflows
+> 
+> Let's patch this by setting a slightly-more-correct max (that accounts
+> for a combination of both 2.4G and 5G bands) and adding a bounds check
+> when writing to our statistics buffer.
+> 
+> Due to problem (b), we still might not properly report all known survey
+> information (e.g., with "iw <dev> survey dump"), since duplicate results
+> (or otherwise "larger than expected" results) will cause some
+> truncation. But that's a problem for a future bugfix.
+> 
+> (And because of this known deficiency, only log the excess at the WARN
+> level, since that isn't visible by default in this driver and would
+> otherwise be a bit too noisy.)
+> 
+> Fixes: bf35443314ac ("mwifiex: channel statistics support for mwifiex")
+> Cc: <stable@vger.kernel.org>
+> Cc: Avinash Patil <patila@marvell.com>
+> Cc: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 > ---
+> I've got a ton of other patches still queued up locally, and I hope to send
+> them soon. But I realized this one is a nasty bug (with a trivial fix), so it's
+> probably best to get this out the door quickly.
 
-NACK!! That variable is used in file core.c in driver rtlwifi, which is loaded 
-and used by rtl8821ae.
+This does make sense to me.
 
-Please do more than blindly follow Coverity outputs, or improve that tool!
+Reviewed-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 
-Larry
-
->   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 3 ---
->   1 file changed, 3 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> index 2bc6bac..d158e34 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> @@ -1360,7 +1360,6 @@ static bool _rtl8821ae_reset_pcie_interface_dma(struct ieee80211_hw *hw,
->   static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
->   {
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
->   	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
->   	u8 fw_reason = 0;
->   	struct timeval ts;
-> @@ -1372,8 +1371,6 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
->   
->   	ppsc->wakeup_reason = 0;
->   
-> -	rtlhal->last_suspend_sec = ts.tv_sec;
-> -
->   	switch (fw_reason) {
->   	case FW_WOW_V2_PTK_UPDATE_EVENT:
->   		ppsc->wakeup_reason = WOL_REASON_PTK_UPDATE;
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
+>  drivers/net/wireless/marvell/mwifiex/scan.c     | 6 ++++++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
 > 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index a850ec0054e2..82f4e796ed39 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -4219,7 +4219,7 @@ int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter)
+>  	if (adapter->config_bands & BAND_A)
+>  		n_channels_a = mwifiex_band_5ghz.n_channels;
+>  
+> -	adapter->num_in_chan_stats = max_t(u32, n_channels_bg, n_channels_a);
+> +	adapter->num_in_chan_stats = n_channels_bg + n_channels_a;
+>  	adapter->chan_stats = vmalloc(sizeof(*adapter->chan_stats) *
+>  				      adapter->num_in_chan_stats);
+>  
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index ae9630b49342..9900855746ac 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -2492,6 +2492,12 @@ mwifiex_update_chan_statistics(struct mwifiex_private *priv,
+>  					      sizeof(struct mwifiex_chan_stats);
+>  
+>  	for (i = 0 ; i < num_chan; i++) {
+> +		if (adapter->survey_idx >= adapter->num_in_chan_stats) {
+> +			mwifiex_dbg(adapter, WARN,
+> +				    "FW reported too many channel results (max %d)\n",
+> +				    adapter->num_in_chan_stats);
+> +			return;
+> +		}
+>  		chan_stats.chan_num = fw_chan_stats->chan_num;
+>  		chan_stats.bandcfg = fw_chan_stats->bandcfg;
+>  		chan_stats.flags = fw_chan_stats->flags;
+> -- 
+> 2.13.2.725.g09c95d1e9-goog
+> 
+
+-- 
+Dmitry
