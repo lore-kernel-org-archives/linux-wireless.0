@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47954 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753065AbdFLQic (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59028 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752653AbdF3KIt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2017 12:38:32 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2017-06-06
-References: <1496777308.9478.107.camel@coelho.fi>
-Date: Mon, 12 Jun 2017 19:38:06 +0300
-In-Reply-To: <1496777308.9478.107.camel@coelho.fi> (Luca Coelho's message of
-        "Tue, 06 Jun 2017 22:28:28 +0300")
-Message-ID: <87d1a988lt.fsf@kamboji.qca.qualcomm.com> (sfid-20170612_183851_956488_F9F4BC0D)
+        Fri, 30 Jun 2017 06:08:49 -0400
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][-next] rtlwifi: kfree entry until after entry->bssid has been accessed
+Date: Fri, 30 Jun 2017 11:08:43 +0100
+Message-Id: <20170630100843.9188-1-colin.king@canonical.com> (sfid-20170630_121251_642952_AF0BCF0F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> Here's my first pull-request intended for v4.13.=C2=A0 This one is double=
- the
-> size of my normal pull-request since I'm sending to batches at once.  It
-> contain=C2=A0generic development work, with improvements, bug fixes and
-> cleanup all around.=C2=A0 More=C2=A0details in the tag description.
->
-> I have sent this out before, and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 219569ad0c41df7a7f999a2cad688c6b6ce173=
-e2:
->
->   rsi: use subdirectory for firmware file (2017-06-01 12:51:19 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
-tags/iwlwifi-next-for-kalle-2017-06-06
->
-> for you to fetch changes up to 0ae0bb3f409d48251a9a1730a514b3521d8f6042:
->
->   iwlwifi: remove unnecessary code in iwl_trans_alloc_tx_cmd (2017-06-05 =
-23:34:31 +0300)
->
-> ----------------------------------------------------------------
-> First batch of iwlwifi driver patches 4.13
->
-> * Loads of FW API documentation improvements (for tools and htmldoc);
-> * Continued work for the new A000 family;
-> * Bumped the maximum supported FW API to 31;
-> * Improve the differentiation between 8000, 9000 and A000 families;
-> * A lot of fixes and cleanups here and there;
->
-> ----------------------------------------------------------------
+The current code kfree's entry and then dereferences it by accessing
+entry->bssid.  Avoid the dereference-after-free by moving the kfree
+after the access to entry->bssid.
 
-Pulled, thanks.
+Detected by CoverityScan, CID#1448600 ("Read from pointer after free")
 
-Because an hour earlier I had fast forwarded to latest net-next there
-were two conflicts. This is what I wrote to the commit log, please
-double check:
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-kvalo: There were conflicts iwl_mvm_stop_device() and
-iwl_mvm_tcool_set_cur_state(). The former was easy but latter needed more
-thought. Apparently the mutex was taken too late, so I fixed so that the mu=
-tex
-is taken first and then check for iwl_mvm_firmware_running().
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next=
-.git/commit/?id=3D833689044e13a3fb8c6c03ad868375670d97010b
-
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index e36ee592c660..208f56297a75 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1735,12 +1735,12 @@ void rtl_scan_list_expire(struct ieee80211_hw *hw)
+ 			continue;
+ 
+ 		list_del(&entry->list);
+-		kfree(entry);
+ 		rtlpriv->scan_list.num--;
+ 
+ 		RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
+ 			 "BSSID=%pM is expire in scan list (total=%d)\n",
+ 			 entry->bssid, rtlpriv->scan_list.num);
++		kfree(entry);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&rtlpriv->locks.scan_list_lock, flags);
+-- 
+2.11.0
