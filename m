@@ -1,94 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44290 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:35014 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751397AbdFGOxX (ORCPT
+        with ESMTP id S1751718AbdF3LEU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2017 10:53:23 -0400
+        Fri, 30 Jun 2017 07:04:20 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Luca Coelho <luca@coelho.fi>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [V4,1/3] brcmfmac: add support multi-scheduled scan
-References: <1495180659-12406-1-git-send-email-arend.vanspriel@broadcom.com>
-        <20170522151649.B5F1060AC8@smtp.codeaurora.org>
-        <621288e8-e950-5aea-7d27-c5cb802dd416@broadcom.com>
-Date: Wed, 07 Jun 2017 17:53:13 +0300
-In-Reply-To: <621288e8-e950-5aea-7d27-c5cb802dd416@broadcom.com> (Arend van
-        Spriel's message of "Wed, 7 Jun 2017 10:15:15 +0200")
-Message-ID: <87y3t34zom.fsf@codeaurora.org> (sfid-20170607_165331_372834_FABD7492)
+Subject: Re: pull-request: iwlwifi-next 2017-06-30
+References: <1498817319.22048.161.camel@coelho.fi>
+Date: Fri, 30 Jun 2017 14:04:13 +0300
+In-Reply-To: <1498817319.22048.161.camel@coelho.fi> (Luca Coelho's message of
+        "Fri, 30 Jun 2017 13:08:39 +0300")
+Message-ID: <874luxn3de.fsf@kamboji.qca.qualcomm.com> (sfid-20170630_130521_521574_29DE58C8)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Luca Coelho <luca@coelho.fi> writes:
 
-> On 5/22/2017 5:16 PM, Kalle Valo wrote:
->> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
->>>
->>> This change adds support for multi-scheduled scan in the driver. It
->>> currently relies on g-scan support in firmware and will set struct
->>> wiphy::max_sched_scan_reqs accordingly. This is limited to 16 concurrent
->>> requests.
->>>
->>> The firmware currently has a limit of 64 channels that can be configured
->>> for all requests in total regardless whether there are duplicates. So if
->>> a request uses 35 channels there are 29 channels left for another reque=
-st.
->>> When user-space does not specify any channels cfg80211 will add all
->>> channels defined by the wiphy instance to the request, which makes
->>> reaching the limit rather easy for dual-band devices.
->>>
->>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>
->> I see new warnings:
->>
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c: In function =E2=
-=80=98brcmf_pno_config_sched_scans=E2=80=99:
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:166:6: warning: =
-=E2=80=98mac_mask=E2=80=99 may be used uninitialized in this function [-Wma=
-ybe-uninitialized]
->>    u8 *mac_mask;
->>        ^
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:183:2: warning: =
-=E2=80=98mac_addr=E2=80=99 may be used uninitialized in this function [-Wma=
-ybe-uninitialized]
->>    memcpy(pfn_mac.mac, mac_addr, ETH_ALEN);
->>    ^
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c:165:6: note: =E2=
-=80=98mac_addr=E2=80=99 was declared here
->>    u8 *mac_addr;
->>        ^
->>
->> 3 patches set to Changes Requested.
->>
->> 9736151 [V4,1/3] brcmfmac: add support multi-scheduled scan
->> 9736147 [V4,2/3] brcmfmac: add mutex to protect pno requests
->> 9736149 [V4,3/3] brcmfmac: add scheduled scan support for specified BSSI=
-Ds
+> Hi Kalle,
 >
-> Not seeing it here using gcc version 4.8.4 (Ubuntu
-> 4.8.4-2ubuntu1~14.04.3).
+> Here's my final pull-request intended for v4.13.=C2=A0 Again, this pull-
+> request includes the last two patchsets I sent out.=C2=A0 Most importantl=
+y,
+> it contains critical fixes and FW API changes to support the upcoming FW
+> that we will release publicly for the 9000 HW family.=C2=A0 More=C2=A0det=
+ails in
+> the tag description.
+>
+> I have sent this out before, and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit fdcbe65d618af080ee23229f0137ffd37f2de3=
+6b:
+>
+>   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo=
+/ath.git (2017-06-28 22:10:48 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
+tags/iwlwifi-next-for-kalle-2017-06-30
+>
+> for you to fetch changes up to ba320dd61ec91bbe98730f3407a486facc174d63:
+>
+>   iwlwifi: bump MAX API for 8000/9000/A000 to 33 (2017-06-29 21:09:58 +03=
+00)
+>
+> ----------------------------------------------------------------
+> Final set of patches for 4.13
+>
+> * Some important fixes for 9000 HW;
+> * FW API changes for the upcoming -30 ucode release;
+> * A few new PCI IDs for 9000 series;
+> * Reorganization of common files;
+> * Some more fixes and improvements here and there
+> * Initialization and other important fixes for 9000 series;
+> * Support for version 30 of the FW API for 8000 and 9000 series;
+>
+> ----------------------------------------------------------------
 
-My version is:
+Pulled, thanks.
 
-gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
-
-I don't think that's really exocit version of the compiler, or is it?
-
-> Also tried using W=3D1 on the make command
-> line. Getting a bunck of other warnings, but not the ones above.
-
-This was without W=3D1, just a default compilation with all wireless
-drivers enabled.
-
-> Do you want me to fix it?
-
-Yes, please. I try to keep the patches warning free, even if they are
-false warnings.
+Let's see if I can squeeze these into 4.13 still. But in the future
+please submit patches early, for various reasons (extra work, higher
+chance of regressions etc) I really dislike having last minute patches
+for new features.
 
 --=20
 Kalle Valo
