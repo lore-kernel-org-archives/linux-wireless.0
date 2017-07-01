@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50760 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752370AbdGaQfO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:35:14 -0400
-Subject: Re: QCA9994 ath10k chipset
-To: Matteo Grandi <iu5bdp@gmail.com>,
-        LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
-References: <CAHdg3xaLAhxNdegJO-oj-D-fEZg8cZQM5_5pOCFaLSSnBJYw+A@mail.gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5b76c4c9-7d58-ad01-1e3e-f14d88451cfe@candelatech.com> (sfid-20170731_183517_868815_A73D8B78)
-Date: Mon, 31 Jul 2017 09:35:13 -0700
+Received: from mga01.intel.com ([192.55.52.88]:55538 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750822AbdGAD7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Jun 2017 23:59:40 -0400
+Date: Sat, 1 Jul 2017 11:59:13 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kbuild-all@01.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH v3 09/10] rtlwifi: use debugfs to debug.
+Message-ID: <201707011153.OdPSd2wB%fengguang.wu@intel.com> (sfid-20170701_055945_485832_2E03A3C9)
 MIME-Version: 1.0
-In-Reply-To: <CAHdg3xaLAhxNdegJO-oj-D-fEZg8cZQM5_5pOCFaLSSnBJYw+A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170628151225.22190-10-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Very likely 9984 firmware works for 9994, usually the '9' just means
-it is expensive and high-temp and/or high-power capable.
+Hi Ping-Ke,
 
-I don't know of any 9994 NIC manufacturers....You might could get some
-from zcomax or compex, but might take a special order.
+[auto build test WARNING on wireless-drivers-next/master]
+[also build test WARNING on next-20170630]
+[cannot apply to v4.12-rc7]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Thanks,
-Ben
+url:    https://github.com/0day-ci/linux/commits/Larry-Finger/Set-3-of-changes-related-to-updates-of-btcoexist/20170701-003321
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
 
-On 07/31/2017 05:47 AM, Matteo Grandi wrote:
-> Dear all,
->
-> I have to find a miniPCIe Wi-Fi adapters that uses the QCA9994 chipset.
-> As far as I discovered looking to the Internet, seems that only the
-> Acelink EW-7956MAC uses the QCA9994 chipset, but I didn't find a
-> dealer where to purchase it. Contacting Acelink is useless because
-> their email " contact@acelink.com.tw" seems to be inexistent: I
-> receive a mail delivery status notification.
->
->
-> Moreover, having a look on Kalle Valo git repo, I didn't find any
-> QCA9994 but only QCA9984 firmwares. And it's quite easier to find
-> devices that use the QCA9984 chipset.
->
->
-> Does anyone use/have used such QCA9994 chipset?
-> Any hint to find a QCA9994 device and its related ath10k firmware will
-> be really appreciated.
->
-> Thank you in advance
->
-> Matteo
->
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+coccinelle warnings: (new ones prefixed by >>)
+
+>> drivers/net/wireless/realtek/rtlwifi/debug.c:398:11-27: WARNING opportunity for simple_open, see also structure on line 418
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
