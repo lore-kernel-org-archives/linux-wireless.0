@@ -1,111 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:60903 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755263AbdGKH5E (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:36520 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751400AbdGAJHN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 03:57:04 -0400
-Date: Tue, 11 Jul 2017 16:26:34 +0900
-From: Carsten Haitzler (The Rasterman) <raster@rasterman.com>
-To: Carsten Haitzler (The Rasterman) <raster@rasterman.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath10k QCA6174 not working -> missing data in board2.bin?
-Message-Id: <20170711162634.39364ac93d614efabc01ddbb@rasterman.com> (sfid-20170711_095707_436290_2F6A1F32)
-In-Reply-To: <20170705205258.a5ca8ca700de06c5e3c33677@rasterman.com>
-References: <20170705205258.a5ca8ca700de06c5e3c33677@rasterman.com>
-Mime-Version: 1.0
+        Sat, 1 Jul 2017 05:07:13 -0400
+Date: Sat, 1 Jul 2017 10:06:55 +0100 (BST)
+From: Sami Kerola <kerolasa@iki.fi>
+To: Karel Zak <kzak@redhat.com>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless@vger.kernel.org,
+        util-linux <util-linux@vger.kernel.org>
+Subject: Re: rfkill(8) move and improvements
+In-Reply-To: <20170630074729.s3gknfobabgepk4h@ws.net.home>
+Message-ID: <alpine.LNX.2.20.1707010956520.7939@imuri> (sfid-20170701_110721_650331_CBF9C089)
+References: <alpine.LNX.2.20.1706251339500.25762@imuri> <1498745040.3141.6.camel@sipsolutions.net> <CAG27Bk0tKzqxkm6qqjGO6GJE7vxReRAQbvYGexjp+PBLo+RK_A@mail.gmail.com> <20170630074729.s3gknfobabgepk4h@ws.net.home>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 5 Jul 2017 20:52:58 +0900 Carsten Haitzler (The Rasterman)
-<raster@rasterman.com> said:
+On Fri, 30 Jun 2017, Karel Zak wrote:
 
-i've built the linux wireless master tree and got firmware-6 working ... but
-same results. i can get a bit more out of the qualcomm wifi device if i switch
-irq mode:
+> On Thu, Jun 29, 2017 at 10:23:12PM +0100, Sami Kerola wrote:
+> > On 29 June 2017 at 15:04, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > >> The otherday I ran powertop and it did rfkill to save battery, which
+> > >> was particularly annoying because I had not installed rfkill(8)
+> > >> package.
+> > >> Fixing the immediate issue was relatively easy, but the ordeal made
+> > >> me wonder if this tool could be moved to a package that is installed
+> > >> by default to all systems, such as util-linux.
+> > >
+> > > [...]
+> > >
+> > >> What do you think, would the move and proposed updates be ok?
+> > >
+> > > I can't say I mind, and most of your proposed changes seem sensible,
+> > > though I haven't reviewed them in enough detail to comment on them.
+> > > Something that caught my eye here was comparing a string to _("all")
+> > > which seems wrong, since that'd mean you'd have to type the translated
+> > > version even on the command line? That seems really awkward (to put it
+> > > charitably).
+> > >
+> > > However, at the same time, I have very little desire to get involved
+> > > with util-linux as yet another project, so frankly I'd probably
+> > > continue to "maintain" the current rfkill tool - which really hasn't
+> > > changed in a very long time, and hope somebody else picks up
+> > > maintenance of rfkill included in util-linux.
+> > 
+> > Hello Johannes,
+> > 
+> > Thank you for feedback. I removed the rfkill command strings from
+> > translations, and gave hint to translators how to deal with them in
+> > usage() output. Also in same go updates are rebased on top of
+> > most recent upstream to get usage() --help and --version handling
+> > done correctly.
+> > 
+> > What comes  to maintenance I am fairly optimistic util-linux is a
+> > good home for the rfkill. Karel, what do you think?
+> 
+> I have no problem with it, if Johannes agree with this step. We have
+> definitely manpower to maintain it.
 
-[  365.108503] ath10k_pci 0000:01:00.0: limiting irq mode to: 1
-[  365.108505] ath10k_pci 0000:01:00.0: pci irq legacy oper_irq_mode 1 irq_mode 1 reset_mode 1
-[  365.444164] ath10k_pci 0000:01:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 144d:c14f
-[  365.444166] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 0 testmode 0
-[  365.444587] ath10k_pci 0000:01:00.0: firmware ver WLAN.RM.4.4.1-00014-QCARMSWP-1 api 6 features wowlan,ignore-otp crc32 f26d4f5b
-[  365.509151] ath10k_pci 0000:01:00.0: failed to fetch board data for bus=pci,vendor=168c,device=003e,subsystem-vendor=144d,subsystem-device=c14f,variant=K from ath10k/QCA6174/hw3.0/board-2.bin
-[  365.509167] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A crc32 ed5f849a
-[  366.084214] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
-[  366.087206] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
-[  366.087699] ath10k_pci 0000:01:00.0: htt-ver 3.44 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
-[  369.119046] ath10k_pci 0000:01:00.0: could not suspend target (-11)
-[  369.231789] ath: EEPROM regdomain: 0x0
-[  369.231790] ath: EEPROM indicates default country code should be used
-[  369.231791] ath: doing EEPROM country->regdmn map search
-[  369.231792] ath: country maps to regdmn code: 0x3a
-[  369.231792] ath: Country alpha2 being used: US
-[  369.231793] ath: Regpair used: 0x3a
-[  369.981913] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
-[  369.984910] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
-[  373.172159] ath10k_pci 0000:01:00.0: failed to enable dynamic BW: -11
-[  379.572152] ath10k_pci 0000:01:00.0: could not suspend target (-11)
-[  379.686241] ath10k_pci 0000:01:00.0 wlp1s0: renamed from wlan0
+Hello,
 
-there's something up here and i'm not sure where to begin other than "grab the windows driver firmware and use that" ... but i dont know if that's possible or even how to transform it into a usable form.
+I did couple last minute changes to my remote branch, that should now be
+ready for final review.
 
-any advice?
+git://github.com/kerolasa/lelux-utiliteetit.git rfkill
 
-> I've scored myself a new laptop. With that come new problems.
-> 
-> I updated to 4.12.0 to make sure i'm on the latest.
-> 
-> lspci says:
-> 
-> 01:00.0 Network controller: Qualcomm Atheros QCA6174 802.11ac Wireless
-> Network Adapter (rev 32)
-> 
-> So relevant bits from dmesg:
-> 
-> [  124.268483] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2 irq_mode
-> 0 reset_mode 0 [  124.524661] ath10k_pci 0000:01:00.0: qca6174 hw3.2 target
-> 0x05030000 chip_id 0x00340aff sub 144d:c14f [  124.524668] ath10k_pci
-> 0000:01:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 0 testmode 0
-> [  124.526309] ath10k_pci 0000:01:00.0: firmware ver
-> WLAN.RM.4.4.1-00008-QCARMSWP-1 api 6 features wowlan,ignore-otp crc32
-> bdced4e9 [  124.590884] ath10k_pci 0000:01:00.0: failed to fetch board data
-> for
-> bus=pci,vendor=168c,device=003e,subsystem-vendor=144d,subsystem-device=c14f,variant=K
-> from ath10k/QCA6174/hw3.0/board-2.bin [  124.590901] ath10k_pci 0000:01:00.0:
-> board_file api 1 bmi_id N/A crc32 ed5f849a [  125.164076] ath10k_pci
-> 0000:01:00.0: Unknown eventid: 118809 [  125.167113] ath10k_pci 0000:01:00.0:
-> Unknown eventid: 90118
-> 
-> I've tried firmware-6 from:
-> 
->   https://github.com/kvalo/ath10k-firmware/tree/master/QCA6174/hw3.0
-> 
-> Specifically firmware-6.bin_WLAN.RM.4.4.1-00008-QCARMSWP-1. firmware-4.bin
-> also is a no go.
-> 
-> How can I help make this work? I have all the windows .bin's but none of them
-> match the same header that the Linux fw bin files have (but a chunk of the
-> binary seems familiar having a quick binary dump of it). There is some
-> mysterious way of generating the Linux firmware files I can't google for.
-> 
-> I also have some help from the OEM - the engineers who made the laptop (not
-> the chip wifi maker though). I have already verified which GPIO lines control
-> RFkill on this device (and they are clear and unkilled by default - both lines
-> up at 1 and it's confirmed that this means RF is unblocked from the engineers.
-> It took me a while to figure out their GPIO mapping table/naming onto kernel
-> GPIO numbering). So the Wifi (an BT actually) should be powered on. It's a
-> combo chip.
-> 
-> So how can I help. What data do I need to scrounge to provide. How are
-> firmware files built to work for Linux (based off the windows ones) for
-> ath10k?
-> 
-> -- 
-> ------------- Codito, ergo sum - "I code, therefore I am" --------------
-> The Rasterman (Carsten Haitzler)    raster@rasterman.com
-> 
+The changes:
 
+1. Add commit to make rfkill_event struct read size check to be back and
+   forward compatible.
+   https://github.com/kerolasa/lelux-utiliteetit/commit/fdb76db0d32fdd77bff49b6c2a7db77763b1c4e4
+
+2. Refer this email thread in merge commit.
+   https://github.com/kerolasa/lelux-utiliteetit/commit/0b6c2693debf1219cfbe39dcf70e208abc94c1af
+
+3. Change 'yes' and 'no' in rfkill status output to 'blocked' and
+   'unblocked' that are more associative with command strings. Here is a
+   sample output:
+
+   $ rfkill
+   DEVICE            ID TYPE      SOFT      HARD
+   ideapad_wlan      0  wlan      unblocked unblocked
+   ideapad_bluetooth 1  bluetooth blocked   unblocked
+   hci0              2  bluetooth blocked   unblocked
+   phy0              3  wlan      unblocked unblocked
+
+4. Mark in configure.ac rfkill is linux only utility.
+   https://github.com/kerolasa/lelux-utiliteetit/commit/5f715abb96a4fa3699bcfdb35d029d7ae3a5ea07#diff-67e997bcfdac55191033d57a16d1408aR1596
+
+5. Small wording change in --output manual page entry: s/list of all
+   supported/list of available/. The later matches with --help output
+   title, hopefully makes it easier to know what is being referred.
 
 -- 
-------------- Codito, ergo sum - "I code, therefore I am" --------------
-The Rasterman (Carsten Haitzler)    raster@rasterman.com
+Sami Kerola
+http://www.iki.fi/kerolasa/
