@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37338 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751074AbdGEGFv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+Received: from mail-co1nam03on0077.outbound.protection.outlook.com ([104.47.40.77]:43840
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751400AbdGAIqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Jul 2017 04:46:07 -0400
+Date: Sat, 1 Jul 2017 11:45:52 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:38 +0300
-Message-Id: <20170705060539.20737-7-luca@coelho.fi> (sfid-20170705_080604_437823_A20FFBB3)
-In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
-References: <20170705060539.20737-1-luca@coelho.fi>
-Subject: [PATCH 6/7] iwlwifi: mvm: handle IBSS probe_queue in a few missing places
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: Re: [PATCH 3/8] qtnfmac: implement AP_VLAN iftype support
+Message-ID: <20170701084549.rqvia27dyxuco4gs@bars> (sfid-20170701_104614_998284_147B2CCC)
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+ <20170620195517.18373-4-sergey.matyukevich.os@quantenna.com>
+ <878tkd49m1.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <878tkd49m1.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+> 
+> > This patch implements AP_VLAN interface type support enabling
+> > the use of dynamic VLAN mode in hostapd.
+> >
+> > Implementation notes.
 
-When IBSS was implemented for DQA, we missid a few places where it
-should be handled in the same way as AP.
+[...]
 
-Fixes: ee48b72211f8 ("iwlwifi: mvm: support ibss in dqa mode")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> 
+> This looks somewhat controversial to me but I'm not very familiar with
+> VLANs. Do other wireless drivers do something similar or how is this
+> usually implemented? Or not at all?
+> 
+> --
+> Kalle Valo
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 4a6df45b73df..ab66b4394dfc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2027,7 +2027,8 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 						IWL_MAX_TID_COUNT,
- 						wdg_timeout);
- 
--		if (vif->type == NL80211_IFTYPE_AP)
-+		if (vif->type == NL80211_IFTYPE_AP ||
-+		    vif->type == NL80211_IFTYPE_ADHOC)
- 			mvm->probe_queue = queue;
- 		else if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
- 			mvm->p2p_dev_queue = queue;
--- 
-2.11.0
+Well, IIUC this feature is not supported by other full-mac drivers at the
+moment, so no good example to follow. I don't think it is too controversial.
+Probably the restrictions on hostapd AP_VLAN interface names can be
+frowned upon. But at the moment this information is not passed by hostapd
+to kernel. It needs some additional work both in hostapd and cfg80211
+to get this info directly in the driver.
+
+Anyways, other patches in this series are more straighforward. So I will split
+submission in v2: AP_VLAN support will be posted separately as RFC in order to
+some feedback regarding the overall approach.
+
+Regards,
+Sergey
