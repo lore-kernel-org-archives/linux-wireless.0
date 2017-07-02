@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33664 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753016AbdGHTIy (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33909 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751780AbdGBSMr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Jul 2017 15:08:54 -0400
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH] ath10k: sdio: fix compile warning
-Date: Sat,  8 Jul 2017 21:08:41 +0200
-Message-Id: <1499540921-18521-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20170708_210930_692721_EA16C75A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Sun, 2 Jul 2017 14:12:47 -0400
+Received: by mail-oi0-f66.google.com with SMTP id d77so17372853oig.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Jul 2017 11:12:47 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH v3 00/10] Set 3 of changes related to updates of btcoexist
+Date: Sun,  2 Jul 2017 13:12:29 -0500
+Message-Id: <20170702181239.17911-1-Larry.Finger@lwfinger.net> (sfid-20170702_201254_627536_F34AA979)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As suggested by Arnd Bergmann, replace
-"while (time_before_...) {}"
-with
-"do {} while (time_before_...)"
+To get maximum benefit of the recent changes in btcoexist, changes need
+to be made in the drivers for the NIC. This is set 3 of those changes.
 
-This fixes the following warnings detected by gcc 4.1.2:
+v2 - remove \r characters as suggested by Joe Perches
+v3 - remove those \r characters missed in v2
+v4 - replace rtl_debugfs_open() with simple_open() as found by kbuild test robot <lkp@intel.com>
 
-drivers/net/wireless/ath/ath10k/sdio.c: In function
-‘ath10k_sdio_mbox_rxmsg_pending_handler’:
-drivers/net/wireless/ath/ath10k/sdio.c:676: warning: ‘ret’ may be used uninitialized in this function
+Ping-Ke Shih (10):
+  rtlwifi: Fill in_4way field by driver
+  rtlwifi: Add BT_MP_INFO to c2h handler.
+  rtlwifi: Add board type for 8723be and 8192ee
+  rtlwifi: add amplifier type for 8812ae
+  rtlwifi: Update 8723be new phy parameters and its parser.
+  rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
+  rtlwifi: Uses addr1 instead DA to determine broadcast and multicast
+    addr.
+  rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
+  rtlwifi: use debugfs to debug.
+  rtlwifi: btcoex: Use seq_file to dump btcoex status
 
-...
+ drivers/net/wireless/realtek/rtlwifi/base.c        |  21 +-
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  16 -
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 202 +++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 269 ++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 206 +++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 285 ++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 177 ++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 150 ++++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  14 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  34 ++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   2 +
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   2 +
+ drivers/net/wireless/realtek/rtlwifi/debug.c       | 439 +++++++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/debug.h       |  12 +
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |   6 +
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   5 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   7 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 365 ++++++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8723be/table.c | 192 +++++----
+ .../net/wireless/realtek/rtlwifi/rtl8723be/table.h |  10 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |  13 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  41 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  58 +--
+ 31 files changed, 1588 insertions(+), 974 deletions(-)
 
-drivers/net/wireless/ath/ath10k/sdio.c: In function
-‘ath10k_sdio_irq_handler’:
-drivers/net/wireless/ath/ath10k/sdio.c:1331: warning: ‘ret’ may be used uninitialized in this function
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/sdio.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 859ed87..48268f0 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -683,7 +683,7 @@ static int ath10k_sdio_mbox_rxmsg_pending_handler(struct ath10k *ar,
- 	lookaheads[0] = msg_lookahead;
- 
- 	timeout = jiffies + SDIO_MBOX_PROCESSING_TIMEOUT_HZ;
--	while (time_before(jiffies, timeout)) {
-+	do {
- 		/* Try to allocate as many HTC RX packets indicated by
- 		 * n_lookaheads.
- 		 */
-@@ -719,7 +719,7 @@ static int ath10k_sdio_mbox_rxmsg_pending_handler(struct ath10k *ar,
- 		 * performance in high throughput situations.
- 		 */
- 		*done = false;
--	}
-+	} while (time_before(jiffies, timeout));
- 
- 	if (ret && (ret != -ECANCELED))
- 		ath10k_warn(ar, "failed to get pending recv messages: %d\n",
-@@ -1336,11 +1336,11 @@ static void ath10k_sdio_irq_handler(struct sdio_func *func)
- 	sdio_release_host(ar_sdio->func);
- 
- 	timeout = jiffies + ATH10K_SDIO_HIF_COMMUNICATION_TIMEOUT_HZ;
--	while (time_before(jiffies, timeout) && !done) {
-+	do {
- 		ret = ath10k_sdio_mbox_proc_pending_irqs(ar, &done);
- 		if (ret)
- 			break;
--	}
-+	} while (time_before(jiffies, timeout) && !done);
- 
- 	sdio_claim_host(ar_sdio->func);
- 
 -- 
-2.7.4
+2.12.3
