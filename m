@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:56142 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933715AbdGSTIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:08:39 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 04/34] brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
-Date: Wed, 19 Jul 2017 20:07:52 +0100
-Message-Id: <20170719190822.10857-5-ian@mnementh.co.uk> (sfid-20170719_211051_228772_BE712B79)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33075 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751810AbdGBSMy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 2 Jul 2017 14:12:54 -0400
+Received: by mail-oi0-f68.google.com with SMTP id f134so10161147oig.0
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Jul 2017 11:12:54 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v4 07/10] rtlwifi: Uses addr1 instead DA to determine broadcast and multicast addr.
+Date: Sun,  2 Jul 2017 13:12:36 -0500
+Message-Id: <20170702181239.17911-8-Larry.Finger@lwfinger.net> (sfid-20170702_201307_102435_B4EB481A)
+In-Reply-To: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	This function sets the address of the IO window used for
-SDIO accesses onto the backplane of the chip.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-It currently uses 3 separate masks despite the full mask being
-defined in the code already. Remove the separate masks and clean up.
+We should check addr1 to indicate a packet as broadcast or multicast
+in tx desc. An obvious example, a STA transmit an *unicast* ARP packet
+where addr1 and DA are the addresses of AP and broadcast respectively.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 15 ++++-----------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   |  3 ---
- 2 files changed, 4 insertions(+), 14 deletions(-)
+v2 - no changes
+v3 - no changes
+v4 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 5b9a21d6b6b2..aee1ecb7260e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -408,23 +408,16 @@ static int
- brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- {
- 	int err = 0, i;
--	u8 addr[3];
-+	u32 addr;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 0c9cfb670cec..4023644c3532 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1166,9 +1166,9 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 			}
+ 		}
  
- 	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
- 		return -ENOMEDIUM;
+-		if (is_multicast_ether_addr(ieee80211_get_DA(hdr)))
++		if (is_multicast_ether_addr(hdr->addr1))
+ 			tcb_desc->multicast = 1;
+-		else if (is_broadcast_ether_addr(ieee80211_get_DA(hdr)))
++		else if (is_broadcast_ether_addr(hdr->addr1))
+ 			tcb_desc->broadcast = 1;
  
--	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
--	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
--	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
-+	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
- 
--	for (i = 0; i < 3; i++) {
--		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
-+	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
- 					&err);
--		if (err) {
--			brcmf_err("failed at addr: 0x%0x\n",
--				  SBSDIO_FUNC1_SBADDRLOW + i);
--		}
--	}
- 
- 	return err;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index f3da32fc6360..e3b78db331b5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -133,9 +133,6 @@
- 
- /* valid bits in SBSDIO_FUNC1_SBADDRxxx regs */
- 
--#define SBSDIO_SBADDRLOW_MASK		0x80	/* Valid bits in SBADDRLOW */
--#define SBSDIO_SBADDRMID_MASK		0xff	/* Valid bits in SBADDRMID */
--#define SBSDIO_SBADDRHIGH_MASK		0xffU	/* Valid bits in SBADDRHIGH */
- /* Address bits from SBADDR regs */
- #define SBSDIO_SBWINDOW_MASK		0xffff8000
- 
+ 		_rtl_txrate_selectmode(hw, sta, tcb_desc);
 -- 
-2.11.0
+2.12.3
