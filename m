@@ -1,68 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f178.google.com ([209.85.128.178]:38684 "EHLO
-        mail-wr0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750938AbdGYL62 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36447 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751810AbdGBSNA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 07:58:28 -0400
-Received: by mail-wr0-f178.google.com with SMTP id f21so61541095wrf.5
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jul 2017 04:58:27 -0700 (PDT)
-Message-ID: <59773261.5030100@broadcom.com> (sfid-20170725_135832_673227_ECA5697B)
-Date: Tue, 25 Jul 2017 13:58:25 +0200
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-MIME-Version: 1.0
-To: Rafal <fatwildcat@gmail.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: brcfmac: add possibility to turn off powersave on wiphy
-References: <alpine.DEB.2.20.1707211652430.10663@wilk> <1500655872.10725.1.camel@redhat.com> <alpine.DEB.2.20.1707212252060.13284@wilk>
-In-Reply-To: <alpine.DEB.2.20.1707212252060.13284@wilk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+        Sun, 2 Jul 2017 14:13:00 -0400
+Received: by mail-oi0-f65.google.com with SMTP id n2so10037954oig.3
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Jul 2017 11:13:00 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v4 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
+Date: Sun,  2 Jul 2017 13:12:37 -0500
+Message-Id: <20170702181239.17911-9-Larry.Finger@lwfinger.net> (sfid-20170702_201305_674424_551EA94C)
+In-Reply-To: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/21/2017 11:19 PM, Rafal wrote:
-> On Fri, 21 Jul 2017, Dan Williams wrote:
->
->> On Fri, 2017-07-21 at 16:56 +0200, Rafal wrote:
->>> I have a board with ap6212 chip and I have encountered two problems
->>> with the brcmfmac driver operating with this device. First problem I
->>> describe below, second one in separate mail.
->>>
->>>
->>> Namely, I have noticed quite poor connection with the device despite
->>> good signal strength. Ping to the device was very uneven, about 50 -
->>> 100 ms in average, 10 - 20% of packets loss. After some
->>> investigations I have found that problem is caused by powersave
->>> feature on wiphy (BRCMF_C_SET_PM command). When the value is set to
->>> PM_OFF, the problem does not appear - ping is quite stable, ~2ms.
->>> When set to PM_FAST, the ping is bad.
->>>
->>> The brcmfmac driver currently does not have possibility to turn off
->>> the powersave feature. I have added the possibility on 4.11.6 kernel
->>
->> I don't think that's true?  The driver implements the nl80211
->> set_power_mgmt hook, which lets you turn off powersave with 'iw'.  That
->> seems like a much better option than a module parameter.  I know other
->> drivers have the module parameter, but I personally consider that
->> legacy/holdover, given that we have runtime toggles for this kind of
->> thing.
->>
->> brcmf_cfg80211_set_power_mgmt() should do what you need, right?
->
-> Yes, it does.
->
-> In fact, I needed only a parameter in OF database. This is a bug in the
-> device or firmware and I needed to disable the feature for this chip.
-> Many device drivers allow to specify in OF database that driver should
-> use a quirk. This is similar situation.
->
-> I have added the kernel parameter as an additional feature. I thought
-> that not all platforms are using devicetree database. But maybe it is a
-> bad idea.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I was going to make the same remark as Dan. Anyway, the ping times are 
-not really unexpected. It depends on your beacon period and dtim 
-setting. However, the packet loss is not expected and will require 
-analyzing a sniff capture.
+Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
+the same definitions.
 
-Regards,
-Arend
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+v3 - no changes
+v4 - no changes
+---
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
+ 3 files changed, 19 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 2ac989a4b2bb..02dff4c3f664 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -43,22 +43,6 @@
+ #define RT_SDIO_INTERFACE	3
+ #define DEV_BUS_TYPE		RT_PCI_INTERFACE
+ 
+-/* IC type */
+-#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
+-
+-#define IS_NEW_GENERATION_IC(adapter)		\
+-			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
+-#define IS_HARDWARE_TYPE_8812(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
+-#define IS_HARDWARE_TYPE_8821(adapter)		\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
+-#define IS_HARDWARE_TYPE_8723A(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
+-#define IS_HARDWARE_TYPE_8723B(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
+-#define IS_HARDWARE_TYPE_8192E(adapter)	\
+-			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
+-
+ #include "halbtc8192e2ant.h"
+ #include "halbtc8723b1ant.h"
+ #include "halbtc8723b2ant.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index 1b124eade846..5657b1e34ad0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
+ void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 
+-	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
++	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
+ 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
+ 				0xFFFFFFFF);
+ 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 4c6d01eb065d..f77acd329e0e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -314,35 +314,29 @@ enum hardware_type {
+ 	HARDWARE_TYPE_RTL8192EE,
+ 	HARDWARE_TYPE_RTL8821AE,
+ 	HARDWARE_TYPE_RTL8812AE,
++	HARDWARE_TYPE_RTL8822BE,
+ 
+ 	/* keep it last */
+ 	HARDWARE_TYPE_NUM
+ };
+ 
+-#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
+-#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+-#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
+-#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
+-#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
+-#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
+-#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
+-#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
+-	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
+-#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
+-(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
+-#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
+-(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
++#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
++#define IS_NEW_GENERATION_IC(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
++#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
++#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
++#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
++#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
++#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
++#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
++			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
+ 
+ #define RX_HAL_IS_CCK_RATE(rxmcs)			\
+ 	((rxmcs) == DESC_RATE1M ||			\
+-- 
+2.12.3
