@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36016 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755477AbdGKHcG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 03:32:06 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: stas.yakovlev@gmail.com, kvalo@codeaurora.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 05/10] wireless: ipw2100: constify attribute_group structures.
-Date: Tue, 11 Jul 2017 13:01:31 +0530
-Message-Id: <1499758291-24821-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170711_093310_726476_F876FEB2)
-In-Reply-To: <1499758291-24821-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1499758291-24821-1-git-send-email-arvind.yadav.cs@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38932 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752206AbdGCM2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Jul 2017 08:28:31 -0400
+From: Stefan Assmann <sassmann@kpanic.de>
+To: devel@driverdev.osuosl.org
+Cc: linux-wireless@vger.kernel.org, sassmann@kpanic.de
+Subject: [PATCH] rtl8723bs: fix build when DEBUG_RTL871X is defined
+Date: Mon,  3 Jul 2017 14:27:33 +0200
+Message-Id: <20170703122733.28512-1-sassmann@kpanic.de> (sfid-20170703_142834_670630_32A17D26)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-attribute_groups are not supposed to change at runtime. All functions
-working with attribute_groups provided by <linux/sysfs.h> work
-with const attribute_group. So mark the non-const structs as const.
+Defining DEBUG_RTL871X in rtw_debug.h causes the following compile error:
+  CC [M]  drivers/staging/rtl8723bs/core/rtw_mlme.o
+In file included from drivers/staging/rtl8723bs/core/rtw_mlme.c:18:0:
+drivers/staging/rtl8723bs/core/rtw_mlme.c: In function ‘rtw_restruct_sec_ie’:
+drivers/staging/rtl8723bs/core/rtw_mlme.c:2502:19: error: ‘ndissecuritytype’ undeclared (first use in thisfunction)
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Remove the no longer existing parameter.
+
+Signed-off-by: Stefan Assmann <sassmann@kpanic.de>
 ---
-Changes in v2:
-              Added cover later.
+ drivers/staging/rtl8723bs/core/rtw_mlme.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index aaaca4d..ccbe745 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -4324,7 +4324,7 @@ static ssize_t store_rf_kill(struct device *d, struct device_attribute *attr,
- 	NULL,
- };
+diff --git a/drivers/staging/rtl8723bs/core/rtw_mlme.c b/drivers/staging/rtl8723bs/core/rtw_mlme.c
+index 9e35573..f97f35a 100644
+--- a/drivers/staging/rtl8723bs/core/rtw_mlme.c
++++ b/drivers/staging/rtl8723bs/core/rtw_mlme.c
+@@ -2498,8 +2498,7 @@ sint rtw_restruct_sec_ie(struct adapter *adapter, u8 *in_ie, u8 *out_ie, uint in
+ 	uint	ndisauthmode = psecuritypriv->ndisauthtype;
  
--static struct attribute_group ipw2100_attribute_group = {
-+static const struct attribute_group ipw2100_attribute_group = {
- 	.attrs = ipw2100_sysfs_entries,
- };
+ 	RT_TRACE(_module_rtl871x_mlme_c_, _drv_notice_,
+-		 ("+rtw_restruct_sec_ie: ndisauthmode =%d ndissecuritytype =%d\n",
+-		  ndisauthmode, ndissecuritytype));
++		 ("+rtw_restruct_sec_ie: ndisauthmode =%d\n", ndisauthmode));
  
+ 	/* copy fixed ie only */
+ 	memcpy(out_ie, in_ie, 12);
 -- 
-1.9.1
+2.9.4
