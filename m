@@ -1,53 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:36771 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751078AbdGHH1v (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36488 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754201AbdGCSkw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Jul 2017 03:27:51 -0400
-Received: by mail-wr0-f194.google.com with SMTP id 77so12225290wrb.3
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Jul 2017 00:27:51 -0700 (PDT)
-From: Mathias Kresin <dev@kresin.me>
-To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2x00: call clk_get_rate only if we have a clock
-Date: Sat,  8 Jul 2017 09:27:43 +0200
-Message-Id: <1499498863-6865-1-git-send-email-dev@kresin.me> (sfid-20170708_092755_548770_9F5C50C2)
+        Mon, 3 Jul 2017 14:40:52 -0400
+Received: by mail-oi0-f67.google.com with SMTP id n2so12756227oig.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:52 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/11] rtlwifi: Add TX/RX throughput statistics in period
+Date: Mon,  3 Jul 2017 13:40:34 -0500
+Message-Id: <20170703184038.24669-8-Larry.Finger@lwfinger.net> (sfid-20170703_204106_627956_8CA94B3B)
+In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If clk_get returns an error, rt2x00dev->clk is set to NULL. In
-contrast to the common clock framework provided clk_get_rate(), at
-least the ramips and bcm63xx legacy implementation of the clk API
-access the rate member of the clk struct without a NULL check. This
-results into a kernel panic if we do not have a (SoC) clock.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Call clk_get_rate only if we have a clock to fix the issues. This
-approach is similar to what is done in the kernel at various places.
-Usually clk_get_rate() is only called if clk_get_rate() doesn't return
-an error.
+The statistic variables use u64 to get higher precision.
 
-Signed-off-by: Mathias Kresin <dev@kresin.me>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 16 ++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 15 +++++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-Resend, the first mail had the wrong list in cc.
-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index d11c7b2..2a525b9 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -2059,6 +2059,9 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 5e9e25a4ba3d..61cb7bb714fa 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1999,6 +1999,22 @@ void rtl_watchdog_wq_callback(void *data)
+ 	rtlpriv->link_info.tx_busy_traffic = tx_busy_traffic;
+ 	rtlpriv->link_info.higher_busyrxtraffic = higher_busyrxtraffic;
  
- static inline bool rt2800_clk_is_20mhz(struct rt2x00_dev *rt2x00dev)
- {
-+	if (!rt2x00dev->clk)
-+		return 0;
++	rtlpriv->stats.txbytesunicast_inperiod =
++		rtlpriv->stats.txbytesunicast -
++		rtlpriv->stats.txbytesunicast_last;
++	rtlpriv->stats.rxbytesunicast_inperiod =
++		rtlpriv->stats.rxbytesunicast -
++		rtlpriv->stats.rxbytesunicast_last;
++	rtlpriv->stats.txbytesunicast_last = rtlpriv->stats.txbytesunicast;
++	rtlpriv->stats.rxbytesunicast_last = rtlpriv->stats.rxbytesunicast;
 +
- 	return clk_get_rate(rt2x00dev->clk) == 20000000;
- }
++	rtlpriv->stats.txbytesunicast_inperiod_tp =
++		(u32)(rtlpriv->stats.txbytesunicast_inperiod * 8 / 2 /
++		1024 / 1024);
++	rtlpriv->stats.rxbytesunicast_inperiod_tp =
++		(u32)(rtlpriv->stats.rxbytesunicast_inperiod * 8 / 2 /
++		1024 / 1024);
++
+ 	/* <3> DM */
+ 	if (!rtlpriv->cfg->mod_params->disable_watchdog)
+ 		rtlpriv->cfg->ops->dm_watchdog(hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 90f3c019bc04..8d8e104507d6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1013,10 +1013,17 @@ struct init_gain {
+ };
  
+ struct wireless_stats {
+-	unsigned long txbytesunicast;
+-	unsigned long txbytesmulticast;
+-	unsigned long txbytesbroadcast;
+-	unsigned long rxbytesunicast;
++	u64 txbytesunicast;
++	u64 txbytesmulticast;
++	u64 txbytesbroadcast;
++	u64 rxbytesunicast;
++
++	u64 txbytesunicast_inperiod;
++	u64 rxbytesunicast_inperiod;
++	u32 txbytesunicast_inperiod_tp;
++	u32 rxbytesunicast_inperiod_tp;
++	u64 txbytesunicast_last;
++	u64 rxbytesunicast_last;
+ 
+ 	long rx_snr_db[4];
+ 	/*Correct smoothed ss in Dbm, only used
 -- 
-2.7.4
+2.12.3
