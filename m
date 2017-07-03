@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34646 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755389AbdGKHd1 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43948 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752198AbdGCFch (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 03:33:27 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: sgruszka@redhat.com, kvalo@codeaurora.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 07/10] wireless: iwlegacy: Constify attribute_group structures.
-Date: Tue, 11 Jul 2017 13:02:50 +0530
-Message-Id: <1499758370-24871-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170711_093529_914677_3CC291F9)
-In-Reply-To: <1499758370-24871-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1499758370-24871-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Mon, 3 Jul 2017 01:32:37 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Increase buffer len to print all wmi services.
+Date: Mon, 3 Jul 2017 11:02:36 +0530
+Message-ID: <1499059956-30051-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170703_073249_975962_942A1C64)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-attribute_groups are not supposed to change at runtime. All functions
-working with attribute_groups provided by <linux/sysfs.h> work
-with const attribute_group. So mark the non-const structs as const.
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+All wmi_services are not printing when we give below command.
+
+cat /sys/kernel/debug/ieee80211/phyX/ath10k/wmi_services
+
+This patch increases the buffer_len to 8192 to print all the wmi_services.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
-Changes in v2:
-              Added cover later.
-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
+ drivers/net/wireless/ath/ath10k/debug.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 5b51fba..de9b652 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4654,7 +4654,7 @@ static DEVICE_ATTR(tx_power, S_IWUSR | S_IRUGO, il4965_show_tx_power,
- 	NULL
- };
- 
--static struct attribute_group il_attribute_group = {
-+static const struct attribute_group il_attribute_group = {
- 	.name = NULL,		/* put in device directory */
- 	.attrs = il_sysfs_entries,
- };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 389fcb7..56404fe 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -237,7 +237,7 @@ static ssize_t ath10k_read_wmi_services(struct file *file,
+ {
+ 	struct ath10k *ar = file->private_data;
+ 	char *buf;
+-	size_t len = 0, buf_len = 4096;
++	size_t len = 0, buf_len = 8192;
+ 	const char *name;
+ 	ssize_t ret_cnt;
+ 	bool enabled;
 -- 
-1.9.1
+1.7.9.5
