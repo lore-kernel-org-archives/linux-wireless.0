@@ -1,125 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49554 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751503AbdGZUqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:46:44 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 31/34] brcmfmac: Remove func0 from function array
-Date: Wed, 26 Jul 2017 21:25:54 +0100
-Message-Id: <20170726202557.15632-32-ian@mnementh.co.uk> (sfid-20170726_230043_011690_A4FE7C18)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:34425 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755367AbdGCNjB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Jul 2017 09:39:01 -0400
+From: Rob Clark <robdclark@gmail.com>
+To: linux-arm-msm@vger.kernel.org
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, Rob Clark <robdclark@gmail.com>
+Subject: [PATCH] wcn36xx: check dma_mapping_error()
+Date: Mon,  3 Jul 2017 09:38:45 -0400
+Message-Id: <20170703133845.13638-1-robdclark@gmail.com> (sfid-20170703_170242_224028_8CEA9E63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linux doesnt pass you func0 as a function when probing - instead
-providing specific access functions to read/write it.
+Fixes splat:
 
-This prepares for a patch to remove the actual array entry itself.
+  wcn36xx a204000.wcnss:smd-edge:wcnss:wifi: DMA-API: device driver failed to check map error[device address=0x00000000b45ba000] [size=3872 bytes] [mapped as single]
+  ------------[ cut here ]------------
+  WARNING: CPU: 0 PID: 0 at ../lib/dma-debug.c:1167 check_unmap+0x474/0x8d0
+  Modules linked in: bnep(E) arc4(E) wcn36xx(E) mac80211(E) btqcomsmd(E) btqca(E) bluetooth(E) cfg80211(E) ecdh_generic(E) rfkill(E) vfat(E) fat(E) wcnss_ctrl qcom_wcnss_pil(E) mdt_loader(E) qcom_common(E) remoteproc(E) crc32_ce(E) virtio_ring(E) snd_soc_lpass_apq8016(E) snd_soc_lpass_cpu(E) virtio(E) snd_soc_lpass_platform(E) leds_gpio(E) snd_soc_hdmi_codec(E) snd_soc_apq8016_sbc(E) snd_soc_msm8916_digital(E) snd_soc_core(E) qcom_spmi_temp_alarm(E) ac97_bus(E) snd_pcm_dmaengine(E) snd_seq(E) snd_seq_device(E) snd_pcm(E) spi_qup(E) nvmem_qfprom(E) snd_timer(E) snd(E) soundcore(E) msm_rng(E) qcom_tsens(E) nvmem_core(E) uas(E) usb_storage(E) dm9601(E) cdc_ether(E) usbnet(E) mii(E) mmc_block(E) sdhci_msm(E) sdhci_pltfm(E) qcom_spmi_vadc(E) qcom_vadc_common(PE) clk_smd_rpm(E) industrialio(E)
+   qcom_smd_regulator(E) pinctrl_spmi_mpp(E) pinctrl_spmi_gpio(E) rtc_pm8xxx(E) adv7511(E) smd_rpm(E) qcom_spmi_pmic(E) regmap_spmi(E) phy_msm_usb(E) usb3503(E) extcon_usb_gpio(E) ci_hdrc_msm(E) ci_hdrc(E) qcom_hwspinlock(E) udc_core(E) extcon_core(E) ehci_msm(E) i2c_qup(E) sdhci(E) msm(E) mmc_core(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) fb_sys_fops(E) spmi_pmic_arb(E) drm(E) spmi(E) qcom_smd(E) rpmsg_core smsm(E) gpio_keys(E) smp2p(E) smem(E) hwspinlock_core(E) sunrpc(E) scsi_transport_iscsi(E)
+  CPU: 0 PID: 0 Comm: swapper/0 Tainted: P            E   4.12.0-rc7+ #1476
+  Hardware name: qualcomm dragonboard410c/dragonboard410c, BIOS 2017.07-rc1-00234-g22fa70a-dirty 06/26/2017
+  task: ffff000009049780 task.stack: ffff000009030000
+  PC is at check_unmap+0x474/0x8d0
+  LR is at check_unmap+0x474/0x8d0
+  ...
+  Mapped at:
+   dma_entry_alloc+0x68/0xa8
+   debug_dma_map_page+0x94/0x148
+   wcn36xx_dxe_fill_skb.isra.1+0xbc/0xf8 [wcn36xx]
+   wcn36xx_dxe_init+0x244/0x398 [wcn36xx]
+   wcn36xx_start+0xf4/0x298 [wcn36xx]
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Rob Clark <robdclark@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  5 +----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   |  6 +++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 13 ++++++-------
- 3 files changed, 10 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 95149c686c5f..da0654c50db9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1021,8 +1021,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	/* store refs to functions used. mmc_card does
- 	 * not hold the F0 function pointer.
- 	 */
--	sdiodev->func[0] = kmemdup(func, sizeof(*func), GFP_KERNEL);
--	sdiodev->func[0]->num = 0;
-+	sdiodev->func[0] = NULL;
- 	sdiodev->func[1] = func->card->sdio_func[0];
- 	sdiodev->func[2] = func;
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 87dfdaf..d5c810a 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -289,6 +289,11 @@ static int wcn36xx_dxe_fill_skb(struct device *dev, struct wcn36xx_dxe_ctl *ctl)
+ 					 skb_tail_pointer(skb),
+ 					 WCN36XX_PKT_SIZE,
+ 					 DMA_FROM_DEVICE);
++	if (dma_mapping_error(dev, dxe->dst_addr_l)) {
++		dev_err(dev, "unable to map skb\n");
++		kfree_skb(skb);
++		return -ENOMEM;
++	}
+ 	ctl->skb = skb;
  
-@@ -1048,7 +1047,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- fail:
- 	dev_set_drvdata(&func->dev, NULL);
- 	dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
--	kfree(sdiodev->func[0]);
- 	kfree(sdiodev);
- 	kfree(bus_if);
- 	return err;
-@@ -1081,7 +1079,6 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
- 		dev_set_drvdata(&sdiodev->func[2]->dev, NULL);
- 
- 		kfree(bus_if);
--		kfree(sdiodev->func[0]);
- 		kfree(sdiodev);
- 	}
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 91a17ef63a6b..230a24cb6c0a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3766,9 +3766,9 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	/* Force 4339 chips over rev2 to use the same ID */
- 	/* This is borderline tolerable whilst there is only two exceptions */
- 	/* But could be handled better */
--	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
--		sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
--		addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+	if ((sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
-+	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
-+	     addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
- 
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 8a976c89cf63..227c90198a8e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -21,7 +21,9 @@
- #include <linux/firmware.h>
- #include "firmware.h"
- 
--#define SDIO_FUNC_0		0
-+/* Maximum number of I/O funcs */
-+#define NUM_SDIO_FUNCS	3
-+
- #define SDIO_FUNC_1		1
- #define SDIO_FUNC_2		2
- 
-@@ -39,9 +41,6 @@
- #define INTR_STATUS_FUNC1	0x2
- #define INTR_STATUS_FUNC2	0x4
- 
--/* Maximum number of I/O funcs */
--#define SDIOD_MAX_IOFUNCS	7
--
- /* mask of register map */
- #define REG_F0_REG_MASK		0x7FF
- #define REG_F1_MISC_MASK	0x1FFFF
-@@ -175,7 +174,7 @@ struct brcmf_sdio;
- struct brcmf_sdiod_freezer;
- 
- struct brcmf_sdio_dev {
--	struct sdio_func *func[SDIO_MAX_FUNCS];
-+	struct sdio_func *func[NUM_SDIO_FUNCS];
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 sbwad;			/* Save backplane window address */
- 	struct brcmf_core *cc_core;	/* chipcommon core info struct */
-@@ -297,10 +296,10 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
- /* SDIO device register access interface */
- /* Functions for accessing SDIO Function 0 */
- #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
--	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
-+	sdio_f0_readb((sdiodev)->func[1], (addr), (r))
- 
- #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
--	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
-+	sdio_f0_writeb((sdiodev)->func[1], (v), (addr), (ret))
- 
- /* Functions for accessing SDIO Function 1 */
- #define brcmf_sdiod_readb(sdiodev, addr, r) \
+ 	return 0;
 -- 
-2.11.0
+2.9.4
