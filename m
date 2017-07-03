@@ -1,41 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:46016 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S936694AbdGTRpR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jul 2017 13:45:17 -0400
-Subject: Re: [PATCH 28/29] brcmfmac: Rename buscore->core for consistency
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
-        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-References: <201707201435.jvP0aU47%fengguang.wu@intel.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <211aceb1-0b4e-039f-f874-0e4ea8073172@mnementh.co.uk> (sfid-20170720_194539_001719_3E0E8637)
-Date: Thu, 20 Jul 2017 18:45:13 +0100
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:35968 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753747AbdGCVIs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Jul 2017 17:08:48 -0400
+Received: by mail-qt0-f180.google.com with SMTP id i2so152343201qta.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 14:08:47 -0700 (PDT)
+Subject: Re: [PATCH v4 02/10] rtlwifi: Add BT_MP_INFO to c2h handler.
+To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+ <20170702181239.17911-3-Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <02d73d82-b609-036f-6560-ca7a657d7bf2@broadcom.com> (sfid-20170703_231053_498524_25285526)
+Date: Mon, 3 Jul 2017 23:08:43 +0200
 MIME-Version: 1.0
-In-Reply-To: <201707201435.jvP0aU47%fengguang.wu@intel.com>
+In-Reply-To: <20170702181239.17911-3-Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20/07/17 08:00, kbuild test robot wrote:
-> Hi Ian,
-> 
-> [auto build test WARNING on wireless-drivers-next/master]
-> [also build test WARNING on v4.13-rc1]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Ian-Molton/brcmfmac-Fix-parameter-order-in-brcmf_sdiod_f0_writeb/20170718-123057
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-> config: x86_64-randconfig-a0-07201347 (attached as .config)
-> compiler: gcc-4.4 (Debian 4.4.7-8) 4.4.7
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
-> 
-> All warnings (new ones prefixed by >>):
-> 
->    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c: In function 'brcmf_sdio_intr_rstatus':
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2470: warning: unused variable 'addr'
 
-Fixed in v3 spin of this series.
+
+On 2-7-2017 20:12, Larry Finger wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> We use H2C to ask BT's status, and C2H will return the status.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
+> ---
+> v2 - no changes
+> v3 - no changes
+> v4 - no changes
+> ---
+>  .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 17 ++++++++++++-
+>  .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 28 ++++++++++++++++++++++
+>  .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  1 +
+>  .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |  9 +++++--
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |  9 +++++--
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 13 +++++++---
+>  drivers/net/wireless/realtek/rtlwifi/wifi.h        |  2 ++
+>  7 files changed, 71 insertions(+), 8 deletions(-)
+> 
+
+[...]
+
+>  
+> +void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
+> +{
+> +	u8 extid, seq, len;
+> +	u16 bt_real_fw_ver;
+> +	u8 bt_fw_ver;
+> +
+> +	if ((length < 4) || (!tmp_buf))
+> +		return;
+> +
+> +	extid = tmp_buf[0];
+> +	/* not response from BT FW then exit*/
+> +	if (extid != 1) /* C2H_TRIG_BY_BT_FW = 1 */
+> +		return;
+> +
+> +	len = tmp_buf[1] >> 4;
+> +	seq = tmp_buf[2] >> 4;
+> +
+> +	/* BT Firmware version response */
+> +	if (seq == 0x0E) {
+> +		bt_real_fw_ver = tmp_buf[3] | (tmp_buf[4] << 8);
+> +		bt_fw_ver = tmp_buf[5];
+> +
+> +		gl_bt_coexist.bt_info.bt_real_fw_ver = bt_real_fw_ver;
+> +		gl_bt_coexist.bt_info.bt_fw_ver = bt_fw_ver;
+> +	}
+> +}
+
+Just stumbled upon this and curious. I assume gl_bt_coexist is a global
+variable so I guess this code will not work when running multiple
+realtek device with btcoexist on your system.
+
+Regards,
+Arend
