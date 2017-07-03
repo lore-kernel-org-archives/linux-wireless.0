@@ -1,207 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0071.outbound.protection.outlook.com ([104.47.41.71]:30304
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751635AbdG0XHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 19:07:41 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 07/12] qtnfmac: move current channel info from vif to mac
-Date: Fri, 28 Jul 2017 02:06:49 +0300
-Message-Id: <20170727230654.30850-8-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010746_503017_486D686F)
-In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:32904 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753914AbdGCSks (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Jul 2017 14:40:48 -0400
+Received: by mail-oi0-f66.google.com with SMTP id f134so12888033oig.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:47 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 03/11] rtlwifi: Remove redundant semicolon in wifi.h.
+Date: Mon,  3 Jul 2017 13:40:30 -0500
+Message-Id: <20170703184038.24669-4-Larry.Finger@lwfinger.net> (sfid-20170703_204053_988366_F140516E)
+In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless cfg80211 core supplies channel settings in cfg80211_ap_settings
-structure for each BSS in multiple BSS configuration. On the other hand
-all the virtual interfaces on one radio are using the same PHY settings
-including channel.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Move chandef structure from vif to mac structure in order to mantain
-the only instance of cfg80211_chan_def structure in qtnf_wmac
-rather than its multiple copies in qtnf_vif.
+The semicolon can cause compiler error, if it exists in if...else
+statement.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 38 +++++++++++++++--------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++--
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  2 +-
- 3 files changed, 29 insertions(+), 17 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index ef8089c163bc..d47050934f00 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -266,11 +266,19 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			 struct cfg80211_ap_settings *settings)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
-+	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 6c3ff4a73d19..cdf3944715ee 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2867,19 +2867,19 @@ value to host byte ordering.*/
+ 	cpu_to_le32( \
+ 		LE_BITS_CLEARED_TO_4BYTE(__pstart, __bitoffset, __bitlen) | \
+ 		((((u32)__val) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset)) \
+-	);
++	)
+ #define SET_BITS_TO_LE_2BYTE(__pstart, __bitoffset, __bitlen, __val) \
+ 	*((__le16 *)(__pstart)) = \
+ 	cpu_to_le16( \
+ 		LE_BITS_CLEARED_TO_2BYTE(__pstart, __bitoffset, __bitlen) | \
+ 		((((u16)__val) & BIT_LEN_MASK_16(__bitlen)) << (__bitoffset)) \
+-	);
++	)
+ #define SET_BITS_TO_LE_1BYTE(__pstart, __bitoffset, __bitlen, __val) \
+ 	*((u8 *)(__pstart)) = EF1BYTE \
+ 	( \
+ 		LE_BITS_CLEARED_TO_1BYTE(__pstart, __bitoffset, __bitlen) | \
+ 		((((u8)__val) & BIT_LEN_MASK_8(__bitlen)) << (__bitoffset)) \
+-	);
++	)
  
--	bss_cfg = &vif->bss_cfg;
-+	if (!cfg80211_chandef_identical(&mac->chandef, &settings->chandef)) {
-+		memcpy(&mac->chandef, &settings->chandef, sizeof(mac->chandef));
-+		if (vif->vifid != 0)
-+			pr_warn("%s: unexpected chan %u (%u MHz)\n", dev->name,
-+				settings->chandef.chan->hw_value,
-+				settings->chandef.chan->center_freq);
-+	}
- 
-+	bss_cfg = &vif->bss_cfg;
- 	memset(bss_cfg, 0, sizeof(*bss_cfg));
- 
- 	bss_cfg->bcn_period = settings->beacon_interval;
-@@ -281,8 +289,6 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	bss_cfg->ssid_len = settings->ssid_len;
- 	memcpy(&bss_cfg->ssid, settings->ssid, bss_cfg->ssid_len);
- 
--	memcpy(&bss_cfg->chandef, &settings->chandef,
--	       sizeof(struct cfg80211_chan_def));
- 	memcpy(&bss_cfg->crypto, &settings->crypto,
- 	       sizeof(struct cfg80211_crypto_settings));
- 
-@@ -593,6 +599,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	     struct cfg80211_connect_params *sme)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
-+	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct cfg80211_chan_def chandef;
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
-@@ -615,7 +622,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 			cfg80211_chandef_create(&chandef, sme->channel,
- 						NL80211_CHAN_HT20);
- 
--		memcpy(&bss_cfg->chandef, &chandef, sizeof(bss_cfg->chandef));
-+		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
- 	}
- 
- 	bss_cfg->ssid_len = sme->ssid_len;
-@@ -695,14 +702,14 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct ieee80211_supported_band *sband;
--	struct cfg80211_chan_def *bss_chandef;
-+	struct cfg80211_chan_def *chandef;
- 	struct ieee80211_channel *chan;
- 	struct qtnf_chan_stats stats;
- 	struct qtnf_vif *vif;
- 	int ret;
- 
- 	vif = qtnf_netdev_get_priv(dev);
--	bss_chandef = &vif->bss_cfg.chandef;
-+	chandef = &mac->chandef;
- 
- 	sband = wiphy->bands[NL80211_BAND_2GHZ];
- 	if (sband && idx >= sband->n_channels) {
-@@ -722,9 +729,10 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 	survey->channel = chan;
- 	survey->filled = 0x0;
- 
--	if (bss_chandef->chan)
--		if (chan->hw_value == bss_chandef->chan->hw_value)
--			survey->filled |= SURVEY_INFO_IN_USE;
-+	if (chandef->chan) {
-+		if (chan->hw_value == chandef->chan->hw_value)
-+			survey->filled = SURVEY_INFO_IN_USE;
-+	}
- 
- 	ret = qtnf_cmd_get_chan_stats(mac, chan->hw_value, &stats);
- 	switch (ret) {
-@@ -736,7 +744,7 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 			break;
- 		}
- 
--		survey->filled = SURVEY_INFO_TIME |
-+		survey->filled |= SURVEY_INFO_TIME |
- 				 SURVEY_INFO_TIME_SCAN |
- 				 SURVEY_INFO_TIME_BUSY |
- 				 SURVEY_INFO_TIME_RX |
-@@ -768,15 +776,14 @@ static int
- qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		 struct cfg80211_chan_def *chandef)
- {
-+	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct net_device *ndev = wdev->netdev;
--	struct qtnf_bss_config *bss_cfg;
- 	struct qtnf_vif *vif;
- 
- 	if (!ndev)
- 		return -ENODEV;
- 
- 	vif = qtnf_netdev_get_priv(wdev->netdev);
--	bss_cfg = &vif->bss_cfg;
- 
- 	switch (vif->wdev.iftype) {
- 	case NL80211_IFTYPE_STATION:
-@@ -796,7 +803,12 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		return -ENODATA;
- 	}
- 
--	memcpy(chandef, &bss_cfg->chandef, sizeof(*chandef));
-+	if (!cfg80211_chandef_valid(&mac->chandef)) {
-+		pr_err("invalid channel settings on %s\n", ndev->name);
-+		return -ENODATA;
-+	}
-+
-+	memcpy(chandef, &mac->chandef, sizeof(*chandef));
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index c8c0685f81b3..a3c3dddb194c 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -185,7 +185,7 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif)
- {
- 	struct sk_buff *cmd_skb;
- 	struct qtnf_bss_config *bss_cfg = &vif->bss_cfg;
--	struct cfg80211_chan_def *chandef = &bss_cfg->chandef;
-+	struct cfg80211_chan_def *chandef = &vif->mac->chandef;
- 	struct qlink_tlv_channel *qchan;
- 	struct qlink_auth_encr aen;
- 	u16 res_code = QLINK_CMD_RESULT_OK;
-@@ -2035,8 +2035,8 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 
- 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
- 
--	if (bss_cfg->chandef.chan)
--		cmd->channel = cpu_to_le16(bss_cfg->chandef.chan->hw_value);
-+	if (vif->mac->chandef.chan)
-+		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
- 
- 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index b2d050c4f1e2..6830ff45976d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -67,7 +67,6 @@ struct qtnf_bss_config {
- 	u16 auth_type;
- 	bool privacy;
- 	enum nl80211_mfp mfp;
--	struct cfg80211_chan_def chandef;
- 	struct cfg80211_crypto_settings crypto;
- 	u16 bg_scan_period;
- 	u32 connect_flags;
-@@ -141,6 +140,7 @@ struct qtnf_wmac {
- 	struct qtnf_mac_info macinfo;
- 	struct qtnf_vif iflist[QTNF_MAX_INTF];
- 	struct cfg80211_scan_request *scan_req;
-+	struct cfg80211_chan_def chandef;
- };
- 
- struct qtnf_hw_info {
+ #define	N_BYTE_ALIGMENT(__value, __aligment) ((__aligment == 1) ? \
+ 	(__value) : (((__value + __aligment - 1) / __aligment) * __aligment))
 -- 
-2.11.0
+2.12.3
