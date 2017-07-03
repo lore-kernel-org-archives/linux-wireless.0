@@ -1,170 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0082.outbound.protection.outlook.com ([104.47.41.82]:14763
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751673AbdG0XHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 19:07:55 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 12/12] qtnfmac: prepare for AP_VLAN interface type support
-Date: Fri, 28 Jul 2017 02:06:54 +0300
-Message-Id: <20170727230654.30850-13-sergey.matyukevich.os@quantenna.com> (sfid-20170728_013043_217628_F23A6CED)
-In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:32887 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753570AbdGCSkp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Jul 2017 14:40:45 -0400
+Received: by mail-oi0-f66.google.com with SMTP id f134so12887890oig.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:44 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 00/11] Set 4 of changes related to updates of btcoexist
+Date: Mon,  3 Jul 2017 13:40:27 -0500
+Message-Id: <20170703184038.24669-1-Larry.Finger@lwfinger.net> (sfid-20170703_204049_190711_173C9618)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify qlink command structures and interface types handling
-to prepare adding AP_VLAN support to qtnfmac driver.
+To get maximum benefit of the recent changes in btcoexist, changes need
+to be made in the drivers for the NIC. This is set 3 of those changes.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 27 ++++++++++++++++++----
- drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 13 ++++++++---
- .../net/wireless/quantenna/qtnfmac/qlink_util.c    |  3 +++
- 3 files changed, 36 insertions(+), 7 deletions(-)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 94656106b496..4206886b110c 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -1047,6 +1047,7 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
- 
- 			/* supported modes: STA, AP */
- 			limits[rec].types &= BIT(NL80211_IFTYPE_AP) |
-+					     BIT(NL80211_IFTYPE_AP_VLAN) |
- 					     BIT(NL80211_IFTYPE_STATION);
- 
- 			pr_debug("MAC%u: MAX: %u; TYPES: %.4X\n", mac->macid,
-@@ -1058,6 +1059,7 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
- 		default:
- 			break;
- 		}
-+
- 		tlv_buf_size -= tlv_full_len;
- 		tlv = (struct qlink_tlv_hdr *)(tlv->val + tlv_value_len);
- 	}
-@@ -1859,10 +1861,27 @@ int qtnf_cmd_send_change_sta(struct qtnf_vif *vif, const u8 *mac,
- 
- 	cmd = (struct qlink_cmd_change_sta *)cmd_skb->data;
- 	ether_addr_copy(cmd->sta_addr, mac);
--	cmd->sta_flags_mask = cpu_to_le32(qtnf_encode_sta_flags(
--					  params->sta_flags_mask));
--	cmd->sta_flags_set = cpu_to_le32(qtnf_encode_sta_flags(
--					 params->sta_flags_set));
-+
-+	switch (vif->wdev.iftype) {
-+	case NL80211_IFTYPE_AP:
-+		cmd->if_type = cpu_to_le16(QLINK_IFTYPE_AP);
-+		cmd->sta_flags_mask = cpu_to_le32(qtnf_encode_sta_flags(
-+						  params->sta_flags_mask));
-+		cmd->sta_flags_set = cpu_to_le32(qtnf_encode_sta_flags(
-+						 params->sta_flags_set));
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		cmd->if_type = cpu_to_le16(QLINK_IFTYPE_STATION);
-+		cmd->sta_flags_mask = cpu_to_le32(qtnf_encode_sta_flags(
-+						  params->sta_flags_mask));
-+		cmd->sta_flags_set = cpu_to_le32(qtnf_encode_sta_flags(
-+						 params->sta_flags_set));
-+		break;
-+	default:
-+		pr_err("unsupported iftype %d\n", vif->wdev.iftype);
-+		ret = -EINVAL;
-+		goto out;
-+	}
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
- 	if (unlikely(ret))
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index ec5126362494..a8242f678496 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -19,7 +19,7 @@
- 
- #include <linux/ieee80211.h>
- 
--#define QLINK_PROTO_VER		4
-+#define QLINK_PROTO_VER		5
- 
- #define QLINK_MACID_RSVD		0xFF
- #define QLINK_VIFID_RSVD		0xFF
-@@ -77,6 +77,7 @@ enum qlink_iface_type {
- 	QLINK_IFTYPE_ADHOC	= 3,
- 	QLINK_IFTYPE_MONITOR	= 4,
- 	QLINK_IFTYPE_WDS	= 5,
-+	QLINK_IFTYPE_AP_VLAN	= 6,
- };
- 
- /**
-@@ -85,12 +86,12 @@ enum qlink_iface_type {
-  * Data describing a single virtual interface.
-  *
-  * @if_type: Mode of interface operation, one of &enum qlink_iface_type
-- * @flags: interface flagsmap.
-+ * @vlanid: VLAN ID for AP_VLAN interface type
-  * @mac_addr: MAC address of virtual interface.
-  */
- struct qlink_intf_info {
- 	__le16 if_type;
--	__le16 flags;
-+	__le16 vlanid;
- 	u8 mac_addr[ETH_ALEN];
- 	u8 rsvd[2];
- } __packed;
-@@ -292,6 +293,7 @@ struct qlink_cmd_get_sta_info {
-  * @pairwise: whether to use pairwise key.
-  * @addr: MAC address of a STA key is being installed to.
-  * @cipher: cipher suite.
-+ * @vlanid: VLAN ID for AP_VLAN interface type
-  * @key_data: key data itself.
-  */
- struct qlink_cmd_add_key {
-@@ -300,6 +302,7 @@ struct qlink_cmd_add_key {
- 	u8 pairwise;
- 	u8 addr[ETH_ALEN];
- 	__le32 cipher;
-+	__le16 vlanid;
- 	u8 key_data[0];
- } __packed;
- 
-@@ -346,12 +349,16 @@ struct qlink_cmd_set_def_mgmt_key {
-  *
-  * @sta_flags_mask: STA flags mask, bitmap of &enum qlink_sta_flags
-  * @sta_flags_set: STA flags values, bitmap of &enum qlink_sta_flags
-+ * @if_type: Mode of interface operation, one of &enum qlink_iface_type
-+ * @vlanid: VLAN ID to assign to specific STA
-  * @sta_addr: address of the STA for which parameters are set.
-  */
- struct qlink_cmd_change_sta {
- 	struct qlink_cmd chdr;
- 	__le32 sta_flags_mask;
- 	__le32 sta_flags_set;
-+	__le16 if_type;
-+	__le16 vlanid;
- 	u8 sta_addr[ETH_ALEN];
- } __packed;
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-index 22fa631d692d..cf024c995fd6 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-@@ -37,6 +37,9 @@ u16 qlink_iface_type_to_nl_mask(u16 qlink_type)
- 	case QLINK_IFTYPE_WDS:
- 		result |= BIT(NL80211_IFTYPE_WDS);
- 		break;
-+	case QLINK_IFTYPE_AP_VLAN:
-+		result |= BIT(NL80211_IFTYPE_AP_VLAN);
-+		break;
- 	}
- 
- 	return result;
+
+Ping-Ke Shih (11):
+  rtlwifi: btcoex: Add power_on_setting routine
+  rtlwifi: Fix MAX MPDU of VHT capability
+  rtlwifi: Remove redundant semicolon in wifi.h.
+  rtlwifi: rtl8192ee: Make driver support 64bits DMA.
+  rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
+  rtlwifi: Add rtl_get_hal_edca_param() to generate register's format of
+    EDCA.
+  rtlwifi: Add TX/RX throughput statistics in period
+  rtlwifi: Add RSSI and RF type to wifi.h for phydm
+  rtlwifi: Remove BAND_NUM and related fields
+  rtlwifi: Add bw_update parameter for RA mask update.
+  rtlwifi: Add module parameter ASPM
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 100 +++++++++++++--
+ drivers/net/wireless/realtek/rtlwifi/base.h        |   4 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   1 +
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |   6 +
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   1 +
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   5 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |  49 ++++++--
+ drivers/net/wireless/realtek/rtlwifi/pci.h         |  10 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/dm.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |   7 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   |   5 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.h   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.h    |   5 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   |   5 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.h   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.h    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/trx.h   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/dm.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |  40 ++++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  49 ++++----
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.h   | 140 ++++-----------------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/dm.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.h    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |   8 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/trx.c   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/trx.h   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |   7 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/sw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.c   |   5 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.h   |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/dm.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.h    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |   5 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.h   |   3 +-
+ .../realtek/rtlwifi/rtl8723com/fw_common.c         |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.h    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |   6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |   5 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.h   |   3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  60 ++++-----
+ 58 files changed, 392 insertions(+), 278 deletions(-)
+
 -- 
-2.11.0
+2.12.3
