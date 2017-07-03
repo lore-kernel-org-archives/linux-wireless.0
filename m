@@ -1,72 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:55706 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751332AbdGQQQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:16:50 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 06/29] brcmfmac: Remove bandaid for SleepCSR
-Date: Mon, 17 Jul 2017 17:16:14 +0100
-Message-Id: <20170717161637.4652-7-ian@mnementh.co.uk> (sfid-20170717_181700_012491_009B25E3)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34230 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754158AbdGCSku (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Jul 2017 14:40:50 -0400
+Received: by mail-oi0-f65.google.com with SMTP id d77so20095247oig.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:50 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 05/11] rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
+Date: Mon,  3 Jul 2017 13:40:32 -0500
+Message-Id: <20170703184038.24669-6-Larry.Finger@lwfinger.net> (sfid-20170703_204108_713185_917E40E3)
+In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register access code is not the place for band-aid fixes like this.
-If this is a genuine problem, it should be fixed further up in the driver
-stack.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Originally, we get legacy rate only, so we extend to get HT and VHT rate.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 26 ----------------------
- 1 file changed, 26 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c | 42 ++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index c3e909526a1d..7eb54539a85e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -334,19 +334,6 @@ static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 
- 	if (ret == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
--	else if (ret != 0) {
--		/*
--		 * SleepCSR register access can fail when
--		 * waking up the device so reduce this noise
--		 * in the logs.
--		 */
--		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--		else
--			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--	}
- 
- 	return ret;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 40e281273a55..38c8e94d2d6b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1100,6 +1100,42 @@ int rtlwifi_rate_mapping(struct ieee80211_hw *hw, bool isht, bool isvht,
  }
-@@ -387,19 +374,6 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ EXPORT_SYMBOL(rtlwifi_rate_mapping);
  
- 	if (ret == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
--	else if (ret != 0) {
--		/*
--		 * SleepCSR register access can fail when
--		 * waking up the device so reduce this noise
--		 * in the logs.
--		 */
--		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--		else
--			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--	}
++static u8 _rtl_get_tx_hw_rate(struct ieee80211_hw *hw,
++			      struct ieee80211_tx_info *info)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct ieee80211_tx_rate *r = &info->status.rates[0];
++	struct ieee80211_rate *txrate;
++	u8 hw_value = 0x0;
++
++	if (r->flags & IEEE80211_TX_RC_MCS) {
++		/* HT MCS0-15 */
++		hw_value = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS15] - 15 +
++			   r->idx;
++	} else if (r->flags & IEEE80211_TX_RC_VHT_MCS) {
++		/* VHT MCS0-9, NSS */
++		if (ieee80211_rate_get_vht_nss(r) == 2)
++			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_2SS_MCS9];
++		else
++			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_1SS_MCS9];
++
++		hw_value = hw_value - 9 + ieee80211_rate_get_vht_mcs(r);
++	} else {
++		/* legacy */
++		txrate = ieee80211_get_tx_rate(hw, info);
++
++		if (txrate)
++			hw_value = txrate->hw_value;
++	}
++
++	/* check 5G band */
++	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G &&
++	    hw_value < rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M])
++		hw_value = rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M];
++
++	return hw_value;
++}
++
+ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 		      struct ieee80211_tx_info *info,
+ 		      struct ieee80211_sta *sta,
+@@ -1108,12 +1144,10 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+ 	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
+-	struct ieee80211_rate *txrate;
++
+ 	__le16 fc = rtl_get_fc(skb);
  
- 	return ret;
- }
+-	txrate = ieee80211_get_tx_rate(hw, info);
+-	if (txrate)
+-		tcb_desc->hw_rate = txrate->hw_value;
++	tcb_desc->hw_rate = _rtl_get_tx_hw_rate(hw, info);
+ 
+ 	if (rtl_is_tx_report_skb(hw, skb))
+ 		tcb_desc->use_spe_rpt = 1;
 -- 
-2.11.0
+2.12.3
