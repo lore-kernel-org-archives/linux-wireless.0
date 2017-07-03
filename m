@@ -1,49 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:47104 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751529AbdGZMJi (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36459 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754121AbdGCSkq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 08:09:38 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.13] brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice
-Date: Wed, 26 Jul 2017 13:09:24 +0100
-Message-Id: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170726_140942_393349_9E9D60D1)
+        Mon, 3 Jul 2017 14:40:46 -0400
+Received: by mail-oi0-f68.google.com with SMTP id n2so12756020oig.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:45 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/11] rtlwifi: btcoex: Add power_on_setting routine
+Date: Mon,  3 Jul 2017 13:40:28 -0500
+Message-Id: <20170703184038.24669-2-Larry.Finger@lwfinger.net> (sfid-20170703_204050_837515_F07C35CA)
+In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to a bugfix in wireless tree and the commit mentioned below a merge
-was needed which went haywire. So the submitted change resulted in the
-function brcmf_sdiod_sgtable_alloc() being called twice during the probe
-thus leaking the memory of the first call.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Cc: stable@vger.kernel.org # 4.6.x
-Fixes: 4d7928959832 ("brcmfmac: switch to new platform data")
-Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
-Tested-by: Stefan Wahren <stefan.wahren@i2se.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+New btcoex uses it to setup antenna before wifi on.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 6 ++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h      | 1 +
+ 3 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index c3ecec6..f355612 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4175,11 +4175,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 		goto fail;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index ea12b9d63a73..bc523af7ef88 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -608,6 +608,7 @@ extern struct btc_coexist gl_bt_coexist;
  
--	/* allocate scatter-gather table. sg support
--	 * will be disabled upon allocation failure.
--	 */
--	brcmf_sdiod_sgtable_alloc(bus->sdiodev);
--
- 	/* Query the F2 block size, set roundup accordingly */
- 	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
- 	bus->roundup = min(max_roundup, bus->blocksize);
+ bool exhalbtc_initlize_variables(void);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
++void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 4d9e33078d4f..9e3623b0423c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -32,6 +32,7 @@
+ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_init_variables = rtl_btc_init_variables,
+ 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
++	.btc_power_on_setting = rtl_btc_power_on_setting,
+ 	.btc_init_hw_config = rtl_btc_init_hw_config,
+ 	.btc_ips_notify = rtl_btc_ips_notify,
+ 	.btc_lps_notify = rtl_btc_lps_notify,
+@@ -116,6 +117,11 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
+ 	 */
+ }
+ 
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
++{
++	exhalbtc_power_on_setting(&gl_bt_coexist);
++}
++
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
+ {
+ 	u8 bt_exist;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 40f1ce8c8a06..9becfa59407d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -29,6 +29,7 @@
+ 
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
+ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
+ void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
 -- 
-1.9.1
+2.12.3
