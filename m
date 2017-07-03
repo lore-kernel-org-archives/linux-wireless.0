@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:34220 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751032AbdGGScZ (ORCPT
+Received: from mail-io0-f182.google.com ([209.85.223.182]:35055 "EHLO
+        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755788AbdGCRu7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 14:32:25 -0400
-Received: by mail-lf0-f54.google.com with SMTP id t72so30049644lff.1
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 11:32:24 -0700 (PDT)
-Date: Fri, 7 Jul 2017 20:32:22 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: johan@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [bug report] NFC: fix broken device allocation
-Message-ID: <20170707183222.GF29638@localhost> (sfid-20170707_203229_124841_990E7E66)
-References: <20170707093334.zhnn3jrtqosbqdib@mwanda>
+        Mon, 3 Jul 2017 13:50:59 -0400
+Received: by mail-io0-f182.google.com with SMTP id h134so60440607iof.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 10:50:58 -0700 (PDT)
+Date: Mon, 3 Jul 2017 12:50:55 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Vasiliy Safronov <vvsprog@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: Update regulatory rules for Kazakhstan (KZ) on 5GHz
+Message-ID: <20170703175055.tnnweqg2uyyw2rnc@ubuntu-xps13> (sfid-20170703_195110_995519_6CAE58D7)
+References: <CALfe80gmDFDnvT=MvN8891wudBEAmeQpH1X1_wNzQpkhbLSOVQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170707093334.zhnn3jrtqosbqdib@mwanda>
+In-Reply-To: <CALfe80gmDFDnvT=MvN8891wudBEAmeQpH1X1_wNzQpkhbLSOVQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 07, 2017 at 12:33:34PM +0300, Dan Carpenter wrote:
-> Hello Johan Hovold,
+On Mon, Jun 26, 2017 at 10:00:13AM +0600, Vasiliy Safronov wrote:
+> Please add support 5ghz for Kazakhstan.
+> In Kazakhstan there are no restrictions up to 100mW
+> country KZ: DFS-ETSI
+>  (2402 - 2482 @ 40), (20)
+>  (5170 - 5250 @ 80), (20), AUTO-BW
+>  (5250 - 5330 @ 80), (20), DFS, AUTO-BW
+>  (5650 - 5730 @ 80), (30), DFS
+>  (5735 - 5835 @ 80), (30)
 > 
-> The patch 20777bc57c34: "NFC: fix broken device allocation" from Mar
-> 30, 2017, leads to the following static checker warning:
-> 
-> 	drivers/nfc/pn533/pn533.c:2653 pn533_register_device()
-> 	error: 'priv->nfc_dev' dereferencing possible ERR_PTR()
+> http://adilet.zan.kz/rus/docs/P000001379_
+> S 5.282 etc
 
-> drivers/nfc/pn533/pn533.c
->   2639          skb_queue_head_init(&priv->resp_q);
->   2640          skb_queue_head_init(&priv->fragment_skb);
->   2641  
->   2642          INIT_LIST_HEAD(&priv->cmd_queue);
->   2643  
->   2644          priv->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
->   2645                                             priv->ops->tx_header_len +
->   2646                                             PN533_CMD_DATAEXCH_HEAD_LEN,
->   2647                                             priv->ops->tx_tail_len);
-> 
-> We changed this to return error pointers as well as NULL.  When
-> functions return a NULL as well as error pointers, then NULL is supposed
-> to be a special case of success but here it's just a failure.  That's
-> messy and bug prone.
-
-Thanks for reporting this, Dan.
-
-I'll take a closer look at this tomorrow, but I guess we could just
-continue using NULL for all errors for now.
+Thanks for the submission, and apologies for the slow response. I've
+been trying to find some time to validate the changes against the
+document you linked to but haven't managed to get it done yet. I hope to
+be able to take a look at this soon.
 
 Thanks,
-Johan
+Seth
