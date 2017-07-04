@@ -1,202 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:48044 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751274AbdGPLpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jul 2017 07:45:30 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 04/21] brcmfmac: Do away with this abomination:
-Date: Sun, 16 Jul 2017 12:21:12 +0100
-Message-Id: <20170716112129.10206-5-ian@mnementh.co.uk> (sfid-20170716_140042_909098_D3565BB3)
-In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
-References: <20170716112129.10206-1-ian@mnementh.co.uk>
+Received: from mail-eopbgr30098.outbound.protection.outlook.com ([40.107.3.98]:4988
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752038AbdGDP5q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Jul 2017 11:57:46 -0400
+Subject: Re: WARN_ON_ONCE(work > weight) in napi_poll()
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <26670dce-4dd2-f8e4-0e14-90d74257e739@virtuozzo.com>
+ <87wp7oia6j.fsf@kamboji.qca.qualcomm.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Message-ID: <952aefe1-6f6a-3978-e7e7-5e74076f26a3@virtuozzo.com> (sfid-20170704_175823_586244_2098B99D)
+Date: Tue, 4 Jul 2017 18:59:56 +0300
+MIME-Version: 1.0
+In-Reply-To: <87wp7oia6j.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_sdiod_regrw_helper()
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 105 +++++++++++++++------
- 1 file changed, 77 insertions(+), 28 deletions(-)
+On 07/04/2017 04:49 PM, Kalle Valo wrote:
+> Andrey Ryabinin <aryabinin@virtuozzo.com> writes:
+> 
+>> I occasionally hit WARN_ON_ONCE(work > weight); in napi_poll() on a
+>> laptop with ath10k card.
+>>
+>>
+>> [37207.593370] ------------[ cut here ]------------
+>> [37207.593380] WARNING: CPU: 0 PID: 7 at ../net/core/dev.c:5274
+>> net_rx_action+0x258/0x360
+>> [37207.593381] Modules linked in: snd_hda_codec_realtek snd_soc_skl
+>> snd_hda_codec_generic snd_soc_skl_ipc snd_soc_sst_ipc snd_soc_sst_dsp
+>> snd_hda_ext_core snd_soc_sst_match snd_soc_core rtsx_pci_sdmmc
+>> mmc_core snd_pcm_dmaengine x86_pkg_temp_thermal snd_hda_intel uvcvideo
+>> kvm_intel videobuf2_vmalloc kvm snd_hda_codec snd_hwdep btusb
+>> videobuf2_memops btintel snd_hda_core videobuf2_v4l2 bluetooth
+>> irqbypass snd_pcm videobuf2_core crc32c_intel videodev mei_me mei
+>> rtsx_pci intel_lpss_pci intel_lpss_acpi intel_vbtn intel_lpss mfd_core
+>> tpm_tis intel_hid tpm_tis_core tpm efivarfs
+>> [37207.593430] CPU: 0 PID: 7 Comm: ksoftirqd/0 Not tainted 4.11.7 #28
+>> [37207.593432] Hardware name: Dell Inc. XPS 13 9360/0839Y6, BIOS 1.3.5 05/08/2017
+> 
+> What firmware and hardware versions exactly? The dmesg output when
+> ath10k loads is preferred. As you are using XPS 13 I'm guessing it's one
+> of QCA6174 family.
+> 
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 6ff4f10e36bb..1012df347c84 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	return ret;
- }
- 
--static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
--				   u8 regsz, void *data, bool write)
-+static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+				   u8 regsz, void *data)
- {
- 	u8 func;
- 	s32 retry = 0;
-@@ -324,13 +324,66 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		func = SDIO_FUNC_1;
- 
- 	do {
--		if (!write)
--			memset(data, 0, regsz);
- 		/* for retry wait for 1 ms till bus get settled down */
- 		if (retry)
- 			usleep_range(1000, 2000);
-+
-+		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
-+					       data, true);
-+
-+	} while (ret != 0 && ret != -ENOMEDIUM &&
-+		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+
-+	if (ret == -ENOMEDIUM)
-+		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+	else if (ret != 0) {
-+		/*
-+		 * SleepCSR register access can fail when
-+		 * waking up the device so reduce this noise
-+		 * in the logs.
-+		 */
-+		if (addr != SBSDIO_FUNC1_SLEEPCSR)
-+			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
-+		else
-+			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
-+	}
-+
-+	return ret;
-+}
-+
-+static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+				   u8 regsz, void *data)
-+{
-+	u8 func;
-+	s32 retry = 0;
-+	int ret;
-+
-+	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
-+		return -ENOMEDIUM;
-+
-+	/*
-+	 * figure out how to read the register based on address range
-+	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
-+	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
-+	 * The rest: function 1 silicon backplane core registers
-+	 */
-+	if ((addr & ~REG_F0_REG_MASK) == 0)
-+		func = SDIO_FUNC_0;
-+	else
-+		func = SDIO_FUNC_1;
-+
-+	do {
-+		memset(data, 0, regsz);
-+
-+		/* for retry wait for 1 ms till bus get settled down */
-+		if (retry)
-+			usleep_range(1000, 2000);
-+
- 		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, write);
-+					       data, false);
-+
- 	} while (ret != 0 && ret != -ENOMEDIUM &&
- 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
- 
-@@ -343,12 +396,13 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		 * in the logs.
- 		 */
- 		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", func, addr, ret);
-+			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
- 		else
--			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", func, addr, ret);
-+			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
- 	}
-+
- 	return ret;
- }
- 
-@@ -356,24 +410,20 @@ static int
- brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- {
- 	int err = 0, i;
--	u8 addr[3];
-+	u32 addr;
- 
- 	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
- 		return -ENOMEDIUM;
- 
--	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
--	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
--	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
-+	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
- 
- 	for (i = 0; i < 3; i++) {
--		err = brcmf_sdiod_regrw_helper(sdiodev,
--					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       sizeof(u8), &addr[i], true);
--		if (err) {
--			brcmf_err("failed at addr: 0x%0x\n",
--				  SBSDIO_FUNC1_SBADDRLOW + i);
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
-+					&err);
-+		if (err)
- 			break;
--		}
-+
-+		addr = addr >> 8;
- 	}
- 
- 	return err;
-@@ -407,8 +457,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
--					  false);
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, sizeof(data), &data);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
- 	if (ret)
-@@ -426,8 +475,8 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
--					  false);
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, sizeof(data), &data);
-+
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
- done:
-@@ -443,8 +492,8 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
--					  true);
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, sizeof(data), &data);
-+
- 	if (ret)
- 		*ret = retval;
- }
-@@ -458,8 +507,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
--					  true);
-+
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, sizeof(data), &data);
- 
- done:
- 	if (ret)
--- 
-2.11.0
+Yes it's qca6174.
+
+$ dmesg |grep ath10
+[    0.624828] ath10k_pci 0000:3a:00.0: enabling device (0000 -> 0002)
+[    0.626370] ath10k_pci 0000:3a:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+[    0.837862] ath10k_pci 0000:3a:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 1a56:1535
+[    0.837863] ath10k_pci 0000:3a:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 0 testmode 0
+[    0.838388] ath10k_pci 0000:3a:00.0: firmware ver WLAN.RM.2.0-00180-QCARMSWPZ-1 api 4 features wowlan,ignore-otp,no-4addr-pad crc32 75dee6c5
+[    0.900606] ath10k_pci 0000:3a:00.0: board_file api 2 bmi_id N/A crc32 19644295
+[    3.020681] ath10k_pci 0000:3a:00.0: htt-ver 3.26 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
+[    9.574087] ath10k_pci 0000:3a:00.0 wlp58s0: renamed from wlan0
