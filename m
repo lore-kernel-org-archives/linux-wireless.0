@@ -1,173 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34968 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752261AbdGEGEE (ORCPT
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:34730 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752189AbdGDG6A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:04:04 -0400
-Received: by mail-pg0-f65.google.com with SMTP id d193so11716986pgc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 23:04:04 -0700 (PDT)
-Date: Wed, 5 Jul 2017 11:34:00 +0530
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix memory leak when firmware request fails
-Message-ID: <20170705060400.GA9481@symbol-HP-ZBook-15> (sfid-20170705_080410_718994_AA055B1A)
+        Tue, 4 Jul 2017 02:58:00 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        ",Tony Lindgren" <tony@atomide.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [v2] wlcore: add missing nvs file name info for wilink8
+Date: Tue, 4 Jul 2017 06:57:18 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B363E2669@DFRE01.ent.ti.com> (sfid-20170704_085821_786137_E9204CB3)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch will fix memory leak when firmware request fails
+When working with wl18xx the nvs file is used for defining an alternate
+mac address and override the default mac address that is stored inside
+the wl18xx chip.
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+The following commits:
+c815fde wlcore: spi: Populate config firmware data
+d776fc8 wlcore: sdio: Populate config firmware data
+
+Populated the nvs entry for wilink6 and wilink7 only while it is=20
+still needed for wilink8 as well.=20
+This broke user space backward compatibility when upgrading from older=20
+kernels, as the alternate mac address would not be read from the nvs that i=
+s=20
+already present in the file system (lib/firmware/ti-connectivity/wl1271-nvs=
+.bin)=20
+causing mac address change of the wlan interface.
+
+This patch fix this and update the structure field with the same default nv=
+s file=20
+name that has been used before.
+
+Cc: stable <stable@vger.kernel.org>
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 4 ++++
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 6 ++++++
- 9 files changed, 24 insertions(+)
+ drivers/net/wireless/ti/wlcore/sdio.c | 1 +
+ drivers/net/wireless/ti/wlcore/spi.c  | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-index 7661cfa..37489b4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-@@ -175,6 +175,8 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_info("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index bcbb0c6..38f85bf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -176,6 +176,8 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-index 62d9214..dfbbd35 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-@@ -85,6 +85,10 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- 	err = request_firmware_nowait(THIS_MODULE, 1,
- 				      fw_name, rtlpriv->io.dev,
- 				      GFP_KERNEL, hw, rtl_fw_cb);
-+	if (err) {
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
-+	}
- 	return err;
- }
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index 16132c6..e38d6f7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -183,6 +183,8 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index 48820bc..6f2d1f0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -177,6 +177,8 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index 2006b09..1ec20ef 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -216,6 +216,8 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl92se_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 7bf9f25..aab8666 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -184,6 +184,8 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 	return 0;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index 8c0ac96..b7a5f92 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -195,6 +195,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 					      rtl_fw_cb);
- 		if (err) {
- 			pr_err("Failed to request firmware!\n");
-+			vfree(rtlpriv->rtlhal.pfirmware);
-+			rtlpriv->rtlhal.pfirmware = NULL;
- 			return 1;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index abaf34c..5272fb4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -196,6 +196,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->rtlhal.wowlan_firmware = vzalloc(0x8000);
- 	if (!rtlpriv->rtlhal.wowlan_firmware) {
- 		pr_err("Can't alloc buffer for wowlan fw.\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-@@ -222,6 +224,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 					      rtl_fw_cb);
- 		if (err) {
- 			pr_err("Failed to request normal firmware!\n");
-+			vfree(rtlpriv->rtlhal.wowlan_firmware);
-+			vfree(rtlpriv->rtlhal.pfirmware);
- 			return 1;
- 		}
- 	}
-@@ -233,6 +237,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_wowlan_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request wowlan firmware!\n");
-+		vfree(rtlpriv->rtlhal.wowlan_firmware);
-+		vfree(rtlpriv->rtlhal.pfirmware);
- 		return 1;
- 	}
- 	return 0;
---
-1.9.1
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/t=
+i/wlcore/sdio.c
+index 2fb3871..f8a1fea 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -230,6 +230,7 @@ static const struct wilink_family_data wl128x_data =3D =
+{
+ static const struct wilink_family_data wl18xx_data =3D {
+ 	.name =3D "wl18xx",
+ 	.cfg_name =3D "ti-connectivity/wl18xx-conf.bin",
++	.nvs_name =3D "ti-connectivity/wl1271-nvs.bin",
+ };
+=20
+ static const struct of_device_id wlcore_sdio_of_match_table[] =3D {
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti=
+/wlcore/spi.c
+index fdabb92..62ce54a 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -92,6 +92,7 @@ static const struct wilink_family_data wl128x_data =3D {
+ static const struct wilink_family_data wl18xx_data =3D {
+ 	.name =3D "wl18xx",
+ 	.cfg_name =3D "ti-connectivity/wl18xx-conf.bin",
++	.nvs_name =3D "ti-connectivity/wl1271-nvs.bin",
+ };
+=20
+ struct wl12xx_spi_glue {
+--=20
+2.7.4
