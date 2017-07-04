@@ -1,110 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35143 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbdGFOno (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:43:44 -0400
-Received: by mail-pf0-f194.google.com with SMTP id q85so563811pfq.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:43:39 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+Received: from muru.com ([72.249.23.125]:53242 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750830AbdGDISC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Jul 2017 04:18:02 -0400
+Date: Tue, 4 Jul 2017 01:17:58 -0700
+From: Tony Lindgren <tony@atomide.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: [v3 21/21] rsi: Rename mutex tx_rxlock to the tx_lock.
-Date: Thu,  6 Jul 2017 20:07:24 +0530
-Message-Id: <1499351844-2046-22-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164348_459899_D6E9ABC0)
-In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+Cc: "Reizer, Eyal" <eyalr@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170704081757.GH3730@atomide.com> (sfid-20170704_101833_299796_F5FFBED0)
+References: <8665E2433BC68541A24DFFCA87B70F5B363E1A3D@DFRE01.ent.ti.com>
+ <87y3s5kbc3.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y3s5kbc3.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+* Kalle Valo <kvalo@codeaurora.org> [170703 04:30]:
+> "Reizer, Eyal" <eyalr@ti.com> writes:
+> 
+> > When working with wl18xx the nvs file is used for defining an alternate
+> > mac address and override the default mac address that is stored inside
+> > the wl18xx chip.
+> > update the structure field with the same default nvs file name that has
+> > been used in the past, otherwise userspace backward compatibility is
+> > broken when upgrading from older kernels, as the alternate mac address
+> > would not be read from the nvs that is already present in the file system
+> > (lib/firmware/ti-connectivity/wl1271-nvs.bin) causing mac address change
+> > of the wlan interface.
+> >
+> > Signed-off-by: Eyal Reizer <eyalr@ti.com>
+> 
+> Should we also cc stable? And a Fixes line would be nice.
 
-We have now added separate lock for Rx. This lock is used to protect
-tx path only
+Argh this mess again. I think there are few things to consider here. What
+about booting the same rootfs on multiple devices for example with NFSroot?
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c | 10 +++++-----
- drivers/net/wireless/rsi/rsi_91x_main.c |  2 +-
- drivers/net/wireless/rsi/rsi_main.h     |  4 ++--
- 3 files changed, 8 insertions(+), 8 deletions(-)
+Not sure if this really is a regression as we've always had a bogus
+wl1271-nvs.bin in linux-firmware.git. Sure would be nice to fix it,
+but going back to using a generic wl1271-nvs.bin sure does not seem
+like a good long term fix to me :)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 68f04a7..88a1a56 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -268,11 +268,11 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			break;
- 		}
- 
--		mutex_lock(&common->tx_rxlock);
-+		mutex_lock(&common->tx_lock);
- 
- 		status = adapter->check_hw_queue_status(adapter, q_num);
- 		if ((status <= 0)) {
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
-@@ -287,7 +287,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 		skb = rsi_core_dequeue_pkt(common, q_num);
- 		if (skb == NULL) {
- 			rsi_dbg(ERR_ZONE, "skb null\n");
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
-@@ -297,14 +297,14 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			status = rsi_send_data_pkt(common, skb);
- 
- 		if (status) {
--			mutex_unlock(&common->tx_rxlock);
-+			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
- 
- 		common->tx_stats.total_tx_pkt_send[q_num]++;
- 
- 		tstamp_2 = jiffies;
--		mutex_unlock(&common->tx_rxlock);
-+		mutex_unlock(&common->tx_lock);
- 
- 		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
- 			schedule();
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 939f568..bb0febb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -220,7 +220,7 @@ struct rsi_hw *rsi_91x_init(void)
- 
- 	rsi_init_event(&common->tx_thread.event);
- 	mutex_init(&common->mutex);
--	mutex_init(&common->tx_rxlock);
-+	mutex_init(&common->tx_lock);
- 	mutex_init(&common->rx_lock);
- 
- 	if (rsi_create_kthread(common,
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 29bccb7..709f767 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -179,8 +179,8 @@ struct rsi_common {
- 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
- 	/* Mutex declaration */
- 	struct mutex mutex;
--	/* Mutex used between tx/rx threads */
--	struct mutex tx_rxlock;
-+	/* Mutex used for tx thread */
-+	struct mutex tx_lock;
- 	/* Mutex used for rx thread */
- 	struct mutex rx_lock;
- 	u8 endpoint;
--- 
-2.7.4
+Isn't the nvs file supposed to be device specific? If so, we should not
+provide it in linux-firmware.git at all because of the issues it causes..
+
+And since it's provided, how are people supposed to know to remove it
+from their file system and replace it with something board specific?
+
+Maybe add a check to first try to find wl18xx-nvs.bin if it exists (and
+not add it to linux-firmware.git), and if not found, then fall back to
+wl1271-nvs.bin, but only if it's not the bogus generic file.. Produce
+a warning if the bogux linux-firmware.git wl1271-nvs.bin is being used..
+
+Regards,
+
+Tony
