@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33764 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933174AbdGSTPm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:15:42 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 30/34] brcmfmac: Correctly handle accesses to SDIO func0
-Date: Wed, 19 Jul 2017 20:08:18 +0100
-Message-Id: <20170719190822.10857-31-ian@mnementh.co.uk> (sfid-20170719_211607_763347_8D64238A)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from muru.com ([72.249.23.125]:53252 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752131AbdGDITV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Jul 2017 04:19:21 -0400
+Date: Tue, 4 Jul 2017 01:19:18 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [v2] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170704081917.GI3730@atomide.com> (sfid-20170704_101954_086034_9C79CB5B)
+References: <8665E2433BC68541A24DFFCA87B70F5B363E2669@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B363E2669@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rather than workaround the restrictions on func0 addressing in the
-driver, set MMC_QUIRK_LENIENT_FN0
+* Reizer, Eyal <eyalr@ti.com> [170703 23:58]:
+> When working with wl18xx the nvs file is used for defining an alternate
+> mac address and override the default mac address that is stored inside
+> the wl18xx chip.
+> 
+> The following commits:
+> c815fde wlcore: spi: Populate config firmware data
+> d776fc8 wlcore: sdio: Populate config firmware data
+> 
+> Populated the nvs entry for wilink6 and wilink7 only while it is 
+> still needed for wilink8 as well. 
+> This broke user space backward compatibility when upgrading from older 
+> kernels, as the alternate mac address would not be read from the nvs that is 
+> already present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin) 
+> causing mac address change of the wlan interface.
+> 
+> This patch fix this and update the structure field with the same default nvs file 
+> name that has been used before.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 ++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 4 ++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+I think more checks on the nvs file being used are needed to avoid other
+nasty issues, see the comments I just made in the earlier version of this
+patch.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index dcdebe8e8ff4..42b09a301f5f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -994,6 +994,10 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
- 
- 	dev = &func->dev;
-+
-+	/* Set MMC_QUIRK_LENIENT_FN0 for this card */
-+	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+
- 	/* prohibit ACPI power management for this device */
- 	brcmf_sdiod_acpi_set_power_manageable(dev, 0);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index a5a05d1a34bf..d0dd69454bbd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -297,10 +297,10 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
- /* SDIO device register access interface */
- /* Functions for accessing SDIO Function 0 */
- #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
--	sdio_readb((sdiodev)->func[0], (addr), (r))
-+	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
- 
- #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
--	sdio_writeb((sdiodev)->func[0], (v), (addr), (ret))
-+	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
- 
- /* Functions for accessing SDIO Function 1 */
- #define brcmf_sdiod_readb(sdiodev, addr, r) \
--- 
-2.11.0
+Regards,
+
+Tony
