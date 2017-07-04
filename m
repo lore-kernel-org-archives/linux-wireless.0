@@ -1,144 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36503 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753919AbdGJMpV (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35182 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752265AbdGDQ11 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 08:45:21 -0400
-Received: by mail-pg0-f65.google.com with SMTP id u36so12592687pgn.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:45:20 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 08/17] rsi: update set_channel command frame
-Date: Mon, 10 Jul 2017 18:10:39 +0530
-Message-Id: <1499690448-9956-9-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144535_916357_D9FFF84A)
-In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
-References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+        Tue, 4 Jul 2017 12:27:27 -0400
+Received: by mail-oi0-f68.google.com with SMTP id l130so23899770oib.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 09:27:27 -0700 (PDT)
+Subject: Re: [PATCH] rtlwifi: Remove unused dummy function
+To: Souptick Joarder <jrdr.linux@gmail.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <20170628123233.GA10039@symbol-HP-ZBook-15>
+ <CAFqt6zY_1R2TLcRgACgYXToUjuaOjMFL411e4tYgssyJqg4Tqg@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <f510b678-f8a5-3361-0bab-551e58ed0a77@lwfinger.net> (sfid-20170704_182732_014649_484334A0)
+Date: Tue, 4 Jul 2017 11:27:25 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAFqt6zY_1R2TLcRgACgYXToUjuaOjMFL411e4tYgssyJqg4Tqg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 07/04/2017 07:22 AM, Souptick Joarder wrote:
+> Any Comment for this patch ?
 
-TX command frame set_channel is modified to use common
-descriptor structure. Also DFS channel indication to firmware
-is added in the descriptor for dfs channels configuration.
+If you keep bugging me about your patches, I will automatically NACK them.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 47 +++++++++++++++------------------
- drivers/net/wireless/rsi/rsi_mgmt.h     | 13 +++++++++
- 2 files changed, 35 insertions(+), 25 deletions(-)
+I have more important things to do than reviewing your patches.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index ead3573..4bcb840 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -965,12 +965,13 @@ int rsi_set_channel(struct rsi_common *common,
- 		    struct ieee80211_channel *channel)
- {
- 	struct sk_buff *skb = NULL;
--	struct rsi_mac_frame *mgmt_frame;
-+	struct rsi_chan_config *chan_cfg;
-+	u16 frame_len = sizeof(struct rsi_chan_config);
- 
- 	rsi_dbg(MGMT_TX_ZONE,
- 		"%s: Sending scan req frame\n", __func__);
- 
--	skb = dev_alloc_skb(FRAME_DESC_SZ);
-+	skb = dev_alloc_skb(frame_len);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
- 			__func__);
-@@ -981,37 +982,33 @@ int rsi_set_channel(struct rsi_common *common,
- 		dev_kfree_skb(skb);
- 		return 0;
- 	}
--	memset(skb->data, 0, FRAME_DESC_SZ);
--	mgmt_frame = (struct rsi_mac_frame *)skb->data;
--
--	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
--	mgmt_frame->desc_word[1] = cpu_to_le16(SCAN_REQUEST);
--	mgmt_frame->desc_word[4] = cpu_to_le16(channel->hw_value);
--
--	mgmt_frame->desc_word[4] |=
--		cpu_to_le16(((char)(channel->max_antenna_gain)) << 8);
--	mgmt_frame->desc_word[5] =
--		cpu_to_le16((char)(channel->max_antenna_gain));
--
--	mgmt_frame->desc_word[7] = cpu_to_le16(PUT_BBP_RESET |
--					       BBP_REG_WRITE |
--					       (RSI_RF_TYPE << 4));
--
--	if (!(channel->flags & IEEE80211_CHAN_NO_IR) &&
--	       !(channel->flags & IEEE80211_CHAN_RADAR)) {
-+	memset(skb->data, 0, frame_len);
-+	chan_cfg = (struct rsi_chan_config *)skb->data;
-+
-+	rsi_set_len_qno(&chan_cfg->desc_dword0.len_qno, 0, RSI_WIFI_MGMT_Q);
-+	chan_cfg->desc_dword0.frame_type = SCAN_REQUEST;
-+	chan_cfg->channel_number = channel->hw_value;
-+	chan_cfg->antenna_gain_offset_2g = channel->max_antenna_gain;
-+	chan_cfg->antenna_gain_offset_5g = channel->max_antenna_gain;
-+	chan_cfg->region_rftype = (RSI_RF_TYPE & 0xf) << 4;
-+
-+	if ((channel->flags & IEEE80211_CHAN_NO_IR) ||
-+	    (channel->flags & IEEE80211_CHAN_RADAR)) {
-+		chan_cfg->antenna_gain_offset_2g |= RSI_CHAN_RADAR;
-+	} else {
- 		if (common->tx_power < channel->max_power)
--			mgmt_frame->desc_word[6] = cpu_to_le16(common->tx_power);
-+			chan_cfg->tx_power = cpu_to_le16(common->tx_power);
- 		else
--			mgmt_frame->desc_word[6] = cpu_to_le16(channel->max_power);
-+			chan_cfg->tx_power = cpu_to_le16(channel->max_power);
- 	}
--	mgmt_frame->desc_word[7] = cpu_to_le16(common->priv->dfs_region);
-+	chan_cfg->region_rftype |= (common->priv->dfs_region & 0xf);
- 
- 	if (common->channel_width == BW_40MHZ)
--		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
-+		chan_cfg->channel_width = 0x1;
- 
- 	common->channel = channel->hw_value;
- 
--	skb_put(skb, FRAME_DESC_SZ);
-+	skb_put(skb, frame_len);
- 
- 	return rsi_send_internal_mgmt_frame(common, skb);
- }
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index d44c79f..2f49e55 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -166,6 +166,7 @@
- #define DISALLOW_BROADCAST_DATA		BIT(6)
- 
- #define RSI_MPDU_DENSITY		0x8
-+#define RSI_CHAN_RADAR			BIT(7)
- 
- enum opmode {
- 	STA_OPMODE = 1,
-@@ -306,6 +307,18 @@ struct rsi_bb_rf_prog {
- 	__le16 flags;
- } __packed;
- 
-+struct rsi_chan_config {
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	struct rsi_cmd_desc_dword1 desc_dword1;
-+	u8 channel_number;
-+	u8 antenna_gain_offset_2g;
-+	u8 antenna_gain_offset_5g;
-+	u8 channel_width;
-+	__le16 tx_power;
-+	u8 region_rftype;
-+	u8 flags;
-+} __packed;
-+
- struct rsi_vap_caps {
- 	__le16 desc_word[8];
- 	u8 mac_addr[6];
--- 
-2.7.4
+FYI, Chaoming Li no longer works on these drivers.
+
+Larry
+
+> 
+> On Wed, Jun 28, 2017 at 6:02 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>> Removing unused dummy function
+>>
+>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+>> ---
+>>   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c  |  2 +-
+>>   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 12 ------------
+>>   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h |  3 ---
+>>   3 files changed, 1 insertion(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+>> index 96c923b..62d9214 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+>> @@ -173,7 +173,7 @@ static bool rtl92cu_get_btc_status(void)
+>>          .rx_urb_num = RTL92C_NUM_RX_URBS,
+>>          .rx_max_size = RTL92C_SIZE_MAX_RX_BUFFER,
+>>          .usb_rx_hdl = rtl8192cu_rx_hdl,
+>> -       .usb_rx_segregate_hdl = NULL, /* rtl8192c_rx_segregate_hdl; */
+>> +       .usb_rx_segregate_hdl = NULL,
+>>          /* tx */
+>>          .usb_tx_cleanup = rtl8192c_tx_cleanup,
+>>          .usb_tx_post_hdl = rtl8192c_tx_post_hdl,
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+>> index 41422e4..25a081c 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+>> @@ -436,13 +436,6 @@ void  rtl8192cu_rx_hdl(struct ieee80211_hw *hw, struct sk_buff * skb)
+>>          _rtl_rx_process(hw, skb);
+>>   }
+>>
+>> -void rtl8192c_rx_segregate_hdl(
+>> -       struct ieee80211_hw *hw,
+>> -       struct sk_buff *skb,
+>> -       struct sk_buff_head *skb_list)
+>> -{
+>> -}
+>> -
+>>   /*----------------------------------------------------------------------
+>>    *
+>>    *     Tx handler
+>> @@ -675,8 +668,3 @@ void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
+>>          RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_LOUD, "H2C Tx Cmd Content",
+>>                        pdesc, RTL_TX_DESC_SIZE);
+>>   }
+>> -
+>> -bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+>> -{
+>> -       return true;
+>> -}
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+>> index 487eec8..15a66c5 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+>> @@ -385,8 +385,6 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
+>>                             struct ieee80211_rx_status *rx_status,
+>>                             u8 *p_desc, struct sk_buff *skb);
+>>   void  rtl8192cu_rx_hdl(struct ieee80211_hw *hw, struct sk_buff * skb);
+>> -void rtl8192c_rx_segregate_hdl(struct ieee80211_hw *, struct sk_buff *,
+>> -                              struct sk_buff_head *);
+>>   void rtl8192c_tx_cleanup(struct ieee80211_hw *hw, struct sk_buff  *skb);
+>>   int rtl8192c_tx_post_hdl(struct ieee80211_hw *hw, struct urb *urb,
+>>                           struct sk_buff *skb);
+>> @@ -404,6 +402,5 @@ void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 * pDesc,
+>>   void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
+>>                               u8 *pdesc, bool b_firstseg,
+>>                               bool b_lastseg, struct sk_buff *skb);
+>> -bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
+>>
+>>   #endif
+>> --
+>> 1.9.1
+>>
+> 
