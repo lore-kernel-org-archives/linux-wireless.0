@@ -1,93 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41042 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752310AbdG1O0t (ORCPT
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:35451 "EHLO
+        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752169AbdGDMW5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:26:49 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:35 +0300
-Message-Id: <20170728142337.19183-23-luca@coelho.fi> (sfid-20170728_162700_601308_16208E58)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 22/24] iwlwifi: mvm: rename p2p-specific sta functions to include p2p in the names
+        Tue, 4 Jul 2017 08:22:57 -0400
+Received: by mail-vk0-f68.google.com with SMTP id p193so12998665vkd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 05:22:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170628123233.GA10039@symbol-HP-ZBook-15>
+References: <20170628123233.GA10039@symbol-HP-ZBook-15>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Tue, 4 Jul 2017 17:52:56 +0530
+Message-ID: <CAFqt6zY_1R2TLcRgACgYXToUjuaOjMFL411e4tYgssyJqg4Tqg@mail.gmail.com> (sfid-20170704_142301_241876_DEA2A66B)
+Subject: Re: [PATCH] rtlwifi: Remove unused dummy function
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Any Comment for this patch ?
 
-The iwl_mvm_add_bcast_sta() and the iwl_mvm_rm_bcast_sta() functions
-are only called in P2P flows.  Add _p2p_ to the function names to make
-this explicit.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h      | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index b8373923cfa9..d0fd46f9597c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1428,7 +1428,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 		if (ret)
- 			goto out_unref_phy;
- 
--		ret = iwl_mvm_add_bcast_sta(mvm, vif);
-+		ret = iwl_mvm_add_p2p_bcast_sta(mvm, vif);
- 		if (ret)
- 			goto out_unbind;
- 
-@@ -1558,7 +1558,7 @@ static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
- 
- 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
- 		mvm->p2p_device_vif = NULL;
--		iwl_mvm_rm_bcast_sta(mvm, vif);
-+		iwl_mvm_rm_p2p_bcast_sta(mvm, vif);
- 		iwl_mvm_binding_remove_vif(mvm, vif);
- 		iwl_mvm_phy_ctxt_unref(mvm, mvmvif->phy_ctxt);
- 		mvmvif->phy_ctxt = NULL;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index b196acd18252..5c707c62f1dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2106,7 +2106,7 @@ int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-  * @mvm: the mvm component
-  * @vif: the interface to which the broadcast station is added
-  * @bsta: the broadcast station to add. */
--int iwl_mvm_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+int iwl_mvm_add_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm_int_sta *bsta = &mvmvif->bcast_sta;
-@@ -2137,7 +2137,7 @@ void iwl_mvm_dealloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-  * Send the FW a request to remove the station from it's internal data
-  * structures, and in addition remove it from the local data structure.
-  */
--int iwl_mvm_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+int iwl_mvm_rm_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- 	int ret;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 05fecbe87da4..6f1d358f3008 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -533,9 +533,9 @@ void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm);
- 
- int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
--int iwl_mvm_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+int iwl_mvm_add_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_send_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
--int iwl_mvm_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+int iwl_mvm_rm_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm,
--- 
-2.13.2
+On Wed, Jun 28, 2017 at 6:02 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+> Removing unused dummy function
+>
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c  |  2 +-
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 12 ------------
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h |  3 ---
+>  3 files changed, 1 insertion(+), 16 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+> index 96c923b..62d9214 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+> @@ -173,7 +173,7 @@ static bool rtl92cu_get_btc_status(void)
+>         .rx_urb_num = RTL92C_NUM_RX_URBS,
+>         .rx_max_size = RTL92C_SIZE_MAX_RX_BUFFER,
+>         .usb_rx_hdl = rtl8192cu_rx_hdl,
+> -       .usb_rx_segregate_hdl = NULL, /* rtl8192c_rx_segregate_hdl; */
+> +       .usb_rx_segregate_hdl = NULL,
+>         /* tx */
+>         .usb_tx_cleanup = rtl8192c_tx_cleanup,
+>         .usb_tx_post_hdl = rtl8192c_tx_post_hdl,
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+> index 41422e4..25a081c 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+> @@ -436,13 +436,6 @@ void  rtl8192cu_rx_hdl(struct ieee80211_hw *hw, struct sk_buff * skb)
+>         _rtl_rx_process(hw, skb);
+>  }
+>
+> -void rtl8192c_rx_segregate_hdl(
+> -       struct ieee80211_hw *hw,
+> -       struct sk_buff *skb,
+> -       struct sk_buff_head *skb_list)
+> -{
+> -}
+> -
+>  /*----------------------------------------------------------------------
+>   *
+>   *     Tx handler
+> @@ -675,8 +668,3 @@ void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
+>         RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_LOUD, "H2C Tx Cmd Content",
+>                       pdesc, RTL_TX_DESC_SIZE);
+>  }
+> -
+> -bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+> -{
+> -       return true;
+> -}
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+> index 487eec8..15a66c5 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.h
+> @@ -385,8 +385,6 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
+>                            struct ieee80211_rx_status *rx_status,
+>                            u8 *p_desc, struct sk_buff *skb);
+>  void  rtl8192cu_rx_hdl(struct ieee80211_hw *hw, struct sk_buff * skb);
+> -void rtl8192c_rx_segregate_hdl(struct ieee80211_hw *, struct sk_buff *,
+> -                              struct sk_buff_head *);
+>  void rtl8192c_tx_cleanup(struct ieee80211_hw *hw, struct sk_buff  *skb);
+>  int rtl8192c_tx_post_hdl(struct ieee80211_hw *hw, struct urb *urb,
+>                          struct sk_buff *skb);
+> @@ -404,6 +402,5 @@ void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 * pDesc,
+>  void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
+>                              u8 *pdesc, bool b_firstseg,
+>                              bool b_lastseg, struct sk_buff *skb);
+> -bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
+>
+>  #endif
+> --
+> 1.9.1
+>
