@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:35949 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751031AbdGZLYP (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59571 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750830AbdGDHom (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 07:24:15 -0400
-From: Daniel Stone <daniels@collabora.com>
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>
-Subject: [PATCH for-v4.13 V4] brcmfmac: Don't grow SKB by negative size
-Date: Wed, 26 Jul 2017 12:24:10 +0100
-Message-Id: <20170726112410.22353-1-daniels@collabora.com> (sfid-20170726_132419_195709_DA7BBF73)
-In-Reply-To: <20170726084924.27546-1-daniels@collabora.com>
-References: <20170726084924.27546-1-daniels@collabora.com>
+        Tue, 4 Jul 2017 03:44:42 -0400
+Date: Tue, 4 Jul 2017 09:44:42 +0200
+From: Greg KH <greg@kroah.com>
+To: Dison River <pwn2river@gmail.com>
+Cc: samuel@sortiz.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, qca_merez@qca.qualcomm.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        jakub.kicinski@netronome.com, davem@davemloft.net,
+        oss-drivers@netronome.com, security@kernel.org,
+        wil6210@qca.qualcomm.com
+Subject: Re: 'skb' buffer address information leakage
+Message-ID: <20170704074442.GA21877@kroah.com> (sfid-20170704_094549_397111_9FC2D5DB)
+References: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit to rework the headroom check in start_xmit() now calls
-pxskb_expand_head() unconditionally if the header is CoW. Unfortunately,
-it does so with the delta between the extant headroom and the header
-length, which may be negative if there is already sufficient headroom.
+On Tue, Jul 04, 2017 at 01:12:18PM +0800, Dison River wrote:
+> Hi all:
+> I'd found several address leaks of "skb" buffer.When i have a
+> arbitrary address write vulnerability in kernel(enabled kASLR),I can
+> use skb's address find sk_destruct's address and overwrite it. And
+> then,invoke close(sock_fd) function can trigger the
+> shellcode(sk_destruct func).
+> 
+> In kernel 4.12-rc7
+> drivers/net/irda/vlsi_ir.c:326           seq_printf(seq, "skb=%p
+> data=%p hw=%p\n", rd->skb, rd->buf, rd->hw);
 
-pskb_expand_head() does allow for size being 0, in which case it just
-copies, so clamp the header delta to zero.
+Irda doesn't even work, and will crash, so it's a bit hard to see this
+as a "leakage" :)
 
-Opening Chrome (and all my tabs) on a PCIE device was enough to reliably
-hit this.
+I'm going to be ripping irda out soon anyway, so this isn't a real
+issue.
 
-Fixes: 270a6c1f65fe ("brcmfmac: rework headroom check in .start_xmit()")
-Signed-off-by: Daniel Stone <daniels@collabora.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: James Hughes <james.hughes@raspberrypi.org>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> drivers/net/ethernet/netronome/nfp/nfp_net_debugfs.c:167
+>          seq_printf(file, " frag=%p", skb);
+> drivers/net/wireless/ath/wil6210/debugfs.c:926           seq_printf(s,
+> "  SKB = 0x%p\n", skb);
 
-v2: Correct thinko.
-v3: Bring assignment on to one line.
-v4: Use max_t rather than max.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 2153e8062b4c..5cc3a07dda9e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -214,7 +214,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 
- 	/* Make sure there's enough writeable headroom */
- 	if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
--		head_delta = drvr->hdrlen - skb_headroom(skb);
-+		head_delta = max_t(int, drvr->hdrlen - skb_headroom(skb), 0);
- 
- 		brcmf_dbg(INFO, "%s: insufficient headroom (%d)\n",
- 			  brcmf_ifname(ifp), head_delta);
--- 
-2.13.2
+debugfs is by nature, root-only access, so the potential for issues here
+is lower than "any user can get this info".  That being said, patches
+for these are always appreciated.
+
+I also need to respin my "turn %p pointers off" patchset to prevent
+future stuff like this from happening.  I want to get to that after
+4.13-rc1 is out.
+
+thanks,
+
+greg k-h
