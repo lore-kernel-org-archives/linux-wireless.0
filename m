@@ -1,49 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35068 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752457AbdGJJsK (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36675 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751910AbdGDHVv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 05:48:10 -0400
+        Tue, 4 Jul 2017 03:21:51 -0400
+Received: by mail-pf0-f196.google.com with SMTP id z6so28526065pfk.3
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 00:21:51 -0700 (PDT)
+Date: Tue, 4 Jul 2017 12:51:47 +0530
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Handle memory free
+Message-ID: <20170704072147.GA5678@symbol-HP-ZBook-15> (sfid-20170704_092156_056731_E4EEA654)
 MIME-Version: 1.0
-In-Reply-To: <20170707140941.122115-1-russell.joyce@york.ac.uk>
-References: <20170707140941.122115-1-russell.joyce@york.ac.uk>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 10 Jul 2017 11:48:08 +0200
-Message-ID: <CACna6rzY84oWNMBfP8N4A=Sxst_8b-S+rTbZFQV0yFcOR5MceQ@mail.gmail.com> (sfid-20170710_114848_040317_23B81CBE)
-Subject: Re: [PATCH] brcmfmac: added LED triggers for transmit/receive
-To: Russell Joyce <russell.joyce@york.ac.uk>
-Cc: Alan Millard <alan.millard@york.ac.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "mhiramat@kernel.org" <mhiramat@kernel.org>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        Tobias Klauser <tklauser@distanz.ch>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com,
-        Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 July 2017 at 16:09, Russell Joyce <russell.joyce@york.ac.uk> wrote:
-> Add three basic LED triggers to brcmfmac, based on those in mac80211: one
-> for transmit, one for receive, and one for combined transmit/receive.
->
-> Signed-off-by: Russell Joyce <russell.joyce@york.ac.uk>
+This patch will fix memory leak when firmware load fails
 
-1) I think most of it should be some cfg80211 shareable code.
-2) This "rxtx" while surely present in other places sounds like a
-workaround for LED subsystem limitation. Maybe it's time to finally
-rework LED triggers.
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 4 ++++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 6 ++++++
+ 9 files changed, 24 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index 7661cfa..37489b4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -175,6 +175,8 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl_fw_cb);
+ 	if (err) {
+ 		pr_info("Failed to request firmware!\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+index bcbb0c6..38f85bf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+@@ -176,6 +176,8 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl_fw_cb);
+ 	if (err) {
+ 		pr_err("Failed to request firmware!\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+index 62d9214..dfbbd35 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+@@ -85,6 +85,10 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
+ 	err = request_firmware_nowait(THIS_MODULE, 1,
+ 				      fw_name, rtlpriv->io.dev,
+ 				      GFP_KERNEL, hw, rtl_fw_cb);
++	if (err) {
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
++	}
+ 	return err;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index 16132c6..e38d6f7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -183,6 +183,8 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl_fw_cb);
+ 	if (err) {
+ 		pr_err("Failed to request firmware!\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index 48820bc..6f2d1f0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -177,6 +177,8 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl_fw_cb);
+ 	if (err) {
+ 		pr_err("Failed to request firmware!\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+index 2006b09..1ec20ef 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+@@ -216,6 +216,8 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl92se_fw_cb);
+ 	if (err) {
+ 		pr_err("Failed to request firmware!\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+index 7bf9f25..aab8666 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+@@ -184,6 +184,8 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl_fw_cb);
+ 	if (err) {
+ 		pr_err("Failed to request firmware!\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 	return 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index 8c0ac96..b7a5f92 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -195,6 +195,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
+ 					      rtl_fw_cb);
+ 		if (err) {
+ 			pr_err("Failed to request firmware!\n");
++			vfree(rtlpriv->rtlhal.pfirmware);
++			rtlpriv->rtlhal.pfirmware = NULL;
+ 			return 1;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index abaf34c..5272fb4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -196,6 +196,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->rtlhal.wowlan_firmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.wowlan_firmware) {
+ 		pr_err("Can't alloc buffer for wowlan fw.\n");
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
+ 		return 1;
+ 	}
+ 
+@@ -222,6 +224,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 					      rtl_fw_cb);
+ 		if (err) {
+ 			pr_err("Failed to request normal firmware!\n");
++			vfree(rtlpriv->rtlhal.wowlan_firmware);
++			vfree(rtlpriv->rtlhal.pfirmware);
+ 			return 1;
+ 		}
+ 	}
+@@ -233,6 +237,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtl_wowlan_fw_cb);
+ 	if (err) {
+ 		pr_err("Failed to request wowlan firmware!\n");
++		vfree(rtlpriv->rtlhal.wowlan_firmware);
++		vfree(rtlpriv->rtlhal.pfirmware);
+ 		return 1;
+ 	}
+ 	return 0;
+-- 
+1.9.1
