@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0077.outbound.protection.outlook.com ([104.47.40.77]:43840
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751400AbdGAIqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Jul 2017 04:46:07 -0400
-Date: Sat, 1 Jul 2017 11:45:52 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: Re: [PATCH 3/8] qtnfmac: implement AP_VLAN iftype support
-Message-ID: <20170701084549.rqvia27dyxuco4gs@bars> (sfid-20170701_104614_998284_147B2CCC)
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
- <20170620195517.18373-4-sergey.matyukevich.os@quantenna.com>
- <878tkd49m1.fsf@purkki.adurom.net>
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:35778 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752249AbdGDMVc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Jul 2017 08:21:32 -0400
+Received: by mail-ua0-f195.google.com with SMTP id j53so15117546uaa.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 05:21:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <878tkd49m1.fsf@purkki.adurom.net>
+In-Reply-To: <20170628075711.GA8101@symbol-HP-ZBook-15>
+References: <20170628075711.GA8101@symbol-HP-ZBook-15>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Tue, 4 Jul 2017 17:51:31 +0530
+Message-ID: <CAFqt6zZVs4A0w35-keKQ-wDhj=sNZKbJdt=pqOeRtX4UVQjEdg@mail.gmail.com> (sfid-20170704_142141_030352_BA06FFBA)
+Subject: Re: [PATCH] rtlwifi: remove dummy function call
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
-> 
-> > This patch implements AP_VLAN interface type support enabling
-> > the use of dynamic VLAN mode in hostapd.
-> >
-> > Implementation notes.
+Hi Larry,
 
-[...]
-
-> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> 
-> This looks somewhat controversial to me but I'm not very familiar with
-> VLANs. Do other wireless drivers do something similar or how is this
-> usually implemented? Or not at all?
-> 
+On Wed, Jun 28, 2017 at 1:27 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+> _rtl92cu_init_usb_aggregation() can be removed as it is dummy one
+>
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 5 -----
+>  1 file changed, 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+> index 107c34e..ef8bd71 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+> @@ -777,10 +777,6 @@ static void _rtl92cu_init_queue_priority(struct ieee80211_hw *hw,
+>                                                    queue_sel);
+>  }
+>
+> -static void _rtl92cu_init_usb_aggregation(struct ieee80211_hw *hw)
+> -{
+> -}
+> -
+>  static void _rtl92cu_init_wmac_setting(struct ieee80211_hw *hw)
+>  {
+>         u16 value16;
+> @@ -863,7 +859,6 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+>         rtl92c_init_edca(hw);
+>         rtl92c_init_rate_fallback(hw);
+>         rtl92c_init_retry_function(hw);
+> -       _rtl92cu_init_usb_aggregation(hw);
+>         rtlpriv->cfg->ops->set_bw_mode(hw, NL80211_CHAN_HT20);
+>         rtl92c_set_min_space(hw, IS_92C_SERIAL(rtlhal->version));
+>         _rtl92cu_init_beacon_parameters(hw);
 > --
-> Kalle Valo
+> 1.9.1
 
-Well, IIUC this feature is not supported by other full-mac drivers at the
-moment, so no good example to follow. I don't think it is too controversial.
-Probably the restrictions on hostapd AP_VLAN interface names can be
-frowned upon. But at the moment this information is not passed by hostapd
-to kernel. It needs some additional work both in hostapd and cfg80211
-to get this info directly in the driver.
+Any comment for this patch ?
+>
 
-Anyways, other patches in this series are more straighforward. So I will split
-submission in v2: AP_VLAN support will be posted separately as RFC in order to
-some feedback regarding the overall approach.
-
-Regards,
-Sergey
+-Souptick
