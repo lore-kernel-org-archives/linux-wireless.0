@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1-priv.urz.unibas.ch ([131.152.226.164]:43203 "EHLO
-        mx1-priv.urz.unibas.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752600AbdGIVrd (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35656 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752031AbdGDSNx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2017 17:47:33 -0400
-From: Ilia Sergachev <ilia.sergachev@unibas.ch>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org,
-        Ilia Sergachev <ilia.sergachev@unibas.ch>
-Subject: [PATCH] staging: wilc1000: fix variable signedness
-Date: Sun,  9 Jul 2017 23:36:35 +0200
-Message-Id: <20170709213635.18692-1-ilia.sergachev@unibas.ch> (sfid-20170709_234756_220986_5B579925)
+        Tue, 4 Jul 2017 14:13:53 -0400
+Received: by mail-pf0-f176.google.com with SMTP id c73so118285639pfk.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 11:13:52 -0700 (PDT)
+Date: Tue, 4 Jul 2017 11:13:44 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Dison River <pwn2river@gmail.com>
+Cc: samuel@sortiz.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, qca_merez@qca.qualcomm.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        jakub.kicinski@netronome.com, davem@davemloft.net,
+        oss-drivers@netronome.com, security@kernel.org,
+        wil6210@qca.qualcomm.com
+Subject: Re: 'skb' buffer address information leakage
+Message-ID: <20170704111344.416fadc5@xeon-e3> (sfid-20170704_201413_606969_ED36EFDD)
+In-Reply-To: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
+References: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-txq_count receives a value from wilc_wlan_handle_txq()
-and therefore should be u32
+On Tue, 4 Jul 2017 13:12:18 +0800
+Dison River <pwn2river@gmail.com> wrote:
 
-found using sparse:
-drivers/staging/wilc1000/linux_wlan.c:306:58: warning:
- incorrect type in argument 2 (different signedness)
+> Hi all:
+> I'd found several address leaks of "skb" buffer.When i have a
+> arbitrary address write vulnerability in kernel(enabled kASLR),I can
+> use skb's address find sk_destruct's address and overwrite it. And
+> then,invoke close(sock_fd) function can trigger the
+> shellcode(sk_destruct func).
+> 
+> In kernel 4.12-rc7
+> drivers/net/irda/vlsi_ir.c:326           seq_printf(seq, "skb=%p
+> data=%p hw=%p\n", rd->skb, rd->buf, rd->hw);
+> drivers/net/ethernet/netronome/nfp/nfp_net_debugfs.c:167
+>          seq_printf(file, " frag=%p", skb);
+> drivers/net/wireless/ath/wil6210/debugfs.c:926           seq_printf(s,
+> "  SKB = 0x%p\n", skb);
+> 
+> Thanks.
 
-Signed-off-by: Ilia Sergachev <ilia.sergachev@unibas.ch>
----
- drivers/staging/wilc1000/linux_wlan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Debugfs support is optional with Netronome. If concerned about security,
+then it should be disabled.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 308708450830..0b097aca597e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -283,7 +283,8 @@ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
- 
- static int linux_wlan_txq_task(void *vp)
- {
--	int ret, txq_count;
-+	int ret;
-+	u32 txq_count;
- 	struct wilc_vif *vif;
- 	struct wilc *wl;
- 	struct net_device *dev = vp;
--- 
-2.11.0
+The WIIL6210 driver debugfs has other worse address leaks.
+The whole debugfs support in this driver should be made optional
+(or removed).
+
+The VLSI /oroc interface likewise should just be removed (or made
+optional). Most distributions do not build IRDA anymore anyway.
