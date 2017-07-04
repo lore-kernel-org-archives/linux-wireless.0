@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:32904 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753914AbdGCSks (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45532 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751852AbdGDOKm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jul 2017 14:40:48 -0400
-Received: by mail-oi0-f66.google.com with SMTP id f134so12888033oig.0
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:47 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 03/11] rtlwifi: Remove redundant semicolon in wifi.h.
-Date: Mon,  3 Jul 2017 13:40:30 -0500
-Message-Id: <20170703184038.24669-4-Larry.Finger@lwfinger.net> (sfid-20170703_204053_988366_F140516E)
-In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
-References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+        Tue, 4 Jul 2017 10:10:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
+References: <20170525001119.64791-1-briannorris@chromium.org>
+        <20170525001119.64791-5-briannorris@chromium.org>
+        <87fufk2hmm.fsf@purkki.adurom.net>
+        <20170601173954.GA138807@google.com> <87inka77md.fsf@codeaurora.org>
+        <1496999018.2424.5.camel@sipsolutions.net>
+        <20170621182706.GB92340@google.com>
+        <1498136554.2246.9.camel@sipsolutions.net>
+        <20170627204858.GB93674@google.com>
+Date: Tue, 04 Jul 2017 17:10:24 +0300
+In-Reply-To: <20170627204858.GB93674@google.com> (Brian Norris's message of
+        "Tue, 27 Jun 2017 13:48:59 -0700")
+Message-ID: <87podgi97z.fsf@kamboji.qca.qualcomm.com> (sfid-20170704_161105_261969_1DE0E3A4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+(I was on vacation and inbox exploded again)
 
-The semicolon can cause compiler error, if it exists in if...else
-statement.
+Brian Norris <briannorris@chromium.org> writes:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> On Thu, Jun 22, 2017 at 03:02:34PM +0200, Johannes Berg wrote:
+>> On Wed, 2017-06-21 at 11:27 -0700, Brian Norris wrote:
+>
+>> > > Without checking the code now, it seems entirely plausible that
+>> > > this is
+>> > > holding some lock that would lock out the control path entirely,
+>> > > for
+>> > > the duration until the wiphy is actually unregistered?
+>> > > 
+>> > > Actually, you can't unregister with the relevant locks held
+>> > > (without
+>> > > causing deadlocks), so perhaps it's marking the wiphy as
+>> > > unavailable so
+>> > > that all operations fail?
+>> > 
+>> > One of the above two sounds along the right line. But it's something
+>> > I couldn't really figure out how to do quite right.
+>> > 
+>> > Dumb question: how would I mark the wiphy as unavailable? Is there
+>> > something I can do at the cfg80211 level? Or would I really have to
+>> > guard all the cfg80211 entry points into mwifiex with a flag or lock?
+>> 
+>> There isn't really a good way to do this. You can, of course, call
+>> wiphy_unregister(), but if you could do that you'd already have the
+>> problem solved, I think?
+>
+> That's probably along the right track. There are still some things we'd
+> need to do properly before that though, and this is where all the
+> problems are so far. (Also, this is what Kalle was already objecting to;
+> he didn't think we should be unregistering/recreating the wiphy, but I
+> think he ended up softening on that a bit.)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 6c3ff4a73d19..cdf3944715ee 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2867,19 +2867,19 @@ value to host byte ordering.*/
- 	cpu_to_le32( \
- 		LE_BITS_CLEARED_TO_4BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u32)__val) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset)) \
--	);
-+	)
- #define SET_BITS_TO_LE_2BYTE(__pstart, __bitoffset, __bitlen, __val) \
- 	*((__le16 *)(__pstart)) = \
- 	cpu_to_le16( \
- 		LE_BITS_CLEARED_TO_2BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u16)__val) & BIT_LEN_MASK_16(__bitlen)) << (__bitoffset)) \
--	);
-+	)
- #define SET_BITS_TO_LE_1BYTE(__pstart, __bitoffset, __bitlen, __val) \
- 	*((u8 *)(__pstart)) = EF1BYTE \
- 	( \
- 		LE_BITS_CLEARED_TO_1BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u8)__val) & BIT_LEN_MASK_8(__bitlen)) << (__bitoffset)) \
--	);
-+	)
- 
- #define	N_BYTE_ALIGMENT(__value, __aligment) ((__aligment == 1) ? \
- 	(__value) : (((__value + __aligment - 1) / __aligment) * __aligment))
+Just to clarify I was more like hoping there would be a better way to do
+it, not really objecting the current method, but I didn't realise that
+of course it's harder to do a transparent firmware restart with fullmac
+design. And certainly what are you doing now is much much better than
+doing nothing after a firmware crash.
+
 -- 
-2.12.3
+Kalle Valo
