@@ -1,119 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:33608 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756715AbdGYBOQ (ORCPT
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:63948 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751982AbdGDIrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:16 -0400
-Received: by mail-pf0-f171.google.com with SMTP id s70so53108073pfs.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:16 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 05/20] mwifiex: unregister wiphy before freeing resources
-Date: Mon, 24 Jul 2017 18:13:21 -0700
-Message-Id: <20170725011336.99993-6-briannorris@chromium.org> (sfid-20170725_031541_384120_E9B1A337)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+        Tue, 4 Jul 2017 04:47:53 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [v2] wlcore: add missing nvs file name info for wilink8
+Date: Tue, 4 Jul 2017 08:47:48 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B363E29ED@DFRE01.ent.ti.com> (sfid-20170704_104833_081570_4BE23BF9)
+References: <8665E2433BC68541A24DFFCA87B70F5B363E2669@DFRE01.ent.ti.com>
+ <20170704081917.GI3730@atomide.com>
+In-Reply-To: <20170704081917.GI3730@atomide.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's possible for some control interfaces (e.g., scans, set freq) to be
-active after we've stopped our main work queue and the netif TX queues.
-These don't get completely shut out until we've unregistered the wdevs
-and wiphy.
+Hi Tony,
 
-So let's only free command buffers and poison our lists after
-wiphy_unregister().
+> > When working with wl18xx the nvs file is used for defining an alternate
+> > mac address and override the default mac address that is stored inside
+> > the wl18xx chip.
+> >
+> > The following commits:
+> > c815fde wlcore: spi: Populate config firmware data
+> > d776fc8 wlcore: sdio: Populate config firmware data
+> >
+> > Populated the nvs entry for wilink6 and wilink7 only while it is
+> > still needed for wilink8 as well.
+> > This broke user space backward compatibility when upgrading from older
+> > kernels, as the alternate mac address would not be read from the nvs th=
+at is
+> > already present in the file system (lib/firmware/ti-connectivity/wl1271=
+-
+> nvs.bin)
+> > causing mac address change of the wlan interface.
+> >
+> > This patch fix this and update the structure field with the same defaul=
+t nvs
+> file
+> > name that has been used before.
+>=20
+> I think more checks on the nvs file being used are needed to avoid other
+> nasty issues, see the comments I just made in the earlier version of this
+> patch.
+>=20
+Just replied on your comments for v1
 
-This resolves various use-after-free issues seen when resetting the
-device.
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-new in v2
----
- drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
- drivers/net/wireless/marvell/mwifiex/main.c | 7 ++++++-
- drivers/net/wireless/marvell/mwifiex/main.h | 1 +
- 3 files changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 3ecb59f7405b..de96675e43d5 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -418,7 +418,10 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
- 	mwifiex_cancel_all_pending_cmd(adapter);
- 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
- 	wake_up_interruptible(&adapter->hs_activate_wait_q);
-+}
- 
-+void mwifiex_free_cmd_buffers(struct mwifiex_adapter *adapter)
-+{
- 	/* Free lock variables */
- 	mwifiex_free_lock_list(adapter);
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 9c8f7bcfef8b..77e491720664 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -653,6 +653,7 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
- 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
- 		mwifiex_shutdown_drv(adapter);
-+		mwifiex_free_cmd_buffers(adapter);
- 	}
- 
- 	init_failed = true;
-@@ -1404,11 +1405,13 @@ static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
- 			mwifiex_del_virtual_intf(adapter->wiphy, &priv->wdev);
- 		rtnl_unlock();
- 	}
--	vfree(adapter->chan_stats);
- 
- 	wiphy_unregister(adapter->wiphy);
- 	wiphy_free(adapter->wiphy);
- 	adapter->wiphy = NULL;
-+
-+	vfree(adapter->chan_stats);
-+	mwifiex_free_cmd_buffers(adapter);
- }
- 
- /*
-@@ -1515,6 +1518,7 @@ mwifiex_reinit_sw(struct mwifiex_adapter *adapter)
- 		mwifiex_dbg(adapter, ERROR,
- 			    "info: %s: shutdown mwifiex\n", __func__);
- 		mwifiex_shutdown_drv(adapter);
-+		mwifiex_free_cmd_buffers(adapter);
- 	}
- 
- 	complete_all(adapter->fw_done);
-@@ -1662,6 +1666,7 @@ mwifiex_add_card(void *card, struct completion *fw_done,
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
- 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
- 		mwifiex_shutdown_drv(adapter);
-+		mwifiex_free_cmd_buffers(adapter);
- 	}
- err_kmalloc:
- 	mwifiex_free_adapter(adapter);
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index f8cf3079ac7d..62ce4e81f695 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1078,6 +1078,7 @@ int mwifiex_get_debug_info(struct mwifiex_private *,
- 
- int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter);
- int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
-+void mwifiex_free_cmd_buffers(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
--- 
-2.14.0.rc0.284.gd933b75aa4-goog
+Best Regards,
+Eyal
