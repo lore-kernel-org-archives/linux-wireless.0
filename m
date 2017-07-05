@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:47322 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751291AbdGQQnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:43:09 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 13/29] brcmfmac: Tidy register definitions a little
-Date: Mon, 17 Jul 2017 17:16:21 +0100
-Message-Id: <20170717161637.4652-14-ian@mnementh.co.uk> (sfid-20170717_184312_352384_11E72592)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from paleale.coelho.fi ([176.9.41.70]:37324 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750885AbdGEGFu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Jul 2017 02:05:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Jul 2017 09:05:36 +0300
+Message-Id: <20170705060539.20737-5-luca@coelho.fi> (sfid-20170705_080554_753363_51923336)
+In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
+References: <20170705060539.20737-1-luca@coelho.fi>
+Subject: [PATCH 4/7] iwlwifi: missing error code in iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trivial tidy of register definitions.
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+We don't set the error code here so we end up returning ERR_PTR(0) which
+is NULL.  The caller doesn't expect that so it results in a NULL
+dereference.
+
+Fixes: 2e5d4a8f61dc ("iwlwifi: pcie: Add new configuration to enable MSIX")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 2f32c9270eaa..e2324a78249b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -51,17 +51,18 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 92b3a55d0fbc..f95eec52508e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3150,7 +3150,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	init_waitqueue_head(&trans_pcie->d0i3_waitq);
  
- /* function 0 vendor specific CCCR registers */
- 
--#define SDIO_CCCR_BRCM_CARDCAP			0xf0
-+#define SDIO_CCCR_BRCM_CARDCAP		0xf0
- #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
- #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
- #define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	0x08
-+
- #define SDIO_CCCR_BRCM_CARDCTRL		0xf1
- #define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	0x02
--#define SDIO_CCCR_BRCM_SEPINT			0xf2
- 
--#define  SDIO_SEPINT_MASK		0x01
--#define  SDIO_SEPINT_OE			0x02
--#define  SDIO_SEPINT_ACT_HI		0x04
-+#define SDIO_CCCR_BRCM_SEPINT		0xf2
-+#define SDIO_SEPINT_MASK			0x01
-+#define SDIO_SEPINT_OE				0x02
-+#define SDIO_SEPINT_ACT_HI			0x04
- 
- /* function 1 miscellaneous registers */
- 
+ 	if (trans_pcie->msix_enabled) {
+-		if (iwl_pcie_init_msix_handler(pdev, trans_pcie))
++		ret = iwl_pcie_init_msix_handler(pdev, trans_pcie);
++		if (ret)
+ 			goto out_no_pci;
+ 	 } else {
+ 		ret = iwl_pcie_alloc_ict(trans);
 -- 
 2.11.0
