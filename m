@@ -1,97 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40872 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752158AbdG1OYL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:24:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:20 +0300
-Message-Id: <20170728142337.19183-8-luca@coelho.fi> (sfid-20170728_162423_729401_F17C3D02)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 07/24] iwlwifi: mvm: add and use iwl_mvm_has_unified_ucode()
+Received: from muru.com ([72.249.23.125]:53372 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752525AbdGEIHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Jul 2017 04:07:03 -0400
+Date: Wed, 5 Jul 2017 01:06:54 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170705080653.GJ3730@atomide.com> (sfid-20170705_100817_890901_611253CB)
+References: <8665E2433BC68541A24DFFCA87B70F5B363E1A3D@DFRE01.ent.ti.com>
+ <87y3s5kbc3.fsf@kamboji.qca.qualcomm.com>
+ <20170704081757.GH3730@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B363E29C8@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B363E29C8@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+* Reizer, Eyal <eyalr@ti.com> [170704 01:47]:
+> Hi Tony,
+> 
+> > 
+> > * Kalle Valo <kvalo@codeaurora.org> [170703 04:30]:
+> > > "Reizer, Eyal" <eyalr@ti.com> writes:
+> > >
+> > > > When working with wl18xx the nvs file is used for defining an alternate
+> > > > mac address and override the default mac address that is stored inside
+> > > > the wl18xx chip.
+> > > > update the structure field with the same default nvs file name that has
+> > > > been used in the past, otherwise userspace backward compatibility is
+> > > > broken when upgrading from older kernels, as the alternate mac address
+> > > > would not be read from the nvs that is already present in the file system
+> > > > (lib/firmware/ti-connectivity/wl1271-nvs.bin) causing mac address change
+> > > > of the wlan interface.
+> > > >
+> > > > Signed-off-by: Eyal Reizer <eyalr@ti.com>
+> > >
+> > > Should we also cc stable? And a Fixes line would be nice.
+> > 
+> > Argh this mess again. I think there are few things to consider here. What
+> > about booting the same rootfs on multiple devices for example with NFSroot?
+> > 
+> > Not sure if this really is a regression as we've always had a bogus
+> > wl1271-nvs.bin in linux-firmware.git. Sure would be nice to fix it,
+> > but going back to using a generic wl1271-nvs.bin sure does not seem
+> > like a good long term fix to me :)
+> A lot of legacy here...
+> Wl1271-nvs has been used mainly with wilink6/7 and indeed was device specific
+> Holding calibration info etc.
+> When they started with wilink8 the device specific configuration that was 
+> Part of it has switched to wl18xx-conf.bin and using the wlaconf tool for setting it.
+> Also there is no calibration specific info per device with wilink8 so the wl18xx-conf.bin
+> The only thing left in wl1271-nvs.bin for wilink8 was the mac address override.
 
-This may need to be refined later, but for now using this,
-even with the TODO, is better than checking "has new TX API".
+And the default wl1271-nvs.bin sets the mac address to a bogus deadbeef address,
+so it's wrong to use and totally broken for distros :(
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 6 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 +-
- 3 files changed, 11 insertions(+), 5 deletions(-)
+> There are wilink8 customer using this feature which is the only reason for keeping 
+> This file for wilink8.
+> So for wilink8 there is really not issue with having the same wl1271-nvs.bin 
+> On NFSroot. 
+> 
+> > 
+> > Isn't the nvs file supposed to be device specific? If so, we should not
+> > provide it in linux-firmware.git at all because of the issues it causes..
+> > 
+> > And since it's provided, how are people supposed to know to remove it
+> > from their file system and replace it with something board specific?
+> 
+> I think the wl1271-nvs.bin should be removed from linux-firmware.git
+> anyway.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index e6f6de2500db..58f846610e5d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -457,7 +457,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 	};
- 	int ret;
- 
--	if (iwl_mvm_has_new_tx_api(mvm))
-+	if (iwl_mvm_has_unified_ucode(mvm))
- 		return iwl_run_unified_mvm_ucode(mvm, true);
- 
- 	lockdep_assert_held(&mvm->mutex);
-@@ -1034,7 +1034,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
- {
- 	int ret;
- 
--	if (iwl_mvm_has_new_tx_api(mvm))
-+	if (iwl_mvm_has_unified_ucode(mvm))
- 		return iwl_run_unified_mvm_ucode(mvm, false);
- 
- 	ret = iwl_run_init_mvm_ucode(mvm, false);
-@@ -1101,8 +1101,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	if (ret)
- 		goto error;
- 
--	/* Send phy db control command and then phy db calibration*/
--	if (!iwl_mvm_has_new_tx_api(mvm)) {
-+	if (!iwl_mvm_has_unified_ucode(mvm)) {
-+		/* Send phy db control command and then phy db calibration */
- 		ret = iwl_send_phy_db_data(mvm->phy_db);
- 		if (ret)
- 			goto error;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 6fa2c44e6edd..e9440ef3022f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1232,6 +1232,12 @@ static inline bool iwl_mvm_has_new_tx_api(struct iwl_mvm *mvm)
- 	return mvm->trans->cfg->use_tfh;
- }
- 
-+static inline bool iwl_mvm_has_unified_ucode(struct iwl_mvm *mvm)
-+{
-+	/* TODO - better define this */
-+	return mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_A000;
-+}
-+
- static inline bool iwl_mvm_is_cdb_supported(struct iwl_mvm *mvm)
- {
- 	/*
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 6b385cf10555..4d591fdc61f2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -645,7 +645,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		mvm->last_agg_queue = IWL_MVM_DQA_MAX_DATA_QUEUE;
- 	}
- 	mvm->sf_state = SF_UNINIT;
--	if (iwl_mvm_has_new_tx_api(mvm))
-+	if (iwl_mvm_has_unified_ucode(mvm))
- 		iwl_fw_set_current_image(&mvm->fwrt, IWL_UCODE_REGULAR);
- 	else
- 		iwl_fw_set_current_image(&mvm->fwrt, IWL_UCODE_INIT);
--- 
-2.13.2
+I agree. But distros carry it already, so we need to also add checks to
+the device driver to warn about the bogus wl1271-nvs.bin. And the driver
+should only attempt to use wl1271-nvs.bin if not the bogus one.
+
+> For wilink6/7 it is really device specific and for wilink8 if a customer
+> Want an alternate mac address he can create this file on his file system.
+
+Yes makes sense, but only with fixing the driver to ignore the bogus
+wl1271-nvs.bin.
+
+> > Maybe add a check to first try to find wl18xx-nvs.bin if it exists (and
+> > not add it to linux-firmware.git), and if not found, then fall back to
+> > wl1271-nvs.bin, but only if it's not the bogus generic file.. Produce
+> > a warning if the bogux linux-firmware.git wl1271-nvs.bin is being used..
+> > 
+> Removing it from linux-firmware.git may be better instead of adding an
+> additional check?
+
+I think we need both to avoid totally broken defaults.
+
+> People are already familiar with the wl1271-nvs.bin file as a mean for
+> Mac address override for wilink8:
+> http://processors.wiki.ti.com/index.php/WL18xx_Writing_MAC_address
+
+Yes so checking, ignoring and warning about the bogus one should solve
+your customer issues. And it will also fix the defaults for distros.
+
+> so I am not sure that a name change
+
+Well that can be done later. The problem of booting the same rootfs
+on multiple devices remains where having wl1271-nvs.bin breaks things.
+
+> Here is really necessary and may only create confusion especially for 
+> Customers that already have products in the field and only updating
+> Their kernel.
+
+Yeah using wl1271-nvs.bin should be the last resort but only if properly
+configured.
+
+Regards,
+
+Tony
