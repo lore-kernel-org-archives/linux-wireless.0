@@ -1,113 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33146 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751691AbdGRL1w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 07:27:52 -0400
-Subject: Re: brcmfmac bus level addressing issues.
-To: Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>
-References: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk>
- <87cdbbc12b504e89d2bd1c33df6a6bf6@mail.gmail.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <5eb895bd-58cf-70fd-3c00-c8fed86aed79@mnementh.co.uk> (sfid-20170718_132755_514183_70A2C7C5)
-Date: Tue, 18 Jul 2017 12:27:48 +0100
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:58261 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752480AbdGEI2l (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Jul 2017 04:28:41 -0400
+Date: Wed, 5 Jul 2017 10:28:37 +0200
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Tony Lindgren <tony@atomide.com>
+Cc: "Reizer, Eyal" <eyalr@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170705082837.g6tmsfeeld6dvsw3@earth> (sfid-20170705_102902_842219_ECE9A559)
+References: <8665E2433BC68541A24DFFCA87B70F5B363E1A3D@DFRE01.ent.ti.com>
+ <87y3s5kbc3.fsf@kamboji.qca.qualcomm.com>
+ <20170704081757.GH3730@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B363E29C8@DFRE01.ent.ti.com>
+ <20170705080653.GJ3730@atomide.com>
 MIME-Version: 1.0
-In-Reply-To: <87cdbbc12b504e89d2bd1c33df6a6bf6@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="sqemetu5rv5v2zdr"
+In-Reply-To: <20170705080653.GJ3730@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/07/17 11:35, Hante Meuleman wrote:
-> Hi Ian,
-> 
-> I've really no idea what you mean.
 
-You should look at the code...
+--sqemetu5rv5v2zdr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> brcmf_pcie_select_core is redundant?
+Hi,
 
-Essentially yes - there may be a couple of corner cases where the IO
-accesses are not performed via brcmf_pcie_buscore_{read,write}32() - but
-other than that, brcmf_pcie_buscore_prep_addr() sets the IO window
-unconditionally on every access.
+On Wed, Jul 05, 2017 at 01:06:54AM -0700, Tony Lindgren wrote:
+> > > Not sure if this really is a regression as we've always had a bogus
+> > > wl1271-nvs.bin in linux-firmware.git. Sure would be nice to fix it,
+> > > but going back to using a generic wl1271-nvs.bin sure does not seem
+> > > like a good long term fix to me :)
+> > A lot of legacy here...
+> > Wl1271-nvs has been used mainly with wilink6/7 and indeed was device sp=
+ecific
+> > Holding calibration info etc.
+> > When they started with wilink8 the device specific configuration that w=
+as=20
+> > Part of it has switched to wl18xx-conf.bin and using the wlaconf tool f=
+or setting it.
+> > Also there is no calibration specific info per device with wilink8 so t=
+he wl18xx-conf.bin
+> > The only thing left in wl1271-nvs.bin for wilink8 was the mac address o=
+verride.
+>=20
+> And the default wl1271-nvs.bin sets the mac address to a bogus deadbeef a=
+ddress,
+> so it's wrong to use and totally broken for distros :(
 
-> Care to try to boot a device without this function?
+So use something like the following pseudo-code?
 
-I strongly suspect it would work. Perhaps try it? Give me a device and
-I'll try it.
+if (fw->mac_address =3D=3D deadbeef) {
+    fw->mac_address =3D get_random_mac();
+    dev_warn(dev, "Detected unconfigured wl1271-nvs.bin.\n"
+        "Your device will run with limited performance.\n"
+        "Please use ti-utils to configure your device.\n");
+}
 
-> Called all over the  place? Hell no, it is default pointing to PCIE2
-> and functions which need to map the window to another core will do
-> so, temporarily, but move it back to PCIE2, at least that is the
-> idea, may be you found a bug?
+-- Sebastian
 
-brcmf_pcie_select_core() looks up the core structure from the core id.
+--sqemetu5rv5v2zdr
+Content-Type: application/pgp-signature; name="signature.asc"
 
-it then sets BRCMF_PCIE_BAR0_WINDOW according to the core base address.
+-----BEGIN PGP SIGNATURE-----
 
-it actually goes to the length of reading it back and trying again if
-its not set, even, which is at least a little bit horrifying.
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAllcozIACgkQ2O7X88g7
++pogOQ//VTlAJ1fuDbP4Ay0nbuAMyszrL7v5fhftWyeapncf9VKOjgzzQctF6/T0
+HzUTa5ffvtAGEV3mqwlipvx0SytrjRh5y90H0LJwTrC4FG3BwvpohozA6nXrBYw6
+jst3DPcy0K9vfX58rxBvHQLp9EIE8+eJth8pCRW8oVcD+8XY10mxh+A1abVryBpF
+apDygqyfq56LiwYcDmFR2fJm4PGJ54U+yWn0SNcbt9zHpZpoEz4bDfJWuq2JGxpe
+dZbn0Zijwu8wYuTe505GmNM4LdEYG2lUKEeS6UhD5kCHz4yt3tpW2kRs4Rl33IHu
++BlY38RQ1CtO4tJv8a+LHu5Ihd5xzGVupBVYpPkMeEsAz/x4BJXLRTYWgEAJIfyM
+q2xMC0nCQXDncIlna7uD0sL9MQX9R/4DNthyhTkUUEturOnG7YdvN6QPnfLq0LPr
+5IHoGoXr/7t1E4HKg6dki8pm22FAPFNJHr2w6Ym/cpFW4z+JY9dKLyUQnRK7nrJM
+osv7Bvf8hWqN2AzQheRD5yLLarS3Ejx4eYA/F/AYQjRPBeRa8jfHB5hFGLD5lA/T
+aOU/M7k1vtqhhCfKs7Y0FUANnzxfMW/RFINg5hU+j79UqLhOWWAuleuIxF9RKRVY
+FiLYDfgxRsTWZs+1yNRlsrcXSK+KX8OaFmTWqvdlutvNzVuy6UM=
+=3f5F
+-----END PGP SIGNATURE-----
 
-------------
-
-brcmf_pcie_buscore_{read,write}32() both call brcmf_pcie_buscore_prep_addr()
-
-brcmf_pcie_buscore_prep_addr() *unconditionally* programs
-BRCMF_PCIE_BAR0_WINDOW on *every single* IO access.
-
-If you want inefficient - its right there.
-
-
-The SDIO version of the code is actually considerably more efficient on
-this point - it at least only programs the window register only when it
-changes, not on every single IO access.
-
-> We are
-> for sure not going to hide the selecting of the window in the read/write
-> routines, that would result in a giant amount of overhead.
-
-Actually it would result in *considerably* less overhead than the
-current code, that blindly sets the window on every access.
-
-> Currently PCIE
-> devices reach 1.5Gpbs, we need to go faster than that in the near future.
-
-I dont need a lesson on writing efficient code, thanks.
-
-> We don't want just change that to make it bit nicer..... Why do you need
-> to see the same in the SDIO and PCIE drivers? SDIO and PCIE differ in many
-> aspects. Sure some things can be improved in or the other, but they sure
-> don't need to look alike.
-
-I dont "need" to see the same in both drivers. Not where it isnt
-appropriate.
-
-but every part of the drivers that can share code without noticeably
-impacting performance *should* do so. You should be justifying to me why
-the code has to be different, not the other way around. Are you
-sreiously arguing that sharing common code is a bad idea?
-
-> It may be ugly, but thusfar it has not caused bugs
-
-Oh, I bet you it has... try reading the SDIO version (note the reliance
-on the dangling ->sbwad pointer) and tell me again that this hasnt
-caused bugs.
-
-Right now, the bulk of the driver code is sat on top of at least two bus
-drivers with differing IO models, and is working via good luck alone.
-
-> The concept in pcie bus part is simple.
-
-And differs completely from the SDIO part.
-
-> The main core to select is PCIE2 (once you have
-> booted and established initial communication with firmware) and every
-> routine which needs to access another core will change the window
-> temporarily and set it back once done. Please don't mess with this, it
-> works, it is clear and it is fast.
-
-If is anything but fast. changing the window involves traversiong the
-list of cores. Every. Single. Time. It doesnt *have* to - but thats what
-brcmf_chip_get_core() does, and brcmf_pcie_select_core() calls it.
+--sqemetu5rv5v2zdr--
