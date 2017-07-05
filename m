@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:56187 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753394AbdGJOpl (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37296 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750885AbdGEGFs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 10:45:41 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: x86@kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 2/2] wl3501_cs: reduce stack size for KASAN
-Date: Mon, 10 Jul 2017 16:44:25 +0200
-Message-Id: <20170710144425.2238584-2-arnd@arndb.de> (sfid-20170710_164611_019437_F5F69CC1)
-In-Reply-To: <20170710144425.2238584-1-arnd@arndb.de>
-References: <20170710144425.2238584-1-arnd@arndb.de>
+        Wed, 5 Jul 2017 02:05:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Jul 2017 09:05:32 +0300
+Message-Id: <20170705060539.20737-1-luca@coelho.fi> (sfid-20170705_080552_352922_C771960C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 0/7] iwlwifi: some fixes intended for 4.13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inlining functions with local variables can lead to excessive stack usage
-with KASAN after a previous patch that modifies the outsb/insb helpers
-on x86.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-drivers/net/wireless/wl3501_cs.c: In function 'wl3501_rx_interrupt':
-drivers/net/wireless/wl3501_cs.c:1103:1: error: the frame size of 2232 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+Hi,
 
-Marking the two callers of insb/outb 'noinline' prevents the compiler
-from adding up the stack usage for each of the local variables passed
-into those, reducing the maximum stack frame size to 800 bytes with
-KASAN again.
+As promised, I'll start sending things out as soon as possible, so I'm
+already sending fixes intended for the 4.13 rc series, even before
+it's out. :)
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/wl3501_cs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Some of the issues solved are:
 
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index acec0d9ec422..2cce22571b4c 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -242,8 +242,8 @@ static int wl3501_get_flash_mac_addr(struct wl3501_card *this)
-  *
-  * Move 'size' bytes from PC to card. (Shouldn't be interrupted)
-  */
--static void wl3501_set_to_wla(struct wl3501_card *this, u16 dest, void *src,
--			      int size)
-+static noinline void wl3501_set_to_wla(struct wl3501_card *this,
-+				       u16 dest, void *src, int size)
- {
- 	/* switch to SRAM Page 0 */
- 	wl3501_switch_page(this, (dest & 0x8000) ? WL3501_BSS_SPAGE1 :
-@@ -264,8 +264,8 @@ static void wl3501_set_to_wla(struct wl3501_card *this, u16 dest, void *src,
-  *
-  * Move 'size' bytes from card to PC. (Shouldn't be interrupted)
-  */
--static void wl3501_get_from_wla(struct wl3501_card *this, u16 src, void *dest,
--				int size)
-+static noinline void wl3501_get_from_wla(struct wl3501_card *this,
-+					 u16 src, void *dest, int size)
- {
- 	/* switch to SRAM Page 0 */
- 	wl3501_switch_page(this, (src & 0x8000) ? WL3501_BSS_SPAGE1 :
+* A few NULL pointer dereferences in the recovery flow;
+* A small but important fix for IBSS;
+* A one-liner fix for tracing, which was including too much data;
+* Some of these are bugzilla bug fixes;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Dan Carpenter (1):
+  iwlwifi: missing error code in iwl_trans_pcie_alloc()
+
+Emmanuel Grumbach (3):
+  iwlwifi: dvm: prevent an out of bounds access
+  iwlwifi: mvm: fix a NULL pointer dereference of error in recovery
+  iwlwifi: fix tracing when tx only is enabled
+
+Johannes Berg (1):
+  iwlwifi: mvm: defer setting IWL_MVM_STATUS_IN_HW_RESTART
+
+Luca Coelho (1):
+  iwlwifi: mvm: handle IBSS probe_queue in a few missing places
+
+Mordechai Goodstein (1):
+  iwlwifi: pcie: fix unused txq NULL pointer dereference
+
+ drivers/net/wireless/intel/iwlwifi/dvm/tx.c       |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  8 +++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 15 ++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  3 +++
+ 8 files changed, 34 insertions(+), 9 deletions(-)
+
 -- 
-2.9.0
+2.11.0
