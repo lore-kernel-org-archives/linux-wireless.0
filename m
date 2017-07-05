@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36933 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752081AbdGFLv4 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37338 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751074AbdGEGFv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 07:51:56 -0400
-Date: Thu, 6 Jul 2017 14:50:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] rtlwifi: Fill ap_num field by driver
-Message-ID: <20170706114936.mung5qc4wt3mzjww@mwanda> (sfid-20170706_135200_463239_436A8C57)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 5 Jul 2017 02:05:51 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Jul 2017 09:05:38 +0300
+Message-Id: <20170705060539.20737-7-luca@coelho.fi> (sfid-20170705_080604_437823_A20FFBB3)
+In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
+References: <20170705060539.20737-1-luca@coelho.fi>
+Subject: [PATCH 6/7] iwlwifi: mvm: handle IBSS probe_queue in a few missing places
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Ping-Ke Shih,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-The patch c76ab8e75442: "rtlwifi: Fill ap_num field by driver" from
-Jun 21, 2017, leads to the following static checker warning:
+When IBSS was implemented for DQA, we missid a few places where it
+should be handled in the same way as AP.
 
-	drivers/net/wireless/realtek/rtlwifi/base.c:1741 rtl_scan_list_expire()
-	error: dereferencing freed memory 'entry'
+Fixes: ee48b72211f8 ("iwlwifi: mvm: support ibss in dqa mode")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-drivers/net/wireless/realtek/rtlwifi/base.c
-  1724  void rtl_scan_list_expire(struct ieee80211_hw *hw)
-  1725  {
-  1726          struct rtl_priv *rtlpriv = rtl_priv(hw);
-  1727          struct rtl_bssid_entry *entry, *next;
-  1728          unsigned long flags;
-  1729  
-  1730          spin_lock_irqsave(&rtlpriv->locks.scan_list_lock, flags);
-  1731  
-  1732          list_for_each_entry_safe(entry, next, &rtlpriv->scan_list.list, list) {
-  1733                  /* 180 seconds */
-  1734                  if (jiffies_to_msecs(jiffies - entry->age) < 180000)
-  1735                          continue;
-  1736  
-  1737                  list_del(&entry->list);
-  1738                  kfree(entry);
-                              ^^^^^
-Freed.
-
-  1739                  rtlpriv->scan_list.num--;
-  1740  
-  1741                  RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
-  1742                           "BSSID=%pM is expire in scan list (total=%d)\n",
-  1743                           entry->bssid, rtlpriv->scan_list.num);
-                                 ^^^^^^^^^^^^
-Dereferenced.
-
-  1744          }
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 4a6df45b73df..ab66b4394dfc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2027,7 +2027,8 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 						IWL_MAX_TID_COUNT,
+ 						wdg_timeout);
+ 
+-		if (vif->type == NL80211_IFTYPE_AP)
++		if (vif->type == NL80211_IFTYPE_AP ||
++		    vif->type == NL80211_IFTYPE_ADHOC)
+ 			mvm->probe_queue = queue;
+ 		else if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+ 			mvm->p2p_dev_queue = queue;
+-- 
+2.11.0
