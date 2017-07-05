@@ -1,32 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:36655 "EHLO
-        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751727AbdGENvF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37332 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752290AbdGEGFv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 09:51:05 -0400
-Received: by mail-oi0-f52.google.com with SMTP id x187so68282924oig.3
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jul 2017 06:51:05 -0700 (PDT)
-Subject: Re: [PATCH] rtlwifi: Fix memory leak when firmware request fails
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-References: <20170705060400.GA9481@symbol-HP-ZBook-15>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5a7aa869-7942-1920-255a-1d8826bec8f6@lwfinger.net> (sfid-20170705_155109_404863_5558D3B7)
-Date: Wed, 5 Jul 2017 08:51:02 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170705060400.GA9481@symbol-HP-ZBook-15>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 5 Jul 2017 02:05:51 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Jul 2017 09:05:37 +0300
+Message-Id: <20170705060539.20737-6-luca@coelho.fi> (sfid-20170705_080555_881484_629ECF10)
+In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
+References: <20170705060539.20737-1-luca@coelho.fi>
+Subject: [PATCH 5/7] iwlwifi: fix tracing when tx only is enabled
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/05/2017 01:04 AM, Souptick Joarder wrote:
-> This patch will fix memory leak when firmware request fails
-> 
-> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-That is better, but how does Kalle know this is version two? That is covered in 
-Documentation/process/submitting-patches.rst. Please read it.
+iwl_trace_data is somewhat confusing. It returns a bool
+that tells if the payload of the skb should be added to
+the tx_data event. If it returns false, then the payload
+of the skb is added to the tx event.
 
-NACK.
+The purpose is to be able to start tracing with
+-e iwlwifi
+and record non-data packets only which saves bandwidth.
 
-Larry
+Since EAPOLs are important, seldom and not real data
+packet (despite being WiFi data packets), they are
+included in tx event and thus iwl_trace_data returns false
+on those. This last part was buggy, and because of that,
+all the data packets were included in the tx event.
+
+Fix that.
+
+Fixes: 0c4cb7314d15 ("iwlwifi: tracing: decouple from mac80211")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
+index 545d14b0bc92..f5c1127253cb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
+@@ -55,8 +55,8 @@ static inline bool iwl_trace_data(struct sk_buff *skb)
+ 	/* also account for the RFC 1042 header, of course */
+ 	offs += 6;
+ 
+-	return skb->len > offs + 2 &&
+-	       *(__be16 *)(skb->data + offs) == cpu_to_be16(ETH_P_PAE);
++	return skb->len <= offs + 2 ||
++		*(__be16 *)(skb->data + offs) != cpu_to_be16(ETH_P_PAE);
+ }
+ 
+ static inline size_t iwl_rx_trace_len(const struct iwl_trans *trans,
+-- 
+2.11.0
