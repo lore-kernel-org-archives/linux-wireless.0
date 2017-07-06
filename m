@@ -1,87 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51298 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932094AbdGUKBe (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33217 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751070AbdGFRQB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 06:01:34 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: Re: [PATCH v2] mwifiex: add tdls uapsd support module parameter
-Date: Fri, 21 Jul 2017 10:01:30 +0000
-Message-ID: <9bdc702a64e1464db6d18b331b2c0000@SC-EXCH02.marvell.com> (sfid-20170721_120138_062268_D4578643)
-References: <1500548753-26752-1-git-send-email-huxinming820@gmail.com>
-In-Reply-To: <1500548753-26752-1-git-send-email-huxinming820@gmail.com>
-Content-Type: text/plain; charset="gb2312"
+        Thu, 6 Jul 2017 13:16:01 -0400
+Received: by mail-pf0-f172.google.com with SMTP id e7so4053081pfk.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 10:16:01 -0700 (PDT)
+Date: Thu, 6 Jul 2017 10:15:58 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH v2] mwifiex: uninit wakeup info in the error handling
+Message-ID: <20170706171557.GA121983@google.com> (sfid-20170706_191636_405639_759E0B62)
+References: <1499327728-25388-1-git-send-email-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1499327728-25388-1-git-send-email-jeffy.chen@rock-chips.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNClBsZWFzZSBkcm9wIHRoaXMgcGF0Y2gsIGFzIHRoZXJlIGlzIGEgcmVwbGFjZSB2ZXJz
-aW9uIGFscmVhZHkuDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBY
-aW5taW5nIEh1IFttYWlsdG86aHV4aW5taW5nODIwQGdtYWlsLmNvbV0NCj4gU2VudDogMjAxN8Tq
-N9TCMjDI1SAxOTowNg0KPiBUbzogTGludXggV2lyZWxlc3MNCj4gQ2M6IEthbGxlIFZhbG87IEJy
-aWFuIE5vcnJpczsgRG1pdHJ5IFRvcm9raG92OyByYWphdGphQGdvb2dsZS5jb207IFpoaXl1YW4N
-Cj4gWWFuZzsgVGltIFNvbmc7IENhdGh5IEx1bzsgWGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbUEFU
-Q0ggdjJdIG13aWZpZXg6IGFkZCB0ZGxzIHVhcHNkIHN1cHBvcnQgbW9kdWxlIHBhcmFtZXRlcg0K
-PiANCj4gRnJvbTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gDQo+IEFuIGlzc3Vl
-IGFib3V0IHRkbHMgdWFwc2Qgd2FzIGZpeGVkIGluIGxhdGVzdCBmaXJtd2FyZSwgdGhpcyBwYXRj
-aCBhZGQgbW9kdWxlDQo+IHBhcmFtZXRlciB0byBjb250cm9sIHRkbHMgdWFwc2Qgc3VwcG9ydCwg
-d2hpY2ggaXMgZGVmYXVsdCBkaXNhYmxlZCwgY291bGQgYmUgYQ0KPiB3b3JrYXJvdW5kIHRvIHRo
-ZSBvbGQgZmlybXdhcmUuIEF0IHRoZSBzYW1lIHRpbWUsIGl0IGlzIG9wdGlvbmFsIHRvIGVuYWJs
-ZSB0aGlzDQo+IGZlYXR1cmUgaW4gc3BlY2lmaWMgY2FzZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6
-IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IENhdGh5IEx1
-byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gLS0tDQo+IHYyOiBhZGQgbW9yZSBjb21tZW50cyBmb3Ig
-ZGlzYWJsZSB0ZGxzX3VhcHNkLiAoQnJpYW4pDQo+IC0tLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWFydmVsbC9td2lmaWV4L2luaXQuYyAgICB8IDUgKysrKysNCj4gIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmggICAgfCAxICsNCj4gIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL21hcnZlbGwvbXdpZmlleC9zdGFfY21kLmMgfCA4ICsrKysrLS0tDQo+ICAzIGZpbGVz
-IGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2luaXQuYw0KPiBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4gaW5kZXggM2VjYjU5
-Zi4uMmNjOGU1NCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
-d2lmaWV4L2luaXQuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
-ZXgvaW5pdC5jDQo+IEBAIC0yNSw2ICsyNSwxMCBAQA0KPiAgI2luY2x1ZGUgIndtbS5oIg0KPiAg
-I2luY2x1ZGUgIjExbi5oIg0KPiANCj4gK3N0YXRpYyBib29sIHRkbHNfdWFwc2Q7DQo+ICttb2R1
-bGVfcGFyYW0odGRsc191YXBzZCwgYm9vbCwgMDAwMCk7DQo+ICtNT0RVTEVfUEFSTV9ERVNDKHRk
-bHNfdWFwc2QsICJ0ZGxzIHVhcHNkIHN1cHBvcnQgZW5hYmxlOjEsIGRpc2FibGU6MCIpOw0KPiAr
-DQo+ICAvKg0KPiAgICogVGhpcyBmdW5jdGlvbiBhZGRzIGEgQlNTIHByaW9yaXR5IHRhYmxlIHRv
-IHRoZSB0YWJsZSBsaXN0Lg0KPiAgICoNCj4gQEAgLTE1NCw2ICsxNTgsNyBAQCBpbnQgbXdpZmll
-eF9pbml0X3ByaXYoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdikNCj4gIAlwcml2LT5kZWxf
-bGlzdF9pZHggPSAwOw0KPiAgCXByaXYtPmhzMl9lbmFibGVkID0gZmFsc2U7DQo+ICAJcHJpdi0+
-Y2hlY2tfdGRsc190eCA9IGZhbHNlOw0KPiArCXByaXYtPnRkbHNfdWFwc2Rfc3VwcG9ydCA9IHRk
-bHNfdWFwc2Q7DQo+ICAJbWVtY3B5KHByaXYtPnRvc190b190aWRfaW52LCB0b3NfdG9fdGlkX2lu
-diwgTUFYX05VTV9USUQpOw0KPiANCj4gIAltd2lmaWV4X2luaXRfMTFoX3BhcmFtcyhwcml2KTsN
-Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWlu
-LmgNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+IGlu
-ZGV4IGY4Y2YzMDcuLmVmNWVhYzcyIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21h
-cnZlbGwvbXdpZmlleC9tYWluLmgNCj4gQEAgLTY2MCw2ICs2NjAsNyBAQCBzdHJ1Y3QgbXdpZmll
-eF9wcml2YXRlIHsNCj4gIAl1OCBjaGVja190ZGxzX3R4Ow0KPiAgCXN0cnVjdCB0aW1lcl9saXN0
-IGF1dG9fdGRsc190aW1lcjsNCj4gIAlib29sIGF1dG9fdGRsc190aW1lcl9hY3RpdmU7DQo+ICsJ
-dTggdGRsc191YXBzZF9zdXBwb3J0Ow0KPiAgCXN0cnVjdCBpZHIgYWNrX3N0YXR1c19mcmFtZXM7
-DQo+ICAJLyogc3BpbiBsb2NrIGZvciBhY2sgc3RhdHVzICovDQo+ICAJc3BpbmxvY2tfdCBhY2tf
-c3RhdHVzX2xvY2s7DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
-L213aWZpZXgvc3RhX2NtZC5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lm
-aWV4L3N0YV9jbWQuYw0KPiBpbmRleCA1MzRkOTRhLi5kNWRhNTY1IDEwMDY0NA0KPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvc3RhX2NtZC5jDQo+ICsrKyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9zdGFfY21kLmMNCj4gQEAgLTE3ODks
-OSArMTc4OSwxMSBAQCBzdGF0aWMgaW50IG13aWZpZXhfY21kX2NoYW5fcmVnaW9uX2NmZyhzdHJ1
-Y3QNCj4gbXdpZmlleF9wcml2YXRlICpwcml2LA0KPiAgCQlwdXRfdW5hbGlnbmVkX2xlMTYocGFy
-YW1zLT5jYXBhYmlsaXR5LCBwb3MpOw0KPiAgCQljb25maWdfbGVuICs9IHNpemVvZihwYXJhbXMt
-PmNhcGFiaWxpdHkpOw0KPiANCj4gLQkJcW9zX2luZm8gPSBwYXJhbXMtPnVhcHNkX3F1ZXVlcyB8
-IChwYXJhbXMtPm1heF9zcCA8PCA1KTsNCj4gLQkJd21tX3Fvc19pbmZvID0gKHN0cnVjdCBtd2lm
-aWV4X2llX3R5cGVzX3Fvc19pbmZvICopKHBvcyArDQo+IC0JCQkJCQkJCSAgICBjb25maWdfbGVu
-KTsNCj4gKwkJaWYgKHByaXYtPnRkbHNfdWFwc2Rfc3VwcG9ydCkNCj4gKwkJCXFvc19pbmZvID0g
-cGFyYW1zLT51YXBzZF9xdWV1ZXMgfCAocGFyYW1zLT5tYXhfc3AgPDwgNSk7DQo+ICsJCWVsc2UN
-Cj4gKwkJCXFvc19pbmZvID0gMDsNCj4gKwkJd21tX3Fvc19pbmZvID0gKHZvaWQgKikocG9zICsg
-Y29uZmlnX2xlbik7DQo+ICAJCXdtbV9xb3NfaW5mby0+aGVhZGVyLnR5cGUgPSBjcHVfdG9fbGUx
-NihXTEFOX0VJRF9RT1NfQ0FQQSk7DQo+ICAJCXdtbV9xb3NfaW5mby0+aGVhZGVyLmxlbiA9IGNw
-dV90b19sZTE2KHNpemVvZihxb3NfaW5mbykpOw0KPiAgCQl3bW1fcW9zX2luZm8tPnFvc19pbmZv
-ID0gcW9zX2luZm87DQo+IC0tDQo+IDEuOS4xDQoNCg==
+On Thu, Jul 06, 2017 at 03:55:28PM +0800, Jeffy Chen wrote:
+> We inited wakeup info at the beginning of mwifiex_add_card, so we need
+> to uninit it in the error handling.
+> 
+> It's much the same as what we did in:
+> 36908c4 mwifiex: uninit wakeup info when removing device
+> 
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> 
+> ---
+> 
+> Changes in v2:
+> Uninit wakeup when _mwifiex_fw_dpc failed too.
+
+Looks good to me:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
