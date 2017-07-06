@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33949 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756235AbdGLLoX (ORCPT
+Received: from lucky1.263xmail.com ([211.157.147.132]:36414 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751741AbdGFHu6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 07:44:23 -0400
-Received: by mail-wr0-f196.google.com with SMTP id k67so5179413wrc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 04:44:23 -0700 (PDT)
-Message-ID: <1499859860.2050.5.camel@googlemail.com> (sfid-20170712_134427_793236_A9E16CC2)
-Subject: [PATCH] ath9k: fix debugfs file permission
-From: Christoph Fritz <chf.fritz@googlemail.com>
-Reply-To: chf.fritz@googlemail.com
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Thu, 6 Jul 2017 03:50:58 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Date: Wed, 12 Jul 2017 13:44:20 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] mwifiex: fix compile warning of unused variable
+Date: Thu,  6 Jul 2017 15:50:33 +0800
+Message-Id: <1499327433-70786-1-git-send-email-shawn.lin@rock-chips.com> (sfid-20170706_095105_011566_9E337295)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a trivial debugfs file permission issue. Debugfs
-file ack_to has no write function, so S_IWUSR gets purged.
+We got a compile warning shows below:
 
-Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+drivers/net/wireless/marvell/mwifiex/sdio.c: In function
+'mwifiex_sdio_remove':
+drivers/net/wireless/marvell/mwifiex/sdio.c:377:6: warning: variable
+'ret' set but not used [-Wunused-but-set-variable]
+
+Per the code, it didn't check if mwifiex_sdio_read_fw_status
+finish successfully. We should at least check the return of
+mwifiex_sdio_read_fw_status, otherwise the following check of
+firmware_stat and adapter->mfg_mode is pointless as the device
+is probably dead.
+
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index c56e40f..674451a 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1405,7 +1405,7 @@ int ath9k_init_debug(struct ath_hw *ah)
- #endif
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index f81a006..fd5183c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -390,7 +390,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
  
- #ifdef CONFIG_ATH9K_DYNACK
--	debugfs_create_file("ack_to", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
-+	debugfs_create_file("ack_to", S_IRUSR, sc->debug.debugfs_phy,
- 			    sc, &fops_ackto);
- #endif
- 	debugfs_create_file("tpc", S_IRUSR | S_IWUSR,
+ 	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
+-	if (firmware_stat == FIRMWARE_READY_SDIO && !adapter->mfg_mode) {
++	if (!ret && firmware_stat == FIRMWARE_READY_SDIO &&
++	    !adapter->mfg_mode) {
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
 -- 
-2.1.4
+1.9.1
