@@ -1,130 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0114.outbound.protection.outlook.com ([104.47.0.114]:58547
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756075AbdGKR03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 13:26:29 -0400
-Subject: Re: WARN_ON_ONCE(work > weight) in napi_poll()
-To: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Networking <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-References: <26670dce-4dd2-f8e4-0e14-90d74257e739@virtuozzo.com>
- <87wp7oia6j.fsf@kamboji.qca.qualcomm.com>
- <952aefe1-6f6a-3978-e7e7-5e74076f26a3@virtuozzo.com>
- <b418d63d-d348-90b5-ea58-6478a1a037f5@qca.qualcomm.com>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <8cb28d9b-41c9-043c-16ca-f0bea41944e9@virtuozzo.com> (sfid-20170711_192647_938509_39928266)
-Date: Tue, 11 Jul 2017 20:28:44 +0300
-MIME-Version: 1.0
-In-Reply-To: <b418d63d-d348-90b5-ea58-6478a1a037f5@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36124 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750970AbdGFOlW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Jul 2017 10:41:22 -0400
+Received: by mail-pf0-f194.google.com with SMTP id z6so549586pfk.3
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:41:22 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v3 00/21] rsi driver enhancements
+Date: Thu,  6 Jul 2017 20:07:03 +0530
+Message-Id: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164126_691112_7A0F96ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2017 12:24 AM, Ryan Hsu wrote:
-> On 07/04/2017 08:59 AM, Andrey Ryabinin wrote:
-> 
->> On 07/04/2017 04:49 PM, Kalle Valo wrote:
->>> Andrey Ryabinin <aryabinin@virtuozzo.com> writes:
->>>
->>>> I occasionally hit WARN_ON_ONCE(work > weight); in napi_poll() on a
->>>> laptop with ath10k card.
->>>>
->>>>
->>>> [37207.593370] ------------[ cut here ]------------
->>>> [37207.593380] WARNING: CPU: 0 PID: 7 at ../net/core/dev.c:5274
->>>> net_rx_action+0x258/0x360
->>>> [37207.593381] Modules linked in: snd_hda_codec_realtek snd_soc_skl
->>>> snd_hda_codec_generic snd_soc_skl_ipc snd_soc_sst_ipc snd_soc_sst_dsp
->>>> snd_hda_ext_core snd_soc_sst_match snd_soc_core rtsx_pci_sdmmc
->>>> mmc_core snd_pcm_dmaengine x86_pkg_temp_thermal snd_hda_intel uvcvideo
->>>> kvm_intel videobuf2_vmalloc kvm snd_hda_codec snd_hwdep btusb
->>>> videobuf2_memops btintel snd_hda_core videobuf2_v4l2 bluetooth
->>>> irqbypass snd_pcm videobuf2_core crc32c_intel videodev mei_me mei
->>>> rtsx_pci intel_lpss_pci intel_lpss_acpi intel_vbtn intel_lpss mfd_core
->>>> tpm_tis intel_hid tpm_tis_core tpm efivarfs
->>>> [37207.593430] CPU: 0 PID: 7 Comm: ksoftirqd/0 Not tainted 4.11.7 #28
->>>> [37207.593432] Hardware name: Dell Inc. XPS 13 9360/0839Y6, BIOS 1.3.5 05/08/2017
->>> What firmware and hardware versions exactly? The dmesg output when
->>> ath10k loads is preferred. As you are using XPS 13 I'm guessing it's one
->>> of QCA6174 family.
->>>
->> Yes it's qca6174.
->>
->> $ dmesg |grep ath10
->> [    0.624828] ath10k_pci 0000:3a:00.0: enabling device (0000 -> 0002)
->> [    0.626370] ath10k_pci 0000:3a:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
->> [    0.837862] ath10k_pci 0000:3a:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 1a56:1535
->> [    0.837863] ath10k_pci 0000:3a:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 0 testmode 0
->> [    0.838388] ath10k_pci 0000:3a:00.0: firmware ver WLAN.RM.2.0-00180-QCARMSWPZ-1 api 4 features wowlan,ignore-otp,no-4addr-pad crc32 75dee6c5
->> [    0.900606] ath10k_pci 0000:3a:00.0: board_file api 2 bmi_id N/A crc32 19644295
->> [    3.020681] ath10k_pci 0000:3a:00.0: htt-ver 3.26 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
->> [    9.574087] ath10k_pci 0000:3a:00.0 wlp58s0: renamed from wlan0
->>
-> 
-> I can't reproduce of this past few days, not sure if this is due to the amsdu packets received from AP, would you mind share what Ap you're using?
-> And if there any specific steps you're doing?
-> 
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-The bug is quite rare, and I don't know how to reproduce it on purpose. It just happens once in several days
-and it happened with different APs. 
+This patch series includes some fixes and enhancements in Tx and Rx
+data paths. Connection in open security and data traffic has been
+verified with SDIO and USB variants of 9113 chipset.
 
-Perhaps you could think of some debug patch that could help to understand what's going on? I could carry it and will
-report if warning hits again. 
+Changes in v3 series:
+1/21: Newly added patch in v3 which makes use of BUILD_BUG_ON to avoid
+      potential issue in future(Kalle Valo)
+2/21: Added missing change in debugfs fsm_state array(Kalle Valo)
+12/21, 14/21, 15/21, 16/21: Pavani's name corrected
 
-FYI I applied small debug patch bellow, just to understand where exactly we bail out with too big quota.
+Changes in v2 series:
+1/20: Get rid of __LITTLE_ENDIAN flag usage
+11/20: Get rid of __LITTLE_ENDIAN flag usage
+12/20: Changes to match modified 11/20
+13/20: Get rid of __LITTLE_ENDIAN flag usage
+14/20: Changes to match modified 13/20
+15/20: Changes to match modified 13/20
+19/20: mutex_init was missed for rx_lock in v1
 
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Amitkumar Karwar (2):
+  rsi: use BUILD_BUG_ON check for fsm_state
+  rsi: correct the logic of deriving queue number
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 02a3fc81fbe3..02b0cc6ec671 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2548,6 +2548,8 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
-                        goto exit;
-                }
-        }
-+       if (quota > budget)
-+               pr_err("#1 quota too big %d %d %d\n", quota, budget, num_rx_msdus);
- 
-        while (quota < budget) {
-                /* no more data to receive */
-@@ -2568,6 +2570,8 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
-                        goto exit;
-                }
-        }
-+       if (quota > budget)
-+               pr_err("#2 quota too big %d %d %d\n", quota, budget, num_rx_msdus);
- 
-        /* From NAPI documentation:
-         *  The napi poll() function may also process TX completions, in which
---
+Karun Eagalapati (13):
+  rsi: fix sdio card reset problem
+  rsi: chip reset for SDIO interface
+  rsi: correct SDIO disconnect path handling
+  rsi: card reset for USB interface
+  rsi: USB tx headroom cleanup
+  rsi: rename USB endpoint macros
+  rsi: choose correct endpoint based on queue.
+  rsi: set immediate wakeup bit
+  rsi: rename variable in_sdio_litefi_irq
+  rsi: Optimise sdio claim and release host
+  rsi: SDIO Rx packet processing enhancement
+  rsi: use separate mutex lock for receive thread
+  rsi: Rename mutex tx_rxlock to the tx_lock.
 
+Pavani Muthyala (4):
+  rsi: management frame descriptor preparation cleanup
+  rsi: data packet descriptor code cleanup
+  rsi: data packet descriptor enhancements
+  rsi: separate function for data packet descriptor
 
-It gave me this:
+Prameela Rani Garnepudi (2):
+  rsi: changes in eeprom read frame
+  rsi: separate function for management packet descriptor
 
-[118648.825347] #1 quota too big 72 64 16
-[118648.825351] #2 quota too big 72 64 16
-[118648.825471] ------------[ cut here ]------------
-[118648.825484] WARNING: CPU: 0 PID: 0 at ../net/core/dev.c:5274 net_rx_action+0x258/0x360
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  10 +-
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   3 +
+ drivers/net/wireless/rsi/rsi_91x_hal.c      | 270 ++++++++++++++++++----------
+ drivers/net/wireless/rsi/rsi_91x_main.c     |   3 +-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  90 +++++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 154 ++++++++++++----
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  44 +++--
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 118 +++++++++---
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |   6 +-
+ drivers/net/wireless/rsi/rsi_hal.h          |  64 +++++++
+ drivers/net/wireless/rsi/rsi_main.h         |  34 +++-
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  26 ++-
+ drivers/net/wireless/rsi/rsi_sdio.h         |   4 +-
+ drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
+ 14 files changed, 623 insertions(+), 208 deletions(-)
 
-So this means that we didn't met the condition bellow, i.e. skb_queue_empty() returned true.
-
-	ath10k_htt_txrx_compl_task():
-
-		if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
-		    !skb_queue_empty(&htt->rx_in_ord_compl_q)) {
-			resched_napi = true;
-			goto exit;
-		}
-
-> Also WLAN.RM.2.0-00180-QCARMSWPZ-1 firmware is a bit old, could you also update firmware to give it a try?
-> https://github.com/kvalo/ath10k-firmware/tree/master/QCA6174/hw3.0/4.4
-> 
-
-Will try.
+-- 
+2.7.4
