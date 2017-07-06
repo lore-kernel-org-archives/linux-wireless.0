@@ -1,43 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:36811 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753446AbdGJMow (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33689 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752011AbdGFOnY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 08:44:52 -0400
-Received: by mail-wr0-f195.google.com with SMTP id 77so24694932wrb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:44:52 -0700 (PDT)
-From: Simon Dinkin <simondinkin@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Simon Dinkin <simon.dinkin@tandemg.com>
-Subject: [PATCH] mac80211: fix incorrect assignment of reassoc value
-Date: Mon, 10 Jul 2017 15:44:38 +0300
-Message-Id: <1499690678-28147-1-git-send-email-simon.dinkin@tandemg.com> (sfid-20170710_144533_628437_8B347A1A)
+        Thu, 6 Jul 2017 10:43:24 -0400
+Received: by mail-pf0-f196.google.com with SMTP id e199so575137pfh.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:43:23 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [v3 19/21] rsi: SDIO Rx packet processing enhancement
+Date: Thu,  6 Jul 2017 20:07:22 +0530
+Message-Id: <1499351844-2046-20-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164333_884336_134AEBCE)
+In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this fix minor issue in the log message.
-in ieee80211_rx_mgmt_assoc_resp function, when assigning the
-reassoc value from the mgmt frame control:
-ieee80211_is_reassoc_resp function need to be used, instead of
-ieee80211_is_reassoc_req function.
+From: Karun Eagalapati <karun256@gmail.com>
 
-Signed-off-by: Simon Dinkin <simon.dinkin@tandemg.com>
+Newer firmware sends information about number of blocks through
+interrupt only. We don't need to read extra register for this.
+This patch adds needed driver changes for this enhancment. The
+change here is backward compatible
+
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 34 ++++++++++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_main.h         |  1 +
+ drivers/net/wireless/rsi/rsi_sdio.h         |  1 +
+ 3 files changed, 28 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7be7917..0467f9f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3159,7 +3159,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 	if (len < 24 + 6)
- 		return;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index df2a63b..b6d0e2a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -69,20 +69,37 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ static int rsi_process_pkt(struct rsi_common *common)
+ {
+ 	struct rsi_hw *adapter = common->priv;
++	struct rsi_91x_sdiodev *dev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	u8 num_blks = 0;
+ 	u32 rcv_pkt_len = 0;
+ 	int status = 0;
++	u8 value = 0;
  
--	reassoc = ieee80211_is_reassoc_req(mgmt->frame_control);
-+	reassoc = ieee80211_is_reassoc_resp(mgmt->frame_control);
- 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
- 	status_code = le16_to_cpu(mgmt->u.assoc_resp.status_code);
- 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
+-	status = rsi_sdio_read_register(adapter,
+-					SDIO_RX_NUM_BLOCKS_REG,
+-					&num_blks);
++	num_blks = ((adapter->interrupt_status & 1) |
++			((adapter->interrupt_status >> RECV_NUM_BLOCKS) << 1));
+ 
+-	if (status) {
+-		rsi_dbg(ERR_ZONE,
+-			"%s: Failed to read pkt length from the card:\n",
+-			__func__);
+-		return status;
++	if (!num_blks) {
++		status = rsi_sdio_read_register(adapter,
++						SDIO_RX_NUM_BLOCKS_REG,
++						&value);
++		if (status) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Failed to read pkt length from the card:\n",
++				__func__);
++			return status;
++		}
++		num_blks = value & 0x1f;
+ 	}
++
++	if (dev->write_fail == 2)
++		rsi_sdio_ack_intr(common->priv, (1 << MSDU_PKT_PENDING));
++
++	if (unlikely(!num_blks)) {
++		dev->write_fail = 2;
++		return -1;
++	}
++
+ 	rcv_pkt_len = (num_blks * 256);
+ 
+ 	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
+@@ -224,6 +241,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 			mutex_unlock(&common->tx_rxlock);
+ 			return;
+ 		}
++		adapter->interrupt_status = isr_status;
+ 
+ 		if (isr_status == 0) {
+ 			rsi_set_event(&common->tx_thread.event);
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 699e9da..c2e1c1c 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -275,6 +275,7 @@ struct rsi_hw {
+ 	bool blcmd_timer_expired;
+ 	u32 flash_capacity;
+ 	struct eepromrw_info eeprom;
++	u32 interrupt_status;
+ 	u8 dfs_region;
+ 	void *rsi_dev;
+ 	struct rsi_host_intf_ops *host_intf_ops;
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index cbbc0448..3cf6756 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -41,6 +41,7 @@ enum sdio_interrupt_type {
+ #define PKT_BUFF_FULL                           1
+ #define PKT_MGMT_BUFF_FULL                      2
+ #define MSDU_PKT_PENDING                        3
++#define RECV_NUM_BLOCKS                         4
+ /* Interrupt Bit Related Macros */
+ #define PKT_BUFF_AVAILABLE                      1
+ #define FW_ASSERT_IND                           2
 -- 
 2.7.4
