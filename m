@@ -1,52 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:36297 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbdGQTVR (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33092 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751861AbdGFOmP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 15:21:17 -0400
-Received: by mail-wm0-f45.google.com with SMTP id t70so24845645wmt.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 12:21:16 -0700 (PDT)
-Subject: Re: [PATCH 11/11] net: brcmfmac: constify pci_device_id.
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>, kvalo@codeaurora.org,
-        hante.meuleman@broadcom.com, franky.lin@broadcom.com,
-        wright.feng@cypress.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-References: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <aa683182-5d94-1b63-2c22-fec3775ae7d3@broadcom.com> (sfid-20170717_212132_396549_82030EB5)
-Date: Mon, 17 Jul 2017 21:21:12 +0200
-MIME-Version: 1.0
-In-Reply-To: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 6 Jul 2017 10:42:15 -0400
+Received: by mail-pf0-f196.google.com with SMTP id e199so570983pfh.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:42:06 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [v3 06/21] rsi: card reset for USB interface
+Date: Thu,  6 Jul 2017 20:07:09 +0530
+Message-Id: <1499351844-2046-7-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164219_913195_9DBECF29)
+In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Karun Eagalapati <karun256@gmail.com>
 
+We need to reset the chip in teardown path so that it can work
+next time when driver is loaded. This patch adds support for this
+reset configuration for USB.
 
-On 17-07-17 20:16, Arvind Yadav wrote:
-> pci_device_id are not supposed to change at runtime. All functions
-> working with pci_device_id provided by <linux/pci.h> work with
-> const pci_device_id. So mark the non-const structs as const.
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 72 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_usb.h     |  1 +
+ 2 files changed, 73 insertions(+)
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> index f878706..e6e9b00 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -1951,7 +1951,7 @@ static const struct dev_pm_ops brcmf_pciedrvr_pm = {
->  	BRCM_PCIE_VENDOR_ID_BROADCOM, dev_id,\
->  	subvend, subdev, PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0 }
->  
-> -static struct pci_device_id brcmf_pcie_devid_table[] = {
-> +static const struct pci_device_id brcmf_pcie_devid_table[] = {
->  	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
->  	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
->  	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
-> 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index bcd7f45..1d7bb9d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -558,6 +558,77 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 	return status;
+ }
+ 
++static int usb_ulp_read_write(struct rsi_hw *adapter, u16 addr, u32 data,
++			      u16 len_in_bits)
++{
++	int ret;
++
++	ret = rsi_usb_master_reg_write
++			(adapter, RSI_GSPI_DATA_REG1,
++			 ((addr << 6) | ((data >> 16) & 0xffff)), 2);
++	if (ret < 0)
++		return ret;
++
++	ret = rsi_usb_master_reg_write(adapter, RSI_GSPI_DATA_REG0,
++				       (data & 0xffff), 2);
++	if (ret < 0)
++		return ret;
++
++	/* Initializing GSPI for ULP read/writes */
++	rsi_usb_master_reg_write(adapter, RSI_GSPI_CTRL_REG0,
++				 RSI_GSPI_CTRL_REG0_VALUE, 2);
++
++	ret = rsi_usb_master_reg_write(adapter, RSI_GSPI_CTRL_REG1,
++				       ((len_in_bits - 1) | RSI_GSPI_TRIG), 2);
++	if (ret < 0)
++		return ret;
++
++	msleep(20);
++
++	return 0;
++}
++
++static int rsi_reset_card(struct rsi_hw *adapter)
++{
++	int ret;
++
++	rsi_dbg(INFO_ZONE, "Resetting Card...\n");
++	rsi_usb_master_reg_write(adapter, RSI_TA_HOLD_REG, 0xE, 4);
++
++	/* This msleep will ensure Thread-Arch processor to go to hold
++	 * and any pending dma transfers to rf in device to finish.
++	 */
++	msleep(100);
++
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1,
++				 RSI_ULP_WRITE_2, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_2,
++				 RSI_ULP_WRITE_0, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_1,
++				 RSI_ULP_WRITE_50, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_DELAY_TIMER_2,
++				 RSI_ULP_WRITE_0, 32);
++	if (ret < 0)
++		goto fail;
++	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_ENABLE,
++				 RSI_ULP_TIMER_ENABLE, 32);
++	if (ret < 0)
++		goto fail;
++
++	rsi_dbg(INFO_ZONE, "Reset card done\n");
++	return ret;
++
++fail:
++	rsi_dbg(ERR_ZONE, "Reset card failed\n");
++	return ret;
++}
++
+ /**
+  * rsi_probe() - This function is called by kernel when the driver provided
+  *		 Vendor and device IDs are matched. All the initialization
+@@ -641,6 +712,7 @@ static void rsi_disconnect(struct usb_interface *pfunction)
+ 		return;
+ 
+ 	rsi_mac80211_detach(adapter);
++	rsi_reset_card(adapter);
+ 	rsi_deinit_usb_interface(adapter);
+ 	rsi_91x_deinit(adapter);
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 59513ac..2c5c0e7 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -25,6 +25,7 @@
+ #define USB_INTERNAL_REG_1           0x25000
+ #define RSI_USB_READY_MAGIC_NUM      0xab
+ #define FW_STATUS_REG                0x41050012
++#define RSI_TA_HOLD_REG              0x22000844
+ 
+ #define USB_VENDOR_REGISTER_READ     0x15
+ #define USB_VENDOR_REGISTER_WRITE    0x16
+-- 
+2.7.4
