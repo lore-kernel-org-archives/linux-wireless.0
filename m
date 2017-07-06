@@ -1,40 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44084 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752650AbdGCL3s (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.130]:52688 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751741AbdGFHzh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jul 2017 07:29:48 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Reizer\, Eyal" <eyalr@ti.com>
-Cc: "\,Tony Lindgren" <tony@atomide.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] wlcore: add missing nvs file name info for wilink8
-References: <8665E2433BC68541A24DFFCA87B70F5B363E1A3D@DFRE01.ent.ti.com>
-Date: Mon, 03 Jul 2017 14:29:32 +0300
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B363E1A3D@DFRE01.ent.ti.com>
-        (Eyal Reizer's message of "Mon, 3 Jul 2017 10:54:43 +0000")
-Message-ID: <87y3s5kbc3.fsf@kamboji.qca.qualcomm.com> (sfid-20170703_132951_918053_FDE39A06)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 6 Jul 2017 03:55:37 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-wireless@vger.kernel.org, akarwar@marvell.com
+Cc: briannorris@google.com, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Subject: [PATCH v2] mwifiex: uninit wakeup info in the error handling
+Date: Thu,  6 Jul 2017 15:55:28 +0800
+Message-Id: <1499327728-25388-1-git-send-email-jeffy.chen@rock-chips.com> (sfid-20170706_095558_791052_63183DE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Reizer, Eyal" <eyalr@ti.com> writes:
+We inited wakeup info at the beginning of mwifiex_add_card, so we need
+to uninit it in the error handling.
 
-> When working with wl18xx the nvs file is used for defining an alternate
-> mac address and override the default mac address that is stored inside
-> the wl18xx chip.
-> update the structure field with the same default nvs file name that has
-> been used in the past, otherwise userspace backward compatibility is
-> broken when upgrading from older kernels, as the alternate mac address
-> would not be read from the nvs that is already present in the file system
-> (lib/firmware/ti-connectivity/wl1271-nvs.bin) causing mac address change
-> of the wlan interface.
->
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
+It's much the same as what we did in:
+36908c4 mwifiex: uninit wakeup info when removing device
 
-Should we also cc stable? And a Fixes line would be nice.
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 
+---
+
+Changes in v2:
+Uninit wakeup when _mwifiex_fw_dpc failed too.
+
+ drivers/net/wireless/marvell/mwifiex/main.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index f2600b8..097a899 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -665,8 +665,11 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 		release_firmware(adapter->firmware);
+ 		adapter->firmware = NULL;
+ 	}
+-	if (init_failed)
++	if (init_failed) {
++		if (adapter->irq_wakeup >= 0)
++			device_init_wakeup(adapter->dev, false);
+ 		mwifiex_free_adapter(adapter);
++	}
+ 	/* Tell all current and future waiters we're finished */
+ 	complete_all(fw_done);
+ 
+@@ -1655,6 +1658,8 @@ mwifiex_add_card(void *card, struct completion *fw_done,
+ 		mwifiex_shutdown_drv(adapter);
+ 	}
+ err_kmalloc:
++	if (adapter->irq_wakeup >= 0)
++		device_init_wakeup(adapter->dev, false);
+ 	mwifiex_free_adapter(adapter);
+ 
+ err_init_sw:
 -- 
-Kalle Valo
+2.1.4
