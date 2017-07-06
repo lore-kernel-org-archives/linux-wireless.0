@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:37977 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751860AbdGVNXZ (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33432 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750896AbdGFOld (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Jul 2017 09:23:25 -0400
-Date: Sat, 22 Jul 2017 15:09:54 +0200
-From: Greg KH <gregkh@linux.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
-Subject: Re: New Realtek driver
-Message-ID: <20170722130954.GA9321@kroah.com> (sfid-20170722_152328_536246_D7798F63)
-References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
- <20170721150820.GC18198@kroah.com>
- <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net>
- <20170722035119.GA31377@kroah.com>
- <f0c99e4c-52bf-0b32-df56-afbcee4b879e@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f0c99e4c-52bf-0b32-df56-afbcee4b879e@lwfinger.net>
+        Thu, 6 Jul 2017 10:41:33 -0400
+Received: by mail-pg0-f65.google.com with SMTP id u62so500519pgb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:41:32 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v3 01/21] rsi: use BUILD_BUG_ON check for fsm_state
+Date: Thu,  6 Jul 2017 20:07:04 +0530
+Message-Id: <1499351844-2046-2-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164135_924099_8728C9FC)
+In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 22, 2017 at 07:51:20AM -0500, Larry Finger wrote:
-> On 07/21/2017 10:51 PM, Greg KH wrote:
-> > On Fri, Jul 21, 2017 at 07:36:41PM -0500, Larry Finger wrote:
-> > > On 07/21/2017 10:08 AM, Greg KH wrote:
-> > > > On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
-> > > > > Kalle and Greg,
-> > > > > 
-> > > > > Once again I find myself in the awkward position of needing to submit code
-> > > > > to two different trees, i.e. wireless and staging.
-> > > > > 
-> > > > > The code in question concerns a new Realtek device, the RTL8822BE. The
-> > > > > device is already shipping, and Realtek would like it to be available in
-> > > > > kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
-> > > > > Realtek that 3.14 would not be possible, at least in the wireless tree. What
-> > > > > I plan to do is submit the changes in the existing drivers through wireless,
-> > > > > and the three totally new drivers through staging. My expectation is that
-> > > > > this code would live for a relatively short time there, but going that route
-> > > > > would give time for the code to be reviewed properly, but still be available
-> > > > > in a kernel driver. All of the new code will be available in a GitHub repo
-> > > > > maintained by Realtek for those users whose distros do not configure
-> > > > > anything in staging.
-> > > > > 
-> > > > > For my part, I will push the wireless tree material as fast as I can and
-> > > > > hope there is time available near the end of the 4.13-rcX sequence for the
-> > > > > material to reach 4.14-rc1.
-> > > > 
-> > > > Why do you need a staging driver to have changes in the wireless tree?
-> > > > Staging drivers should be self-contained and not rely on anything
-> > > > outside of it in order to work properly (i.e. don't add code to the real
-> > > > kernel only for a staging driver.)
-> > > 
-> > > Greg,
-> > > 
-> > > To add the new driver to staging without any other changes, I will need to
-> > > duplicate a lot of code. That is no problem, other than the duplicate entry
-> > > points that will show up in a makeallyes configuration. If that is what you
-> > > want, then that is what I will do.
-> > 
-> > What do you mean by "duplicate entry points"?  Duplicate global symbols?
-> > Something else?
-> 
-> Of course, I meant duplicate global symbols.
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Just make the staging driver only be built as a module then there should
-not be the chance for any global symbols to occur.  We've done that many
-times in the past, probably for these same drivers...
+Whenever new fsm_state enum element is added, fsm_state array
+also needs to be updated. If this change is missed, we may end
+up doing invalid access in array. BUILD_BUG_ON check will help
+to avoid this problem.
 
-thanks,
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c | 2 ++
+ drivers/net/wireless/rsi/rsi_main.h        | 4 +++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+index 4c0a493..f3b91b6 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
++++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+@@ -138,6 +138,8 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
+ 	seq_puts(seq, "==> RSI STA DRIVER STATUS <==\n");
+ 	seq_puts(seq, "DRIVER_FSM_STATE: ");
+ 
++	BUILD_BUG_ON(ARRAY_SIZE(fsm_state) != NUM_FSM_STATES);
++
+ 	if (common->fsm_state <= FSM_MAC_INIT_DONE)
+ 		seq_printf(seq, "%s", fsm_state[common->fsm_state]);
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index f398525..72675eb 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -40,7 +40,9 @@ enum RSI_FSM_STATES {
+ 	FSM_RESET_MAC_SENT,
+ 	FSM_RADIO_CAPS_SENT,
+ 	FSM_BB_RF_PROG_SENT,
+-	FSM_MAC_INIT_DONE
++	FSM_MAC_INIT_DONE,
++
++	NUM_FSM_STATES
+ };
+ 
+ extern u32 rsi_zone_enabled;
+-- 
+2.7.4
