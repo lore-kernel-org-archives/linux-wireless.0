@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:45406 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbdGFIrh (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:22819 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752056AbdGFWoM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 04:47:37 -0400
-Message-ID: <595DF921.2020108@rock-chips.com> (sfid-20170706_104759_945620_5F9822DC)
-Date: Thu, 06 Jul 2017 16:47:29 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+        Thu, 6 Jul 2017 18:44:12 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Srinivas Dasari <dasaris@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 1/4] cfg80211: Check if PMKID attribute is of expected size
+Date: Fri, 7 Jul 2017 01:43:39 +0300
+Message-ID: <1499381022-5389-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20170707_004415_208951_ECDD2734)
 MIME-Version: 1.0
-To: Brian Norris <briannorris@chromium.org>
-CC: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-        Xinming Hu <huxm@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-kernel@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: uninit wakeup info when failed to add card
-References: <1499068470-8022-1-git-send-email-jeffy.chen@rock-chips.com> <20170705180813.GA115427@google.com>
-In-Reply-To: <20170705180813.GA115427@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi brian,
+From: Srinivas Dasari <dasaris@qti.qualcomm.com>
 
-On 07/06/2017 02:08 AM, Brian Norris wrote:
-> On Mon, Jul 03, 2017 at 03:54:30PM +0800, Jeffy Chen wrote:
->> We inited wakeup info at the beginning of mwifiex_add_card, so we need
->> to uninit it in the error handling.
->>
->> It's much the same as what we did in:
->> 36908c4 mwifiex: uninit wakeup info when removing device
->
-> Yeah, I noticed I hadn't covered all the error cases, so your change is
-> part of the fix. But you're not covering the error paths when the
-> firmware doesn't load correctly -- this happens asynchronously to
-> mwifiex_add_card(). i.e., you need to fixup the error paths in
-> _mwifiex_fw_dpc() too.
-right, so we need to uninit it before every mwifiex_free_adapter :)
->
-> Brian
->
->> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->>
->> ---
->>
->>   drivers/net/wireless/marvell/mwifiex/main.c | 2 ++
->>   1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
->> index f2600b8..17d2cbe 100644
->> --- a/drivers/net/wireless/marvell/mwifiex/main.c
->> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
->> @@ -1655,6 +1655,8 @@ mwifiex_add_card(void *card, struct completion *fw_done,
->>   		mwifiex_shutdown_drv(adapter);
->>   	}
->>   err_kmalloc:
->> +	if (adapter->irq_wakeup >= 0)
->> +		device_init_wakeup(adapter->dev, false);
->>   	mwifiex_free_adapter(adapter);
->>
->>   err_init_sw:
->> --
->> 2.1.4
->>
->>
->
->
->
+nla policy checks for only maximum length of the attribute data
+when the attribute type is NLA_BINARY. If userspace sends less
+data than specified, the wireless drivers may access illegal
+memory. When type is NLA_UNSPEC, nla policy check ensures that
+userspace sends minimum specified length number of bytes.
+
+Remove type assignment to NLA_BINARY from nla_policy of
+NL80211_ATTR_PMKID to make this NLA_UNSPEC and to make sure minimum
+WLAN_PMKID_LEN bytes are received from userspace with
+NL80211_ATTR_PMKID.
+
+Fixes: 67fbb16be69d ("nl80211: PMKSA caching support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Srinivas Dasari <dasaris@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ net/wireless/nl80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5487cd7..364291c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -291,8 +291,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_4ADDR] = { .type = NLA_U8 },
+-	[NL80211_ATTR_PMKID] = { .type = NLA_BINARY,
+-				 .len = WLAN_PMKID_LEN },
++	[NL80211_ATTR_PMKID] = { .len = WLAN_PMKID_LEN },
+ 	[NL80211_ATTR_DURATION] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_COOKIE] = { .type = NLA_U64 },
+ 	[NL80211_ATTR_TX_RATES] = { .type = NLA_NESTED },
+-- 
+2.7.4
