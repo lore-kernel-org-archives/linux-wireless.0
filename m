@@ -1,52 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:34513 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbdGQUgk (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:35710 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751873AbdGFUCC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 16:36:40 -0400
-Received: by mail-wm0-f48.google.com with SMTP id 70so24781688wmo.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 13:36:40 -0700 (PDT)
-Subject: Re: BUG: brcmfmac: add firmware feature detection for gscan feature
- breaks 43430a1
-To: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-References: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk>
- <e6635794-7c35-1a46-2d5b-68824c7b0657@mnementh.co.uk>
- <ff344ee3-3feb-6886-8007-d8ed00386424@broadcom.com>
- <c322c7c6-823b-0d36-8968-101d143b3220@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6c512250-5299-0cad-675b-e7780e999b58@broadcom.com> (sfid-20170717_223644_609961_40F18137)
-Date: Mon, 17 Jul 2017 22:36:37 +0200
+        Thu, 6 Jul 2017 16:02:02 -0400
+Subject: Re: ath10k: ret used but uninitialized (was: Re: ath10k: add initial
+ SDIO support)
+To: Geert Uytterhoeven <geert@linux-m68k.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <CAMuHMdWVYA4TejcTjOQh7CBfFwJ=q59pzvuHrpH91Kx=-BK9fg@mail.gmail.com>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <c72d2e7a-195d-bcac-4ce5-f3051531664c@gmail.com> (sfid-20170706_220235_249556_1DBF77DD)
+Date: Thu, 6 Jul 2017 22:01:57 +0200
 MIME-Version: 1.0
-In-Reply-To: <c322c7c6-823b-0d36-8968-101d143b3220@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CAMuHMdWVYA4TejcTjOQh7CBfFwJ=q59pzvuHrpH91Kx=-BK9fg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 17-07-17 22:13, Ian Molton wrote:
-> On 17/07/17 20:53, Arend van Spriel wrote:
->>> 2) The firmware is failing when asked to handle the new requiests, and
->>>    is going to la-la land.
->> taken a wrong turn straight into la-la land.
+> With gcc 4.1.2:
 > 
-> Doh!
+> drivers/net/wireless/ath/ath10k/sdio.c: In function
+> ‘ath10k_sdio_mbox_rxmsg_pending_handler’:
+> drivers/net/wireless/ath/ath10k/sdio.c:676: warning: ‘ret’ may be used
+> uninitialized in this function
 > 
->>> I have version wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327)
->>> FWID 01-4527cfab
->> Not so much newer firmware, but I used a different chip when
->> implementing the multi-scheduled scan patches. I tried some other
->> devices, but not the bcm4343{0,8}. Now as far as I can see over here the
->> brcmfmac43430-sdio.bin is not built with gscan support so it should just
->> return firmware errorcode, ie. -23. So it would be interesting to see
->> what firmware has to say. Can you load the driver with
->> ignore_probe_fail=1 and dump the forensics file in debugfs.
+>> +
+>> +       *done = true;
+>> +
+>> +       /* Copy the lookahead obtained from the HTC register table into our
+>> +        * temp array as a start value.
+>> +        */
+>> +       lookaheads[0] = msg_lookahead;
+>> +
+>> +       timeout = jiffies + SDIO_MBOX_PROCESSING_TIMEOUT_HZ;
 > 
-> I don't appear to get anything useful in debugfs. Where should I be looking?
+> Although very unlikely due to the long timeout, if the code is preempted here,
+> and the loop below never entered, ret will indeed be uninitialized.
+> 
+> It's unclear to me what the proper initialization would be, though, so
+> that's why I didn't send a patch.
+> 
+I think it would be best to use 0 as initial value of ret in this case.
+This will make all other interrupts be processed in a normal way.
 
-In <debugfs_mountpoint>/brcmfmac/*/forensics, but you have to load the
-driver with modules parameter 'ignore_probe_fail=1' to avoid the driver
-remove tearing down all debugfs stuff.
+Kalle: Should I create a new patch (initializing ret with zero)?
+
+>> +       while (time_before(jiffies, timeout)) {
+>> +               /* Try to allocate as many HTC RX packets indicated by
+>> +                * n_lookaheads.
+>> +                */
+>> +               ret = ath10k_sdio_mbox_rx_alloc(ar, lookaheads,
+>> +                                               n_lookaheads);
+>> +               if (ret)
+>> +                       break;
+>> +
+>> +               if (ar_sdio->n_rx_pkts >= 2)
+>> +                       /* A recv bundle was detected, force IRQ status
+>> +                        * re-check again.
+>> +                        */
+>> +                       *done = false;
+>> +
+>> +               ret = ath10k_sdio_mbox_rx_fetch(ar);
+>> +
+>> +               /* Process fetched packets. This will potentially update
+>> +                * n_lookaheads depending on if the packets contain lookahead
+>> +                * reports.
+>> +                */
+>> +               n_lookaheads = 0;
+>> +               ret = ath10k_sdio_mbox_rx_process_packets(ar,
+>> +                                                         lookaheads,
+>> +                                                         &n_lookaheads);
+>> +
+>> +               if (!n_lookaheads || ret)
+>> +                       break;
+>> +
+>> +               /* For SYNCH processing, if we get here, we are running
+>> +                * through the loop again due to updated lookaheads. Set
+>> +                * flag that we should re-check IRQ status registers again
+>> +                * before leaving IRQ processing, this can net better
+>> +                * performance in high throughput situations.
+>> +                */
+>> +               *done = false;
+>> +       }
+>> +
+>> +       if (ret && (ret != -ECANCELED))
+>> +               ath10k_warn(ar, "failed to get pending recv messages: %d\n",
+>> +                           ret);
+>> +
+>> +       return ret;
+>> +}
+> 
+>> +static void ath10k_sdio_irq_handler(struct sdio_func *func)
+>> +{
+>> +       struct ath10k_sdio *ar_sdio = sdio_get_drvdata(func);
+>> +       struct ath10k *ar = ar_sdio->ar;
+>> +       unsigned long timeout;
+>> +       bool done = false;
+>> +       int ret;
+> 
+> drivers/net/wireless/ath/ath10k/sdio.c: In function ‘ath10k_sdio_irq_handler’:
+> drivers/net/wireless/ath/ath10k/sdio.c:1331: warning: ‘ret’ may be
+> used uninitialized in this function
+> 
+>> +
+>> +       /* Release the host during interrupts so we can pick it back up when
+>> +        * we process commands.
+>> +        */
+>> +       sdio_release_host(ar_sdio->func);
+>> +
+>> +       timeout = jiffies + ATH10K_SDIO_HIF_COMMUNICATION_TIMEOUT_HZ;
+> 
+> Same here.
+> 
+> Should ret be preinitialized to 0, -ECANCELED, or something else?
+> 
+ret = 0 or ret = -ECANCELED, will result in no warning message.
+-ETIMEDOUT could be used perhaps.
+
+Note that the function is a void function so the error will not get
+propagated.
+
+I am fine with ret = 0 in this case as well.
+>> +       while (time_before(jiffies, timeout) && !done) {
+>> +               ret = ath10k_sdio_mbox_proc_pending_irqs(ar, &done);
+>> +               if (ret)
+>> +                       break;
+>> +       }
+>> +
+>> +       sdio_claim_host(ar_sdio->func);
+>> +
+>> +       wake_up(&ar_sdio->irq_wq);
+>> +
+>> +       if (ret && ret != -ECANCELED)
+>> +               ath10k_warn(ar, "failed to process pending SDIO interrupts: %d\n",
+>> +                           ret);
+>> +}
+> 
+> Gr{oetje,eeting}s,
+> 
+>                          Geert
+> 
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> 
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                  -- Linus Torvalds
+> 
