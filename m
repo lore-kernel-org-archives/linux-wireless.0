@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:11662
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751684AbdG0XHw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 19:07:52 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 11/12] qtnfmac: remove function qtnf_cmd_skb_put_action
-Date: Fri, 28 Jul 2017 02:06:53 +0300
-Message-Id: <20170727230654.30850-12-sergey.matyukevich.os@quantenna.com> (sfid-20170728_013043_058595_14189A3B)
-In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+Received: from lucky1.263xmail.com ([211.157.147.133]:55335 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750922AbdGFISz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Jul 2017 04:18:55 -0400
+Cc: shawn.lin@rock-chips.com, Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] mwifiex: fix compile warning of unused variable
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1499327433-70786-1-git-send-email-shawn.lin@rock-chips.com>
+ <87k23mf15x.fsf@kamboji.qca.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <5adbeb32-7510-d08e-9bb6-c18fd490388c@rock-chips.com> (sfid-20170706_101903_813779_EB13717C)
+Date: Thu, 6 Jul 2017 16:18:56 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87k23mf15x.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function is not used anymore, so remove it.
+Hi Kalle,
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/qlink_util.h | 8 --------
- 1 file changed, 8 deletions(-)
+On 2017/7/6 15:57, Kalle Valo wrote:
+> Shawn Lin <shawn.lin@rock-chips.com> writes:
+> 
+>> We got a compile warning shows below:
+>>
+>> drivers/net/wireless/marvell/mwifiex/sdio.c: In function
+>> 'mwifiex_sdio_remove':
+>> drivers/net/wireless/marvell/mwifiex/sdio.c:377:6: warning: variable
+>> 'ret' set but not used [-Wunused-but-set-variable]
+>>
+>> Per the code, it didn't check if mwifiex_sdio_read_fw_status
+>> finish successfully. We should at least check the return of
+>> mwifiex_sdio_read_fw_status, otherwise the following check of
+>> firmware_stat and adapter->mfg_mode is pointless as the device
+>> is probably dead.
+> 
+> I don't see that warning, any ideas why? My compiler:
+> 
+> gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-index c9e882a3a991..de06c1e20b5b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-@@ -22,14 +22,6 @@
- 
- #include "qlink.h"
- 
--static inline void qtnf_cmd_skb_put_action(struct sk_buff *skb, u16 action)
--{
--	__le16 *buf_ptr;
--
--	buf_ptr = skb_put(skb, sizeof(action));
--	*buf_ptr = cpu_to_le16(action);
--}
--
- static inline void
- qtnf_cmd_skb_put_buffer(struct sk_buff *skb, const u8 *buf_src, size_t len)
- {
--- 
-2.11.0
+I was using gcc-arm-eabi-4.8- , but it doesn't matter.
+
+Could you add W=1 to compile the code, for instance, "make W=1  -j32"
+
+> 
+> 
