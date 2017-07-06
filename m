@@ -1,57 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:13996 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751943AbdGFWoh (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35143 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbdGFOno (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 18:44:37 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Srinivas Dasari <dasaris@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 2/4] cfg80211: Check if NAN service ID is of expected size
-Date: Fri, 7 Jul 2017 01:43:40 +0300
-Message-ID: <1499381022-5389-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20170707_004441_743543_DDAE0441)
-In-Reply-To: <1499381022-5389-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1499381022-5389-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 6 Jul 2017 10:43:44 -0400
+Received: by mail-pf0-f194.google.com with SMTP id q85so563811pfq.2
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:43:39 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [v3 21/21] rsi: Rename mutex tx_rxlock to the tx_lock.
+Date: Thu,  6 Jul 2017 20:07:24 +0530
+Message-Id: <1499351844-2046-22-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164348_459899_D6E9ABC0)
+In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Srinivas Dasari <dasaris@qti.qualcomm.com>
+From: Karun Eagalapati <karun256@gmail.com>
 
-nla policy checks for only maximum length of the attribute data when the
-attribute type is NLA_BINARY. If userspace sends less data than
-specified, cfg80211 may access illegal memory. When type is NLA_UNSPEC,
-nla policy check ensures that userspace sends minimum specified length
-number of bytes.
+We have now added separate lock for Rx. This lock is used to protect
+tx path only
 
-Remove type assignment to NLA_BINARY from nla_policy of
-NL80211_NAN_FUNC_SERVICE_ID to make these NLA_UNSPEC and to make sure
-minimum NL80211_NAN_FUNC_SERVICE_ID_LEN bytes are received from
-userspace with NL80211_NAN_FUNC_SERVICE_ID.
-
-Fixes: a442b761b24 ("cfg80211: add add_nan_func / del_nan_func")
-Cc: stable@vger.kernel.org
-Signed-off-by: Srinivas Dasari <dasaris@qti.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_core.c | 10 +++++-----
+ drivers/net/wireless/rsi/rsi_91x_main.c |  2 +-
+ drivers/net/wireless/rsi/rsi_main.h     |  4 ++--
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 364291c..dcfeae0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -519,7 +519,7 @@ nl80211_bss_select_policy[NL80211_BSS_SELECT_ATTR_MAX + 1] = {
- static const struct nla_policy
- nl80211_nan_func_policy[NL80211_NAN_FUNC_ATTR_MAX + 1] = {
- 	[NL80211_NAN_FUNC_TYPE] = { .type = NLA_U8 },
--	[NL80211_NAN_FUNC_SERVICE_ID] = { .type = NLA_BINARY,
-+	[NL80211_NAN_FUNC_SERVICE_ID] = {
- 				    .len = NL80211_NAN_FUNC_SERVICE_ID_LEN },
- 	[NL80211_NAN_FUNC_PUBLISH_TYPE] = { .type = NLA_U8 },
- 	[NL80211_NAN_FUNC_PUBLISH_BCAST] = { .type = NLA_FLAG },
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 68f04a7..88a1a56 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -268,11 +268,11 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 			break;
+ 		}
+ 
+-		mutex_lock(&common->tx_rxlock);
++		mutex_lock(&common->tx_lock);
+ 
+ 		status = adapter->check_hw_queue_status(adapter, q_num);
+ 		if ((status <= 0)) {
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+ 
+@@ -287,7 +287,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 		skb = rsi_core_dequeue_pkt(common, q_num);
+ 		if (skb == NULL) {
+ 			rsi_dbg(ERR_ZONE, "skb null\n");
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+ 
+@@ -297,14 +297,14 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 			status = rsi_send_data_pkt(common, skb);
+ 
+ 		if (status) {
+-			mutex_unlock(&common->tx_rxlock);
++			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+ 
+ 		common->tx_stats.total_tx_pkt_send[q_num]++;
+ 
+ 		tstamp_2 = jiffies;
+-		mutex_unlock(&common->tx_rxlock);
++		mutex_unlock(&common->tx_lock);
+ 
+ 		if (time_after(tstamp_2, tstamp_1 + (300 * HZ) / 1000))
+ 			schedule();
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 939f568..bb0febb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -220,7 +220,7 @@ struct rsi_hw *rsi_91x_init(void)
+ 
+ 	rsi_init_event(&common->tx_thread.event);
+ 	mutex_init(&common->mutex);
+-	mutex_init(&common->tx_rxlock);
++	mutex_init(&common->tx_lock);
+ 	mutex_init(&common->rx_lock);
+ 
+ 	if (rsi_create_kthread(common,
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 29bccb7..709f767 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -179,8 +179,8 @@ struct rsi_common {
+ 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 1];
+ 	/* Mutex declaration */
+ 	struct mutex mutex;
+-	/* Mutex used between tx/rx threads */
+-	struct mutex tx_rxlock;
++	/* Mutex used for tx thread */
++	struct mutex tx_lock;
+ 	/* Mutex used for rx thread */
+ 	struct mutex rx_lock;
+ 	u8 endpoint;
 -- 
 2.7.4
