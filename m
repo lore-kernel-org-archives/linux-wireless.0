@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f195.google.com ([209.85.217.195]:35778 "EHLO
-        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752249AbdGDMVc (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34915 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751813AbdGFQuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2017 08:21:32 -0400
-Received: by mail-ua0-f195.google.com with SMTP id j53so15117546uaa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 05:21:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170628075711.GA8101@symbol-HP-ZBook-15>
-References: <20170628075711.GA8101@symbol-HP-ZBook-15>
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Date: Tue, 4 Jul 2017 17:51:31 +0530
-Message-ID: <CAFqt6zZVs4A0w35-keKQ-wDhj=sNZKbJdt=pqOeRtX4UVQjEdg@mail.gmail.com> (sfid-20170704_142141_030352_BA06FFBA)
-Subject: Re: [PATCH] rtlwifi: remove dummy function call
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 6 Jul 2017 12:50:15 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: clement.perrochaud@effinnov.com, charles.gorand@effinnov.com,
+        sameo@linux.intel.com
+Cc: linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] nfc: nxp-nci: constify acpi_device_id.
+Date: Thu,  6 Jul 2017 22:20:00 +0530
+Message-Id: <50b7d8e8b297f58a2db0e8fbcc13549666174245.1499359652.git.arvind.yadav.cs@gmail.com> (sfid-20170706_185052_645464_8B555C9B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+acpi_device_id are not supposed to change at runtime. All functions
+working with acpi_device_id provided by <acpi/acpi_bus.h> work with
+const acpi_device_id. So mark the non-const structs as const.
 
-On Wed, Jun 28, 2017 at 1:27 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
-> _rtl92cu_init_usb_aggregation() can be removed as it is dummy one
->
-> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 5 -----
->  1 file changed, 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> index 107c34e..ef8bd71 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> @@ -777,10 +777,6 @@ static void _rtl92cu_init_queue_priority(struct ieee80211_hw *hw,
->                                                    queue_sel);
->  }
->
-> -static void _rtl92cu_init_usb_aggregation(struct ieee80211_hw *hw)
-> -{
-> -}
-> -
->  static void _rtl92cu_init_wmac_setting(struct ieee80211_hw *hw)
->  {
->         u16 value16;
-> @@ -863,7 +859,6 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
->         rtl92c_init_edca(hw);
->         rtl92c_init_rate_fallback(hw);
->         rtl92c_init_retry_function(hw);
-> -       _rtl92cu_init_usb_aggregation(hw);
->         rtlpriv->cfg->ops->set_bw_mode(hw, NL80211_CHAN_HT20);
->         rtl92c_set_min_space(hw, IS_92C_SERIAL(rtlhal->version));
->         _rtl92cu_init_beacon_parameters(hw);
-> --
-> 1.9.1
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   2208	    400	      0	   2608	    a30	drivers/nfc/nxp-nci/i2c.o
 
-Any comment for this patch ?
->
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   2272	    336	      0	   2608	    a30	drivers/nfc/nxp-nci/i2c.o
 
--Souptick
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/nfc/nxp-nci/i2c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+index ff22d76..35d4fc5 100644
+--- a/drivers/nfc/nxp-nci/i2c.c
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -407,7 +407,7 @@ static const struct of_device_id of_nxp_nci_i2c_match[] = {
+ MODULE_DEVICE_TABLE(of, of_nxp_nci_i2c_match);
+ 
+ #ifdef CONFIG_ACPI
+-static struct acpi_device_id acpi_id[] = {
++static const struct acpi_device_id acpi_id[] = {
+ 	{ "NXP7471" },
+ 	{ },
+ };
+-- 
+2.7.4
