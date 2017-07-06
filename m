@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:37406 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751911AbdGSLrO (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33809 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751742AbdGFOvJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 07:47:14 -0400
-Received: by mail-wm0-f47.google.com with SMTP id g127so13344371wmd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jul 2017 04:47:14 -0700 (PDT)
-Subject: Re: brcmfmac bus level addressing issues.
-To: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        brcm80211-dev-list@broadcom.com,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-References: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk>
- <87cdbbc12b504e89d2bd1c33df6a6bf6@mail.gmail.com>
- <5eb895bd-58cf-70fd-3c00-c8fed86aed79@mnementh.co.uk>
- <6fe08666ca09bf3c1d4476fdad8ce97a@mail.gmail.com>
- <222e2bc1-4d8f-8133-4fa7-51a48f3de785@mnementh.co.uk>
- <0395e3f6-6bd9-cbad-0fe2-9a5d32a9baa6@mnementh.co.uk>
- <701af0be-87b6-a397-ae29-a5ba75605588@broadcom.com>
- <feb0cba3-27da-6cab-316f-164867867cd6@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <126c9c73-387e-e718-5ac8-e816ec922989@broadcom.com> (sfid-20170719_134719_231861_98AD3962)
-Date: Wed, 19 Jul 2017 13:47:12 +0200
+        Thu, 6 Jul 2017 10:51:09 -0400
+Received: by mail-qk0-f194.google.com with SMTP id 91so616307qkq.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:51:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <feb0cba3-27da-6cab-316f-164867867cd6@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <87h8z02bxh.fsf@purkki.adurom.net>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1497624881-2315-2-git-send-email-amit.karwar@redpinesignals.com> <87h8z02bxh.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Thu, 6 Jul 2017 20:21:08 +0530
+Message-ID: <CAEhWJFm_J3=F37NgGi+OJa3LVpoNr5-Dz=euJiL0ohjYOBt8Vw@mail.gmail.com> (sfid-20170706_165112_976660_25D25A11)
+Subject: Re: [v2 01/20] rsi: changes in eeprom read frame
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-07-17 00:45, Ian Molton wrote:
+On Thu, Jun 29, 2017 at 12:10 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> EEPROM read frame is sent during device initialization to read mac address.
+>> The format of the frame is modified in firmware to include eeprom length
+>> and offset. This frame does not return firmware version now. Also same
+>> frame is sent again to read rf type and band information.
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> [...]
+>
+>> --- a/drivers/net/wireless/rsi/rsi_main.h
+>> +++ b/drivers/net/wireless/rsi/rsi_main.h
+>> @@ -37,6 +37,7 @@ enum RSI_FSM_STATES {
+>>       FSM_COMMON_DEV_PARAMS_SENT,
+>>       FSM_BOOT_PARAMS_SENT,
+>>       FSM_EEPROM_READ_MAC_ADDR,
+>> +     FSM_EEPROM_READ_RF_TYPE,
+>>       FSM_RESET_MAC_SENT,
+>>       FSM_RADIO_CAPS_SENT,
+>>       FSM_BB_RF_PROG_SENT,
+>
+> Shouldn't you also update fsm_state array, just like Colin fixed earlier
+> this week:
 
-[...]
+Thanks for pointing this out. This has been addressed in v3 series.
 
-> Fair enough - I guess now that its in the kernel it needs fixing before
-> 4.13 - but I would argue that no new features should go into the driver
-> for the short term once that is done. Lets give it a good spring clean.
-> 
-> I am, actually, able to put some time into this, and *want* to help - MY
-> current employer would benefit greatly from this driver becoming stable.
-> 
-> (as it stands, back to back wpasuplpicant runs make it keel over, as
-> does module unload and reload).
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=58828680af495bc4863af3a006f2018c71714665
+>
+> I think a some kind of build time check for this is in order, should be
+> doable with BUILD_BUG_ON().
+>
 
-It is good to get such feedback. We should get in details about this.
-
->> So I am chasing that although I am actually on vacation.
-> 
-> Dude - enjoy your vacation. Seriously.
-> 
-
-[...]
-
->> That really has to wait until I return as well as running some tests on
->> older 4329 and some newer chipsets.
-> 
-> Fair. When do you return? No pressure - it just means I know I can hold
-> off and do something else on my project until then.
-
-Vacation is only this week.
+Sure. I have created a separate patch for this in v3 series.
 
 Regards,
-Arend
+Amitkumar
