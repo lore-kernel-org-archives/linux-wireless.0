@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f172.google.com ([209.85.128.172]:35289 "EHLO
-        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750726AbdGGLTf (ORCPT
+Received: from lucky1.263xmail.com ([211.157.147.133]:45406 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750778AbdGFIrh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 07:19:35 -0400
-Received: by mail-wr0-f172.google.com with SMTP id k67so42305554wrc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 04:19:34 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security@kernel.org" <security@kernel.org>
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
- <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
- <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
- <20170707084640.cv3igibbhhmgsmta@mwanda>
- <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
- <20170707101939.3mgdgc4pvjg6dyyx@mwanda>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <36f255e3-60e6-3ecc-8a47-90ec7df97ec6@broadcom.com> (sfid-20170707_131938_915865_51A94B9C)
-Date: Fri, 7 Jul 2017 13:19:31 +0200
+        Thu, 6 Jul 2017 04:47:37 -0400
+Message-ID: <595DF921.2020108@rock-chips.com> (sfid-20170706_104759_945620_5F9822DC)
+Date: Thu, 06 Jul 2017 16:47:29 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <20170707101939.3mgdgc4pvjg6dyyx@mwanda>
-Content-Type: text/plain; charset=utf-8
+To: Brian Norris <briannorris@chromium.org>
+CC: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: uninit wakeup info when failed to add card
+References: <1499068470-8022-1-git-send-email-jeffy.chen@rock-chips.com> <20170705180813.GA115427@google.com>
+In-Reply-To: <20170705180813.GA115427@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-07-17 12:19, Dan Carpenter wrote:
-> Speaking of underflows:
-> 
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->   4913          if (ieee80211_is_probe_resp(mgmt->frame_control)) {
->   4914                  /* Right now the only reason to get a probe response */
->   4915                  /* is for p2p listen response or for p2p GO from     */
->   4916                  /* wpa_supplicant. Unfortunately the probe is send   */
->   4917                  /* on primary ndev, while dongle wants it on the p2p */
->   4918                  /* vif. Since this is only reason for a probe        */
->   4919                  /* response to be sent, the vif is taken from cfg.   */
->   4920                  /* If ever desired to send proberesp for non p2p     */
->   4921                  /* response then data should be checked for          */
->   4922                  /* "DIRECT-". Note in future supplicant will take    */
->   4923                  /* dedicated p2p wdev to do this and then this 'hack'*/
->   4924                  /* is not needed anymore.                            */
->   4925                  ie_offset =  DOT11_MGMT_HDR_LEN +
->   4926                               DOT11_BCN_PRB_FIXED_LEN;
->   4927                  ie_len = len - ie_offset;
->                                  ^^^^^^^^^^^^^^^
-> This can underflow.  It's harmless, but it's annoying for me as a static
-> checker person because this is the line where I'd like to print a
-> warning but everyone will complain it's a "false positive".
+Hi brian,
 
-Feel free to provide such a patch.
-
-Regards,
-Arend
+On 07/06/2017 02:08 AM, Brian Norris wrote:
+> On Mon, Jul 03, 2017 at 03:54:30PM +0800, Jeffy Chen wrote:
+>> We inited wakeup info at the beginning of mwifiex_add_card, so we need
+>> to uninit it in the error handling.
+>>
+>> It's much the same as what we did in:
+>> 36908c4 mwifiex: uninit wakeup info when removing device
+>
+> Yeah, I noticed I hadn't covered all the error cases, so your change is
+> part of the fix. But you're not covering the error paths when the
+> firmware doesn't load correctly -- this happens asynchronously to
+> mwifiex_add_card(). i.e., you need to fixup the error paths in
+> _mwifiex_fw_dpc() too.
+right, so we need to uninit it before every mwifiex_free_adapter :)
+>
+> Brian
+>
+>> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>>
+>> ---
+>>
+>>   drivers/net/wireless/marvell/mwifiex/main.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+>> index f2600b8..17d2cbe 100644
+>> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+>> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+>> @@ -1655,6 +1655,8 @@ mwifiex_add_card(void *card, struct completion *fw_done,
+>>   		mwifiex_shutdown_drv(adapter);
+>>   	}
+>>   err_kmalloc:
+>> +	if (adapter->irq_wakeup >= 0)
+>> +		device_init_wakeup(adapter->dev, false);
+>>   	mwifiex_free_adapter(adapter);
+>>
+>>   err_init_sw:
+>> --
+>> 2.1.4
+>>
+>>
+>
+>
+>
