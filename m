@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41396 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752228AbdG1PgE (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:35171 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750896AbdGFOwq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 11:36:04 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 6 Jul 2017 10:52:46 -0400
+Received: by mail-qk0-f173.google.com with SMTP id 16so4239075qkg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:52:45 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [v2,01/11] rtlwifi: btcoex: Add power_on_setting routine
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170717150954.1441-2-Larry.Finger@lwfinger.net>
-References: <20170717150954.1441-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170728153604.31514609FD@smtp.codeaurora.org> (sfid-20170728_173619_297251_85E0EF63)
-Date: Fri, 28 Jul 2017 15:36:04 +0000 (UTC)
+In-Reply-To: <87tw302caj.fsf@purkki.adurom.net>
+References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
+ <1497624881-2315-8-git-send-email-amit.karwar@redpinesignals.com> <87tw302caj.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Thu, 6 Jul 2017 20:22:44 +0530
+Message-ID: <CAEhWJFmFNXAN6gUfFzst9-TUL_U7uR1ieG4ZqMzzQF=87E-qEg@mail.gmail.com> (sfid-20170706_165249_209514_9A083FD3)
+Subject: Re: [v2 07/20] rsi: correct the logic of deriving queue number
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Thu, Jun 29, 2017 at 12:02 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> Maximum valid queue number is 0x5. So anding with 0x7 should be
+>> ok here.
+>>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> The separate From header is missing which you had in v1.
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> New btcoex uses it to setup antenna before wifi on.
-> 
-> This patch also restores the content of commit f95d95a7cd55 ("rtlwifi:
-> btcoex: rtl8723be: fix ant_sel not work"), which caused a kernel oops
-> without this material.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+Thanks. This is corrected in v3.
 
-Failed to apply:
-
-fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h).
-error: could not build fake ancestor
-Applying: rtlwifi: btcoex: Add power_on_setting routine
-Patch failed at 0001 rtlwifi: btcoex: Add power_on_setting routine
-The copy of the patch that failed is found in: .git/rebase-apply/patch
-
-11 patches set to Changes Requested.
-
-9845421 [v2,01/11] rtlwifi: btcoex: Add power_on_setting routine
-9845423 [v2,02/11] rtlwifi: Fix MAX MPDU of VHT capability
-9845431 [v2,03/11] rtlwifi: Remove redundant semicolon in wifi.h.
-9845435 [v2,04/11] rtlwifi: rtl8192ee: Make driver support 64bits DMA.
-9845425 [v2,05/11] rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
-9845439 [v2,06/11] rtlwifi: Add rtl_get_hal_edca_param() to generate register's format of EDCA.
-9845437 [v2,07/11] rtlwifi: Add TX/RX throughput statistics in period
-9845427 [v2,08/11] rtlwifi: Add RSSI and RF type to wifi.h for phydm
-9845441 [v2,09/11] rtlwifi: Remove BAND_NUM and related fields
-9845433 [v2,10/11] rtlwifi: Add bw_update parameter for RA mask update.
-9845429 [v2,11/11] rtlwifi: Add module parameter ASPM
-
--- 
-https://patchwork.kernel.org/patch/9845421/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Amitkumar
