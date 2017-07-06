@@ -1,109 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39682 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751065AbdGUJg2 (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34651 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751995AbdGFOnB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 05:36:28 -0400
-Message-ID: <1500629777.22048.324.camel@coelho.fi> (sfid-20170721_113636_207056_CBDEBB1A)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Date: Fri, 21 Jul 2017 12:36:17 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-YvDVRCXHrQaqWiLbLB0D"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2017-07-21
+        Thu, 6 Jul 2017 10:43:01 -0400
+Received: by mail-pg0-f66.google.com with SMTP id j186so502534pge.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:43:01 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Pavani Muthyala <pavani.muthyala@redpinesignals.com>
+Subject: [v3 15/21] rsi: data packet descriptor enhancements
+Date: Thu,  6 Jul 2017 20:07:18 +0530
+Message-Id: <1499351844-2046-16-git-send-email-amitkarwar@gmail.com> (sfid-20170706_170042_202942_1F4F3AE9)
+In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
 
---=-YvDVRCXHrQaqWiLbLB0D
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This patch covers some enhancements in data packet descriptor
+preparation especially for EAPOL, multicast/broadcast packets.
 
-Hi Kalle,
+Signed-off-by: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 64 ++++++++++++++++++++++++++--------
+ drivers/net/wireless/rsi/rsi_hal.h     |  3 +-
+ drivers/net/wireless/rsi/rsi_mgmt.h    |  3 ++
+ 3 files changed, 55 insertions(+), 15 deletions(-)
 
-Here are some fixes for 4.13.  More details in the tag description.
-
-I have sent this out before and kbuildbot didn't find any issues.=20
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 271612d72da5b46715447bc18add4a1cf7d87687=
-:
-
-  Revert "rtlwifi: btcoex: rtl8723be: fix ant_sel not work" (2017-07-21 10:=
-41:43 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2017-07-21
-
-for you to fetch changes up to bf8b286f86fcc66d138fd992acfa37839340218d:
-
-  iwlwifi: mvm: defer setting IWL_MVM_STATUS_IN_HW_RESTART (2017-07-21 12:2=
-6:39 +0300)
-
-----------------------------------------------------------------
-Some iwlwifi fixes for 4.13:
-
-* A few NULL pointer dereferences in the recovery flow;
-* A small but important fix for IBSS;
-* A one-liner fix for tracing, which was including too much data;
-* Some of these are bugzilla bug fixes;
-
-----------------------------------------------------------------
-Dan Carpenter (1):
-      iwlwifi: missing error code in iwl_trans_pcie_alloc()
-
-Emmanuel Grumbach (3):
-      iwlwifi: dvm: prevent an out of bounds access
-      iwlwifi: mvm: fix a NULL pointer dereference of error in recovery
-      iwlwifi: fix tracing when tx only is enabled
-
-Johannes Berg (1):
-      iwlwifi: mvm: defer setting IWL_MVM_STATUS_IN_HW_RESTART
-
-Luca Coelho (1):
-      iwlwifi: mvm: handle IBSS probe_queue in a few missing places
-
-Mordechai Goodstein (1):
-      iwlwifi: pcie: fix unused txq NULL pointer dereference
-
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  6 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 15 ++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  3 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  3 +++
- 8 files changed, 34 insertions(+), 9 deletions(-)
-
---=-YvDVRCXHrQaqWiLbLB0D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAllxyxEACgkQoUecoho8
-xfqOBg/7BzE5XsVMca1igoWisSmgeMzdFt9rdx+XfnC10wRXO6gBUpgGlZq/mmct
-iO8Z5lJRnPCFqhJ3DtHIH7NlnnX7Qhepo/9iGJ2adMrjqsZ3Er0d1ilqd2wfYZwP
-Z9gyYQKYBuqbFgqpkMR/z5thOST0yoMQPhTg8MrZFD8AK19CMFxuAO02y4GlRWxJ
-/Ond20WO21Tcw6zUS78LhT+RNgBd4hJTTAw9zNaIOOXDdkcwjMC7BmaBWcyNObte
-C8Y91TzgDI5SO0QCDHmSKxlFnqAuW7KTgo/AHN1kZ5ynZ/mDH9P/mhr95MRKpkah
-Vx+dOZenauWdZT19r+e60fNGuCCWyCQFN2IT40oDFjWofZuM/u3iXQ2cZUcqlgWf
-INcOHiyzR1b/woGZO1pcMMcAljTOpSb/3FoESOtq+oLn3vvgXDIgkFzcSOiVcFpH
-yURcFVWMMY10TJNiMSWoWyeuSjIqiw7cecmdIp3RgpyGNvTJ+eh954jjhVf34O2f
-yxh/2v38HpEBtssKzl6/TvCXfyB0oJhiKoM6tNOZ5MOvSOGfvGy0dLix9+n0JNUn
-E3Bq5ecizi4qs6H0UUCLaK2aX41e0E4UdjLy32hUS4Yt1zf7jp7CebvDODbZOh7J
-m4FKKQt3o6jau/w9DdPmYcPBb0eUIFPVa271NJTJhC4mFzq8mK0=
-=G4Wg
------END PGP SIGNATURE-----
-
---=-YvDVRCXHrQaqWiLbLB0D--
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 9da2fc8..af7fe87 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -119,14 +119,18 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+-	struct ieee80211_hdr *tmp_hdr;
++	struct ieee80211_hdr *wh = NULL;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_vif *vif = NULL;
+ 	struct skb_info *tx_params;
+ 	struct ieee80211_bss_conf *bss;
+ 	struct rsi_data_desc *data_desc;
++	struct xtended_desc *xtend_desc;
+ 	int status;
+ 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
+-	u8 extnd_size;
++	u8 header_size;
++	u8 vap_id = 0;
++	u8 dword_align_bytes;
+ 	u16 seq_num;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+@@ -137,23 +141,34 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 		status = -EINVAL;
+ 		goto err;
+ 	}
+-
+-	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
+-	seq_num = (le16_to_cpu(tmp_hdr->seq_ctrl) >> 4);
+-
+-	extnd_size = ((uintptr_t)skb->data & 0x3);
+-
+-	if ((FRAME_DESC_SZ + extnd_size) > skb_headroom(skb)) {
++	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
++	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+ 		status = -ENOSPC;
+ 		goto err;
+ 	}
++	skb_push(skb, header_size);
++	dword_align_bytes = ((unsigned long)skb->data & 0x3f);
++	if (header_size > skb_headroom(skb)) {
++		rsi_dbg(ERR_ZONE, "%s: Not enough headroom\n", __func__);
++		status = -ENOSPC;
++		goto err;
++	}
++	skb_push(skb, dword_align_bytes);
++	header_size += dword_align_bytes;
+ 
+-	skb_push(skb, (FRAME_DESC_SZ + extnd_size));
++	tx_params->internal_hdr_size = header_size;
+ 	data_desc = (struct rsi_data_desc *)skb->data;
+-	memset(data_desc, 0, sizeof(*data_desc));
++	memset(data_desc, 0, header_size);
++
++	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
++	wh = (struct ieee80211_hdr *)&skb->data[header_size];
++	seq_num = (le16_to_cpu(wh->seq_ctrl) >> 4);
++	vif = adapter->vifs[0];
+ 
+-	if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
++	data_desc->xtend_desc_size = header_size - FRAME_DESC_SZ;
++
++	if (ieee80211_is_data_qos(wh->frame_control)) {
+ 		ieee80211_size += 2;
+ 		data_desc->mac_flags |= cpu_to_le16(RSI_QOS_ENABLE);
+ 	}
+@@ -169,7 +184,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	rsi_set_len_qno(&data_desc->len_qno, (skb->len - FRAME_DESC_SZ),
+ 			RSI_WIFI_DATA_Q);
+ 	data_desc->header_len = ieee80211_size;
+-	data_desc->xtend_desc_size = extnd_size;
+ 
+ 	if (common->min_rate != RSI_RATE_AUTO) {
+ 		/* Send fixed rate */
+@@ -184,6 +198,21 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 				data_desc->rate_info |=
+ 					cpu_to_le16(ENABLE_SHORTGI_RATE);
+ 		}
++
++	}
++
++	if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
++		rsi_dbg(INFO_ZONE, "*** Tx EAPOL ***\n");
++
++		data_desc->frame_info = cpu_to_le16(RATE_INFO_ENABLE);
++		if (common->band == NL80211_BAND_5GHZ)
++			data_desc->rate_info = cpu_to_le16(RSI_RATE_6);
++		else
++			data_desc->rate_info = cpu_to_le16(RSI_RATE_1);
++		data_desc->mac_flags |= cpu_to_le16(RSI_REKEY_PURPOSE);
++		data_desc->misc_flags |= RSI_FETCH_RETRY_CNT_FRM_HST;
++#define EAPOL_RETRY_CNT 15
++		xtend_desc->retry_cnt = EAPOL_RETRY_CNT;
+ 	}
+ 
+ 	data_desc->mac_flags = cpu_to_le16(seq_num & 0xfff);
+@@ -191,7 +220,14 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 			      ((tx_params->tid & 0xf) << 4));
+ 	data_desc->sta_id = tx_params->sta_id;
+ 
+-	status = adapter->host_intf_ops->write_pkt(adapter, skb->data,
++	if ((is_broadcast_ether_addr(wh->addr1)) ||
++	    (is_multicast_ether_addr(wh->addr1))) {
++		data_desc->frame_info = cpu_to_le16(RATE_INFO_ENABLE);
++		data_desc->frame_info |= cpu_to_le16(RSI_BROADCAST_PKT);
++		data_desc->sta_id = vap_id;
++	}
++
++	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
+ 						   skb->len);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index 2ae5863..00c6a0c 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -131,7 +131,8 @@ struct rsi_mgmt_desc {
+ 
+ struct rsi_data_desc {
+ 	__le16 len_qno;
+-	u16 reserved;
++	u8 cfm_frame_type;
++	u8 misc_flags;
+ 	u8 xtend_desc_size;
+ 	u8 header_len;
+ 	__le16 frame_info;
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 058dfe5..a8a195e 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -64,7 +64,10 @@
+ #define RATE_INFO_ENABLE                BIT(0)
+ #define RSI_BROADCAST_PKT               BIT(9)
+ #define RSI_DESC_REQUIRE_CFM_TO_HOST	BIT(2)
++#define RSI_ADD_DELTA_TSF_VAP_ID	BIT(3)
++#define RSI_FETCH_RETRY_CNT_FRM_HST	BIT(4)
+ #define RSI_QOS_ENABLE			BIT(12)
++#define RSI_REKEY_PURPOSE		BIT(13)
+ #define RSI_ENCRYPT_PKT			BIT(15)
+ 
+ #define UPPER_20_ENABLE                 (0x2 << 12)
+-- 
+2.7.4
