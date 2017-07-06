@@ -1,123 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33778 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933051AbdGSTPo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:15:44 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 31/34] brcmfmac: Remove func0 from function array
-Date: Wed, 19 Jul 2017 20:08:19 +0100
-Message-Id: <20170719190822.10857-32-ian@mnementh.co.uk> (sfid-20170719_211549_323359_3F71D3D6)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:4664 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752660AbdGFHt4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Jul 2017 03:49:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Matthias Frei <mf@frei.media>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: set a-mpdu reference number in ath10k (receiver)
+Date: Thu, 6 Jul 2017 07:42:48 +0000
+Message-ID: <87o9syf1uf.fsf@kamboji.qca.qualcomm.com> (sfid-20170706_095005_649453_C4943163)
+References: <B8D63297-0A88-42A3-B789-3849895CF201@frei.media>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linux doesnt pass you func0 as a function when probing - instead
-providing specific access functions to read/write it.
+Matthias Frei <mf@frei.media> writes:
 
-This prepares for a patch to remove the actual array entry itself.
+> Set the a-mpdu reference number in ath10k to make it accessible in the re=
+ceivers radiotap header. Implemented as in ath9k.=20
+> The reference number is needed for troubleshooting and research at the re=
+ceivers site (e.g. to identify mpdu's that were aggregated in an a-mpdu)
+>
+> Signed-off-by: Matthias Frei <mf@frei.media>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  5 +----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   |  4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 13 ++++++-------
- 3 files changed, 9 insertions(+), 13 deletions(-)
+I did some changes in pending branch, please review them:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 42b09a301f5f..89cf71d98cee 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1021,8 +1021,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	/* store refs to functions used. mmc_card does
- 	 * not hold the F0 function pointer.
- 	 */
--	sdiodev->func[0] = kmemdup(func, sizeof(*func), GFP_KERNEL);
--	sdiodev->func[0]->num = 0;
-+	sdiodev->func[0] = NULL;
- 	sdiodev->func[1] = func->card->sdio_func[0];
- 	sdiodev->func[2] = func;
- 
-@@ -1048,7 +1047,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- fail:
- 	dev_set_drvdata(&func->dev, NULL);
- 	dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
--	kfree(sdiodev->func[0]);
- 	kfree(sdiodev);
- 	kfree(bus_if);
- 	return err;
-@@ -1081,7 +1079,6 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
- 		dev_set_drvdata(&sdiodev->func[2]->dev, NULL);
- 
- 		kfree(bus_if);
--		kfree(sdiodev->func[0]);
- 		kfree(sdiodev);
- 	}
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 2a52f48bdddc..9b8bd870c1fc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3751,8 +3751,8 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	/* Force 4339 chips over rev2 to use the same ID */
- 	/* This is borderline tolerable whilst there is only two exceptions */
- 	/* But could be handled better */
--	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
--		sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
-+	if ((sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
-+		sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
- 		addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
- 
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index d0dd69454bbd..cae21d14042d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -21,7 +21,9 @@
- #include <linux/firmware.h>
- #include "firmware.h"
- 
--#define SDIO_FUNC_0		0
-+/* Maximum number of I/O funcs */
-+#define NUM_SDIO_FUNCS	3
-+
- #define SDIO_FUNC_1		1
- #define SDIO_FUNC_2		2
- 
-@@ -39,9 +41,6 @@
- #define INTR_STATUS_FUNC1	0x2
- #define INTR_STATUS_FUNC2	0x4
- 
--/* Maximum number of I/O funcs */
--#define SDIOD_MAX_IOFUNCS	7
--
- /* mask of register map */
- #define REG_F0_REG_MASK		0x7FF
- #define REG_F1_MISC_MASK	0x1FFFF
-@@ -175,7 +174,7 @@ struct brcmf_sdio;
- struct brcmf_sdiod_freezer;
- 
- struct brcmf_sdio_dev {
--	struct sdio_func *func[SDIO_MAX_FUNCS];
-+	struct sdio_func *func[NUM_SDIO_FUNCS];
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 sbwad;			/* Save backplane window address */
- 	struct brcmf_core *cc_core;	/* chipcommon core info struct */
-@@ -297,10 +296,10 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
- /* SDIO device register access interface */
- /* Functions for accessing SDIO Function 0 */
- #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
--	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
-+	sdio_f0_readb((sdiodev)->func[1], (addr), (r))
- 
- #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
--	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
-+	sdio_f0_writeb((sdiodev)->func[1], (v), (addr), (ret))
- 
- /* Functions for accessing SDIO Function 1 */
- #define brcmf_sdiod_readb(sdiodev, addr, r) \
--- 
-2.11.0
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=3Dp=
+ending&id=3Df722728460a5c9e9200a7f1362fa605a714c1968
+
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -989,6 +989,9 @@ struct ath10k {
+>  		u32 reg_ack_cts_timeout_orig;
+>  	} fw_coverage;
+> =20
+> +	/* AMPDU */
+> +	u32 ampdu_ref;
+
+The comment is not providing any extra value, I'll remove that.
+
+What about locking? How is this protected or doesn't it need anything?
+
+Also I renamed this to ampdu_reference just to be consistent with the
+mac80211 name.
+
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -877,16 +877,24 @@ static void ath10k_htt_rx_h_ppdu(struct ath10k *ar,
+>  		status->nss =3D 0;
+>  		status->encoding =3D RX_ENC_LEGACY;
+>  		status->bw =3D RATE_INFO_BW_20;
+> -		status->flag &=3D ~RX_FLAG_MACTIME_END;
+> -		status->flag |=3D RX_FLAG_NO_SIGNAL_VAL;
+> +		status->flag &=3D ~(RX_FLAG_MACTIME_END | RX_FLAG_AMPDU_IS_LAST);
+> +		status->flag |=3D RX_FLAG_NO_SIGNAL_VAL | RX_FLAG_AMPDU_DETAILS | RX_F=
+LAG_AMPDU_LAST_KNOWN;
+
+This added a new warning:
+
+drivers/net/wireless/ath/ath10k/htt_rx.c:894: line over 90 characters
+
+I fixed that by separating the setting of ampdu flags.
+
+> +		/* set ampdu ref */
+> +		status->ampdu_reference =3D ar->ampdu_ref;
+
+The comment is not telling anything new so removed it.
+
+> -	if (is_last_ppdu)
+> +	if (is_last_ppdu) {
+>  		ath10k_htt_rx_h_mactime(ar, status, rxd);
+> +
+> +		/* set ampdu last segment flag */
+> +		status->flag |=3D RX_FLAG_AMPDU_IS_LAST;
+> +		ar->ampdu_ref++;
+> +	}
+
+So this counter is per wiphy, not per vdev. Is that ok?
+
+--=20
+Kalle Valo=
