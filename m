@@ -1,809 +1,370 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:46266 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751024AbdGZUmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:42:05 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 23/34] brcmfmac: HUGE cleanup of IO access functions.
-Date: Wed, 26 Jul 2017 21:25:46 +0100
-Message-Id: <20170726202557.15632-24-ian@mnementh.co.uk> (sfid-20170726_224209_774693_8AA6C85D)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:35780 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdGGOKP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jul 2017 10:10:15 -0400
+Received: by mail-wr0-f195.google.com with SMTP id z45so7953333wrb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 07:10:15 -0700 (PDT)
+From: Russell Joyce <russell.joyce@york.ac.uk>
+To: Russell Joyce <russell.joyce@york.ac.uk>
+Cc: Alan Millard <alan.millard@york.ac.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        "mhiramat@kernel.org" <mhiramat@kernel.org>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        Tobias Klauser <tklauser@distanz.ch>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH] brcmfmac: added LED triggers for transmit/receive
+Date: Fri,  7 Jul 2017 15:09:29 +0100
+Message-Id: <20170707140941.122115-1-russell.joyce@york.ac.uk> (sfid-20170707_161049_966400_2D572C24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of the core IO functions are called via a long train of pointers.
+Add three basic LED triggers to brcmfmac, based on those in mac80211: one
+for transmit, one for receive, and one for combined transmit/receive.
 
-Introduce brcmf_readl(), brcmf_writel(), brcmf_writelp(),
-brcmf_clear_bits(), and brcmf_set_bits_post() in an attempt to deal with
-this.
-
-These brcmf_writelp() and brcmf_set_bits_post() issue posted writes.
-
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Russell Joyce <russell.joyce@york.ac.uk>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 447 ++++++++++-----------
- 1 file changed, 219 insertions(+), 228 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/Kconfig    |  12 +++
+ .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |   2 +
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   4 +
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  16 +++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   5 +
+ .../net/wireless/broadcom/brcm80211/brcmfmac/led.c | 113 +++++++++++++++++++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/led.h |  57 +++++++++++
+ 7 files changed, 209 insertions(+)
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.h
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index ec47924b0f76..9cfabf4a7f62 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -106,9 +106,6 @@
+diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+index 9d99eb42d917..7bb593aa755a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
++++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+@@ -68,6 +68,18 @@ config BRCMFMAC_PCIE
+ 	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
+ 	  use the driver for an PCIE wireless card.
  
- #define CORE_SB(base, field) \
- 		(base + SBCONFIGOFF + offsetof(struct sbconfig, field))
--#define	SBCOREREV(sbidh) \
--	((((sbidh) & SSB_IDHIGH_RCHI) >> SSB_IDHIGH_RCHI_SHIFT) | \
--	  ((sbidh) & SSB_IDHIGH_RCLO))
- 
- struct sbconfig {
- 	u32 PAD[2];
-@@ -223,252 +220,251 @@ struct sbsocramregs {
- #define	ARMCR4_BSZ_MASK		0x3f
- #define	ARMCR4_BSZ_MULT		8192
- 
-+static inline int brcmf_readl(struct brcmf_chip *chip, u32 addr)
-+{
-+	return chip->ops->read32(chip->ctx, addr);
-+}
++config BRCMFMAC_LEDS
++	bool "LED trigger support for FullMAC driver"
++	depends on BRCMFMAC
++	depends on LEDS_CLASS
++	select LEDS_TRIGGERS
++	default y
++	---help---
++	  This option enables LED trigger support for Broadcom FullMAC WLAN
++	  driver. Say Y to create LED triggers for receive events (phyXrx),
++	  transmit events (phyXtx), and both events combined (phyXrxtx), on
++	  each adapter (where 'phyX' is the phy name).
 +
-+static inline void brcmf_writel(struct brcmf_chip *chip, u32 addr, u32 v)
-+{
-+	chip->ops->write32(chip->ctx, addr, v);
-+}
+ config BRCM_TRACING
+ 	bool "Broadcom device tracing"
+ 	depends on BRCMSMAC || BRCMFMAC
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+index 1f5a9b948abf..5c33c582a75a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+@@ -48,6 +48,8 @@ brcmfmac-$(CONFIG_BRCMFMAC_USB) += \
+ 		usb.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PCIE) += \
+ 		pcie.o
++brcmfmac-$(CONFIG_BRCMFMAC_LEDS) += \
++		led.o
+ brcmfmac-$(CONFIG_BRCMDBG) += \
+ 		debug.o
+ brcmfmac-$(CONFIG_BRCM_TRACING) += \
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index dcde596c9eb9..43c028513aa2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -40,6 +40,7 @@
+ #include "vendor.h"
+ #include "bus.h"
+ #include "common.h"
++#include "led.h"
+ 
+ #define BRCMF_SCAN_IE_LEN_MAX		2048
+ 
+@@ -7123,6 +7124,8 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ #endif
+ 	}
+ 
++	brcmfmac_led_init(cfg);
 +
-+static inline void brcmf_writelp(struct brcmf_chip *chip, u32 addr, u32 v)
-+{
-+	chip->ops->write32(chip->ctx, addr, v);
-+	chip->ops->read32(chip->ctx, addr);
-+}
-+
-+static void brcmf_clear_bits(struct brcmf_chip *ci, u32 reg, u32 bits)
-+{
-+	u32 val;
-+
-+	val = brcmf_readl(ci, reg);
-+	val &= ~bits;
-+	brcmf_writel(ci, reg, val);
-+}
-+
-+static void brcmf_set_bits_post(struct brcmf_chip *ci, u32 reg, u32 bits)
-+{
-+	u32 val;
-+
-+	val = brcmf_readl(ci, reg);
-+	val |= bits;
-+	brcmf_writelp(ci, reg, val);
-+}
-+
- static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
--	u32 regdata;
--	u32 address;
--
--	address = CORE_SB(core->base, sbtmstatelow);
-+	u32 val;
+ 	return cfg;
  
--	regdata = ci->ops->read32(ci->ctx, address);
-+	val = brcmf_readl(ci, CORE_SB(core->base, sbtmstatelow));
- 
--	regdata &= (SSB_TMSLOW_RESET | SSB_TMSLOW_REJECT |
--		    SSB_IMSTATE_REJECT | SSB_TMSLOW_CLOCK);
-+	val &= SSB_TMSLOW_RESET |
-+		SSB_TMSLOW_REJECT |
-+		SSB_IMSTATE_REJECT |
-+		SSB_TMSLOW_CLOCK;
- 
--	return SSB_TMSLOW_CLOCK == regdata;
-+	return val == SSB_TMSLOW_CLOCK;
- }
- 
- static bool brcmf_chip_axi_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
--	u32 regdata;
--	bool ret;
-+	u32 val;
- 
--	regdata = ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
-+	val = brcmf_readl(ci, core->wrapbase + BCMA_IOCTL);
- 
--	ret = (regdata & (BCMA_IOCTL_FGC | BCMA_IOCTL_CLK)) == BCMA_IOCTL_CLK;
-+	if ((val & BCMA_IOCTL_FGC) || !(val & BCMA_IOCTL_CLK))
-+		return 0;
- 
--	regdata = ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL);
-+	/* Is core in reset? */
-+	val = brcmf_readl(ci, core->wrapbase + BCMA_RESET_CTL);
- 
--	ret = ret && ((regdata & BCMA_RESET_CTL_RESET) == 0);
-+	val &= BCMA_RESET_CTL_RESET;
- 
--	return ret;
-+	return !val;
- }
- 
--static void brcmf_chip_sb_coredisable(struct brcmf_core *core,
--				      u32 prereset, u32 reset)
-+/* prereset and reset ignored */
-+static void brcmf_chip_sb_core_disable(struct brcmf_core *core,
-+				       u32 prereset, u32 reset)
- {
- 	struct brcmf_chip *ci = core->chip;
- 	u32 val, base;
- 
- 	base = core->base;
- 
--	val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+	val = brcmf_readl(ci, CORE_SB(base, sbtmstatelow));
- 
-+	/* If core is already in reset, skip reset */
- 	if (val & SSB_TMSLOW_RESET)
+ detach:
+@@ -7147,6 +7150,7 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ 	if (!cfg)
  		return;
  
--	val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
--
--	if ((val & SSB_TMSLOW_CLOCK) != 0) {
--		/*
--		 * set target reject and spin until busy is clear
--		 * (preserve core-specific bits)
--		 */
--		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+	if (!(val & SSB_TMSLOW_CLOCK))
-+		goto out_clock_off;
++	brcmfmac_led_exit(cfg);
+ 	brcmf_pno_detach(cfg);
+ 	brcmf_btcoex_detach(cfg);
+ 	wiphy_unregister(cfg->wiphy);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 7b2835e5e434..304c13b409a1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -17,6 +17,8 @@
+ #ifndef BRCMFMAC_CFG80211_H
+ #define BRCMFMAC_CFG80211_H
  
--		ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
--					 val | SSB_TMSLOW_REJECT);
-+	/* Clock is running, so do other stuff? */
++#include <linux/leds.h>
++
+ /* for brcmu_d11inf */
+ #include <brcmu_d11.h>
  
--		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+	/*
-+	 * Set target reject and spin until busy is clear
-+	 * (preserve core-specific bits)
-+	 */
-+	brcmf_set_bits_post(ci, CORE_SB(base, sbtmstatelow), SSB_TMSLOW_REJECT);
-+	udelay(1);
+@@ -301,6 +303,12 @@ struct brcmf_cfg80211_wowl {
+  * @vif_event: vif event signalling.
+  * @wowl: wowl related information.
+  * @pno: information of pno module.
++ * @rx_led: receive LED trigger information.
++ * @tx_led: transmit LED trigger information.
++ * @rxtx_led: receive/transmit LED trigger information.
++ * @rx_led_active: receive LED trigger active.
++ * @tx_led_active: transmit LED trigger active.
++ * @rxtx_led_active: receive/transmit LED trigger active.
+  */
+ struct brcmf_cfg80211_info {
+ 	struct wiphy *wiphy;
+@@ -335,6 +343,14 @@ struct brcmf_cfg80211_info {
+ 	struct brcmf_assoclist_le assoclist;
+ 	struct brcmf_cfg80211_wowl wowl;
+ 	struct brcmf_pno_info *pno;
++#ifdef CONFIG_BRCMFMAC_LEDS
++	struct led_trigger rx_led;
++	struct led_trigger tx_led;
++	struct led_trigger rxtx_led;
++	atomic_t rx_led_active;
++	atomic_t tx_led_active;
++	atomic_t rxtx_led_active;
++#endif
+ };
  
--		udelay(1);
-+	SPINWAIT((brcmf_readl(ci, CORE_SB(base, sbtmstatehigh))
-+		  & SSB_TMSHIGH_BUSY), 100000);
+ /**
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 2153e8062b4c..8cc0bf111e27 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -37,6 +37,7 @@
+ #include "proto.h"
+ #include "pcie.h"
+ #include "common.h"
++#include "led.h"
  
--		SPINWAIT((ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatehigh))
--			  & SSB_TMSHIGH_BUSY), 100000);
-+	val = brcmf_readl(ci, CORE_SB(base, sbtmstatehigh));
+ #define MAX_WAIT_FOR_8021X_TX			msecs_to_jiffies(950)
  
--		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatehigh));
-+	if (val & SSB_TMSHIGH_BUSY)
-+		brcmf_err("core state still busy\n");
+@@ -336,6 +337,8 @@ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
  
--		if (val & SSB_TMSHIGH_BUSY)
--			brcmf_err("core state still busy\n");
+ 	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
  
--		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbidlow));
--
--		if (val & SSB_IDLOW_INITIATOR) {
--			val = ci->ops->read32(ci->ctx,
--					      CORE_SB(base, sbimstate));
--			val |= SSB_IMSTATE_REJECT;
--			ci->ops->write32(ci->ctx,
--					 CORE_SB(base, sbimstate), val);
--			val = ci->ops->read32(ci->ctx,
--					      CORE_SB(base, sbimstate));
--			udelay(1);
--			SPINWAIT((ci->ops->read32(ci->ctx,
--						  CORE_SB(base, sbimstate)) &
--				  SSB_IMSTATE_BUSY), 100000);
--		}
-+	val = brcmf_readl(ci, CORE_SB(base, sbidlow));
-+	if (val & SSB_IDLOW_INITIATOR) {
-+		/* Do something and spin until core acknowledges */
++	brcmfmac_led_rx(drvr->config);
++
+ 	if (brcmf_rx_hdrpull(drvr, skb, &ifp))
+ 		return;
  
--		/* set reset and reject while enabling the clocks */
--		val = SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
--		      SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET;
-+		brcmf_set_bits_post(ci, CORE_SB(base, sbimstate),
-+				    SSB_IMSTATE_REJECT);
-+		udelay(1);
+@@ -373,6 +376,8 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+ 	eh = (struct ethhdr *)(txp->data);
+ 	type = ntohs(eh->h_proto);
  
--		ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow), val);
-+		SPINWAIT((brcmf_readl(ci, CORE_SB(base, sbimstate)) &
-+			  SSB_IMSTATE_BUSY), 100000);
- 
--		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+		val = brcmf_readl(ci, CORE_SB(base, sbimstate));
- 
--		udelay(10);
-+		if (val & SSB_IMSTATE_BUSY)
-+			brcmf_err("core state still busy\n");
++	brcmfmac_led_tx(ifp->drvr->config);
++
+ 	if (type == ETH_P_PAE) {
+ 		atomic_dec(&ifp->pend_8021x_cnt);
+ 		if (waitqueue_active(&ifp->pend_8021x_wait))
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.c
+new file mode 100644
+index 000000000000..d85ef430333d
+--- /dev/null
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.c
+@@ -0,0 +1,113 @@
++/*
++ * Copyright 2006, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2017, Russell Joyce <russell.joyce@york.ac.uk>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/slab.h>
++#include "led.h"
++
++static void brcmfmac_rx_led_activate(struct led_classdev *led_cdev)
++{
++	struct brcmf_cfg80211_info *info = container_of(led_cdev->trigger,
++						struct brcmf_cfg80211_info,
++						rx_led);
++
++	atomic_inc(&info->rx_led_active);
++}
++
++static void brcmfmac_rx_led_deactivate(struct led_classdev *led_cdev)
++{
++	struct brcmf_cfg80211_info *info = container_of(led_cdev->trigger,
++						struct brcmf_cfg80211_info,
++						rx_led);
++
++	atomic_dec(&info->rx_led_active);
++}
++
++static void brcmfmac_tx_led_activate(struct led_classdev *led_cdev)
++{
++	struct brcmf_cfg80211_info *info = container_of(led_cdev->trigger,
++						struct brcmf_cfg80211_info,
++						tx_led);
++
++	atomic_inc(&info->tx_led_active);
++}
++
++static void brcmfmac_tx_led_deactivate(struct led_classdev *led_cdev)
++{
++	struct brcmf_cfg80211_info *info = container_of(led_cdev->trigger,
++						struct brcmf_cfg80211_info,
++						tx_led);
++
++	atomic_dec(&info->tx_led_active);
++}
++
++static void brcmfmac_rxtx_led_activate(struct led_classdev *led_cdev)
++{
++	struct brcmf_cfg80211_info *info = container_of(led_cdev->trigger,
++						struct brcmf_cfg80211_info,
++						rxtx_led);
++
++	atomic_inc(&info->rxtx_led_active);
++}
++
++static void brcmfmac_rxtx_led_deactivate(struct led_classdev *led_cdev)
++{
++	struct brcmf_cfg80211_info *info = container_of(led_cdev->trigger,
++						struct brcmf_cfg80211_info,
++						rxtx_led);
++
++	atomic_dec(&info->rxtx_led_active);
++}
++
++void brcmfmac_led_init(struct brcmf_cfg80211_info *info)
++{
++	info->rx_led.name = kasprintf(GFP_KERNEL, "%srx",
++				      wiphy_name(info->wiphy));
++	info->tx_led.name = kasprintf(GFP_KERNEL, "%stx",
++				      wiphy_name(info->wiphy));
++	info->rxtx_led.name = kasprintf(GFP_KERNEL, "%srxtx",
++					wiphy_name(info->wiphy));
++
++	atomic_set(&info->rx_led_active, 0);
++	info->rx_led.activate = brcmfmac_rx_led_activate;
++	info->rx_led.deactivate = brcmfmac_rx_led_deactivate;
++	if (info->rx_led.name && led_trigger_register(&info->rx_led)) {
++		kfree(info->rx_led.name);
++		info->rx_led.name = NULL;
 +	}
- 
--		/* clear the initiator reject bit */
--		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbidlow));
-+	/* Set reset and reject while enabling the clocks */
-+	brcmf_writelp(ci, CORE_SB(base, sbtmstatelow),
-+		      SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
-+		      SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET);
- 
--		if (val & SSB_IDLOW_INITIATOR) {
--			val = ci->ops->read32(ci->ctx,
--					      CORE_SB(base, sbimstate));
-+	udelay(10);
- 
--			val &= ~SSB_IMSTATE_REJECT;
-+	/* Clear the initiator reject bit */
-+	/* FIXME: Has this value actually changed since it was read earlier? */
-+	val = brcmf_readl(ci, CORE_SB(base, sbidlow));
- 
--			ci->ops->write32(ci->ctx,
--					 CORE_SB(base, sbimstate), val);
--		}
--	}
-+	if (val & SSB_IDLOW_INITIATOR)
-+		brcmf_clear_bits(ci, CORE_SB(base, sbimstate),
-+				 SSB_IMSTATE_REJECT);
- 
-+out_clock_off:
- 	/* leave reset and reject asserted */
--	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
--			 (SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET));
-+	brcmf_writel(ci, CORE_SB(base, sbtmstatelow),
-+		     SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET);
- 
- 	udelay(1);
- }
- 
--static void brcmf_chip_axi_coredisable(struct brcmf_core *core,
--				      u32 prereset, u32 reset)
-+static void brcmf_chip_axi_core_disable(struct brcmf_core *core, u32 prereset,
-+					u32 reset)
- {
- 	struct brcmf_chip *ci = core->chip;
--	u32 regdata;
-+	u32 val;
- 
--	/* if core is already in reset, skip reset */
--	regdata = ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL);
-+	val = brcmf_readl(ci, core->wrapbase + BCMA_RESET_CTL);
- 
--	if ((regdata & BCMA_RESET_CTL_RESET) != 0)
-+	/* If core is already in reset, skip reset */
-+	if ((val & BCMA_RESET_CTL_RESET))
- 		goto in_reset_configure;
- 
--	/* configure reset */
--	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
--			 prereset | BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
-+	/* Configure reset */
-+	brcmf_writelp(ci, core->wrapbase + BCMA_IOCTL,
-+		      prereset | BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
- 
--	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
--
--	/* put in reset */
--	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_RESET_CTL,
--			 BCMA_RESET_CTL_RESET);
-+	/* Put the core into reset */
-+	brcmf_writel(ci, core->wrapbase + BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
- 
- 	usleep_range(10, 20);
- 
--	/* wait till reset is 1 */
--	SPINWAIT(ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL) !=
-+	/*
-+	 * Wait till reset is 1
-+	 * FIXME: should this test the BCMA_RESET_CTL_RESET bit only?
-+	 */
-+	SPINWAIT(brcmf_readl(ci, core->wrapbase + BCMA_RESET_CTL) !=
- 		 BCMA_RESET_CTL_RESET, 300);
- 
- in_reset_configure:
--	/* in-reset configure */
--	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
--			 reset | BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
--
--	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
-+	brcmf_writelp(ci, core->wrapbase + BCMA_IOCTL,
-+		      reset | BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
- }
- 
--static void brcmf_chip_sb_resetcore(struct brcmf_core *core, u32 prereset,
--				    u32 reset, u32 postreset)
-+static void brcmf_chip_sb_reset_core(struct brcmf_core *core, u32 prereset,
-+				     u32 reset, u32 postreset)
- {
- 	struct brcmf_chip *ci = core->chip;
- 	u32 base = core->base;
--	u32 regdata;
-+	u32 val;
- 
- 	/*
- 	 * Must do the disable sequence first to work for
- 	 * arbitrary current core state.
- 	 */
--	brcmf_chip_sb_coredisable(core, 0, 0);
-+	brcmf_chip_sb_core_disable(core, 0, 0);
- 
- 	/*
- 	 * Now do the initialization sequence.
- 	 * set reset while enabling the clock and
- 	 * forcing them on throughout the core
- 	 */
--	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
--			 SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
--			 SSB_TMSLOW_RESET);
--
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+	brcmf_writelp(ci, CORE_SB(base, sbtmstatelow),
-+		      SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
-+		      SSB_TMSLOW_RESET);
- 
- 	udelay(1);
- 
--	/* clear any serror */
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatehigh));
-+	/* Clear any serror */
-+	val = brcmf_readl(ci, CORE_SB(base, sbtmstatehigh));
- 
--	if (regdata & SSB_TMSHIGH_SERR)
--		ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatehigh), 0);
-+	if (val & SSB_TMSHIGH_SERR)
-+		brcmf_writel(ci, CORE_SB(base, sbtmstatehigh), 0);
- 
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbimstate));
-+	val = brcmf_readl(ci, CORE_SB(base, sbimstate));
- 
--	if (regdata & (SSB_IMSTATE_IBE | SSB_IMSTATE_TO)) {
--		regdata &= ~(SSB_IMSTATE_IBE | SSB_IMSTATE_TO);
--		ci->ops->write32(ci->ctx, CORE_SB(base, sbimstate), regdata);
-+	if (val & (SSB_IMSTATE_IBE | SSB_IMSTATE_TO)) {
-+		val &= ~(SSB_IMSTATE_IBE | SSB_IMSTATE_TO);
-+		brcmf_writel(ci, CORE_SB(base, sbimstate), val);
- 	}
- 
--	/* clear reset and allow it to propagate throughout the core */
--	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
--			 SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
--
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+	/* Clear reset and allow it to propagate throughout the core */
-+	brcmf_writelp(ci, CORE_SB(base, sbtmstatelow),
-+		      SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
- 
- 	udelay(1);
- 
--	/* leave clock enabled */
--	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
--			 SSB_TMSLOW_CLOCK);
--
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+	/* Leave clock enabled */
-+	brcmf_writelp(ci, CORE_SB(base, sbtmstatelow), SSB_TMSLOW_CLOCK);
- 
- 	udelay(1);
- }
- 
--static void brcmf_chip_axi_resetcore(struct brcmf_core *core, u32 prereset,
--				    u32 reset, u32 postreset)
-+static void brcmf_chip_axi_reset_core(struct brcmf_core *core, u32 prereset,
-+				      u32 reset, u32 postreset)
- {
- 	struct brcmf_chip *ci = core->chip;
--	int count;
-+	int count = 0;
- 
--	/* must disable first to work for arbitrary current core state */
--	brcmf_chip_axi_coredisable(core, prereset, reset);
-+	/* Must disable first to work for arbitrary current core state */
-+	brcmf_chip_axi_core_disable(core, prereset, reset);
- 
--	count = 0;
-+	while ((brcmf_readl(ci, core->wrapbase + BCMA_RESET_CTL) &
-+			BCMA_RESET_CTL_RESET) &&
-+			count++ <= 50) {
- 
--	while (ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL) &
--	       BCMA_RESET_CTL_RESET) {
--
--		ci->ops->write32(ci->ctx, core->wrapbase + BCMA_RESET_CTL, 0);
--
--		count++;
--
--		if (count > 50)
--			break;
-+		brcmf_writel(ci, core->wrapbase + BCMA_RESET_CTL, 0);
- 
- 		usleep_range(40, 60);
- 	}
- 
--	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
--			 postreset | BCMA_IOCTL_CLK);
--
--	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
--}
--
--static char *brcmf_chip_name(uint chipid, char *buf, uint len)
--{
--	const char *fmt;
--
--	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
--	snprintf(buf, len, fmt, chipid);
--	return buf;
-+	brcmf_writelp(ci, core->wrapbase + BCMA_IOCTL,
-+		      postreset | BCMA_IOCTL_CLK);
- }
- 
- static struct brcmf_core *__brcmf_chip_add_core(struct brcmf_chip *ci,
-@@ -481,9 +477,9 @@ static struct brcmf_core *__brcmf_chip_add_core(struct brcmf_chip *ci,
- 	if (!core)
- 		return NULL;
- 
-+	core->chip = ci;
- 	core->id = coreid;
- 	core->base = base;
--	core->chip = ci;
- 	core->wrapbase = wrapbase;
- 
- 	list_add_tail(&core->list, &ci->cores);
-@@ -496,16 +492,16 @@ static struct brcmf_core *brcmf_chip_add_sb_core(struct brcmf_chip *ci,
- 						 u32 wrapbase)
- {
- 	struct brcmf_core *core;
--	u32 regdata;
-+	u32 val;
- 
- 	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
- 
- 	if (!core)
- 		goto out;
- 
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
-+	val = brcmf_readl(ci, CORE_SB(core->base, sbidhigh));
- 
--	core->rev = SBCOREREV(regdata);
-+	core->rev = (val & 0xf) | ((val & 0x7000) >> 8);
- 
- out:
- 	return core;
-@@ -572,34 +568,29 @@ static int brcmf_chip_cores_check(struct brcmf_chip *ci)
- 	return 0;
- }
- 
--static u32 brcmf_chip_core_read32(struct brcmf_core *core, u16 reg)
--{
--	return core->chip->ops->read32(core->chip->ctx, core->base + reg);
--}
--
--static void brcmf_chip_core_write32(struct brcmf_core *core,
--				    u16 reg, u32 val)
--{
--	core->chip->ops->write32(core->chip->ctx, core->base + reg, val);
--}
--
- static bool brcmf_chip_socram_banksize(struct brcmf_core *core, u8 idx,
- 				       u32 *banksize)
- {
-+	struct brcmf_chip *ci = core->chip;
- 	u32 bankinfo;
- 	u32 bankidx = (SOCRAM_MEMTYPE_RAM << SOCRAM_BANKIDX_MEMTYPE_SHIFT);
- 
- 	bankidx |= idx;
--	brcmf_chip_core_write32(core, SOCRAMREGOFFS(bankidx), bankidx);
--	bankinfo = brcmf_chip_core_read32(core, SOCRAMREGOFFS(bankinfo));
 +
-+	brcmf_writel(ci, core->base + SOCRAMREGOFFS(bankidx), bankidx);
++	atomic_set(&info->tx_led_active, 0);
++	info->tx_led.activate = brcmfmac_tx_led_activate;
++	info->tx_led.deactivate = brcmfmac_tx_led_deactivate;
++	if (info->tx_led.name && led_trigger_register(&info->tx_led)) {
++		kfree(info->tx_led.name);
++		info->tx_led.name = NULL;
++	}
 +
-+	bankinfo = brcmf_readl(ci, core->base + SOCRAMREGOFFS(bankinfo));
++	atomic_set(&info->rxtx_led_active, 0);
++	info->rxtx_led.activate = brcmfmac_rxtx_led_activate;
++	info->rxtx_led.deactivate = brcmfmac_rxtx_led_deactivate;
++	if (info->rxtx_led.name && led_trigger_register(&info->rxtx_led)) {
++		kfree(info->rxtx_led.name);
++		info->rxtx_led.name = NULL;
++	}
++}
 +
- 	*banksize = (bankinfo & SOCRAM_BANKINFO_SZMASK) + 1;
- 	*banksize *= SOCRAM_BANKINFO_SZBASE;
++void brcmfmac_led_exit(struct brcmf_cfg80211_info *info)
++{
++	if (info->rx_led.name)
++		led_trigger_unregister(&info->rx_led);
++	if (info->tx_led.name)
++		led_trigger_unregister(&info->tx_led);
++	if (info->rxtx_led.name)
++		led_trigger_unregister(&info->rxtx_led);
 +
- 	return !!(bankinfo & SOCRAM_BANKINFO_RETNTRAM_MASK);
- }
- 
- static void brcmf_chip_socram_ramsize(struct brcmf_core *sr, u32 *ramsize,
- 				      u32 *srsize)
- {
-+	struct brcmf_chip *ci = sr->chip;
- 	u32 coreinfo;
- 	uint nb, banksize, lss;
- 	bool retent;
-@@ -615,7 +606,8 @@ static void brcmf_chip_socram_ramsize(struct brcmf_core *sr, u32 *ramsize,
- 		brcmf_chip_resetcore(sr, 0, 0, 0);
- 
- 	/* Get info for determining size */
--	coreinfo = brcmf_chip_core_read32(sr, SOCRAMREGOFFS(coreinfo));
-+	coreinfo = brcmf_readl(ci, sr->base + SOCRAMREGOFFS(coreinfo));
++	kfree(info->rx_led.name);
++	kfree(info->tx_led.name);
++	kfree(info->rxtx_led.name);
++}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.h
+new file mode 100644
+index 000000000000..c9eee5f8f89b
+--- /dev/null
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/led.h
+@@ -0,0 +1,57 @@
++/*
++ * Copyright 2006, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2017, Russell Joyce <russell.joyce@york.ac.uk>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
- 	nb = (coreinfo & SRCI_SRNB_MASK) >> SRCI_SRNB_SHIFT;
- 
- 	if ((sr->rev <= 7) || (sr->rev == 12)) {
-@@ -656,6 +648,7 @@ static void brcmf_chip_socram_ramsize(struct brcmf_core *sr, u32 *ramsize,
- /** Return the SYS MEM size */
- static u32 brcmf_chip_sysmem_ramsize(struct brcmf_core *sysmem)
- {
-+	struct brcmf_chip *ci = sysmem->chip;
- 	u32 memsize = 0;
- 	u32 coreinfo;
- 	u32 idx;
-@@ -665,7 +658,7 @@ static u32 brcmf_chip_sysmem_ramsize(struct brcmf_core *sysmem)
- 	if (!brcmf_chip_iscoreup(sysmem))
- 		brcmf_chip_resetcore(sysmem, 0, 0, 0);
- 
--	coreinfo = brcmf_chip_core_read32(sysmem, SYSMEMREGOFFS(coreinfo));
-+	coreinfo = brcmf_readl(ci, sysmem->base + SYSMEMREGOFFS(coreinfo));
- 	nb = (coreinfo & SRCI_SRNB_MASK) >> SRCI_SRNB_SHIFT;
- 
- 	for (idx = 0; idx < nb; idx++) {
-@@ -679,6 +672,7 @@ static u32 brcmf_chip_sysmem_ramsize(struct brcmf_core *sysmem)
- /** Return the TCM-RAM size of the ARMCR4 core. */
- static u32 brcmf_chip_tcm_ramsize(struct brcmf_core *cr4)
- {
-+	struct brcmf_chip *ci = cr4->chip;
- 	u32 corecap;
- 	u32 memsize = 0;
- 	u32 nab;
-@@ -687,15 +681,18 @@ static u32 brcmf_chip_tcm_ramsize(struct brcmf_core *cr4)
- 	u32 bxinfo;
- 	u32 idx;
- 
--	corecap = brcmf_chip_core_read32(cr4, ARMCR4_CAP);
-+	corecap = brcmf_readl(ci, cr4->base + ARMCR4_CAP);
- 
- 	nab = (corecap & ARMCR4_TCBANB_MASK) >> ARMCR4_TCBANB_SHIFT;
- 	nbb = (corecap & ARMCR4_TCBBNB_MASK) >> ARMCR4_TCBBNB_SHIFT;
++#include <linux/atomic.h>
++#include <linux/leds.h>
++#include "cfg80211.h"
 +
- 	totb = nab + nbb;
- 
- 	for (idx = 0; idx < totb; idx++) {
--		brcmf_chip_core_write32(cr4, ARMCR4_BANKIDX, idx);
--		bxinfo = brcmf_chip_core_read32(cr4, ARMCR4_BANKINFO);
-+		brcmf_writel(ci, cr4->base + ARMCR4_BANKIDX, idx);
++#define BRCMFMAC_BLINK_DELAY 50 /* ms */
 +
-+		bxinfo = brcmf_readl(ci, cr4->base + ARMCR4_BANKINFO);
++static inline void brcmfmac_led_rx(struct brcmf_cfg80211_info *info)
++{
++#ifdef CONFIG_BRCMFMAC_LEDS
++	unsigned long led_delay = BRCMFMAC_BLINK_DELAY;
 +
- 		memsize += ((bxinfo & ARMCR4_BSZ_MASK) + 1) * ARMCR4_BSZ_MULT;
- 	}
- 
-@@ -785,15 +782,17 @@ static u32 brcmf_chip_dmp_get_desc(struct brcmf_chip *ci, u32 *eromaddr,
- {
- 	u32 val;
- 
--	/* read next descriptor */
--	val = ci->ops->read32(ci->ctx, *eromaddr);
-+	/* Read next descriptor */
-+	val = brcmf_readl(ci, *eromaddr);
++	if (atomic_read(&info->rx_led_active))
++		led_trigger_blink_oneshot(&info->rx_led, &led_delay,
++					  &led_delay, 0);
 +
- 	*eromaddr += 4;
- 
- 	if (!type)
- 		return val;
- 
--	/* determine descriptor type */
-+	/* Determine descriptor type */
- 	*type = (val & DMP_DESC_TYPE_MSK);
++	if (atomic_read(&info->rxtx_led_active))
++		led_trigger_blink_oneshot(&info->rxtx_led, &led_delay,
++					  &led_delay, 0);
++#endif
++}
 +
- 	if ((*type & ~DMP_DESC_ADDRSIZE_GT32) == DMP_DESC_ADDRESS)
- 		*type = DMP_DESC_ADDRESS;
- 
-@@ -884,7 +883,7 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip *ci)
- 	u32 base, wrap;
- 	int err;
- 
--	eromaddr = ci->ops->read32(ci->ctx, CORE_CC_REG(SI_ENUM_BASE, eromptr));
-+	eromaddr = brcmf_readl(ci, CORE_CC_REG(SI_ENUM_BASE, eromptr));
- 
- 	while (desc_type != DMP_DESC_EOT) {
- 		val = brcmf_chip_dmp_get_desc(ci, &eromaddr, &desc_type);
-@@ -958,30 +957,23 @@ static int brcmf_chip_add_static(struct brcmf_chip *ci,
- 
- static int brcmf_chip_probe(struct brcmf_chip *ci)
- {
--	u32 regdata;
--	u32 socitype;
-+	u32 val, socitype;
- 	int ret;
- 
--	/* Get CC core rev
--	 * Chipid is assume to be at offset 0 from SI_ENUM_BASE
--	 * For different chiptypes or old sdio hosts w/o chipcommon,
--	 * other ways of to probe should be added here.
--	 */
--	regdata = ci->ops->read32(ci->ctx, CORE_CC_REG(SI_ENUM_BASE, chipid));
-+	val = brcmf_readl(ci, CORE_CC_REG(SI_ENUM_BASE, chipid));
- 
--	ci->chip = regdata & CID_ID_MASK;
--	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
- 
--	socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
-+	ci->chip = val & CID_ID_MASK;
-+	ci->chiprev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
- 
--	brcmf_chip_name(ci->chip, ci->name, sizeof(ci->name));
-+	snprintf(ci->name, sizeof(ci->name),
-+		 (ci->chip > 0xa000 || ci->chip < 0x4000) ? "%d" : "%x",
-+		 ci->chip);
- 
--	printk(KERN_LOG "found %s chip: BCM%s, rev=%d\n",
--	       socitype == SOCI_SB ? "SB" : "AXI", ci->name, ci->chiprev);
-+	socitype = (val & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
- 
- 	switch (socitype) {
- 	case SOCI_SB:
--
- 		switch (ci->chip) {
- 		case BRCM_CC_4329_CHIP_ID:
- 			ret = brcmf_chip_add_static(ci, brcmf_4329);
-@@ -995,8 +987,8 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
- 			return -ENODEV;
- 
- 		ci->iscoreup = brcmf_chip_sb_iscoreup;
--		ci->coredisable = brcmf_chip_sb_coredisable;
--		ci->resetcore = brcmf_chip_sb_resetcore;
-+		ci->coredisable = brcmf_chip_sb_core_disable;
-+		ci->resetcore = brcmf_chip_sb_reset_core;
- 
- 		break;
- 	case SOCI_AXI:
-@@ -1005,8 +997,8 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
- 			return -ENODEV;
- 
- 		ci->iscoreup = brcmf_chip_axi_iscoreup;
--		ci->coredisable = brcmf_chip_axi_coredisable;
--		ci->resetcore = brcmf_chip_axi_resetcore;
-+		ci->coredisable = brcmf_chip_axi_core_disable;
-+		ci->resetcore = brcmf_chip_axi_reset_core;
- 
- 		break;
- 	default:
-@@ -1019,18 +1011,23 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
- 	if (ret)
- 		return ret;
- 
--	/* assure chip is passive for core access */
-+	/* Ensure chip is passive for core access */
- 	brcmf_chip_set_passive(ci);
- 
--	/* Call bus specific reset function now. Cores have been determined
--	 * but further access may require a chip specific reset at this point.
-+	/* Cores have been probed, but further access may require a chip
-+	 * specific reset at this point.
- 	 */
- 	if (ci->ops->reset) {
- 		ci->ops->reset(ci->ctx, ci);
- 		brcmf_chip_set_passive(ci);
- 	}
- 
--	return brcmf_chip_get_raminfo(ci);
-+	ret = brcmf_chip_get_raminfo(ci);
++static inline void brcmfmac_led_tx(struct brcmf_cfg80211_info *info)
++{
++#ifdef CONFIG_BRCMFMAC_LEDS
++	unsigned long led_delay = BRCMFMAC_BLINK_DELAY;
 +
-+	printk("Found BCM%s, %s backplane, rev=%d\n", ci->name,
-+	       socitype == SOCI_SB ? "SB" : "AXI", ci->chiprev);
++	if (atomic_read(&info->tx_led_active))
++		led_trigger_blink_oneshot(&info->tx_led, &led_delay,
++					  &led_delay, 0);
 +
-+	return ret;
- }
- 
- static void brcmf_chip_disable_arm(struct brcmf_chip *chip, u16 id)
-@@ -1050,9 +1047,11 @@ static void brcmf_chip_disable_arm(struct brcmf_chip *chip, u16 id)
- 	case BCMA_CORE_ARM_CR4:
- 	case BCMA_CORE_ARM_CA7:
- 
--		/* clear all IOCTL bits except HALT bit */
--		val = chip->ops->read32(chip->ctx, cpu->wrapbase + BCMA_IOCTL);
-+		/* Clear all IOCTL bits except HALT bit */
-+		val = brcmf_readl(chip, cpu->wrapbase + BCMA_IOCTL);
++	if (atomic_read(&info->rxtx_led_active))
++		led_trigger_blink_oneshot(&info->rxtx_led, &led_delay,
++					  &led_delay, 0);
++#endif
++}
 +
- 		val &= ARMCR4_BCMA_IOCTL_CPUHALT;
++#ifdef CONFIG_BRCMFMAC_LEDS
++void brcmfmac_led_init(struct brcmf_cfg80211_info *info);
++void brcmfmac_led_exit(struct brcmf_cfg80211_info *info);
++#else
++static inline void brcmfmac_led_init(struct brcmf_cfg80211_info *info)
++{
++}
 +
- 		brcmf_chip_resetcore(cpu, val, ARMCR4_BCMA_IOCTL_CPUHALT,
- 				     ARMCR4_BCMA_IOCTL_CPUHALT);
- 		break;
-@@ -1073,17 +1072,14 @@ static int brcmf_chip_setup(struct brcmf_chip *chip)
- 	base = cc->base;
- 
- 	/* get chipcommon capabilites */
--	chip->cc_caps = chip->ops->read32(chip->ctx,
--					 CORE_CC_REG(base, capabilities));
--	chip->cc_caps_ext = chip->ops->read32(chip->ctx,
--					     CORE_CC_REG(base,
--							 capabilities_ext));
-+	chip->cc_caps = brcmf_readl(chip, CORE_CC_REG(base, capabilities));
-+	chip->cc_caps_ext = brcmf_readl(chip, CORE_CC_REG(base,
-+							  capabilities_ext));
- 
- 	/* get pmu caps & rev */
- 	pmu = brcmf_chip_get_pmu(chip); /* after reading cc_caps_ext */
- 	if (chip->cc_caps & CC_CAP_PMU) {
--		val = chip->ops->read32(chip->ctx,
--					CORE_CC_REG(pmu->base, pmucapabilities));
-+		val = brcmf_readl(chip,	CORE_CC_REG(pmu->base, pmucapabilities));
- 		chip->pmurev = val & PCAP_REV_MASK;
- 		chip->pmucaps = val;
- 	}
-@@ -1229,8 +1225,8 @@ brcmf_chip_cm3_set_passive(struct brcmf_chip *chip)
- 
- 	/* disable bank #3 remap for this device */
- 	if (chip->chip == BRCM_CC_43430_CHIP_ID) {
--		brcmf_chip_core_write32(core, SOCRAMREGOFFS(bankidx), 3);
--		brcmf_chip_core_write32(core, SOCRAMREGOFFS(bankpda), 0);
-+		brcmf_writel(chip, core->base + SOCRAMREGOFFS(bankidx), 3);
-+		brcmf_writel(chip, core->base + SOCRAMREGOFFS(bankpda), 0);
- 	}
- }
- 
-@@ -1353,53 +1349,48 @@ bool brcmf_chip_set_active(struct brcmf_chip *chip, u32 rstvec)
- 	return false;
- }
- 
--bool brcmf_chip_sr_capable(struct brcmf_chip *chip)
-+bool brcmf_chip_sr_capable(struct brcmf_chip *ci)
- {
--	struct brcmf_core *pmu = brcmf_chip_get_pmu(chip);
--	u32 base, addr, reg, pmu_cc3_mask = ~0;
-+	struct brcmf_core *pmu = brcmf_chip_get_pmu(ci);
-+	u32 base, reg, pmu_cc3_mask = ~0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	/* old chips with PMU version less than 17 don't support save restore */
--	if (chip->pmurev < 17)
-+	/* Old chips with PMU version less than 17 don't support save restore */
-+	if (ci->pmurev < 17)
- 		return false;
- 
--	base = brcmf_chip_get_chipcommon(chip)->base;
--
--	switch (chip->chip) {
-+	switch (ci->chip) {
- 	case BRCM_CC_4354_CHIP_ID:
- 	case BRCM_CC_4356_CHIP_ID:
--		/* explicitly check SR engine enable bit */
-+		/* Explicitly check SR engine enable bit */
- 		pmu_cc3_mask = BIT(2);
--		/* fall-through */
-+		/* Fall-through */
- 	case BRCM_CC_43241_CHIP_ID:
- 	case BRCM_CC_4335_CHIP_ID:
- 	case BRCM_CC_4339_CHIP_ID:
- 
--		/* read PMU chipcontrol register 3 */
--		addr = CORE_CC_REG(pmu->base, chipcontrol_addr);
--		chip->ops->write32(chip->ctx, addr, 3);
-+		/* Read PMU chipcontrol register 3 */
-+		brcmf_writel(ci, CORE_CC_REG(pmu->base, chipcontrol_addr), 3);
- 
--		addr = CORE_CC_REG(pmu->base, chipcontrol_data);
--		reg = chip->ops->read32(chip->ctx, addr);
-+		reg = brcmf_readl(ci, CORE_CC_REG(pmu->base, chipcontrol_data));
- 
- 		return (reg & pmu_cc3_mask) != 0;
- 	case BRCM_CC_43430_CHIP_ID:
- 
--		addr = CORE_CC_REG(base, sr_control1);
--		reg = chip->ops->read32(chip->ctx, addr);
-+		base = brcmf_chip_get_chipcommon(ci)->base;
-+
-+		reg = brcmf_readl(ci, CORE_CC_REG(base, sr_control1));
- 
- 		return reg != 0;
- 	default:
- 
--		addr = CORE_CC_REG(pmu->base, pmucapabilities_ext);
--		reg = chip->ops->read32(chip->ctx, addr);
-+		reg = brcmf_readl(ci, CORE_CC_REG(pmu->base, pmucapabilities_ext));
- 
- 		if ((reg & PCAPEXT_SR_SUPPORTED_MASK) == 0)
- 			return false;
- 
--		addr = CORE_CC_REG(pmu->base, retention_ctl);
--		reg = chip->ops->read32(chip->ctx, addr);
-+		reg = brcmf_readl(ci, CORE_CC_REG(pmu->base, retention_ctl));
- 
- 		return (reg & (PMU_RCTL_MACPHY_DISABLE_MASK |
- 			       PMU_RCTL_LOGIC_DISABLE_MASK)) == 0;
++static inline void brcmfmac_led_exit(struct brcmf_cfg80211_info *info)
++{
++}
++#endif
 -- 
 2.11.0
