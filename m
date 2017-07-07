@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41004 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752283AbdG1O01 (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:34220 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751032AbdGGScZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:26:27 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:28 +0300
-Message-Id: <20170728142337.19183-16-luca@coelho.fi> (sfid-20170728_162630_852008_1E0B8FE7)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 15/24] iwlwifi: mvm: support fw reading empty OTP
+        Fri, 7 Jul 2017 14:32:25 -0400
+Received: by mail-lf0-f54.google.com with SMTP id t72so30049644lff.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 11:32:24 -0700 (PDT)
+Date: Fri, 7 Jul 2017 20:32:22 +0200
+From: Johan Hovold <johan@kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: johan@kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [bug report] NFC: fix broken device allocation
+Message-ID: <20170707183222.GF29638@localhost> (sfid-20170707_203229_124841_990E7E66)
+References: <20170707093334.zhnn3jrtqosbqdib@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170707093334.zhnn3jrtqosbqdib@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Fri, Jul 07, 2017 at 12:33:34PM +0300, Dan Carpenter wrote:
+> Hello Johan Hovold,
+> 
+> The patch 20777bc57c34: "NFC: fix broken device allocation" from Mar
+> 30, 2017, leads to the following static checker warning:
+> 
+> 	drivers/nfc/pn533/pn533.c:2653 pn533_register_device()
+> 	error: 'priv->nfc_dev' dereferencing possible ERR_PTR()
 
-If the OTP is empty, the NVM_GET_INFO command returns
-with flags' bit(0) on. This means the FW returns the
-default values for working with. This is allowed, so
-use this returned data.
+> drivers/nfc/pn533/pn533.c
+>   2639          skb_queue_head_init(&priv->resp_q);
+>   2640          skb_queue_head_init(&priv->fragment_skb);
+>   2641  
+>   2642          INIT_LIST_HEAD(&priv->cmd_queue);
+>   2643  
+>   2644          priv->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
+>   2645                                             priv->ops->tx_header_len +
+>   2646                                             PN533_CMD_DATAEXCH_HEAD_LEN,
+>   2647                                             priv->ops->tx_tail_len);
+> 
+> We changed this to return error pointers as well as NULL.  When
+> functions return a NULL as well as error pointers, then NULL is supposed
+> to be a special case of success but here it's just a failure.  That's
+> messy and bug prone.
 
-Fixes: e9e1ba3dbf00 ("iwlwifi: mvm: support getting nvm data from firmware")
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h | 10 +++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c        |  7 ++-----
- 2 files changed, 11 insertions(+), 6 deletions(-)
+Thanks for reporting this, Dan.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-index d4c01f3dce32..00bc7a25dece 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-@@ -164,8 +164,16 @@ struct iwl_nvm_get_info {
- } __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_S_VER_1 */
- 
- /**
-+ * enum iwl_nvm_info_general_flags - flags in NVM_GET_INFO resp
-+ * @NVM_GENERAL_FLAGS_EMPTY_OTP: 1 if OTP is empty
-+ */
-+enum iwl_nvm_info_general_flags {
-+	NVM_GENERAL_FLAGS_EMPTY_OTP	= BIT(0),
-+};
-+
-+/**
-  * struct iwl_nvm_get_info_general - general NVM data
-- * @flags: 1 - empty, 0 - valid
-+ * @flags: bit 0: 1 - empty, 0 - non-empty
-  * @nvm_version: nvm version
-  * @board_type: board type
-  * @reserved: reserved
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index dac7e542a190..5cc749261ce3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -576,11 +576,8 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
- 	}
- 
- 	rsp = (void *)hcmd.resp_pkt->data;
--	if (le32_to_cpu(rsp->general.flags)) {
--		IWL_ERR(mvm, "Invalid NVM data from FW\n");
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
-+		IWL_INFO(mvm, "OTP is empty\n");
- 
- 	mvm->nvm_data = kzalloc(sizeof(*mvm->nvm_data) +
- 				sizeof(struct ieee80211_channel) *
--- 
-2.13.2
+I'll take a closer look at this tomorrow, but I guess we could just
+continue using NULL for all errors for now.
+
+Thanks,
+Johan
