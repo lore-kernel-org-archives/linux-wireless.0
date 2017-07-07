@@ -1,69 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46846 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753899AbdGUP3r (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 11:29:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Subject: Re: RFC: Broadcom fmac wireless driver cleanup
-References: <20170716112129.10206-1-ian@mnementh.co.uk>
-        <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
-Date: Fri, 21 Jul 2017 18:29:42 +0300
-In-Reply-To: <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
-        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Mon, 17 Jul 2017
- 06:53:53 +0200")
-Message-ID: <87k23124gp.fsf@purkki.adurom.net> (sfid-20170721_173209_013109_1A238BA0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37988 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751034AbdGGLly (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jul 2017 07:41:54 -0400
+Message-ID: <1499427711.4790.4.camel@sipsolutions.net> (sfid-20170707_134157_458956_493F7FFA)
+Subject: Re: [PATCH 1/4] cfg80211: Check if PMKID attribute is of expected
+ size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Srinivas Dasari <dasaris@qti.qualcomm.com>
+Date: Fri, 07 Jul 2017 13:41:51 +0200
+In-Reply-To: <20170707093612.GA5732@jouni.qca.qualcomm.com>
+References: <1499381022-5389-1-git-send-email-jouni@qca.qualcomm.com>
+         <1499419676.4790.1.camel@sipsolutions.net>
+         <20170707093612.GA5732@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+On Fri, 2017-07-07 at 09:36 +0000, Jouni Malinen wrote:
+> On Fri, Jul 07, 2017 at 11:27:56AM +0200, Johannes Berg wrote:
+> > All applied, thanks.
+> > 
+> > How did you find these? Some of them go way back, after all, and I
+> > don't think even coverity flagged them?
+> 
+> Through manual review of all the nl80211 attributes.. There have been
+> somewhat similar issues flagged as security issues in various kernel
+> components recently and that has triggered more scrutiny for the
+> kernel interfaces.
 
-> On 16 July 2017 at 13:21, Ian Molton <ian@mnementh.co.uk> wrote:
->> I've been doing some cleanups in the broadcome brcmfmac driver, trying to
->> understand how it works.
->>
->> I think this makes the driver a *lot* more readable.
->>
->> Of note:
->>
->> * Gets rid of the arbitrary and completely 1:1 mapping of
->>  struct brcmf_{core,chip}_priv/struct brcmf_{core,chip} structures
->>  which add unreadability whilst offering no real seperation.
->>
->> * The patch titled HACK - stabilise the value of ->sbwad in use
->>  highlights an issue that is either bizarre undocumented behaviour or a
->>  genuine bug - without datasheets, I dont know. Essentially the value of=
- sbwad
->>  is taken as the base address in several functions, even though it is su=
-bject
->>  to change should other IO occur that moves the window offset
->>
->> Obviously this is a first cut at this and needs substantial cleanup itse=
-lf,
->> however I wanted to get some idea of wether I should continue working on=
- this.
->
-> I looked at 4 random patches and none got any description. Not to
-> mention their chaotic subjects. In this state I can't even review it.
-> If you want to have some change accepted, you've to convince us it's
-> needed. Work on cleaning your patches and resend them. You also need
-> to signed off your changes.
+Cool, thanks for that. I almost thought (hoped?) you had a (new) tool
+to detect this :)
 
-And try to stick with max 10-12 patches per patchset rule. More than
-that and it gets difficult for everyone (submitter, reviewers and
-maintainers). And if you are a new with the subsystem, like you are
-here, start with baby steps: send one patch, wait for it to get applied,
-send two, wait, send four, wait etc. This way you learn how things work
-without putting too much burden on the maintainers and things go forward
-smoothly.
-
---=20
-Kalle Valo
+johannes
