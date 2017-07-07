@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:36011 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750726AbdGGLV7 (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:6456 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750768AbdGGKE3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 07:21:59 -0400
-Received: by mail-wr0-f173.google.com with SMTP id c11so42496008wrc.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 04:21:58 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc: =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security@kernel.org" <security@kernel.org>
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
- <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
- <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
- <20170707084640.cv3igibbhhmgsmta@mwanda>
- <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
-Message-ID: <f0f38282-9767-188d-a68b-76d1316ac17d@broadcom.com> (sfid-20170707_132203_060135_338D2479)
-Date: Fri, 7 Jul 2017 13:21:55 +0200
+        Fri, 7 Jul 2017 06:04:29 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: Geert Uytterhoeven <geert@linux-m68k.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath10k: ret used but uninitialized
+Date: Fri, 7 Jul 2017 10:04:24 +0000
+Message-ID: <87bmowd0mh.fsf@kamboji.qca.qualcomm.com> (sfid-20170707_120454_497111_8BB34F0B)
+References: <CAMuHMdWVYA4TejcTjOQh7CBfFwJ=q59pzvuHrpH91Kx=-BK9fg@mail.gmail.com>
+        <c72d2e7a-195d-bcac-4ce5-f3051531664c@gmail.com>
+In-Reply-To: <c72d2e7a-195d-bcac-4ce5-f3051531664c@gmail.com> (Erik
+        Stromdahl's message of "Thu, 6 Jul 2017 22:01:57 +0200")
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-07-17 11:24, Arend van Spriel wrote:
-> 
-> 
-> On 7/7/2017 10:46 AM, Dan Carpenter wrote:
->> On Thu, Jul 06, 2017 at 03:32:42PM -0700, Linus Torvalds wrote:
->>> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>>
->>>> Looks fine to me so ...
->>>
->>> I really think that if we can't trust 'len', then we have to check
->>> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
->>> we'll just have a big 16-bit number instead.
->>
->> There is already a check in cfg80211_mlme_mgmt_tx().
->>
->>     if (params->len < 24 + 1)
->>         return -EINVAL;
->>
->> It probably should be using DOT11_MGMT_HDR_LEN instead of a magic 24.
-> 
-> Missed that check when I looked yesterday evening. Must have been the
-> time ;-)
-
-Hi Dan,
-
-This being said, are you going to send a V2 adding a brcmf_err() call as
-Linus proposed? I think we can improve the length check above later if
-deemed necessary.
-
-Regards,
-Arend
+RXJpayBTdHJvbWRhaGwgPGVyaWsuc3Ryb21kYWhsQGdtYWlsLmNvbT4gd3JpdGVzOg0KDQo+PiBX
+aXRoIGdjYyA0LjEuMjoNCj4+DQo+PiBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL3Nk
+aW8uYzogSW4gZnVuY3Rpb24NCj4+IOKAmGF0aDEwa19zZGlvX21ib3hfcnhtc2dfcGVuZGluZ19o
+YW5kbGVy4oCZOg0KPj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9zZGlvLmM6Njc2
+OiB3YXJuaW5nOiDigJhyZXTigJkgbWF5IGJlIHVzZWQNCj4+IHVuaW5pdGlhbGl6ZWQgaW4gdGhp
+cyBmdW5jdGlvbg0KPj4NCj4+PiArDQo+Pj4gKyAgICAgICAqZG9uZSA9IHRydWU7DQo+Pj4gKw0K
+Pj4+ICsgICAgICAgLyogQ29weSB0aGUgbG9va2FoZWFkIG9idGFpbmVkIGZyb20gdGhlIEhUQyBy
+ZWdpc3RlciB0YWJsZSBpbnRvIG91cg0KPj4+ICsgICAgICAgICogdGVtcCBhcnJheSBhcyBhIHN0
+YXJ0IHZhbHVlLg0KPj4+ICsgICAgICAgICovDQo+Pj4gKyAgICAgICBsb29rYWhlYWRzWzBdID0g
+bXNnX2xvb2thaGVhZDsNCj4+PiArDQo+Pj4gKyAgICAgICB0aW1lb3V0ID0gamlmZmllcyArIFNE
+SU9fTUJPWF9QUk9DRVNTSU5HX1RJTUVPVVRfSFo7DQo+Pg0KPj4gQWx0aG91Z2ggdmVyeSB1bmxp
+a2VseSBkdWUgdG8gdGhlIGxvbmcgdGltZW91dCwgaWYgdGhlIGNvZGUgaXMgcHJlZW1wdGVkIGhl
+cmUsDQo+PiBhbmQgdGhlIGxvb3AgYmVsb3cgbmV2ZXIgZW50ZXJlZCwgcmV0IHdpbGwgaW5kZWVk
+IGJlIHVuaW5pdGlhbGl6ZWQuDQo+Pg0KPj4gSXQncyB1bmNsZWFyIHRvIG1lIHdoYXQgdGhlIHBy
+b3BlciBpbml0aWFsaXphdGlvbiB3b3VsZCBiZSwgdGhvdWdoLCBzbw0KPj4gdGhhdCdzIHdoeSBJ
+IGRpZG4ndCBzZW5kIGEgcGF0Y2guDQo+Pg0KPiBJIHRoaW5rIGl0IHdvdWxkIGJlIGJlc3QgdG8g
+dXNlIDAgYXMgaW5pdGlhbCB2YWx1ZSBvZiByZXQgaW4gdGhpcyBjYXNlLg0KPiBUaGlzIHdpbGwg
+bWFrZSBhbGwgb3RoZXIgaW50ZXJydXB0cyBiZSBwcm9jZXNzZWQgaW4gYSBub3JtYWwgd2F5Lg0K
+Pg0KPiBLYWxsZTogU2hvdWxkIEkgY3JlYXRlIGEgbmV3IHBhdGNoIChpbml0aWFsaXppbmcgcmV0
+IHdpdGggemVybyk/DQoNClllcywgcGxlYXNlIHNlbmQgYSBuZXcgcGF0Y2ggZml4aW5nIHRoaXMu
+DQoNCkJ1dCBJIGRvbid0IGxpa2UgdGhhdCBtdWNoIHdpdGggdGhlIHN0eWxlIG9mIGluaXRpYWxp
+c2luZyByZXQgdG8gemVybywNCml0IHRlbmRzIHRvIGhpZGUgdGhpbmdzLiBJbnN0ZWFkIG15IHBy
+ZWZlcmVuY2UgaXMgc29tZXRoaW5nIGxpa2UgYmVsb3cNCndoZXJlIHRoZSBlcnJvciBoYW5kbGlu
+ZyBpcyBtb3JlIGV4cGxpY2l0IGFuZCBlYXNpZXIgdG8gZmluZCB3aGVyZSBpdCdzDQpleGFjdGx5
+IGZhaWxpbmcuIEJ1dCB0aGF0J3MganVzdCBhbiBleGFtcGxlIGhvdyBJIHdvdWxkIHRyeSB0byBz
+b2x2ZSBpdCwNCml0IHN0aWxsIGxhY2tzIHRoZSBoYW5kbGluZyBvZiAtRUNBTkNFTCBldGMuDQoN
+CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL3NkaW8uYyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvc2Rpby5jDQppbmRleCA4NTllZDg3MGJkOTcu
+LjE5YTUzZTU3NzkzMiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgx
+MGsvc2Rpby5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL3NkaW8uYw0K
+QEAgLTY4OSw4ICs2ODksMTAgQEAgc3RhdGljIGludCBhdGgxMGtfc2Rpb19tYm94X3J4bXNnX3Bl
+bmRpbmdfaGFuZGxlcihzdHJ1Y3QgYXRoMTBrICphciwNCiAJCSAqLw0KIAkJcmV0ID0gYXRoMTBr
+X3NkaW9fbWJveF9yeF9hbGxvYyhhciwgbG9va2FoZWFkcywNCiAJCQkJCQluX2xvb2thaGVhZHMp
+Ow0KLQkJaWYgKHJldCkNCi0JCQlicmVhazsNCisJCWlmIChyZXQpIHsNCisJCQlhdGgxMGtfd2Fy
+bihhciwgImZhaWxlZCB0byAuLi4uOiAlZCIsIHJldCk7DQorCQkJcmV0dXJuIHJldDsNCisJCX0N
+CiANCiAJCWlmIChhcl9zZGlvLT5uX3J4X3BrdHMgPj0gMikNCiAJCQkvKiBBIHJlY3YgYnVuZGxl
+IHdhcyBkZXRlY3RlZCwgZm9yY2UgSVJRIHN0YXR1cw0KQEAgLTcwOSw4ICs3MTEsMTAgQEAgc3Rh
+dGljIGludCBhdGgxMGtfc2Rpb19tYm94X3J4bXNnX3BlbmRpbmdfaGFuZGxlcihzdHJ1Y3QgYXRo
+MTBrICphciwNCiAJCQkJCQkJICBsb29rYWhlYWRzLA0KIAkJCQkJCQkgICZuX2xvb2thaGVhZHMp
+Ow0KIA0KLQkJaWYgKCFuX2xvb2thaGVhZHMgfHwgcmV0KQ0KLQkJCWJyZWFrOw0KKwkJaWYgKCFu
+X2xvb2thaGVhZHMgfHwgcmV0KSB7DQorCQkJYXRoMTBrX3dhcm4oYXIsICJmYWlsZWQgdG8gLi4u
+LiIpOw0KKwkJCXJldHVybiByZXQ7DQorCQl9DQogDQogCQkvKiBGb3IgU1lOQ0ggcHJvY2Vzc2lu
+ZywgaWYgd2UgZ2V0IGhlcmUsIHdlIGFyZSBydW5uaW5nDQogCQkgKiB0aHJvdWdoIHRoZSBsb29w
+IGFnYWluIGR1ZSB0byB1cGRhdGVkIGxvb2thaGVhZHMuIFNldA0KQEAgLTcyMSwxMSArNzI1LDcg
+QEAgc3RhdGljIGludCBhdGgxMGtfc2Rpb19tYm94X3J4bXNnX3BlbmRpbmdfaGFuZGxlcihzdHJ1
+Y3QgYXRoMTBrICphciwNCiAJCSpkb25lID0gZmFsc2U7DQogCX0NCiANCi0JaWYgKHJldCAmJiAo
+cmV0ICE9IC1FQ0FOQ0VMRUQpKQ0KLQkJYXRoMTBrX3dhcm4oYXIsICJmYWlsZWQgdG8gZ2V0IHBl
+bmRpbmcgcmVjdiBtZXNzYWdlczogJWRcbiIsDQotCQkJICAgIHJldCk7DQotDQotCXJldHVybiBy
+ZXQ7DQorCXJldHVybiAwOw0KIH0NCiANCiBzdGF0aWMgaW50IGF0aDEwa19zZGlvX21ib3hfcHJv
+Y19kYmdfaW50cihzdHJ1Y3QgYXRoMTBrICphcikNCg0KDQotLSANCkthbGxlIFZhbG8=
