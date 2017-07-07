@@ -1,95 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33622 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756772AbdGYBOW (ORCPT
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:35289 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdGGLTf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:22 -0400
-Received: by mail-pf0-f172.google.com with SMTP id s70so53108769pfs.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:22 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Fri, 7 Jul 2017 07:19:35 -0400
+Received: by mail-wr0-f172.google.com with SMTP id k67so42305554wrc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 04:19:34 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 12/20] mwifiex: don't open-code ARRAY_SIZE()
-Date: Mon, 24 Jul 2017 18:13:28 -0700
-Message-Id: <20170725011336.99993-13-briannorris@chromium.org> (sfid-20170725_032023_037934_838DCA5E)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        "security@kernel.org" <security@kernel.org>
+References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
+ <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
+ <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
+ <20170707084640.cv3igibbhhmgsmta@mwanda>
+ <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
+ <20170707101939.3mgdgc4pvjg6dyyx@mwanda>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <36f255e3-60e6-3ecc-8a47-90ec7df97ec6@broadcom.com> (sfid-20170707_131938_915865_51A94B9C)
+Date: Fri, 7 Jul 2017 13:19:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170707101939.3mgdgc4pvjg6dyyx@mwanda>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: no change
----
- drivers/net/wireless/marvell/mwifiex/cfp.c         | 4 +---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 8 ++------
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 5 ++---
- 3 files changed, 5 insertions(+), 12 deletions(-)
+On 07-07-17 12:19, Dan Carpenter wrote:
+> Speaking of underflows:
+> 
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>   4913          if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+>   4914                  /* Right now the only reason to get a probe response */
+>   4915                  /* is for p2p listen response or for p2p GO from     */
+>   4916                  /* wpa_supplicant. Unfortunately the probe is send   */
+>   4917                  /* on primary ndev, while dongle wants it on the p2p */
+>   4918                  /* vif. Since this is only reason for a probe        */
+>   4919                  /* response to be sent, the vif is taken from cfg.   */
+>   4920                  /* If ever desired to send proberesp for non p2p     */
+>   4921                  /* response then data should be checked for          */
+>   4922                  /* "DIRECT-". Note in future supplicant will take    */
+>   4923                  /* dedicated p2p wdev to do this and then this 'hack'*/
+>   4924                  /* is not needed anymore.                            */
+>   4925                  ie_offset =  DOT11_MGMT_HDR_LEN +
+>   4926                               DOT11_BCN_PRB_FIXED_LEN;
+>   4927                  ie_len = len - ie_offset;
+>                                  ^^^^^^^^^^^^^^^
+> This can underflow.  It's harmless, but it's annoying for me as a static
+> checker person because this is the line where I'd like to print a
+> warning but everyone will complain it's a "false positive".
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-index 6e2994308526..bfe84e55df77 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-@@ -180,11 +180,9 @@ static struct region_code_mapping region_code_mapping_t[] = {
- u8 *mwifiex_11d_code_2_region(u8 code)
- {
- 	u8 i;
--	u8 size = sizeof(region_code_mapping_t)/
--				sizeof(struct region_code_mapping);
- 
- 	/* Look for code in mapping table */
--	for (i = 0; i < size; i++)
-+	for (i = 0; i < ARRAY_SIZE(region_code_mapping_t); i++)
- 		if (region_code_mapping_t[i].code == code)
- 			return region_code_mapping_t[i].region;
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 534d94a206a5..b71ad4de5e54 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -189,9 +189,7 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
- 	if (pbitmap_rates != NULL) {
- 		rate_scope->hr_dsss_rate_bitmap = cpu_to_le16(pbitmap_rates[0]);
- 		rate_scope->ofdm_rate_bitmap = cpu_to_le16(pbitmap_rates[1]);
--		for (i = 0;
--		     i < sizeof(rate_scope->ht_mcs_rate_bitmap) / sizeof(u16);
--		     i++)
-+		for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
- 			rate_scope->ht_mcs_rate_bitmap[i] =
- 				cpu_to_le16(pbitmap_rates[2 + i]);
- 		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
-@@ -206,9 +204,7 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
- 			cpu_to_le16(priv->bitmap_rates[0]);
- 		rate_scope->ofdm_rate_bitmap =
- 			cpu_to_le16(priv->bitmap_rates[1]);
--		for (i = 0;
--		     i < sizeof(rate_scope->ht_mcs_rate_bitmap) / sizeof(u16);
--		     i++)
-+		for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
- 			rate_scope->ht_mcs_rate_bitmap[i] =
- 				cpu_to_le16(priv->bitmap_rates[2 + i]);
- 		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 2945775e83c5..0fba5b10ef2d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -298,9 +298,8 @@ static int mwifiex_ret_tx_rate_cfg(struct mwifiex_private *priv,
- 			priv->bitmap_rates[1] =
- 				le16_to_cpu(rate_scope->ofdm_rate_bitmap);
- 			for (i = 0;
--			     i <
--			     sizeof(rate_scope->ht_mcs_rate_bitmap) /
--			     sizeof(u16); i++)
-+			     i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap);
-+			     i++)
- 				priv->bitmap_rates[2 + i] =
- 					le16_to_cpu(rate_scope->
- 						    ht_mcs_rate_bitmap[i]);
--- 
-2.14.0.rc0.284.gd933b75aa4-goog
+Feel free to provide such a patch.
+
+Regards,
+Arend
