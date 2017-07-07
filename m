@@ -1,160 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37826 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752555AbdGaQcs (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34198 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbdGGQhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:32:48 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 06/10] wil6210: add statistics for suspend time
-Date: Mon, 31 Jul 2017 19:32:29 +0300
-Message-Id: <1501518753-6339-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183251_830569_8FF4E882)
-In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 7 Jul 2017 12:37:09 -0400
+Received: by mail-oi0-f41.google.com with SMTP id l130so32095012oib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 09:37:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1499433473.4790.6.camel@sipsolutions.net>
+References: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com> <1499433473.4790.6.camel@sipsolutions.net>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 7 Jul 2017 09:37:08 -0700
+Message-ID: <CA+55aFzV_Gp=q7r+WjNV9epaCaAFqirXfMVD1=+CcfwGV1SGoA@mail.gmail.com> (sfid-20170707_183713_259872_0EE51572)
+Subject: Re: [PATCH] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add statistics for total, min and max suspend time, that
-calculates the time the 11ad device was in suspend.
-Those statistics will help to estimate the power impact
-of d3hot feature.
+On Fri, Jul 7, 2017 at 6:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> Linus, since you were involved already, will you apply this directly?
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
- drivers/net/wireless/ath/wil6210/main.c    |  2 ++
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
- 4 files changed, 40 insertions(+), 4 deletions(-)
+I don't think it's _that_ urgent, since it's specific to one
+particular driver anyway. I'd suggest just going through the normal
+channels, and be cc'd to netdev.
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 8a0e64c..97d79a9 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1669,6 +1669,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
-+	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1680,18 +1682,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
-+	unsigned long long stats_collection_time =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n"
-+		     "total suspend time:%lld min suspend time:%lld\n"
-+		     "max suspend time:%lld stats collection time: %lld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device);
-+		     wil->suspend_stats.rejected_by_device,
-+		     wil->suspend_stats.total_suspend_time,
-+		     wil->suspend_stats.min_suspend_time,
-+		     wil->suspend_stats.max_suspend_time,
-+		     stats_collection_time);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1864,6 +1875,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
-+	wil->suspend_stats.collection_start = ktime_get();
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index daf944a..8968c2c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
- 
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
-+	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 976c9aa..4a18f8e 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -321,6 +321,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
-+	if (!rc)
-+		wil->suspend_stats.suspend_start_time = ktime_get();
-+
- 	return rc;
- }
- 
-@@ -330,6 +333,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	bool keep_radio_on = ndev->flags & IFF_UP &&
- 			     wil->keep_radio_on_during_sleep;
-+	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -347,9 +351,21 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
-+	if (rc)
-+		goto out;
-+
-+	suspend_time_usec =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.suspend_start_time));
-+	wil->suspend_stats.total_suspend_time += suspend_time_usec;
-+	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
-+		wil->suspend_stats.min_suspend_time = suspend_time_usec;
-+	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
-+		wil->suspend_stats.max_suspend_time = suspend_time_usec;
-+
- out:
--	wil_dbg_pm(wil, "resume: %s => %d\n",
--		   is_runtime ? "runtime" : "system", rc);
-+	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
-+		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
- 	return rc;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 69103b0..f1488299 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -90,6 +90,11 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
-+	unsigned long long total_suspend_time;
-+	unsigned long long min_suspend_time;
-+	unsigned long long max_suspend_time;
-+	ktime_t collection_start;
-+	ktime_t suspend_start_time;
- };
- 
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
--- 
-1.9.1
+> I guess it should also have a Cc: stable tag, and perhaps a Fixes?
+
+The fixes tag would be
+
+    Fixes: 18e2f61db3b70 ("brcmfmac: P2P action frame tx.")
+
+which is 3.9 in case anybody cares. I assume that didn't get
+backported any further.
+
+                Linus
