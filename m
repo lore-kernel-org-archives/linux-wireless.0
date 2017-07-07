@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:47026 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750907AbdGHMUS (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:35621 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752409AbdGGI2d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Jul 2017 08:20:18 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: Request to add bluetooth module identifier to
- net/rfkill/rfkill-gpio.c
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <CALnajPCeYP6W4iECCsDegwTmq7UsPcH04C=K0h-zZQD6pf6rZw@mail.gmail.com>
-Date: Sat, 8 Jul 2017 14:20:15 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-Message-Id: <985A2192-C2F2-4361-BE23-9E9A5F53DAFA@holtmann.org> (sfid-20170708_142035_090248_5BFB5075)
-References: <CALnajPDkZi5tOTcghFCRHg8EiLgXXy1nWo+b7R4DxX8iEd1g0Q@mail.gmail.com>
- <CALnajPCeYP6W4iECCsDegwTmq7UsPcH04C=K0h-zZQD6pf6rZw@mail.gmail.com>
-To: Sundar Nagarajan <sun.nagarajan@gmail.com>
+        Fri, 7 Jul 2017 04:28:33 -0400
+Received: by mail-wr0-f182.google.com with SMTP id k67so36252171wrc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 01:28:32 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        "security@kernel.org" <security@kernel.org>
+References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
+ <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
+ <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <37617809-d840-fe43-ae0d-71c545f9fab1@broadcom.com> (sfid-20170707_102849_589396_FD13D4BD)
+Date: Fri, 7 Jul 2017 10:28:29 +0200
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sundar,
 
-> I have a Cherry Trail laptop with an Atom X5-Z8300. It has a bluetooth
-> chip that needs the r8723bs (coexisting RTL 8723BS wifi and
-> bluetooth).
-> 
-> I am using linux-next (20150817) with the r8723bs staging driver and
-> the firmware and utility from https://github.com/lwfinger/rtl8723bs_bt
-> by Larry finger.
-> 
-> With linux-next the bluetooth works SOMETIMES, but on reboot, it does
-> not work any more (no bluetooth interfaces are detected and hciconfig
-> shows nothing).
-> 
-> I am a kernel novice, but I saw that another kernel that I had tried
-> had the following line added in struct acpi_device_id
-> rfkill_acpi_match:
-> 
-> { "OBDA8723",RFKILL_TYPE_BLUETOOTH }
-> 
-> With the attached patch applied (one line added), my bluetooth works every time.
-> 
-> Does this belong in rfkill-gpio.c, or should I contact someone else?
 
-it does not belong in rfkill-gpio.c since this controls the power of the Bluetooth device. This belongs in the Bluetooth driver. We already moved all the Intel and Broadcom ones into hci_intel.c and respectively hci_bcm.c. So have the staging driver deal with the power GPIO.
+On 7/7/2017 12:32 AM, Linus Torvalds wrote:
+> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>>
+>> Looks fine to me so ...
+> 
+> I really think that if we can't trust 'len', then we have to check
+> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
+> we'll just have a big 16-bit number instead.
 
-Regards
+Fair enough. The firmware on the device should have a check in place, 
+but guess what... :-( Anyway, the lower bound depends on the type of 
+management frames. So for action frames it is DOT11_MGMT_HDR_LEN + 1 /* 
+Action Category */ + 1 /* Action */.
 
-Marcel
+Might be better to place the lower bound check in net/wireless/nl80211.c 
+and do that appropriate for the type of management frame. That way it is 
+assured for all wireless drivers.
+
+> And we should do that brcmf_err() that I had in my version, which also
+> let's people know they are being attacked.
+
+Ok.
+
+Regards,
+Arend
