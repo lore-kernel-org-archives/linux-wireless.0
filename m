@@ -1,51 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36638 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752205AbdGYOus (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:25627 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752473AbdGGO2s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 10:50:48 -0400
+        Fri, 7 Jul 2017 10:28:48 -0400
+Date: Fri, 7 Jul 2017 17:28:34 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: prameela.j04cs@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Subject: Re: [bug report] rsi: Add new host interface operations
+Message-ID: <20170707142834.46l26uc2yrcxyidk@mwanda> (sfid-20170707_162852_330580_EA8318B7)
+References: <20170612195908.GA2079@elgon.mountain>
 MIME-Version: 1.0
-In-Reply-To: <87mv7sisr3.fsf@codeaurora.org>
-References: <20170710144425.2238584-1-arnd@arndb.de> <20170710144425.2238584-2-arnd@arndb.de>
- <87mv7sisr3.fsf@codeaurora.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 25 Jul 2017 16:50:47 +0200
-Message-ID: <CAK8P3a2jHkrE57jYWuXOkyUSeFxy0jdT-pnL4GXP7z0bhHiTKQ@mail.gmail.com> (sfid-20170725_165148_595677_51E425C8)
-Subject: Re: [RFC 2/2] wl3501_cs: reduce stack size for KASAN
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "the arch/x86 maintainers" <x86@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170612195908.GA2079@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 25, 2017 at 2:52 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
->
->> Inlining functions with local variables can lead to excessive stack usage
->> with KASAN after a previous patch that modifies the outsb/insb helpers
->> on x86.
->>
->> drivers/net/wireless/wl3501_cs.c: In function 'wl3501_rx_interrupt':
->> drivers/net/wireless/wl3501_cs.c:1103:1: error: the frame size of 2232 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
->>
->> Marking the two callers of insb/outb 'noinline' prevents the compiler
->> from adding up the stack usage for each of the local variables passed
->> into those, reducing the maximum stack frame size to 800 bytes with
->> KASAN again.
->>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
-> Arnd, based on the discussion I'm dropping. Please let me know if I
-> should take this still.
+None of these issues have been addressed.
 
-Thanks, that's good. The problem has become unreproducible and
-I assume it's gone for good with the new x86 fix. In the unlikely
-case some form of the problem comes back in another randconfig,
-I'll post a new patch.
+regards,
+dan carpenter
 
-       Arnd
+On Mon, Jun 12, 2017 at 10:59:08PM +0300, Dan Carpenter wrote:
+> Hello Prameela Rani Garnepudi,
+> 
+> The patch b97e9b94ad75: "rsi: Add new host interface operations" from
+> May 16, 2017, leads to the following static checker warning:
+> 
+> 	drivers/net/wireless/rsi/rsi_91x_usb.c:400 rsi_usb_master_reg_read()
+> 	warn: passing casted pointer 'value' to 'rsi_usb_reg_read()' 32 vs 16.
+> 
+> drivers/net/wireless/rsi/rsi_91x_usb.c
+>    156  static int rsi_usb_reg_read(struct usb_device *usbdev,
+>    157                              u32 reg,
+>    158                              u16 *value,
+>    159                              u16 len)
+>    160  {
+>    161          u8 *buf;
+>    162          int status = -ENOMEM;
+>    163  
+>    164          buf  = kmalloc(0x04, GFP_KERNEL);
+> 
+> Why are we allocating 0x4 bytes?
+> 
+>    165          if (!buf)
+>    166                  return status;
+>    167  
+>    168          status = usb_control_msg(usbdev,
+>    169                                   usb_rcvctrlpipe(usbdev, 0),
+>    170                                   USB_VENDOR_REGISTER_READ,
+>    171                                   RSI_USB_REQ_IN,
+>    172                                   ((reg & 0xffff0000) >> 16), (reg & 0xffff),
+>    173                                   (void *)buf,
+>    174                                   len,
+>                                          ^^^
+> If len is more than 4 then we have memory corruption.
+> 
+>    175                                   USB_CTRL_GET_TIMEOUT);
+>    176  
+>    177          *value = (buf[0] | (buf[1] << 8));
+>    178          if (status < 0) {
+>    179                  rsi_dbg(ERR_ZONE,
+>    180                          "%s: Reg read failed with error code :%d\n",
+>    181                          __func__, status);
+>    182          }
+> 
+> [ snip ]
+> 
+>    394  static int rsi_usb_master_reg_read(struct rsi_hw *adapter, u32 reg,
+>    395                                     u32 *value, u16 len)
+>    396  {
+>    397          struct usb_device *usbdev =
+>    398                  ((struct rsi_91x_usbdev *)adapter->rsi_dev)->usbdev;
+>    399  
+>    400          return rsi_usb_reg_read(usbdev, reg, (u16 *)value, len);
+> 
+> This is an endian bug because we're assuming the CPU is little endian.
+> 
+> 	u16 tmp;
+> 	int ret;
+> 
+> 	if (len != sizeof(*value)) /* Or maybe sizeof(tmp), who knows? */
+> 		return -EINVAL;
+> 	ret = rsi_usb_reg_read(usbdev, reg, &tmp, len);
+> 	if (ret)
+> 		return ret;
+> 
+> 	*value = tmp;
+> 	return 0;
+> 
+> 
+>    401  }
+> 
+> regards,
+> dan carpenter
