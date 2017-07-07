@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:34255 "EHLO
-        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756703AbdGYBOO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:14 -0400
-Received: by mail-pg0-f54.google.com with SMTP id 123so64046332pgj.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:14 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 03/20] mwifiex: pcie: don't allow cmd buffer reuse after reset
-Date: Mon, 24 Jul 2017 18:13:19 -0700
-Message-Id: <20170725011336.99993-4-briannorris@chromium.org> (sfid-20170725_031514_627727_55374C3F)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+Received: from mga02.intel.com ([134.134.136.20]:49722 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751023AbdGGJ4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jul 2017 05:56:32 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        "[4.0+]" <stable@vger.kernel.org>
+Subject: [PATCH] cfg80211: don't change the regulatory HT flags in custom regulatory flows
+Date: Fri,  7 Jul 2017 12:56:16 +0300
+Message-Id: <20170707095616.29450-1-emmanuel.grumbach@intel.com> (sfid-20170707_115636_912882_607436E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In rogue cases (due to other bugs) it's possible we try to process an
-old command response *after* resetting the device. This could trigger a
-double-free (or the SKB can get reallocated elsewhere...causing other
-memory corruptions) in mwifiex_pcie_process_cmd_complete().
+When the regulatory is handled by the driver, don't
+interact with the flags it sets.
+iwlwifi doesn't want to use channel 40 HT40+ for example.
 
-For safety (and symmetry) let's always NULL out the command buffer as we
-free it up. We're already doing this for the command response buffer.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Cc: <stable@vger.kernel.org> [4.0+]
+Fixes: b0d7aa59592b ("cfg80211: allow wiphy specific regdomain management")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v2: no change
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/wireless/reg.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index b53ecf1eddda..5c07edd4e094 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1030,12 +1030,14 @@ static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
- 		mwifiex_unmap_pci_memory(adapter, card->cmdrsp_buf,
- 					 PCI_DMA_FROMDEVICE);
- 		dev_kfree_skb_any(card->cmdrsp_buf);
-+		card->cmdrsp_buf = NULL;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 5fae296a6a58..29879440626e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -4,6 +4,7 @@
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
++ * Copyright      2017  Intel Deutschland GmbH
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -1483,7 +1484,9 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_supported_band *sband = wiphy->bands[channel->band];
+ 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
++	const struct ieee80211_regdomain *regd;
+ 	unsigned int i;
++	u32 flags;
+ 
+ 	if (!is_ht40_allowed(channel)) {
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40;
+@@ -1503,17 +1506,30 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ 			channel_after = c;
  	}
  
- 	if (card && card->cmd_buf) {
- 		mwifiex_unmap_pci_memory(adapter, card->cmd_buf,
- 					 PCI_DMA_TODEVICE);
- 		dev_kfree_skb_any(card->cmd_buf);
-+		card->cmd_buf = NULL;
- 	}
- 	return 0;
- }
-@@ -2921,7 +2923,6 @@ static void mwifiex_pcie_free_buffers(struct mwifiex_adapter *adapter)
- 	mwifiex_pcie_delete_evtbd_ring(adapter);
- 	mwifiex_pcie_delete_rxbd_ring(adapter);
- 	mwifiex_pcie_delete_txbd_ring(adapter);
--	card->cmdrsp_buf = NULL;
- }
++	regd = get_wiphy_regdom(wiphy);
++	if (regd) {
++		const struct ieee80211_reg_rule *reg_rule =
++			freq_reg_info_regd(MHZ_TO_KHZ(channel->center_freq),
++					   regd, MHZ_TO_KHZ(20));
++
++		flags = reg_rule->flags;
++	} else {
++		flags = 0;
++	}
++
+ 	/*
+ 	 * Please note that this assumes target bandwidth is 20 MHz,
+ 	 * if that ever changes we also need to change the below logic
+ 	 * to include that as well.
+ 	 */
+-	if (!is_ht40_allowed(channel_before))
++	if (!is_ht40_allowed(channel_before) ||
++	    flags & NL80211_RRF_NO_HT40MINUS)
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
+ 	else
+ 		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
  
- /*
+-	if (!is_ht40_allowed(channel_after))
++	if (!is_ht40_allowed(channel_after) ||
++	    flags & NL80211_RRF_NO_HT40PLUS)
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
+ 	else
+ 		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
 -- 
-2.14.0.rc0.284.gd933b75aa4-goog
+2.9.3
