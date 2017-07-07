@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:60229 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750757AbdGYSWd (ORCPT
+Received: from mail-wr0-f178.google.com ([209.85.128.178]:32860 "EHLO
+        mail-wr0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750848AbdGGTjH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 14:22:33 -0400
-Date: Tue, 25 Jul 2017 11:22:32 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
-        Mark Greer <mgreer@animalcreek.com>
-Subject: Re: [PATCH 00/23] neard: Support TI Std & Pro tags, fixups, etc.
-Message-ID: <20170725182232.GA13245@animalcreek.com> (sfid-20170725_202238_056733_D47294C4)
-References: <20170615182516.4508-1-mgreer@animalcreek.com>
+        Fri, 7 Jul 2017 15:39:07 -0400
+Received: by mail-wr0-f178.google.com with SMTP id r103so60330420wrb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 12:39:06 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: fix possible buffer overflow in
+ brcmf_cfg80211_mgmt_tx()
+To: sedat.dilek@gmail.com
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-wireless@vger.kernel.org
+References: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CA+icZUXVEBQzau4d36iO1vvhioX_WM8AH-iw=Tv+vUcVBtUeWw@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <069e03ba-9d83-cde9-5ff1-49f847ccb887@broadcom.com> (sfid-20170707_213910_688414_CCD0F1F2)
+Date: Fri, 7 Jul 2017 21:39:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
+In-Reply-To: <CA+icZUXVEBQzau4d36iO1vvhioX_WM8AH-iw=Tv+vUcVBtUeWw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 15, 2017 at 11:24:53AM -0700, Mark Greer wrote:
-> This is an assortment of commits that make some fixups, do some general
-> tightening of NDEF data checking, add support for TI Standard and Pro
-> Type 5 tags, and stop issuing the Read Multiple Blocks command when
-> formatting a Type 5 tag.  The reasoning for each change is in the
-> individual commit descriptions.
+On 07-07-17 14:47, Sedat Dilek wrote:
+> On Fri, Jul 7, 2017 at 2:01 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> The lower level nl80211 code in cfg80211 ensures that "len" is between
+>> 25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) from
+>> "len" so thats's max of 2280.  However, the action_frame->data[] buffer is
+>> only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
+>> overflow.
+>>
+>>         memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+>>                le16_to_cpu(action_frame->len));
+>>
+>> Reported-by: "freenerguo(郭大兴)" <freenerguo@tencent.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> ---
+>> Hi Kalle,
+>>
+>> Here is the patch as Linus send it to us and security@kernel.org. I
+>> removed the lower bound check as that is already done in cfg80211.
+>> Now I signed off on the patch although formally I suppose Linus should
+>> sign it off. Putting it out there so people can respond as deemed
+>> necessary.
+>>
+>> Now fingers crossed whether patchwork will properly deal with the UTF-8
+>> characters :-p
+>>
 > 
-> For convenience, a branch with these commits is available in the
-> submit/updates-v1 branch here:
-> 
-> 	https://github.com/animalcreek/neard.git
-> 
-> Mark Greer (23):
->   ndef: Add default language ("en") for Text records
->   ndef: Fix use of uninitialized variable in property_get_type()
->   ndef: Unrecognized WKTs should return RECORD_TYPE_UNKNOWN
->   ndef: Verify RTD record type name encodings
->   ndef: Discard records containing errors
->   ndef: Validate text data in WKT Text records
->   adapter: Return '-errno' when socket() call fails
->   adapter: Return '-errno' when connect() call fails
->   adapter: Clear timeout handle when check presence timer stopped
->   adapter: Clear timer handle when DEP timer stopped
->   adapter: Do not poll when there is an active tag
->   nfctype2: Don't read tags with bad magic number
->   nfctype5: Reduce noise when tag is moved out of range
->   nfctype5: Add space between 'if' and first '('
->   nfctype5: Remove superfluous parentheses
->   nfctype5: Rework code that identifies ST Micro Type 5 tags
->   nfctype5: Add support for TI Standard and Pro Type 5 tag
->   nfctype5: Remove useless initialization
->   nfctype5: Don't issue RMB command when formatting
->   nfctype5: Discard extra byte in RMB response data
->   nfctype5: Fix formatting
->   nfctools: Move nciattach macros & enums to nciattach.c
->   nfc_copy: Update nfc_copy.h to match Linux kernel's version
-> 
->  include/nfc_copy.h          |  63 +++++----
->  plugins/nfctype2.c          |   1 +
->  plugins/nfctype5.c          | 320 ++++++++++++++++++++++++--------------------
->  src/adapter.c               |  15 ++-
->  src/ndef.c                  |  43 +++++-
->  tools/nciattach.c           |  12 ++
->  tools/nfctool/llcp-decode.c |  14 +-
->  tools/nfctool/snep-decode.c |  12 +-
->  8 files changed, 290 insertions(+), 190 deletions(-)
+> Somehow horrific to see - less in usage (no CC here).
 
-Ping?
+Sorry, Sedat
+
+What is horrific? It is a bit cryptic (for me) what you would like me to
+do now if anything.
+
+Regards,
+Arend
+
+> - Sedat -
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/log/?qt=grep&q=security%40kernel.org
+> 
