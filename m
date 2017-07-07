@@ -1,82 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:35210 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751301AbdGQRkJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 13:40:09 -0400
-Subject: Re: RFC: Broadcom fmac wireless driver cleanup
-From: Ian Molton <ian@mnementh.co.uk>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170716112129.10206-1-ian@mnementh.co.uk>
- <72fae7cb-7db0-4979-8e4b-cf26c557634a@broadcom.com>
- <97ac668c-fef4-37be-06e1-0135dea77527@mnementh.co.uk>
-Message-ID: <3f51e5bb-c0ea-6c56-66e2-f5fd170bc7c4@mnementh.co.uk> (sfid-20170717_194013_104400_0D519E0E)
-Date: Mon, 17 Jul 2017 18:40:07 +0100
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:35518 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdGGQ7T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jul 2017 12:59:19 -0400
+Date: Fri, 7 Jul 2017 18:59:17 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [Patch net] wl1251: add a missing spin_lock_init()
+Message-ID: <20170707165917.GA14179@amd> (sfid-20170707_185923_120872_176C1CEC)
+References: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <97ac668c-fef4-37be-06e1-0135dea77527@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="5mCyUwZo2JvN/JJP"
+In-Reply-To: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17/07/17 16:56, Ian Molton wrote:
-> The two structures *always* exist together. And yes, preventing access
-> to the members that we don't want accessed from the wrong layer would
-> be *possibly* worthwhile, however the driver code as it stands
-> *constantly* short circuits that with the use of offsetof().
 
-inb4: misthought there - it doesnt use offsetof() for that, but my point
-stands.
+--5mCyUwZo2JvN/JJP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Look, for example, at the core structs:
+Hi!
 
-struct brcmf_core_priv {
-	struct brcmf_core pub;
-	u32 wrapbase;
-	struct list_head list;
-	struct brcmf_chip_priv *chip;
-};
+> This fixes the following kernel warning:
+>=20
+>   [ 5668.771453] BUG: spinlock bad magic on CPU#0, kworker/u2:3/9745
+=2E..
+>   [ 5668.777343] [<c06a4f94>] (ieee80211_subif_start_xmit) from
+>   [<c0578848>] (dev_hard_start_xmit+0x80/0x118)
+>   ...
+>=20
+> by adding the missing spin_lock_init().
+>=20
+> Reported-by: Pavel Machek <pavel@ucw.cz>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
 
-and
+Looks very reasonable.
 
-struct brcmf_core {
- 	u16 id;
- 	u16 rev;
- 	u32 base;
-}
+Acked-by: Pavel Machek <pavel@ucw.cz>
 
+I tried testing it, and resulting kernel works, but even going back to
+broken kernel I can't reproduce the problem on demand...
 
-What is the useful separation being achieved here? both base and
-wrapbase are pointers to core address space.
+Best regards,
+								Pavel
 
-Apart from that, nothing but the core ID and revision are separated from
-the other data.
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -1571,6 +1571,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+> =20
+>  	wl->state =3D WL1251_STATE_OFF;
+>  	mutex_init(&wl->mutex);
+> +	spin_lock_init(&wl->wl_lock);
+> =20
+>  	wl->tx_mgmt_frm_rate =3D DEFAULT_HW_GEN_TX_RATE;
+>  	wl->tx_mgmt_frm_mod =3D DEFAULT_HW_GEN_MODULATION_TYPE;
 
-so we have two address space pointers, which are separated for no good
-reason, and two derived values which its pretty much irrelevant if
-they're changed.
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
 
-The only other information in there is the list management structures,
-which are used in public structures throughout the linux kernel - its
-common practice.
+--5mCyUwZo2JvN/JJP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-A quick grep shows that the struct brcmf_core does not get used outside
-chip.c, and struct brcmf_chip is used purely as a pointer in a less than
-a handful of places in the bus drivers, which are barely interested in
-their internal data (chiprev, etc.).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-For these tiny number of cases do we really want to make all of chip.c
-and chip.h illegible?
+iEYEARECAAYFAllfveUACgkQMOfwapXb+vLW7gCfdyCsZKPRytciLgFwu8s800n6
+mXIAoJsQFneQIERNXrID507oRP3hGCV4
+=OJa0
+-----END PGP SIGNATURE-----
 
-eg:
-
--	chip->ops->activate(chip->ctx, &chip->pub, rstvec);
-+	chip->ops->activate(chip->ctx, chip, rstvec);
-
-Which I was planning to submit a further patch to convert it to simply:
-
-chip->ops->activate(chip, rstvec);
-
-Which is *so* much more readable.
-
--Ian
+--5mCyUwZo2JvN/JJP--
