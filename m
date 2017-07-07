@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37296 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750885AbdGEGFs (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:51629 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750892AbdGGMBh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:32 +0300
-Message-Id: <20170705060539.20737-1-luca@coelho.fi> (sfid-20170705_080552_352922_C771960C)
+        Fri, 7 Jul 2017 08:01:37 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
+Date: Fri,  7 Jul 2017 13:01:33 +0100
+Message-Id: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170707_140140_467929_3104918C)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 0/7] iwlwifi: some fixes intended for 4.13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+The lower level nl80211 code in cfg80211 ensures that "len" is between
+25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) from
+"len" so thats's max of 2280.  However, the action_frame->data[] buffer is
+only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
+overflow.
 
-Hi,
+	memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+	       le16_to_cpu(action_frame->len));
 
-As promised, I'll start sending things out as soon as possible, so I'm
-already sending fixes intended for the 4.13 rc series, even before
-it's out. :)
+Reported-by: "freenerguo(郭大兴)" <freenerguo@tencent.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+Hi Kalle,
 
-Some of the issues solved are:
+Here is the patch as Linus send it to us and security@kernel.org. I
+removed the lower bound check as that is already done in cfg80211.
+Now I signed off on the patch although formally I suppose Linus should
+sign it off. Putting it out there so people can respond as deemed
+necessary.
 
-* A few NULL pointer dereferences in the recovery flow;
-* A small but important fix for IBSS;
-* A one-liner fix for tracing, which was including too much data;
-* Some of these are bugzilla bug fixes;
+Now fingers crossed whether patchwork will properly deal with the UTF-8
+characters :-p
 
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
+Regards,
+Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Please review.
-
-Cheers,
-Luca.
-
-
-Dan Carpenter (1):
-  iwlwifi: missing error code in iwl_trans_pcie_alloc()
-
-Emmanuel Grumbach (3):
-  iwlwifi: dvm: prevent an out of bounds access
-  iwlwifi: mvm: fix a NULL pointer dereference of error in recovery
-  iwlwifi: fix tracing when tx only is enabled
-
-Johannes Berg (1):
-  iwlwifi: mvm: defer setting IWL_MVM_STATUS_IN_HW_RESTART
-
-Luca Coelho (1):
-  iwlwifi: mvm: handle IBSS probe_queue in a few missing places
-
-Mordechai Goodstein (1):
-  iwlwifi: pcie: fix unused txq NULL pointer dereference
-
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  6 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 15 ++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  3 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  3 +++
- 8 files changed, 34 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index cd1d673..d182a00 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4851,6 +4851,11 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
+ 					GFP_KERNEL);
+ 	} else if (ieee80211_is_action(mgmt->frame_control)) {
++		if (len > BRCMF_FIL_ACTION_FRAME_SIZE + DOT11_MGMT_HDR_LEN) {
++			brcmf_err("invalid action frame length\n");
++			err = -EINVAL;
++			goto exit;
++		}
+ 		af_params = kzalloc(sizeof(*af_params), GFP_KERNEL);
+ 		if (af_params == NULL) {
+ 			brcmf_err("unable to allocate frame\n");
 -- 
-2.11.0
+1.9.1
