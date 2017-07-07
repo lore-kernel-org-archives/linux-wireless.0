@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33288 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751025AbdGHNhP (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.138]:42098 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753296AbdGGDEn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Jul 2017 09:37:15 -0400
-Received: by mail-wr0-f196.google.com with SMTP id x23so13888832wrb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Jul 2017 06:37:14 -0700 (PDT)
-Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1499498863-6865-1-git-send-email-dev@kresin.me>
- <CAOiHx=m5CdOM82R3T7DBwQPNgHTrAA95mt4ZeYWqa-cr5KPGrQ@mail.gmail.com>
-From: Mathias Kresin <dev@kresin.me>
-Message-ID: <f3744f76-9909-90a9-012d-ddafbda9ad4a@kresin.me> (sfid-20170708_153754_158133_A1FC3902)
-Date: Sat, 8 Jul 2017 15:37:11 +0200
+        Thu, 6 Jul 2017 23:04:43 -0400
+Message-ID: <595EFA40.1080405@rock-chips.com> (sfid-20170707_050447_430169_FE7CE0CA)
+Date: Fri, 07 Jul 2017 11:04:32 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOiHx=m5CdOM82R3T7DBwQPNgHTrAA95mt4ZeYWqa-cr5KPGrQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Brian Norris <briannorris@chromium.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        dmitry.torokhov@gmail.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [v4,3/3] mwifiex: Enable WoWLAN for both sdio and pcie
+References: <1479216964-3328-3-git-send-email-akarwar@marvell.com> <595A207D.3000804@rock-chips.com> <20170707005302.GA17921@google.com>
+In-Reply-To: <20170707005302.GA17921@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-08.07.2017 13:15, Jonas Gorski:
-> Hi,
-> 
-> On 8 July 2017 at 09:27, Mathias Kresin <dev@kresin.me> wrote:
->> If clk_get returns an error, rt2x00dev->clk is set to NULL. In
->> contrast to the common clock framework provided clk_get_rate(), at
->> least the ramips and bcm63xx legacy implementation of the clk API
->> access the rate member of the clk struct without a NULL check. This
->> results into a kernel panic if we do not have a (SoC) clock.
+Hi brian,
+
+On 07/07/2017 08:53 AM, Brian Norris wrote:
+> On Mon, Jul 03, 2017 at 06:46:21PM +0800, Jeffy Chen wrote:
+>> Hi guys,
 >>
->> Call clk_get_rate only if we have a clock to fix the issues. This
->> approach is similar to what is done in the kernel at various places.
->> Usually clk_get_rate() is only called if clk_get_rate() doesn't return
-> 
-> Did you mean clk_get() as the second one?
+>> with this patch, the pci device's irq might be override by this
+>> wakeup irq when not using msi:
+>
+> Hmm, good point. I believe I noticed this one at some point and then
+> didn't get to investigate further...
+>
+> It kind of seems like we inadvertently conflicted with the PCI OF
+> interrupt spec [1]. There, the "interrupts" property for a device (if
+> present) is supposed to represent INT{A...D} with values of {1...4}.
+> IIUC, there should only be a single entry in this property.
+>
+> If we were to extend this properly, I guess that would mean we'd need a
+> second "interrupts" entry, with a different parent. I think we can use
+> "interrupts-extended" for that.
+>
+> So we'd need to document an optional "interrupt-names" for Marvell, and
+> have the driver try that first. The rough outline would be something
+> like this.
+>
+> For the device tree (e.g., rk3399-gru):
+>
+> -			interrupt-parent = <&gpio0>;
+> -			interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+> +			interrupts-extended = <&pcie0 1>, <&gpio0 8 IRQ_TYPE_LEVEL_LOW>;
+> +			interrupt-names = "int-A", "wake";
+This is a great idea.
 
-Yes I do. ... is only called if clk_get() doesn't return an error.
+And how about also add a property to tell of_pci_irq to ignore of irq 
+and force using PCI_INTERRUPT_PIN? Since there might be devices don't 
+use pci irq, but using other irq(wowlan for example).
 
-> 
->> an error.
->>
->> Signed-off-by: Mathias Kresin <dev@kresin.me>
-> 
-> Tbh, I'd rather have this fixed at the source than adding a workaround
-> to consumers, to have a consistent API across implementations (with
-> drivers/clk/clk.c as the reference).
-> 
-> And there don't seem that many, at least searching for clk_get_rate
-> gave me only two handful of implementations of which many already
-> check for NULL.
+Then we can specify this property and add a name("wake") to the wifi 
+wake irq here. And interrupts-extended would still be an available option.
 
-I do not necessarily see an error in the archs legacy clock 
-implementation. It rather looks like it works with the common clock 
-framework due the lucky coincident that someone has added (an extra) 
-null check.
-
-I only had a brief look at the common clock framework, but it seams to 
-me one should not pass the error returned by clk_get() and/or call 
-clk_get_rate() at all if there was an error. That is what I've already 
-seen and mentioned in the commit message.
-
-The only difference here is that we do not have the error check and the 
-clk_get_rate() call in the same function. rt2800_clk_is_20mhz() isn't 
-aware that clk_get() failed. rt2x00dev->clk is set back to NULL in 
-rt2x00soc_probe() in case of an clk_get error.
-
-Mathias
+>
+> Then mwifiex would need to check "byname" before trying "by index":
+>
+> 	adapter->irq_wakeup = of_irq_get_byname(adapter->dt_node, "wake");
+> 	if (!adapter->irq_wakeup) {
+> 		adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
+> 		if (!adapter->irq_wakeup) {
+> 			dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
+> 			goto err_exit;
+> 		}
+> 	}
+>
+> Or if we want to suggest the original binding was wrong and that we
+> should just ignore existing device trees that tried to use it, we can
+> skip the by-index fallback.
+>
+> Brian
+>
+> [1] Documentation/devicetree/bindings/pci/pci.txt points to
+> http://www.firmware.org/1275/practice/imap/imap0_9d.pdf
+> except that link is also dead now. I found the same doc here:
+> https://www.openfirmware.info/data/docs/rec.intmap.d09.pdf
+> Might want to update the binding doc... I've sent a patch for that
+> separately.
+>
+>
+>
