@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35510 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750893AbdGZQFy (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:34610 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdGGJYR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 12:05:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for-4.13] brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice
-References: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com>
-Date: Wed, 26 Jul 2017 19:05:49 +0300
-In-Reply-To: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com>
-        (Arend van Spriel's message of "Wed, 26 Jul 2017 13:09:24 +0100")
-Message-ID: <87k22v18v6.fsf@kamboji.qca.qualcomm.com> (sfid-20170726_180558_102725_29F15CAC)
+        Fri, 7 Jul 2017 05:24:17 -0400
+Received: by mail-qk0-f170.google.com with SMTP id d78so22601970qkb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 02:24:16 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc: =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        "security@kernel.org" <security@kernel.org>
+References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
+ <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
+ <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
+ <20170707084640.cv3igibbhhmgsmta@mwanda>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com> (sfid-20170707_112420_534443_B25C5223)
+Date: Fri, 7 Jul 2017 11:24:11 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170707084640.cv3igibbhhmgsmta@mwanda>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> Due to a bugfix in wireless tree and the commit mentioned below a merge
-> was needed which went haywire. So the submitted change resulted in the
-> function brcmf_sdiod_sgtable_alloc() being called twice during the probe
-> thus leaking the memory of the first call.
->
-> Cc: stable@vger.kernel.org # 4.6.x
-> Fixes: 4d7928959832 ("brcmfmac: switch to new platform data")
-> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Tested-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-I'll queue this for 4.13.
+On 7/7/2017 10:46 AM, Dan Carpenter wrote:
+> On Thu, Jul 06, 2017 at 03:32:42PM -0700, Linus Torvalds wrote:
+>> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>>
+>>> Looks fine to me so ...
+>>
+>> I really think that if we can't trust 'len', then we have to check
+>> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
+>> we'll just have a big 16-bit number instead.
+> 
+> There is already a check in cfg80211_mlme_mgmt_tx().
+> 
+> 	if (params->len < 24 + 1)
+> 		return -EINVAL;
+> 
+> It probably should be using DOT11_MGMT_HDR_LEN instead of a magic 24.
 
--- 
-Kalle Valo
+Missed that check when I looked yesterday evening. Must have been the 
+time ;-)
+
+Regards,
+Arend
