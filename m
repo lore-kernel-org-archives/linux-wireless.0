@@ -1,69 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44092 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbdGYLvK (ORCPT
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:36011 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdGGLV7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 07:51:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>, Greg KH <gregkh@linux.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
-Subject: Re: New Realtek driver
-References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
-        <617F6F88-FA7B-4BB1-8DFE-AA17D0C540DF@holtmann.org>
-        <daf881fc-918e-7716-2b09-20abe74f6cb3@lwfinger.net>
-Date: Tue, 25 Jul 2017 14:51:04 +0300
-In-Reply-To: <daf881fc-918e-7716-2b09-20abe74f6cb3@lwfinger.net> (Larry
-        Finger's message of "Fri, 21 Jul 2017 21:04:37 -0500")
-Message-ID: <87o9s8ka53.fsf@codeaurora.org> (sfid-20170725_135117_786725_FED0B11A)
+        Fri, 7 Jul 2017 07:21:59 -0400
+Received: by mail-wr0-f173.google.com with SMTP id c11so42496008wrc.3
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 04:21:58 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc: =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        "security@kernel.org" <security@kernel.org>
+References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
+ <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
+ <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
+ <20170707084640.cv3igibbhhmgsmta@mwanda>
+ <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
+Message-ID: <f0f38282-9767-188d-a68b-76d1316ac17d@broadcom.com> (sfid-20170707_132203_060135_338D2479)
+Date: Fri, 7 Jul 2017 13:21:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> On 07/21/2017 05:13 AM, Marcel Holtmann wrote:
->> Hi Larry,
->>
->>> Once again I find myself in the awkward position of needing to
->>> submit code to two different trees, i.e. wireless and staging.
+On 07-07-17 11:24, Arend van Spriel wrote:
+> 
+> 
+> On 7/7/2017 10:46 AM, Dan Carpenter wrote:
+>> On Thu, Jul 06, 2017 at 03:32:42PM -0700, Linus Torvalds wrote:
+>>> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>
+>>>> Looks fine to me so ...
 >>>
->>> The code in question concerns a new Realtek device, the RTL8822BE.
->>> The device is already shipping, and Realtek would like it to be
->>> available in kernel 3.14. As it consists of ~120,000 new lines of
->>> code, I have assured Realtek that 3.14 would not be possible, at
->>> least in the wireless tree. What I plan to do is submit the changes
->>> in the existing drivers through wireless, and the three totally new
->>> drivers through staging. My expectation is that this code would
->>> live for a relatively short time there, but going that route would
->>> give time for the code to be reviewed properly, but still be
->>> available in a kernel driver. All of the new code will be available
->>> in a GitHub repo maintained by Realtek for those users whose
->>> distros do not configure anything in staging.
->>>
->>> For my part, I will push the wireless tree material as fast as I
->>> can and hope there is time available near the end of the 4.13-rcX
->>> sequence for the material to reach 4.14-rc1.
+>>> I really think that if we can't trust 'len', then we have to check
+>>> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
+>>> we'll just have a big 16-bit number instead.
 >>
->> I really do not understand the need for staging if there is already
->> active cleanup and submission to wireless-drivers happening. I find
->> it also unfair to others who submit code to linux-wireless and have
->> it reviewed there before it gets merged.
+>> There is already a check in cfg80211_mlme_mgmt_tx().
 >>
->> Also the faster it gets into wireless-drivers the faster it can be
->> available via linux-backports. Seems many companies have used
->> linux-backports successfully to deal with older kernel versions.
->
-> The part that is being submitted to wireless drivers is only a small
-> part of the entire effort.
->
-> Beyond that is the new driver with roughly 120,000 lines of code that
-> have not yet been seen by any reviewers.
+>>     if (params->len < 24 + 1)
+>>         return -EINVAL;
+>>
+>> It probably should be using DOT11_MGMT_HDR_LEN instead of a magic 24.
+> 
+> Missed that check when I looked yesterday evening. Must have been the
+> time ;-)
 
-120 kLOC is a lot, why is the driver so big? I would like to take a
-quick look, is the code available somewhere?
+Hi Dan,
 
--- 
-Kalle Valo
+This being said, are you going to send a V2 adding a brcmf_err() call as
+Linus proposed? I think we can improve the length check above later if
+deemed necessary.
+
+Regards,
+Arend
