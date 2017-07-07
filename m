@@ -1,98 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33680 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1754052AbdGSTPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:15:37 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 29/34] brcmfmac: stabilise the value of ->sbwad in use for some xfer routines.
-Date: Wed, 19 Jul 2017 20:08:17 +0100
-Message-Id: <20170719190822.10857-30-ian@mnementh.co.uk> (sfid-20170719_211541_930321_9AA77060)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39700 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750726AbdGGNR5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Jul 2017 09:17:57 -0400
+Message-ID: <1499433473.4790.6.camel@sipsolutions.net> (sfid-20170707_151817_286027_2C5CB3B4)
+Subject: Re: [PATCH] brcmfmac: fix possible buffer overflow in
+ brcmf_cfg80211_mgmt_tx()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 07 Jul 2017 15:17:53 +0200
+In-Reply-To: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170707_140140_467929_3104918C)
+References: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com>
+         (sfid-20170707_140140_467929_3104918C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IO functions operate within the Chipcommon IO window. Explicitly
-set this, rather than relying on the last initialisation IO access to
-leave it set to the right value by chance.
+On Fri, 2017-07-07 at 13:01 +0100, Arend van Spriel wrote:
+> The lower level nl80211 code in cfg80211 ensures that "len" is
+> between
+> 25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN
+> (24) from
+> "len" so thats's max of 2280.  However, the action_frame->data[]
+> buffer is
+> only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy()
+> can
+> overflow.
+> 
+> 	memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+> 	       le16_to_cpu(action_frame->len));
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
- 3 files changed, 10 insertions(+), 4 deletions(-)
+Kalle is on vacation for the next 10 days or so.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index ab015bad02f2..dcdebe8e8ff4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -528,7 +528,7 @@ int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 
- int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- {
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err = 0;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
-@@ -551,7 +551,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- {
- 	struct sk_buff *glom_skb = NULL;
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err = 0;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
-@@ -592,7 +592,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err;
- 
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-@@ -625,7 +625,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 			 struct sk_buff_head *pktq)
- {
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 19f40a1ee418..2a52f48bdddc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3821,6 +3821,11 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 	if (!bus->sdio_core)
- 		goto fail;
- 
-+	/* Pick up the CHIPCOMMON core info struct, used for bulk IO in bcmsdh.c */
-+	sdiodev->cc_core = brcmf_chip_get_core(bus->ci, BCMA_CORE_CHIPCOMMON);
-+	if (!sdiodev->cc_core)
-+		goto fail;
-+
- 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
- 						   BRCMF_BUSTYPE_SDIO,
- 						   bus->ci->chip,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index e2324a78249b..a5a05d1a34bf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -178,6 +178,7 @@ struct brcmf_sdio_dev {
- 	struct sdio_func *func[SDIO_MAX_FUNCS];
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 sbwad;			/* Save backplane window address */
-+	struct brcmf_core *cc_core;	/* chipcommon core info struct */
- 	struct brcmf_sdio *bus;
- 	struct device *dev;
- 	struct brcmf_bus *bus_if;
--- 
-2.11.0
+Linus, since you were involved already, will you apply this directly?
+
+Arend, otherwise please resend including netdev@, so we can ask davem
+to pick it up (needs to land in his patchwork).
+
+I guess it should also have a Cc: stable tag, and perhaps a Fixes?
+
+Thanks,
+johannes
