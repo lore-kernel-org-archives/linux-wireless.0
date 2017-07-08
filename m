@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40876 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752059AbdG1OYL (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:36771 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751078AbdGHH1v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:24:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:21 +0300
-Message-Id: <20170728142337.19183-9-luca@coelho.fi> (sfid-20170728_162425_531494_F14BF28A)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 08/24] iwlwifi: mvm: check family instead of new TX API for workarounds
+        Sat, 8 Jul 2017 03:27:51 -0400
+Received: by mail-wr0-f194.google.com with SMTP id 77so12225290wrb.3
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Jul 2017 00:27:51 -0700 (PDT)
+From: Mathias Kresin <dev@kresin.me>
+To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rt2x00: call clk_get_rate only if we have a clock
+Date: Sat,  8 Jul 2017 09:27:43 +0200
+Message-Id: <1499498863-6865-1-git-send-email-dev@kresin.me> (sfid-20170708_092755_548770_9F5C50C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+If clk_get returns an error, rt2x00dev->clk is set to NULL. In
+contrast to the common clock framework provided clk_get_rate(), at
+least the ramips and bcm63xx legacy implementation of the clk API
+access the rate member of the clk struct without a NULL check. This
+results into a kernel panic if we do not have a (SoC) clock.
 
-There are two workarounds because RSS is currently broken on A000
-devices due to firmware issues, but checking for the new TX API
-doesn't really make sense. Check the hardware family instead of
-the new TX API - there's nothing better to check since it's just
-a temporary workaround.
+Call clk_get_rate only if we have a clock to fix the issues. This
+approach is similar to what is done in the kernel at various places.
+Usually clk_get_rate() is only called if clk_get_rate() doesn't return
+an error.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Mathias Kresin <dev@kresin.me>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 58f846610e5d..e04bf2f7c1ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1118,7 +1118,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+Resend, the first mail had the wrong list in cc.
+
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index d11c7b2..2a525b9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -2059,6 +2059,9 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
  
- 	/* Init RSS configuration */
- 	/* TODO - remove a000 disablement when we have RXQ config API */
--	if (iwl_mvm_has_new_rx_api(mvm) && !iwl_mvm_has_new_tx_api(mvm)) {
-+	if (iwl_mvm_has_new_rx_api(mvm) &&
-+	    mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_A000) {
- 		ret = iwl_send_rss_cfg_cmd(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to configure RSS queues: %d\n",
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index ab6c6bf79565..44f144c58720 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4280,7 +4280,8 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 	lockdep_assert_held(&mvm->mutex);
+ static inline bool rt2800_clk_is_20mhz(struct rt2x00_dev *rt2x00dev)
+ {
++	if (!rt2x00dev->clk)
++		return 0;
++
+ 	return clk_get_rate(rt2x00dev->clk) == 20000000;
+ }
  
- 	/* TODO - remove a000 disablement when we have RXQ config API */
--	if (!iwl_mvm_has_new_rx_api(mvm) || iwl_mvm_has_new_tx_api(mvm))
-+	if (!iwl_mvm_has_new_rx_api(mvm) ||
-+	    mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000)
- 		return;
- 
- 	notif->cookie = mvm->queue_sync_cookie;
 -- 
-2.13.2
+2.7.4
