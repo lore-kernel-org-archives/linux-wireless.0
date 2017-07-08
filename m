@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34579 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752317AbdGJJnT (ORCPT
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:33456 "EHLO
+        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752841AbdGHLPm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 05:43:19 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: sgruszka@redhat.com, kvalo@codeaurora.org, davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: iwlegacy: constify attribute_group structures.
-Date: Mon, 10 Jul 2017 15:12:53 +0530
-Message-Id: <4333d7c1a2e0c5def85b1d0a42672499890f9f4c.1499679699.git.arvind.yadav.cs@gmail.com> (sfid-20170710_114417_442467_A2CC4C62)
+        Sat, 8 Jul 2017 07:15:42 -0400
+Received: by mail-vk0-f43.google.com with SMTP id r126so29093042vkg.0
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Jul 2017 04:15:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1499498863-6865-1-git-send-email-dev@kresin.me>
+References: <1499498863-6865-1-git-send-email-dev@kresin.me>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Sat, 8 Jul 2017 13:15:21 +0200
+Message-ID: <CAOiHx=m5CdOM82R3T7DBwQPNgHTrAA95mt4ZeYWqa-cr5KPGrQ@mail.gmail.com> (sfid-20170708_131545_801247_C9D67BD1)
+Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
+To: Mathias Kresin <dev@kresin.me>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-attribute_groups are not supposed to change at runtime. All functions
-working with attribute_groups provided by <linux/sysfs.h> work
-with const attribute_group. So mark the non-const structs as const.
+Hi,
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 8 July 2017 at 09:27, Mathias Kresin <dev@kresin.me> wrote:
+> If clk_get returns an error, rt2x00dev->clk is set to NULL. In
+> contrast to the common clock framework provided clk_get_rate(), at
+> least the ramips and bcm63xx legacy implementation of the clk API
+> access the rate member of the clk struct without a NULL check. This
+> results into a kernel panic if we do not have a (SoC) clock.
+>
+> Call clk_get_rate only if we have a clock to fix the issues. This
+> approach is similar to what is done in the kernel at various places.
+> Usually clk_get_rate() is only called if clk_get_rate() doesn't return
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 38bf403..329f3a6 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -3464,7 +3464,7 @@ static DEVICE_ATTR(antenna, S_IWUSR | S_IRUGO, il3945_show_antenna,
- 	NULL
- };
- 
--static struct attribute_group il3945_attribute_group = {
-+static const struct attribute_group il3945_attribute_group = {
- 	.name = NULL,		/* put in device directory */
- 	.attrs = il3945_sysfs_entries,
- };
--- 
-1.9.1
+Did you mean clk_get() as the second one?
+
+> an error.
+>
+> Signed-off-by: Mathias Kresin <dev@kresin.me>
+
+Tbh, I'd rather have this fixed at the source than adding a workaround
+to consumers, to have a consistent API across implementations (with
+drivers/clk/clk.c as the reference).
+
+And there don't seem that many, at least searching for clk_get_rate
+gave me only two handful of implementations of which many already
+check for NULL.
+
+
+Regards
+Jonas
