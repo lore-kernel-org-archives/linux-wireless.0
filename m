@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34984 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753887AbdGJMpn (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:47026 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750907AbdGHMUS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 08:45:43 -0400
-Received: by mail-pf0-f194.google.com with SMTP id q85so14376988pfq.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:45:43 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 16/17] rsi: Send rx filter frame to device when interface is down
-Date: Mon, 10 Jul 2017 18:10:47 +0530
-Message-Id: <1499690448-9956-17-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144558_507984_8A5E9B28)
-In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
-References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+        Sat, 8 Jul 2017 08:20:18 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: Request to add bluetooth module identifier to
+ net/rfkill/rfkill-gpio.c
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <CALnajPCeYP6W4iECCsDegwTmq7UsPcH04C=K0h-zZQD6pf6rZw@mail.gmail.com>
+Date: Sat, 8 Jul 2017 14:20:15 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Message-Id: <985A2192-C2F2-4361-BE23-9E9A5F53DAFA@holtmann.org> (sfid-20170708_142035_090248_5BFB5075)
+References: <CALnajPDkZi5tOTcghFCRHg8EiLgXXy1nWo+b7R4DxX8iEd1g0Q@mail.gmail.com>
+ <CALnajPCeYP6W4iECCsDegwTmq7UsPcH04C=K0h-zZQD6pf6rZw@mail.gmail.com>
+To: Sundar Nagarajan <sun.nagarajan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Hi Sundar,
 
-When interface is down it is better to stop all RX packets to
-host. 0xffff will block all packets to host.
+> I have a Cherry Trail laptop with an Atom X5-Z8300. It has a bluetooth
+> chip that needs the r8723bs (coexisting RTL 8723BS wifi and
+> bluetooth).
+> 
+> I am using linux-next (20150817) with the r8723bs staging driver and
+> the firmware and utility from https://github.com/lwfinger/rtl8723bs_bt
+> by Larry finger.
+> 
+> With linux-next the bluetooth works SOMETIMES, but on reboot, it does
+> not work any more (no bluetooth interfaces are detected and hciconfig
+> shows nothing).
+> 
+> I am a kernel novice, but I saw that another kernel that I had tried
+> had the following line added in struct acpi_device_id
+> rfkill_acpi_match:
+> 
+> { "OBDA8723",RFKILL_TYPE_BLUETOOTH }
+> 
+> With the attached patch applied (one line added), my bluetooth works every time.
+> 
+> Does this belong in rfkill-gpio.c, or should I contact someone else?
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
+it does not belong in rfkill-gpio.c since this controls the power of the Bluetooth device. This belongs in the Bluetooth driver. We already moved all the Intel and Broadcom ones into hci_intel.c and respectively hci_bcm.c. So have the staging driver deal with the power GPIO.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 36303ae..d094b0a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -301,6 +301,10 @@ static void rsi_mac80211_stop(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&common->mutex);
- 	common->iface_down = true;
-+
-+	/* Block all rx frames */
-+	rsi_send_rx_filter_frame(common, 0xffff);
-+
- 	mutex_unlock(&common->mutex);
- }
- 
--- 
-2.7.4
+Regards
+
+Marcel
