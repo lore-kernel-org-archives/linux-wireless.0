@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33101 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934072AbdGKQuQ (ORCPT
+Received: from mx1-priv.urz.unibas.ch ([131.152.226.164]:43203 "EHLO
+        mx1-priv.urz.unibas.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752600AbdGIVrd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 12:50:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170711.072416.2014054416066621222.davem@davemloft.net>
-References: <20170711.072416.2014054416066621222.davem@davemloft.net>
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Date: Tue, 11 Jul 2017 09:49:54 -0700
-Message-ID: <CAM_iQpUrq3jxNCceCKdm-qCgM7OkG3SOnz=H=_r=_7sHOft4fQ@mail.gmail.com> (sfid-20170711_185038_117754_E329C5FA)
-Subject: Re: net-next STATUS page
-To: David Miller <davem@davemloft.net>
-Cc: Linux Kernel Network Developers <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netfilter-devel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 9 Jul 2017 17:47:33 -0400
+From: Ilia Sergachev <ilia.sergachev@unibas.ch>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org,
+        Ilia Sergachev <ilia.sergachev@unibas.ch>
+Subject: [PATCH] staging: wilc1000: fix variable signedness
+Date: Sun,  9 Jul 2017 23:36:35 +0200
+Message-Id: <20170709213635.18692-1-ilia.sergachev@unibas.ch> (sfid-20170709_234756_220986_5B579925)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 11, 2017 at 7:24 AM, David Miller <davem@davemloft.net> wrote:
->
-> It has gotten to the point that even casually walking around
-> Faro, Portugal last week, random German tourists would stop
-> me in the street and ask if net-next was open or not.
->
-> Therefore, in order to avoid any and all confusion I have created this
-> web site:
->
->         http://vger.kernel.org/~davem/net-next.html
->
-> Please refer to it if you are ever in doubt.
+txq_count receives a value from wilc_wlan_handle_txq()
+and therefore should be u32
 
-Can we update netdev-FAQ too? ;)
+found using sparse:
+drivers/staging/wilc1000/linux_wlan.c:306:58: warning:
+ incorrect type in argument 2 (different signedness)
+
+Signed-off-by: Ilia Sergachev <ilia.sergachev@unibas.ch>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 308708450830..0b097aca597e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -283,7 +283,8 @@ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
+ 
+ static int linux_wlan_txq_task(void *vp)
+ {
+-	int ret, txq_count;
++	int ret;
++	u32 txq_count;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wl;
+ 	struct net_device *dev = vp;
+-- 
+2.11.0
