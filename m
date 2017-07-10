@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57837 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750732AbdGYRqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 13:46:18 -0400
-From: Felix Fietkau <nbd@nbd.name>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:36811 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753446AbdGJMow (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Jul 2017 08:44:52 -0400
+Received: by mail-wr0-f195.google.com with SMTP id 77so24694932wrb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:44:52 -0700 (PDT)
+From: Simon Dinkin <simondinkin@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH v2] ath9k: fix more-data flag for buffered multicast packets
-Date: Tue, 25 Jul 2017 19:46:16 +0200
-Message-Id: <20170725174616.81638-1-nbd@nbd.name> (sfid-20170725_194622_467407_8719BB13)
+Cc: Simon Dinkin <simon.dinkin@tandemg.com>
+Subject: [PATCH] mac80211: fix incorrect assignment of reassoc value
+Date: Mon, 10 Jul 2017 15:44:38 +0300
+Message-Id: <1499690678-28147-1-git-send-email-simon.dinkin@tandemg.com> (sfid-20170710_144533_628437_8B347A1A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag needs to be cleared for the last packet in the list, not the
-first one. Fixes some issues with multicast packet loss for powersave
-clients connected to an ath9k AP.
+this fix minor issue in the log message.
+in ieee80211_rx_mgmt_assoc_resp function, when assigning the
+reassoc value from the mgmt frame control:
+ieee80211_is_reassoc_resp function need to be used, instead of
+ieee80211_is_reassoc_req function.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Simon Dinkin <simon.dinkin@tandemg.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 30efe79e9d89..abc7c2e88e22 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2451,7 +2451,6 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		.txq = sc->beacon.cabq
- 	};
- 	struct ath_tx_info info = {};
--	struct ieee80211_hdr *hdr;
- 	struct ath_buf *bf_tail = NULL;
- 	struct ath_buf *bf;
- 	LIST_HEAD(bf_q);
-@@ -2495,15 +2494,10 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (list_empty(&bf_q))
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7be7917..0467f9f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3159,7 +3159,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	if (len < 24 + 6)
  		return;
  
--	bf = list_first_entry(&bf_q, struct ath_buf, list);
--	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
--
--	if (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_MOREDATA)) {
--		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_MOREDATA);
--		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
--			sizeof(*hdr), DMA_TO_DEVICE);
--	}
-+	bf = list_last_entry(&bf_q, struct ath_buf, list);
-+	ath9k_set_moredata(sc, bf, false);
- 
-+	bf = list_first_entry(&bf_q, struct ath_buf, list);
- 	ath_txq_lock(sc, txctl.txq);
- 	ath_tx_fill_desc(sc, bf, txctl.txq, 0);
- 	ath_tx_txqaddbuf(sc, txctl.txq, &bf_q, false);
+-	reassoc = ieee80211_is_reassoc_req(mgmt->frame_control);
++	reassoc = ieee80211_is_reassoc_resp(mgmt->frame_control);
+ 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
+ 	status_code = le16_to_cpu(mgmt->u.assoc_resp.status_code);
+ 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
 -- 
-2.13.0
+2.7.4
