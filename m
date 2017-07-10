@@ -1,80 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f172.google.com ([209.85.128.172]:36486 "EHLO
-        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932079AbdGJNqL (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42191 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750812AbdGJI6L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 09:46:11 -0400
-Received: by mail-wr0-f172.google.com with SMTP id c11so139620612wrc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 06:46:10 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au,
-        ebiggers@google.com
-Cc: davem@davemloft.net, dm-devel@redhat.com,
-        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        agk@redhat.com, snitzer@redhat.com,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH 0/2] crypto/algapi - refactor crypto_xor() to avoid memcpy()s
-Date: Mon, 10 Jul 2017 14:45:46 +0100
-Message-Id: <20170710134548.20234-1-ard.biesheuvel@linaro.org> (sfid-20170710_155328_668011_9A903616)
+        Mon, 10 Jul 2017 04:58:11 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6A8sogU089593
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 04:57:56 -0400
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bjufqdms4-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 04:57:56 -0400
+Received: from localhost
+        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-wireless@vger.kernel.org> from <rui.teng@linux.vnet.ibm.com>;
+        Mon, 10 Jul 2017 02:57:55 -0600
+From: Rui Teng <rui.teng@linux.vnet.ibm.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org,
+        Rui Teng <rui.teng@linux.vnet.ibm.com>
+Subject: [PATCH] drivers/staging/wilc1000: fix sparse warning: right shift by bigger than source value
+Date: Mon, 10 Jul 2017 16:57:31 +0800
+Message-Id: <20170710085731.28397-1-rui.teng@linux.vnet.ibm.com> (sfid-20170710_105845_329453_23FCEDA0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 2/2:
+This patch sets memory to zero directly to avoid unnecessary shift and
+bitwise operations on bool type, which can fix a sparse warning and also
+improve performance.
 
-"""
-There are quite a number of occurrences in the kernel of the pattern
+Signed-off-by: Rui Teng <rui.teng@linux.vnet.ibm.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-    if (dst != src)
-            memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
-    crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
-
-or
-
-    crypto_xor(keystream, src, nbytes);
-    memcpy(dst, keystream, nbytes);
-
-where crypto_xor() is preceded or followed by a memcpy() invocation
-that is only there because crypto_xor() uses its output parameter as
-one of the inputs.
-"""
-
-Patch #1 is a preparatory patch, which is split off for ease of review.
-
-Patch #2 updates all occurrences of crypto_xor() to use a separate
-output argument.
-
-Ard Biesheuvel (2):
-  crypto/algapi - use separate dst and src operands for __crypto_xor()
-  crypto/algapi - make crypto_xor() take separate dst and src arguments
-
- arch/arm/crypto/aes-ce-glue.c       |  4 +---
- arch/arm/crypto/aes-neonbs-glue.c   |  9 +++----
- arch/arm64/crypto/aes-glue.c        |  8 +++----
- arch/arm64/crypto/aes-neonbs-glue.c |  9 +++----
- arch/sparc/crypto/aes_glue.c        |  3 +--
- arch/x86/crypto/aesni-intel_glue.c  |  4 ++--
- arch/x86/crypto/blowfish_glue.c     |  3 +--
- arch/x86/crypto/cast5_avx_glue.c    |  3 +--
- arch/x86/crypto/des3_ede_glue.c     |  3 +--
- crypto/algapi.c                     | 25 ++++++++++++--------
- crypto/ccm.c                        |  2 +-
- crypto/chacha20_generic.c           |  4 ++--
- crypto/cmac.c                       |  8 +++----
- crypto/ctr.c                        |  7 +++---
- crypto/cts.c                        |  4 ++--
- crypto/gcm.c                        |  4 ++--
- crypto/ghash-generic.c              |  2 +-
- crypto/keywrap.c                    |  4 ++--
- crypto/pcbc.c                       | 20 +++++++---------
- crypto/salsa20_generic.c            |  4 ++--
- crypto/seqiv.c                      |  2 +-
- crypto/xcbc.c                       |  8 +++----
- drivers/crypto/vmx/aes_ctr.c        |  3 +--
- drivers/md/dm-crypt.c               | 19 +++++++--------
- include/crypto/algapi.h             | 12 ++++++----
- include/crypto/cbc.h                | 10 ++++----
- net/mac80211/fils_aead.c            |  6 ++---
- 27 files changed, 89 insertions(+), 101 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2568dfc15181..036c5c19a016 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2416,10 +2416,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 		goto ERRORHANDLER;
+ 
+ 	pu8CurrByte = wid.val;
+-	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
++	memset(pu8CurrByte, 0, 4);
++	*pu8CurrByte = (strHostIfSetMulti->enabled & 0xFF);
++	pu8CurrByte += 4;
+ 
+ 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+ 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
 -- 
-2.9.3
+2.11.0
