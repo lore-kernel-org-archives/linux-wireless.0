@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59571 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750830AbdGDHom (ORCPT
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:36486 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932079AbdGJNqL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2017 03:44:42 -0400
-Date: Tue, 4 Jul 2017 09:44:42 +0200
-From: Greg KH <greg@kroah.com>
-To: Dison River <pwn2river@gmail.com>
-Cc: samuel@sortiz.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, qca_merez@qca.qualcomm.com,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        jakub.kicinski@netronome.com, davem@davemloft.net,
-        oss-drivers@netronome.com, security@kernel.org,
-        wil6210@qca.qualcomm.com
-Subject: Re: 'skb' buffer address information leakage
-Message-ID: <20170704074442.GA21877@kroah.com> (sfid-20170704_094549_397111_9FC2D5DB)
-References: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
+        Mon, 10 Jul 2017 09:46:11 -0400
+Received: by mail-wr0-f172.google.com with SMTP id c11so139620612wrc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 06:46:10 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au,
+        ebiggers@google.com
+Cc: davem@davemloft.net, dm-devel@redhat.com,
+        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        agk@redhat.com, snitzer@redhat.com,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH 0/2] crypto/algapi - refactor crypto_xor() to avoid memcpy()s
+Date: Mon, 10 Jul 2017 14:45:46 +0100
+Message-Id: <20170710134548.20234-1-ard.biesheuvel@linaro.org> (sfid-20170710_155328_668011_9A903616)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 04, 2017 at 01:12:18PM +0800, Dison River wrote:
-> Hi all:
-> I'd found several address leaks of "skb" buffer.When i have a
-> arbitrary address write vulnerability in kernel(enabled kASLR),I can
-> use skb's address find sk_destruct's address and overwrite it. And
-> then,invoke close(sock_fd) function can trigger the
-> shellcode(sk_destruct func).
-> 
-> In kernel 4.12-rc7
-> drivers/net/irda/vlsi_ir.c:326           seq_printf(seq, "skb=%p
-> data=%p hw=%p\n", rd->skb, rd->buf, rd->hw);
+>From 2/2:
 
-Irda doesn't even work, and will crash, so it's a bit hard to see this
-as a "leakage" :)
+"""
+There are quite a number of occurrences in the kernel of the pattern
 
-I'm going to be ripping irda out soon anyway, so this isn't a real
-issue.
+    if (dst != src)
+            memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
+    crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
 
-> drivers/net/ethernet/netronome/nfp/nfp_net_debugfs.c:167
->          seq_printf(file, " frag=%p", skb);
-> drivers/net/wireless/ath/wil6210/debugfs.c:926           seq_printf(s,
-> "  SKB = 0x%p\n", skb);
+or
 
+    crypto_xor(keystream, src, nbytes);
+    memcpy(dst, keystream, nbytes);
 
-debugfs is by nature, root-only access, so the potential for issues here
-is lower than "any user can get this info".  That being said, patches
-for these are always appreciated.
+where crypto_xor() is preceded or followed by a memcpy() invocation
+that is only there because crypto_xor() uses its output parameter as
+one of the inputs.
+"""
 
-I also need to respin my "turn %p pointers off" patchset to prevent
-future stuff like this from happening.  I want to get to that after
-4.13-rc1 is out.
+Patch #1 is a preparatory patch, which is split off for ease of review.
 
-thanks,
+Patch #2 updates all occurrences of crypto_xor() to use a separate
+output argument.
 
-greg k-h
+Ard Biesheuvel (2):
+  crypto/algapi - use separate dst and src operands for __crypto_xor()
+  crypto/algapi - make crypto_xor() take separate dst and src arguments
+
+ arch/arm/crypto/aes-ce-glue.c       |  4 +---
+ arch/arm/crypto/aes-neonbs-glue.c   |  9 +++----
+ arch/arm64/crypto/aes-glue.c        |  8 +++----
+ arch/arm64/crypto/aes-neonbs-glue.c |  9 +++----
+ arch/sparc/crypto/aes_glue.c        |  3 +--
+ arch/x86/crypto/aesni-intel_glue.c  |  4 ++--
+ arch/x86/crypto/blowfish_glue.c     |  3 +--
+ arch/x86/crypto/cast5_avx_glue.c    |  3 +--
+ arch/x86/crypto/des3_ede_glue.c     |  3 +--
+ crypto/algapi.c                     | 25 ++++++++++++--------
+ crypto/ccm.c                        |  2 +-
+ crypto/chacha20_generic.c           |  4 ++--
+ crypto/cmac.c                       |  8 +++----
+ crypto/ctr.c                        |  7 +++---
+ crypto/cts.c                        |  4 ++--
+ crypto/gcm.c                        |  4 ++--
+ crypto/ghash-generic.c              |  2 +-
+ crypto/keywrap.c                    |  4 ++--
+ crypto/pcbc.c                       | 20 +++++++---------
+ crypto/salsa20_generic.c            |  4 ++--
+ crypto/seqiv.c                      |  2 +-
+ crypto/xcbc.c                       |  8 +++----
+ drivers/crypto/vmx/aes_ctr.c        |  3 +--
+ drivers/md/dm-crypt.c               | 19 +++++++--------
+ include/crypto/algapi.h             | 12 ++++++----
+ include/crypto/cbc.h                | 10 ++++----
+ net/mac80211/fils_aead.c            |  6 ++---
+ 27 files changed, 89 insertions(+), 101 deletions(-)
+
+-- 
+2.9.3
