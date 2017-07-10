@@ -1,90 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33248 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdGLGMZ (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34290 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754010AbdGJMp0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 02:12:25 -0400
-Date: Wed, 12 Jul 2017 08:12:20 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Rui Teng <rui.teng@linux.vnet.ibm.com>
-Cc: devel@driverdev.osuosl.org,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ganesh Krishna <ganesh.krishna@microchip.com>
-Subject: Re: [PATCH] drivers/staging/wilc1000: fix sparse warning: right
- shift by bigger than source value
-Message-ID: <20170712061220.GB11450@kroah.com> (sfid-20170712_081240_291087_0FD50D24)
-References: <20170710085731.28397-1-rui.teng@linux.vnet.ibm.com>
- <20170711170449.GA30362@kroah.com>
- <f31c5818-7ba3-4708-3fda-5bfbe0c4c1da@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f31c5818-7ba3-4708-3fda-5bfbe0c4c1da@linux.vnet.ibm.com>
+        Mon, 10 Jul 2017 08:45:26 -0400
+Received: by mail-pg0-f65.google.com with SMTP id j186so12602680pge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:45:25 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 11/17] rsi: set_key enhancements
+Date: Mon, 10 Jul 2017 18:10:42 +0530
+Message-Id: <1499690448-9956-12-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144537_072222_467DCB66)
+In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 12, 2017 at 10:23:02AM +0800, Rui Teng wrote:
-> On 12/07/2017 1:04 AM, Greg Kroah-Hartman wrote:
-> > On Mon, Jul 10, 2017 at 04:57:31PM +0800, Rui Teng wrote:
-> > > This patch sets memory to zero directly to avoid unnecessary shift and
-> > > bitwise operations on bool type, which can fix a sparse warning and also
-> > > improve performance.
-> > 
-> > It does?  How did you measure the performance impact?  What was now
-> > faster?
-> 
-> It can avoid 3 times right shift and 3 times bitwise operations.
-> And once memory set should also faster than 4 times copy operations.
-> And add number 4 once should also faster than 4 times plus plus.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-And did you test this to prove that this does matter and is noticable?
-How do you know that gcc doesn't just optimize it all away?  Is this on
-a code path that actually matters?
+Broadcast bit to be set for broadcast and multicast packets.
+For remove_key, tx and rx mic need not be filled.
 
-Don't ever say "improve performance" without actually being able to
-prove it please.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-> > thanks,
-> > 
-> > greg k-h
-> > 
-> > 
-> > > 
-> > > Signed-off-by: Rui Teng <rui.teng@linux.vnet.ibm.com>
-> > > ---
-> > >  drivers/staging/wilc1000/host_interface.c | 7 +++----
-> > >  1 file changed, 3 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> > > index 2568dfc15181..036c5c19a016 100644
-> > > --- a/drivers/staging/wilc1000/host_interface.c
-> > > +++ b/drivers/staging/wilc1000/host_interface.c
-> > > @@ -2416,10 +2416,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
-> > >  		goto ERRORHANDLER;
-> > > 
-> > >  	pu8CurrByte = wid.val;
-> > > -	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
-> > > -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
-> > > -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
-> > > -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-> > > +	memset(pu8CurrByte, 0, 4);
-> > > +	*pu8CurrByte = (strHostIfSetMulti->enabled & 0xFF);
-> > > +	pu8CurrByte += 4;
-> > 
-> > Are you sure enabled isn't larger than 8 bits?
-> 
-> The size of bool may larger than 8 bits. But when we assign any value
-> to bool type, the value of bool type will only be 1 or 0.
-> For example, the following output will be 1 other than 0x100.
-> 	bool b = 0x100;
-> 	printf("b: %d\n", b);
-> 
-> Or I think it should change 'enabled' type from bool to u32, to make sure
-> that the right shift operation can take effect.
-
-I think we should ask the authors of this code what is expected here as
-it is quite odd...
-
-thanks,
-
-greg k-h
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 9395d6d..3bffe31 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -723,38 +723,40 @@ int rsi_hal_load_key(struct rsi_common *common,
+ 	memset(skb->data, 0, frame_len);
+ 	set_key = (struct rsi_set_key *)skb->data;
+ 
++	if (key_type == RSI_GROUP_KEY)
++		key_descriptor = RSI_KEY_TYPE_BROADCAST;
+ 	if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
+ 	    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
+-		key_len += 1;
++		key_id = 0;
+ 		key_descriptor |= RSI_WEP_KEY;
+ 		if (key_len >= 13)
+ 			key_descriptor |= RSI_WEP_KEY_104;
+ 	} else if (cipher != KEY_TYPE_CLEAR) {
+ 		key_descriptor |= RSI_CIPHER_WPA;
+-		if (key_type == RSI_PAIRWISE_KEY)
+-			key_id = 0;
+ 		if (cipher == WLAN_CIPHER_SUITE_TKIP)
+ 			key_descriptor |= RSI_CIPHER_TKIP;
+ 	}
+-	key_descriptor |= (key_type | RSI_PROTECT_DATA_FRAMES | (key_id << 14));
++	key_descriptor |= RSI_PROTECT_DATA_FRAMES;
++	key_descriptor |= ((key_id << RSI_KEY_ID_OFFSET) & RSI_KEY_ID_MASK);
+ 
+ 	rsi_set_len_qno(&set_key->desc_dword0.len_qno,
+ 			(frame_len - FRAME_DESC_SZ), RSI_WIFI_MGMT_Q);
+ 	set_key->desc_dword0.frame_type = SET_KEY_REQ;
+ 	set_key->key_desc = cpu_to_le16(key_descriptor);
+ 
+-	if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
+-	    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
+-		memcpy(&set_key->key[key_id][1],
+-		       data,
+-		       key_len * 2);
++	if (data) {
++		if ((cipher == WLAN_CIPHER_SUITE_WEP40) ||
++		    (cipher == WLAN_CIPHER_SUITE_WEP104)) {
++			memcpy(&set_key->key[key_id][1], data, key_len * 2);
++		} else {
++			memcpy(&set_key->key[0][0], data, key_len);
++		}
++		memcpy(set_key->tx_mic_key, &data[16], 8);
++		memcpy(set_key->rx_mic_key, &data[24], 8);
+ 	} else {
+-		memcpy(&set_key->key[0][0], data, key_len);
++		memset(&set_key[FRAME_DESC_SZ], 0, frame_len - FRAME_DESC_SZ);
+ 	}
+ 
+-	memcpy(set_key->tx_mic_key, &data[16], 8);
+-	memcpy(set_key->rx_mic_key, &data[24], 8);
+-
+ 	skb_put(skb, frame_len);
+ 
+ 	return rsi_send_internal_mgmt_frame(common, skb);
+-- 
+2.7.4
