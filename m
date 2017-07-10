@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:55534 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751263AbdGQDMM (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33885 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753061AbdGJMo1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jul 2017 23:12:12 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>
-Subject: Re: [PATCH] mwifiex: usb: unlock on error in
- mwifiex_usb_tx_aggr_tmo()
-Date: Mon, 17 Jul 2017 03:12:08 +0000
-Message-ID: <f30cbe024e584abea4b67d453b171450@SC-EXCH02.marvell.com> (sfid-20170717_051217_194711_BE9C9DF6)
-References: <20170710072115.2y4ukbl7x4rk4bac@mwanda>
-In-Reply-To: <20170710072115.2y4ukbl7x4rk4bac@mwanda>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+        Mon, 10 Jul 2017 08:44:27 -0400
+Received: by mail-pg0-f67.google.com with SMTP id j186so12598576pge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:44:26 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 02/17] rsi: immediate wakeup bit and priority for TX command packets
+Date: Mon, 10 Jul 2017 18:10:33 +0530
+Message-Id: <1499690448-9956-3-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144533_073907_37B6BA5E)
+In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRGFuIENhcnBlbnRl
-ciBbbWFpbHRvOmRhbi5jYXJwZW50ZXJAb3JhY2xlLmNvbV0NCj4gU2VudDogMjAxN8TqN9TCMTDI
-1SAxNToyMQ0KPiBUbzogQW1pdGt1bWFyIEthcndhcjsgWGlubWluZyBIdQ0KPiBDYzogTmlzaGFu
-dCBTYXJtdWthZGFtOyBHYW5hcGF0aGkgQmhhdDsgS2FsbGUgVmFsbzsNCj4gbGludXgtd2lyZWxl
-c3NAdmdlci5rZXJuZWwub3JnOyBrZXJuZWwtamFuaXRvcnNAdmdlci5rZXJuZWwub3JnDQo+IFN1
-YmplY3Q6IFtFWFRdIFtQQVRDSF0gbXdpZmlleDogdXNiOiB1bmxvY2sgb24gZXJyb3IgaW4NCj4g
-bXdpZmlleF91c2JfdHhfYWdncl90bW8oKQ0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0NCj4gV2UgbmVlZCB0byB1bmxvY2sgaWYgbXdpZmlleF91c2JfcHJlcGFyZV90
-eF9hZ2dyX3NrYigpIGZhaWxzLg0KPiANCj4gRml4ZXM6IGEyY2E4NWFkNzIxZCAoIm13aWZpZXg6
-IHVzYjogYWRkIHRpbWVyIHRvIGZsdXNoIGFnZ3JlZ2F0aW9uIHBhY2tldHMiKQ0KPiBTaWduZWQt
-b2ZmLWJ5OiBEYW4gQ2FycGVudGVyIDxkYW4uY2FycGVudGVyQG9yYWNsZS5jb20+DQo+IA0KPiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5jDQo+
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3VzYi5jDQo+IGluZGV4IGNi
-MTc1M2U0M2VmNC4uODgwZWYxY2I0MDg4IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9tYXJ2ZWxsL213aWZpZXgvdXNiLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bWFydmVsbC9td2lmaWV4L3VzYi5jDQo+IEBAIC0xMTEyLDcgKzExMTIsNyBAQCBzdGF0aWMgdm9p
-ZCBtd2lmaWV4X3VzYl90eF9hZ2dyX3Rtbyh1bnNpZ25lZCBsb25nDQo+IGNvbnRleHQpDQo+ICAJ
-aWYgKGVycikgew0KPiAgCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4gIAkJCSAgICAi
-cHJlcGFyZSB0eCBhZ2dyIHNrYiBmYWlsZWQsIGVycj0lZFxuIiwgZXJyKTsNCj4gLQkJcmV0dXJu
-Ow0KPiArCQlnb3RvIHVubG9jazsNCj4gIAl9DQo+IA0KPiAgCWlmIChhdG9taWNfcmVhZCgmcG9y
-dC0+dHhfZGF0YV91cmJfcGVuZGluZykgPj0gQEAgLTExMzMsNiArMTEzMyw3DQo+IEBAIHN0YXRp
-YyB2b2lkIG13aWZpZXhfdXNiX3R4X2FnZ3JfdG1vKHVuc2lnbmVkIGxvbmcgY29udGV4dCkNCj4g
-IGRvbmU6DQo+ICAJaWYgKGVyciA9PSAtMSkNCj4gIAkJbXdpZmlleF93cml0ZV9kYXRhX2NvbXBs
-ZXRlKGFkYXB0ZXIsIHNrYl9zZW5kLCAwLCAtMSk7DQo+ICt1bmxvY2s6DQo+ICAJc3Bpbl91bmxv
-Y2tfaXJxcmVzdG9yZSgmcG9ydC0+dHhfYWdncl9sb2NrLCBmbGFncyk7ICB9DQo+IA0KDQpDaGFu
-Z2UgbG9va3MgZmluZSB0byBtZS4gVGhhbmtzLg0KDQpSZWdhcmRzLA0KU2ltb24NCg==
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+
+For all TX command packets immediate wakeup bit needs to be
+set in descriptor. This will make sure device will wakeup if it
+is in any sleep state. Priority of the packet is also set.
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 3 +++
+ drivers/net/wireless/rsi/rsi_mgmt.h     | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index ebd1e56..68771b0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -266,11 +266,14 @@ static int rsi_send_internal_mgmt_frame(struct rsi_common *common,
+ 					struct sk_buff *skb)
+ {
+ 	struct skb_info *tx_params;
++	struct rsi_cmd_desc *desc;
+ 
+ 	if (skb == NULL) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to allocate skb\n", __func__);
+ 		return -ENOMEM;
+ 	}
++	desc->desc_dword0.len_qno |= cpu_to_le16(DESC_IMMEDIATE_WAKEUP);
++	skb->priority = MGMT_SOFT_Q;
+ 	tx_params = (struct skb_info *)&IEEE80211_SKB_CB(skb)->driver_data;
+ 	tx_params->flags |= INTERNAL_MGMT_PKT;
+ 	skb_queue_tail(&common->tx_queue[MGMT_SOFT_Q], skb);
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 63360c2..6f7f181 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -229,6 +229,7 @@ struct rsi_mac_frame {
+ #define EOSP_INDICATION			BIT(5)
+ #define REQUIRE_TSF_SYNC_CONFIRM	BIT(6)
+ #define ENCAP_MGMT_PKT			BIT(7)
++#define DESC_IMMEDIATE_WAKEUP		BIT(15)
+ 
+ struct rsi_cmd_desc_dword0 {
+ 	__le16 len_qno;
+-- 
+2.7.4
