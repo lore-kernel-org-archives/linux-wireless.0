@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:5011 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751830AbdGXLDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 07:03:51 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: linuxwifi <linuxwifi@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "jprvita@gmail.com" <jprvita@gmail.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux@endlessm.com" <linux@endlessm.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "jprvita@endlessm.com" <jprvita@endlessm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: Demote messages about fw flags size to info
-Date: Mon, 24 Jul 2017 11:01:27 +0000
-Message-ID: <1500894086.20057.12.camel@intel.com> (sfid-20170724_130418_250267_501DFF64)
-References: <20170721145147.7572-1-jprvita@endlessm.com>
-In-Reply-To: <20170721145147.7572-1-jprvita@endlessm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35009 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753681AbdGJMpr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Jul 2017 08:45:47 -0400
+Received: by mail-pg0-f65.google.com with SMTP id d193so12604905pgc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:45:28 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 12/17] rsi: update autorate request command frame
+Date: Mon, 10 Jul 2017 18:10:43 +0530
+Message-Id: <1499690448-9956-13-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144559_588014_D7347176)
+In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE3LTA3LTIxIGF0IDA3OjUxIC0wNzAwLCBKb8OjbyBQYXVsbyBSZWNoaSBWaXRh
-IHdyb3RlOg0KPiBUaGVzZSBtZXNzYWdlcyBhcmUgbm90IHJlcG9ydGluZyBhIHJlYWwgZXJyb3Is
-IGp1c3QgdGhlIGZhY3QgdGhhdCB0aGUNCj4gZmlybXdhcmUga25vd3MgYWJvdXQgbW9yZSBmbGFn
-cyB0aGVuIHRoZSBkcml2ZXIuDQo+IA0KPiBDdXJyZW50bHkgdGhlc2UgbWVzc2FnZXMgYXJlIHBy
-ZXNlbnRlZCB0byB0aGUgdXNlciBkdXJpbmcgYm9vdCBpZiB0aGVyZQ0KPiBpcyBubyBib290c3Bs
-YXNoIGNvdmVyaW5nIHRoZSBjb25zb2xlLCBzb21ldGltZXMgZXZlbiBpZiB0aGUgYm9vdCBzcGxh
-c2gNCj4gaXMgZW5hYmxlZCBidXQgaGFzIG5vdCBzdGFydGVkIHlldCBieSB0aGUgdGltZSB0aGlz
-IG1lc3NhZ2UgaXMgc2hvd24uDQo+IA0KPiBEZW1vdGluZyBpdCB0byB0aGUgaW5mbyBsZXZlbCBo
-ZWxwcyBoYXZpbmcgYSBjbGVhbiBib290IHByb2Nlc3MuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBK
-b8OjbyBQYXVsbyBSZWNoaSBWaXRhIDxqcHJ2aXRhQGVuZGxlc3NtLmNvbT4NCj4gLS0tDQoNClRo
-ZSBpZGVhIHdpdGggdGhpcyBlcnJvciBpcyB0aGF0IGlmIHRoZSBmaXJtd2FyZSBpcyB0b28gbmV3
-IGFuZCBpbmNsdWRlcw0KYSBUTFYgdGhhdCB3ZSBhcmUgbm90IGF3YXJlIG9mLCB0aGVyZSBjYW4g
-YmUgdW5leHBlY3RlZCBpc3N1ZXMuICBGb3INCmluc3RhbmNlLCBzb21ldGltZXMgdGhlIEZXIEFQ
-SSBjaGFuZ2VzIHNvbWUgb2YgaXRzIHN0cnVjdHVyZXMgYW5kIHdlIHVzZQ0KVExWcyB0byBrbm93
-IHdoaWNoIG9uZSB0byB1c2UuICBJZiBhIG5ldyBzdHJ1Y3QgaXMgaW4gdXNlIGJ5IHRoZQ0KZmly
-bXdhcmUgYnV0IG5vdCBieSB0aGUgZHJpdmVyLCBwcm9ibGVtcyB3aWxsIG9jY3VyLg0KDQpSZWNl
-bnRseSB3ZSBhY2NpZGVudGFsbHkgb21pdHRlZCBvbmUgVExWIGZyb20gdGhlIGRyaXZlciBhbmQg
-cmVsZWFzZWQgYQ0KbmV3IGZpcm13YXJlIHRoYXQgaGFkIGl0IHNldC4uLiBUaGF0J3MgdGhlIGVy
-cm9yIHlvdSBhcmUgY3VycmVudGx5DQpzZWVpbmcuICBXZSBoYXZlIGEgYnVnemlsbGEgZW50cnlb
-MV0gYW5kIGl0IGlzIGZpeGVkIGluIG91ciBpbnRlcm5hbA0KdHJlZS4gIFRoZSBmaXggd2lsbCBi
-ZSBzZW50IHVwc3RyZWFtIGluIHRoZSBuZXh0IC1maXhlcyByb3VuZCB3ZSBzZW5kDQpvdXQuDQoN
-ClRoaXMgc3BlY2lmaWMgY2FzZSBpcyBoYXJtbGVzcywgYnV0IEknZCByYXRoZXIga2VlcCB0aGlz
-IG1lc3NhZ2UgYXMgYW4NCmVycm9yLCBiZWNhdXNlIGluIG90aGVyIHNpdHVhdGlvbnMgaXQgY291
-bGQgbGVhZCB0byB1bmV4cGVjdGVkDQpiZWhhdmlvaXIsIHNvIEkgcHJlZmVyIHRvIGtlZXAgaXQg
-dmVyeSB2aXNpYmxlLg0KDQoNClsxXSBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19i
-dWcuY2dpP2lkPTE5NjE5NQ0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4=
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+
+When Short Gaurd Interval is enabled bit 9 is set in rate. Otherwise
+it should not be set. Added missing 'else' case in this patch.
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 3bffe31..77b6757 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1199,6 +1199,9 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 			    conf_is_ht40(&common->priv->hw->conf))
+ 				auto_rate->supported_rates[ii++] =
+ 					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
++			else
++				auto_rate->supported_rates[ii++] =
++					cpu_to_le16(rsi_mcsrates[kk]);
+ 			auto_rate->supported_rates[ii] =
+ 				cpu_to_le16(rsi_mcsrates[kk--]);
+ 		}
+-- 
+2.7.4
