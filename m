@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0067.outbound.protection.outlook.com ([104.47.1.67]:51508
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751337AbdGMLcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jul 2017 07:32:55 -0400
-Subject: Re: net-next STATUS page
-To: Jiri Pirko <jiri@resnulli.us>,
-        Stephen Hemminger <stephen@networkplumber.org>
-References: <20170711.072416.2014054416066621222.davem@davemloft.net>
- <20170711115841.64d9aa1d@xeon-e3> <20170713085639.GA2060@nanopsycho>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-From: Saeed Mahameed <saeedm@mellanox.com>
-Message-ID: <572310a4-5914-52d2-6688-c899f3c7f245@mellanox.com> (sfid-20170713_133337_518689_46CDD6FB)
-Date: Thu, 13 Jul 2017 14:32:48 +0300
-MIME-Version: 1.0
-In-Reply-To: <20170713085639.GA2060@nanopsycho>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:34575 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754492AbdGJRCZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Jul 2017 13:02:25 -0400
+Received: by mail-wr0-f193.google.com with SMTP id k67so26159575wrc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 10:02:24 -0700 (PDT)
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] brcmfmac: added LED triggers for transmit/receive
+From: Russell Joyce <russell.joyce@york.ac.uk>
+In-Reply-To: <CACna6rzY84oWNMBfP8N4A=Sxst_8b-S+rTbZFQV0yFcOR5MceQ@mail.gmail.com>
+Date: Mon, 10 Jul 2017 18:02:21 +0100
+Cc: Alan Millard <alan.millard@york.ac.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        "mhiramat@kernel.org" <mhiramat@kernel.org>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        Tobias Klauser <tklauser@distanz.ch>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com,
+        Network Development <netdev@vger.kernel.org>
+Message-Id: <B8983FA2-39CE-478B-80C9-F32E01856FE9@york.ac.uk> (sfid-20170710_190244_652408_01B7EF22)
+References: <20170707140941.122115-1-russell.joyce@york.ac.uk>
+ <CACna6rzY84oWNMBfP8N4A=Sxst_8b-S+rTbZFQV0yFcOR5MceQ@mail.gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> 1) I think most of it should be some cfg80211 shareable code.
+
+I=E2=80=99m not sure exactly what you mean by this, could you please =
+clarify?
+
+> 2) This "rxtx" while surely present in other places sounds like a
+> workaround for LED subsystem limitation. Maybe it's time to finally
+> rework LED triggers.
+
+I agree that it=E2=80=99s not an ideal way to do things, but I =
+couldn=E2=80=99t think of a
+better alternative. I think that having a combined trigger is useful =
+though, for
+situations like using the single LED on a Raspberry Pi to show Wi-Fi =
+activity.
 
 
-On 7/13/2017 11:56 AM, Jiri Pirko wrote:
-> Tue, Jul 11, 2017 at 08:58:41PM CEST, stephen@networkplumber.org wrote:
->> On Tue, 11 Jul 2017 07:24:16 -0700 (PDT)
->> David Miller <davem@davemloft.net> wrote:
->>
->>> It has gotten to the point that even casually walking around
->>> Faro, Portugal last week, random German tourists would stop
->>> me in the street and ask if net-next was open or not.
->>>
->>> Therefore, in order to avoid any and all confusion I have created this
->>> web site:
->>>
->>> 	https://emea01.safelinks.protection.outlook.com/?url=http:%2F%2Fvger.kernel.org%2F~davem%2Fnet-next.html&data=02%7C01%7Csaeedm%40mellanox.com%7Caf800791df264ccd4eb008d4c9cd20ca%7Ca652971c7d2e4d9ba6a4d149256f461b%7C0%7C0%7C636355330266033104&sdata=frov8YFnlybI1n3hacYLWJZzYbWL7mk4kWIS6XlG2Vg%3D&reserved=0
->>>
->>> Please refer to it if you are ever in doubt.
->>>
->>> Thanks!
->>
->> Where is the app?
->
-> There would be good to have git-send-email hook to check this :)
->
-
-You will need an image processing algorithm to determine whether it is 
-open or close, i have some good neural network algorithms if you are 
-interested :)
+> On 10 Jul 2017, at 10:48, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> =
+wrote:
+>=20
+> On 7 July 2017 at 16:09, Russell Joyce <russell.joyce@york.ac.uk> =
+wrote:
+>> Add three basic LED triggers to brcmfmac, based on those in mac80211: =
+one
+>> for transmit, one for receive, and one for combined transmit/receive.
+>>=20
+>> Signed-off-by: Russell Joyce <russell.joyce@york.ac.uk>
+>=20
+> 1) I think most of it should be some cfg80211 shareable code.
+> 2) This "rxtx" while surely present in other places sounds like a
+> workaround for LED subsystem limitation. Maybe it's time to finally
+> rework LED triggers.
