@@ -1,31 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:38026 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752762AbdGFHiN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 03:38:13 -0400
-Received: by mail-it0-f54.google.com with SMTP id k192so109422863ith.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 00:38:12 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:39374 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751130AbdGJGxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Jul 2017 02:53:15 -0400
+Date: Mon, 10 Jul 2017 08:52:12 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mathias Kresin <dev@kresin.me>
+Cc: Jonas Gorski <jonas.gorski@gmail.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
+Message-ID: <20170710065211.GA2808@redhat.com> (sfid-20170710_085330_522743_04CC5DF6)
+References: <1499498863-6865-1-git-send-email-dev@kresin.me>
+ <CAOiHx=m5CdOM82R3T7DBwQPNgHTrAA95mt4ZeYWqa-cr5KPGrQ@mail.gmail.com>
+ <f3744f76-9909-90a9-012d-ddafbda9ad4a@kresin.me>
 MIME-Version: 1.0
-In-Reply-To: <a496cdaa-41f3-53e1-bb4f-2843d5bd8b12@lwfinger.net>
-References: <a496cdaa-41f3-53e1-bb4f-2843d5bd8b12@lwfinger.net>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Thu, 6 Jul 2017 10:38:11 +0300
-Message-ID: <CANUX_P3E9OASgfHykWsFjN1ii__sM=-8wWKr+6+rMk6GP2utvg@mail.gmail.com> (sfid-20170706_093901_047913_5AD77E35)
-Subject: Re: Command equivalent in iw
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f3744f76-9909-90a9-012d-ddafbda9ad4a@kresin.me>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 6, 2017 at 5:51 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
-> Someone using the rtlwifi code that is posted at GitHub wants to know the iw equivalent of "iwpriv wlan0 bandcfg" to limit the wireless interface to 802.11b, 802.11g, or 802.11n. I only use simple iw commands, and I could not answer the question.
+On Sat, Jul 08, 2017 at 03:37:11PM +0200, Mathias Kresin wrote:
+> 08.07.2017 13:15, Jonas Gorski:
+> >to consumers, to have a consistent API across implementations (with
+> >drivers/clk/clk.c as the reference).
+> >
+> >And there don't seem that many, at least searching for clk_get_rate
+> >gave me only two handful of implementations of which many already
+> >check for NULL.
+> 
+> I do not necessarily see an error in the archs legacy clock
+> implementation. It rather looks like it works with the common clock
+> framework due the lucky coincident that someone has added (an extra)
+> null check.
+> 
+> I only had a brief look at the common clock framework, but it seams
+> to me one should not pass the error returned by clk_get() and/or
+> call clk_get_rate() at all if there was an error. That is what I've
+> already seen and mentioned in the commit message.
 
-This seems to be a private IOCTL and I can't find the code for that
-handler in the kernel today. Even in wireless extensions..
-I am not aware of something like this with iw today.
+> The only difference here is that we do not have the error check and
+> the clk_get_rate() call in the same function. rt2800_clk_is_20mhz()
+> isn't aware that clk_get() failed. rt2x00dev->clk is set back to
+> NULL in rt2x00soc_probe() in case of an clk_get error.
 
-In iwlwifi we have module parameter for this since this should really
-be used seldom.
+If we need to check clk before clk_get_rate() call, we can remove NULL
+assignment from rt2x00soc_probe() and use IS_ERR_OR_NULL() on
+rt2800_clk_is_20mhz() .
+
+Thanks
+Stanislaw
