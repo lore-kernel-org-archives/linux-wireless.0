@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43614 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751628AbdG1OjX (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36465 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752457AbdGJJwH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:39:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH] mwifiex: correct IE parse during association
-References: <1500263187-1167-1-git-send-email-huxinming820@gmail.com>
-Date: Fri, 28 Jul 2017 17:39:17 +0300
-In-Reply-To: <1500263187-1167-1-git-send-email-huxinming820@gmail.com>
-        (Xinming Hu's message of "Mon, 17 Jul 2017 03:46:27 +0000")
-Message-ID: <87mv7owrqi.fsf@purkki.adurom.net> (sfid-20170728_163927_432798_1D357884)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 10 Jul 2017 05:52:07 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sgruszka@redhat.com, kvalo@codeaurora.org, davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: iwlegacy: Constify attribute_group structures.
+Date: Mon, 10 Jul 2017 15:21:42 +0530
+Message-Id: <ec85da590a1239a98e24b696eb11e3cf1739fd4d.1499680248.git.arvind.yadav.cs@gmail.com> (sfid-20170710_115249_621334_ECCC61B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxinming820@gmail.com> writes:
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-> From: Xinming Hu <huxm@marvell.com>
->
-> It is observed that some IEs get missed during association.
-> This patch correct the old IE parse code. sme->ie will be
-> store as wpa ie, wps ie, wapi ie and gen ie accordingly.
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[...]
-
-> +		} else {
-> +			if (pvendor_ie->element_id ==
-> +			    WLAN_EID_VENDOR_SPECIFIC) {
-> +				/* Test to see if it is a WPA IE,
-> +				 * if not, then it is a gen IE
-> +				 */
-> +				if (!memcmp(pvendor_ie->oui, wpa_oui,
-> +					    sizeof(wpa_oui))) {
-> +					/* IE is a WPA/WPA2 IE so call
-> +					 * set_wpa function
-> +					 */
-> +					mwifiex_set_wpa_ie(priv,
-> +							   (u8 *)pvendor_ie,
-> +							   cur_ie_len);
-
-The indentation is getting ugly here. A helper function or similar would
-really make this more readable.
-
-
-[...]
-
-> +NEXT_IE:
-
-Goto labels in lower case, please.
-
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+index 5b51fba..de9b652 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+@@ -4654,7 +4654,7 @@ static DEVICE_ATTR(tx_power, S_IWUSR | S_IRUGO, il4965_show_tx_power,
+ 	NULL
+ };
+ 
+-static struct attribute_group il_attribute_group = {
++static const struct attribute_group il_attribute_group = {
+ 	.name = NULL,		/* put in device directory */
+ 	.attrs = il_sysfs_entries,
+ };
 -- 
-Kalle Valo
+1.9.1
