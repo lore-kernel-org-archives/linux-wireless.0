@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:48962 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751245AbdGPLqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jul 2017 07:46:39 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 02/21] net: brcmfmac: Fix brain damaged fn parameter order
-Date: Sun, 16 Jul 2017 12:21:10 +0100
-Message-Id: <20170716112129.10206-3-ian@mnementh.co.uk> (sfid-20170716_140042_595966_A0B54BD0)
-In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
-References: <20170716112129.10206-1-ian@mnementh.co.uk>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34579 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752317AbdGJJnT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Jul 2017 05:43:19 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sgruszka@redhat.com, kvalo@codeaurora.org, davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: iwlegacy: constify attribute_group structures.
+Date: Mon, 10 Jul 2017 15:12:53 +0530
+Message-Id: <4333d7c1a2e0c5def85b1d0a42672499890f9f4c.1499679699.git.arvind.yadav.cs@gmail.com> (sfid-20170710_114417_442467_A2CC4C62)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index fd398d27a30c..dadbba2f82ed 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -232,8 +232,7 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 38bf403..329f3a6 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -3464,7 +3464,7 @@ static DEVICE_ATTR(antenna, S_IWUSR | S_IRUGO, il3945_show_antenna,
+ 	NULL
+ };
  
--static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
--					uint regaddr, u8 byte)
-+static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
- {
- 	int err_ret;
- 
-@@ -271,8 +270,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
- 			else
--				ret = brcmf_sdiod_f0_writeb(func, addr,
--							    *(u8 *)data);
-+				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
- 		} else {
- 			if (fn)
- 				*(u8 *)data = sdio_readb(func, addr, &ret);
+-static struct attribute_group il3945_attribute_group = {
++static const struct attribute_group il3945_attribute_group = {
+ 	.name = NULL,		/* put in device directory */
+ 	.attrs = il3945_sysfs_entries,
+ };
 -- 
-2.11.0
+1.9.1
