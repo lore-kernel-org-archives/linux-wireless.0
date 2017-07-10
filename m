@@ -1,155 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:58820 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1752760AbdGSTMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:12:10 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 24/34] brcmfmac: Rename chip.ctx -> chip.bus_priv
-Date: Wed, 19 Jul 2017 20:08:12 +0100
-Message-Id: <20170719190822.10857-25-ian@mnementh.co.uk> (sfid-20170719_211214_272642_15AF6AF3)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36503 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753919AbdGJMpV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Jul 2017 08:45:21 -0400
+Received: by mail-pg0-f65.google.com with SMTP id u36so12592687pgn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:45:20 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 08/17] rsi: update set_channel command frame
+Date: Mon, 10 Jul 2017 18:10:39 +0530
+Message-Id: <1499690448-9956-9-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144535_916357_D9FFF84A)
+In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver uses the label ctx like its going out of fashion.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Lets rename this usage of it so that its easier to see whats going on.
+TX command frame set_channel is modified to use common
+descriptor structure. Also DFS channel indication to firmware
+is added in the descriptor for dfs channels configuration.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 24 +++++++++++-----------
- .../wireless/broadcom/brcm80211/brcmfmac/chip.h    | 16 +++++++--------
- 2 files changed, 20 insertions(+), 20 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 47 +++++++++++++++------------------
+ drivers/net/wireless/rsi/rsi_mgmt.h     | 13 +++++++++
+ 2 files changed, 35 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index bab1bb3e99ae..ae21f16b31de 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -225,18 +225,18 @@ struct sbsocramregs {
- 
- static inline int brcmf_readl(struct brcmf_chip *chip, u32 addr)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index ead3573..4bcb840 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -965,12 +965,13 @@ int rsi_set_channel(struct rsi_common *common,
+ 		    struct ieee80211_channel *channel)
  {
--	return chip->ops->read32(chip->ctx, addr);
-+	return chip->ops->read32(chip->bus_priv, addr);
- }
+ 	struct sk_buff *skb = NULL;
+-	struct rsi_mac_frame *mgmt_frame;
++	struct rsi_chan_config *chan_cfg;
++	u16 frame_len = sizeof(struct rsi_chan_config);
  
- static inline void brcmf_writel(struct brcmf_chip *chip, u32 addr, u32 v)
- {
--	chip->ops->write32(chip->ctx, addr, v);
-+	chip->ops->write32(chip->bus_priv, addr, v);
- }
+ 	rsi_dbg(MGMT_TX_ZONE,
+ 		"%s: Sending scan req frame\n", __func__);
  
- static inline void brcmf_writelp(struct brcmf_chip *chip, u32 addr, u32 v)
- {
--	chip->ops->write32(chip->ctx, addr, v);
--	chip->ops->read32(chip->ctx, addr);
-+	chip->ops->write32(chip->bus_priv, addr, v);
-+	chip->ops->read32(chip->bus_priv, addr);
- }
- 
- static void brcmf_clear_bits(struct brcmf_chip *ci, u32 reg, u32 bits)
-@@ -1025,7 +1025,7 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
- 	 * specific reset at this point.
- 	 */
- 	if (ci->ops->reset) {
--		ci->ops->reset(ci->ctx, ci);
-+		ci->ops->reset(ci->bus_priv, ci);
- 		brcmf_chip_set_passive(ci);
+-	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	skb = dev_alloc_skb(frame_len);
+ 	if (!skb) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
+ 			__func__);
+@@ -981,37 +982,33 @@ int rsi_set_channel(struct rsi_common *common,
+ 		dev_kfree_skb(skb);
+ 		return 0;
  	}
- 
-@@ -1097,12 +1097,12 @@ static int brcmf_chip_setup(struct brcmf_chip *chip)
- 
- 	/* execute bus core specific setup */
- 	if (chip->ops->setup)
--		ret = chip->ops->setup(chip->ctx, chip);
-+		ret = chip->ops->setup(chip->bus_priv, chip);
- 
- 	return ret;
- }
- 
--struct brcmf_chip *brcmf_chip_attach(void *ctx,
-+struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
- 				     const struct brcmf_buscore_ops *ops)
- {
- 	struct brcmf_chip *chip;
-@@ -1126,9 +1126,9 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	INIT_LIST_HEAD(&chip->cores);
- 	chip->num_cores = 0;
- 	chip->ops = ops;
--	chip->ctx = ctx;
-+	chip->bus_priv = bus_priv;
- 
--	err = ops->prepare(ctx);
-+	err = ops->prepare(bus_priv);
- 	if (err < 0)
- 		goto fail;
- 
-@@ -1249,7 +1249,7 @@ static bool brcmf_chip_cm3_set_active(struct brcmf_chip *chip)
- 		return false;
+-	memset(skb->data, 0, FRAME_DESC_SZ);
+-	mgmt_frame = (struct rsi_mac_frame *)skb->data;
+-
+-	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
+-	mgmt_frame->desc_word[1] = cpu_to_le16(SCAN_REQUEST);
+-	mgmt_frame->desc_word[4] = cpu_to_le16(channel->hw_value);
+-
+-	mgmt_frame->desc_word[4] |=
+-		cpu_to_le16(((char)(channel->max_antenna_gain)) << 8);
+-	mgmt_frame->desc_word[5] =
+-		cpu_to_le16((char)(channel->max_antenna_gain));
+-
+-	mgmt_frame->desc_word[7] = cpu_to_le16(PUT_BBP_RESET |
+-					       BBP_REG_WRITE |
+-					       (RSI_RF_TYPE << 4));
+-
+-	if (!(channel->flags & IEEE80211_CHAN_NO_IR) &&
+-	       !(channel->flags & IEEE80211_CHAN_RADAR)) {
++	memset(skb->data, 0, frame_len);
++	chan_cfg = (struct rsi_chan_config *)skb->data;
++
++	rsi_set_len_qno(&chan_cfg->desc_dword0.len_qno, 0, RSI_WIFI_MGMT_Q);
++	chan_cfg->desc_dword0.frame_type = SCAN_REQUEST;
++	chan_cfg->channel_number = channel->hw_value;
++	chan_cfg->antenna_gain_offset_2g = channel->max_antenna_gain;
++	chan_cfg->antenna_gain_offset_5g = channel->max_antenna_gain;
++	chan_cfg->region_rftype = (RSI_RF_TYPE & 0xf) << 4;
++
++	if ((channel->flags & IEEE80211_CHAN_NO_IR) ||
++	    (channel->flags & IEEE80211_CHAN_RADAR)) {
++		chan_cfg->antenna_gain_offset_2g |= RSI_CHAN_RADAR;
++	} else {
+ 		if (common->tx_power < channel->max_power)
+-			mgmt_frame->desc_word[6] = cpu_to_le16(common->tx_power);
++			chan_cfg->tx_power = cpu_to_le16(common->tx_power);
+ 		else
+-			mgmt_frame->desc_word[6] = cpu_to_le16(channel->max_power);
++			chan_cfg->tx_power = cpu_to_le16(channel->max_power);
  	}
+-	mgmt_frame->desc_word[7] = cpu_to_le16(common->priv->dfs_region);
++	chan_cfg->region_rftype |= (common->priv->dfs_region & 0xf);
  
--	chip->ops->activate(chip->ctx, chip, 0);
-+	chip->ops->activate(chip->bus_priv, chip, 0);
+ 	if (common->channel_width == BW_40MHZ)
+-		mgmt_frame->desc_word[5] |= cpu_to_le16(0x1 << 8);
++		chan_cfg->channel_width = 0x1;
  
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CM3);
- 	brcmf_chip_resetcore(core, 0, 0, 0);
-@@ -1275,7 +1275,7 @@ static bool brcmf_chip_cr4_set_active(struct brcmf_chip *chip, u32 rstvec)
- {
- 	struct brcmf_core *core;
+ 	common->channel = channel->hw_value;
  
--	chip->ops->activate(chip->ctx, chip, rstvec);
-+	chip->ops->activate(chip->bus_priv, chip, rstvec);
+-	skb_put(skb, FRAME_DESC_SZ);
++	skb_put(skb, frame_len);
  
- 	/* restore ARM */
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CR4);
-@@ -1302,7 +1302,7 @@ static bool brcmf_chip_ca7_set_active(struct brcmf_chip *chip, u32 rstvec)
- {
- 	struct brcmf_core *core;
+ 	return rsi_send_internal_mgmt_frame(common, skb);
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index d44c79f..2f49e55 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -166,6 +166,7 @@
+ #define DISALLOW_BROADCAST_DATA		BIT(6)
  
--	chip->ops->activate(chip->ctx, chip, rstvec);
-+	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ #define RSI_MPDU_DENSITY		0x8
++#define RSI_CHAN_RADAR			BIT(7)
  
- 	/* restore ARM */
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CA7);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-index 0babb328d155..8698abfb806e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-@@ -50,7 +50,7 @@ struct brcmf_chip {
- 	void (*resetcore)(struct brcmf_core *core, u32 prereset, u32 reset,
- 				u32 postreset);
+ enum opmode {
+ 	STA_OPMODE = 1,
+@@ -306,6 +307,18 @@ struct rsi_bb_rf_prog {
+ 	__le16 flags;
+ } __packed;
  
--	void *ctx;
-+	void *bus_priv;
- 
- 	u32 chip;
- 	u32 chiprev;
-@@ -94,15 +94,15 @@ struct brcmf_core {
-  *	The callback should use the provided @rstvec when non-zero.
-  */
- struct brcmf_buscore_ops {
--	u32 (*read32)(void *ctx, u32 addr);
--	void (*write32)(void *ctx, u32 addr, u32 value);
--	int (*prepare)(void *ctx);
--	int (*reset)(void *ctx, struct brcmf_chip *chip);
--	int (*setup)(void *ctx, struct brcmf_chip *chip);
--	void (*activate)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
-+	u32 (*read32)(void *bus_priv, u32 addr);
-+	void (*write32)(void *bus_priv, u32 addr, u32 value);
-+	int (*prepare)(void *bus_priv);
-+	int (*reset)(void *bus_priv, struct brcmf_chip *chip);
-+	int (*setup)(void *bus_priv, struct brcmf_chip *chip);
-+	void (*activate)(void *bus_priv, struct brcmf_chip *chip, u32 rstvec);
- };
- 
--struct brcmf_chip *brcmf_chip_attach(void *ctx,
-+struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
- 				     const struct brcmf_buscore_ops *ops);
- void brcmf_chip_detach(struct brcmf_chip *chip);
- struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 coreid);
++struct rsi_chan_config {
++	struct rsi_cmd_desc_dword0 desc_dword0;
++	struct rsi_cmd_desc_dword1 desc_dword1;
++	u8 channel_number;
++	u8 antenna_gain_offset_2g;
++	u8 antenna_gain_offset_5g;
++	u8 channel_width;
++	__le16 tx_power;
++	u8 region_rftype;
++	u8 flags;
++} __packed;
++
+ struct rsi_vap_caps {
+ 	__le16 desc_word[8];
+ 	u8 mac_addr[6];
 -- 
-2.11.0
+2.7.4
