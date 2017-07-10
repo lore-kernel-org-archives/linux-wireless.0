@@ -1,367 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41058 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752330AbdG1O05 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34609 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753848AbdGJMqG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:26:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Mon, 10 Jul 2017 08:46:06 -0400
+Received: by mail-pf0-f196.google.com with SMTP id c24so14381086pfe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:46:00 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:24 +0300
-Message-Id: <20170728142337.19183-12-luca@coelho.fi> (sfid-20170728_162710_233393_8EC80665)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 11/24] iwlwifi: mvm: refactor beacon template command code
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 17/17] rsi: regulatory enhancements
+Date: Mon, 10 Jul 2017 18:10:48 +0530
+Message-Id: <1499690448-9956-18-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144616_062864_E69E2C8A)
+In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-We currently support 3 different versions of the beacon template
-command and the code does some tricks in order to reuse what is
-possible across these versions.  But it is a bit complicated to read
-and soon there will be one more variation that the driver needs
-implement, which would complicate it even further.
+Below regulatory changes are included this patch
+* Country code is saved as it will be used in bgscan.
+* Region codes are mapped according to RSI region codes.
+* Radar flag settings are moved under the check if 5GHZ band
+  is enabled.
 
-Refactor the way we send beacon template commands, which increases the
-code size a bit, but makes it much easier to read.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    |  31 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 202 +++++++++++++---------
- 2 files changed, 138 insertions(+), 95 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 49 ++++++++++++++++++++++-------
+ drivers/net/wireless/rsi/rsi_main.h         |  8 +++++
+ 2 files changed, 45 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index d20baedead98..95dbed609f3e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -766,7 +766,8 @@ struct iwl_mac_beacon_cmd_v6 {
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_6 */
- 
- /**
-- * struct iwl_mac_beacon_cmd_data - data of beacon template with offloaded CSA
-+ * struct iwl_mac_beacon_cmd_v7 - beacon template command with offloaded CSA
-+ * @tx: the tx commands associated with the beacon frame
-  * @template_id: currently equal to the mac context id of the coresponding
-  *  mac.
-  * @tim_idx: the offset of the tim IE in the beacon
-@@ -775,23 +776,14 @@ struct iwl_mac_beacon_cmd_v6 {
-  * @csa_offset: offset to the CSA IE if present
-  * @frame: the template of the beacon frame
-  */
--struct iwl_mac_beacon_cmd_data {
-+struct iwl_mac_beacon_cmd_v7 {
-+	struct iwl_tx_cmd tx;
- 	__le32 template_id;
- 	__le32 tim_idx;
- 	__le32 tim_size;
- 	__le32 ecsa_offset;
- 	__le32 csa_offset;
- 	struct ieee80211_hdr frame[0];
--};
--
--/**
-- * struct iwl_mac_beacon_cmd_v7 - beacon template command with offloaded CSA
-- * @tx: the tx commands associated with the beacon frame
-- * @data: see &iwl_mac_beacon_cmd_data
-- */
--struct iwl_mac_beacon_cmd_v7 {
--	struct iwl_tx_cmd tx;
--	struct iwl_mac_beacon_cmd_data data;
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
- 
- /**
-@@ -799,13 +791,24 @@ struct iwl_mac_beacon_cmd_v7 {
-  * @byte_cnt: byte count of the beacon frame
-  * @flags: for future use
-  * @reserved: reserved
-- * @data: see &iwl_mac_beacon_cmd_data
-+ * @template_id: currently equal to the mac context id of the coresponding
-+ *  mac.
-+ * @tim_idx: the offset of the tim IE in the beacon
-+ * @tim_size: the length of the tim IE
-+ * @ecsa_offset: offset to the ECSA IE if present
-+ * @csa_offset: offset to the CSA IE if present
-+ * @frame: the template of the beacon frame
-  */
- struct iwl_mac_beacon_cmd {
- 	__le16 byte_cnt;
- 	__le16 flags;
- 	__le64 reserved;
--	struct iwl_mac_beacon_cmd_data data;
-+	__le32 template_id;
-+	__le32 tim_idx;
-+	__le32 tim_size;
-+	__le32 ecsa_offset;
-+	__le32 csa_offset;
-+	struct ieee80211_hdr frame[0];
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
- 
- struct iwl_beacon_notif {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index d130bdd76368..1546d54e2ebd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,7 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -1048,83 +1048,26 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
- 	return ie - beacon;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index d094b0a..c91d6ef 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1163,6 +1163,21 @@ static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
+ 	return 0;	
  }
  
--static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
--					struct ieee80211_vif *vif,
--					struct sk_buff *beacon)
-+static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
-+				    struct ieee80211_vif *vif,
-+				    struct sk_buff *beacon,
-+				    struct iwl_tx_cmd *tx)
++static int rsi_map_region_code(enum nl80211_dfs_regions region_code)
++{
++	switch (region_code) {
++	case NL80211_DFS_FCC:
++		return RSI_REGION_FCC;
++	case NL80211_DFS_ETSI:
++		return RSI_REGION_ETSI;
++	case NL80211_DFS_JP:
++		return RSI_REGION_TELEC;
++	case NL80211_DFS_UNSET:
++		return RSI_REGION_WORLD;
++	}
++	return RSI_REGION_WORLD;
++}
++
+ static void rsi_reg_notify(struct wiphy *wiphy,
+ 			   struct regulatory_request *request)
  {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	struct iwl_host_cmd cmd = {
--		.id = BEACON_TEMPLATE_CMD,
--		.flags = CMD_ASYNC,
--	};
--	union {
--		struct iwl_mac_beacon_cmd_v6 beacon_cmd_v6;
--		struct iwl_mac_beacon_cmd_v7 beacon_cmd;
--	} u = {};
--	struct iwl_mac_beacon_cmd beacon_cmd = {};
- 	struct ieee80211_tx_info *info;
--	u32 beacon_skb_len;
- 	u32 rate, tx_flags;
- 
--	if (WARN_ON(!beacon))
--		return -EINVAL;
+@@ -1170,23 +1185,33 @@ static void rsi_reg_notify(struct wiphy *wiphy,
+ 	struct ieee80211_channel *ch;
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct rsi_hw * adapter = hw->priv; 
++	struct rsi_common *common = adapter->priv;
+ 	int i;
 -
--	beacon_skb_len = beacon->len;
--
--	if (fw_has_capa(&mvm->fw->ucode_capa,
--			IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD)) {
--		u32 csa_offset, ecsa_offset;
--
--		csa_offset = iwl_mvm_find_ie_offset(beacon->data,
--						    WLAN_EID_CHANNEL_SWITCH,
--						    beacon_skb_len);
--		ecsa_offset =
--			iwl_mvm_find_ie_offset(beacon->data,
--					       WLAN_EID_EXT_CHANSWITCH_ANN,
--					       beacon_skb_len);
--
--		if (iwl_mvm_has_new_tx_api(mvm)) {
--			beacon_cmd.data.template_id =
--				cpu_to_le32((u32)mvmvif->id);
--			beacon_cmd.data.ecsa_offset = cpu_to_le32(ecsa_offset);
--			beacon_cmd.data.csa_offset = cpu_to_le32(csa_offset);
--			beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon_skb_len);
--			if (vif->type == NL80211_IFTYPE_AP)
--				iwl_mvm_mac_ctxt_set_tim(mvm,
--							 &beacon_cmd.data.tim_idx,
--							 &beacon_cmd.data.tim_size,
--							 beacon->data,
--							 beacon_skb_len);
--			cmd.len[0] = sizeof(beacon_cmd);
--			cmd.data[0] = &beacon_cmd;
--			goto send;
--
--		} else {
--			u.beacon_cmd.data.ecsa_offset =
--				cpu_to_le32(ecsa_offset);
--			u.beacon_cmd.data.csa_offset = cpu_to_le32(csa_offset);
--			cmd.len[0] = sizeof(u.beacon_cmd);
--			cmd.data[0] = &u;
--		}
--	} else {
--		cmd.len[0] = sizeof(u.beacon_cmd_v6);
--		cmd.data[0] = &u;
--	}
--
--	/* TODO: for now the beacon template id is set to be the mac context id.
--	 * Might be better to handle it as another resource ... */
--	u.beacon_cmd_v6.template_id = cpu_to_le32((u32)mvmvif->id);
- 	info = IEEE80211_SKB_CB(beacon);
- 
- 	/* Set up TX command fields */
--	u.beacon_cmd_v6.tx.len = cpu_to_le16((u16)beacon_skb_len);
--	u.beacon_cmd_v6.tx.sta_id = mvmvif->bcast_sta.sta_id;
--	u.beacon_cmd_v6.tx.life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
-+	tx->len = cpu_to_le16((u16)beacon->len);
-+	tx->sta_id = mvmvif->bcast_sta.sta_id;
-+	tx->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
- 	tx_flags = TX_CMD_FLG_SEQ_CTL | TX_CMD_FLG_TSF;
- 	tx_flags |=
- 		iwl_mvm_bt_coex_tx_prio(mvm, (void *)beacon->data, info, 0) <<
- 						TX_CMD_FLG_BT_PRIO_POS;
--	u.beacon_cmd_v6.tx.tx_flags = cpu_to_le32(tx_flags);
-+	tx->tx_flags = cpu_to_le32(tx_flags);
- 
- 	if (!fw_has_capa(&mvm->fw->ucode_capa,
- 			 IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION)) {
-@@ -1133,7 +1076,7 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 					     mvm->mgmt_last_antenna_idx);
- 	}
- 
--	u.beacon_cmd_v6.tx.rate_n_flags =
-+	tx->rate_n_flags =
- 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
- 			    RATE_MCS_ANT_POS);
- 
-@@ -1141,29 +1084,126 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 		rate = IWL_FIRST_OFDM_RATE;
- 	} else {
- 		rate = IWL_FIRST_CCK_RATE;
--		u.beacon_cmd_v6.tx.rate_n_flags |=
--					cpu_to_le32(RATE_MCS_CCK_MSK);
-+		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
- 	}
--	u.beacon_cmd_v6.tx.rate_n_flags |=
--		cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
- 
--	/* Set up TX beacon command fields */
--	if (vif->type == NL80211_IFTYPE_AP)
--		iwl_mvm_mac_ctxt_set_tim(mvm, &u.beacon_cmd_v6.tim_idx,
--					 &u.beacon_cmd_v6.tim_size,
--					 beacon->data,
--					 beacon_skb_len);
-+	tx->rate_n_flags |= cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
-+}
+-	sband = wiphy->bands[NL80211_BAND_5GHZ];
+ 	
+-	for (i = 0; i < sband->n_channels; i++) {
+-		ch = &sband->channels[i];
+-		if (ch->flags & IEEE80211_CHAN_DISABLED)
+-			continue;
++	mutex_lock(&common->mutex);
 +
-+static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
-+					    struct sk_buff *beacon,
-+					    void *data, int len)
-+{
-+	struct iwl_host_cmd cmd = {
-+		.id = BEACON_TEMPLATE_CMD,
-+		.flags = CMD_ASYNC,
-+	};
++	rsi_dbg(INFO_ZONE, "country = %s dfs_region = %d\n",
++		request->alpha2, request->dfs_region);
++
++	if (common->num_supp_bands > 1) {
++		sband = wiphy->bands[NL80211_BAND_5GHZ];
  
--send:
--	/* Submit command */
-+	cmd.len[0] = len;
-+	cmd.data[0] = data;
- 	cmd.dataflags[0] = 0;
--	cmd.len[1] = beacon_skb_len;
-+	cmd.len[1] = beacon->len;
- 	cmd.data[1] = beacon->data;
- 	cmd.dataflags[1] = IWL_HCMD_DFL_DUP;
- 
- 	return iwl_mvm_send_cmd(mvm, &cmd);
+-		if (ch->flags & IEEE80211_CHAN_RADAR)
+-			ch->flags |= IEEE80211_CHAN_NO_IR;
++		for (i = 0; i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++			if (ch->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++
++			if (ch->flags & IEEE80211_CHAN_RADAR)
++				ch->flags |= IEEE80211_CHAN_NO_IR;
++		}
+ 	}
++	adapter->dfs_region = rsi_map_region_code(request->dfs_region);
++	rsi_dbg(INFO_ZONE, "RSI region code = %d\n", adapter->dfs_region);
+ 	
+-	rsi_dbg(INFO_ZONE,
+-		"country = %s dfs_region = %d\n",
+-		request->alpha2, request->dfs_region);
+-	adapter->dfs_region = request->dfs_region;
++	adapter->country[0] = request->alpha2[0];
++	adapter->country[1] = request->alpha2[1];
++
++	mutex_unlock(&common->mutex);
  }
  
-+static int iwl_mvm_mac_ctxt_send_beacon_v6(struct iwl_mvm *mvm,
-+					   struct ieee80211_vif *vif,
-+					   struct sk_buff *beacon)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mac_beacon_cmd_v6 beacon_cmd = {};
+ static struct ieee80211_ops mac80211_ops = {
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 485b97a..6a8e8e7 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -170,6 +170,13 @@ struct xtended_desc {
+ 	u16 reserved;
+ };
+ 
++enum rsi_dfs_regions {
++	RSI_REGION_FCC = 0,
++	RSI_REGION_ETSI,
++	RSI_REGION_TELEC,
++	RSI_REGION_WORLD
++};
 +
-+	iwl_mvm_mac_ctxt_set_tx(mvm, vif, beacon, &beacon_cmd.tx);
-+
-+	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
-+
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
-+					 &beacon_cmd.tim_size,
-+					 beacon->data, beacon->len);
-+
-+	return iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
-+						sizeof(beacon_cmd));
-+}
-+
-+static int iwl_mvm_mac_ctxt_send_beacon_v7(struct iwl_mvm *mvm,
-+					   struct ieee80211_vif *vif,
-+					   struct sk_buff *beacon)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mac_beacon_cmd_v7 beacon_cmd = {};
-+
-+	iwl_mvm_mac_ctxt_set_tx(mvm, vif, beacon, &beacon_cmd.tx);
-+
-+	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
-+
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
-+					 &beacon_cmd.tim_size,
-+					 beacon->data, beacon->len);
-+
-+	beacon_cmd.csa_offset =
-+		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
-+						   WLAN_EID_CHANNEL_SWITCH,
-+						   beacon->len));
-+	beacon_cmd.ecsa_offset =
-+		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
-+						   WLAN_EID_EXT_CHANSWITCH_ANN,
-+						   beacon->len));
-+
-+	return iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
-+						sizeof(beacon_cmd));
-+}
-+
-+static int iwl_mvm_mac_ctxt_send_beacon_v8(struct iwl_mvm *mvm,
-+					   struct ieee80211_vif *vif,
-+					   struct sk_buff *beacon)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mac_beacon_cmd beacon_cmd = {};
-+
-+	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
-+	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
-+
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		iwl_mvm_mac_ctxt_set_tim(mvm,
-+					 &beacon_cmd.tim_idx,
-+					 &beacon_cmd.tim_size,
-+					 beacon->data, beacon->len);
-+
-+	beacon_cmd.csa_offset =
-+		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
-+						   WLAN_EID_CHANNEL_SWITCH,
-+						   beacon->len));
-+	beacon_cmd.ecsa_offset =
-+		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
-+						   WLAN_EID_EXT_CHANSWITCH_ANN,
-+						   beacon->len));
-+
-+	return iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
-+						sizeof(beacon_cmd));
-+}
-+
-+static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
-+					struct ieee80211_vif *vif,
-+					struct sk_buff *beacon)
-+{
-+	if (WARN_ON(!beacon))
-+		return -EINVAL;
-+
-+	if (!fw_has_capa(&mvm->fw->ucode_capa,
-+			 IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD))
-+		return iwl_mvm_mac_ctxt_send_beacon_v6(mvm, vif, beacon);
-+
-+	if (!iwl_mvm_has_new_tx_api(mvm))
-+		return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
-+
-+	return iwl_mvm_mac_ctxt_send_beacon_v8(mvm, vif, beacon);
-+}
-+
- /* The beacon template for the AP/GO/IBSS has changed and needs update */
- int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif)
+ struct rsi_hw;
+ 
+ struct rsi_common {
+@@ -287,6 +294,7 @@ struct rsi_hw {
+ 	struct eepromrw_info eeprom;
+ 	u32 interrupt_status;
+ 	u8 dfs_region;
++	char country[2];
+ 	void *rsi_dev;
+ 	struct rsi_host_intf_ops *host_intf_ops;
+ 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
 -- 
-2.13.2
+2.7.4
