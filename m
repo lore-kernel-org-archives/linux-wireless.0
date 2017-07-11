@@ -1,173 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36675 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751910AbdGDHVv (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33181 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdGKBdW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2017 03:21:51 -0400
-Received: by mail-pf0-f196.google.com with SMTP id z6so28526065pfk.3
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 00:21:51 -0700 (PDT)
-Date: Tue, 4 Jul 2017 12:51:47 +0530
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Handle memory free
-Message-ID: <20170704072147.GA5678@symbol-HP-ZBook-15> (sfid-20170704_092156_056731_E4EEA654)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 10 Jul 2017 21:33:22 -0400
+Received: by mail-oi0-f66.google.com with SMTP id f134so13928138oig.0
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 18:33:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/2] rtlwifi: Fix two static errors
+Date: Mon, 10 Jul 2017 20:33:11 -0500
+Message-Id: <20170711013313.3478-1-Larry.Finger@lwfinger.net> (sfid-20170711_033337_939368_675658E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch will fix memory leak when firmware load fails
+Dan Carpenter reported two problems found in changes that were merged
+into kernel 4.12. One of them involves twp variables that might not
+be initialized. The second is a potential use after free error.
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 4 ++++
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 6 ++++++
- 9 files changed, 24 insertions(+)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-index 7661cfa..37489b4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-@@ -175,6 +175,8 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_info("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index bcbb0c6..38f85bf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -176,6 +176,8 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-index 62d9214..dfbbd35 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-@@ -85,6 +85,10 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- 	err = request_firmware_nowait(THIS_MODULE, 1,
- 				      fw_name, rtlpriv->io.dev,
- 				      GFP_KERNEL, hw, rtl_fw_cb);
-+	if (err) {
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
-+	}
- 	return err;
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index 16132c6..e38d6f7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -183,6 +183,8 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index 48820bc..6f2d1f0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -177,6 +177,8 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index 2006b09..1ec20ef 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -216,6 +216,8 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl92se_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 7bf9f25..aab8666 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -184,6 +184,8 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 	return 0;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index 8c0ac96..b7a5f92 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -195,6 +195,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 					      rtl_fw_cb);
- 		if (err) {
- 			pr_err("Failed to request firmware!\n");
-+			vfree(rtlpriv->rtlhal.pfirmware);
-+			rtlpriv->rtlhal.pfirmware = NULL;
- 			return 1;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index abaf34c..5272fb4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -196,6 +196,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->rtlhal.wowlan_firmware = vzalloc(0x8000);
- 	if (!rtlpriv->rtlhal.wowlan_firmware) {
- 		pr_err("Can't alloc buffer for wowlan fw.\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 
-@@ -222,6 +224,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 					      rtl_fw_cb);
- 		if (err) {
- 			pr_err("Failed to request normal firmware!\n");
-+			vfree(rtlpriv->rtlhal.wowlan_firmware);
-+			vfree(rtlpriv->rtlhal.pfirmware);
- 			return 1;
- 		}
- 	}
-@@ -233,6 +237,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_wowlan_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request wowlan firmware!\n");
-+		vfree(rtlpriv->rtlhal.wowlan_firmware);
-+		vfree(rtlpriv->rtlhal.pfirmware);
- 		return 1;
- 	}
- 	return 0;
+Ping-Ke Shih (2):
+  rtlwifi: fix static checker warning of uninitialized symbol.
+  rtlwifi: fix static checker warning of dereferencing freed memory
+
+ drivers/net/wireless/realtek/rtlwifi/base.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
 -- 
-1.9.1
+2.12.3
