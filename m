@@ -1,60 +1,651 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34100 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752206AbdG1OYm (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26903 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755947AbdGKN5X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:24:42 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 11 Jul 2017 09:57:23 -0400
+From: <mpubbise@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [PATCH 2/3] ath10k: add tdls support for 10.4 firmwares
+Date: Tue, 11 Jul 2017 19:26:17 +0530
+Message-ID: <1499781378-858-3-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170711_155726_934431_2E0D7B83)
+In-Reply-To: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
 MIME-Version: 1.0
-Subject: Re: [v3,01/21] rsi: use BUILD_BUG_ON check for fsm_state
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1499351844-2046-2-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-2-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Message-Id: <20170728142441.6E22F6128F@smtp.codeaurora.org> (sfid-20170728_162450_652712_2BAD6B5F)
-Date: Fri, 28 Jul 2017 14:24:36 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> 
-> Whenever new fsm_state enum element is added, fsm_state array
-> also needs to be updated. If this change is missed, we may end
-> up doing invalid access in array. BUILD_BUG_ON check will help
-> to avoid this problem.
-> 
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+This patch adds the support of TDLS feature for 10.4 firmware
+versions.
 
-21 patches applied to wireless-drivers-next.git, thanks.
+A new WMI service is added to advertise the support of TDLS for
+10.4 firmwares.
 
-e0d0ae8a4304 rsi: use BUILD_BUG_ON check for fsm_state
-09cfb41f3579 rsi: changes in eeprom read frame
-f95bbd979df7 rsi: fix sdio card reset problem
-49ddac0d4b80 rsi: chip reset for SDIO interface
-f746606a51ed rsi: correct SDIO disconnect path handling
-ea0676c47085 rsi: card reset for USB interface
-ed833be6faa0 rsi: USB tx headroom cleanup
-ac6107caa0d8 rsi: correct the logic of deriving queue number
-5d16a1c1ae11 rsi: rename USB endpoint macros
-d1f69e418f66 rsi: choose correct endpoint based on queue.
-015240018b0a rsi: set immediate wakeup bit
-de2dea16ec9f rsi: management frame descriptor preparation cleanup
-6507de6df900 rsi: separate function for management packet descriptor
-af1930977678 rsi: data packet descriptor code cleanup
-0eb42586cf87 rsi: data packet descriptor enhancements
-ceb2e4eab994 rsi: separate function for data packet descriptor
-5f6ae7cae211 rsi: rename variable in_sdio_litefi_irq
-72bccf51d459 rsi: Optimise sdio claim and release host
-ebf084ea0ec7 rsi: SDIO Rx packet processing enhancement
-6c409cad3d2b rsi: use separate mutex lock for receive thread
-cb16453565f8 rsi: Rename mutex tx_rxlock to the tx_lock.
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    9 ++
+ drivers/net/wireless/ath/ath10k/hw.h   |    5 +
+ drivers/net/wireless/ath/ath10k/mac.c  |    5 +-
+ drivers/net/wireless/ath/ath10k/wmi.c  |  161 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  256 ++++++++++++++++++++++++++++++++
+ 5 files changed, 435 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 8ff4745..9f72dda 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1885,6 +1885,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->fw_stats_req_mask = WMI_10_4_STAT_PEER |
+ 					WMI_10_4_STAT_PEER_EXTD;
+ 		ar->max_spatial_stream = ar->hw_params.max_spatial_stream;
++		ar->max_num_tdls_vdevs = TARGET_10_4_NUM_TDLS_VDEVS;
+ 
+ 		if (test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
+ 			     fw_file->fw_features))
+@@ -2123,6 +2124,14 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 			     ar->running_fw->fw_file.fw_features))
+ 			val |= WMI_10_4_COEX_GPIO_SUPPORT;
+ 
++		if (test_bit(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
++			     ar->wmi.svc_map))
++			val |= WMI_10_4_TDLS_EXPLICIT_MODE_ONLY;
++
++		if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA,
++			     ar->wmi.svc_map))
++			val |= WMI_10_4_TDLS_UAPSD_BUFFER_STA;
++
+ 		status = ath10k_mac_ext_resource_config(ar, val);
+ 		if (status) {
+ 			ath10k_err(ar,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 19e4351..0c089f6 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -720,6 +720,11 @@ struct ath10k_hw_ops {
+ #define TARGET_10_4_IPHDR_PAD_CONFIG		1
+ #define TARGET_10_4_QWRAP_CONFIG		0
+ 
++/* TDLS config */
++#define TARGET_10_4_NUM_TDLS_VDEVS		1
++#define TARGET_10_4_NUM_TDLS_BUFFER_STA		1
++#define TARGET_10_4_NUM_TDLS_SLEEP_STA		1
++
+ /* Maximum number of Copy Engine's supported */
+ #define CE_COUNT_MAX 12
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 55c808f..523a549 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8197,8 +8197,11 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
+ 	}
+ 
+-	if (test_bit(WMI_SERVICE_TDLS, ar->wmi.svc_map))
++	if (test_bit(WMI_SERVICE_TDLS, ar->wmi.svc_map) ||
++	    test_bit(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, ar->wmi.svc_map)) {
+ 		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
++		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
++	}
+ 
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 96cd1eb..c91d804 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -711,6 +711,33 @@
+ 	.pdev_bss_chan_info_request_cmdid =
+ 			WMI_10_4_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
+ 	.ext_resource_cfg_cmdid = WMI_10_4_EXT_RESOURCE_CFG_CMDID,
++	.vdev_set_ie_cmdid = WMI_10_4_VDEV_SET_IE_CMDID,
++	.set_lteu_config_cmdid = WMI_10_4_SET_LTEU_CONFIG_CMDID,
++	.atf_ssid_grouping_request_cmdid =
++			WMI_10_4_ATF_SSID_GROUPING_REQUEST_CMDID,
++	.peer_atf_ext_request_cmdid = WMI_10_4_PEER_ATF_EXT_REQUEST_CMDID,
++	.set_periodic_channel_stats_cfg_cmdid =
++			WMI_10_4_SET_PERIODIC_CHANNEL_STATS_CONFIG,
++	.peer_bwf_request_cmdid = WMI_10_4_PEER_BWF_REQUEST_CMDID,
++	.btcoex_cfg_cmdid = WMI_10_4_BTCOEX_CFG_CMDID,
++	.peer_tx_mu_txmit_count_cmdid = WMI_10_4_PEER_TX_MU_TXMIT_COUNT_CMDID,
++	.peer_tx_mu_txmit_rstcnt_cmdid = WMI_10_4_PEER_TX_MU_TXMIT_RSTCNT_CMDID,
++	.peer_gid_userpos_list_cmdid = WMI_10_4_PEER_GID_USERPOS_LIST_CMDID,
++	.pdev_check_cal_version_cmdid = WMI_10_4_PDEV_CHECK_CAL_VERSION_CMDID,
++	.coex_version_cfg_cmid = WMI_10_4_COEX_VERSION_CFG_CMID,
++	.pdev_get_rx_filter_cmdid = WMI_10_4_PDEV_GET_RX_FILTER_CMDID,
++	.pdev_extended_nss_cfg_cmdid = WMI_10_4_PDEV_EXTENDED_NSS_CFG_CMDID,
++	.vdev_set_scan_nac_rssi_cmdid = WMI_10_4_VDEV_SET_SCAN_NAC_RSSI_CMDID,
++	.prog_gpio_band_select_cmdid = WMI_10_4_PROG_GPIO_BAND_SELECT_CMDID,
++	.config_smart_logging_cmdid = WMI_10_4_CONFIG_SMART_LOGGING_CMDID,
++	.debug_fatal_condition_cmdid = WMI_10_4_DEBUG_FATAL_CONDITION_CMDID,
++	.get_tsf_timer_cmdid = WMI_10_4_GET_TSF_TIMER_CMDID,
++	.pdev_get_tpc_table_cmdid = WMI_10_4_PDEV_GET_TPC_TABLE_CMDID,
++	.vdev_sifs_trigger_time_cmdid = WMI_10_4_VDEV_SIFS_TRIGGER_TIME_CMDID,
++	.pdev_wds_entry_list_cmdid = WMI_10_4_PDEV_WDS_ENTRY_LIST_CMDID,
++	.tdls_set_state_cmdid = WMI_10_4_TDLS_SET_STATE_CMDID,
++	.tdls_peer_update_cmdid = WMI_10_4_TDLS_PEER_UPDATE_CMDID,
++	.tdls_set_offchan_mode_cmdid = WMI_10_4_TDLS_SET_OFFCHAN_MODE_CMDID,
+ };
+ 
+ /* MAIN WMI VDEV param map */
+@@ -7803,14 +7830,28 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
+ {
+ 	struct wmi_ext_resource_config_10_4_cmd *cmd;
+ 	struct sk_buff *skb;
++	u32 num_tdls_sleep_sta = 0;
+ 
+ 	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
+ 	if (!skb)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	if (test_bit(WMI_SERVICE_TDLS_UAPSD_SLEEP_STA, ar->wmi.svc_map))
++		num_tdls_sleep_sta = TARGET_10_4_NUM_TDLS_SLEEP_STA;
++
+ 	cmd = (struct wmi_ext_resource_config_10_4_cmd *)skb->data;
+ 	cmd->host_platform_config = __cpu_to_le32(type);
+ 	cmd->fw_feature_bitmap = __cpu_to_le32(fw_feature_bitmap);
++	cmd->wlan_gpio_priority = __cpu_to_le32(-1);
++	cmd->coex_version = __cpu_to_le32(WMI_NO_COEX_VERSION_SUPPORT);
++	cmd->coex_gpio_pin1 = __cpu_to_le32(-1);
++	cmd->coex_gpio_pin2 = __cpu_to_le32(-1);
++	cmd->coex_gpio_pin3 = __cpu_to_le32(-1);
++	cmd->num_tdls_vdevs = __cpu_to_le32(TARGET_10_4_NUM_TDLS_VDEVS);
++	cmd->num_tdls_conn_table_entries = __cpu_to_le32(20);
++	cmd->max_tdls_concurrent_sleep_sta = __cpu_to_le32(num_tdls_sleep_sta);
++	cmd->max_tdls_concurrent_buffer_sta =
++			__cpu_to_le32(TARGET_10_4_NUM_TDLS_BUFFER_STA);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 		   "wmi ext resource config host type %d firmware feature bitmap %08x\n",
+@@ -7819,6 +7860,124 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
+ }
+ 
+ static struct sk_buff *
++ath10k_wmi_10_4_gen_update_fw_tdls_state(struct ath10k *ar, u32 vdev_id,
++					 enum wmi_tdls_state state)
++{
++	struct wmi_10_4_tdls_set_state_cmd *cmd;
++	struct sk_buff *skb;
++	u32 options = 0;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	if (test_bit(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, ar->wmi.svc_map))
++		state = WMI_TDLS_ENABLE_PASSIVE;
++
++	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
++		options |= WMI_TDLS_BUFFER_STA_EN;
++
++	cmd = (struct wmi_10_4_tdls_set_state_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	cmd->state = __cpu_to_le32(state);
++	cmd->notification_interval_ms = __cpu_to_le32(5000);
++	cmd->tx_discovery_threshold = __cpu_to_le32(100);
++	cmd->tx_teardown_threshold = __cpu_to_le32(5);
++	cmd->rssi_teardown_threshold = __cpu_to_le32(-75);
++	cmd->rssi_delta = __cpu_to_le32(-20);
++	cmd->tdls_options = __cpu_to_le32(options);
++	cmd->tdls_peer_traffic_ind_window = __cpu_to_le32(2);
++	cmd->tdls_peer_traffic_response_timeout_ms = __cpu_to_le32(5000);
++	cmd->tdls_puapsd_mask = __cpu_to_le32(0xf);
++	cmd->tdls_puapsd_inactivity_time_ms = __cpu_to_le32(0);
++	cmd->tdls_puapsd_rx_frame_threshold = __cpu_to_le32(10);
++	cmd->teardown_notification_ms = __cpu_to_le32(10);
++	cmd->tdls_peer_kickout_threshold = __cpu_to_le32(96);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi update fw tdls state %d for vdev %i\n",
++		   state, vdev_id);
++	return skb;
++}
++
++static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
++{
++	u32 peer_qos = 0;
++
++	if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
++		peer_qos |= WMI_TDLS_PEER_QOS_AC_VO;
++	if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VI)
++		peer_qos |= WMI_TDLS_PEER_QOS_AC_VI;
++	if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
++		peer_qos |= WMI_TDLS_PEER_QOS_AC_BK;
++	if (uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
++		peer_qos |= WMI_TDLS_PEER_QOS_AC_BE;
++
++	peer_qos |= SM(sp, WMI_TDLS_PEER_SP);
++
++	return peer_qos;
++}
++
++static struct sk_buff *
++ath10k_wmi_10_4_gen_tdls_peer_update(struct ath10k *ar,
++				     const struct wmi_tdls_peer_update_cmd_arg *arg,
++				     const struct wmi_tdls_peer_capab_arg *cap,
++				     const struct wmi_channel_arg *chan_arg)
++{
++	struct wmi_10_4_tdls_peer_update_cmd *cmd;
++	struct wmi_tdls_peer_capabilities *peer_cap;
++	struct wmi_channel *chan;
++	struct sk_buff *skb;
++	u32 peer_qos;
++	int len, chan_len;
++	int i;
++
++	/* tdls peer update cmd has place holder for one channel*/
++	chan_len = cap->peer_chan_len ? (cap->peer_chan_len - 1) : 0;
++
++	len = sizeof(*cmd) + chan_len * sizeof(*chan);
++
++	skb = ath10k_wmi_alloc_skb(ar, len);
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	memset(skb->data, 0, sizeof(*cmd));
++
++	cmd = (struct wmi_10_4_tdls_peer_update_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(arg->vdev_id);
++	ether_addr_copy(cmd->peer_macaddr.addr, arg->addr);
++	cmd->peer_state = __cpu_to_le32(arg->peer_state);
++
++	peer_qos = ath10k_wmi_prepare_peer_qos(cap->peer_uapsd_queues,
++					       cap->peer_max_sp);
++
++	peer_cap = &cmd->peer_capab;
++	peer_cap->peer_qos = __cpu_to_le32(peer_qos);
++	peer_cap->buff_sta_support = __cpu_to_le32(cap->buff_sta_support);
++	peer_cap->off_chan_support = __cpu_to_le32(cap->off_chan_support);
++	peer_cap->peer_curr_operclass = __cpu_to_le32(cap->peer_curr_operclass);
++	peer_cap->self_curr_operclass = __cpu_to_le32(cap->self_curr_operclass);
++	peer_cap->peer_chan_len = __cpu_to_le32(cap->peer_chan_len);
++	peer_cap->peer_operclass_len = __cpu_to_le32(cap->peer_operclass_len);
++
++	for (i = 0; i < WMI_TDLS_MAX_SUPP_OPER_CLASSES; i++)
++		peer_cap->peer_operclass[i] = cap->peer_operclass[i];
++
++	peer_cap->is_peer_responder = __cpu_to_le32(cap->is_peer_responder);
++	peer_cap->pref_offchan_num = __cpu_to_le32(cap->pref_offchan_num);
++	peer_cap->pref_offchan_bw = __cpu_to_le32(cap->pref_offchan_bw);
++
++	for (i = 0; i < cap->peer_chan_len; i++) {
++		chan = (struct wmi_channel *)&peer_cap->peer_chan_list[i];
++		ath10k_wmi_put_wmi_channel(chan, &chan_arg[i]);
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi tdls peer update vdev %i state %d n_chans %u\n",
++		   arg->vdev_id, arg->peer_state, cap->peer_chan_len);
++	return skb;
++}
++
++static struct sk_buff *
+ ath10k_wmi_op_gen_echo(struct ath10k *ar, u32 value)
+ {
+ 	struct wmi_echo_cmd *cmd;
+@@ -8197,6 +8356,8 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
+ 	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
+ 	.fw_stats_fill = ath10k_wmi_10_4_op_fw_stats_fill,
+ 	.ext_resource_config = ath10k_wmi_10_4_ext_resource_config,
++	.gen_update_fw_tdls_state = ath10k_wmi_10_4_gen_update_fw_tdls_state,
++	.gen_tdls_peer_update = ath10k_wmi_10_4_gen_tdls_peer_update,
+ 
+ 	/* shared with 10.2 */
+ 	.pull_echo_ev = ath10k_wmi_op_pull_echo_ev,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 3a4cbbc..eb95e8b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -184,6 +184,17 @@ enum wmi_service {
+ 	WMI_SERVICE_TX_MODE_PUSH_ONLY,
+ 	WMI_SERVICE_TX_MODE_PUSH_PULL,
+ 	WMI_SERVICE_TX_MODE_DYNAMIC,
++	WMI_SERVICE_VDEV_RX_FILTER,
++	WMI_SERVICE_BTCOEX,
++	WMI_SERVICE_CHECK_CAL_VERSION,
++	WMI_SERVICE_DBGLOG_WARN2,
++	WMI_SERVICE_BTCOEX_DUTY_CYCLE,
++	WMI_SERVICE_4_WIRE_COEX_SUPPORT,
++	WMI_SERVICE_EXTENDED_NSS_SUPPORT,
++	WMI_SERVICE_PROG_GPIO_BAND_SELECT,
++	WMI_SERVICE_SMART_LOGGING_SUPPORT,
++	WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
++	WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -310,6 +321,21 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
+ 	WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
+ 	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
++	WMI_10_4_SERVICE_VDEV_RX_FILTER,
++	WMI_10_4_SERVICE_BTCOEX,
++	WMI_10_4_SERVICE_CHECK_CAL_VERSION,
++	WMI_10_4_SERVICE_DBGLOG_WARN2,
++	WMI_10_4_SERVICE_BTCOEX_DUTY_CYCLE,
++	WMI_10_4_SERVICE_4_WIRE_COEX_SUPPORT,
++	WMI_10_4_SERVICE_EXTENDED_NSS_SUPPORT,
++	WMI_10_4_SERVICE_PROG_GPIO_BAND_SELECT,
++	WMI_10_4_SERVICE_SMART_LOGGING_SUPPORT,
++	WMI_10_4_SERVICE_TDLS,
++	WMI_10_4_SERVICE_TDLS_OFFCHAN,
++	WMI_10_4_SERVICE_TDLS_UAPSD_BUFFER_STA,
++	WMI_10_4_SERVICE_TDLS_UAPSD_SLEEP_STA,
++	WMI_10_4_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
++	WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -408,6 +434,16 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
++	SVCSTR(WMI_SERVICE_VDEV_RX_FILTER);
++	SVCSTR(WMI_SERVICE_CHECK_CAL_VERSION);
++	SVCSTR(WMI_SERVICE_DBGLOG_WARN2);
++	SVCSTR(WMI_SERVICE_BTCOEX_DUTY_CYCLE);
++	SVCSTR(WMI_SERVICE_4_WIRE_COEX_SUPPORT);
++	SVCSTR(WMI_SERVICE_EXTENDED_NSS_SUPPORT);
++	SVCSTR(WMI_SERVICE_PROG_GPIO_BAND_SELECT);
++	SVCSTR(WMI_SERVICE_SMART_LOGGING_SUPPORT);
++	SVCSTR(WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE);
++	SVCSTR(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -674,6 +710,36 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_TX_MODE_PUSH_PULL, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
+ 	       WMI_SERVICE_TX_MODE_DYNAMIC, len);
++	SVCMAP(WMI_10_4_SERVICE_VDEV_RX_FILTER,
++	       WMI_SERVICE_VDEV_RX_FILTER, len);
++	SVCMAP(WMI_10_4_SERVICE_BTCOEX,
++	       WMI_SERVICE_BTCOEX, len);
++	SVCMAP(WMI_10_4_SERVICE_CHECK_CAL_VERSION,
++	       WMI_SERVICE_CHECK_CAL_VERSION, len);
++	SVCMAP(WMI_10_4_SERVICE_DBGLOG_WARN2,
++	       WMI_SERVICE_DBGLOG_WARN2, len);
++	SVCMAP(WMI_10_4_SERVICE_BTCOEX_DUTY_CYCLE,
++	       WMI_SERVICE_BTCOEX_DUTY_CYCLE, len);
++	SVCMAP(WMI_10_4_SERVICE_4_WIRE_COEX_SUPPORT,
++	       WMI_SERVICE_4_WIRE_COEX_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_EXTENDED_NSS_SUPPORT,
++	       WMI_SERVICE_EXTENDED_NSS_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_PROG_GPIO_BAND_SELECT,
++	       WMI_SERVICE_PROG_GPIO_BAND_SELECT, len);
++	SVCMAP(WMI_10_4_SERVICE_SMART_LOGGING_SUPPORT,
++	       WMI_SERVICE_SMART_LOGGING_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS,
++	       WMI_SERVICE_TDLS, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS_OFFCHAN,
++	       WMI_SERVICE_TDLS_OFFCHAN, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS_UAPSD_BUFFER_STA,
++	       WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS_UAPSD_SLEEP_STA,
++	       WMI_SERVICE_TDLS_UAPSD_SLEEP_STA, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
++	       WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
++	       WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, len);
+ }
+ 
+ #undef SVCMAP
+@@ -848,6 +914,29 @@ struct wmi_cmd_map {
+ 	u32 pdev_bss_chan_info_request_cmdid;
+ 	u32 pdev_enable_adaptive_cca_cmdid;
+ 	u32 ext_resource_cfg_cmdid;
++	u32 vdev_set_ie_cmdid;
++	u32 set_lteu_config_cmdid;
++	u32 atf_ssid_grouping_request_cmdid;
++	u32 peer_atf_ext_request_cmdid;
++	u32 set_periodic_channel_stats_cfg_cmdid;
++	u32 peer_bwf_request_cmdid;
++	u32 btcoex_cfg_cmdid;
++	u32 peer_tx_mu_txmit_count_cmdid;
++	u32 peer_tx_mu_txmit_rstcnt_cmdid;
++	u32 peer_gid_userpos_list_cmdid;
++	u32 pdev_check_cal_version_cmdid;
++	u32 coex_version_cfg_cmid;
++	u32 pdev_get_rx_filter_cmdid;
++	u32 pdev_extended_nss_cfg_cmdid;
++	u32 vdev_set_scan_nac_rssi_cmdid;
++	u32 prog_gpio_band_select_cmdid;
++	u32 config_smart_logging_cmdid;
++	u32 debug_fatal_condition_cmdid;
++	u32 get_tsf_timer_cmdid;
++	u32 pdev_get_tpc_table_cmdid;
++	u32 vdev_sifs_trigger_time_cmdid;
++	u32 pdev_wds_entry_list_cmdid;
++	u32 tdls_set_offchan_mode_cmdid;
+ };
+ 
+ /*
+@@ -1658,6 +1747,29 @@ enum wmi_10_4_cmd_id {
+ 	WMI_10_4_EXT_RESOURCE_CFG_CMDID,
+ 	WMI_10_4_VDEV_SET_IE_CMDID,
+ 	WMI_10_4_SET_LTEU_CONFIG_CMDID,
++	WMI_10_4_ATF_SSID_GROUPING_REQUEST_CMDID,
++	WMI_10_4_PEER_ATF_EXT_REQUEST_CMDID,
++	WMI_10_4_SET_PERIODIC_CHANNEL_STATS_CONFIG,
++	WMI_10_4_PEER_BWF_REQUEST_CMDID,
++	WMI_10_4_BTCOEX_CFG_CMDID,
++	WMI_10_4_PEER_TX_MU_TXMIT_COUNT_CMDID,
++	WMI_10_4_PEER_TX_MU_TXMIT_RSTCNT_CMDID,
++	WMI_10_4_PEER_GID_USERPOS_LIST_CMDID,
++	WMI_10_4_PDEV_CHECK_CAL_VERSION_CMDID,
++	WMI_10_4_COEX_VERSION_CFG_CMID,
++	WMI_10_4_PDEV_GET_RX_FILTER_CMDID,
++	WMI_10_4_PDEV_EXTENDED_NSS_CFG_CMDID,
++	WMI_10_4_VDEV_SET_SCAN_NAC_RSSI_CMDID,
++	WMI_10_4_PROG_GPIO_BAND_SELECT_CMDID,
++	WMI_10_4_CONFIG_SMART_LOGGING_CMDID,
++	WMI_10_4_DEBUG_FATAL_CONDITION_CMDID,
++	WMI_10_4_GET_TSF_TIMER_CMDID,
++	WMI_10_4_PDEV_GET_TPC_TABLE_CMDID,
++	WMI_10_4_VDEV_SIFS_TRIGGER_TIME_CMDID,
++	WMI_10_4_PDEV_WDS_ENTRY_LIST_CMDID,
++	WMI_10_4_TDLS_SET_STATE_CMDID,
++	WMI_10_4_TDLS_PEER_UPDATE_CMDID,
++	WMI_10_4_TDLS_SET_OFFCHAN_MODE_CMDID,
+ 	WMI_10_4_PDEV_UTF_CMDID = WMI_10_4_END_CMDID - 1,
+ };
+ 
+@@ -1721,6 +1833,18 @@ enum wmi_10_4_event_id {
+ 	WMI_10_4_PDEV_NFCAL_POWER_ALL_CHANNELS_EVENTID,
+ 	WMI_10_4_PDEV_BSS_CHAN_INFO_EVENTID,
+ 	WMI_10_4_MU_REPORT_EVENTID,
++	WMI_10_4_TX_DATA_TRAFFIC_CTRL_EVENTID,
++	WMI_10_4_PEER_TX_MU_TXMIT_COUNT_EVENTID,
++	WMI_10_4_PEER_GID_USERPOS_LIST_EVENTID,
++	WMI_10_4_PDEV_CHECK_CAL_VERSION_EVENTID,
++	WMI_10_4_ATF_PEER_STATS_EVENTID,
++	WMI_10_4_PDEV_GET_RX_FILTER_EVENTID,
++	WMI_10_4_NAC_RSSI_EVENTID,
++	WMI_10_4_DEBUG_FATAL_CONDITION_EVENTID,
++	WMI_10_4_GET_TSF_TIMER_RESP_EVENTID,
++	WMI_10_4_PDEV_TPC_TABLE_EVENTID,
++	WMI_10_4_PDEV_WDS_ENTRY_LIST_EVENTID,
++	WMI_10_4_TDLS_PEER_EVENTID,
+ 	WMI_10_4_PDEV_UTF_EVENTID = WMI_10_4_END_EVENTID - 1,
+ };
+ 
+@@ -2729,6 +2853,18 @@ struct wmi_resource_config_10_4 {
+ 	__le32 qwrap_config;
+ } __packed;
+ 
++enum wmi_coex_version {
++	WMI_NO_COEX_VERSION_SUPPORT	= 0,
++	/* 3 wire coex support*/
++	WMI_COEX_VERSION_1		= 1,
++	/* 2.5 wire coex support*/
++	WMI_COEX_VERSION_2		= 2,
++	/* 2.5 wire coex with duty cycle support */
++	WMI_COEX_VERSION_3		= 3,
++	/* 4 wire coex support*/
++	WMI_COEX_VERSION_4		= 4,
++};
++
+ /**
+  * enum wmi_10_4_feature_mask - WMI 10.4 feature enable/disable flags
+  * @WMI_10_4_LTEU_SUPPORT: LTEU config
+@@ -2737,6 +2873,13 @@ struct wmi_resource_config_10_4 {
+  * @WMI_10_4_AUX_RADIO_CHAN_LOAD_INTF: AUX Radio Enhancement for chan load scan
+  * @WMI_10_4_BSS_CHANNEL_INFO_64: BSS channel info stats
+  * @WMI_10_4_PEER_STATS: Per station stats
++ * @WMI_10_4_VDEV_STATS: Per vdev stats
++ * @WMI_10_4_TDLS: Implicit TDLS support in firmware enable/disable
++ * @WMI_10_4_TDLS_OFFCHAN: TDLS offchannel support enable/disable
++ * @WMI_10_4_TDLS_UAPSD_BUFFER_STA: TDLS buffer sta support enable/disable
++ * @WMI_10_4_TDLS_UAPSD_SLEEP_STA: TDLS sleep sta support enable/disable
++ * @WMI_10_4_TDLS_CONN_TRACKER_IN_HOST_MODE: TDLS connection tracker in host enable/disable
++ * @WMI_10_4_TDLS_EXPLICIT_MODE_ONLY:Explicit TDLS mode enable/disable
+  */
+ enum wmi_10_4_feature_mask {
+ 	WMI_10_4_LTEU_SUPPORT			= BIT(0),
+@@ -2745,6 +2888,14 @@ enum wmi_10_4_feature_mask {
+ 	WMI_10_4_AUX_RADIO_CHAN_LOAD_INTF	= BIT(3),
+ 	WMI_10_4_BSS_CHANNEL_INFO_64		= BIT(4),
+ 	WMI_10_4_PEER_STATS			= BIT(5),
++	WMI_10_4_VDEV_STATS			= BIT(6),
++	WMI_10_4_TDLS				= BIT(7),
++	WMI_10_4_TDLS_OFFCHAN			= BIT(8),
++	WMI_10_4_TDLS_UAPSD_BUFFER_STA		= BIT(9),
++	WMI_10_4_TDLS_UAPSD_SLEEP_STA		= BIT(10),
++	WMI_10_4_TDLS_CONN_TRACKER_IN_HOST_MODE = BIT(11),
++	WMI_10_4_TDLS_EXPLICIT_MODE_ONLY	= BIT(12),
++
+ };
+ 
+ struct wmi_ext_resource_config_10_4_cmd {
+@@ -2752,6 +2903,22 @@ struct wmi_ext_resource_config_10_4_cmd {
+ 	__le32 host_platform_config;
+ 	/* see enum wmi_10_4_feature_mask */
+ 	__le32 fw_feature_bitmap;
++	/* WLAN proirity GPIO number */
++	__le32 wlan_gpio_priority;
++	/* see enum wmi_coex_version */
++	__le32 coex_version;
++	/* COEX GPIO config */
++	__le32 coex_gpio_pin1;
++	__le32 coex_gpio_pin2;
++	__le32 coex_gpio_pin3;
++	/* number of vdevs allowed to perform tdls */
++	__le32 num_tdls_vdevs;
++	/* number of peers to track per TDLS vdev */
++	__le32 num_tdls_conn_table_entries;
++	/* number of tdls sleep sta supported */
++	__le32 max_tdls_concurrent_sleep_sta;
++	/* number of tdls buffer sta supported */
++	__le32 max_tdls_concurrent_buffer_sta;
+ };
+ 
+ /* strucutre describing host memory chunk. */
+@@ -6567,6 +6734,22 @@ struct wmi_tdls_peer_update_cmd_arg {
+ 
+ #define WMI_TDLS_MAX_SUPP_OPER_CLASSES 32
+ 
++#define WMI_TDLS_PEER_SP_MASK	0x60
++#define WMI_TDLS_PEER_SP_LSB	5
++
++enum wmi_tdls_options {
++	WMI_TDLS_OFFCHAN_EN = BIT(0),
++	WMI_TDLS_BUFFER_STA_EN = BIT(1),
++	WMI_TDLS_SLEEP_STA_EN = BIT(2),
++};
++
++enum {
++	WMI_TDLS_PEER_QOS_AC_VO = BIT(0),
++	WMI_TDLS_PEER_QOS_AC_VI = BIT(1),
++	WMI_TDLS_PEER_QOS_AC_BK = BIT(2),
++	WMI_TDLS_PEER_QOS_AC_BE = BIT(3),
++};
++
+ struct wmi_tdls_peer_capab_arg {
+ 	u8 peer_uapsd_queues;
+ 	u8 peer_max_sp;
+@@ -6582,6 +6765,79 @@ struct wmi_tdls_peer_capab_arg {
+ 	u32 pref_offchan_bw;
+ };
+ 
++struct wmi_10_4_tdls_set_state_cmd {
++	__le32 vdev_id;
++	__le32 state;
++	__le32 notification_interval_ms;
++	__le32 tx_discovery_threshold;
++	__le32 tx_teardown_threshold;
++	__le32 rssi_teardown_threshold;
++	__le32 rssi_delta;
++	__le32 tdls_options;
++	__le32 tdls_peer_traffic_ind_window;
++	__le32 tdls_peer_traffic_response_timeout_ms;
++	__le32 tdls_puapsd_mask;
++	__le32 tdls_puapsd_inactivity_time_ms;
++	__le32 tdls_puapsd_rx_frame_threshold;
++	__le32 teardown_notification_ms;
++	__le32 tdls_peer_kickout_threshold;
++} __packed;
++
++struct wmi_tdls_peer_capabilities {
++	__le32 peer_qos;
++	__le32 buff_sta_support;
++	__le32 off_chan_support;
++	__le32 peer_curr_operclass;
++	__le32 self_curr_operclass;
++	__le32 peer_chan_len;
++	__le32 peer_operclass_len;
++	u8 peer_operclass[WMI_TDLS_MAX_SUPP_OPER_CLASSES];
++	__le32 is_peer_responder;
++	__le32 pref_offchan_num;
++	__le32 pref_offchan_bw;
++	struct wmi_channel peer_chan_list[1];
++} __packed;
++
++struct wmi_10_4_tdls_peer_update_cmd {
++	__le32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	__le32 peer_state;
++	__le32 reserved[4];
++	struct wmi_tdls_peer_capabilities peer_capab;
++} __packed;
++
++enum wmi_tdls_peer_reason {
++	WMI_TDLS_TEARDOWN_REASON_TX,
++	WMI_TDLS_TEARDOWN_REASON_RSSI,
++	WMI_TDLS_TEARDOWN_REASON_SCAN,
++	WMI_TDLS_DISCONNECTED_REASON_PEER_DELETE,
++	WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT,
++	WMI_TDLS_TEARDOWN_REASON_BAD_PTR,
++	WMI_TDLS_TEARDOWN_REASON_NO_RESPONSE,
++	WMI_TDLS_ENTER_BUF_STA,
++	WMI_TDLS_EXIT_BUF_STA,
++	WMI_TDLS_ENTER_BT_BUSY_MODE,
++	WMI_TDLS_EXIT_BT_BUSY_MODE,
++	WMI_TDLS_SCAN_STARTED_EVENT,
++	WMI_TDLS_SCAN_COMPLETED_EVENT,
++};
++
++enum wmi_tdls_peer_notification {
++	WMI_TDLS_SHOULD_DISCOVER,
++	WMI_TDLS_SHOULD_TEARDOWN,
++	WMI_TDLS_PEER_DISCONNECTED,
++	WMI_TDLS_CONNECTION_TRACKER_NOTIFICATION,
++};
++
++struct wmi_tdls_peer_event {
++	struct wmi_mac_addr peer_macaddr;
++	/* see enum wmi_tdls_peer_notification*/
++	__le32 peer_status;
++	/* see enum wmi_tdls_peer_reason */
++	__le32 peer_reason;
++	__le32 vdev_id;
++} __packed;
++
+ enum wmi_txbf_conf {
+ 	WMI_TXBF_CONF_UNSUPPORTED,
+ 	WMI_TXBF_CONF_BEFORE_ASSOC,
 -- 
-https://patchwork.kernel.org/patch/9828403/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
