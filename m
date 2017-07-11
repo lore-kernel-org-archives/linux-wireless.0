@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56614 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751014AbdG0LDD (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36016 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755477AbdGKHcG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 07:03:03 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [for-v4.13,V4] brcmfmac: Don't grow SKB by negative size
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170726112410.22353-1-daniels@collabora.com>
-References: <20170726112410.22353-1-daniels@collabora.com>
-To: Daniel Stone <daniels@collabora.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>
-Message-Id: <20170727110303.105046081B@smtp.codeaurora.org> (sfid-20170727_130307_133457_FFA23F7E)
-Date: Thu, 27 Jul 2017 11:03:03 +0000 (UTC)
+        Tue, 11 Jul 2017 03:32:06 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: stas.yakovlev@gmail.com, kvalo@codeaurora.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 05/10] wireless: ipw2100: constify attribute_group structures.
+Date: Tue, 11 Jul 2017 13:01:31 +0530
+Message-Id: <1499758291-24821-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170711_093310_726476_F876FEB2)
+In-Reply-To: <1499758291-24821-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1499758291-24821-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Stone <daniels@collabora.com> wrote:
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-> The commit to rework the headroom check in start_xmit() now calls
-> pxskb_expand_head() unconditionally if the header is CoW. Unfortunately,
-> it does so with the delta between the extant headroom and the header
-> length, which may be negative if there is already sufficient headroom.
-> 
-> pskb_expand_head() does allow for size being 0, in which case it just
-> copies, so clamp the header delta to zero.
-> 
-> Opening Chrome (and all my tabs) on a PCIE device was enough to reliably
-> hit this.
-> 
-> Fixes: 270a6c1f65fe ("brcmfmac: rework headroom check in .start_xmit()")
-> Signed-off-by: Daniel Stone <daniels@collabora.com>
-> Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
-> Cc: James Hughes <james.hughes@raspberrypi.org>
-> Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-> Cc: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Cc: Franky Lin <franky.lin@broadcom.com>
-> Tested-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+Changes in v2:
+              Added cover later.
 
-Patch applied to wireless-drivers.git, thanks.
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-58f36b4526ad brcmfmac: Don't grow SKB by negative size
-
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index aaaca4d..ccbe745 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -4324,7 +4324,7 @@ static ssize_t store_rf_kill(struct device *d, struct device_attribute *attr,
+ 	NULL,
+ };
+ 
+-static struct attribute_group ipw2100_attribute_group = {
++static const struct attribute_group ipw2100_attribute_group = {
+ 	.attrs = ipw2100_sysfs_entries,
+ };
+ 
 -- 
-https://patchwork.kernel.org/patch/9864575/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
