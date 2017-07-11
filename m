@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37332 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752290AbdGEGFv (ORCPT
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:35233 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdGKAsG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:37 +0300
-Message-Id: <20170705060539.20737-6-luca@coelho.fi> (sfid-20170705_080555_881484_629ECF10)
-In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
-References: <20170705060539.20737-1-luca@coelho.fi>
-Subject: [PATCH 5/7] iwlwifi: fix tracing when tx only is enabled
+        Mon, 10 Jul 2017 20:48:06 -0400
+Received: by mail-pg0-f54.google.com with SMTP id j186so57547135pge.2
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 17:48:05 -0700 (PDT)
+From: Ningyuan Wang <nywang@google.com>
+To: johannes@sipsolutions.net
+Cc: Ningyuan Wang <nywang@google.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH] Print NL80211_BSS_LAST_SEEN_BOOTTIME on scan results
+Date: Mon, 10 Jul 2017 17:47:46 -0700
+Message-Id: <20170711004746.142837-1-nywang@google.com> (sfid-20170711_024811_022066_15223599)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This patch allows iw to print NL80211_BSS_LAST_SEEN_BOOTTIME
+values on scan results.
 
-iwl_trace_data is somewhat confusing. It returns a bool
-that tells if the payload of the skb should be added to
-the tx_data event. If it returns false, then the payload
-of the skb is added to the tx event.
-
-The purpose is to be able to start tracing with
--e iwlwifi
-and record non-data packets only which saves bandwidth.
-
-Since EAPOLs are important, seldom and not real data
-packet (despite being WiFi data packets), they are
-included in tx event and thus iwl_trace_data returns false
-on those. This last part was buggy, and because of that,
-all the data packets were included in the tx event.
-
-Fix that.
-
-Fixes: 0c4cb7314d15 ("iwlwifi: tracing: decouple from mac80211")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Change-Id: I4e6a3d9999830a83766d59671b42e824421a3414
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ nl80211.h |  4 ++++
+ scan.c    | 11 +++++++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
-index 545d14b0bc92..f5c1127253cb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
-@@ -55,8 +55,8 @@ static inline bool iwl_trace_data(struct sk_buff *skb)
- 	/* also account for the RFC 1042 header, of course */
- 	offs += 6;
+diff --git a/nl80211.h b/nl80211.h
+index 241220c..5ea103c 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -3360,6 +3360,9 @@ enum nl80211_bss_scan_width {
+  *	(not present if no beacon frame has been received yet)
+  * @NL80211_BSS_PRESP_DATA: the data in @NL80211_BSS_INFORMATION_ELEMENTS and
+  *	@NL80211_BSS_TSF is known to be from a probe response (flag attribute)
++ * @NL80211_BSS_LAST_SEEN_BOOTTIME: CLOCK_BOOTTIME timestamp when this entry
++ *	was last updated by a received frame. The value is expected to be
++ *	accurate to about 10ms. (u64, nanoseconds)
+  * @__NL80211_BSS_AFTER_LAST: internal
+  * @NL80211_BSS_MAX: highest BSS attribute
+  */
+@@ -3379,6 +3382,7 @@ enum nl80211_bss {
+ 	NL80211_BSS_CHAN_WIDTH,
+ 	NL80211_BSS_BEACON_TSF,
+ 	NL80211_BSS_PRESP_DATA,
++	NL80211_BSS_LAST_SEEN_BOOTTIME,
  
--	return skb->len > offs + 2 &&
--	       *(__be16 *)(skb->data + offs) == cpu_to_be16(ETH_P_PAE);
-+	return skb->len <= offs + 2 ||
-+		*(__be16 *)(skb->data + offs) != cpu_to_be16(ETH_P_PAE);
- }
- 
- static inline size_t iwl_rx_trace_len(const struct iwl_trans *trans,
+ 	/* keep last */
+ 	__NL80211_BSS_AFTER_LAST,
+diff --git a/scan.c b/scan.c
+index bf39f34..279df04 100644
+--- a/scan.c
++++ b/scan.c
+@@ -1853,6 +1853,7 @@ static int print_bss_handler(struct nl_msg *msg, void *arg)
+ 	char mac_addr[20], dev[20];
+ 	static struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
+ 		[NL80211_BSS_TSF] = { .type = NLA_U64 },
++		[NL80211_BSS_LAST_SEEN_BOOTTIME] = { .type = NLA_U64 },
+ 		[NL80211_BSS_FREQUENCY] = { .type = NLA_U32 },
+ 		[NL80211_BSS_BSSID] = { },
+ 		[NL80211_BSS_BEACON_INTERVAL] = { .type = NLA_U16 },
+@@ -1918,6 +1919,16 @@ static int print_bss_handler(struct nl_msg *msg, void *arg)
+ 			tsf, tsf/1000/1000/60/60/24, (tsf/1000/1000/60/60) % 24,
+ 			(tsf/1000/1000/60) % 60, (tsf/1000/1000) % 60);
+ 	}
++	if (bss[NL80211_BSS_LAST_SEEN_BOOTTIME]) {
++		unsigned long long last_seen_since_boot;
++		last_seen_since_boot =
++			(unsigned long long)nla_get_u64(bss[NL80211_BSS_LAST_SEEN_BOOTTIME]);
++		printf("\tlast seen since boot time: %llu usec (%llud, %.2lld:%.2llu:%.2llu)\n",
++			last_seen_since_boot, last_seen_since_boot /1000/1000/1000/60/60/24,
++			(last_seen_since_boot /1000/1000/1000/60/60) % 24,
++			(last_seen_since_boot/1000/1000/1000/60) % 60,
++			(last_seen_since_boot/1000/1000/1000) % 60);
++	}
+ 	if (bss[NL80211_BSS_FREQUENCY]) {
+ 		int freq = nla_get_u32(bss[NL80211_BSS_FREQUENCY]);
+ 		printf("\tfreq: %d\n", freq);
 -- 
-2.11.0
+2.13.2.725.g09c95d1e9-goog
