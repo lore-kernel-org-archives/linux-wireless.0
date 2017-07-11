@@ -1,55 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32785 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750893AbdGENie (ORCPT
+Received: from ecemailfilter.ece.umd.edu ([129.2.90.4]:46758 "EHLO
+        mailfilter.ece.umd.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752607AbdGKMci (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 09:38:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Switching away from ath10k patchwork project
-Date: Wed, 5 Jul 2017 13:29:20 +0000
-Message-ID: <87tw2rgggu.fsf@kamboji.qca.qualcomm.com> (sfid-20170705_153905_146955_1E41AB5C)
-Content-Type: text/plain; charset="iso-8859-1"
+        Tue, 11 Jul 2017 08:32:38 -0400
+Received: from mail-qk0-f197.google.com (mail-qk0-f197.google.com [209.85.220.197]) by mailfilter.ece.umd.edu with ESMTP id nDhCHd69eyl17daO for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 08:21:28 -0400 (EDT)
+Received: by mail-qk0-f197.google.com with SMTP id a195so62433332qkb.13
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 05:21:28 -0700 (PDT)
+Date: Tue, 11 Jul 2017 08:21:25 -0400
+From: "S. Gilles" <sgilles@math.umd.edu>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [BUG] brcmfmac: BRCM4354 cannot connect since commit 270a6c1f65
+Message-ID: <20170711122125.5epcjhcyneiwxyse@number18.npnth.net> (sfid-20170711_143244_060146_4D236A3B)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TL;DR:
+Hi,
 
-Starting from patches submitted today I'm switching away from
-ath10k specific patchwork project to the general linux-wireless
-patchwork project.
+I have an Asus C201, which comes with a BRCM4354 (SDIO). On boot,
+dmesg shows
 
-The longer story:
+    brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Apr  8 2015 13:03:52 version 7.35.79.79 (r547158) FWID 01-7f29997a
 
-For legacy reasons we have had two patchwork projects, the main project
-being linux-wireless (which tracks linux-wireless mailing list):
+Since 270a6c1f65fe68a28a5d39cd405592c550b496c7 (brcmfmac: rework
+headroom check in .start_xmit()), the machine cannot connect to any
+wireless network. I can fully reproduce this, and have bisected it;
+I'm mailing this from the commit before: a833f3d4de. I only have
+access to WPA2 networks, in case it matters. The relevent part of
+dmesg from a bad boot is
 
-https://patchwork.kernel.org/project/linux-wireless/list/?state=3D*
+    [    ...    ] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+    [  +0.000767] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [  +0.905426] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [Jul11 11:02] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [  +0.983406] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [Jul11 11:03] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [Jul11 11:05] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [  +0.981930] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [Jul11 11:07] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [Jul11 11:09] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [  +0.698295] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    ... (etc.)
+    [  +0.918891] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    [Jul11 11:18] dwmmc_rockchip ff0d0000.dwmmc: Successfully tuned phase to 204
+    [ +12.545604] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+    ... (etc.)
 
-And then we have a separate project for ath10k (which tracks the ath10k
-mailing list):
+meanwhile, wpa_cli is full of output like
 
-https://patchwork.kernel.org/project/ath10k/list/?state=3D*
+    ...
+    <3>CTRL-EVENT-NETWORK-NOT-FOUND
+    <3>CTRL-EVENT-SCAN-STARTED
+    <3>CTRL-EVENT-SCAN-RESULTS
+    <3>CTRL-EVENT-SSID-REENABLED id=1 ssid="{known SSID}"
+    <3>Trying to associate with SSID '{known SSID}'
+    <3>Associated with {MAC}
+    <3>CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
+    <3>Authentication with {MAC} timed out.
+    <3>CTRL-EVENT-DISCONNECTED bssid={MAC} reason=3 locally_generated=1
+    <3>WPA: 4-Way Handshake failed - pre-shared key may be incorrect
+    <3>CTRL-EVENT-SID-TEMP-DISABLED id=1 ssid="{known SSID}" auth_failures=26 duration=120 reason=WRONG_KEY
+    <3>CTRL-EVENT-REGDOM-CHANGE init=CORE type=WORLD
+    <3>CTRL-EVENT-SCAN-STARTED
+    <3>CTRL-EVENT-SCAN-RESULTS
+    <4>Failed to initiate sched scan
+    <3>CTRL-EVENT-NETWORK-NOT-FOUND
+    ... 
 
-This creates a confusion as people don't always know which patchwork
-project to follow. To simplify this I'm dropping the ath10k project in
-patchwork and track also ath10k patches using the general linux-wireless
-project so that all wireless patches can be tracked from the same
-patchwork project.
+The `non-BCDC packet received' messages in dmesg occur just before
+the `timed out' messages in wpa_cli.
 
-The only downside from this is that if someone posts a patch only to the
-ath10k list and forgets to CC linux-wireless I will not see it as I only
-take patches from patchwork. But we have instructed everyone to CC
-linux-wireless anyway[1] so hopefully this is a small problem. I do
-remember having few cases where the patch was not CCed to
-linux-wireless, but usually it's actually the other way around (people
-forget to CC the ath10k list). So I'm not expecting that much problems
-with this change.
+Please let me know if more information is needed of if there are
+patches I should test.
 
-[1] https://wireless.wiki.kernel.org/en/users/drivers/ath10k/submittingpatc=
-hes
-
---=20
-Kalle Valo=
+-- 
+S. Gilles
