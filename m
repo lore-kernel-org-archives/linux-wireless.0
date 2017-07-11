@@ -1,89 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:57509 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933137AbdGSP3g (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25085 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755513AbdGKN4p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 11:29:36 -0400
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: linux-kernel@vger.kernel.org
-Cc: Philipp Zabel <p.zabel@pengutronix.de>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 049/102] ath10k: explicitly request exclusive reset control
-Date: Wed, 19 Jul 2017 17:25:53 +0200
-Message-Id: <20170719152646.25903-50-p.zabel@pengutronix.de> (sfid-20170719_174309_753453_F81DDBA1)
-In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
-References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+        Tue, 11 Jul 2017 09:56:45 -0400
+From: <mpubbise@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [PATCH 0/3] TDLS support on 10.4 firmware
+Date: Tue, 11 Jul 2017 19:26:15 +0530
+Message-ID: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170711_155649_740569_A9927E16)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
-reset lines") started to transition the reset control request API calls
-to explicitly state whether the driver needs exclusive or shared reset
-control behavior. Convert all drivers requesting exclusive resets to the
-explicit API call so the temporary transition helpers can be removed.
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-No functional changes.
+This patchset adds TDLS support on 10.4 firmwares.
 
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
----
- drivers/net/wireless/ath/ath10k/ahb.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Manikanta Pubbisetty (3):
+  ath10k: extend wmi service map to accommodate new services
+  ath10k: add tdls support for 10.4 firmwares
+  ath10k: push peer type to target for TDLS peers
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index da770af830369..2ad3ed7b89417 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -197,35 +197,40 @@ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
- 
- 	dev = &ar_ahb->pdev->dev;
- 
--	ar_ahb->core_cold_rst = devm_reset_control_get(dev, "wifi_core_cold");
-+	ar_ahb->core_cold_rst = devm_reset_control_get_exclusive(dev,
-+								 "wifi_core_cold");
- 	if (IS_ERR(ar_ahb->core_cold_rst)) {
- 		ath10k_err(ar, "failed to get core cold rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->core_cold_rst));
- 		return PTR_ERR(ar_ahb->core_cold_rst);
- 	}
- 
--	ar_ahb->radio_cold_rst = devm_reset_control_get(dev, "wifi_radio_cold");
-+	ar_ahb->radio_cold_rst = devm_reset_control_get_exclusive(dev,
-+								  "wifi_radio_cold");
- 	if (IS_ERR(ar_ahb->radio_cold_rst)) {
- 		ath10k_err(ar, "failed to get radio cold rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_cold_rst));
- 		return PTR_ERR(ar_ahb->radio_cold_rst);
- 	}
- 
--	ar_ahb->radio_warm_rst = devm_reset_control_get(dev, "wifi_radio_warm");
-+	ar_ahb->radio_warm_rst = devm_reset_control_get_exclusive(dev,
-+								  "wifi_radio_warm");
- 	if (IS_ERR(ar_ahb->radio_warm_rst)) {
- 		ath10k_err(ar, "failed to get radio warm rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_warm_rst));
- 		return PTR_ERR(ar_ahb->radio_warm_rst);
- 	}
- 
--	ar_ahb->radio_srif_rst = devm_reset_control_get(dev, "wifi_radio_srif");
-+	ar_ahb->radio_srif_rst = devm_reset_control_get_exclusive(dev,
-+								  "wifi_radio_srif");
- 	if (IS_ERR(ar_ahb->radio_srif_rst)) {
- 		ath10k_err(ar, "failed to get radio srif rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_srif_rst));
- 		return PTR_ERR(ar_ahb->radio_srif_rst);
- 	}
- 
--	ar_ahb->cpu_init_rst = devm_reset_control_get(dev, "wifi_cpu_init");
-+	ar_ahb->cpu_init_rst = devm_reset_control_get_exclusive(dev,
-+								"wifi_cpu_init");
- 	if (IS_ERR(ar_ahb->cpu_init_rst)) {
- 		ath10k_err(ar, "failed to get cpu init rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->cpu_init_rst));
+ drivers/net/wireless/ath/ath10k/core.c |    9 ++
+ drivers/net/wireless/ath/ath10k/hw.h   |    5 +
+ drivers/net/wireless/ath/ath10k/mac.c  |    5 +-
+ drivers/net/wireless/ath/ath10k/wmi.c  |  162 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  256 +++++++++++++++++++++++++++++++-
+ 5 files changed, 435 insertions(+), 2 deletions(-)
+
 -- 
-2.11.0
+1.7.9.5
