@@ -1,101 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:57298 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753612AbdG2JV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Jul 2017 05:21:57 -0400
-From: Sven Joachim <svenjoac@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] rtlwifi: Fix fallback firmware loading
-References: <87k22sq0de.fsf@turtle.gmx.de>
-Date: Sat, 29 Jul 2017 11:21:31 +0200
-In-Reply-To: <87k22sq0de.fsf@turtle.gmx.de> (Sven Joachim's message of "Fri,
-        28 Jul 2017 13:14:37 +0200")
-Message-ID: <87a83noaxw.fsf@turtle.gmx.de> (sfid-20170729_112202_702939_EDD9AC45)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:58624 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755513AbdGKN5E (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Jul 2017 09:57:04 -0400
+From: <mpubbise@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [PATCH 1/3] ath10k: extend wmi service map to accommodate new services
+Date: Tue, 11 Jul 2017 19:26:16 +0530
+Message-ID: <1499781378-858-2-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170711_155709_254440_7DF5B56B)
+In-Reply-To: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit f70e4df2 ("rtlwifi: Add code to read new versions of firmware")
-added code to load an old firmware file if the new one is not
-available.  Unfortunately that code is never reached because
-request_firmware_nowait() does not wait for the firmware to show up
-and returns 0 even if the file is not there.
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-Use the existing fallback mechanism introduced by commit
-62009b7f ("rtlwifi: rtl8192cu: Add new firmware") instead.
+Though there is room to accommodate 512 services in wmi service
+ready event, target uses only first 4-bits of each 32-bit word for
+advertising wmi services thereby limiting max wmi services to 64.
 
-Fixes: f70e4df2b384d21e36a7c30a591639592692e0ec
-Cc: stable@vger.kernel.org
-Signed-off-by: Sven Joachim <svenjoac@gmx.de>
+TDLS implementation for 10.4 firmwares introduces new wmi services by
+making use of remaining unused bits of each 32-bit word, therefore the
+wmi service mapping in host needs to be extended.
+
+This patch adds the logic to extend the wmi SVCMAP to accommodate new
+wmi services.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 13 +++----------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 13 +++----------
- 2 files changed, 6 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.h |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index f9d10f1e7cf8..1c2d5f6dd3ff 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -187,16 +187,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl_fw_cb);
- 	if (err) {
--		/* Failed to get firmware. Check if old version available */
--		fw_name = "rtlwifi/rtl8723befw.bin";
--		pr_info("Using firmware %s\n", fw_name);
--		err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
--					      rtlpriv->io.dev, GFP_KERNEL, hw,
--					      rtl_fw_cb);
--		if (err) {
--			pr_err("Failed to request firmware!\n");
--			return 1;
--		}
-+		pr_err("Failed to request firmware!\n");
-+		return 1;
- 	}
- 	return 0;
- }
-@@ -287,6 +279,7 @@ static const struct rtl_hal_cfg rtl8723be_hal_cfg = {
- 	.bar_id = 2,
- 	.write_readback = true,
- 	.name = "rtl8723be_pci",
-+	.alt_fw_name = "rtlwifi/rtl8723befw.bin",
- 	.ops = &rtl8723be_hal_ops,
- 	.mod_params = &rtl8723be_mod_params,
- 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index d71d2776ca03..0801576bfa89 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -214,16 +214,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl_fw_cb);
- 	if (err) {
--		/* Failed to get firmware. Check if old version available */
--		fw_name = "rtlwifi/rtl8821aefw.bin";
--		pr_info("Using firmware %s\n", fw_name);
--		err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
--					      rtlpriv->io.dev, GFP_KERNEL, hw,
--					      rtl_fw_cb);
--		if (err) {
--			pr_err("Failed to request normal firmware!\n");
--			return 1;
--		}
-+		pr_err("Failed to request normal firmware!\n");
-+		return 1;
- 	}
- 	/*load wowlan firmware*/
- 	pr_info("Using firmware %s\n", wowlan_fw_name);
-@@ -325,6 +317,7 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
- 	.bar_id = 2,
- 	.write_readback = true,
- 	.name = "rtl8821ae_pci",
-+	.alt_fw_name = "rtlwifi/rtl8821aefw.bin",
- 	.ops = &rtl8821ae_hal_ops,
- 	.mod_params = &rtl8821ae_mod_params,
- 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index baa38c8..3a4cbbc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -420,9 +420,20 @@ static inline char *wmi_service_name(int service_id)
+ 	 __le32_to_cpu((wmi_svc_bmap)[(svc_id) / (sizeof(u32))]) & \
+ 	 BIT((svc_id) % (sizeof(u32))))
+ 
++/* This extension is required to accommodate new services, current limit
++ * for wmi_services is 64 as target is using only 4-bits of each 32-bit
++ * wmi_service word. Extending this to make use of remaining unused bits
++ * for new services.
++ */
++#define WMI_EXT_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
++	((svc_id) >= (len) && \
++	__le32_to_cpu((wmi_svc_bmap)[((svc_id) - (len)) / 28]) & \
++	BIT(((((svc_id) - (len)) % 28) & 0x1f) + 4))
++
+ #define SVCMAP(x, y, len) \
+ 	do { \
+-		if (WMI_SERVICE_IS_ENABLED((in), (x), (len))) \
++		if ((WMI_SERVICE_IS_ENABLED((in), (x), (len))) || \
++		    (WMI_EXT_SERVICE_IS_ENABLED((in), (x), (len)))) \
+ 			__set_bit(y, out); \
+ 	} while (0)
+ 
 -- 
-2.13.3
+1.7.9.5
