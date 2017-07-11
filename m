@@ -1,77 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:55688 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751286AbdGQQQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:16:49 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 04/29] brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
-Date: Mon, 17 Jul 2017 17:16:12 +0100
-Message-Id: <20170717161637.4652-5-ian@mnementh.co.uk> (sfid-20170717_181733_166498_A4EA4564)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34646 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755389AbdGKHd1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Jul 2017 03:33:27 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sgruszka@redhat.com, kvalo@codeaurora.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 07/10] wireless: iwlegacy: Constify attribute_group structures.
+Date: Tue, 11 Jul 2017 13:02:50 +0530
+Message-Id: <1499758370-24871-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170711_093529_914677_3CC291F9)
+In-Reply-To: <1499758370-24871-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1499758370-24871-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	This function sets the address of the IO window used for
-SDIO accesses onto the backplane of the chip.
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-It currently uses 3 separate masks despite the full mask being
-defined in the code already. Remove the separate masks and clean up.
-
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 15 ++++-----------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   |  3 ---
- 2 files changed, 4 insertions(+), 14 deletions(-)
+Changes in v2:
+              Added cover later.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 5b9a21d6b6b2..aee1ecb7260e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -408,23 +408,16 @@ static int
- brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- {
- 	int err = 0, i;
--	u8 addr[3];
-+	u32 addr;
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+index 5b51fba..de9b652 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+@@ -4654,7 +4654,7 @@ static DEVICE_ATTR(tx_power, S_IWUSR | S_IRUGO, il4965_show_tx_power,
+ 	NULL
+ };
  
- 	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
- 		return -ENOMEDIUM;
- 
--	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
--	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
--	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
-+	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
- 
--	for (i = 0; i < 3; i++) {
--		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
-+	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
- 					&err);
--		if (err) {
--			brcmf_err("failed at addr: 0x%0x\n",
--				  SBSDIO_FUNC1_SBADDRLOW + i);
--		}
--	}
- 
- 	return err;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index f3da32fc6360..e3b78db331b5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -133,9 +133,6 @@
- 
- /* valid bits in SBSDIO_FUNC1_SBADDRxxx regs */
- 
--#define SBSDIO_SBADDRLOW_MASK		0x80	/* Valid bits in SBADDRLOW */
--#define SBSDIO_SBADDRMID_MASK		0xff	/* Valid bits in SBADDRMID */
--#define SBSDIO_SBADDRHIGH_MASK		0xffU	/* Valid bits in SBADDRHIGH */
- /* Address bits from SBADDR regs */
- #define SBSDIO_SBWINDOW_MASK		0xffff8000
- 
+-static struct attribute_group il_attribute_group = {
++static const struct attribute_group il_attribute_group = {
+ 	.name = NULL,		/* put in device directory */
+ 	.attrs = il_sysfs_entries,
+ };
 -- 
-2.11.0
+1.9.1
