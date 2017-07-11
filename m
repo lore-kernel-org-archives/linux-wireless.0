@@ -1,262 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:45214 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1750970AbdGZUlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:41:00 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 20/34] brcmfmac: Whitespace patch
-Date: Wed, 26 Jul 2017 21:25:43 +0100
-Message-Id: <20170726202557.15632-21-ian@mnementh.co.uk> (sfid-20170726_224103_886176_156C7298)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-he1eur01on0114.outbound.protection.outlook.com ([104.47.0.114]:58547
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756075AbdGKR03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Jul 2017 13:26:29 -0400
+Subject: Re: WARN_ON_ONCE(work > weight) in napi_poll()
+To: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Networking <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+References: <26670dce-4dd2-f8e4-0e14-90d74257e739@virtuozzo.com>
+ <87wp7oia6j.fsf@kamboji.qca.qualcomm.com>
+ <952aefe1-6f6a-3978-e7e7-5e74076f26a3@virtuozzo.com>
+ <b418d63d-d348-90b5-ea58-6478a1a037f5@qca.qualcomm.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Message-ID: <8cb28d9b-41c9-043c-16ca-f0bea41944e9@virtuozzo.com> (sfid-20170711_192647_938509_39928266)
+Date: Tue, 11 Jul 2017 20:28:44 +0300
+MIME-Version: 1.0
+In-Reply-To: <b418d63d-d348-90b5-ea58-6478a1a037f5@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Improve legibility / conform to kernel coding style.
+On 07/11/2017 12:24 AM, Ryan Hsu wrote:
+> On 07/04/2017 08:59 AM, Andrey Ryabinin wrote:
+> 
+>> On 07/04/2017 04:49 PM, Kalle Valo wrote:
+>>> Andrey Ryabinin <aryabinin@virtuozzo.com> writes:
+>>>
+>>>> I occasionally hit WARN_ON_ONCE(work > weight); in napi_poll() on a
+>>>> laptop with ath10k card.
+>>>>
+>>>>
+>>>> [37207.593370] ------------[ cut here ]------------
+>>>> [37207.593380] WARNING: CPU: 0 PID: 7 at ../net/core/dev.c:5274
+>>>> net_rx_action+0x258/0x360
+>>>> [37207.593381] Modules linked in: snd_hda_codec_realtek snd_soc_skl
+>>>> snd_hda_codec_generic snd_soc_skl_ipc snd_soc_sst_ipc snd_soc_sst_dsp
+>>>> snd_hda_ext_core snd_soc_sst_match snd_soc_core rtsx_pci_sdmmc
+>>>> mmc_core snd_pcm_dmaengine x86_pkg_temp_thermal snd_hda_intel uvcvideo
+>>>> kvm_intel videobuf2_vmalloc kvm snd_hda_codec snd_hwdep btusb
+>>>> videobuf2_memops btintel snd_hda_core videobuf2_v4l2 bluetooth
+>>>> irqbypass snd_pcm videobuf2_core crc32c_intel videodev mei_me mei
+>>>> rtsx_pci intel_lpss_pci intel_lpss_acpi intel_vbtn intel_lpss mfd_core
+>>>> tpm_tis intel_hid tpm_tis_core tpm efivarfs
+>>>> [37207.593430] CPU: 0 PID: 7 Comm: ksoftirqd/0 Not tainted 4.11.7 #28
+>>>> [37207.593432] Hardware name: Dell Inc. XPS 13 9360/0839Y6, BIOS 1.3.5 05/08/2017
+>>> What firmware and hardware versions exactly? The dmesg output when
+>>> ath10k loads is preferred. As you are using XPS 13 I'm guessing it's one
+>>> of QCA6174 family.
+>>>
+>> Yes it's qca6174.
+>>
+>> $ dmesg |grep ath10
+>> [    0.624828] ath10k_pci 0000:3a:00.0: enabling device (0000 -> 0002)
+>> [    0.626370] ath10k_pci 0000:3a:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+>> [    0.837862] ath10k_pci 0000:3a:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 1a56:1535
+>> [    0.837863] ath10k_pci 0000:3a:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 0 testmode 0
+>> [    0.838388] ath10k_pci 0000:3a:00.0: firmware ver WLAN.RM.2.0-00180-QCARMSWPZ-1 api 4 features wowlan,ignore-otp,no-4addr-pad crc32 75dee6c5
+>> [    0.900606] ath10k_pci 0000:3a:00.0: board_file api 2 bmi_id N/A crc32 19644295
+>> [    3.020681] ath10k_pci 0000:3a:00.0: htt-ver 3.26 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
+>> [    9.574087] ath10k_pci 0000:3a:00.0 wlp58s0: renamed from wlan0
+>>
+> 
+> I can't reproduce of this past few days, not sure if this is due to the amsdu packets received from AP, would you mind share what Ap you're using?
+> And if there any specific steps you're doing?
+> 
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+The bug is quite rare, and I don't know how to reproduce it on purpose. It just happens once in several days
+and it happened with different APs. 
+
+Perhaps you could think of some debug patch that could help to understand what's going on? I could carry it and will
+report if warning hits again. 
+
+FYI I applied small debug patch bellow, just to understand where exactly we bail out with too big quota.
+
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index ecd242b33691..daa3c335804b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -276,29 +276,36 @@ static void brcmf_chip_sb_coredisable(struct brcmf_core *core,
- 	base = core->base;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 02a3fc81fbe3..02b0cc6ec671 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2548,6 +2548,8 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+                        goto exit;
+                }
+        }
++       if (quota > budget)
++               pr_err("#1 quota too big %d %d %d\n", quota, budget, num_rx_msdus);
  
- 	val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 	if (val & SSB_TMSLOW_RESET)
- 		return;
+        while (quota < budget) {
+                /* no more data to receive */
+@@ -2568,6 +2570,8 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+                        goto exit;
+                }
+        }
++       if (quota > budget)
++               pr_err("#2 quota too big %d %d %d\n", quota, budget, num_rx_msdus);
  
- 	val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 	if ((val & SSB_TMSLOW_CLOCK) != 0) {
- 		/*
- 		 * set target reject and spin until busy is clear
- 		 * (preserve core-specific bits)
- 		 */
- 		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 		ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
- 					 val | SSB_TMSLOW_REJECT);
- 
- 		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 		udelay(1);
-+
- 		SPINWAIT((ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatehigh))
- 			  & SSB_TMSHIGH_BUSY), 100000);
- 
- 		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatehigh));
-+
- 		if (val & SSB_TMSHIGH_BUSY)
- 			brcmf_err("core state still busy\n");
- 
- 		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbidlow));
-+
- 		if (val & SSB_IDLOW_INITIATOR) {
- 			val = ci->ops->read32(ci->ctx,
- 					      CORE_SB(base, sbimstate));
-@@ -316,16 +323,22 @@ static void brcmf_chip_sb_coredisable(struct brcmf_core *core,
- 		/* set reset and reject while enabling the clocks */
- 		val = SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
- 		      SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET;
-+
- 		ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow), val);
-+
- 		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 		udelay(10);
- 
- 		/* clear the initiator reject bit */
- 		val = ci->ops->read32(ci->ctx, CORE_SB(base, sbidlow));
-+
- 		if (val & SSB_IDLOW_INITIATOR) {
- 			val = ci->ops->read32(ci->ctx,
- 					      CORE_SB(base, sbimstate));
-+
- 			val &= ~SSB_IMSTATE_REJECT;
-+
- 			ci->ops->write32(ci->ctx,
- 					 CORE_SB(base, sbimstate), val);
- 		}
-@@ -334,6 +347,7 @@ static void brcmf_chip_sb_coredisable(struct brcmf_core *core,
- 	/* leave reset and reject asserted */
- 	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
- 			 (SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET));
-+
- 	udelay(1);
- }
- 
-@@ -345,17 +359,20 @@ static void brcmf_chip_ai_coredisable(struct brcmf_core *core,
- 
- 	/* if core is already in reset, skip reset */
- 	regdata = ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL);
-+
- 	if ((regdata & BCMA_RESET_CTL_RESET) != 0)
- 		goto in_reset_configure;
- 
- 	/* configure reset */
- 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
- 			 prereset | BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
-+
- 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
- 
- 	/* put in reset */
- 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_RESET_CTL,
- 			 BCMA_RESET_CTL_RESET);
-+
- 	usleep_range(10, 20);
- 
- 	/* wait till reset is 1 */
-@@ -366,6 +383,7 @@ static void brcmf_chip_ai_coredisable(struct brcmf_core *core,
- 	/* in-reset configure */
- 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
- 			 reset | BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
-+
- 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
- }
- 
-@@ -390,15 +408,19 @@ static void brcmf_chip_sb_resetcore(struct brcmf_core *core, u32 prereset,
- 	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
- 			 SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
- 			 SSB_TMSLOW_RESET);
-+
- 	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 	udelay(1);
- 
- 	/* clear any serror */
- 	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatehigh));
-+
- 	if (regdata & SSB_TMSHIGH_SERR)
- 		ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatehigh), 0);
- 
- 	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbimstate));
-+
- 	if (regdata & (SSB_IMSTATE_IBE | SSB_IMSTATE_TO)) {
- 		regdata &= ~(SSB_IMSTATE_IBE | SSB_IMSTATE_TO);
- 		ci->ops->write32(ci->ctx, CORE_SB(base, sbimstate), regdata);
-@@ -407,13 +429,17 @@ static void brcmf_chip_sb_resetcore(struct brcmf_core *core, u32 prereset,
- 	/* clear reset and allow it to propagate throughout the core */
- 	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
- 			 SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
-+
- 	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 	udelay(1);
- 
- 	/* leave clock enabled */
- 	ci->ops->write32(ci->ctx, CORE_SB(base, sbtmstatelow),
- 			 SSB_TMSLOW_CLOCK);
-+
- 	regdata = ci->ops->read32(ci->ctx, CORE_SB(base, sbtmstatelow));
-+
- 	udelay(1);
- }
- 
-@@ -427,17 +453,23 @@ static void brcmf_chip_ai_resetcore(struct brcmf_core *core, u32 prereset,
- 	brcmf_chip_ai_coredisable(core, prereset, reset);
- 
- 	count = 0;
-+
- 	while (ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL) &
- 	       BCMA_RESET_CTL_RESET) {
-+
- 		ci->ops->write32(ci->ctx, core->wrapbase + BCMA_RESET_CTL, 0);
-+
- 		count++;
-+
- 		if (count > 50)
- 			break;
-+
- 		usleep_range(40, 60);
- 	}
- 
- 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
- 			 postreset | BCMA_IOCTL_CLK);
-+
- 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
- }
- 
-@@ -907,6 +939,7 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 			brcmf_err("SB chip is not supported\n");
- 			return -ENODEV;
- 		}
-+
- 		ci->iscoreup = brcmf_chip_sb_iscoreup;
- 		ci->coredisable = brcmf_chip_sb_coredisable;
- 		ci->resetcore = brcmf_chip_sb_resetcore;
-@@ -914,25 +947,31 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_CHIPCOMMON,
- 					   SI_ENUM_BASE, 0);
- 		brcmf_chip_sb_corerev(ci, core);
-+
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_SDIO_DEV,
- 					   BCM4329_CORE_BUS_BASE, 0);
- 		brcmf_chip_sb_corerev(ci, core);
-+
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_INTERNAL_MEM,
- 					   BCM4329_CORE_SOCRAM_BASE, 0);
- 		brcmf_chip_sb_corerev(ci, core);
-+
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_ARM_CM3,
- 					   BCM4329_CORE_ARM_BASE, 0);
- 		brcmf_chip_sb_corerev(ci, core);
- 
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
- 		brcmf_chip_sb_corerev(ci, core);
-+
- 		break;
- 	case SOCI_AXI:
-+
- 		ci->iscoreup = brcmf_chip_ai_iscoreup;
- 		ci->coredisable = brcmf_chip_ai_coredisable;
- 		ci->resetcore = brcmf_chip_ai_resetcore;
- 
- 		brcmf_chip_dmp_erom_scan(ci);
-+
- 		break;
- 	default:
- 		brcmf_err("chip backplane type %u is not supported\n",
-@@ -1300,24 +1339,32 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *chip)
- 	case BRCM_CC_43241_CHIP_ID:
- 	case BRCM_CC_4335_CHIP_ID:
- 	case BRCM_CC_4339_CHIP_ID:
-+
- 		/* read PMU chipcontrol register 3 */
- 		addr = CORE_CC_REG(pmu->base, chipcontrol_addr);
- 		chip->ops->write32(chip->ctx, addr, 3);
-+
- 		addr = CORE_CC_REG(pmu->base, chipcontrol_data);
- 		reg = chip->ops->read32(chip->ctx, addr);
-+
- 		return (reg & pmu_cc3_mask) != 0;
- 	case BRCM_CC_43430_CHIP_ID:
-+
- 		addr = CORE_CC_REG(base, sr_control1);
- 		reg = chip->ops->read32(chip->ctx, addr);
-+
- 		return reg != 0;
- 	default:
-+
- 		addr = CORE_CC_REG(pmu->base, pmucapabilities_ext);
- 		reg = chip->ops->read32(chip->ctx, addr);
-+
- 		if ((reg & PCAPEXT_SR_SUPPORTED_MASK) == 0)
- 			return false;
- 
- 		addr = CORE_CC_REG(pmu->base, retention_ctl);
- 		reg = chip->ops->read32(chip->ctx, addr);
-+
- 		return (reg & (PMU_RCTL_MACPHY_DISABLE_MASK |
- 			       PMU_RCTL_LOGIC_DISABLE_MASK)) == 0;
- 	}
--- 
-2.11.0
+        /* From NAPI documentation:
+         *  The napi poll() function may also process TX completions, in which
+--
+
+
+It gave me this:
+
+[118648.825347] #1 quota too big 72 64 16
+[118648.825351] #2 quota too big 72 64 16
+[118648.825471] ------------[ cut here ]------------
+[118648.825484] WARNING: CPU: 0 PID: 0 at ../net/core/dev.c:5274 net_rx_action+0x258/0x360
+
+So this means that we didn't met the condition bellow, i.e. skb_queue_empty() returned true.
+
+	ath10k_htt_txrx_compl_task():
+
+		if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
+		    !skb_queue_empty(&htt->rx_in_ord_compl_q)) {
+			resched_napi = true;
+			goto exit;
+		}
+
+> Also WLAN.RM.2.0-00180-QCARMSWPZ-1 firmware is a bit old, could you also update firmware to give it a try?
+> https://github.com/kvalo/ath10k-firmware/tree/master/QCA6174/hw3.0/4.4
+> 
+
+Will try.
