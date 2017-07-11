@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41668 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752527AbdGGImK (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33201 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753956AbdGKBd3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 04:42:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        =?utf-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?utf-8?Q?R?= =?utf-8?Q?afa=C5=82_Mi=C5=82ecki?=
-        <rafal@milecki.pl>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl\@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security\@kernel.org" <security@kernel.org>
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
-        <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
-        <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
-        <37617809-d840-fe43-ae0d-71c545f9fab1@broadcom.com>
-Date: Fri, 07 Jul 2017 11:41:46 +0300
-In-Reply-To: <37617809-d840-fe43-ae0d-71c545f9fab1@broadcom.com> (Arend van
-        Spriel's message of "Fri, 7 Jul 2017 10:28:29 +0200")
-Message-ID: <87wp7kd4fp.fsf@kamboji.qca.qualcomm.com> (sfid-20170707_104239_425782_6E7914C8)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 10 Jul 2017 21:33:29 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Stable <stable@vger.kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/2] rtlwifi: fix static checker warning of uninitialized symbol.
+Date: Mon, 10 Jul 2017 20:33:12 -0500
+Message-Id: <20170711013313.3478-2-Larry.Finger@lwfinger.net> (sfid-20170711_033338_483245_55AF9322)
+In-Reply-To: <20170711013313.3478-1-Larry.Finger@lwfinger.net>
+References: <20170711013313.3478-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> On 7/7/2017 12:32 AM, Linus Torvalds wrote:
->> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>>
->>> Looks fine to me so ...
->>
->> I really think that if we can't trust 'len', then we have to check
->> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
->> we'll just have a big 16-bit number instead.
->
-> Fair enough. The firmware on the device should have a check in place,
-> but guess what... :-( Anyway, the lower bound depends on the type of
-> management frames. So for action frames it is DOT11_MGMT_HDR_LEN + 1
-> /* Action Category */ + 1 /* Action */.
->
-> Might be better to place the lower bound check in
-> net/wireless/nl80211.c and do that appropriate for the type of
-> management frame. That way it is assured for all wireless drivers.
+Patch 2635664e6e4a: ("rtlwifi: Add rx ampdu cfg for btcoexist.")
+leads to the following static checker warning:
 
-So I drop this patch and wait for v2?
+	drivers/net/wireless/realtek/rtlwifi/base.c:1664 rtl_rx_ampdu_apply()
+	error: uninitialized symbol 'reject_agg'.
 
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Fixes: 2635664e6e4a: ("rtlwifi: Add rx ampdu cfg for btcoexist.")
+Cc: Stable <stable@vger.kernel.org> # v4.12+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index c145cfe27216..d7a1e2d2d529 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1731,7 +1731,7 @@ int rtl_tx_agg_oper(struct ieee80211_hw *hw,
+ void rtl_rx_ampdu_apply(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+-	u8 reject_agg, ctrl_agg_size = 0, agg_size;
++	u8 reject_agg = 0, ctrl_agg_size = 0, agg_size = 0;
+ 
+ 	if (rtlpriv->cfg->ops->get_btc_status())
+ 		btc_ops->btc_get_ampdu_cfg(rtlpriv, &reject_agg,
 -- 
-Kalle Valo
+2.12.3
