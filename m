@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:44166 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751500AbdGZAfo (ORCPT
+Received: from ecemailfilter.ece.umd.edu ([129.2.90.4]:52117 "EHLO
+        mailfilter.ece.umd.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754931AbdGKO4V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 20:35:44 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
-        devel@driverdev.osuosl.org,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        linux-watchdog@vger.kernel.org,
-        linux-efi <linux-efi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID API
-Date: Wed, 26 Jul 2017 02:27:44 +0200
-Message-ID: <6349641.0fe8FCM51k@aspire.rjw.lan> (sfid-20170726_023604_005440_6E1D3753)
-In-Reply-To: <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com>
-References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com> <2908341.aERReitNcd@aspire.rjw.lan> <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com>
+        Tue, 11 Jul 2017 10:56:21 -0400
+Received: from mail-qk0-f197.google.com (mail-qk0-f197.google.com [209.85.220.197]) by mailfilter.ece.umd.edu with ESMTP id RpYOz6386Y6An4nJ for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 10:56:20 -0400 (EDT)
+Received: by mail-qk0-f197.google.com with SMTP id a195so1398568qkb.13
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 07:56:20 -0700 (PDT)
+Date: Tue, 11 Jul 2017 10:56:17 -0400
+From: "S. Gilles" <sgilles@math.umd.edu>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: [BUG] brcmfmac: BRCM4354 cannot connect since commit 270a6c1f65
+Message-ID: <20170711145617.puao7oybvpv3it72@number18.npnth.net> (sfid-20170711_165625_554602_B17F3A39)
+References: <20170711122125.5epcjhcyneiwxyse@number18.npnth.net>
+ <d5775426-f1bd-c2ce-89a8-e11472815787@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <d5775426-f1bd-c2ce-89a8-e11472815787@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, July 26, 2017 03:35:01 AM Andy Shevchenko wrote:
-> On Wed, Jul 26, 2017 at 3:21 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Tuesday, July 25, 2017 05:12:35 PM Mika Westerberg wrote:
-> >> On Wed, Jul 19, 2017 at 09:28:57PM +0300, Andy Shevchenko wrote:
-> >> > There are new types and helpers that are supposed to be used in new code.
-> >> >
-> >> > As a preparation to get rid of legacy types and API functions do
-> >> > the conversion here.
-> >> >
-> >> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> >> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >>
-> >> Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >
-> > OK
-> >
-> > Andy, do you want me to apply this?
+On 2017-07-11T14:35:07+0200, Arend van Spriel wrote:
+> [...]
 > 
-> If you would like to.
-> 
-> The patch is now pretty independent since necessary stuff made v4.13-rc1.
+> Looking at the diff of the bad commit, I came up with the patch below.
+> Can you try it and let me know the result?
 
-OK
+That seems to fix everything for me, thanks for the quick patch!
+
+Thanks,
+S. Gilles
