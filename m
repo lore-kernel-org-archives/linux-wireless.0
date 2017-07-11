@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:40372 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751311AbdGQRrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 13:47:10 -0400
-To: linux-wireless@vger.kernel.org
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Subject: hante.meuleman@broadcom.com
-Message-ID: <67fac3a3-ab91-0b5e-4568-2bfe692d6598@mnementh.co.uk> (sfid-20170717_194727_207647_B9F15884)
-Date: Mon, 17 Jul 2017 18:47:07 +0100
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:36320 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932580AbdGKI6M (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Jul 2017 04:58:12 -0400
+Received: by mail-wr0-f172.google.com with SMTP id c11so173870033wrc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 01:58:12 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: added LED triggers for transmit/receive
+To: Russell Joyce <russell.joyce@york.ac.uk>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Alan Millard <alan.millard@york.ac.uk>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        "mhiramat@kernel.org" <mhiramat@kernel.org>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        Tobias Klauser <tklauser@distanz.ch>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com,
+        Network Development <netdev@vger.kernel.org>
+References: <20170707140941.122115-1-russell.joyce@york.ac.uk>
+ <CACna6rzY84oWNMBfP8N4A=Sxst_8b-S+rTbZFQV0yFcOR5MceQ@mail.gmail.com>
+ <B8983FA2-39CE-478B-80C9-F32E01856FE9@york.ac.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <60de1301-b4a3-95a7-117f-a953576655d9@broadcom.com> (sfid-20170711_105828_317408_359B97EE)
+Date: Tue, 11 Jul 2017 10:58:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <B8983FA2-39CE-478B-80C9-F32E01856FE9@york.ac.uk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Folks,
+On 10-07-17 19:02, Russell Joyce wrote:
+>> 1) I think most of it should be some cfg80211 shareable code.
+> 
+> I’m not sure exactly what you mean by this, could you please clarify?
 
-9fe929aaace6  brcmfmac: add firmware feature detection for gscan feature
+What I think Rafał is saying is that it would be better to have this
+code in cfg80211 so other drivers including mac80211 could use it.
 
-Completely breaks 43430a1 support.
+>> 2) This "rxtx" while surely present in other places sounds like a
+>> workaround for LED subsystem limitation. Maybe it's time to finally
+>> rework LED triggers.
+> 
+> I agree that it’s not an ideal way to do things, but I couldn’t think of a
+> better alternative. I think that having a combined trigger is useful though, for
+> situations like using the single LED on a Raspberry Pi to show Wi-Fi activity.
 
-This was tested on top of my last patchset - but the same occurs on top
-of vanilla 4.13-rc1
+Indeed. However, the LED subsystem could/should(?) take care of mapping
+"rx" and "tx" triggers to the same LED.
 
-[   15.703014]  [1 ] core 0x800:49 base 0x18000000 wrap 0x18100000
-[   15.703025]  [2 ] core 0x812:39 base 0x18001000 wrap 0x18101000
-[   15.703036]  [3 ] core 0x829:21 base 0x18002000 wrap 0x18102000
-[   15.703044]  [4 ] core 0x82a:9  base 0x18003000 wrap 0x18103000
-[   15.703052]  [5 ] core 0x80e:22 base 0x18004000 wrap 0x18104000
-[   15.703059]  [6 ] core 0x135:0  base 0x00000000 wrap 0x18105000
-[   15.703067]  [7 ] core 0x240:0  base 0x00000000 wrap 0x18106000
-[   15.703070] Enter
-[   15.735280] RAM: base=0x0 size=524288 (0x80000) sr=65536 (0x10000)
-[   15.735293] Found BCM43430, AXI backplane, rev=1
-[   15.735461] ccrev=49, pmurev=24, pmucaps=0x39d25f18
-[   15.904051] Enter
-[   15.974045] Enter
-[   15.984378] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
-Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
-[   16.009363] brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data
-content: 0x40012
-...
-[   18.566406] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-...
-[   21.126419] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-[   23.686371] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-...
-[   26.246357] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-[   28.806347] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-[   31.366355] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-[   33.926319] brcmfmac: brcmf_proto_bcdc_query_dcmd:
-brcmf_proto_bcdc_msg failed w/status -110
-[   36.486448] brcmfmac: brcmf_proto_bcdc_query_dcmd:
-brcmf_proto_bcdc_msg failed w/status -110
-[   36.497332] brcmfmac: brcmf_cfg80211_attach: Failed to get D11
-version (-110)
-[   36.504059] brcmfmac: brcmf_bus_started: failed: -12
-[   36.517686] brcmfmac: brcmf_sdio_firmware_callback: dongle is not
-responding
-[   36.586256] Enter
+I am happy to comment on your patch, but maybe you can first take a look
+at the suggestion Rafał made above.
 
--Ian
+Regards,
+Arend
