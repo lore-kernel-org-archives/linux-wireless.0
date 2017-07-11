@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f175.google.com ([209.85.128.175]:34847 "EHLO
-        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751856AbdGRTt1 (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:48560 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755947AbdGKN5j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 15:49:27 -0400
-Received: by mail-wr0-f175.google.com with SMTP id w4so42943281wrb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 12:49:26 -0700 (PDT)
-Subject: Re: BUG: brcmfmac: add firmware feature detection for gscan feature
- breaks 43430a1
-To: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-References: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk>
- <e6635794-7c35-1a46-2d5b-68824c7b0657@mnementh.co.uk>
- <ff344ee3-3feb-6886-8007-d8ed00386424@broadcom.com>
- <c322c7c6-823b-0d36-8968-101d143b3220@mnementh.co.uk>
- <6c512250-5299-0cad-675b-e7780e999b58@broadcom.com>
- <246dc2f3-5cfd-7e89-6244-50fa2f546306@mnementh.co.uk>
- <0271ee86-ba99-fc50-46cd-b796f614fa19@broadcom.com>
- <f3b1c2a3-c2f0-2f1c-c3f6-dbcc78246dc7@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <90ba4777-dedc-1a4f-c9c5-fca58106b754@broadcom.com> (sfid-20170718_214931_111706_C1363951)
-Date: Tue, 18 Jul 2017 21:49:24 +0200
+        Tue, 11 Jul 2017 09:57:39 -0400
+From: <mpubbise@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [PATCH 3/3] ath10k: push peer type to target for TDLS peers
+Date: Tue, 11 Jul 2017 19:26:18 +0530
+Message-ID: <1499781378-858-4-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170711_155742_336323_6F804C35)
+In-Reply-To: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <f3b1c2a3-c2f0-2f1c-c3f6-dbcc78246dc7@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18-07-17 00:10, Ian Molton wrote:
-> Hi Arend,
-> 
-> This is all there is in the forensics file, hope its of some use.
-> 
-> # cat /sys/kernel/debug/brcmfmac/mmc1\:0001\:1/forensics
-> Enter
-> hndarm_armr addr: 0x18003000, cr4_idx: 0
-> 000000.000
-> RTE (SDIO-CDC) 7.45.41.26 (r640327) on BCM43430 r1 @ 37.4/81.0/81.0MHz
-> 000000.001 sdpcmdcdc0: Broadcom SDPCMD CDC driver
-> 000000.005 reclaim section 0: Returned 47716 bytes to the heap
-> 000000.007 wlc_bmac_info_init: host_enab 1
-> 000000.025 wl0: Broadcom BCM43430 802.11 Wireless Controller 7.45.41.26
-> (r640327)
-> 000000.026 TCAM: 256 used: 179 exceed:0
-> 000000.027 reclaim section 1: Returned 81268 bytes to the heap
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-You probably guessed it, but this does not show anything useful. The
-behavior suggested a firmware crash, but that does not seem to be
-happening. Maybe it is the SDIO core driver on the firmware side which
-is in la-la land.
+WMI interface for all the firmwares(except QCA6714) does not include the
+type of peer(default/bss/tdls) requested during peer creation, therefore
+target creates a default peer.
 
-Regards,
-Arend
+TDLS implementation on 10.4 firmware requires host to configure the
+peer type(tdls) for TDLS peers. This patch adds peer type parameter to the
+existing WMI interface for peer creation to accommodate this requirement.
+
+Tested this change on QCA9888(10.4-3.5.1-00018) and QCA988x(10.2.4.70.9-2)
+with ping tests for AP/STA modes.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    1 +
+ drivers/net/wireless/ath/ath10k/wmi.h |    1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index c91d804..b5e5a9e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -6500,6 +6500,7 @@ void ath10k_wmi_start_scan_init(struct ath10k *ar,
+ 	cmd = (struct wmi_peer_create_cmd *)skb->data;
+ 	cmd->vdev_id = __cpu_to_le32(vdev_id);
+ 	ether_addr_copy(cmd->peer_macaddr.addr, peer_addr);
++	cmd->peer_type = __cpu_to_le32(peer_type);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 		   "wmi peer create vdev_id %d peer_addr %pM\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index eb95e8b..7b3a413 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -5876,6 +5876,7 @@ struct wmi_tbtt_offset_event {
+ struct wmi_peer_create_cmd {
+ 	__le32 vdev_id;
+ 	struct wmi_mac_addr peer_macaddr;
++	__le32 peer_type;
+ } __packed;
+ 
+ enum wmi_peer_type {
+-- 
+1.7.9.5
