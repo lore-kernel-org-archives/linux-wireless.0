@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33848 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1750952AbdGZU0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:26:09 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 01/34] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
-Date: Wed, 26 Jul 2017 21:25:24 +0100
-Message-Id: <20170726202557.15632-2-ian@mnementh.co.uk> (sfid-20170726_222621_477378_D5323498)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from smtprelay0093.hostedemail.com ([216.40.44.93]:53847 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933300AbdGLILb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jul 2017 04:11:31 -0400
+Message-ID: <1499847086.4457.27.camel@perches.com> (sfid-20170712_101153_922933_1AC18B9F)
+Subject: Re: [PATCH] drivers/staging/wilc1000: fix sparse warning: right
+ shift by bigger than source value
+From: Joe Perches <joe@perches.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Rui Teng <rui.teng@linux.vnet.ibm.com>
+Cc: devel@driverdev.osuosl.org,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ganesh Krishna <ganesh.krishna@microchip.com>
+Date: Wed, 12 Jul 2017 01:11:26 -0700
+In-Reply-To: <20170712061220.GB11450@kroah.com>
+References: <20170710085731.28397-1-rui.teng@linux.vnet.ibm.com>
+         <20170711170449.GA30362@kroah.com>
+         <f31c5818-7ba3-4708-3fda-5bfbe0c4c1da@linux.vnet.ibm.com>
+         <20170712061220.GB11450@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	All the other IO functions are the other way round in this
-driver. Make this one match.
+On Wed, 2017-07-12 at 08:12 +0200, Greg Kroah-Hartman wrote:
+> On Wed, Jul 12, 2017 at 10:23:02AM +0800, Rui Teng wrote:
+> > On 12/07/2017 1:04 AM, Greg Kroah-Hartman wrote:
+> > > On Mon, Jul 10, 2017 at 04:57:31PM +0800, Rui Teng wrote:
+> > > > This patch sets memory to zero directly to avoid unnecessary shift and
+> > > > bitwise operations on bool type, which can fix a sparse warning and also
+> > > > improve performance.
+> > > 
+> > > It does?  How did you measure the performance impact?  What was now
+> > > faster?
+> > 
+> > It can avoid 3 times right shift and 3 times bitwise operations.
+> > And once memory set should also faster than 4 times copy operations.
+> > And add number 4 once should also faster than 4 times plus plus.
+> 
+> And did you test this to prove that this does matter and is noticable?
+> How do you know that gcc doesn't just optimize it all away?  Is this on
+> a code path that actually matters?
+> 
+> Don't ever say "improve performance" without actually being able to
+> prove it please.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Using __be32 would be more intelligible.
+
+Maybe something like this: (in any number of patches)
+
+o convert u8 *pu8CurrByte to be32 *buf
+o convert strHostIfSetMulti to smulti
+o remove useless initialization of result
+o remove unnecessary parentheses
+o return directly on kalloc failure
+o remove label
+
+Ending up with: (uncompiled/untested)
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+				      struct set_multicast *smulti)
+{
+	s32 result;
+	struct wid wid;
+	__be32 *buf;
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 984c1d0560b1..f585dfd89453 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -230,8 +230,8 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
- 
--static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
--					uint regaddr, u8 byte)
-+static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte,
-+					uint regaddr)
- {
- 	int err_ret;
- 
-@@ -269,8 +269,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
- 			else
--				ret = brcmf_sdiod_f0_writeb(func, addr,
--							    *(u8 *)data);
-+				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data,
-+							    addr);
- 		} else {
- 			if (fn)
- 				*(u8 *)data = sdio_readb(func, addr, &ret);
--- 
-2.11.0
+	wid.id = (u16)WID_SETUP_MULTICAST_FILTER;
+	wid.type = WID_BIN;
+	wid.size = sizeof(struct set_multicast) + smulti->cnt * ETH_ALEN;
+	wid.val = kmalloc(wid.size, GFP_KERNEL);
+	if (!wid.val)
+		return;
+
+	buf = (__force __be32 *)wid.val;
+	*buf++ = cpu_to_be32(smulti->enabled);
+	*buf++ = cpu_to_be32(smulti->cnt);
+
+	memcpy(buf, wilc_multicast_mac_addr_list, smulti->cnt * ETH_ALEN);
+
+	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+				      wilc_get_vif_idx(vif));
+	if (result)
+		netdev_err(vif->ndev, "Failed to send setup multicast\n");
+
+	kfree(wid.val);
+}
