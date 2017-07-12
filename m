@@ -1,89 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0093.hostedemail.com ([216.40.44.93]:53847 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933300AbdGLILb (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:33661 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756700AbdGLHEn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 04:11:31 -0400
-Message-ID: <1499847086.4457.27.camel@perches.com> (sfid-20170712_101153_922933_1AC18B9F)
-Subject: Re: [PATCH] drivers/staging/wilc1000: fix sparse warning: right
- shift by bigger than source value
-From: Joe Perches <joe@perches.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rui Teng <rui.teng@linux.vnet.ibm.com>
-Cc: devel@driverdev.osuosl.org,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ganesh Krishna <ganesh.krishna@microchip.com>
-Date: Wed, 12 Jul 2017 01:11:26 -0700
-In-Reply-To: <20170712061220.GB11450@kroah.com>
-References: <20170710085731.28397-1-rui.teng@linux.vnet.ibm.com>
-         <20170711170449.GA30362@kroah.com>
-         <f31c5818-7ba3-4708-3fda-5bfbe0c4c1da@linux.vnet.ibm.com>
-         <20170712061220.GB11450@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 12 Jul 2017 03:04:43 -0400
+Subject: Re: [PATCH] rt2x00: make const array glrt_table static
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+References: <20170711114733.15387-1-colin.king@canonical.com>
+ <20170712064911.GA2769@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        netdev@vger.kernel.org
+From: Colin Ian King <colin.king@canonical.com>
+Message-ID: <ff540218-a260-98ac-b1d1-d4b9f3317a9f@canonical.com> (sfid-20170712_090454_609029_4A4F9E0C)
+Date: Wed, 12 Jul 2017 08:04:40 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170712064911.GA2769@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-07-12 at 08:12 +0200, Greg Kroah-Hartman wrote:
-> On Wed, Jul 12, 2017 at 10:23:02AM +0800, Rui Teng wrote:
-> > On 12/07/2017 1:04 AM, Greg Kroah-Hartman wrote:
-> > > On Mon, Jul 10, 2017 at 04:57:31PM +0800, Rui Teng wrote:
-> > > > This patch sets memory to zero directly to avoid unnecessary shift and
-> > > > bitwise operations on bool type, which can fix a sparse warning and also
-> > > > improve performance.
-> > > 
-> > > It does?  How did you measure the performance impact?  What was now
-> > > faster?
-> > 
-> > It can avoid 3 times right shift and 3 times bitwise operations.
-> > And once memory set should also faster than 4 times copy operations.
-> > And add number 4 once should also faster than 4 times plus plus.
+On 12/07/17 07:49, Stanislaw Gruszka wrote:
+> On Tue, Jul 11, 2017 at 12:47:33PM +0100, Colin King wrote:
+>> From: Colin Ian King <colin.king@canonical.com>
+>>
+>> Don't populate array glrt_table on the stack but make it static.
+>> Makes the object code a smaller by over 670 bytes:
+>>
+>> Before:
+>>    text	   data	    bss	    dec	    hex	filename
+>>  131772	   4733	      0	 136505	  21539	rt2800lib.o
+>>
+>> After:
+>>    text	   data	    bss	    dec	    hex	filename
+>>  131043	   4789	      0	 135832	  21298	rt2800lib.o
+>>
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > 
-> And did you test this to prove that this does matter and is noticable?
-> How do you know that gcc doesn't just optimize it all away?  Is this on
-> a code path that actually matters?
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > 
-> Don't ever say "improve performance" without actually being able to
-> prove it please.
+> I wonder why compiler do not optimize by itself since array is
+> const, but patch is ok.
 
-Using __be32 would be more intelligible.
+Afraid marking it as const does not guarantee that at all. The const
+qualifier just announces that the value will not be changed [1]. So one
+requires static const to ensure it's not populated on the stack and also
+marked as non-modifiable.
 
-Maybe something like this: (in any number of patches)
+[1] Section A4.4, The C programming Language, page 196
 
-o convert u8 *pu8CurrByte to be32 *buf
-o convert strHostIfSetMulti to smulti
-o remove useless initialization of result
-o remove unnecessary parentheses
-o return directly on kalloc failure
-o remove label
+Colin
 
-Ending up with: (uncompiled/untested)
----
-static void Handle_SetMulticastFilter(struct wilc_vif *vif,
-				      struct set_multicast *smulti)
-{
-	s32 result;
-	struct wid wid;
-	__be32 *buf;
-
-	wid.id = (u16)WID_SETUP_MULTICAST_FILTER;
-	wid.type = WID_BIN;
-	wid.size = sizeof(struct set_multicast) + smulti->cnt * ETH_ALEN;
-	wid.val = kmalloc(wid.size, GFP_KERNEL);
-	if (!wid.val)
-		return;
-
-	buf = (__force __be32 *)wid.val;
-	*buf++ = cpu_to_be32(smulti->enabled);
-	*buf++ = cpu_to_be32(smulti->cnt);
-
-	memcpy(buf, wilc_multicast_mac_addr_list, smulti->cnt * ETH_ALEN);
-
-	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-				      wilc_get_vif_idx(vif));
-	if (result)
-		netdev_err(vif->ndev, "Failed to send setup multicast\n");
-
-	kfree(wid.val);
-}
+> 
+> Stanislaw 
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
