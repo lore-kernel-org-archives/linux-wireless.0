@@ -1,134 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:35012 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750923AbdGaQ7C (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:32841 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756401AbdGLLtj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:59:02 -0400
-Received: by mail-pf0-f182.google.com with SMTP id t86so13374301pfe.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 09:59:02 -0700 (PDT)
-Date: Mon, 31 Jul 2017 09:58:58 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: pcie: compatible with wifi-only image while
- extract wifi-part fw
-Message-ID: <20170731165857.GA136608@google.com> (sfid-20170731_185906_252290_649996BD)
-References: <1501506447-31851-1-git-send-email-huxinming820@gmail.com>
- <1501506447-31851-2-git-send-email-huxinming820@gmail.com>
+        Wed, 12 Jul 2017 07:49:39 -0400
+Received: by mail-qk0-f182.google.com with SMTP id a66so4990930qkb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 04:49:39 -0700 (PDT)
+Message-ID: <59660CC3.9030809@broadcom.com> (sfid-20170712_134945_365012_E2DCBB39)
+Date: Wed, 12 Jul 2017 13:49:23 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501506447-31851-2-git-send-email-huxinming820@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+CC: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH V2] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
+References: <1499458154-18358-1-git-send-email-arend.vanspriel@broadcom.com>
+In-Reply-To: <1499458154-18358-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Two nitpicks below:
-
-On Mon, Jul 31, 2017 at 01:07:27PM +0000, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> Sometimes, we might using wifi-only firmware with a combo firmware name,
-> in this case, do not need to filter bluetooth part from header.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+On 7/7/2017 10:09 PM, Arend van Spriel wrote:
+> The lower level nl80211 code in cfg80211 ensures that "len" is between
+> 25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) from
+> "len" so thats's max of 2280.  However, the action_frame->data[] buffer is
+> only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
+> overflow.
+>
+> 	memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+> 	       le16_to_cpu(action_frame->len));
+>
+> Cc: stable@vger.kernel.org # 3.9.x
+> Fixes: 18e2f61db3b70 ("brcmfmac: P2P action frame tx.")
+> Reported-by: "freenerguo(郭大兴)" <freenerguo@tencent.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 > ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 26 +++++++++++++++++++-------
->  1 file changed, 19 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 3da1eeb..dc4e054 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -1985,7 +1985,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
->   * (3) wifi image.
->   *
->   * This function bypass the header and bluetooth part, return
-> - * the offset of tail wifi-only part.
-> + * the offset of tail wifi-only part. if the image is already wifi-only,
+>   V2:
+>    - added Fixes: tag and Cc: for stable kernels.
+>    - Cc: patch to netdev list.
+> ---
+> Hi David,
+>
+> Here is the patch as Linus send it to us and security@kernel.org. I
+> removed the lower bound check as that is already done in cfg80211.
+> Now I signed off on the patch although formally I suppose Linus should
+> sign it off. Putting it out there so people can respond as deemed
+> necessary.
+>
+> The reason for submitting it to your tree is the fact that Kalle is
+> on vacation for next 10 days or so which was indicated to me by Johannes.
+> The patch applies to the master branch of your net repository. For
+> reference V1 of this patch can be found here [1].
 
-Sentences start with capital letters (i.e., "If the image ...").
+Hi Dave,
 
-> + * that is start with CMD1, return 0.
->   */
->  
->  static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-> @@ -1993,7 +1994,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->  	const struct mwifiex_fw_data *fwdata;
->  	u32 offset = 0, data_len, dnld_cmd;
->  	int ret = 0;
-> -	bool cmd7_before = false;
-> +	bool cmd7_before = false, first_cmd = false;
->  
->  	while (1) {
->  		/* Check for integer and buffer overflow */
-> @@ -2014,20 +2015,29 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->  
->  		switch (dnld_cmd) {
->  		case MWIFIEX_FW_DNLD_CMD_1:
-> -			if (!cmd7_before) {
-> -				mwifiex_dbg(adapter, ERROR,
-> -					    "no cmd7 before cmd1!\n");
-> +			if (offset + data_len < data_len) {
-> +				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
->  				ret = -1;
->  				goto done;
->  			}
-> -			if (offset + data_len < data_len) {
-> -				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-> +
-> +			/* Image start with cmd1, already wifi-only firmware*/
+Not sure if you missed this one. It is addressing a reported security 
+issue and intended for the net repository, not net-next which is 
+obviously closed [2].
 
-You need a space before closing the comment. i.e.:
+Regards,
+Arend
 
-			/* Image starts with cmd1; already wifi-only firmware */
+[2] http://vger.kernel.org/~davem/net-next.html
 
-Otherwise, I think both of these look fine:
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-> +			if (!first_cmd) {
-> +				mwifiex_dbg(adapter, MSG,
-> +					    "input wifi-only firmware\n");
-> +				return 0;
-> +			}
-> +
-> +			if (!cmd7_before) {
-> +				mwifiex_dbg(adapter, ERROR,
-> +					    "no cmd7 before cmd1!\n");
->  				ret = -1;
->  				goto done;
->  			}
->  			offset += data_len;
->  			break;
->  		case MWIFIEX_FW_DNLD_CMD_5:
-> +			first_cmd = true;
->  			/* Check for integer overflow */
->  			if (offset + data_len < data_len) {
->  				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-> @@ -2037,6 +2047,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->  			offset += data_len;
->  			break;
->  		case MWIFIEX_FW_DNLD_CMD_6:
-> +			first_cmd = true;
->  			/* Check for integer overflow */
->  			if (offset + data_len < data_len) {
->  				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-> @@ -2053,6 +2064,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->  			}
->  			goto done;
->  		case MWIFIEX_FW_DNLD_CMD_7:
-> +			first_cmd = true;
->  			cmd7_before = true;
->  			break;
->  		default:
-> -- 
-> 1.9.1
-> 
+> Regards,
+> Arend
+>
+> [1] https://patchwork.kernel.org/patch/9829977/
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index cd1d673..d182a00 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -4851,6 +4851,11 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+>   		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
+>   					GFP_KERNEL);
+>   	} else if (ieee80211_is_action(mgmt->frame_control)) {
+> +		if (len > BRCMF_FIL_ACTION_FRAME_SIZE + DOT11_MGMT_HDR_LEN) {
+> +			brcmf_err("invalid action frame length\n");
+> +			err = -EINVAL;
+> +			goto exit;
+> +		}
+>   		af_params = kzalloc(sizeof(*af_params), GFP_KERNEL);
+>   		if (af_params == NULL) {
+>   			brcmf_err("unable to allocate frame\n");
+>
