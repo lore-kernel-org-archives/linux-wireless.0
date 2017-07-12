@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40354 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755903AbdGLGuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 02:50:15 -0400
-Date: Wed, 12 Jul 2017 08:49:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: make const array glrt_table static
-Message-ID: <20170712064911.GA2769@redhat.com> (sfid-20170712_085021_704103_7E59BF5C)
-References: <20170711114733.15387-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170711114733.15387-1-colin.king@canonical.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:55488 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752617AbdGLP2y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Jul 2017 11:28:54 -0400
+Date: Wed, 12 Jul 2017 08:28:53 -0700 (PDT)
+Message-Id: <20170712.082853.1710711458527879433.davem@davemloft.net> (sfid-20170712_172904_592178_4BB97A44)
+To: arend.vanspriel@broadcom.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        torvalds@linux-foundation.org
+Subject: Re: [PATCH V2] brcmfmac: fix possible buffer overflow in
+ brcmf_cfg80211_mgmt_tx()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <59660CC3.9030809@broadcom.com>
+References: <1499458154-18358-1-git-send-email-arend.vanspriel@broadcom.com>
+        <59660CC3.9030809@broadcom.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 11, 2017 at 12:47:33PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Don't populate array glrt_table on the stack but make it static.
-> Makes the object code a smaller by over 670 bytes:
-> 
-> Before:
->    text	   data	    bss	    dec	    hex	filename
->  131772	   4733	      0	 136505	  21539	rt2800lib.o
-> 
-> After:
->    text	   data	    bss	    dec	    hex	filename
->  131043	   4789	      0	 135832	  21298	rt2800lib.o
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-
-I wonder why compiler do not optimize by itself since array is
-const, but patch is ok.
-
-Stanislaw 
+RnJvbTogQXJlbmQgdmFuIFNwcmllbCA8YXJlbmQudmFuc3ByaWVsQGJyb2FkY29tLmNvbT4NCkRh
+dGU6IFdlZCwgMTIgSnVsIDIwMTcgMTM6NDk6MjMgKzAyMDANCg0KPiBPbiA3LzcvMjAxNyAxMDow
+OSBQTSwgQXJlbmQgdmFuIFNwcmllbCB3cm90ZToNCj4+IFRoZSBsb3dlciBsZXZlbCBubDgwMjEx
+IGNvZGUgaW4gY2ZnODAyMTEgZW5zdXJlcyB0aGF0ICJsZW4iIGlzIGJldHdlZW4NCj4+IDI1IGFu
+ZCBOTDgwMjExX0FUVFJfRlJBTUUgKDIzMDQpLiAgV2Ugc3VidHJhY3QgRE9UMTFfTUdNVF9IRFJf
+TEVOICgyNCkNCj4+IGZyb20NCj4+ICJsZW4iIHNvIHRoYXRzJ3MgbWF4IG9mIDIyODAuICBIb3dl
+dmVyLCB0aGUgYWN0aW9uX2ZyYW1lLT5kYXRhW10NCj4+IGJ1ZmZlciBpcw0KPj4gb25seSBCUkNN
+Rl9GSUxfQUNUSU9OX0ZSQU1FX1NJWkUgKDE4MDApIGJ5dGVzIGxvbmcgc28gdGhpcyBtZW1jcHko
+KQ0KPj4gY2FuDQo+PiBvdmVyZmxvdy4NCj4+DQo+PiAJbWVtY3B5KGFjdGlvbl9mcmFtZS0+ZGF0
+YSwgJmJ1ZltET1QxMV9NR01UX0hEUl9MRU5dLA0KPj4gCSAgICAgICBsZTE2X3RvX2NwdShhY3Rp
+b25fZnJhbWUtPmxlbikpOw0KPj4NCj4+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnICMgMy45
+LngNCj4+IEZpeGVzOiAxOGUyZjYxZGIzYjcwICgiYnJjbWZtYWM6IFAyUCBhY3Rpb24gZnJhbWUg
+dHguIikNCj4+IFJlcG9ydGVkLWJ5OiAiZnJlZW5lcmd1byjpg63lpKflhbQpIiA8ZnJlZW5lcmd1
+b0B0ZW5jZW50LmNvbT4NCj4+IFNpZ25lZC1vZmYtYnk6IEFyZW5kIHZhbiBTcHJpZWwgPGFyZW5k
+LnZhbnNwcmllbEBicm9hZGNvbS5jb20+DQo+PiAtLS0NCj4+ICAgVjI6DQo+PiAgICAtIGFkZGVk
+IEZpeGVzOiB0YWcgYW5kIENjOiBmb3Igc3RhYmxlIGtlcm5lbHMuDQo+PiAgICAtIENjOiBwYXRj
+aCB0byBuZXRkZXYgbGlzdC4NCj4+IC0tLQ0KPj4gSGkgRGF2aWQsDQo+Pg0KPj4gSGVyZSBpcyB0
+aGUgcGF0Y2ggYXMgTGludXMgc2VuZCBpdCB0byB1cyBhbmQgc2VjdXJpdHlAa2VybmVsLm9yZy4g
+SQ0KPj4gcmVtb3ZlZCB0aGUgbG93ZXIgYm91bmQgY2hlY2sgYXMgdGhhdCBpcyBhbHJlYWR5IGRv
+bmUgaW4gY2ZnODAyMTEuDQo+PiBOb3cgSSBzaWduZWQgb2ZmIG9uIHRoZSBwYXRjaCBhbHRob3Vn
+aCBmb3JtYWxseSBJIHN1cHBvc2UgTGludXMgc2hvdWxkDQo+PiBzaWduIGl0IG9mZi4gUHV0dGlu
+ZyBpdCBvdXQgdGhlcmUgc28gcGVvcGxlIGNhbiByZXNwb25kIGFzIGRlZW1lZA0KPj4gbmVjZXNz
+YXJ5Lg0KPj4NCj4+IFRoZSByZWFzb24gZm9yIHN1Ym1pdHRpbmcgaXQgdG8geW91ciB0cmVlIGlz
+IHRoZSBmYWN0IHRoYXQgS2FsbGUgaXMNCj4+IG9uIHZhY2F0aW9uIGZvciBuZXh0IDEwIGRheXMg
+b3Igc28gd2hpY2ggd2FzIGluZGljYXRlZCB0byBtZSBieQ0KPj4gSm9oYW5uZXMuDQo+PiBUaGUg
+cGF0Y2ggYXBwbGllcyB0byB0aGUgbWFzdGVyIGJyYW5jaCBvZiB5b3VyIG5ldCByZXBvc2l0b3J5
+LiBGb3INCj4+IHJlZmVyZW5jZSBWMSBvZiB0aGlzIHBhdGNoIGNhbiBiZSBmb3VuZCBoZXJlIFsx
+XS4NCj4gDQo+IEhpIERhdmUsDQo+IA0KPiBOb3Qgc3VyZSBpZiB5b3UgbWlzc2VkIHRoaXMgb25l
+LiBJdCBpcyBhZGRyZXNzaW5nIGEgcmVwb3J0ZWQgc2VjdXJpdHkNCj4gaXNzdWUgYW5kIGludGVu
+ZGVkIGZvciB0aGUgbmV0IHJlcG9zaXRvcnksIG5vdCBuZXQtbmV4dCB3aGljaCBpcw0KPiBvYnZp
+b3VzbHkgY2xvc2VkIFsyXS4NCg0KVGhhbmtzIGZvciBwb2ludGluZyB0aGlzIG91dCB0byBtZSwg
+SSdsbCB0YWtlIGNhcmUgb2YgaXQuDQoNCg==
