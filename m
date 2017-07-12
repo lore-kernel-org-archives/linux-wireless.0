@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:36180 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751637AbdGELxN (ORCPT
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34273 "EHLO
+        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751215AbdGLKAA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 07:53:13 -0400
-Date: Wed, 5 Jul 2017 20:52:58 +0900
-From: Carsten Haitzler (The Rasterman) <raster@rasterman.com>
-To: linux-wireless@vger.kernel.org
-Subject: ath10k QCA6174 not working -> missing data in board2.bin?
-Message-Id: <20170705205258.a5ca8ca700de06c5e3c33677@rasterman.com> (sfid-20170705_135317_540289_00A33797)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Wed, 12 Jul 2017 06:00:00 -0400
+Received: by mail-vk0-f66.google.com with SMTP id f68so785749vkg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 03:00:00 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <069e03ba-9d83-cde9-5ff1-49f847ccb887@broadcom.com>
+References: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CA+icZUXVEBQzau4d36iO1vvhioX_WM8AH-iw=Tv+vUcVBtUeWw@mail.gmail.com> <069e03ba-9d83-cde9-5ff1-49f847ccb887@broadcom.com>
+From: Sedat Dilek <sedat.dilek@gmail.com>
+Date: Wed, 12 Jul 2017 11:59:59 +0200
+Message-ID: <CA+icZUVcG7+fk-BK8o3UU87Y-rqT7_nC4TMdzAVwawHb84cv-g@mail.gmail.com> (sfid-20170712_120005_852547_DC17EA54)
+Subject: Re: [PATCH] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've scored myself a new laptop. With that come new problems.
+On Fri, Jul 7, 2017 at 9:39 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 07-07-17 14:47, Sedat Dilek wrote:
+>> On Fri, Jul 7, 2017 at 2:01 PM, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> The lower level nl80211 code in cfg80211 ensures that "len" is between
+>>> 25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) =
+from
+>>> "len" so thats's max of 2280.  However, the action_frame->data[] buffer=
+ is
+>>> only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
+>>> overflow.
+>>>
+>>>         memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
+>>>                le16_to_cpu(action_frame->len));
+>>>
+>>> Reported-by: "freenerguo(=E9=83=AD=E5=A4=A7=E5=85=B4)" <freenerguo@tenc=
+ent.com>
+>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>> ---
+>>> Hi Kalle,
+>>>
+>>> Here is the patch as Linus send it to us and security@kernel.org. I
+>>> removed the lower bound check as that is already done in cfg80211.
+>>> Now I signed off on the patch although formally I suppose Linus should
+>>> sign it off. Putting it out there so people can respond as deemed
+>>> necessary.
+>>>
+>>> Now fingers crossed whether patchwork will properly deal with the UTF-8
+>>> characters :-p
+>>>
+>>
+>> Somehow horrific to see - less in usage (no CC here).
+>
+> Sorry, Sedat
+>
+> What is horrific? It is a bit cryptic (for me) what you would like me to
+> do now if anything.
+>
 
-I updated to 4.12.0 to make sure i'm on the latest.
+You did a CC <security@kernel.org>, thanks.
+Looking at the sources, docs and (commit) logs, this email-address
+seems "unknown" and less in usage.
 
-lspci says:
+- Sedat -
 
-01:00.0 Network controller: Qualcomm Atheros QCA6174 802.11ac Wireless Network Adapter (rev 32)
-
-So relevant bits from dmesg:
-
-[  124.268483] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
-[  124.524661] ath10k_pci 0000:01:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 144d:c14f
-[  124.524668] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1 tracing 0 dfs 0 testmode 0
-[  124.526309] ath10k_pci 0000:01:00.0: firmware ver WLAN.RM.4.4.1-00008-QCARMSWP-1 api 6 features wowlan,ignore-otp crc32 bdced4e9
-[  124.590884] ath10k_pci 0000:01:00.0: failed to fetch board data for bus=pci,vendor=168c,device=003e,subsystem-vendor=144d,subsystem-device=c14f,variant=K from ath10k/QCA6174/hw3.0/board-2.bin
-[  124.590901] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A crc32 ed5f849a
-[  125.164076] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
-[  125.167113] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
-
-I've tried firmware-6 from:
-
-  https://github.com/kvalo/ath10k-firmware/tree/master/QCA6174/hw3.0
-
-Specifically firmware-6.bin_WLAN.RM.4.4.1-00008-QCARMSWP-1. firmware-4.bin also is a no go.
-
-How can I help make this work? I have all the windows .bin's but none of them
-match the same header that the Linux fw bin files have (but a chunk of the
-binary seems familiar having a quick binary dump of it). There is some
-mysterious way of generating the Linux firmware files I can't google for.
-
-I also have some help from the OEM - the engineers who made the laptop (not
-the chip wifi maker though). I have already verified which GPIO lines control
-RFkill on this device (and they are clear and unkilled by default - both lines
-up at 1 and it's confirmed that this means RF is unblocked from the engineers.
-It took me a while to figure out their GPIO mapping table/naming onto kernel
-GPIO numbering). So the Wifi (an BT actually) should be powered on. It's a
-combo chip.
-
-So how can I help. What data do I need to scrounge to provide. How are firmware
-files built to work for Linux (based off the windows ones) for ath10k?
-
--- 
-------------- Codito, ergo sum - "I code, therefore I am" --------------
-The Rasterman (Carsten Haitzler)    raster@rasterman.com
+> Regards,
+> Arend
+>
+>> - Sedat -
+>>
+>> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/l=
+og/?qt=3Dgrep&q=3Dsecurity%40kernel.org
+>>
