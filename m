@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34295 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752057AbdGFOmP (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:35240 "EHLO
+        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752719AbdGLO5p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:42:15 -0400
-Received: by mail-pg0-f68.google.com with SMTP id j186so499680pge.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:42:15 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v3 08/21] rsi: correct the logic of deriving queue number
-Date: Thu,  6 Jul 2017 20:07:11 +0530
-Message-Id: <1499351844-2046-9-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164218_771126_E30273C6)
-In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+        Wed, 12 Jul 2017 10:57:45 -0400
+Received: by mail-lf0-f46.google.com with SMTP id b207so19400375lfg.2
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 07:57:45 -0700 (PDT)
+Subject: Re: [PATCH for-4.13] brcmfmac: fix regression in
+ brcmf_sdio_txpkt_hdalign()
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+References: <1499851968-18768-1-git-send-email-arend.vanspriel@broadcom.com>
+ <20170712142901.evso24vh3jfj6umk@localhost>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <819501de-724e-889f-1b45-b3e4addd0d1a@broadcom.com> (sfid-20170712_165750_115887_A59A43A9)
+Date: Wed, 12 Jul 2017 16:57:42 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170712142901.evso24vh3jfj6umk@localhost>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+On 12-07-17 16:29, Bob Copeland wrote:
+> On Wed, Jul 12, 2017 at 10:32:48AM +0100, Arend van Spriel wrote:
+>> Recent change in brcmf_sdio_txpkt_hdalign() changed the
+>> behavior and now always returns 0. This resulted in a
+>> regression which basically renders the device useless.
+> 
+> Should this go via netdev as well, or just wait for Kalle (returning
+> on Sunday)?
 
-Maximum valid queue number is 0x5. So anding with 0x7 should be
-ok here.
+Hi Bob,
 
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This regression got introduced recently so the issue will pop-up in
+v4.13-rc1 hence I figured we can wait for Kalle with this one.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 25f6195..dc0a0b2 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -381,7 +381,7 @@ static int rsi_usb_host_intf_write_pkt(struct rsi_hw *adapter,
- 				       u8 *pkt,
- 				       u32 len)
- {
--	u32 queueno = ((pkt[1] >> 4) & 0xf);
-+	u32 queueno = ((pkt[1] >> 4) & 0x7);
- 	u8 endpoint;
- 
- 	endpoint = ((queueno == RSI_WIFI_MGMT_Q) ? MGMT_EP : DATA_EP);
--- 
-2.7.4
+Regards,
+Arend
