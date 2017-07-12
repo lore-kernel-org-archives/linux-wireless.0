@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34179 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751446AbdGaNHe (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:20489 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933180AbdGLHxQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 09:07:34 -0400
-Received: by mail-pf0-f195.google.com with SMTP id t86so4168372pfe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 06:07:34 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 1/2] mwifiex: make addba request command clean
-Date: Mon, 31 Jul 2017 13:07:26 +0000
-Message-Id: <1501506447-31851-1-git-send-email-huxinming820@gmail.com> (sfid-20170731_150737_728482_DE2520CE)
+        Wed, 12 Jul 2017 03:53:16 -0400
+Date: Wed, 12 Jul 2017 10:53:00 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Sharon Dvir <sharon.dvir@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] iwlwifi: pcie: Fix error code in iwl_trans_pcie_alloc()
+Message-ID: <20170712075300.sbd2vlwqf4rriale@mwanda> (sfid-20170712_095320_702407_211A1D38)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+We accidentally forgot to propogate the error code on this path.  It
+means we return ERR_PTR(0) which is NULL and it results in a NULL
+dereference in the caller.
 
-uninitilized variable, such as .add_req_result might be magic stack
-value. Initialize the structure to make it clean.
+Fixes: 2e5d4a8f61dc ("iwlwifi: pcie: Add new configuration to enable MSIX")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/11n.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
-index 16c77c2..7252069 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n.c
-@@ -572,6 +572,8 @@ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 92b3a55d0fbc..f95eec52508e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3150,7 +3150,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	init_waitqueue_head(&trans_pcie->d0i3_waitq);
  
- 	mwifiex_dbg(priv->adapter, CMD, "cmd: %s: tid %d\n", __func__, tid);
- 
-+	memset(&add_ba_req, 0, sizeof(add_ba_req));
-+
- 	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
- 	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
- 	    priv->adapter->is_hw_11ac_capable &&
--- 
-1.9.1
+ 	if (trans_pcie->msix_enabled) {
+-		if (iwl_pcie_init_msix_handler(pdev, trans_pcie))
++		ret = iwl_pcie_init_msix_handler(pdev, trans_pcie);
++		if (ret)
+ 			goto out_no_pci;
+ 	 } else {
+ 		ret = iwl_pcie_alloc_ict(trans);
