@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49462 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751466AbdGZUqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:46:37 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 22/34] brcmfmac: Rename axi functions for clarity.
-Date: Wed, 26 Jul 2017 21:25:45 +0100
-Message-Id: <20170726202557.15632-23-ian@mnementh.co.uk> (sfid-20170726_224641_963206_F280F299)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:57003 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753418AbdGNKHK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Jul 2017 06:07:10 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        luciano.coelho@intel.com, linuxwifi@intel.com,
+        kvalo@codeaurora.org, sara.sharon@intel.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH v2] iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
+Date: Fri, 14 Jul 2017 12:06:59 +0200
+Message-Id: <20170714100659.26369-1-christophe.jaillet@wanadoo.fr> (sfid-20170714_120737_694906_F68DEA15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions are poorly named. for the sake of one character,
-correct this.
+We should free 'wgds.pointer' here as done a few lines above in another
+error handling path.
+It was allocated within 'acpi_evaluate_object()'.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+v2: rebase after 7fe90e0e3d60 ("iwlwifi: mvm: refactor geo init")
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 3fe75aa30d9b..ec47924b0f76 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -239,7 +239,7 @@ static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
- 	return SSB_TMSLOW_CLOCK == regdata;
- }
+
+Moreovern a comment in '/drivers/acpi/acpica/utalloc.c' states that:
+/* [...] Note: The caller should use acpi_os_free to free this
+ * buffer created via ACPI_ALLOCATE_BUFFER.
+ */
+
+So, at the end of this function:
+	out_free:
+		kfree(wgds.pointer);
+should maybe be:
+	out_free:
+		acpi_os_free(wgds.pointer);
+
+If correct, several places should be fixed accordingly.
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 79e7a7a285dc..82863e9273eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1275,8 +1275,10 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
  
--static bool brcmf_chip_ai_iscoreup(struct brcmf_core *core)
-+static bool brcmf_chip_axi_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
- 	u32 regdata;
-@@ -340,7 +340,7 @@ static void brcmf_chip_sb_coredisable(struct brcmf_core *core,
- 	udelay(1);
- }
+ 			entry = &wifi_pkg->package.elements[idx++];
+ 			if ((entry->type != ACPI_TYPE_INTEGER) ||
+-			    (entry->integer.value > U8_MAX))
+-				return -EINVAL;
++			    (entry->integer.value > U8_MAX)) {
++				ret = -EINVAL;
++				goto out_free;
++			}
  
--static void brcmf_chip_ai_coredisable(struct brcmf_core *core,
-+static void brcmf_chip_axi_coredisable(struct brcmf_core *core,
- 				      u32 prereset, u32 reset)
- {
- 	struct brcmf_chip *ci = core->chip;
-@@ -432,14 +432,14 @@ static void brcmf_chip_sb_resetcore(struct brcmf_core *core, u32 prereset,
- 	udelay(1);
- }
- 
--static void brcmf_chip_ai_resetcore(struct brcmf_core *core, u32 prereset,
-+static void brcmf_chip_axi_resetcore(struct brcmf_core *core, u32 prereset,
- 				    u32 reset, u32 postreset)
- {
- 	struct brcmf_chip *ci = core->chip;
- 	int count;
- 
- 	/* must disable first to work for arbitrary current core state */
--	brcmf_chip_ai_coredisable(core, prereset, reset);
-+	brcmf_chip_axi_coredisable(core, prereset, reset);
- 
- 	count = 0;
- 
-@@ -1004,9 +1004,9 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
- 		if (brcmf_chip_dmp_erom_scan(ci))
- 			return -ENODEV;
- 
--		ci->iscoreup = brcmf_chip_ai_iscoreup;
--		ci->coredisable = brcmf_chip_ai_coredisable;
--		ci->resetcore = brcmf_chip_ai_resetcore;
-+		ci->iscoreup = brcmf_chip_axi_iscoreup;
-+		ci->coredisable = brcmf_chip_axi_coredisable;
-+		ci->resetcore = brcmf_chip_axi_resetcore;
- 
- 		break;
- 	default:
+ 			mvm->geo_profiles[i].values[j] = entry->integer.value;
+ 		}
 -- 
 2.11.0
