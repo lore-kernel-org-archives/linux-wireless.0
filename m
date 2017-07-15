@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40324 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750965AbdG0LUv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 07:20:51 -0400
-From: Stefano Brivio <sbrivio@redhat.com>
-To: netdev@vger.kernel.org
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>, Jouni Malinen <j@w1.fi>,
+Received: from paleale.coelho.fi ([176.9.41.70]:38682 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751182AbdGOU67 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 15 Jul 2017 16:58:59 -0400
+Message-ID: <1500152336.22048.188.camel@coelho.fi> (sfid-20170715_225903_311795_94723C0A)
+From: Luca Coelho <luca@coelho.fi>
+To: David Goodenough <dfgoodenough@googlemail.com>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH net] intersil/hostap: Fix outdated comment about dev->destructor
-Date: Thu, 27 Jul 2017 13:20:15 +0200
-Message-Id: <0824ed85fd45846da65fc919ae22df9d7ebf2f97.1501150507.git.sbrivio@redhat.com> (sfid-20170727_132057_860262_E57BF7D1)
+Date: Sat, 15 Jul 2017 23:58:56 +0300
+In-Reply-To: <34104523.kB8OiK1t1Y@stargate>
+References: <34104523.kB8OiK1t1Y@stargate>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Intel 8265/8275 microcode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After commit cf124db566e6 ("net: Fix inconsistent teardown and
-release of private netdev state."), setting
-'dev->needs_free_netdev' ensures device data is released, and
-'dev->destructor' is not used anymore.
+On Sat, 2017-07-15 at 10:03 +0100, David Goodenough wrote:
+> I have a laptop which reports the wifi adapter to be an 8265/8275 rev 78 
+> and the driver complains that it can not find:-
+> 
+> iwlwifi-8265-23.ucode
+> iwlwifi-8265-24.ucode
+> iwlwifi-8265-25.ucode
+> iwlwifi-8265-26.ucode
+> iwlwifi-8265-27.ucode
+> iwlwifi-8265-28.ucode
+> 
+> and they not appear to be in the kernel.org github.  Where do I find
+> them and could they be added to github?
 
-Fixes: cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
-Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
----
-Despite checkpatch.pl warning against unnecessary changes, this
-outdated comment might lead to confusion -- making this change
-actually necessary, perhaps.
+Does your wifi card work? The driver tries to find one of the supported
+versions, starting from highest and going down to the lowest.  It seems
+that you have -22.ucode and, if that's the case, everything should be
+fine and you can ignore these messages.
 
- drivers/net/wireless/intersil/hostap/hostap_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+It is an old known problem that there is no way to try to load a
+firmware without getting an error message.  People are working on
+solving this, but until then, just ignore this messages and everything
+should be fine. :)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_main.c b/drivers/net/wireless/intersil/hostap/hostap_main.c
-index a3c066f90afc..012930d35434 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_main.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_main.c
-@@ -125,8 +125,8 @@ void hostap_remove_interface(struct net_device *dev, int rtnl_locked,
- 	else
- 		unregister_netdev(dev);
- 
--	/* dev->destructor = free_netdev() will free the device data, including
--	 * private data, when removing the device */
-+	/* 'dev->needs_free_netdev = true' implies device data, including
-+	 * private data, will be freed when the device is removed */
- }
- 
- 
--- 
-2.9.4
+--
+Cheers,
+Luca.
