@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57260 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752236AbdG1PEC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 11:04:02 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mga05.intel.com ([192.55.52.43]:64327 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751223AbdGPPRR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Jul 2017 11:17:17 -0400
+Date: Sun, 16 Jul 2017 23:16:53 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Ian Molton <ian@mnementh.co.uk>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: Re: [PATCH 17/21] brcmfmac: HUGE cleanup of IO access functions.
+Message-ID: <201707162358.x6v6RcNt%fengguang.wu@intel.com> (sfid-20170716_171721_740547_3B067E75)
 MIME-Version: 1.0
-Subject: Re: [11/11] brcmfmac: constify pci_device_id
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: arend.vanspriel@broadcom.com, hante.meuleman@broadcom.com,
-        franky.lin@broadcom.com, wright.feng@cypress.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Message-Id: <20170728150401.C25B360A18@smtp.codeaurora.org> (sfid-20170728_170416_601756_2C4A4BE7)
-Date: Fri, 28 Jul 2017 15:04:01 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170716112129.10206-18-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+Hi Ian,
 
-> pci_device_id are not supposed to change at runtime. All functions
-> working with pci_device_id provided by <linux/pci.h> work with
-> const pci_device_id. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+[auto build test WARNING on wireless-drivers/master]
+[also build test WARNING on v4.13-rc1 next-20170714]
+[cannot apply to wireless-drivers-next/master]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Patch applied to wireless-drivers-next.git, thanks.
+url:    https://github.com/0day-ci/linux/commits/Ian-Molton/net-brcmfmac-Write-function-depends-on-size-of-regs-not-types/20170716-195206
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git master
 
-e66d70b789d1 brcmfmac: constify pci_device_id
 
--- 
-https://patchwork.kernel.org/patch/9845919/
+coccinelle warnings: (new ones prefixed by >>)
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:283:9-10: WARNING: return of 0/1 in function 'brcmf_chip_axi_iscoreup' with return type bool
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
