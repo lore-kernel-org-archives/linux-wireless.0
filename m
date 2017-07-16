@@ -1,90 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:37366 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750813AbdGZH7E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 03:59:04 -0400
-Received: by mail-qk0-f176.google.com with SMTP id z18so805334qka.4
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2017 00:59:03 -0700 (PDT)
-Message-ID: <59784BC5.2070109@broadcom.com> (sfid-20170726_095907_809614_F2458F74)
-Date: Wed, 26 Jul 2017 09:59:01 +0200
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-MIME-Version: 1.0
-To: Stefan Wahren <stefan.wahren@i2se.com>
-CC: franky.lin@broadcom.com, pieter-paul.giesberts@broadcom.com,
-        kvalo@codeaurora.org, hante.meuleman@broadcom.com,
-        brcm80211-dev-list.pdl@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: brcmfmac: Possible memleak brcmf_sdiod_sgtable_alloc
-References: <1442361688.41682.1500729531173@email.1und1.de> <325e5f1a-2752-6004-a460-a59e8e2c702d@broadcom.com> <1455616686.54674.1500769455061@email.1und1.de> <1781803691.135971.1501049549490@email.1und1.de>
-In-Reply-To: <1781803691.135971.1501049549490@email.1und1.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from [217.148.43.144] ([217.148.43.144]:48952 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751245AbdGPLqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Jul 2017 07:46:37 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 18/21] brcmfmac: rename ctx -> bus_priv
+Date: Sun, 16 Jul 2017 12:21:26 +0100
+Message-Id: <20170716112129.10206-19-ian@mnementh.co.uk> (sfid-20170716_140043_366010_E92975CE)
+In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/26/2017 8:12 AM, Stefan Wahren wrote:
-> Hi Arend,
->
->> Stefan Wahren <stefan.wahren@i2se.com> hat am 23. Juli 2017 um 02:24 geschrieben:
->>
->>
->>
->>> Arend van Spriel <arend.vanspriel@broadcom.com> hat am 22. Juli 2017 um 21:40 geschrieben:
->>>
->>>
->>> On 22-07-17 15:18, Stefan Wahren wrote:
->>>> Hi,
->>>>
->>>> with enabled memleak detector on 4.13-rc1 (Raspberry Pi Zero W) i get the following:
->>>>
->>>> root@raspberrypi:/sys/kernel/debug# cat kmemleak
->>>> unreferenced object 0xd824e400 (size 1024):
->>>>    comm "kworker/0:0", pid 3, jiffies 4294939822 (age 873.420s)
->>>>    hex dump (first 32 bytes):
->>>>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>>>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>>>    backtrace:
->>>>      [<c07f741c>] kmemleak_alloc+0x60/0xc8
->>>>      [<c024cb44>] __kmalloc+0x184/0x2f4
->>>>      [<c03dc1c8>] sg_kmalloc+0x48/0x4c
->>>>      [<c03dc0dc>] __sg_alloc_table+0x78/0x11c
->>>>      [<c03dc5d0>] sg_alloc_table+0x2c/0x5c
->>>>      [<bf07d7e8>] brcmf_sdiod_sgtable_alloc+0xc0/0x110 [brcmfmac]
->>>>      [<bf07b814>] brcmf_sdio_probe+0x24c/0x970 [brcmfmac]
->>>>      [<bf07c6fc>] brcmf_ops_sdio_probe+0x17c/0x244 [brcmfmac]
->>>>      [<c057d5b4>] sdio_bus_probe+0xb4/0x124
->>>>      [<c04add08>] driver_probe_device+0x1d8/0x438
->>>>      [<c04ae00c>] __driver_attach+0xa4/0x108
->>>>      [<c04abe20>] bus_for_each_dev+0x84/0x98
->>>>      [<c04ad644>] driver_attach+0x28/0x30
->>>>      [<c04ad084>] bus_add_driver+0xe4/0x24c
->>>>      [<c04ae834>] driver_register+0xac/0xf0
->>>>      [<c057d7dc>] sdio_register_driver+0x2c/0x34
->>>
->>> Hi Stefan,
->>>
->>> Thanks for the report. Checking elixir it shows two call sites to
->>> brcmf_sdiod_sgtable_alloc() [1]. This is rather unexpected. We did move
->>> the call so this might be a merge issue.
->>>
->>> 4d7928959 sdio.c (Hante Meuleman   2016-02-17 11:27:07 +0100:
->>> 3867)     brcmf_sdiod_sgtable_alloc(sdiodev);
->>>
->>> e0045bf80 sdio.c (Hante Meuleman   2016-01-19 12:39:24 +0100:
->>> 4180)     brcmf_sdiod_sgtable_alloc(bus->sdiodev);
->>>
->>> The most recent change is:
->>>
->>> commit 4d7928959832 ("brcmfmac: switch to new platform data") found in
->>> patchwork [2], which shows the added call, but no removal so the merge
->>> issue is probably internal with us (me :-( ).
->>>
->>> Again thanks for the report. Below change should fix the issue.
->>
->> Yes, this fixed the leak. Thanks for you fast reply.
->
-> do you plan to send a proper patch for this?
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 24 +++++++++++-----------
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.h    | 16 +++++++--------
+ 2 files changed, 20 insertions(+), 20 deletions(-)
 
-Sure. Catching up after my vacation.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index bab1bb3e99ae..ae21f16b31de 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -225,18 +225,18 @@ struct sbsocramregs {
+ 
+ static inline int brcmf_readl(struct brcmf_chip *chip, u32 addr)
+ {
+-	return chip->ops->read32(chip->ctx, addr);
++	return chip->ops->read32(chip->bus_priv, addr);
+ }
+ 
+ static inline void brcmf_writel(struct brcmf_chip *chip, u32 addr, u32 v)
+ {
+-	chip->ops->write32(chip->ctx, addr, v);
++	chip->ops->write32(chip->bus_priv, addr, v);
+ }
+ 
+ static inline void brcmf_writelp(struct brcmf_chip *chip, u32 addr, u32 v)
+ {
+-	chip->ops->write32(chip->ctx, addr, v);
+-	chip->ops->read32(chip->ctx, addr);
++	chip->ops->write32(chip->bus_priv, addr, v);
++	chip->ops->read32(chip->bus_priv, addr);
+ }
+ 
+ static void brcmf_clear_bits(struct brcmf_chip *ci, u32 reg, u32 bits)
+@@ -1025,7 +1025,7 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
+ 	 * specific reset at this point.
+ 	 */
+ 	if (ci->ops->reset) {
+-		ci->ops->reset(ci->ctx, ci);
++		ci->ops->reset(ci->bus_priv, ci);
+ 		brcmf_chip_set_passive(ci);
+ 	}
+ 
+@@ -1097,12 +1097,12 @@ static int brcmf_chip_setup(struct brcmf_chip *chip)
+ 
+ 	/* execute bus core specific setup */
+ 	if (chip->ops->setup)
+-		ret = chip->ops->setup(chip->ctx, chip);
++		ret = chip->ops->setup(chip->bus_priv, chip);
+ 
+ 	return ret;
+ }
+ 
+-struct brcmf_chip *brcmf_chip_attach(void *ctx,
++struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
+ 				     const struct brcmf_buscore_ops *ops)
+ {
+ 	struct brcmf_chip *chip;
+@@ -1126,9 +1126,9 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 	INIT_LIST_HEAD(&chip->cores);
+ 	chip->num_cores = 0;
+ 	chip->ops = ops;
+-	chip->ctx = ctx;
++	chip->bus_priv = bus_priv;
+ 
+-	err = ops->prepare(ctx);
++	err = ops->prepare(bus_priv);
+ 	if (err < 0)
+ 		goto fail;
+ 
+@@ -1249,7 +1249,7 @@ static bool brcmf_chip_cm3_set_active(struct brcmf_chip *chip)
+ 		return false;
+ 	}
+ 
+-	chip->ops->activate(chip->ctx, chip, 0);
++	chip->ops->activate(chip->bus_priv, chip, 0);
+ 
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CM3);
+ 	brcmf_chip_resetcore(core, 0, 0, 0);
+@@ -1275,7 +1275,7 @@ static bool brcmf_chip_cr4_set_active(struct brcmf_chip *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->activate(chip->ctx, chip, rstvec);
++	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CR4);
+@@ -1302,7 +1302,7 @@ static bool brcmf_chip_ca7_set_active(struct brcmf_chip *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->activate(chip->ctx, chip, rstvec);
++	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CA7);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+index 0babb328d155..8698abfb806e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+@@ -50,7 +50,7 @@ struct brcmf_chip {
+ 	void (*resetcore)(struct brcmf_core *core, u32 prereset, u32 reset,
+ 				u32 postreset);
+ 
+-	void *ctx;
++	void *bus_priv;
+ 
+ 	u32 chip;
+ 	u32 chiprev;
+@@ -94,15 +94,15 @@ struct brcmf_core {
+  *	The callback should use the provided @rstvec when non-zero.
+  */
+ struct brcmf_buscore_ops {
+-	u32 (*read32)(void *ctx, u32 addr);
+-	void (*write32)(void *ctx, u32 addr, u32 value);
+-	int (*prepare)(void *ctx);
+-	int (*reset)(void *ctx, struct brcmf_chip *chip);
+-	int (*setup)(void *ctx, struct brcmf_chip *chip);
+-	void (*activate)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
++	u32 (*read32)(void *bus_priv, u32 addr);
++	void (*write32)(void *bus_priv, u32 addr, u32 value);
++	int (*prepare)(void *bus_priv);
++	int (*reset)(void *bus_priv, struct brcmf_chip *chip);
++	int (*setup)(void *bus_priv, struct brcmf_chip *chip);
++	void (*activate)(void *bus_priv, struct brcmf_chip *chip, u32 rstvec);
+ };
+ 
+-struct brcmf_chip *brcmf_chip_attach(void *ctx,
++struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
+ 				     const struct brcmf_buscore_ops *ops);
+ void brcmf_chip_detach(struct brcmf_chip *chip);
+ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 coreid);
+-- 
+2.11.0
