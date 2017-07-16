@@ -1,96 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:33498 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934145AbdGTLGA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jul 2017 07:06:00 -0400
-Received: by mail-pg0-f65.google.com with SMTP id z1so2507657pgs.0
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 04:06:00 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v2] mwifiex: add tdls uapsd support module parameter
-Date: Thu, 20 Jul 2017 11:05:53 +0000
-Message-Id: <1500548753-26752-1-git-send-email-huxinming820@gmail.com> (sfid-20170720_130634_353410_BDBE7DF0)
+Received: from [217.148.43.144] ([217.148.43.144]:46976 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751087AbdGPLoT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Jul 2017 07:44:19 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 20/21] brcmfmac: general cleanup
+Date: Sun, 16 Jul 2017 12:21:28 +0100
+Message-Id: <20170716112129.10206-21-ian@mnementh.co.uk> (sfid-20170716_134422_620760_A06921D8)
+In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
-
-An issue about tdls uapsd was fixed in latest firmware, this
-patch add module parameter to control tdls uapsd support,
-which is default disabled, could be a workaround to the
-old firmware. At the same time, it is optional to enable
-this feature in specific case.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
-v2: add more comments for disable tdls_uapsd. (Brian)
----
- drivers/net/wireless/marvell/mwifiex/init.c    | 5 +++++
- drivers/net/wireless/marvell/mwifiex/main.h    | 1 +
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 8 +++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 24 ++++++++++++++--------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 3ecb59f..2cc8e54 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -25,6 +25,10 @@
- #include "wmm.h"
- #include "11n.h"
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 95d325921ce2..45b8000680c0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -639,11 +639,13 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
  
-+static bool tdls_uapsd;
-+module_param(tdls_uapsd, bool, 0000);
-+MODULE_PARM_DESC(tdls_uapsd, "tdls uapsd support enable:1, disable:0");
+ static void pkt_align(struct sk_buff *p, int len, int align)
+ {
+-	uint datalign;
+-	datalign = (unsigned long)(p->data);
++	uint datalign = (unsigned long)(p->data);
 +
- /*
-  * This function adds a BSS priority table to the table list.
-  *
-@@ -154,6 +158,7 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
- 	priv->del_list_idx = 0;
- 	priv->hs2_enabled = false;
- 	priv->check_tdls_tx = false;
-+	priv->tdls_uapsd_support = tdls_uapsd;
- 	memcpy(priv->tos_to_tid_inv, tos_to_tid_inv, MAX_NUM_TID);
+ 	datalign = roundup(datalign, (align)) - datalign;
++
+ 	if (datalign)
+ 		skb_pull(p, datalign);
++
+ 	__skb_trim(p, len);
+ }
  
- 	mwifiex_init_11h_params(priv);
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index f8cf307..ef5eac72 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -660,6 +660,7 @@ struct mwifiex_private {
- 	u8 check_tdls_tx;
- 	struct timer_list auto_tdls_timer;
- 	bool auto_tdls_timer_active;
-+	u8 tdls_uapsd_support;
- 	struct idr ack_status_frames;
- 	/* spin lock for ack status */
- 	spinlock_t ack_status_lock;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 534d94a..d5da565 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1789,9 +1789,11 @@ static int mwifiex_cmd_chan_region_cfg(struct mwifiex_private *priv,
- 		put_unaligned_le16(params->capability, pos);
- 		config_len += sizeof(params->capability);
+@@ -2463,10 +2465,9 @@ static void brcmf_sdio_bus_stop(struct device *dev)
  
--		qos_info = params->uapsd_queues | (params->max_sp << 5);
--		wmm_qos_info = (struct mwifiex_ie_types_qos_info *)(pos +
--								    config_len);
-+		if (priv->tdls_uapsd_support)
-+			qos_info = params->uapsd_queues | (params->max_sp << 5);
-+		else
-+			qos_info = 0;
-+		wmm_qos_info = (void *)(pos + config_len);
- 		wmm_qos_info->header.type = cpu_to_le16(WLAN_EID_QOS_CAPA);
- 		wmm_qos_info->header.len = cpu_to_le16(sizeof(qos_info));
- 		wmm_qos_info->qos_info = qos_info;
+ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_sdio_dev *sdiodev;
++	struct brcmf_sdio_dev *sdiodev = bus->sdiodev;
+ 	unsigned long flags;
+ 
+-	sdiodev = bus->sdiodev;
+ 	if (sdiodev->oob_irq_requested) {
+ 		spin_lock_irqsave(&sdiodev->irq_en_lock, flags);
+ 		if (!sdiodev->irq_en && !atomic_read(&bus->ipend)) {
+@@ -3762,15 +3763,23 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+ 	u32 val, rev;
+ 
+ 	val = brcmf_sdiod_regrl(sdiodev, addr, NULL);
++
++	/* Force 4339 chips over rev2 to use the same ID */
++	/* This is borderline tolerable whilst there is only two exceptions */
++	/* But could be handled better */
+ 	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
+-	     sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
+-	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
++		sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
++		addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
++
+ 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
++
+ 		if (rev >= 2) {
+ 			val &= ~CID_ID_MASK;
+ 			val |= BRCM_CC_4339_CHIP_ID;
+ 		}
++
+ 	}
++
+ 	return val;
+ }
+ 
+@@ -3801,9 +3810,6 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 	sdiodev = bus->sdiodev;
+ 	sdio_claim_host(sdiodev->func[1]);
+ 
+-	pr_debug("F1 signature read @0x18000000=0x%4x\n",
+-		 brcmf_sdiod_regrl(sdiodev, SI_ENUM_BASE, NULL));
+-
+ 	/*
+ 	 * Force PLL off until brcmf_chip_attach()
+ 	 * programs PLL control regs
 -- 
-1.9.1
+2.11.0
