@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr20099.outbound.protection.outlook.com ([40.107.2.99]:41172
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751376AbdGXJ2Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 05:28:24 -0400
-Subject: Re: WARN_ON_ONCE(work > weight) in napi_poll()
-To: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Networking <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-References: <26670dce-4dd2-f8e4-0e14-90d74257e739@virtuozzo.com>
- <87wp7oia6j.fsf@kamboji.qca.qualcomm.com>
- <952aefe1-6f6a-3978-e7e7-5e74076f26a3@virtuozzo.com>
- <b418d63d-d348-90b5-ea58-6478a1a037f5@qca.qualcomm.com>
- <8cb28d9b-41c9-043c-16ca-f0bea41944e9@virtuozzo.com>
- <3ce246b3-b110-dd50-bf29-45ee78985872@quantenna.com>
- <daa2fbf9-ac75-a7eb-f2b7-054dfae6fc56@qca.qualcomm.com>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <b5e60c2f-c719-0c65-f2c4-bb280fee2eb7@virtuozzo.com> (sfid-20170724_112849_774149_BB5EEB5D)
-Date: Mon, 24 Jul 2017 12:30:44 +0300
-MIME-Version: 1.0
-In-Reply-To: <daa2fbf9-ac75-a7eb-f2b7-054dfae6fc56@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from [217.148.43.144] ([217.148.43.144]:48962 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751245AbdGPLqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Jul 2017 07:46:39 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 02/21] net: brcmfmac: Fix brain damaged fn parameter order
+Date: Sun, 16 Jul 2017 12:21:10 +0100
+Message-Id: <20170716112129.10206-3-ian@mnementh.co.uk> (sfid-20170716_140042_595966_A0B54BD0)
+In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/18/2017 09:47 AM, Ryan Hsu wrote:
-> On 07/11/2017 06:19 PM, Igor Mitsyanko wrote:
-> 
->> On 07/11/2017 10:28 AM, Andrey Ryabinin wrote:
->>>
->>> It gave me this:
->>>
->>> [118648.825347] #1 quota too big 72 64 16
->>> [118648.825351] #2 quota too big 72 64 16
->>> [118648.825471] ------------[ cut here ]------------
->>> [118648.825484] WARNING: CPU: 0 PID: 0 at ../net/core/dev.c:5274 net_rx_action+0x258/0x360
->>>
->>> So this means that we didn't met the condition bellow, i.e. skb_queue_empty() returned true.
->>>
->>>          ath10k_htt_txrx_compl_task():
->>>
->>>                  if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
->>>                      !skb_queue_empty(&htt->rx_in_ord_compl_q)) {
->>>                          resched_napi = true;
->>>                          goto exit;
->>>                  }
->>>
->>>> Also WLAN.RM.2.0-00180-QCARMSWPZ-1 firmware is a bit old, could you also update firmware to give it a try?
->>>> https://github.com/kvalo/ath10k-firmware/tree/master/QCA6174/hw3.0/4.4
->>>>
->>>
->>> Will try.
->>>
->>
->> Maybe ath10k_htt_rx_in_ord_ind() has to accept "budget_left" parameter and use it to limit number of processed MSDUs in queued AMSDU and saving rest for later (NAPI has to be rescheduled in this case).
->> It seems natural that this problem happens with current logic, in case AMSDU in Rx queue has more elements then left in budget.
-> 
-> Thanks, likely in current logic, it does have chance to exceed the budget while dequeuing from the last list.
-> 
-> Can you give it a try this one? for QCA6174 reorder is offload, so this should be good enough for your case to test, will have to check non-offload reorder case... but let me know if you're seeing something different....
-> 
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-I've been running with this patch almost a week and haven't seen the WARNING. One week is usually enough to trigger it several times.
-I guess we can assume that the patch fixed the problem.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index fd398d27a30c..dadbba2f82ed 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -232,8 +232,7 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
+ }
+ 
+-static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
+-					uint regaddr, u8 byte)
++static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
+ {
+ 	int err_ret;
+ 
+@@ -271,8 +270,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+ 			else
+-				ret = brcmf_sdiod_f0_writeb(func, addr,
+-							    *(u8 *)data);
++				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
+ 		} else {
+ 			if (fn)
+ 				*(u8 *)data = sdio_readb(func, addr, &ret);
+-- 
+2.11.0
