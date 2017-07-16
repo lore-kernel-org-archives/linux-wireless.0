@@ -1,70 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:36555 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753927AbdGUOvy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 10:51:54 -0400
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux@endlessm.com,
-        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: Demote messages about fw flags size to info
-Date: Fri, 21 Jul 2017 07:51:47 -0700
-Message-Id: <20170721145147.7572-1-jprvita@endlessm.com> (sfid-20170721_165637_051191_C7F06969)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from [217.148.43.144] ([217.148.43.144]:44658 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751087AbdGPLk7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Jul 2017 07:40:59 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 15/21] brcmfmac: Simplify chip probe routine
+Date: Sun, 16 Jul 2017 12:21:23 +0100
+Message-Id: <20170716112129.10206-16-ian@mnementh.co.uk> (sfid-20170716_134106_487244_0C04CCD3)
+In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages are not reporting a real error, just the fact that the
-firmware knows about more flags then the driver.
-
-Currently these messages are presented to the user during boot if there
-is no bootsplash covering the console, sometimes even if the boot splash
-is enabled but has not started yet by the time this message is shown.
-
-Demoting it to the info level helps having a clean boot process.
-
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+Also remove otherwise un-needed chiprev function.
+Also rename in line with typical kernel naming.
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 130 +++++++++++++--------
+ 1 file changed, 84 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 6fdb5921e17f..557acd43d705 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -487,9 +487,9 @@ static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
- 	int i;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 38794d7c1da8..b3b28e78c49d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -223,17 +223,6 @@ struct sbsocramregs {
+ #define	ARMCR4_BSZ_MASK		0x3f
+ #define	ARMCR4_BSZ_MULT		8192
  
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_API, 32)) {
--		IWL_ERR(drv,
--			"api flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_INFO(drv,
-+			 "api flags index %d larger than supported by driver\n",
-+			 api_index);
- 		/* don't return an error so we can load FW that has more bits */
- 		return 0;
- 	}
-@@ -511,9 +511,9 @@ static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
- 	int i;
+-
+-static void brcmf_chip_sb_corerev(struct brcmf_chip *ci,
+-				  struct brcmf_core *core)
+-{
+-	u32 regdata;
+-
+-	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
+-
+-	core->rev = SBCOREREV(regdata);
+-}
+-
+ static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
+ {
+ 	struct brcmf_chip *ci = core->chip;
+@@ -482,7 +471,7 @@ static char *brcmf_chip_name(uint chipid, char *buf, uint len)
+ 	return buf;
+ }
  
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_CAPA, 32)) {
--		IWL_ERR(drv,
--			"capa flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_INFO(drv,
-+			 "capa flags index %d larger than supported by driver\n",
-+			 api_index);
- 		/* don't return an error so we can load FW that has more bits */
- 		return 0;
+-static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
++static struct brcmf_core *__brcmf_chip_add_core(struct brcmf_chip *ci,
+ 					      u16 coreid, u32 base,
+ 					      u32 wrapbase)
+ {
+@@ -490,7 +479,7 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
+ 
+ 	core = kzalloc(sizeof(*core), GFP_KERNEL);
+ 	if (!core)
+-		return ERR_PTR(-ENOMEM);
++		return NULL;
+ 
+ 	core->id = coreid;
+ 	core->base = base;
+@@ -502,6 +491,41 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
+ 	return core;
+ }
+ 
++static struct brcmf_core *brcmf_chip_add_sb_core(struct brcmf_chip *ci,
++					      u16 coreid, u32 base,
++					      u32 wrapbase)
++{
++	struct brcmf_core *core;
++	u32 regdata;
++
++	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
++
++	if (!core)
++		goto out;
++
++	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
++
++	core->rev = SBCOREREV(regdata);
++
++out:
++	return core;
++}
++
++static struct brcmf_core *brcmf_chip_add_axi_core(struct brcmf_chip *ci,
++					      u16 coreid, u32 base,
++					      u32 wrapbase, u8 rev)
++{
++	struct brcmf_core *core;
++
++	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
++
++	if (core)
++		core->rev = rev;
++
++	return core;
++}
++
++
+ /* safety check for chipinfo */
+ static int brcmf_chip_cores_check(struct brcmf_chip *ci)
+ {
+@@ -900,19 +924,42 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip *ci)
+ 			continue;
+ 
+ 		/* finally a core to be added */
+-		core = brcmf_chip_add_core(ci, id, base, wrap);
+-		if (IS_ERR(core))
+-			return PTR_ERR(core);
+-
+-		core->rev = rev;
++		core = brcmf_chip_add_axi_core(ci, id, base, wrap, rev);
++		if (!core)
++			return -ENOMEM; //FIXME - and cleanup the allocated cores?
  	}
+ 
+ 	return 0;
+ }
+ 
+-static int brcmf_chip_recognition(struct brcmf_chip *ci)
++struct brcmf_chip_desc {
++	u16 id;
++	u32 base;
++};
++
++static struct brcmf_chip_desc brcmf_4329[] = {
++	{ BCMA_CORE_CHIPCOMMON,   SI_ENUM_BASE },
++	{ BCMA_CORE_SDIO_DEV,     BCM4329_CORE_BUS_BASE },
++	{ BCMA_CORE_INTERNAL_MEM, BCM4329_CORE_SOCRAM_BASE },
++	{ BCMA_CORE_ARM_CM3,      BCM4329_CORE_ARM_BASE },
++	{ BCMA_CORE_80211,        0x18001000 },
++	{ 0 , 0},
++};
++
++static int brcmf_chip_add_static(struct brcmf_chip *ci,
++				struct brcmf_chip_desc *desc)
++{
++	for ( ; desc->id ; desc++ )
++		brcmf_chip_add_sb_core(ci, desc->id, desc->base, 0);
++
++	//FIXME: cleanup if we fail to add a core?
++
++	return 0;
++}
++
++
++static int brcmf_chip_probe(struct brcmf_chip *ci)
+ {
+-	struct brcmf_core *core;
+ 	u32 regdata;
+ 	u32 socitype;
+ 	int ret;
+@@ -920,11 +967,13 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
+ 	/* Get CC core rev
+ 	 * Chipid is assume to be at offset 0 from SI_ENUM_BASE
+ 	 * For different chiptypes or old sdio hosts w/o chipcommon,
+-	 * other ways of recognition should be added here.
++	 * other ways of to probe should be added here.
+ 	 */
+ 	regdata = ci->ops->read32(ci->ctx, CORE_CC_REG(SI_ENUM_BASE, chipid));
++
+ 	ci->chip = regdata & CID_ID_MASK;
+ 	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
++
+ 	socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
+ 
+ 	brcmf_chip_name(ci->chip, ci->name, sizeof(ci->name));
+@@ -936,43 +985,32 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
+ 	switch(socitype) {
+ 		case SOCI_SB:
+ 
+-		if (ci->chip != BRCM_CC_4329_CHIP_ID) {
+-			brcmf_err("SB chip is not supported\n");
+-			return -ENODEV;
++		switch(ci->chip) {
++			case BRCM_CC_4329_CHIP_ID:
++				ret = brcmf_chip_add_static(ci, brcmf_4329);
++				break;
++			default:
++				brcmf_err("SB chip is not supported\n");
++				return -ENODEV;
+ 		}
+ 
++		if(!ret)
++			return -ENODEV;
++
+ 		ci->iscoreup = brcmf_chip_sb_iscoreup;
+ 		ci->coredisable = brcmf_chip_sb_coredisable;
+ 		ci->resetcore = brcmf_chip_sb_resetcore;
+ 
+-		core = brcmf_chip_add_core(ci, BCMA_CORE_CHIPCOMMON,
+-					   SI_ENUM_BASE, 0);
+-		brcmf_chip_sb_corerev(ci, core);
+-
+-		core = brcmf_chip_add_core(ci, BCMA_CORE_SDIO_DEV,
+-					   BCM4329_CORE_BUS_BASE, 0);
+-		brcmf_chip_sb_corerev(ci, core);
+-
+-		core = brcmf_chip_add_core(ci, BCMA_CORE_INTERNAL_MEM,
+-					   BCM4329_CORE_SOCRAM_BASE, 0);
+-		brcmf_chip_sb_corerev(ci, core);
+-
+-		core = brcmf_chip_add_core(ci, BCMA_CORE_ARM_CM3,
+-					   BCM4329_CORE_ARM_BASE, 0);
+-		brcmf_chip_sb_corerev(ci, core);
+-
+-		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
+-		brcmf_chip_sb_corerev(ci, core);
+-
+ 		break;
+ 	case SOCI_AXI:
+ 
++		if (brcmf_chip_dmp_erom_scan(ci))
++			return -ENODEV;
++
+ 		ci->iscoreup = brcmf_chip_ai_iscoreup;
+ 		ci->coredisable = brcmf_chip_ai_coredisable;
+ 		ci->resetcore = brcmf_chip_ai_resetcore;
+ 
+-		brcmf_chip_dmp_erom_scan(ci);
+-
+ 		break;
+ 	default:
+ 		brcmf_err("chip backplane type %u is not supported\n",
+@@ -1093,7 +1131,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 	if (err < 0)
+ 		goto fail;
+ 
+-	err = brcmf_chip_recognition(chip);
++	err = brcmf_chip_probe(chip);
+ 	if (err < 0)
+ 		goto fail;
+ 
 -- 
-2.13.2
+2.11.0
