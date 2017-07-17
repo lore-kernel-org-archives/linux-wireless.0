@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:33432 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750896AbdGFOld (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34984 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751351AbdGQSOe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:41:33 -0400
-Received: by mail-pg0-f65.google.com with SMTP id u62so500519pgb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:41:32 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v3 01/21] rsi: use BUILD_BUG_ON check for fsm_state
-Date: Thu,  6 Jul 2017 20:07:04 +0530
-Message-Id: <1499351844-2046-2-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164135_924099_8728C9FC)
-In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+        Mon, 17 Jul 2017 14:14:34 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: imitsyanko@quantenna.com, kvalo@codeaurora.org,
+        avinashp@quantenna.com, smatyukevich@quantenna.com
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 10/11] net: qtnfmac: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:44:23 +0530
+Message-Id: <1500315263-3373-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201448_503055_A3791EDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-Whenever new fsm_state enum element is added, fsm_state array
-also needs to be updated. If this change is missed, we may end
-up doing invalid access in array. BUILD_BUG_ON check will help
-to avoid this problem.
-
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_debugfs.c | 2 ++
- drivers/net/wireless/rsi/rsi_main.h        | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-index 4c0a493..f3b91b6 100644
---- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-@@ -138,6 +138,8 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
- 	seq_puts(seq, "==> RSI STA DRIVER STATUS <==\n");
- 	seq_puts(seq, "DRIVER_FSM_STATE: ");
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 7fc4f0d..02337d8 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -1336,7 +1336,7 @@ static SIMPLE_DEV_PM_OPS(qtnf_pcie_pm_ops, qtnf_pcie_suspend,
+ 			 qtnf_pcie_resume);
+ #endif
  
-+	BUILD_BUG_ON(ARRAY_SIZE(fsm_state) != NUM_FSM_STATES);
-+
- 	if (common->fsm_state <= FSM_MAC_INIT_DONE)
- 		seq_printf(seq, "%s", fsm_state[common->fsm_state]);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index f398525..72675eb 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -40,7 +40,9 @@ enum RSI_FSM_STATES {
- 	FSM_RESET_MAC_SENT,
- 	FSM_RADIO_CAPS_SENT,
- 	FSM_BB_RF_PROG_SENT,
--	FSM_MAC_INIT_DONE
-+	FSM_MAC_INIT_DONE,
-+
-+	NUM_FSM_STATES
- };
- 
- extern u32 rsi_zone_enabled;
+-static struct pci_device_id qtnf_pcie_devid_table[] = {
++static const struct pci_device_id qtnf_pcie_devid_table[] = {
+ 	{
+ 		PCIE_VENDOR_ID_QUANTENNA, PCIE_DEVICE_ID_QTN_PEARL,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0,
 -- 
 2.7.4
