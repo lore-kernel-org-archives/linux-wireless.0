@@ -1,67 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:56202 "EHLO mnementh.co.uk"
+Received: from [217.148.43.144] ([217.148.43.144]:50534 "EHLO mnementh.co.uk"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933714AbdGSTIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:08:43 -0400
+        id S1751301AbdGQQsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:48:41 -0400
 From: Ian Molton <ian@mnementh.co.uk>
 To: linux-wireless@vger.kernel.org
 Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com
-Subject: [PATCH 09/34] brcmfmac: Remove noisy debugging.
-Date: Wed, 19 Jul 2017 20:07:57 +0100
-Message-Id: <20170719190822.10857-10-ian@mnementh.co.uk> (sfid-20170719_211035_840829_FB1D962C)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Subject: [PATCH 15/29] brcmfamc: remove unnecessary call to brcmf_sdiod_set_backplane_window()
+Date: Mon, 17 Jul 2017 17:16:23 +0100
+Message-Id: <20170717161637.4652-16-ian@mnementh.co.uk> (sfid-20170717_184851_507370_923D6A36)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you need debugging this low level, you're doing something wrong.
-Remove these noisy debug statements so the code is more readable.
+All functions that might require the window address changing call
+brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
+the window is not required.
 
 Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9145dda11e5a..7dd6af689ac8 100644
+index eb388b69418a..ab015bad02f2 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -372,9 +372,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u8 data = 0;
- 	int retval;
+@@ -723,11 +723,6 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
  
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
--	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 	dev_kfree_skb(pkt);
  
- 	if (ret)
- 		*ret = retval;
-@@ -387,8 +385,6 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u32 data = 0;
- 	int retval;
+-	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
+-		brcmf_err("FAILED to set window back to 0x%x\n",
+-			  sdiodev->sbwad);
+-
+ 	sdio_release_host(sdiodev->func[1]);
  
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
- 
- 	if (ret)
-@@ -402,7 +398,6 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
- 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
- 
- 	if (ret)
-@@ -414,7 +409,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
- 
- 	if (ret)
- 		*ret = retval;
+ 	return err;
 -- 
 2.11.0
