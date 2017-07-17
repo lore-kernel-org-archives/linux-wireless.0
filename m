@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49504 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751301AbdGQSbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 14:31:32 -0400
-Subject: Re: BUG: brcmfmac: add firmware feature detection for gscan feature
- breaks 43430a1
-From: Ian Molton <ian@mnementh.co.uk>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-References: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk>
-Message-ID: <e6635794-7c35-1a46-2d5b-68824c7b0657@mnementh.co.uk> (sfid-20170717_203136_249213_16A63D32)
-Date: Mon, 17 Jul 2017 19:31:29 +0100
-MIME-Version: 1.0
-In-Reply-To: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34857 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751473AbdGQSK0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 14:10:26 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 07/11] rtlwifi: rtl8192ee: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:39:55 +0530
+Message-Id: <1500314995-3181-8-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201104_305790_3FF14323)
+In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17/07/17 18:50, Ian Molton wrote:
-> Resent due to subject error. Apologies, Hante :)
-> 
-> Hi Folks,
-> 
-> 9fe929aaace6  brcmfmac: add firmware feature detection for gscan feature
-> 
-> Completely breaks 43430a1 support.
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-Digging a bit deeper, this would *appear* to be one of a couple of
-possibilities;
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   1899	    928	      0	   2827	    b0b	realtek/rtlwifi/rtl8192ee/sw.o
 
-1) brcmf_sdio_hostmail() is missing code to handle a response of type
-   0x40012
-2) The firmware is failing when asked to handle the new requiests, and
-   is going to la-la land.
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   1963	    864	      0	   2827	    b0b	realtek/rtlwifi/rtl8192ee/sw.o
 
-Decoding the reply gives us HMB_DATA_DEVREADY or-ed with 0x40010
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Since the upper half-word is masked, that leaves us with 0x10 which does
-not appear to be a defined state.
-
-The driver does not handle this well, in any event.
-
-My guess is that you are working on top of newer firmware than I have.
-Can you let me know what the latest public firmware is, and where I can
-get it?
-
-I have version wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327)
-FWID 01-4527cfab
-
-Thanks,
-
--Ian
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index eaa503b..bc4e561 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -354,7 +354,7 @@ static const struct rtl_hal_cfg rtl92ee_hal_cfg = {
+ 	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
+ };
+ 
+-static struct pci_device_id rtl92ee_pci_ids[] = {
++static const struct pci_device_id rtl92ee_pci_ids[] = {
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x818B, rtl92ee_hal_cfg)},
+ 	{},
+ };
+-- 
+2.7.4
