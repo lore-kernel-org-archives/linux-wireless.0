@@ -1,53 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40753 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753647AbdGKLrh (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36216 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdGQPKJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 07:47:37 -0400
-From: Colin King <colin.king@canonical.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] rt2x00: make const array glrt_table static
-Date: Tue, 11 Jul 2017 12:47:33 +0100
-Message-Id: <20170711114733.15387-1-colin.king@canonical.com> (sfid-20170711_134801_533102_6BE24414)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Mon, 17 Jul 2017 11:10:09 -0400
+Received: by mail-oi0-f68.google.com with SMTP id n2so18150678oig.3
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:08 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 06/11] rtlwifi: Add rtl_get_hal_edca_param() to generate register's format of EDCA.
+Date: Mon, 17 Jul 2017 10:09:49 -0500
+Message-Id: <20170717150954.1441-7-Larry.Finger@lwfinger.net> (sfid-20170717_171029_017666_BCD3D442)
+In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Don't populate array glrt_table on the stack but make it static.
-Makes the object code a smaller by over 670 bytes:
+Convert from the value of ieee80211_tx_queue_params to Realtek's
+register value.
 
-Before:
-   text	   data	    bss	    dec	    hex	filename
- 131772	   4733	      0	 136505	  21539	rt2800lib.o
-
-After:
-   text	   data	    bss	    dec	    hex	filename
- 131043	   4789	      0	 135832	  21298	rt2800lib.o
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 36 +++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/base.h |  4 ++++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 6e2e760d98b1..0b75def39c6c 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -5704,7 +5704,7 @@ static void rt2800_init_freq_calibration(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index f71b44c48ec0..9e6fcdde7475 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1558,6 +1558,42 @@ void rtl_wait_tx_report_acked(struct ieee80211_hw *hw, u32 wait_ms)
+ 			 "Wait 1ms (%d/%d) to disable key.\n", i, wait_ms);
+ 	}
+ }
++
++u32 rtl_get_hal_edca_param(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   enum wireless_mode wirelessmode,
++			   struct ieee80211_tx_queue_params *param)
++{
++	u32 reg = 0;
++	u8 sifstime = 10;
++	u8 slottime = 20;
++
++	/* AIFS = AIFSN * slot time + SIFS */
++	switch (wirelessmode) {
++	case WIRELESS_MODE_A:
++	case WIRELESS_MODE_N_24G:
++	case WIRELESS_MODE_N_5G:
++	case WIRELESS_MODE_AC_5G:
++	case WIRELESS_MODE_AC_24G:
++		sifstime = 16;
++		slottime = 9;
++		break;
++	case WIRELESS_MODE_G:
++		slottime = (vif->bss_conf.use_short_slot ? 9 : 20);
++		break;
++	default:
++		break;
++	}
++
++	reg |= (param->txop & 0x7FF) << 16;
++	reg |= (fls(param->cw_max) & 0xF) << 12;
++	reg |= (fls(param->cw_min) & 0xF) << 8;
++	reg |= (param->aifs & 0x0F) * slottime + sifstime;
++
++	return reg;
++}
++EXPORT_SYMBOL_GPL(rtl_get_hal_edca_param);
++
+ /*********************************************************
+  *
+  * functions called by core.c
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index ab7d81904d25..4371dd4f75cb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -135,6 +135,10 @@ void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf,
+ 			   u8 c2h_cmd_len);
+ bool rtl_check_tx_report_acked(struct ieee80211_hw *hw);
+ void rtl_wait_tx_report_acked(struct ieee80211_hw *hw, u32 wait_ms);
++u32 rtl_get_hal_edca_param(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   enum wireless_mode wirelessmode,
++			   struct ieee80211_tx_queue_params *param);
  
- static void rt2800_init_bbp_5592_glrt(struct rt2x00_dev *rt2x00dev)
- {
--	const u8 glrt_table[] = {
-+	static const u8 glrt_table[] = {
- 		0xE0, 0x1F, 0X38, 0x32, 0x08, 0x28, 0x19, 0x0A, 0xFF, 0x00, /* 128 ~ 137 */
- 		0x16, 0x10, 0x10, 0x0B, 0x36, 0x2C, 0x26, 0x24, 0x42, 0x36, /* 138 ~ 147 */
- 		0x30, 0x2D, 0x4C, 0x46, 0x3D, 0x40, 0x3E, 0x42, 0x3D, 0x40, /* 148 ~ 157 */
+ void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
+ void rtl_collect_scan_list(struct ieee80211_hw *hw, struct sk_buff *skb);
 -- 
-2.11.0
+2.12.3
