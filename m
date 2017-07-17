@@ -1,70 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:48230 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751175AbdGZUpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:45:19 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 18/34] brcmfmac: Rename SOC_AI to SOC_AXI
-Date: Wed, 26 Jul 2017 21:25:41 +0100
-Message-Id: <20170726202557.15632-19-ian@mnementh.co.uk> (sfid-20170726_224524_662965_89774CBF)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36187 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751286AbdGQPKD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 11:10:03 -0400
+Received: by mail-oi0-f66.google.com with SMTP id n2so18150404oig.3
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:03 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 01/11] rtlwifi: btcoex: Add power_on_setting routine
+Date: Mon, 17 Jul 2017 10:09:44 -0500
+Message-Id: <20170717150954.1441-2-Larry.Finger@lwfinger.net> (sfid-20170717_171009_722620_9BDAF63C)
+In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This #define is poorly named. Correct it.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-At the same time, convert the if..elseif...else it is used in to a switch
-for clarity.
+New btcoex uses it to setup antenna before wifi on.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+This patch also restores the content of commit f95d95a7cd55 ("rtlwifi:
+btcoex: rtl8723be: fix ant_sel not work"), which caused a kernel oops
+without this material.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+v2 - Add the material in commit f95d95a7cd55, which had to be reverted.
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 6 ++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h      | 1 +
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c           | 3 +++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+ 5 files changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 05f22ff81d60..7b8ba7192e1a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -30,7 +30,7 @@
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index ea12b9d63a73..bc523af7ef88 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -608,6 +608,7 @@ extern struct btc_coexist gl_bt_coexist;
  
- /* SOC Interconnect types (aka chip types) */
- #define SOCI_SB		0
--#define SOCI_AI		1
-+#define SOCI_AXI	1
+ bool exhalbtc_initlize_variables(void);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
++void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 4d9e33078d4f..9e3623b0423c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -32,6 +32,7 @@
+ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_init_variables = rtl_btc_init_variables,
+ 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
++	.btc_power_on_setting = rtl_btc_power_on_setting,
+ 	.btc_init_hw_config = rtl_btc_init_hw_config,
+ 	.btc_ips_notify = rtl_btc_ips_notify,
+ 	.btc_lps_notify = rtl_btc_lps_notify,
+@@ -116,6 +117,11 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
+ 	 */
+ }
  
- /* PL-368 DMP definitions */
- #define DMP_DESC_TYPE_MSK	0x0000000F
-@@ -927,7 +927,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
- 		  ci->pub.chiprev);
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
++{
++	exhalbtc_power_on_setting(&gl_bt_coexist);
++}
++
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
+ {
+ 	u8 bt_exist;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 40f1ce8c8a06..9becfa59407d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -29,6 +29,7 @@
  
--	if (socitype == SOCI_SB) {
-+	switch(socitype) {
-+		case SOCI_SB:
- 		if (ci->pub.chip != BRCM_CC_4329_CHIP_ID) {
- 			brcmf_err("SB chip is not supported\n");
- 			return -ENODEV;
-@@ -951,13 +952,15 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
+ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
+ void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 4d47b97adfed..0b9366e7acbd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -846,6 +846,9 @@ static bool _rtl8723be_init_mac(struct ieee80211_hw *hw)
+ 		return false;
+ 	}
  
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
- 		brcmf_chip_sb_corerev(ci, core);
--	} else if (socitype == SOCI_AI) {
-+		break;
-+	case SOCI_AXI:
- 		ci->iscoreup = brcmf_chip_ai_iscoreup;
- 		ci->coredisable = brcmf_chip_ai_coredisable;
- 		ci->resetcore = brcmf_chip_ai_resetcore;
++	if (rtlpriv->cfg->ops->get_btc_status())
++		rtlpriv->btcoexist.btc_ops->btc_power_on_setting(rtlpriv);
++
+ 	bytetmp = rtl_read_byte(rtlpriv, REG_MULTI_FUNC_CTRL);
+ 	rtl_write_byte(rtlpriv, REG_MULTI_FUNC_CTRL, bytetmp | BIT(3));
  
- 		brcmf_chip_dmp_erom_scan(ci);
--	} else {
-+		break;
-+	default:
- 		brcmf_err("chip backplane type %u is not supported\n",
- 			  socitype);
- 		return -ENODEV;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 71a523e342b7..6c3ff4a73d19 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2550,6 +2550,7 @@ struct bt_coexist_info {
+ struct rtl_btc_ops {
+ 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
++	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
+ 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
+ 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
 -- 
-2.11.0
+2.12.3
