@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:35240 "EHLO
-        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752719AbdGLO5p (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36540 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751249AbdGQExy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 10:57:45 -0400
-Received: by mail-lf0-f46.google.com with SMTP id b207so19400375lfg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 07:57:45 -0700 (PDT)
-Subject: Re: [PATCH for-4.13] brcmfmac: fix regression in
- brcmf_sdio_txpkt_hdalign()
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-References: <1499851968-18768-1-git-send-email-arend.vanspriel@broadcom.com>
- <20170712142901.evso24vh3jfj6umk@localhost>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <819501de-724e-889f-1b45-b3e4addd0d1a@broadcom.com> (sfid-20170712_165750_115887_A59A43A9)
-Date: Wed, 12 Jul 2017 16:57:42 +0200
+        Mon, 17 Jul 2017 00:53:54 -0400
+Received: by mail-oi0-f51.google.com with SMTP id x187so109039046oig.3
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Jul 2017 21:53:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170712142901.evso24vh3jfj6umk@localhost>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 17 Jul 2017 06:53:53 +0200
+Message-ID: <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com> (sfid-20170717_065358_678380_4453C1F4)
+Subject: Re: RFC: Broadcom fmac wireless driver cleanup
+To: Ian Molton <ian@mnementh.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-07-17 16:29, Bob Copeland wrote:
-> On Wed, Jul 12, 2017 at 10:32:48AM +0100, Arend van Spriel wrote:
->> Recent change in brcmf_sdio_txpkt_hdalign() changed the
->> behavior and now always returns 0. This resulted in a
->> regression which basically renders the device useless.
-> 
-> Should this go via netdev as well, or just wait for Kalle (returning
-> on Sunday)?
+On 16 July 2017 at 13:21, Ian Molton <ian@mnementh.co.uk> wrote:
+> I've been doing some cleanups in the broadcome brcmfmac driver, trying to
+> understand how it works.
+>
+> I think this makes the driver a *lot* more readable.
+>
+> Of note:
+>
+> * Gets rid of the arbitrary and completely 1:1 mapping of
+>  struct brcmf_{core,chip}_priv/struct brcmf_{core,chip} structures
+>  which add unreadability whilst offering no real seperation.
+>
+> * The patch titled HACK - stabilise the value of ->sbwad in use
+>  highlights an issue that is either bizarre undocumented behaviour or a
+>  genuine bug - without datasheets, I dont know. Essentially the value of =
+sbwad
+>  is taken as the base address in several functions, even though it is sub=
+ject
+>  to change should other IO occur that moves the window offset
+>
+> Obviously this is a first cut at this and needs substantial cleanup itsel=
+f,
+> however I wanted to get some idea of wether I should continue working on =
+this.
 
-Hi Bob,
+I looked at 4 random patches and none got any description. Not to
+mention their chaotic subjects. In this state I can't even review it.
+If you want to have some change accepted, you've to convince us it's
+needed. Work on cleaning your patches and resend them. You also need
+to signed off your changes.
 
-This regression got introduced recently so the issue will pop-up in
-v4.13-rc1 hence I figured we can wait for Kalle with this one.
-
-Regards,
-Arend
+--=20
+Rafa=C5=82
