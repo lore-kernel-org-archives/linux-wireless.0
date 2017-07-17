@@ -1,362 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:55712 "EHLO mnementh.co.uk"
+Received: from [217.148.43.144] ([217.148.43.144]:36942 "EHLO mnementh.co.uk"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751310AbdGQQQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:16:51 -0400
+        id S1751335AbdGQP4D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 11:56:03 -0400
+Subject: Re: RFC: Broadcom fmac wireless driver cleanup
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
+ <72fae7cb-7db0-4979-8e4b-cf26c557634a@broadcom.com>
 From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 07/29] brcmfmac: Remove brcmf_sdiod_request_data()
-Date: Mon, 17 Jul 2017 17:16:15 +0100
-Message-Id: <20170717161637.4652-8-ian@mnementh.co.uk> (sfid-20170717_181657_393181_048DFAC8)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Message-ID: <97ac668c-fef4-37be-06e1-0135dea77527@mnementh.co.uk> (sfid-20170717_175608_018687_68E6A1F9)
+Date: Mon, 17 Jul 2017 16:56:00 +0100
+MIME-Version: 1.0
+In-Reply-To: <72fae7cb-7db0-4979-8e4b-cf26c557634a@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function is obfuscating how IO works on this chip. Remove it
-and push its logic into brcmf_sdiod_reg_{read,write}().
+On 17/07/17 13:41, Arend van Spriel wrote:
+>> * Gets rid of the arbitrary and completely 1:1 mapping of
+>>  struct brcmf_{core,chip}_priv/struct brcmf_{core,chip} structures
+>>  which add unreadability whilst offering no real seperation.
+> It is maybe 1:1 but it assures that whatever is in the priv structures
+> in only accessible in chip.c. Why would that not offer any real separation.
 
-Handling of -ENOMEDIUM is altered, but as that's pretty much broken anyway
-we can ignore that.
+Ok, I'm going to keep this to technical points from now on, everyones
+had a chance to say how they feel about it now :)
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 241 ++++++++-------------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |   2 +-
- 2 files changed, 90 insertions(+), 153 deletions(-)
+To address your specific comment above - "Why would that not offer any
+real separation"
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 7eb54539a85e..6df12430a43f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -230,6 +230,44 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
- 
-+static int
-+brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
-+{
-+	int err = 0, i;
-+	u32 addr;
-+
-+	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
-+		return -ENOMEDIUM;
-+
-+	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
-+
-+	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
-+					&err);
-+
-+	return err;
-+}
-+
-+static int
-+brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
-+{
-+	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
-+	int err = 0;
-+
-+	if (bar0 != sdiodev->sbwad) {
-+		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
-+		if (err)
-+			return err;
-+
-+		sdiodev->sbwad = bar0;
-+	}
-+
-+	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	return 0;
-+}
-+
- static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
- {
- 	int err_ret;
-@@ -248,172 +286,85 @@ static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint re
- 	return err_ret;
- }
- 
--static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
--				    u32 addr, u8 regsz, void *data, bool write)
--{
--	struct sdio_func *func;
--	int ret = -EINVAL;
--
--	brcmf_dbg(SDIO, "rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
--		  write, fn, addr, regsz);
--
--	/* only allow byte access on F0 */
--	if (WARN_ON(regsz > 1 && !fn))
--		return -EINVAL;
--	func = sdiodev->func[fn];
--
--	switch (regsz) {
--	case 1:
--		if (write) {
--			if (fn)
--				sdio_writeb(func, *(u8 *)data, addr, &ret);
--			else
--				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
--		} else {
--			if (fn)
--				*(u8 *)data = sdio_readb(func, addr, &ret);
--			else
--				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
--		}
--		break;
--	case 2:
--		if (write)
--			sdio_writew(func, *(u16 *)data, addr, &ret);
--		else
--			*(u16 *)data = sdio_readw(func, addr, &ret);
--		break;
--	case 4:
--		if (write)
--			sdio_writel(func, *(u32 *)data, addr, &ret);
--		else
--			*(u32 *)data = sdio_readl(func, addr, &ret);
--		break;
--	default:
--		brcmf_err("invalid size: %d\n", regsz);
--		break;
--	}
--
--	if (ret)
--		brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
--			  write ? "write" : "read", fn, addr, ret);
--
--	return ret;
--}
--
- static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 				   u8 regsz, void *data)
- {
--	u8 func;
--	s32 retry = 0;
- 	int ret;
- 
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
--
- 	/*
- 	 * figure out how to read the register based on address range
- 	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
- 	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
- 	 * The rest: function 1 silicon backplane core registers
-+	 * f0 writes must be bytewise
- 	 */
--	if ((addr & ~REG_F0_REG_MASK) == 0)
--		func = SDIO_FUNC_0;
--	else
--		func = SDIO_FUNC_1;
--
--	do {
--		/* for retry wait for 1 ms till bus get settled down */
--		if (retry)
--			usleep_range(1000, 2000);
- 
--		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, true);
--
--	} while (ret != 0 && ret != -ENOMEDIUM &&
--		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+	if ((addr & ~REG_F0_REG_MASK) == 0) {
-+		if (WARN_ON(regsz > 1))
-+			return -EINVAL;
-+		ret = brcmf_sdiod_f0_writeb(sdiodev->func[0], *(u8 *)data, addr);
-+	}
-+	else {
-+		switch (regsz) {
-+			case 1:
-+				sdio_writeb(sdiodev->func[1], *(u8 *)data, addr, &ret);
-+				break;
-+			case 4:
-+				ret = brcmf_sdiod_addrprep(sdiodev, &addr);
-+				if (ret)
-+					goto done;
- 
--	if (ret == -ENOMEDIUM)
--		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+				sdio_writel(sdiodev->func[1], *(u32 *)data, addr, &ret);
-+				break;
-+			default:
-+				BUG();
-+				ret = -EINVAL;
-+				break;
-+		}
-+	}
- 
-+done:
- 	return ret;
- }
- 
- static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 				   u8 regsz, void *data)
- {
--	u8 func;
--	s32 retry = 0;
- 	int ret;
- 
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
--
- 	/*
- 	 * figure out how to read the register based on address range
- 	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
- 	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
- 	 * The rest: function 1 silicon backplane core registers
-+	 * f0 reads must be bytewise
- 	 */
--	if ((addr & ~REG_F0_REG_MASK) == 0)
--		func = SDIO_FUNC_0;
--	else
--		func = SDIO_FUNC_1;
--
--	do {
--		memset(data, 0, regsz);
--
--		/* for retry wait for 1 ms till bus get settled down */
--		if (retry)
--			usleep_range(1000, 2000);
--
--		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, false);
--
--	} while (ret != 0 && ret != -ENOMEDIUM &&
--		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
--
--	if (ret == -ENOMEDIUM)
--		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
--
--	return ret;
--}
--
--static int
--brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
--{
--	int err = 0, i;
--	u32 addr;
--
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
--
--	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
--
--	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
--		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
--					&err);
--
--	return err;
--}
--
--static int
--brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
--{
--	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
--	int err = 0;
--
--	if (bar0 != sdiodev->sbwad) {
--		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
--		if (err)
--			return err;
--
--		sdiodev->sbwad = bar0;
-+	if ((addr & ~REG_F0_REG_MASK) == 0) {
-+		if (WARN_ON(regsz > 1))
-+			return -EINVAL;
-+		*(u8 *)data = sdio_f0_readb(sdiodev->func[0], addr, &ret);
- 	}
-+	else {
-+		switch (regsz) {
-+			case 1:
-+				*(u8 *)data = sdio_readb(sdiodev->func[1], addr, &ret);
-+				break;
-+			case 4:
-+				ret = brcmf_sdiod_addrprep(sdiodev, &addr);
-+				if (ret)
-+					goto done;
- 
--	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
--	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+				*(u32 *)data = sdio_readl(sdiodev->func[1], addr, &ret);
-+				break;
-+			default:
-+				BUG();
-+				ret = -EINVAL;
-+				break;
-+		}
-+	}
- 
--	return 0;
-+done:
-+	return ret;
- }
- 
- u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
-@@ -437,15 +388,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
--	if (retval)
--		goto done;
--
--	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
--
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
- 
--done:
- 	if (ret)
- 		*ret = retval;
- 
-@@ -470,13 +415,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
--	if (retval)
--		goto done;
- 
--	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
--
--done:
- 	if (ret)
- 		*ret = retval;
- }
-@@ -884,14 +823,12 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	return bcmerror;
- }
- 
--int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
-+int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
- {
--	char t_func = (char)fn;
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* issue abort cmd52 command through F0 */
--	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
--				 1, &t_func, true);
-+	brcmf_sdiod_reg_write(sdiodev, SDIO_CCCR_ABORT, 1, &fn);
- 
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index e3b78db331b5..1e4b4760159f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -339,7 +339,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		      u8 *data, uint size);
- 
- /* Issue an abort to the specified function */
--int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
-+int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn);
- void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 			      enum brcmf_sdiod_state state);
--- 
-2.11.0
+The two structures *always* exist together. And yes, preventing access
+to the members that we don't want accessed from the wrong layer would
+be *possibly* worthwhile, however the driver code as it stands
+*constantly* short circuits that with the use of offsetof().
+
+This makes any minimal protection against poor coding practice
+completely irrelevant, at the same time as making the code unreadable.
+
+If the separation is to stay, it needs to be re-written such that
+offsetof() is not required throughout the code.
+
+I've re-done my patchset, which I'll resubmit in just a moment.
+
+My preferred solution is still removal, as nothing outside this driver
+will ever touch these structures anyway, so all they are doing, other
+than making the code impossible to maintain, is protecting us from no-one.
+
+-Ian
