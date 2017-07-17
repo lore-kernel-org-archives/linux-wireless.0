@@ -1,37 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a3.inai.de ([88.198.180.161]:60580 "EHLO a3.inai.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751145AbdGMLyG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jul 2017 07:54:06 -0400
-Date: Thu, 13 Jul 2017 13:47:29 +0200 (CEST)
-From: Jan Engelhardt <jengelh@inai.de>
-To: Saeed Mahameed <saeedm@mellanox.com>
-cc: Jiri Pirko <jiri@resnulli.us>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: Re: net-next STATUS page
-In-Reply-To: <572310a4-5914-52d2-6688-c899f3c7f245@mellanox.com>
-Message-ID: <nycvar.YFH.7.76.1707131340400.29961@n3.vanv.qr> (sfid-20170713_135422_424517_58D350C2)
-References: <20170711.072416.2014054416066621222.davem@davemloft.net> <20170711115841.64d9aa1d@xeon-e3> <20170713085639.GA2060@nanopsycho> <572310a4-5914-52d2-6688-c899f3c7f245@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36212 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751286AbdGQPKI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 11:10:08 -0400
+Received: by mail-oi0-f65.google.com with SMTP id n2so18150635oig.3
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:07 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 05/11] rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
+Date: Mon, 17 Jul 2017 10:09:48 -0500
+Message-Id: <20170717150954.1441-6-Larry.Finger@lwfinger.net> (sfid-20170717_171013_069349_D4ECCE87)
+In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-On Thursday 2017-07-13 13:32, Saeed Mahameed wrote:
->>>
->>>> Therefore, in order to avoid any and all confusion I have created this
->>>> web site:
->>>>
->>>>  http://vger.kernel.org/~davem/net-next.html
->
-> You will need an image processing algorithm to determine whether it is open or
-> close, i have some good neural network algorithms if you are interested :)
+Originally, we get legacy rate only, so we extend to get HT and VHT rate.
 
-That's not going to win any hacker prize.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 42 ++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 4 deletions(-)
 
-A much more resource-saving approach is to just strcasestr(s, "closed") 
-in the raw text. …at least while the page maintainer remains 
-good-hearted.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 0f36594da76c..f71b44c48ec0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1100,6 +1100,42 @@ int rtlwifi_rate_mapping(struct ieee80211_hw *hw, bool isht, bool isvht,
+ }
+ EXPORT_SYMBOL(rtlwifi_rate_mapping);
+ 
++static u8 _rtl_get_tx_hw_rate(struct ieee80211_hw *hw,
++			      struct ieee80211_tx_info *info)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct ieee80211_tx_rate *r = &info->status.rates[0];
++	struct ieee80211_rate *txrate;
++	u8 hw_value = 0x0;
++
++	if (r->flags & IEEE80211_TX_RC_MCS) {
++		/* HT MCS0-15 */
++		hw_value = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS15] - 15 +
++			   r->idx;
++	} else if (r->flags & IEEE80211_TX_RC_VHT_MCS) {
++		/* VHT MCS0-9, NSS */
++		if (ieee80211_rate_get_vht_nss(r) == 2)
++			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_2SS_MCS9];
++		else
++			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_1SS_MCS9];
++
++		hw_value = hw_value - 9 + ieee80211_rate_get_vht_mcs(r);
++	} else {
++		/* legacy */
++		txrate = ieee80211_get_tx_rate(hw, info);
++
++		if (txrate)
++			hw_value = txrate->hw_value;
++	}
++
++	/* check 5G band */
++	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G &&
++	    hw_value < rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M])
++		hw_value = rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M];
++
++	return hw_value;
++}
++
+ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 		      struct ieee80211_tx_info *info,
+ 		      struct ieee80211_sta *sta,
+@@ -1108,12 +1144,10 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+ 	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
+-	struct ieee80211_rate *txrate;
++
+ 	__le16 fc = rtl_get_fc(skb);
+ 
+-	txrate = ieee80211_get_tx_rate(hw, info);
+-	if (txrate)
+-		tcb_desc->hw_rate = txrate->hw_value;
++	tcb_desc->hw_rate = _rtl_get_tx_hw_rate(hw, info);
+ 
+ 	if (rtl_is_tx_report_skb(hw, skb))
+ 		tcb_desc->use_spe_rpt = 1;
+-- 
+2.12.3
