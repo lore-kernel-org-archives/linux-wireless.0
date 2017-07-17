@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:34610 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750726AbdGGJYR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 05:24:17 -0400
-Received: by mail-qk0-f170.google.com with SMTP id d78so22601970qkb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 02:24:16 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc: =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security@kernel.org" <security@kernel.org>
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
- <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
- <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
- <20170707084640.cv3igibbhhmgsmta@mwanda>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com> (sfid-20170707_112420_534443_B25C5223)
-Date: Fri, 7 Jul 2017 11:24:11 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170707084640.cv3igibbhhmgsmta@mwanda>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from [217.148.43.144] ([217.148.43.144]:50546 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751348AbdGQQsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:48:43 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 10/29] brcmfmac: Rename bcmerror to err
+Date: Mon, 17 Jul 2017 17:16:18 +0100
+Message-Id: <20170717161637.4652-11-ian@mnementh.co.uk> (sfid-20170717_184852_051486_97096AE4)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Trivial cleanup of nasty variable name
 
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-On 7/7/2017 10:46 AM, Dan Carpenter wrote:
-> On Thu, Jul 06, 2017 at 03:32:42PM -0700, Linus Torvalds wrote:
->> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>>
->>> Looks fine to me so ...
->>
->> I really think that if we can't trust 'len', then we have to check
->> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
->> we'll just have a big 16-bit number instead.
-> 
-> There is already a check in cfg80211_mlme_mgmt_tx().
-> 
-> 	if (params->len < 24 + 1)
-> 		return -EINVAL;
-> 
-> It probably should be using DOT11_MGMT_HDR_LEN instead of a magic 24.
-
-Missed that check when I looked yesterday evening. Must have been the 
-time ;-)
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 7dd6af689ac8..f97b2234044f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -747,7 +747,7 @@ int
+ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 		  u8 *data, uint size)
+ {
+-	int bcmerror = 0;
++	int err = 0;
+ 	struct sk_buff *pkt;
+ 	u32 sdaddr;
+ 	uint dsize;
+@@ -772,8 +772,8 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	/* Do the transfer(s) */
+ 	while (size) {
+ 		/* Set the backplane window to include the start address */
+-		bcmerror = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
+-		if (bcmerror)
++		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
++		if (err)
+ 			break;
+ 
+ 		brcmf_dbg(SDIO, "%s %d bytes at offset 0x%08x in window 0x%08x\n",
+@@ -786,9 +786,9 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 		skb_put(pkt, dsize);
+ 		if (write)
+ 			memcpy(pkt->data, data, dsize);
+-		bcmerror = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write,
++		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write,
+ 					      sdaddr, pkt);
+-		if (bcmerror) {
++		if (err) {
+ 			brcmf_err("membytes transfer failed\n");
+ 			break;
+ 		}
+@@ -815,7 +815,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+-	return bcmerror;
++	return err;
+ }
+ 
+ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
+-- 
+2.11.0
