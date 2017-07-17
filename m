@@ -1,286 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34054 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750896AbdGFOli (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:34477 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbdGQMlv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:41:38 -0400
-Received: by mail-pg0-f68.google.com with SMTP id j186so497863pge.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:41:38 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v3 02/21] rsi: changes in eeprom read frame
-Date: Thu,  6 Jul 2017 20:07:05 +0530
-Message-Id: <1499351844-2046-3-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164142_080164_36E85503)
-In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+        Mon, 17 Jul 2017 08:41:51 -0400
+Received: by mail-qk0-f181.google.com with SMTP id d78so118714651qkb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 05:41:50 -0700 (PDT)
+Subject: Re: RFC: Broadcom fmac wireless driver cleanup
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <72fae7cb-7db0-4979-8e4b-cf26c557634a@broadcom.com> (sfid-20170717_144155_077033_500ACA44)
+Date: Mon, 17 Jul 2017 14:41:46 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 16-07-17 13:21, Ian Molton wrote:
+> Hi folks,
+> 
+> I've been doing some cleanups in the broadcome brcmfmac driver, trying to
+> understand how it works.
+> 
+> I think this makes the driver a *lot* more readable.
 
-EEPROM read frame is sent during device initialization to read mac address.
-The format of the frame is modified in firmware to include eeprom length
-and offset. This frame does not return firmware version now. Also same
-frame is sent again to read rf type and band information.
+Everyone is entitled to his own opinion. While skimming the patches
+terms like horrid, abomination, brain damaged does not really get me
+motivated in reviewing it let alone accepting it. Especially when I just
+start my vacation, but you could not have known ;-)
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_debugfs.c |  1 +
- drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 90 ++++++++++++++++++++----------
- drivers/net/wireless/rsi/rsi_main.h        | 16 ++++++
- drivers/net/wireless/rsi/rsi_mgmt.h        | 19 ++++++-
- 4 files changed, 96 insertions(+), 30 deletions(-)
+> Of note:
+> 
+> * Gets rid of the arbitrary and completely 1:1 mapping of
+>  struct brcmf_{core,chip}_priv/struct brcmf_{core,chip} structures
+>  which add unreadability whilst offering no real seperation.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-index f3b91b6..e98eb55 100644
---- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
-@@ -130,6 +130,7 @@ static int rsi_stats_read(struct seq_file *seq, void *data)
- 		"FSM_COMMON_DEV_PARAMS_SENT",
- 		"FSM_BOOT_PARAMS_SENT",
- 		"FSM_EEPROM_READ_MAC_ADDR",
-+		"FSM_EEPROM_READ_RF_TYPE",
- 		"FSM_RESET_MAC_SENT",
- 		"FSM_RADIO_CAPS_SENT",
- 		"FSM_BB_RF_PROG_SENT",
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index d4d365b..ebd1e56 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1276,7 +1276,8 @@ void rsi_inform_bss_status(struct rsi_common *common,
-  */
- static int rsi_eeprom_read(struct rsi_common *common)
- {
--	struct rsi_mac_frame *mgmt_frame;
-+	struct rsi_eeprom_read_frame *mgmt_frame;
-+	struct rsi_hw *adapter = common->priv;
- 	struct sk_buff *skb;
- 
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending EEPROM read req frame\n", __func__);
-@@ -1289,18 +1290,21 @@ static int rsi_eeprom_read(struct rsi_common *common)
- 	}
- 
- 	memset(skb->data, 0, FRAME_DESC_SZ);
--	mgmt_frame = (struct rsi_mac_frame *)skb->data;
-+	mgmt_frame = (struct rsi_eeprom_read_frame *)skb->data;
- 
- 	/* FrameType */
--	mgmt_frame->desc_word[1] = cpu_to_le16(EEPROM_READ_TYPE);
--	mgmt_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
-+	rsi_set_len_qno(&mgmt_frame->len_qno, 0, RSI_WIFI_MGMT_Q);
-+	mgmt_frame->pkt_type = EEPROM_READ;
-+
- 	/* Number of bytes to read */
--	mgmt_frame->desc_word[3] = cpu_to_le16(ETH_ALEN +
--					       WLAN_MAC_MAGIC_WORD_LEN +
--					       WLAN_HOST_MODE_LEN +
--					       WLAN_FW_VERSION_LEN);
-+	mgmt_frame->pkt_info =
-+		cpu_to_le32((adapter->eeprom.length << RSI_EEPROM_LEN_OFFSET) &
-+			    RSI_EEPROM_LEN_MASK);
-+	mgmt_frame->pkt_info |= cpu_to_le32((3 << RSI_EEPROM_HDR_SIZE_OFFSET) &
-+					    RSI_EEPROM_HDR_SIZE_MASK);
-+
- 	/* Address to read */
--	mgmt_frame->desc_word[4] = cpu_to_le16(WLAN_MAC_EEPROM_ADDR);
-+	mgmt_frame->eeprom_offset = cpu_to_le32(adapter->eeprom.offset);
- 
- 	skb_put(skb, FRAME_DESC_SZ);
- 
-@@ -1426,19 +1430,25 @@ int rsi_set_antenna(struct rsi_common *common, u8 antenna)
- static int rsi_handle_ta_confirm_type(struct rsi_common *common,
- 				      u8 *msg)
- {
-+	struct rsi_hw *adapter = common->priv;
- 	u8 sub_type = (msg[15] & 0xff);
-+	u16 msg_len = ((u16 *)msg)[0] & 0xfff;
-+	u8 offset;
- 
- 	switch (sub_type) {
- 	case BOOTUP_PARAMS_REQUEST:
- 		rsi_dbg(FSM_ZONE, "%s: Boot up params confirm received\n",
- 			__func__);
- 		if (common->fsm_state == FSM_BOOT_PARAMS_SENT) {
-+			adapter->eeprom.length = (IEEE80211_ADDR_LEN +
-+						  WLAN_MAC_MAGIC_WORD_LEN +
-+						  WLAN_HOST_MODE_LEN);
-+			adapter->eeprom.offset = WLAN_MAC_EEPROM_ADDR;
- 			if (rsi_eeprom_read(common)) {
- 				common->fsm_state = FSM_CARD_NOT_READY;
- 				goto out;
--			} else {
--				common->fsm_state = FSM_EEPROM_READ_MAC_ADDR;
- 			}
-+			common->fsm_state = FSM_EEPROM_READ_MAC_ADDR;
- 		} else {
- 			rsi_dbg(INFO_ZONE,
- 				"%s: Received bootup params cfm in %d state\n",
-@@ -1447,30 +1457,52 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
- 		}
- 		break;
- 
--	case EEPROM_READ_TYPE:
-+	case EEPROM_READ:
-+		rsi_dbg(FSM_ZONE, "EEPROM READ confirm received\n");
-+		if (msg_len <= 0) {
-+			rsi_dbg(FSM_ZONE,
-+				"%s: [EEPROM_READ] Invalid len %d\n",
-+				__func__, msg_len);
-+			goto out;
-+		}
-+		if (msg[16] != MAGIC_WORD) {
-+			rsi_dbg(FSM_ZONE,
-+				"%s: [EEPROM_READ] Invalid token\n", __func__);
-+			common->fsm_state = FSM_CARD_NOT_READY;
-+			goto out;
-+		}
- 		if (common->fsm_state == FSM_EEPROM_READ_MAC_ADDR) {
--			if (msg[16] == MAGIC_WORD) {
--				u8 offset = (FRAME_DESC_SZ + WLAN_HOST_MODE_LEN
--					     + WLAN_MAC_MAGIC_WORD_LEN);
--				memcpy(common->mac_addr,
--				       &msg[offset],
--				       ETH_ALEN);
--				memcpy(&common->fw_ver,
--				       &msg[offset + ETH_ALEN],
--				       sizeof(struct version_info));
--
--			} else {
-+			offset = (FRAME_DESC_SZ + WLAN_HOST_MODE_LEN +
-+				  WLAN_MAC_MAGIC_WORD_LEN);
-+			memcpy(common->mac_addr, &msg[offset], ETH_ALEN);
-+			adapter->eeprom.length =
-+				((WLAN_MAC_MAGIC_WORD_LEN + 3) & (~3));
-+			adapter->eeprom.offset = WLAN_EEPROM_RFTYPE_ADDR;
-+			if (rsi_eeprom_read(common)) {
-+				rsi_dbg(ERR_ZONE,
-+					"%s: Failed reading RF band\n",
-+					__func__);
- 				common->fsm_state = FSM_CARD_NOT_READY;
--				break;
-+				goto out;
-+			}
-+			common->fsm_state = FSM_EEPROM_READ_RF_TYPE;
-+		} else if (common->fsm_state == FSM_EEPROM_READ_RF_TYPE) {
-+			if ((msg[17] & 0x3) == 0x3) {
-+				rsi_dbg(INIT_ZONE, "Dual band supported\n");
-+				common->band = NL80211_BAND_5GHZ;
-+				common->num_supp_bands = 2;
-+			} else if ((msg[17] & 0x3) == 0x1) {
-+				rsi_dbg(INIT_ZONE,
-+					"Only 2.4Ghz band supported\n");
-+				common->band = NL80211_BAND_2GHZ;
-+				common->num_supp_bands = 1;
- 			}
- 			if (rsi_send_reset_mac(common))
- 				goto out;
--			else
--				common->fsm_state = FSM_RESET_MAC_SENT;
-+			common->fsm_state = FSM_RESET_MAC_SENT;
- 		} else {
--			rsi_dbg(ERR_ZONE,
--				"%s: Received eeprom mac addr in %d state\n",
--				__func__, common->fsm_state);
-+			rsi_dbg(ERR_ZONE, "%s: Invalid EEPROM read type\n",
-+				__func__);
- 			return 0;
- 		}
- 		break;
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 72675eb..cbf29c3 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -37,6 +37,7 @@ enum RSI_FSM_STATES {
- 	FSM_COMMON_DEV_PARAMS_SENT,
- 	FSM_BOOT_PARAMS_SENT,
- 	FSM_EEPROM_READ_MAC_ADDR,
-+	FSM_EEPROM_READ_RF_TYPE,
- 	FSM_RESET_MAC_SENT,
- 	FSM_RADIO_CAPS_SENT,
- 	FSM_BB_RF_PROG_SENT,
-@@ -177,6 +178,7 @@ struct rsi_common {
- 
- 	/* Channel/band related */
- 	u8 band;
-+	u8 num_supp_bands;
- 	u8 channel_width;
- 
- 	u16 rts_threshold;
-@@ -230,6 +232,19 @@ enum host_intf {
- 	RSI_HOST_INTF_USB
- };
- 
-+struct eepromrw_info {
-+	u32 offset;
-+	u32 length;
-+	u8  write;
-+	u16 eeprom_erase;
-+	u8 data[480];
-+};
-+
-+struct eeprom_read {
-+	u16 length;
-+	u16 off_set;
-+};
-+
- struct rsi_hw {
- 	struct rsi_common *priv;
- 	u8 device_model;
-@@ -252,6 +267,7 @@ struct rsi_hw {
- 	struct timer_list bl_cmd_timer;
- 	bool blcmd_timer_expired;
- 	u32 flash_capacity;
-+	struct eepromrw_info eeprom;
- 	u8 dfs_region;
- 	void *rsi_dev;
- 	struct rsi_host_intf_ops *host_intf_ops;
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index dcb6db7..47926c9 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -43,6 +43,7 @@
- #define WLAN_HOST_MODE_LEN              0x04
- #define WLAN_FW_VERSION_LEN             0x08
- #define MAGIC_WORD                      0x5A
-+#define WLAN_EEPROM_RFTYPE_ADDR		424
- 
- /* Receive Frame Types */
- #define TA_CONFIRM_TYPE                 0x01
-@@ -192,7 +193,7 @@ enum cmd_frame_type {
- 	AUTO_RATE_IND,
- 	BOOTUP_PARAMS_REQUEST,
- 	VAP_CAPABILITIES,
--	EEPROM_READ_TYPE ,
-+	EEPROM_READ,
- 	EEPROM_WRITE,
- 	GPIO_PIN_CONFIG ,
- 	SET_RX_FILTER,
-@@ -353,6 +354,22 @@ struct rsi_config_vals {
- 	u8 reserved2[16];
- } __packed;
- 
-+/* Packet info flags */
-+#define RSI_EEPROM_HDR_SIZE_OFFSET		8
-+#define RSI_EEPROM_HDR_SIZE_MASK		0x300
-+#define RSI_EEPROM_LEN_OFFSET			20
-+#define RSI_EEPROM_LEN_MASK			0xFFF00000
-+
-+struct rsi_eeprom_read_frame {
-+	__le16 len_qno;
-+	u8 pkt_type;
-+	u8 misc_flags;
-+	__le32 pkt_info;
-+	__le32 eeprom_offset;
-+	__le16 delay_ms;
-+	__le16 reserved3;
-+} __packed;
-+
- static inline u32 rsi_get_queueno(u8 *addr, u16 offset)
- {
- 	return (le16_to_cpu(*(__le16 *)&addr[offset]) & 0x7000) >> 12;
--- 
-2.7.4
+It is maybe 1:1 but it assures that whatever is in the priv structures
+in only accessible in chip.c. Why would that not offer any real separation.
+
+> * The patch titled HACK - stabilise the value of ->sbwad in use
+>  highlights an issue that is either bizarre undocumented behaviour or a
+>  genuine bug - without datasheets, I dont know. Essentially the value of sbwad
+>  is taken as the base address in several functions, even though it is subject
+>  to change should other IO occur that moves the window offset
+
+Ok. This needs to be looked at, but as I recall sbwad is only changing
+when needed. All IO occurs under claimed host lock so I don't expect
+there is a bug here, but will look at it more closely.
+
+> Obviously this is a first cut at this and needs substantial cleanup itself,
+> however I wanted to get some idea of wether I should continue working on this.
+
+Now this is where a commit message would really help to explain your
+train of thought. What is obvious to you, may not be to others. For
+instance changing the order of parameters in a function is simply absurd
+although that is my opinion.
+
+> I only have a 43430 SDIO WiFi / BT chip to test on, but other chips *should*
+> be unaffected by these changes.
+
+I have a decent amount of SDIO chipsets so count on it that I will run
+this patch series when I return from my vacation.
+
+I just noticed some earlier reactions and it seems your are easily
+offended starting to use *star* quotes. No need to start shouting. There
+is stuff in there that I am happy to acknowledge, but some I think is a
+matter of taste. Although mostly there are no arguments given to get the
+discussion going. I am sure you have them in mind so don't qualm and
+just spew them.
+
+Regards,
+Arend
