@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33272 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750836AbdG0KR7 (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34000 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751312AbdGQSKV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 06:17:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v4 09/10] rtlwifi: use debugfs to debug.
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-        <20170702181239.17911-10-Larry.Finger@lwfinger.net>
-Date: Thu, 27 Jul 2017 13:17:54 +0300
-In-Reply-To: <20170702181239.17911-10-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Sun, 2 Jul 2017 13:12:38 -0500")
-Message-ID: <87vamew5d9.fsf@purkki.adurom.net> (sfid-20170727_121803_199938_182F3775)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 17 Jul 2017 14:10:21 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 05/11] rtlwifi: rtl8723be: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:39:53 +0530
+Message-Id: <1500314995-3181-6-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201123_053113_9F55F5FB)
+In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> Use debugfs to dump register and btcoex status.
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   3032	    912	      0	   3944	    f68	realtek/rtlwifi/rtl8723be/sw.o
 
-The title is useless and the commit log does not mention anything about
-what files are added and to which location.
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   3096	    848	      0	   3944	    f68	realtek/rtlwifi/rtl8723be/sw.o
 
-> The kbuild test robot <lkp@intel.com> suggested a change to use
-> simple_open() instead of a local routine.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This comment doesn't belong to commit log, it should be in the changelog.
-
-> +void rtl_debugfs_add_topdir(void)
-> +{
-> +	debugfs_topdir = debugfs_create_dir("rtlwifi", NULL);
-> +}
-> +
-> +void rtl_debugfs_remove_topdir(void)
-> +{
-> +	debugfs_remove_recursive(debugfs_topdir);
-> +}
-
-I'm surprised to see that rtlwifi creates it's own top level debugfs
-directory and does not use wiphy->debugfsdir. So how is this supposed to
-work when we have multiple rtlwifi devices on the same system?
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index f9d10f1..fdd0c41 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -380,7 +380,7 @@ static const struct rtl_hal_cfg rtl8723be_hal_cfg = {
+ 	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
+ };
+ 
+-static struct pci_device_id rtl8723be_pci_ids[] = {
++static const struct pci_device_id rtl8723be_pci_ids[] = {
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB723, rtl8723be_hal_cfg)},
+ 	{},
+ };
 -- 
-Kalle Valo
+2.7.4
