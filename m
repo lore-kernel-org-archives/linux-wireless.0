@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:62686 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751832AbdGXHTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 03:19:19 -0400
-Subject: Re: Madwifi porting to Ath9k
-To: Arul jothi <aruljkp@gmail.com>
-References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
- <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de>
- <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <b91c5424-baaf-c1e1-5d2b-51aad79b6991@rempel-privat.de> (sfid-20170724_091923_731131_9E50996F)
-Date: Mon, 24 Jul 2017 09:19:16 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl"
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35248 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751361AbdGQPKL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 11:10:11 -0400
+Received: by mail-oi0-f66.google.com with SMTP id r74so4560916oie.2
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:11 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH v2 08/11] rtlwifi: Add RSSI and RF type to wifi.h for phydm
+Date: Mon, 17 Jul 2017 10:09:51 -0500
+Message-Id: <20170717150954.1441-9-Larry.Finger@lwfinger.net> (sfid-20170717_171016_199486_BB599A47)
+In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl
-Content-Type: multipart/mixed; boundary="4ked1aBWP6HQm4L2C6mRnoduxU2foD071";
- protected-headers="v1"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: Arul jothi <aruljkp@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <b91c5424-baaf-c1e1-5d2b-51aad79b6991@rempel-privat.de>
-Subject: Re: Madwifi porting to Ath9k
-References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
- <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de>
- <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
-In-Reply-To: <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
---4ked1aBWP6HQm4L2C6mRnoduxU2foD071
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: quoted-printable
+These definition will be used by phydm later.
 
-Am 24.07.2017 um 08:08 schrieb Arul jothi:
-> Hi Oleksij,
->=20
->    Thanks for your reply. I am new to the linux wireless.
-> Does ath9k has support for PCF implementation ? I couldn't find any
-> reference about PCF in ath9k.
->=20
-> Do you mean porting madwifi code to ath9k is straight forward ?.
-> Please give some link or guideliness.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-- Isolate PCF code in Madwifi
-- port it to the ath9k if possible
-- do lots of testing
-- send patches for review.
-
---=20
-Regards,
-Oleksij
-
-
---4ked1aBWP6HQm4L2C6mRnoduxU2foD071--
-
---PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAll1n3QACgkQHwImuRkmbWkVHAD6A3eZG+btLCmglHiyKc58CWZe
-0W1ARQg27Hs3wz7qEBoBAIWQIW2/xXHbd4LuogBW6MSp+IkHhdFUEbQUfWSltL0/
-=L8mu
------END PGP SIGNATURE-----
-
---PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 8d8e104507d6..4dbce5f4c2db 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -560,6 +560,11 @@ enum rf_type {
+ 	RF_1T2R = 1,
+ 	RF_2T2R = 2,
+ 	RF_2T2R_GREEN = 3,
++	RF_2T3R = 4,
++	RF_2T4R = 5,
++	RF_3T3R = 6,
++	RF_3T4R = 7,
++	RF_4T4R = 8,
+ };
+ 
+ enum ht_channel_width {
+@@ -1329,6 +1334,7 @@ struct rtl_sta_info {
+ 	struct rtl_tid_data tids[MAX_TID_COUNT];
+ 	/* just used for ap adhoc or mesh*/
+ 	struct rssi_sta rssi_stat;
++	u8 rssi_level;
+ 	u16 wireless_mode;
+ 	u8 ratr_index;
+ 	u8 mimo_ps;
+-- 
+2.12.3
