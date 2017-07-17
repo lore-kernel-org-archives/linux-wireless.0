@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35739 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751996AbdGBSMx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Jul 2017 14:12:53 -0400
-Received: by mail-oi0-f68.google.com with SMTP id l130so17397655oib.2
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Jul 2017 11:12:53 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v4 06/10] rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
-Date: Sun,  2 Jul 2017 13:12:35 -0500
-Message-Id: <20170702181239.17911-7-Larry.Finger@lwfinger.net> (sfid-20170702_201310_708991_F6EBACA4)
-In-Reply-To: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+Received: from [217.148.43.144] ([217.148.43.144]:49954 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751291AbdGQQrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:47:33 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 28/29] brcmfmac: Rename buscore->core for consistency
+Date: Mon, 17 Jul 2017 17:16:36 +0100
+Message-Id: <20170717161637.4652-29-ian@mnementh.co.uk> (sfid-20170717_184737_986456_CAB8BF20)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Avoid confusion with unrelated _buscore labels.
 
-This is a common enumeration, so we use a common name.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
-v2 - no changes
-v3 - no changes
-v4 - no changes
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 77c3b186900e..4c6d01eb065d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -592,7 +592,7 @@ enum rtl_hal_state {
- 	_HAL_STATE_START = 1,
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 87eca68d6e4f..15f2acfc626d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2466,14 +2466,12 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
  
--enum rtl_desc92_rate {
-+enum rtl_desc_rate {
- 	DESC_RATE1M = 0x00,
- 	DESC_RATE2M = 0x01,
- 	DESC_RATE5_5M = 0x02,
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_core *buscore = bus->sdio_core;
++	struct brcmf_core *core = bus->sdio_core;
+ 	u32 addr;
+ 	unsigned long val;
+ 	int ret;
+ 
+-	addr = buscore->base + __sd_reg(intstatus);
+-
+-	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
++	val = brcmf_sdiod_readl(bus->sdiodev, core->base + __sd_reg(intstatus), &ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+ 		return ret;
+@@ -2483,7 +2481,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ 	/* Clear interrupts */
+ 	if (val) {
+-		brcmf_sdiod_writel(bus->sdiodev, addr, val, &ret);
++		brcmf_sdiod_writel(bus->sdiodev, core->base + __sd_reg(intstatus),
++					val, &ret);
+ 		bus->sdcnt.f1regdata++;
+ 		atomic_or(val, &bus->intstatus);
+ 	}
 -- 
-2.12.3
+2.11.0
