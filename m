@@ -1,81 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33996 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756760AbdGYBOU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:20 -0400
-Received: by mail-pf0-f181.google.com with SMTP id q85so53114359pfq.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:20 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 10/20] mwifiex: make mwifiex_free_cmd_buffer() return void
-Date: Mon, 24 Jul 2017 18:13:26 -0700
-Message-Id: <20170725011336.99993-11-briannorris@chromium.org> (sfid-20170725_031828_761640_A25EDC96)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+Received: from [217.148.43.144] ([217.148.43.144]:40372 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751311AbdGQRrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 13:47:10 -0400
+To: linux-wireless@vger.kernel.org
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Subject: hante.meuleman@broadcom.com
+Message-ID: <67fac3a3-ab91-0b5e-4568-2bfe692d6598@mnementh.co.uk> (sfid-20170717_194727_207647_B9F15884)
+Date: Mon, 17 Jul 2017 18:47:07 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't fail.
+Hi Folks,
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-new in v2; noticed when reworking driver
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 6 ++----
- drivers/net/wireless/marvell/mwifiex/main.h   | 2 +-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+9fe929aaace6  brcmfmac: add firmware feature detection for gscan feature
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 8dad52886034..6ff8e84b01e0 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -427,7 +427,7 @@ int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter)
-  * The function calls the completion callback for all the command
-  * buffers that still have response buffers associated with them.
-  */
--int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter)
-+void mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter)
- {
- 	struct cmd_ctrl_node *cmd_array;
- 	u32 i;
-@@ -436,7 +436,7 @@ int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter)
- 	if (!adapter->cmd_pool) {
- 		mwifiex_dbg(adapter, FATAL,
- 			    "info: FREE_CMD_BUF: cmd_pool is null\n");
--		return 0;
-+		return;
- 	}
- 
- 	cmd_array = adapter->cmd_pool;
-@@ -464,8 +464,6 @@ int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter)
- 		kfree(adapter->cmd_pool);
- 		adapter->cmd_pool = NULL;
- 	}
--
--	return 0;
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 62ce4e81f695..2bee5cdf1fc8 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1077,7 +1077,7 @@ int mwifiex_get_debug_info(struct mwifiex_private *,
- 			   struct mwifiex_debug_info *);
- 
- int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter);
--int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
-+void mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
- void mwifiex_free_cmd_buffers(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
--- 
-2.14.0.rc0.284.gd933b75aa4-goog
+Completely breaks 43430a1 support.
+
+This was tested on top of my last patchset - but the same occurs on top
+of vanilla 4.13-rc1
+
+[   15.703014]  [1 ] core 0x800:49 base 0x18000000 wrap 0x18100000
+[   15.703025]  [2 ] core 0x812:39 base 0x18001000 wrap 0x18101000
+[   15.703036]  [3 ] core 0x829:21 base 0x18002000 wrap 0x18102000
+[   15.703044]  [4 ] core 0x82a:9  base 0x18003000 wrap 0x18103000
+[   15.703052]  [5 ] core 0x80e:22 base 0x18004000 wrap 0x18104000
+[   15.703059]  [6 ] core 0x135:0  base 0x00000000 wrap 0x18105000
+[   15.703067]  [7 ] core 0x240:0  base 0x00000000 wrap 0x18106000
+[   15.703070] Enter
+[   15.735280] RAM: base=0x0 size=524288 (0x80000) sr=65536 (0x10000)
+[   15.735293] Found BCM43430, AXI backplane, rev=1
+[   15.735461] ccrev=49, pmurev=24, pmucaps=0x39d25f18
+[   15.904051] Enter
+[   15.974045] Enter
+[   15.984378] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
+Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
+[   16.009363] brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data
+content: 0x40012
+...
+[   18.566406] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+...
+[   21.126419] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   23.686371] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+...
+[   26.246357] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   28.806347] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   31.366355] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   33.926319] brcmfmac: brcmf_proto_bcdc_query_dcmd:
+brcmf_proto_bcdc_msg failed w/status -110
+[   36.486448] brcmfmac: brcmf_proto_bcdc_query_dcmd:
+brcmf_proto_bcdc_msg failed w/status -110
+[   36.497332] brcmfmac: brcmf_cfg80211_attach: Failed to get D11
+version (-110)
+[   36.504059] brcmfmac: brcmf_bus_started: failed: -12
+[   36.517686] brcmfmac: brcmf_sdio_firmware_callback: dongle is not
+responding
+[   36.586256] Enter
+
+-Ian
