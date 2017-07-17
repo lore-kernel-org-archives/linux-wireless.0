@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37988 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751034AbdGGLly (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 07:41:54 -0400
-Message-ID: <1499427711.4790.4.camel@sipsolutions.net> (sfid-20170707_134157_458956_493F7FFA)
-Subject: Re: [PATCH 1/4] cfg80211: Check if PMKID attribute is of expected
- size
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Srinivas Dasari <dasaris@qti.qualcomm.com>
-Date: Fri, 07 Jul 2017 13:41:51 +0200
-In-Reply-To: <20170707093612.GA5732@jouni.qca.qualcomm.com>
-References: <1499381022-5389-1-git-send-email-jouni@qca.qualcomm.com>
-         <1499419676.4790.1.camel@sipsolutions.net>
-         <20170707093612.GA5732@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from [217.148.43.144] ([217.148.43.144]:47968 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751291AbdGQQoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:44:15 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 18/29] brcmfmac: Rename SOC_AI to SOC_AXI
+Date: Mon, 17 Jul 2017 17:16:26 +0100
+Message-Id: <20170717161637.4652-19-ian@mnementh.co.uk> (sfid-20170717_184418_175255_5585D48D)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-07-07 at 09:36 +0000, Jouni Malinen wrote:
-> On Fri, Jul 07, 2017 at 11:27:56AM +0200, Johannes Berg wrote:
-> > All applied, thanks.
-> > 
-> > How did you find these? Some of them go way back, after all, and I
-> > don't think even coverity flagged them?
-> 
-> Through manual review of all the nl80211 attributes.. There have been
-> somewhat similar issues flagged as security issues in various kernel
-> components recently and that has triggered more scrutiny for the
-> kernel interfaces.
+This #define is poorly named. Correct it.
 
-Cool, thanks for that. I almost thought (hoped?) you had a (new) tool
-to detect this :)
+At the same time, convert the if..elseif...else it is used in to a switch
+for clarity.
 
-johannes
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 05f22ff81d60..7b8ba7192e1a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -30,7 +30,7 @@
+ 
+ /* SOC Interconnect types (aka chip types) */
+ #define SOCI_SB		0
+-#define SOCI_AI		1
++#define SOCI_AXI	1
+ 
+ /* PL-368 DMP definitions */
+ #define DMP_DESC_TYPE_MSK	0x0000000F
+@@ -927,7 +927,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
+ 		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
+ 		  ci->pub.chiprev);
+ 
+-	if (socitype == SOCI_SB) {
++	switch(socitype) {
++		case SOCI_SB:
+ 		if (ci->pub.chip != BRCM_CC_4329_CHIP_ID) {
+ 			brcmf_err("SB chip is not supported\n");
+ 			return -ENODEV;
+@@ -951,13 +952,15 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
+ 
+ 		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
+ 		brcmf_chip_sb_corerev(ci, core);
+-	} else if (socitype == SOCI_AI) {
++		break;
++	case SOCI_AXI:
+ 		ci->iscoreup = brcmf_chip_ai_iscoreup;
+ 		ci->coredisable = brcmf_chip_ai_coredisable;
+ 		ci->resetcore = brcmf_chip_ai_resetcore;
+ 
+ 		brcmf_chip_dmp_erom_scan(ci);
+-	} else {
++		break;
++	default:
+ 		brcmf_err("chip backplane type %u is not supported\n",
+ 			  socitype);
+ 		return -ENODEV;
+-- 
+2.11.0
