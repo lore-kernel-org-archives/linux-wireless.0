@@ -1,36 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25085 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755513AbdGKN4p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 09:56:45 -0400
-From: <mpubbise@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-Subject: [PATCH 0/3] TDLS support on 10.4 firmware
-Date: Tue, 11 Jul 2017 19:26:15 +0530
-Message-ID: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170711_155649_740569_A9927E16)
+Received: from [217.148.43.144] ([217.148.43.144]:57708 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751294AbdGQQUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:20:52 -0400
+Subject: Re: RFC: Broadcom fmac wireless driver cleanup
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
+ <72fae7cb-7db0-4979-8e4b-cf26c557634a@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <b91796d0-f0cf-377c-f60a-f60feaf5c2d6@mnementh.co.uk> (sfid-20170717_182057_463943_363A6BE3)
+Date: Mon, 17 Jul 2017 17:20:50 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <72fae7cb-7db0-4979-8e4b-cf26c557634a@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+On 17/07/17 13:41, Arend van Spriel wrote:
 
-This patchset adds TDLS support on 10.4 firmwares.
+> I am sure you have them in mind so don't qualm and just spew them.
 
-Manikanta Pubbisetty (3):
-  ath10k: extend wmi service map to accommodate new services
-  ath10k: add tdls support for 10.4 firmwares
-  ath10k: push peer type to target for TDLS peers
+Done. See later patchset.
 
- drivers/net/wireless/ath/ath10k/core.c |    9 ++
- drivers/net/wireless/ath/ath10k/hw.h   |    5 +
- drivers/net/wireless/ath/ath10k/mac.c  |    5 +-
- drivers/net/wireless/ath/ath10k/wmi.c  |  162 ++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h  |  256 +++++++++++++++++++++++++++++++-
- 5 files changed, 435 insertions(+), 2 deletions(-)
-
--- 
-1.7.9.5
+-Ian
