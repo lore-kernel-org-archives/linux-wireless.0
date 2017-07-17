@@ -1,87 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51245 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753388AbdGUKAT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 06:00:19 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Dmitry Torokhov <dtor@google.com>,
-        Brian Norris <briannorris@chromium.org>
-CC: Xinming Hu <huxinming820@gmail.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "Zhiyuan Yang" <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: Re: Re: Re: [PATCH] mwifiex: add tdls uapsd support module parameter
-Date: Fri, 21 Jul 2017 10:00:14 +0000
-Message-ID: <516c8732dd794a2a8b8917c815a10009@SC-EXCH02.marvell.com> (sfid-20170721_120047_315219_36F167EC)
-References: <1500446187-8034-1-git-send-email-huxinming820@gmail.com>
- <20170719200933.GA126381@google.com>
- <2729342a9145434682181afd4bae1710@SC-EXCH02.marvell.com>
- <20170720171636.GA55380@google.com>
- <CAE_wzQ_Q47--atuME69f4eMDa5eMD3B_X5p3HiatY9K4iwoBXw@mail.gmail.com>
-In-Reply-To: <CAE_wzQ_Q47--atuME69f4eMDa5eMD3B_X5p3HiatY9K4iwoBXw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from [217.148.43.144] ([217.148.43.144]:55660 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751286AbdGQQQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:16:46 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 01/29] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
+Date: Mon, 17 Jul 2017 17:16:09 +0100
+Message-Id: <20170717161637.4652-2-ian@mnementh.co.uk> (sfid-20170717_181650_380330_C6A7D584)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRG1pdHJ5IFRvcm9r
-aG92IFttYWlsdG86ZHRvckBnb29nbGUuY29tXQ0KPiBTZW50OiAyMDE35bm0N+aciDIx5pelIDE6
-MjkNCj4gVG86IEJyaWFuIE5vcnJpcw0KPiBDYzogWGlubWluZyBIdTsgWGlubWluZyBIdTsgR2Fu
-YXBhdGhpIEJoYXQ7IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBWYWxvOw0KPiByYWphdGphQGdvb2ds
-ZS5jb207IFpoaXl1YW4gWWFuZzsgVGltIFNvbmc7IENhdGh5IEx1bw0KPiBTdWJqZWN0OiBbRVhU
-XSBSZTogUmU6IFtQQVRDSF0gbXdpZmlleDogYWRkIHRkbHMgdWFwc2Qgc3VwcG9ydCBtb2R1bGUN
-Cj4gcGFyYW1ldGVyDQo+IA0KPiBFeHRlcm5hbCBFbWFpbA0KPiANCj4gLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K
-PiBPbiBUaHUsIEp1bCAyMCwgMjAxNyBhdCAxMDoxNiBBTSwgQnJpYW4gTm9ycmlzIDxicmlhbm5v
-cnJpc0BjaHJvbWl1bS5vcmc+DQo+IHdyb3RlOg0KPiA+IEhpLA0KPiA+DQo+ID4gT24gVGh1LCBK
-dWwgMjAsIDIwMTcgYXQgMTA6NTQ6MTZBTSArMDAwMCwgWGlubWluZyBIdSB3cm90ZToNCj4gPj4g
-SGkgQnJpYW4sDQo+ID4+DQo+ID4+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4g
-PiBGcm9tOiBCcmlhbiBOb3JyaXMgW21haWx0bzpicmlhbm5vcnJpc0BjaHJvbWl1bS5vcmddDQo+
-ID4+ID4gU2VudDogMjAxN+W5tDfmnIgyMOaXpSA0OjEwDQo+ID4+ID4gVG86IFhpbm1pbmcgSHUN
-Cj4gPj4gPiBDYzogTGludXggV2lyZWxlc3M7IEthbGxlIFZhbG87IERtaXRyeSBUb3Jva2hvdjsN
-Cj4gPj4gPiByYWphdGphQGdvb2dsZS5jb207IFpoaXl1YW4gWWFuZzsgVGltIFNvbmc7IENhdGh5
-IEx1bzsgWGlubWluZyBIdQ0KPiA+PiA+IFN1YmplY3Q6IFtFWFRdIFJlOiBbUEFUQ0hdIG13aWZp
-ZXg6IGFkZCB0ZGxzIHVhcHNkIHN1cHBvcnQgbW9kdWxlDQo+ID4+ID4gcGFyYW1ldGVyDQo+ID4+
-ID4NCj4gPj4gPiBFeHRlcm5hbCBFbWFpbA0KPiA+PiA+DQo+ID4+ID4gLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+
-PiA+IC0tLSBPbiBXZWQsIEp1bCAxOSwgMjAxNyBhdCAwNjozNjoyN0FNICswMDAwLCBYaW5taW5n
-IEh1IHdyb3RlOg0KPiA+PiA+ID4gRnJvbTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4N
-Cj4gPj4gPiA+DQo+ID4+ID4gPiBBZGQgbW9kdWxlIHBhcmFtZXRlciB0byBjb250cm9sIHRkbHMg
-dWFwc2Qgc3VwcG9ydCwgd2hpY2ggaXMNCj4gPj4gPiA+IGRlZmF1bHQgZGlzYWJsZWQuDQo+ID4+
-ID4NCj4gPj4gPiBXaHkgZGVmYXVsdCBkaXNhYmxlZCwgd2hlbiBpdCBsb29rcyBsaWtlIGl0IHVz
-ZWQgdG8gYmUgb24gYnkgZGVmYXVsdD8NCj4gPj4NCj4gPj4gT2hvLCBJIHNob3VsZCBjb21tZW50
-IG1vcmUgaW4gZGVzY3JpcHRpb24sIGl0IGlzIG5vdyBjb25mdXNpbmcuDQo+ID4+IFdlIGp1c3Qg
-Zml4ZWQgYW4gdGRscyB1YXBzZCBpc3N1ZSBpbiBsYXRlc3QgZmlybXdhcmUsIHNvIHRyeSB0bw0K
-PiA+PiBkaXNhYmxlIHRoaXMgZmVhdHVyZSBhcyBhIHdvcmthcm91bmQgdG8gdGhlIG9sZCBmaXJt
-d2FyZS4gQXQgdGhlIHNhbWUNCj4gPj4gdGltZSwgaXQgaXMgb3B0aW9uYWwgdG8gZW5hYmxlIHRo
-aXMgZmVhdHVyZSBpbiBzcGVjaWZpYyBjYXNlLg0KPiA+DQo+ID4gVGhhdCBoZWxwcyBhIGJpdCwg
-dGhhbmtzLg0KPiA+DQo+ID4+IEkgd2lsbCBhZGQgbW9yZSBjb21tZW50cyBpbiBWMi4NCj4gPj4g
-UGxlYXNlIGxldCB1cyBrbm93IGlmIHlvdSBoYXZlIG1vcmUgY29tbWVudHMuDQo+ID4NCj4gPiBJ
-IHdvbid0IGluc2lzdCBvbiBjaGFuZ2VzLCBidXQgZm9yIHNvbWV0aGluZyBsaWtlIHRoaXMsIGl0
-IHNlZW1zDQo+ID4gcmVhc29uYWJsZSAoaWYgeW91IGhhdmUgcmVhbGx5IGZpeGVkIHRoZSBpc3N1
-ZSBpbiB0aGUgbGF0ZXN0IGZpcm13YXJlKQ0KPiA+IHRvIGp1c3QgcHJvdmlkZSB0aGUga25vYiB0
-byBkaXNhYmxlIGFzIGEgYmFja3VwLCBub3QgYXMgYSBkZWZhdWx0LiBJZg0KPiA+IHNvbWVvbmUg
-aXMgZ29pbmcgdG8gdXBkYXRlIHRoZWlyIGtlcm5lbCAodG8gaW5jbHVkZSB0aGlzIHBhdGNoKSwg
-YnV0DQo+ID4gbm90IHVwZGF0ZSB0aGVpciBmaXJtd2FyZSwgdGhlbiB0aGV5IHByb2JhYmx5IHNo
-b3VsZCBrbm93IGVub3VnaCB0byBiZQ0KPiA+IGFibGUgdG8gcHJvdmlkZSB0aGUgbW9kdWxlIHBh
-cmFtZXRlciB0byBkaXNhYmxlLg0KPiA+DQo+ID4gT3IgYWx0ZXJuYXRpdmVseTogaG93IGlzIGFu
-eW9uZSBzdXBwb3NlZCB0byBrbm93IHdoZXRoZXIgdGhlaXIgY3VycmVudA0KPiA+IGZpcm13YXJl
-IGlzIGJyb2tlbiBvciBub3Q/IEFuZCBob3cgaXMgdGhpcyBmZWF0dXJlIGV2ZXIgZ29pbmcgdG8g
-YmUNCj4gPiBkZWZhdWx0LWVuYWJsZWQgYWdhaW4/IE5ldyBjaGlwc2V0cyB3aXRoIG5ldyBmaXJt
-d2FyZSBzaG91bGQgaG9wZWZ1bGx5DQo+ID4gbm90IGhhdmUgdGhlIHNhbWUgYnVncywgbm8/DQo+
-IA0KPiBCZXR0ZXIgeWV0LCB0aGUgZHJpdmVyIGNvdWxkIGNoZWNrIHRoZSBmaXJtd2FyZSB2ZXJz
-aW9uLCBhbmQgaWYgaXQgaXMga25vd24gYmFkDQo+IGRpc2FibGUgdGhlIGZlYXR1cmUgYXV0b21h
-dGljYWxseS4gVGhlbiB0aGVyZSBpcyBubyBuZWVkIHRvIHByb3ZpZGUgdGhpcyBrbm9iLg0KPiAN
-Cg0KVGhhbmtzIGZvciBhbGwgdGhlIGNvbW1lbnRzLiBJIGRlZWQgbWlzdXNlIHRoZSBtb2R1bGQg
-cGFyYW1ldGVyLiANClRoZSB0ZGxzIHVwYXNkIGNhcGFiaWxpdHkgaGF2ZSBhbHJlYWR5IGJlZW4g
-ZGlzYWJsZWQgZHVyaW5nIHRkbHMgc2V0dXAuDQpXaGlsZSBoZXJlIHdlIGFyZSB0cnlpbmcgdG8g
-cmVseSBvbiB0ZGxzIHBlZXIgdWFwc2QgY2FwYWJpbGl0eSBpbiB0ZGxzIGNvbmZpZ3VyYXRpb24u
-DQpTbyB3ZSBjYW4gc2ltcGx5IGRpc2FibGUgaXQgaW4gdGRscyBjb25maWcgdG8ga2VlcCBpdCBt
-YXRjaCB3aXRoIG91ciBkZWZhdWx0IGNhcGFiaWxpdHkuDQoNClNvcnJ5IGZvciB0aGUgY29uZnVz
-aW5nIGluIHRoaXMgcGF0Y2guDQpJIGhhdmUgc2VudCB0aGUgcmVwbGFjZSB2ZXJzaW9uIGZvciBy
-ZXZpZXcuDQoNClJlZ2FyZHMsDQpTaW1vbg0KDQo+IFRoYW5rcy4NCj4gDQo+IC0tDQo+IERtaXRy
-eQ0K
+	All the other IO functions are the other way round in this
+driver. Make this one match.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 984c1d0560b1..1acbaaf0f5c9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -230,8 +230,7 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
+ }
+ 
+-static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
+-					uint regaddr, u8 byte)
++static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
+ {
+ 	int err_ret;
+ 
+@@ -269,8 +268,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+ 			else
+-				ret = brcmf_sdiod_f0_writeb(func, addr,
+-							    *(u8 *)data);
++				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
+ 		} else {
+ 			if (fn)
+ 				*(u8 *)data = sdio_readb(func, addr, &ret);
+-- 
+2.11.0
