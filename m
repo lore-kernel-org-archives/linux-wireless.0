@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:57460 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752811AbdGUHyJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 03:54:09 -0400
-Date: Fri, 21 Jul 2017 09:54:07 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Cong Wang <xiyou.wangcong@gmail.com>, davem@davemloft.net,
-        Andrew Morton <akpm@osdl.org>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [Patch net] wl1251: add a missing spin_lock_init()
-Message-ID: <20170721075407.GA21902@amd> (sfid-20170721_095414_061229_7010C044)
-References: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
+Received: from [217.148.43.144] ([217.148.43.144]:42354 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751293AbdGQRuY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 13:50:24 -0400
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Subject: BUG: brcmfmac: add firmware feature detection for gscan feature
+ breaks 43430a1
+Message-ID: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk> (sfid-20170717_195028_764804_AC3DAC29)
+Date: Mon, 17 Jul 2017 18:50:20 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
-In-Reply-To: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Resent due to subject error. Apologies, Hante :)
 
---opJtzjQTFsWo+cga
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Folks,
 
-Hi!
+9fe929aaace6  brcmfmac: add firmware feature detection for gscan feature
 
-On Thu 2017-07-06 15:00:37, Cong Wang wrote:
-> This fixes the following kernel warning:
->=20
->   [ 5668.771453] BUG: spinlock bad magic on CPU#0, kworker/u2:3/9745
->   [ 5668.771850]  lock: 0xce63ef20, .magic: 00000000, .owner: <none>/-1,
->   .owner_cpu: 0
-=2E..
-> by adding the missing spin_lock_init().
->=20
-> Reported-by: Pavel Machek <pavel@ucw.cz>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+Completely breaks 43430a1 support.
 
+This was tested on top of my last patchset - but the same occurs on top
+of vanilla 4.13-rc1
 
-Ping? This is pretty trivial bugfix for an ugly problem. It would be
-nice to take it in.
+[   15.703014]  [1 ] core 0x800:49 base 0x18000000 wrap 0x18100000
+[   15.703025]  [2 ] core 0x812:39 base 0x18001000 wrap 0x18101000
+[   15.703036]  [3 ] core 0x829:21 base 0x18002000 wrap 0x18102000
+[   15.703044]  [4 ] core 0x82a:9  base 0x18003000 wrap 0x18103000
+[   15.703052]  [5 ] core 0x80e:22 base 0x18004000 wrap 0x18104000
+[   15.703059]  [6 ] core 0x135:0  base 0x00000000 wrap 0x18105000
+[   15.703067]  [7 ] core 0x240:0  base 0x00000000 wrap 0x18106000
+[   15.703070] Enter
+[   15.735280] RAM: base=0x0 size=524288 (0x80000) sr=65536 (0x10000)
+[   15.735293] Found BCM43430, AXI backplane, rev=1
+[   15.735461] ccrev=49, pmurev=24, pmucaps=0x39d25f18
+[   15.904051] Enter
+[   15.974045] Enter
+[   15.984378] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
+Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
+[   16.009363] brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data
+content: 0x40012
+...
+[   18.566406] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+...
+[   21.126419] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   23.686371] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+...
+[   26.246357] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   28.806347] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   31.366355] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   33.926319] brcmfmac: brcmf_proto_bcdc_query_dcmd:
+brcmf_proto_bcdc_msg failed w/status -110
+[   36.486448] brcmfmac: brcmf_proto_bcdc_query_dcmd:
+brcmf_proto_bcdc_msg failed w/status -110
+[   36.497332] brcmfmac: brcmf_cfg80211_attach: Failed to get D11
+version (-110)
+[   36.504059] brcmfmac: brcmf_bus_started: failed: -12
+[   36.517686] brcmfmac: brcmf_sdio_firmware_callback: dongle is not
+responding
+[   36.586256] Enter
 
->  drivers/net/wireless/ti/wl1251/main.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
-/ti/wl1251/main.c
-> index bbf7604..1c539c8 100644
-> --- a/drivers/net/wireless/ti/wl1251/main.c
-> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> @@ -1571,6 +1571,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
-> =20
->  	wl->state =3D WL1251_STATE_OFF;
->  	mutex_init(&wl->mutex);
-> +	spin_lock_init(&wl->wl_lock);
-> =20
->  	wl->tx_mgmt_frm_rate =3D DEFAULT_HW_GEN_TX_RATE;
->  	wl->tx_mgmt_frm_mod =3D DEFAULT_HW_GEN_MODULATION_TYPE;
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---opJtzjQTFsWo+cga
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAllxsx8ACgkQMOfwapXb+vJshQCgkLqLyYXe1Fo4Ij8SSeXRoqSj
-zDoAoLtOo8VH8gUQW+awUbs76hI1W9C8
-=Oj7f
------END PGP SIGNATURE-----
-
---opJtzjQTFsWo+cga--
+-Ian
