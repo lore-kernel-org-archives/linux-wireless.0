@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:58624 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755513AbdGKN5E (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34061 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751312AbdGQSKQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 09:57:04 -0400
-From: <mpubbise@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-Subject: [PATCH 1/3] ath10k: extend wmi service map to accommodate new services
-Date: Tue, 11 Jul 2017 19:26:16 +0530
-Message-ID: <1499781378-858-2-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170711_155709_254440_7DF5B56B)
-In-Reply-To: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1499781378-858-1-git-send-email-mpubbise@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 17 Jul 2017 14:10:16 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 03/11] rtlwifi: rtl8821ae: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:39:51 +0530
+Message-Id: <1500314995-3181-4-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201159_092103_21FE48AB)
+In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-Though there is room to accommodate 512 services in wmi service
-ready event, target uses only first 4-bits of each 32-bit word for
-advertising wmi services thereby limiting max wmi services to 64.
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   2491	    960	      0	   3451	    d7b	realtek/rtlwifi/rtl8821ae/sw.o
 
-TDLS implementation for 10.4 firmwares introduces new wmi services by
-making use of remaining unused bits of each 32-bit word, therefore the
-wmi service mapping in host needs to be extended.
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   2587	    864	      0	   3451	    d7b	realtek/rtlwifi/rtl8821ae/sw.o
 
-This patch adds the logic to extend the wmi SVCMAP to accommodate new
-wmi services.
-
-Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index baa38c8..3a4cbbc 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -420,9 +420,20 @@ static inline char *wmi_service_name(int service_id)
- 	 __le32_to_cpu((wmi_svc_bmap)[(svc_id) / (sizeof(u32))]) & \
- 	 BIT((svc_id) % (sizeof(u32))))
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index d71d277..d94e179 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -424,7 +424,7 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
+ 	.maps[RTL_RC_VHT_RATE_2SS_MCS9] = DESC_RATEVHT2SS_MCS9,
+ };
  
-+/* This extension is required to accommodate new services, current limit
-+ * for wmi_services is 64 as target is using only 4-bits of each 32-bit
-+ * wmi_service word. Extending this to make use of remaining unused bits
-+ * for new services.
-+ */
-+#define WMI_EXT_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
-+	((svc_id) >= (len) && \
-+	__le32_to_cpu((wmi_svc_bmap)[((svc_id) - (len)) / 28]) & \
-+	BIT(((((svc_id) - (len)) % 28) & 0x1f) + 4))
-+
- #define SVCMAP(x, y, len) \
- 	do { \
--		if (WMI_SERVICE_IS_ENABLED((in), (x), (len))) \
-+		if ((WMI_SERVICE_IS_ENABLED((in), (x), (len))) || \
-+		    (WMI_EXT_SERVICE_IS_ENABLED((in), (x), (len)))) \
- 			__set_bit(y, out); \
- 	} while (0)
- 
+-static struct pci_device_id rtl8821ae_pci_ids[] = {
++static const struct pci_device_id rtl8821ae_pci_ids[] = {
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8812, rtl8821ae_hal_cfg)},
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8821, rtl8821ae_hal_cfg)},
+ 	{},
 -- 
-1.7.9.5
+2.7.4
