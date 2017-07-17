@@ -1,48 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37306 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751594AbdGEGFs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Mordechai Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:34 +0300
-Message-Id: <20170705060539.20737-3-luca@coelho.fi> (sfid-20170705_080601_763140_C3CF91A2)
-In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
-References: <20170705060539.20737-1-luca@coelho.fi>
-Subject: [PATCH 2/7] iwlwifi: pcie: fix unused txq NULL pointer dereference
+Received: from [217.148.43.144] ([217.148.43.144]:49920 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751367AbdGQQrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:47:31 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 14/29] brcmfmac: Remove brcmf_sdiod_addrprep()
+Date: Mon, 17 Jul 2017 17:16:22 +0100
+Message-Id: <20170717161637.4652-15-ian@mnementh.co.uk> (sfid-20170717_184735_037709_6784F673)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechai Goodstein <mordechay.goodstein@intel.com>
+This function has become trivial enough that it may as well be pushed into
+its callers, which has the side-benefit of clarifying what's going on.
 
-Before TVQM, all TX queues were allocated straight at init.
-With TVQM, queues are allocated on demand and hence we need
-to check if a queue exists before dereferencing it.
+Remove it, and rename brcmf_sdiod_set_sbaddr_window() to
+brcmf_sdiod_set_backplane_window() as it's easier to understand.
 
-Fixes: 66128fa08806 ("iwlwifi: move to TVQM mode")
-Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 78 ++++++++++++----------
+ 1 file changed, 43 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index de50418adae5..034bdb4a0b06 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -298,6 +298,9 @@ void iwl_pcie_txq_check_wrptrs(struct iwl_trans *trans)
- 	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
- 		struct iwl_txq *txq = trans_pcie->txq[i];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 13f20b58d34e..eb388b69418a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -229,41 +229,23 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ }
  
-+		if (!test_bit(i, trans_pcie->queue_used))
-+			continue;
+ static int
+-brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
++brcmf_sdiod_set_backplane_window(struct brcmf_sdio_dev *sdiodev, u32 addr)
+ {
++	u32 v, bar0 = addr & SBSDIO_SBWINDOW_MASK;
+ 	int err = 0, i;
+-	u32 addr;
+ 
+-	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+-		return -ENOMEDIUM;
+-
+-	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
++	if (bar0 == sdiodev->sbwad)
++		return 0;
+ 
+-	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
+-		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
+-					&err);
++	v = bar0 >> 8;
+ 
+-	return err;
+-}
+-
+-static int
+-brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
+-{
+-	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+-	int err = 0;
+-
+-	if (bar0 != sdiodev->sbwad) {
+-		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
+-		if (err)
+-			return err;
++	for (i = 0 ; i < 3 && !err ; i++, v>>=8)
++		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, v & 0xff, &err);
+ 
++	if(!err)
+ 		sdiodev->sbwad = bar0;
+-	}
+-
+-	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	return 0;
++	return err;
+ }
+ 
+ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+@@ -271,11 +253,17 @@ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	u32 data = 0;
+ 	int retval;
+ 
+-	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
++	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
++	if (retval)
++		goto out;
 +
- 		spin_lock_bh(&txq->lock);
- 		if (txq->need_update) {
- 			iwl_pcie_txq_inc_wr_ptr(trans, txq);
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!retval)
+ 		data = sdio_readl(sdiodev->func[1], addr, &retval);
+ 
++out:
+ 	if (ret)
+ 		*ret = retval;
+ 
+@@ -287,11 +275,17 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ {
+ 	int retval;
+ 
+-	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
++	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
++	if (retval)
++		goto out;
++
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!retval)
+ 		sdio_writel(sdiodev->func[1], data, addr, &retval);
+ 
++out:
+ 	if (ret)
+ 		*ret = retval;
+ }
+@@ -539,10 +533,13 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
+ 	if (err)
+ 		goto done;
+ 
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
+ 	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
+ 
+ done:
+@@ -560,10 +557,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+ 		  addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
+ 	if (err)
+ 		goto done;
+ 
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
+ 	if (pktq->qlen == 1)
+ 		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
+ 					 pktq->next);
+@@ -605,7 +605,12 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 
+ 	memcpy(mypkt->data, buf, nbytes);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
++	if (err)
++		return err;
++
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!err)
+ 		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+@@ -625,10 +630,13 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
+ 	if (err)
+ 		return err;
+ 
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
+ 	if (pktq->qlen == 1 || !sdiodev->sg_support)
+ 		skb_queue_walk(pktq, skb) {
+ 			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
+@@ -672,7 +680,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	/* Do the transfer(s) */
+ 	while (size) {
+ 		/* Set the backplane window to include the start address */
+-		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
++		err = brcmf_sdiod_set_backplane_window(sdiodev, address);
+ 		if (err)
+ 			break;
+ 
+@@ -716,7 +724,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	dev_kfree_skb(pkt);
+ 
+ 	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdiod_set_sbaddr_window(sdiodev, sdiodev->sbwad))
++	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
+ 		brcmf_err("FAILED to set window back to 0x%x\n",
+ 			  sdiodev->sbwad);
+ 
 -- 
 2.11.0
