@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:55307 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750896AbdGXGBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 02:01:11 -0400
-Subject: Re: Madwifi porting to Ath9k
-To: Arul jothi <aruljkp@gmail.com>, linux-wireless@vger.kernel.org
-References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de> (sfid-20170724_080115_423675_890E7660)
-Date: Mon, 24 Jul 2017 08:01:03 +0200
+Received: from mail-it0-f68.google.com ([209.85.214.68]:35248 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751346AbdGQQDI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:03:08 -0400
+Received: by mail-it0-f68.google.com with SMTP id v193so18317071itc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 09:03:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv"
+From: Michael Gugino <michael.gugino.2@gmail.com>
+Date: Mon, 17 Jul 2017 12:03:07 -0400
+Message-ID: <CACHT077fJY0EBYRk+wgnVREoEf-d+Brejq2JngcSpsi_ygV-GA@mail.gmail.com> (sfid-20170717_180314_384052_B4F29F0E)
+Subject: [PATCH v2 1/1] rtl8188eu: add TL-WN722N v2 support
+To: linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv
-Content-Type: multipart/mixed; boundary="1FHvlEk4VGVrkjEWV4In0JdATFA82qtlO";
- protected-headers="v1"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: Arul jothi <aruljkp@gmail.com>, linux-wireless@vger.kernel.org
-Message-ID: <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de>
-Subject: Re: Madwifi porting to Ath9k
-References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
-In-Reply-To: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
+From: Michael Gugino <michael.gugino.2@gmail.com>
 
---1FHvlEk4VGVrkjEWV4In0JdATFA82qtlO
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: quoted-printable
+This patch adds support for USB Device TP-Link TL-WN722N v2.
+VendorID: 0x2357, ProductID: 0x010c
 
-Am 23.07.2017 um 15:54 schrieb Arul jothi:
-> Hi,
->=20
->   I have AR7161 based board which is using customized madwifi driver
-> with PCF implementation.
-> I need to port the driver to new board based on AR9344.
-> What should be the approach I should take
->=20
-> 1.       Build Madwifi with current AR9344 Openwrt build
->=20
-> 2.       Implement PCF with current Ath9k driver.
->=20
->=20
-> Please advise which approach I should take. Can someone help me with
-> some clue on that.
-> Thanks in advance.
+Signed-off-by: Michael Gugino <michael.gugino.2@gmail.com>
+---
+ drivers/staging/rtl8188eu/os_dep/usb_intf.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-In long term it is preferable to extend upstream version of the driver
-(ath9k) aaand upstream you patches as well.
-
-ath9k has big developer community and good testing coverage.
-
---=20
-Regards,
-Oleksij
-
-
---1FHvlEk4VGVrkjEWV4In0JdATFA82qtlO--
-
---hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF4EAREIAAYFAll1jR8ACgkQHwImuRkmbWnydwD/R5ZdS+cR3c1fbA75HKA3Co6h
-4QtwgEBmYspslbdCn9IA+wZz1QMmVD/qwbRQ5F/Ok0p95a1SNOPfH4syCp2WkEuV
-=X4dS
------END PGP SIGNATURE-----
-
---hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv--
+diff --git a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+index 963235f..d283341 100644
+--- a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+@@ -43,6 +43,7 @@ static struct usb_device_id rtw_usb_id_tbl[] = {
+  {USB_DEVICE(0x2001, 0x330F)}, /* DLink DWA-125 REV D1 */
+  {USB_DEVICE(0x2001, 0x3310)}, /* Dlink DWA-123 REV D1 */
+  {USB_DEVICE(0x2001, 0x3311)}, /* DLink GO-USB-N150 REV B1 */
++ {USB_DEVICE(0x2357, 0x010c)}, /* TP-Link TL-WN722N v2 */
+  {USB_DEVICE(0x0df6, 0x0076)}, /* Sitecom N150 v2 */
+  {} /* Terminating entry */
+ };
+-- 
+2.7.4
