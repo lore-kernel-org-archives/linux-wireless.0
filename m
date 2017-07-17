@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:36065 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751338AbdGLFRu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 01:17:50 -0400
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        kvalo@codeaurora.org, sara.sharon@intel.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
-Date: Wed, 12 Jul 2017 07:17:38 +0200
-Message-Id: <20170712051738.21646-1-christophe.jaillet@wanadoo.fr> (sfid-20170712_071809_140151_087FE67B)
+Received: from [217.148.43.144] ([217.148.43.144]:46020 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751265AbdGQJqF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 05:46:05 -0400
+Subject: Re: RFC: Broadcom fmac wireless driver cleanup
+To: James Hughes <james.hughes@raspberrypi.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
+ <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
+ <CAE_XsMLVjT1kGmQBciADQwHKS+AgytzxePyQrYnGQQqanFj9jw@mail.gmail.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <0c29a7c4-cd74-0ac1-fca9-b8e9dba656ea@mnementh.co.uk> (sfid-20170717_114609_388908_0F0590F4)
+Date: Mon, 17 Jul 2017 10:45:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAE_XsMLVjT1kGmQBciADQwHKS+AgytzxePyQrYnGQQqanFj9jw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should free 'wgds.pointer' here as done a few lines above in another
-error handling path.
-It was allocated within 'acpi_evaluate_object()'.
+On 17/07/17 10:13, James Hughes wrote:
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-A comment in '/drivers/acpi/acpica/utalloc.c' states that:
-/* [...] Note: The caller should use acpi_os_free to free this
- * buffer created via ACPI_ALLOCATE_BUFFER.
- */
+> As someone who is interested in any bug fixes to this driver (Device
+> is used on Raspberry Pi3/0W and we have a number of issues reported
+> which we are actively investigating), it would be very useful to more
+> clearly split out any actual fixes vs simply tidying up (Yes, I agree
+> the driver is mostly incomprehensible).
 
-So, at the end of this function:
-	out_free:
-		kfree(wgds.pointer);
-should maybe be:
-	out_free:
-		acpi_os_free(wgds.pointer);
+I don't think there are any actual *fixes* in this RFC series. Its all
+cleanup.
 
-If correct, several places should be fixed accordingly.
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+The only issue I highlighted in my covering email - the patch titled
+"HACK" was the only issue I uncovered thus far in that code. I dont know
+the correct solution, although I can *guess* it, which is not good
+enough, IMO.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 24cc406d87ef..56d535ab696f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1287,8 +1287,10 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm,
- 
- 		entry = &wifi_pkg->package.elements[i + 1];
- 		if ((entry->type != ACPI_TYPE_INTEGER) ||
--		    (entry->integer.value > U8_MAX))
--			return -EINVAL;
-+		    (entry->integer.value > U8_MAX)) {
-+			ret = -EINVAL;
-+			goto out_free;
-+		}
- 
- 		geo_table->values[i] = entry->integer.value;
- 	}
--- 
-2.11.0
+If no-one has the docs for this chip, thats a bad state of affairs. Is
+there anything circulating?
+
+> Perhaps asking the
+> list/maintainers for comments on any located issues/bugs fixes would
+> be a useful starting point,
+
+Thats *literally* what RFC means, is it not?
+
+> along with ensuring the description gives a good explanation of what
+> the suspect issue is.
+
+Yes, absolutely - for a fully signed off series, or a particularly
+complex bit of code, sure.
+
+I think each of these patches is easily reviewable. None of them are
+complex, just huge.
+
+As yet, I have *zero* idea that the maintainers are interested in taking
+the driver in the direction I'm going. It looks a LOT like a typical
+corporate code-dump, and unless I'm convinced that sending carefully
+polished patches is worth it, I don't see why I should put the effort in.
+
+Trust goes both ways in this process. Give me a sign that I should carry
+on with this work. If its got no hope of ever going upstream, all I'm
+doing is wasting time.
+
+-Ian
