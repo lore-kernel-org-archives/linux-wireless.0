@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36072 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751054AbdGaLOt (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34087 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751436AbdGQSKY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 07:14:49 -0400
-Received: by mail-pf0-f196.google.com with SMTP id t83so1145176pfj.3
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 04:14:49 -0700 (PDT)
-Date: Mon, 31 Jul 2017 16:44:45 +0530
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v4] rtlwifi: Replace hardcode value with macro
-Message-ID: <20170731111445.GA4844@symbol-HP-ZBook-15> (sfid-20170731_131453_374514_AB0AA839)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 17 Jul 2017 14:10:24 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 06/11] rtlwifi: rtl8188ee: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:39:54 +0530
+Message-Id: <1500314995-3181-7-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201144_105121_2EBD77B6)
+In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
-and hw->max_rate_tries are replaced by macro.
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   3090	    912	      0	   4002	    fa2	realtek/rtlwifi/rtl8188ee/sw.o
+
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   3154	    848	      0	   4002	    fa2	realtek/rtlwifi/rtl8188ee/sw.o
+
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index f45d093..52f2d0b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -422,7 +422,6 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 	hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
-
- 	/* TODO: Correct this value for our hw */
--	/* defined these hard code values */
- 	hw->max_listen_interval = MAX_LISTEN_INTERVAL;
- 	hw->max_rate_tries = MAX_RATE_TRIES;
- 	/* hw->max_rates = 1; */
---
-1.9.1
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index 774e720..25b1e6d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -376,7 +376,7 @@ static const struct rtl_hal_cfg rtl88ee_hal_cfg = {
+ 	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
+ };
+ 
+-static struct pci_device_id rtl88ee_pci_ids[] = {
++static const struct pci_device_id rtl88ee_pci_ids[] = {
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8179, rtl88ee_hal_cfg)},
+ 	{},
+ };
+-- 
+2.7.4
