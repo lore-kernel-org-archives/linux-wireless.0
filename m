@@ -1,112 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:53909 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750933AbdGaIqn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 04:46:43 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        ",Tony Lindgren" <tony@atomide.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>
-Subject: [v4] wlcore: add missing nvs file name info for wilink8
-Date: Mon, 31 Jul 2017 08:45:48 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B364144B7@DFRE01.ent.ti.com> (sfid-20170731_104700_972741_C9205DF0)
-References: <1501490529-3360-1-git-send-email-eyalr@ti.com>
-In-Reply-To: <1501490529-3360-1-git-send-email-eyalr@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from [217.148.43.144] ([217.148.43.144]:55730 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751351AbdGQQQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:16:54 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 09/29] brcmfmac: Remove noisy debugging.
+Date: Mon, 17 Jul 2017 17:16:17 +0100
+Message-Id: <20170717161637.4652-10-ian@mnementh.co.uk> (sfid-20170717_181657_924817_DD34BA9E)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commits:
-c815fde wlcore: spi: Populate config firmware data
-d776fc8 wlcore: sdio: Populate config firmware data
+If you need debugging this low level, you're doing something wrong.
+Remove these noisy debug statements so the code is more readable.
 
-Populated the nvs entry for wilink6 and wilink7 only while it is
-still needed for wilink8 as well.
-This broke user space backward compatibility when upgrading from older
-kernels, as the alternate mac address would not be read from the nvs that
-is present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
-causing mac address change of the wlan interface.
-
-This patch fix this and update the structure field with the same default
-nvs file name that has been used before.
-
-In addition, some distros hold a default wl1271-nvs.bin in the file
-system with a bogus mac address (deadbeef...) that for a wl18xx device
-also overrides the mac address that is stored inside the device.
-Warn users about this bogus mac address and use a random mac instead
-
-Cc: stable <stable@vger.kernel.org>
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
-v2->v3: add a check for default deadbeef... mac address and warn about it
-v3->v4: use a random TI mac address instead of the bogus one
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
----
- drivers/net/wireless/ti/wlcore/main.c | 16 ++++++++++++++++
- drivers/net/wireless/ti/wlcore/sdio.c |  1 +
- drivers/net/wireless/ti/wlcore/spi.c  |  1 +
- 3 files changed, 18 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/t=
-i/wlcore/main.c
-index 60aaa85..7ce4221 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5961,6 +5961,22 @@ static void wl12xx_derive_mac_addresses(struct wl127=
-1 *wl, u32 oui, u32 nic)
- 	if (nic + WLCORE_NUM_MAC_ADDRESSES - wl->num_mac_addr > 0xffffff)
- 		wl1271_warning("NIC part of the MAC address wraps around!");
-=20
-+	if (oui =3D=3D 0xdeadbe && nic =3D=3D 0xef0000) {
-+		wl1271_warning("Detected unconfigured mac address in nvs.\n"
-+				"Using a random TI mac address instead.\n"
-+				"in case of using a wl12xx device, your "
-+				"device performance may not be optimized.\n"
-+				"Please use the calibrator tool to configure "
-+				"your device.\n"
-+				"When using a wl18xx device the nvs file can "
-+				"be removed as a default mac address is "
-+				"stored internally.\n");
-+
-+		/* Use TI oui and a random nic */
-+		oui =3D 0x080028;
-+		nic =3D get_random_int();
-+	}
-+
- 	for (i =3D 0; i < wl->num_mac_addr; i++) {
- 		wl->addresses[i].addr[0] =3D (u8)(oui >> 16);
- 		wl->addresses[i].addr[1] =3D (u8)(oui >> 8);
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/t=
-i/wlcore/sdio.c
-index 2fb3871..f8a1fea 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -230,6 +230,7 @@ static const struct wilink_family_data wl128x_data =3D =
-{
- static const struct wilink_family_data wl18xx_data =3D {
- 	.name =3D "wl18xx",
- 	.cfg_name =3D "ti-connectivity/wl18xx-conf.bin",
-+	.nvs_name =3D "ti-connectivity/wl1271-nvs.bin",
- };
-=20
- static const struct of_device_id wlcore_sdio_of_match_table[] =3D {
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti=
-/wlcore/spi.c
-index fdabb92..62ce54a 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -92,6 +92,7 @@ static const struct wilink_family_data wl128x_data =3D {
- static const struct wilink_family_data wl18xx_data =3D {
- 	.name =3D "wl18xx",
- 	.cfg_name =3D "ti-connectivity/wl18xx-conf.bin",
-+	.nvs_name =3D "ti-connectivity/wl1271-nvs.bin",
- };
-=20
- struct wl12xx_spi_glue {
---=20
-2.7.4
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 9145dda11e5a..7dd6af689ac8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -372,9 +372,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	u8 data = 0;
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+ 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
+-	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
+ 	if (ret)
+ 		*ret = retval;
+@@ -387,8 +385,6 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	u32 data = 0;
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
+ 
+ 	if (ret)
+@@ -402,7 +398,6 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ {
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+ 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
+ 
+ 	if (ret)
+@@ -414,7 +409,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ {
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+ 
+ 	if (ret)
+ 		*ret = retval;
+-- 
+2.11.0
