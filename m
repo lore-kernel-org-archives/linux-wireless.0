@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52458 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751729AbdG0WBN (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:34513 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751317AbdGQUgk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 18:01:13 -0400
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: fix spelling mistake: "Iinitialization" -> "initialization"
-Date: Thu, 27 Jul 2017 23:01:10 +0100
-Message-Id: <20170727220110.11655-1-colin.king@canonical.com> (sfid-20170728_000128_030948_6B202FC5)
+        Mon, 17 Jul 2017 16:36:40 -0400
+Received: by mail-wm0-f48.google.com with SMTP id 70so24781688wmo.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 13:36:40 -0700 (PDT)
+Subject: Re: BUG: brcmfmac: add firmware feature detection for gscan feature
+ breaks 43430a1
+To: Ian Molton <ian@mnementh.co.uk>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+References: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk>
+ <e6635794-7c35-1a46-2d5b-68824c7b0657@mnementh.co.uk>
+ <ff344ee3-3feb-6886-8007-d8ed00386424@broadcom.com>
+ <c322c7c6-823b-0d36-8968-101d143b3220@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6c512250-5299-0cad-675b-e7780e999b58@broadcom.com> (sfid-20170717_223644_609961_40F18137)
+Date: Mon, 17 Jul 2017 22:36:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <c322c7c6-823b-0d36-8968-101d143b3220@mnementh.co.uk>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
 
-Trivial fix to spelling mistake in netdev_err message
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 17-07-17 22:13, Ian Molton wrote:
+> On 17/07/17 20:53, Arend van Spriel wrote:
+>>> 2) The firmware is failing when asked to handle the new requiests, and
+>>>    is going to la-la land.
+>> taken a wrong turn straight into la-la land.
+> 
+> Doh!
+> 
+>>> I have version wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327)
+>>> FWID 01-4527cfab
+>> Not so much newer firmware, but I used a different chip when
+>> implementing the multi-scheduled scan patches. I tried some other
+>> devices, but not the bcm4343{0,8}. Now as far as I can see over here the
+>> brcmfmac43430-sdio.bin is not built with gscan support so it should just
+>> return firmware errorcode, ie. -23. So it would be interesting to see
+>> what firmware has to say. Can you load the driver with
+>> ignore_probe_fail=1 and dump the forensics file in debugfs.
+> 
+> I don't appear to get anything useful in debugfs. Where should I be looking?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 1266dcccad30..119f3459b5bb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -813,7 +813,7 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
- 		wilc_wlan_cleanup(dev);
- _fail_locks_:
- 		wlan_deinit_locks(dev);
--		netdev_err(dev, "WLAN Iinitialization FAILED\n");
-+		netdev_err(dev, "WLAN initialization FAILED\n");
- 	} else {
- 		netdev_dbg(dev, "wilc1000 already initialized\n");
- 	}
--- 
-2.11.0
+In <debugfs_mountpoint>/brcmfmac/*/forensics, but you have to load the
+driver with modules parameter 'ignore_probe_fail=1' to avoid the driver
+remove tearing down all debugfs stuff.
