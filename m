@@ -1,87 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36124 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750970AbdGFOlW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:41:22 -0400
-Received: by mail-pf0-f194.google.com with SMTP id z6so549586pfk.3
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:41:22 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v3 00/21] rsi driver enhancements
-Date: Thu,  6 Jul 2017 20:07:03 +0530
-Message-Id: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164126_691112_7A0F96ED)
+Received: from [217.148.43.144] ([217.148.43.144]:47956 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751291AbdGQQoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 12:44:13 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 16/29] brcmfmac: Cleanup offsetof()
+Date: Mon, 17 Jul 2017 17:16:24 +0100
+Message-Id: <20170717161637.4652-17-ian@mnementh.co.uk> (sfid-20170717_184416_422380_40C7E9E6)
+In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
+References: <20170717161637.4652-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Create a macro to make the code a bit more readable, whilst we're stuck
+with using struct element offsets as register offsets.
 
-This patch series includes some fixes and enhancements in Tx and Rx
-data paths. Connection in open security and data traffic has been
-verified with SDIO and USB variants of 9113 chipset.
 
-Changes in v3 series:
-1/21: Newly added patch in v3 which makes use of BUILD_BUG_ON to avoid
-      potential issue in future(Kalle Valo)
-2/21: Added missing change in debugfs fsm_state array(Kalle Valo)
-12/21, 14/21, 15/21, 16/21: Pavani's name corrected
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 35 +++++++++-------------
+ 1 file changed, 14 insertions(+), 21 deletions(-)
 
-Changes in v2 series:
-1/20: Get rid of __LITTLE_ENDIAN flag usage
-11/20: Get rid of __LITTLE_ENDIAN flag usage
-12/20: Changes to match modified 11/20
-13/20: Get rid of __LITTLE_ENDIAN flag usage
-14/20: Changes to match modified 13/20
-15/20: Changes to match modified 13/20
-19/20: mutex_init was missed for rx_lock in v1
-
-Amitkumar Karwar (2):
-  rsi: use BUILD_BUG_ON check for fsm_state
-  rsi: correct the logic of deriving queue number
-
-Karun Eagalapati (13):
-  rsi: fix sdio card reset problem
-  rsi: chip reset for SDIO interface
-  rsi: correct SDIO disconnect path handling
-  rsi: card reset for USB interface
-  rsi: USB tx headroom cleanup
-  rsi: rename USB endpoint macros
-  rsi: choose correct endpoint based on queue.
-  rsi: set immediate wakeup bit
-  rsi: rename variable in_sdio_litefi_irq
-  rsi: Optimise sdio claim and release host
-  rsi: SDIO Rx packet processing enhancement
-  rsi: use separate mutex lock for receive thread
-  rsi: Rename mutex tx_rxlock to the tx_lock.
-
-Pavani Muthyala (4):
-  rsi: management frame descriptor preparation cleanup
-  rsi: data packet descriptor code cleanup
-  rsi: data packet descriptor enhancements
-  rsi: separate function for data packet descriptor
-
-Prameela Rani Garnepudi (2):
-  rsi: changes in eeprom read frame
-  rsi: separate function for management packet descriptor
-
- drivers/net/wireless/rsi/rsi_91x_core.c     |  10 +-
- drivers/net/wireless/rsi/rsi_91x_debugfs.c  |   3 +
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 270 ++++++++++++++++++----------
- drivers/net/wireless/rsi/rsi_91x_main.c     |   3 +-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  90 +++++++---
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 154 ++++++++++++----
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  44 +++--
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 118 +++++++++---
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |   6 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  64 +++++++
- drivers/net/wireless/rsi/rsi_main.h         |  34 +++-
- drivers/net/wireless/rsi/rsi_mgmt.h         |  26 ++-
- drivers/net/wireless/rsi/rsi_sdio.h         |   4 +-
- drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
- 14 files changed, 623 insertions(+), 208 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 152905e985d2..6b8583c37b92 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -161,6 +161,8 @@ struct rte_console {
+ 
+ #define CORE_BUS_REG(base, field) \
+ 		(base + offsetof(struct sdpcmd_regs, field))
++#define __sd_reg(field) \
++		(offsetof(struct sdpcmd_regs, field))
+ 
+ /* SDIO function 1 register CHIPCLKCSR */
+ /* Force ALP request to backplane */
+@@ -1078,12 +1080,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* Read mailbox data and ack that we did so */
+-	ret = r_sdreg32(bus, &hmb_data,
+-			offsetof(struct sdpcmd_regs, tohostmailboxdata));
++	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
+ 
+ 	if (ret == 0)
+-		w_sdreg32(bus, SMB_INT_ACK,
+-			  offsetof(struct sdpcmd_regs, tosbmailbox));
++		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
+ 	bus->sdcnt.f1regdata += 2;
+ 
+ 	/* Dongle recomposed rx frames, accept them again */
+@@ -1190,8 +1190,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 
+ 	if (rtx) {
+ 		bus->sdcnt.rxrtx++;
+-		err = w_sdreg32(bus, SMB_NAK,
+-				offsetof(struct sdpcmd_regs, tosbmailbox));
++		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
+ 
+ 		bus->sdcnt.f1regdata++;
+ 		if (err == 0)
+@@ -2315,9 +2314,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		if (!bus->intr) {
+ 			/* Check device status, signal pending interrupt */
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+-			ret = r_sdreg32(bus, &intstatus,
+-					offsetof(struct sdpcmd_regs,
+-						 intstatus));
++			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
+ 			sdio_release_host(bus->sdiodev->func[1]);
+ 			bus->sdcnt.f2txdata++;
+ 			if (ret != 0)
+@@ -2423,7 +2420,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		brcmf_sdio_bus_sleep(bus, false, false);
+ 
+ 		/* Disable and clear interrupts at the chip level also */
+-		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
++		w_sdreg32(bus, 0, __sd_reg(hostintmask));
+ 		local_hostintmask = bus->hostintmask;
+ 		bus->hostintmask = 0;
+ 
+@@ -2442,8 +2439,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 		/* Clear any pending interrupts now that F2 is disabled */
+-		w_sdreg32(bus, local_hostintmask,
+-			  offsetof(struct sdpcmd_regs, intstatus));
++		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
+ 
+ 		sdio_release_host(sdiodev->func[1]);
+ 	}
+@@ -2489,7 +2485,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	int ret;
+ 
+ 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+-	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
++	addr = buscore->base + __sd_reg(intstatus);
+ 
+ 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
+ 	bus->sdcnt.f1regdata++;
+@@ -2564,11 +2560,9 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
+-				offsetof(struct sdpcmd_regs, intstatus));
++		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
+ 
+-		err = r_sdreg32(bus, &newstatus,
+-				offsetof(struct sdpcmd_regs, intstatus));
++		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
+ 		bus->sdcnt.f1regdata += 2;
+ 		atomic_set(&bus->fcstate,
+ 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
+@@ -3748,7 +3742,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 
+ 	/* clear all interrupts */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
+-	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
++	reg_addr = core->base + __sd_reg(intstatus);
+ 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
+ 
+ 	if (rstvec)
+@@ -4023,7 +4017,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 
+ 	/* Enable function 2 (frame transfers) */
+ 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
+-		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
++		  __sd_reg(tosbmailboxdata));
+ 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 
+@@ -4033,8 +4027,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (!err) {
+ 		/* Set up the interrupt mask and enable interrupts */
+ 		bus->hostintmask = HOSTINTMASK;
+-		w_sdreg32(bus, bus->hostintmask,
+-			  offsetof(struct sdpcmd_regs, hostintmask));
++		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
+ 
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
 -- 
-2.7.4
+2.11.0
