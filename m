@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f43.google.com ([209.85.213.43]:33456 "EHLO
-        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752841AbdGHLPm (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33002 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751312AbdGQSKL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Jul 2017 07:15:42 -0400
-Received: by mail-vk0-f43.google.com with SMTP id r126so29093042vkg.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Jul 2017 04:15:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1499498863-6865-1-git-send-email-dev@kresin.me>
-References: <1499498863-6865-1-git-send-email-dev@kresin.me>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Sat, 8 Jul 2017 13:15:21 +0200
-Message-ID: <CAOiHx=m5CdOM82R3T7DBwQPNgHTrAA95mt4ZeYWqa-cr5KPGrQ@mail.gmail.com> (sfid-20170708_131545_801247_C9D67BD1)
-Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
-To: Mathias Kresin <dev@kresin.me>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 17 Jul 2017 14:10:11 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 01/11] rtlwifi: rtl8192de: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:39:49 +0530
+Message-Id: <1500314995-3181-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201207_056544_81ECD44F)
+In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-On 8 July 2017 at 09:27, Mathias Kresin <dev@kresin.me> wrote:
-> If clk_get returns an error, rt2x00dev->clk is set to NULL. In
-> contrast to the common clock framework provided clk_get_rate(), at
-> least the ramips and bcm63xx legacy implementation of the clk API
-> access the rate member of the clk struct without a NULL check. This
-> results into a kernel panic if we do not have a (SoC) clock.
->
-> Call clk_get_rate only if we have a clock to fix the issues. This
-> approach is similar to what is done in the kernel at various places.
-> Usually clk_get_rate() is only called if clk_get_rate() doesn't return
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   2833	    945	     12	   3790	    ece realtek/rtlwifi/rtl8192de/sw.o
 
-Did you mean clk_get() as the second one?
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   2929	    849	     12	   3790	    ece realtek/rtlwifi/rtl8192de/sw.o
 
-> an error.
->
-> Signed-off-by: Mathias Kresin <dev@kresin.me>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tbh, I'd rather have this fixed at the source than adding a workaround
-to consumers, to have a consistent API across implementations (with
-drivers/clk/clk.c as the reference).
-
-And there don't seem that many, at least searching for clk_get_rate
-gave me only two handful of implementations of which many already
-check for NULL.
-
-
-Regards
-Jonas
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index 16132c6..be23dac 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -347,7 +347,7 @@ static const struct rtl_hal_cfg rtl92de_hal_cfg = {
+ 	.maps[RTL_RC_HT_RATEMCS15] = DESC_RATEMCS15,
+ };
+ 
+-static struct pci_device_id rtl92de_pci_ids[] = {
++static const struct pci_device_id rtl92de_pci_ids[] = {
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8193, rtl92de_hal_cfg)},
+ 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x002B, rtl92de_hal_cfg)},
+ 	{},
+-- 
+2.7.4
