@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:35486 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751210AbdGZAfD (ORCPT
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:35637 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdGQT6S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 20:35:03 -0400
+        Mon, 17 Jul 2017 15:58:18 -0400
+Received: by mail-wr0-f172.google.com with SMTP id w4so27823603wrb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 12:58:18 -0700 (PDT)
+Subject: Re: BUG: brcmfmac: rework headroom check in .start_xmit() causes
+ 43430a1 to fail.
+To: Ian Molton <ian@mnementh.co.uk>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        davem@davemloft.net
+References: <86761c42-c91d-d4a7-3ba4-314612dd7fd1@mnementh.co.uk>
+ <9ad41664-804f-eaf4-de59-ad3308178362@broadcom.com>
+ <9fcdf5ac-fae5-fe28-b624-9c121b8e5876@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <35261cf2-1b2f-be41-9a5f-f5fdc4ace7df@broadcom.com> (sfid-20170717_215821_692976_7F2AB0C9)
+Date: Mon, 17 Jul 2017 21:58:15 +0200
 MIME-Version: 1.0
-In-Reply-To: <2908341.aERReitNcd@aspire.rjw.lan>
-References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
- <20170719182857.73693-7-andriy.shevchenko@linux.intel.com>
- <20170725141235.GY2369@lahna.fi.intel.com> <2908341.aERReitNcd@aspire.rjw.lan>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 26 Jul 2017 03:35:01 +0300
-Message-ID: <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com> (sfid-20170726_023754_758972_AC04903E)
-Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID API
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
-        devel@driverdev.osuosl.org,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        linux-watchdog@vger.kernel.org,
-        linux-efi <linux-efi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <9fcdf5ac-fae5-fe28-b624-9c121b8e5876@mnementh.co.uk>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 26, 2017 at 3:21 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Tuesday, July 25, 2017 05:12:35 PM Mika Westerberg wrote:
->> On Wed, Jul 19, 2017 at 09:28:57PM +0300, Andy Shevchenko wrote:
->> > There are new types and helpers that are supposed to be used in new code.
->> >
->> > As a preparation to get rid of legacy types and API functions do
->> > the conversion here.
->> >
->> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
->> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+
+On 17-07-17 21:56, Ian Molton wrote:
+> On 17/07/17 20:14, Arend van Spriel wrote:
 >>
->> Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->
-> OK
->
-> Andy, do you want me to apply this?
+>> On 17-07-17 21:03, Ian Molton wrote:
+>>> Hi folks,
+>>>
+>>> I've found that:
+>>>
+>>> 270a6c1f65fe brcmfmac: rework headroom check in .start_xmit()
+>>>
+>>> Causes the 43430a1 to become non-responsive. The log starts emitting
+>>> these messages:
+>>
+>> A fix is already pending in patchwork:
+>>
+>> https://patchwork.kernel.org/patch/9836383/
+> 
+> Confirmed, this fix does fix the breakage.
 
-If you would like to.
+one to go...
 
-The patch is now pretty independent since necessary stuff made v4.13-rc1.
-
--- 
-With Best Regards,
-Andy Shevchenko
+Regards,
+Arend
