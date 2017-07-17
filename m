@@ -1,40 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33940 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1750942AbdGZU0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:26:17 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 08/34] brcmfmac: Fix uninitialised variable
-Date: Wed, 26 Jul 2017 21:25:31 +0100
-Message-Id: <20170726202557.15632-9-ian@mnementh.co.uk> (sfid-20170726_222626_091928_AA10179C)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34465 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751325AbdGQPKK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Jul 2017 11:10:10 -0400
+Received: by mail-oi0-f67.google.com with SMTP id d77so18146639oig.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:10 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH v2 07/11] rtlwifi: Add TX/RX throughput statistics in period
+Date: Mon, 17 Jul 2017 10:09:50 -0500
+Message-Id: <20170717150954.1441-8-Larry.Finger@lwfinger.net> (sfid-20170717_171028_202262_208504DE)
+In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Unlikely to be a problem, but brcmf_sdiod_regrb() is
-not symmetric with brcmf_sdiod_regrl() in this regard.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+The statistic variables use u64 to get higher precision.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2 - no changes
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 16 ++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 15 +++++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index f703d7be6a85..73f2194a854f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -367,7 +367,7 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 9e6fcdde7475..f6baa2d00c72 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1999,6 +1999,22 @@ void rtl_watchdog_wq_callback(void *data)
+ 	rtlpriv->link_info.tx_busy_traffic = tx_busy_traffic;
+ 	rtlpriv->link_info.higher_busyrxtraffic = higher_busyrxtraffic;
  
- u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- {
--	u8 data;
-+	u8 data = 0;
- 	int retval;
++	rtlpriv->stats.txbytesunicast_inperiod =
++		rtlpriv->stats.txbytesunicast -
++		rtlpriv->stats.txbytesunicast_last;
++	rtlpriv->stats.rxbytesunicast_inperiod =
++		rtlpriv->stats.rxbytesunicast -
++		rtlpriv->stats.rxbytesunicast_last;
++	rtlpriv->stats.txbytesunicast_last = rtlpriv->stats.txbytesunicast;
++	rtlpriv->stats.rxbytesunicast_last = rtlpriv->stats.rxbytesunicast;
++
++	rtlpriv->stats.txbytesunicast_inperiod_tp =
++		(u32)(rtlpriv->stats.txbytesunicast_inperiod * 8 / 2 /
++		1024 / 1024);
++	rtlpriv->stats.rxbytesunicast_inperiod_tp =
++		(u32)(rtlpriv->stats.rxbytesunicast_inperiod * 8 / 2 /
++		1024 / 1024);
++
+ 	/* <3> DM */
+ 	if (!rtlpriv->cfg->mod_params->disable_watchdog)
+ 		rtlpriv->cfg->ops->dm_watchdog(hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 90f3c019bc04..8d8e104507d6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1013,10 +1013,17 @@ struct init_gain {
+ };
  
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+ struct wireless_stats {
+-	unsigned long txbytesunicast;
+-	unsigned long txbytesmulticast;
+-	unsigned long txbytesbroadcast;
+-	unsigned long rxbytesunicast;
++	u64 txbytesunicast;
++	u64 txbytesmulticast;
++	u64 txbytesbroadcast;
++	u64 rxbytesunicast;
++
++	u64 txbytesunicast_inperiod;
++	u64 rxbytesunicast_inperiod;
++	u32 txbytesunicast_inperiod_tp;
++	u32 rxbytesunicast_inperiod_tp;
++	u64 txbytesunicast_last;
++	u64 rxbytesunicast_last;
+ 
+ 	long rx_snr_db[4];
+ 	/*Correct smoothed ss in Dbm, only used
 -- 
-2.11.0
+2.12.3
