@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35670 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbdGMI4m (ORCPT
+Received: from mail-io0-f169.google.com ([209.85.223.169]:34319 "EHLO
+        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdGQRel (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jul 2017 04:56:42 -0400
-Received: by mail-wr0-f193.google.com with SMTP id y28so4107801wrd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jul 2017 01:56:42 -0700 (PDT)
-Date: Thu, 13 Jul 2017 10:56:39 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: Re: net-next STATUS page
-Message-ID: <20170713085639.GA2060@nanopsycho> (sfid-20170713_105651_939463_8F6F6AC0)
-References: <20170711.072416.2014054416066621222.davem@davemloft.net>
- <20170711115841.64d9aa1d@xeon-e3>
+        Mon, 17 Jul 2017 13:34:41 -0400
+Received: by mail-io0-f169.google.com with SMTP id r36so867431ioi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 10:34:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170711115841.64d9aa1d@xeon-e3>
+In-Reply-To: <20170717162510.GE9786@kroah.com>
+References: <CACHT077fJY0EBYRk+wgnVREoEf-d+Brejq2JngcSpsi_ygV-GA@mail.gmail.com>
+ <20170717162510.GE9786@kroah.com>
+From: Michael Gugino <michael.gugino.2@gmail.com>
+Date: Mon, 17 Jul 2017 13:34:39 -0400
+Message-ID: <CACHT075WDfsoV+CfM8+KeZrKyXEp_XH40GrUshYcVbxcKqPiHA@mail.gmail.com> (sfid-20170717_193445_035110_FB4F76E3)
+Subject: Re: [PATCH v2 1/1] rtl8188eu: add TL-WN722N v2 support
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tue, Jul 11, 2017 at 08:58:41PM CEST, stephen@networkplumber.org wrote:
->On Tue, 11 Jul 2017 07:24:16 -0700 (PDT)
->David Miller <davem@davemloft.net> wrote:
->
->> It has gotten to the point that even casually walking around
->> Faro, Portugal last week, random German tourists would stop
->> me in the street and ask if net-next was open or not.
->> 
->> Therefore, in order to avoid any and all confusion I have created this
->> web site:
->> 
->> 	http://vger.kernel.org/~davem/net-next.html
->> 
->> Please refer to it if you are ever in doubt.
->> 
->> Thanks!
->
->Where is the app?
+Sorry for the spam.  I think I have it together now, sent patch to
+driverdev-devel list with what appears to be correct subject line. I
+appreciate your time and feedback.
 
-There would be good to have git-send-email hook to check this :)
+Re what changed from v1:  Nothing, my first mangled patch added
+whitespace.  I have submitted new patch to driverdev without vX.
+
+Thank you,
+
+Michael Gugino
+
+On Mon, Jul 17, 2017 at 12:25 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Mon, Jul 17, 2017 at 12:03:07PM -0400, Michael Gugino wrote:
+>> From: Michael Gugino <michael.gugino.2@gmail.com>
+>>
+>> This patch adds support for USB Device TP-Link TL-WN722N v2.
+>> VendorID: 0x2357, ProductID: 0x010c
+>>
+>> Signed-off-by: Michael Gugino <michael.gugino.2@gmail.com>
+>> ---
+>>  drivers/staging/rtl8188eu/os_dep/usb_intf.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>
+> What changed from v1?  Always be specific...
+>
+> v3?
