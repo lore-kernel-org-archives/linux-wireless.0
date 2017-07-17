@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:42972 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751668AbdG2Wan (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35700 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751314AbdGQSQx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Jul 2017 18:30:43 -0400
-Date: Sat, 29 Jul 2017 15:30:42 -0700 (PDT)
-Message-Id: <20170729.153042.505134537790079396.davem@davemloft.net> (sfid-20170730_003057_669962_DB0FD464)
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-07-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87d18kvepm.fsf@kamboji.qca.qualcomm.com>
-References: <87h8xwvevj.fsf@kamboji.qca.qualcomm.com>
-        <87d18kvepm.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 17 Jul 2017 14:16:53 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: arend.vanspriel@broadcom.com, kvalo@codeaurora.org,
+        hante.meuleman@broadcom.com, franky.lin@broadcom.com,
+        wright.feng@cypress.com
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH 11/11] net: brcmfmac: constify pci_device_id.
+Date: Mon, 17 Jul 2017 23:46:42 +0530
+Message-Id: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201711_111979_A6027D23)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Fri, 28 Jul 2017 14:05:59 +0000
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
->> Hi Dave,
->>
->> here's a pull request for net, more info the signed tag below. Please
->> let me know if there are any problems.
->>
->> Kalle
->>
->> The following changes since commit d755cbc26e8295ae8e5d30425364e093b4247a85:
->>
->>   Merge tag 'iwlwifi-for-kalle-2017-07-21' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-07-21 14:33:27 +0300)
->>
->> are available in the git repository at:
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-07-28
-> 
-> Argh, the subject is of course wrong and it should be:
-> 
-> pull-request: wireless-drivers 2017-07-28
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yeah that makes more sense. :)
-
-> So this pull request is for net tree to get these two brcmfmac fixes to
-> 4.13. Otherwise the pull request is correct so I don't submit a new one
-> (but let me know if you prefer that).
-
-Pulled, thanks Kalle.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index f878706..e6e9b00 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1951,7 +1951,7 @@ static const struct dev_pm_ops brcmf_pciedrvr_pm = {
+ 	BRCM_PCIE_VENDOR_ID_BROADCOM, dev_id,\
+ 	subvend, subdev, PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0 }
+ 
+-static struct pci_device_id brcmf_pcie_devid_table[] = {
++static const struct pci_device_id brcmf_pcie_devid_table[] = {
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
+-- 
+2.7.4
