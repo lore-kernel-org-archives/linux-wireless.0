@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41334 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751782AbdGGIkw (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:33266 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751284AbdGQP7g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 04:40:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        =?utf-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?utf-8?Q?R?= =?utf-8?Q?afa=C5=82_Mi=C5=82ecki?=
-        <rafal@milecki.pl>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl\@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security\@kernel.org" <security@kernel.org>
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
-        <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
-        <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
-Date: Fri, 07 Jul 2017 11:40:26 +0300
-In-Reply-To: <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
-        (Linus Torvalds's message of "Thu, 6 Jul 2017 15:32:42 -0700")
-Message-ID: <871spsej2d.fsf@kamboji.qca.qualcomm.com> (sfid-20170707_104111_235447_170BAA36)
+        Mon, 17 Jul 2017 11:59:36 -0400
+Received: by mail-it0-f65.google.com with SMTP id 188so18206478itx.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:59:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Michael Gugino <michael.gugino.2@gmail.com>
+Date: Mon, 17 Jul 2017 11:59:35 -0400
+Message-ID: <CACHT076KPRRyt5KuEOKkjGSh+wrQAFOEzcPx2-ZHfbp=6u9aTQ@mail.gmail.com> (sfid-20170717_175940_493967_A850C09D)
+Subject: [PATCH 1/1] rtl8188eu: add TL-WN722N v2 support
+To: linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
+From: Michael Gugino <michael.gugino.2@gmail.com>
 
-> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->>
->> Looks fine to me so ...
->
-> I really think that if we can't trust 'len', then we have to check
-> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
-> we'll just have a big 16-bit number instead.
->
-> And we should do that brcmf_err() that I had in my version, which also
-> let's people know they are being attacked.
+This patch adds support for USB Device TP-Link TL-WN722N v2.
+VendorID: 0x2357, ProductID: 0x010c
 
-I hope brcmf_err() is ratelimited so that the attacker cannot spam the
-logs too much. BTW I didn't see your version of the patch, I guess it
-was not CCed to linux-wireless.
+Signed-off-by: Michael Gugino <michael.gugino.2@gmail.com>
+---
+drivers/staging/rtl8188eu/os_dep/usb_intf.c | 1 +
+1 file changed, 1 insertion(+)
 
-Just a side note, but this discussion is not stored in patchwork, I only
-see the original patch. No idea why:
-
-https://patchwork.kernel.org/patch/9827721/
-
+diff --git a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+index 963235f..d283341 100644
+--- a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
+@@ -43,6 +43,7 @@ static struct usb_device_id rtw_usb_id_tbl[] = {
+{USB_DEVICE(0x2001, 0x330F)}, /* DLink DWA-125 REV D1 */
+{USB_DEVICE(0x2001, 0x3310)}, /* Dlink DWA-123 REV D1 */
+{USB_DEVICE(0x2001, 0x3311)}, /* DLink GO-USB-N150 REV B1 */
++    {USB_DEVICE(0x2357, 0x010c)}, /* TP-Link TL-WN722N v2 */
+{USB_DEVICE(0x0df6, 0x0076)}, /* Sitecom N150 v2 */
+{}    /* Terminating entry */
+};
 -- 
-Kalle Valo
+2.7.4
