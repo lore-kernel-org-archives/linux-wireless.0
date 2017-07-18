@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:36004 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750839AbdGYWze (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 18:55:34 -0400
-Received: by mail-pg0-f48.google.com with SMTP id 125so75980157pgi.3
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jul 2017 15:55:34 -0700 (PDT)
+Received: from [217.148.43.144] ([217.148.43.144]:50486 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751431AbdGRJp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jul 2017 05:45:28 -0400
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Subject: RFC: brcmfmac bus level addressing issues.
+Message-ID: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk> (sfid-20170718_114532_889895_E7108656)
+Date: Tue, 18 Jul 2017 10:45:25 +0100
 MIME-Version: 1.0
-From: Jacob Bower <jacob.bower@gmail.com>
-Date: Tue, 25 Jul 2017 15:55:13 -0700
-Message-ID: <CAHWWEcbBiTChDns8XaXmG7p8FiFqxzN3-No2J+Lvmt4yYKLi2g@mail.gmail.com> (sfid-20170726_005538_402898_0C982CFD)
-Subject: New binary blobs for BCM43xxx devices?
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi folks,
 
-If understand correctly CVE-2017-9417 (aka. the "broadpwn" exploit) is
-addressed by firmware updates in new drivers recently released by some
-major vendors.
+Its come to my attention that there is a substantial disparity between
+the PCIe and SDIO variants of the driver when it comes to handlign
+writes via the backplane.
 
-Is there a systematic way to extract the new firmware to help secure
-Linux systems with BCM43xxx devices?
+The SDIO bus code checks, upon every (32 bit) access, wether the
+backplane window is in the right place, and only updates it if it has
+actually changed.
 
-In my specific case I have a MacBook Pro 12.1 with a BCM43602 running
-Linux and the brcmfmac driver, but have an old partition with OS X. I
-was hoping it might be possible to extract the firmware from the
-latest OS X updates? Or, maybe there is a way to get the latest
-release of Linux drivers from Broadcom and extract from there? (I had
-a bit of trouble figuring out if there is a specific Broadcom page for
-the latest version of their restrictively licensed drivers).
+The PCIe code sets the window *regardless* of wether its changed, on
+*every single* write.
 
-I appreciate this could be a contentious issue and apologise in
-advance if this is the wrong forum for this discussion.
+The SDIO code has no explicit selection of the window address based on
+the core selected.
 
-Kind regards,
-Jacob
+The PCIe code uses brcmf_pcie_select_core(), which, ultimately, appears
+to be totally redundant, due to the above mentioned 32 bit access code
+setting the window register regardless of its current value.
+
+------------------------------------
+
+Can we standardise how this is supposed to work? Its ugly, and its going
+to cause bugs, ultimately. I suspect its probably the cause of the code
+I mentioned in my recent patch titled "brcmfmac: HACK - stabilise the
+value of ->sbwad in use for some xfer routines."
+
+We really *dont* want to call brcmf_pcie_select_core() all over the
+place. Its inefficient, traversing a list as it does, when all it does
+is return a pointer that never actually changes, to the core structures
+that contain addressing info.
+
+I'd propose we do what I've done in my SDIO patch set - we call
+brcmf_chip_get_core() *once* after the chip has been probed, and store
+the pointer returned.
+
+The window register setting can be hidden in the read32/write32 buscore
+ops, and will never be incorrect from that point, and the code can
+simply use a flat address space model. A single if() has got to be less
+costly than writing the register on overy single read32/write32...
+
+Anyhow, whatever we decide to do, can we do the same thing in both bus
+drivers?
+
+-Ian
