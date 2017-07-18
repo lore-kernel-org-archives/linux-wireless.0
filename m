@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40146 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750723AbdGYFlL (ORCPT
+Received: from gateway30.websitewelcome.com ([192.185.150.24]:43392 "EHLO
+        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751500AbdGRVDA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 01:41:11 -0400
-Message-ID: <1500961268.20057.40.camel@coelho.fi> (sfid-20170725_074116_537415_ECCF3104)
-From: Luca Coelho <luca@coelho.fi>
-To: =?UTF-8?Q?=E9=BE=9A=E6=81=92?= <18278134232@139.com>,
-        linux-wireless@vger.kernel.org
-Cc: linuxwifi@intel.com
-Date: Tue, 25 Jul 2017 08:41:08 +0300
-In-Reply-To: <efb38427-f17d-2761-4883-baea2084a268@139.com>
-References: <efb38427-f17d-2761-4883-baea2084a268@139.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: wireless drives for intel 3165
+        Tue, 18 Jul 2017 17:03:00 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway30.websitewelcome.com (Postfix) with ESMTP id 978FE5E138
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 15:41:07 -0500 (CDT)
+Date: Tue, 18 Jul 2017 15:41:06 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] rtlwifi: remove useless code
+Message-ID: <20170718204106.GA9905@embeddedgus> (sfid-20170718_230304_548859_60C8420B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Hi,
+Remove useless local variables last_read_point and last_txw_point and
+the code related.
 
-With kernel v4.9, you must use the iwlwifi-7265D-22.ucode.  The driver
-supports up to -26, but we didn't release firmwares 23 to 26 publicly.
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-The error messages you're seeing are harmless, because they seem to stop
- -23, which probably means -22 was found, loaded and everything should
-work fine. :)
-
-HTH.
-
---
-Cheers,
-Luca.
-
-
-On Tue, 2017-07-25 at 12:18 +0800, 龚恒 wrote:
-> hello,my computer'system is deepin15.4.1,the kernels is 4.9.0,my 
-> computer turn on failed to load iwlwifi-7265D-26.ucode , failed to load 
-> iwlwifi-7265D-25.ucode ,failed to load iwlwifi-7265D-24.ucode and failed 
-> to load iwlwifi-7265D-23.ucode .
-> I don't find firmware for inter 3165 with the most leastest,I need your 
-> help,can you help me find the  firmware for iwlwifi-7265D-26.ucode , 
-> failed to load iwlwifi-7265D-25.ucode ,failed to load 
-> iwlwifi-7265D-24.ucode and failed to load iwlwifi-7265D-23.ucode and 
-> send my email,thank you
-> 
-> 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index 55f238a..c58393e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -478,7 +478,6 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u16 read_point = 0, write_point = 0, remind_cnt = 0;
+ 	u32 tmp_4byte = 0;
+-	static u16 last_read_point;
+ 	static bool start_rx;
+ 
+ 	tmp_4byte = rtl_read_dword(rtlpriv, REG_RXQ_TXBD_IDX);
+@@ -506,7 +505,6 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
+ 
+ 	rtlpci->rx_ring[queue_index].next_rx_rp = write_point;
+ 
+-	last_read_point = read_point;
+ 	return remind_cnt;
+ }
+ 
+@@ -917,7 +915,6 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u16 cur_tx_rp = 0;
+ 	u16 cur_tx_wp = 0;
+-	static u16 last_txw_point;
+ 	static bool over_run;
+ 	u32 tmp = 0;
+ 	u8 q_idx = *val;
+@@ -951,9 +948,6 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 				rtl_write_word(rtlpriv,
+ 					       get_desc_addr_fr_q_idx(q_idx),
+ 					       ring->cur_tx_wp);
+-
+-				if (q_idx == 1)
+-					last_txw_point = cur_tx_wp;
+ 			}
+ 
+ 			if (ring->avl_desc < (max_tx_desc - 15)) {
+-- 
+2.5.0
