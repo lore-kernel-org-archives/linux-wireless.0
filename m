@@ -1,91 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:37196 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752555AbdGaQcl (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:36802 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdGRJTX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:32:41 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 02/10] wil6210: allow configuring scan timers
-Date: Mon, 31 Jul 2017 19:32:25 +0300
-Message-Id: <1501518753-6339-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183245_889026_EC211B84)
-In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 18 Jul 2017 05:19:23 -0400
+Received: by mail-wr0-f181.google.com with SMTP id y43so19869018wrd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 02:19:22 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au
+Cc: ebiggers@google.com, davem@davemloft.net, dm-devel@redhat.com,
+        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        agk@redhat.com, snitzer@redhat.com,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH v2 1/2] crypto/algapi - use separate dst and src operands for __crypto_xor()
+Date: Tue, 18 Jul 2017 10:19:11 +0100
+Message-Id: <20170718091912.14104-2-ard.biesheuvel@linaro.org> (sfid-20170718_111929_085184_81E25991)
+In-Reply-To: <20170718091912.14104-1-ard.biesheuvel@linaro.org>
+References: <20170718091912.14104-1-ard.biesheuvel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+In preparation of introducing crypto_xor_cpy(), which will use separate
+operands for input and output, modify the __crypto_xor() implementation,
+which it will share with the existing crypto_xor(), which provides the
+actual functionality when not using the inline version.
 
-Allow setting scan timeout and scan dwell time
-through module parameters.
-
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 17 ++++++++++++++---
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
- 2 files changed, 15 insertions(+), 4 deletions(-)
+ crypto/algapi.c         | 25 ++++++++++++--------
+ include/crypto/algapi.h |  4 ++--
+ 2 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 77af749..d079533 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -26,6 +26,14 @@
- module_param(disable_ap_sme, bool, 0444);
- MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
+diff --git a/crypto/algapi.c b/crypto/algapi.c
+index e4cc7615a139..aa699ff6c876 100644
+--- a/crypto/algapi.c
++++ b/crypto/algapi.c
+@@ -975,13 +975,15 @@ void crypto_inc(u8 *a, unsigned int size)
+ }
+ EXPORT_SYMBOL_GPL(crypto_inc);
  
-+static uint scan_dwell_time  = WMI_SCAN_DWELL_TIME_MS;
-+module_param(scan_dwell_time, uint, 0644);
-+MODULE_PARM_DESC(scan_dwell_time, " Scan dwell time (msec)");
-+
-+static uint scan_timeout = WIL6210_SCAN_TO_SEC;
-+module_param(scan_timeout, uint, 0644);
-+MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
-+
- #define CHAN60G(_channel, _flags) {				\
- 	.band			= NL80211_BAND_60GHZ,		\
- 	.center_freq		= 56160 + (2160 * (_channel)),	\
-@@ -528,8 +536,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+-void __crypto_xor(u8 *dst, const u8 *src, unsigned int len)
++void __crypto_xor(u8 *dst, const u8 *src1, const u8 *src2, unsigned int len)
+ {
+ 	int relalign = 0;
  
- 	(void)wil_p2p_stop_discovery(wil);
+ 	if (!IS_ENABLED(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)) {
+ 		int size = sizeof(unsigned long);
+-		int d = ((unsigned long)dst ^ (unsigned long)src) & (size - 1);
++		int d = (((unsigned long)dst ^ (unsigned long)src1) |
++			 ((unsigned long)dst ^ (unsigned long)src2)) &
++			(size - 1);
  
--	wil_dbg_misc(wil, "Start scan_request 0x%p\n", request);
--	wil_dbg_misc(wil, "SSID count: %d", request->n_ssids);
-+	wil_dbg_misc(wil,
-+		     "Start scan_request 0x%p, dwell_time %dms, timeout %dsec, SSID count %d\n",
-+		     request, scan_dwell_time, scan_timeout, request->n_ssids);
+ 		relalign = d ? 1 << __ffs(d) : size;
  
- 	for (i = 0; i < request->n_ssids; i++) {
- 		wil_dbg_misc(wil, "SSID[%d]", i);
-@@ -550,10 +559,12 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+@@ -992,34 +994,37 @@ void __crypto_xor(u8 *dst, const u8 *src, unsigned int len)
+ 		 * process the remainder of the input using optimal strides.
+ 		 */
+ 		while (((unsigned long)dst & (relalign - 1)) && len > 0) {
+-			*dst++ ^= *src++;
++			*dst++ = *src1++ ^ *src2++;
+ 			len--;
+ 		}
  	}
  
- 	wil->scan_request = request;
--	mod_timer(&wil->scan_timer, jiffies + WIL6210_SCAN_TO);
-+	mod_timer(&wil->scan_timer,
-+		  jiffies + msecs_to_jiffies(1000U * scan_timeout));
+ 	while (IS_ENABLED(CONFIG_64BIT) && len >= 8 && !(relalign & 7)) {
+-		*(u64 *)dst ^= *(u64 *)src;
++		*(u64 *)dst = *(u64 *)src1 ^  *(u64 *)src2;
+ 		dst += 8;
+-		src += 8;
++		src1 += 8;
++		src2 += 8;
+ 		len -= 8;
+ 	}
  
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.cmd.scan_type = WMI_ACTIVE_SCAN;
-+	cmd.cmd.dwell_time = cpu_to_le32(scan_dwell_time);
- 	cmd.cmd.num_channels = 0;
- 	n = min(request->n_channels, 4U);
- 	for (i = 0; i < n; i++) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d085ccf..ac32284 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -112,7 +112,7 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
- #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
- #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
- #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
--#define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
-+#define WIL6210_SCAN_TO_SEC		10
- #define WIL6210_DISCONNECT_TO_MS (2000)
- #define WIL6210_RX_HIGH_TRSH_INIT		(0)
- #define WIL6210_RX_HIGH_TRSH_DEFAULT \
+ 	while (len >= 4 && !(relalign & 3)) {
+-		*(u32 *)dst ^= *(u32 *)src;
++		*(u32 *)dst = *(u32 *)src1 ^ *(u32 *)src2;
+ 		dst += 4;
+-		src += 4;
++		src1 += 4;
++		src2 += 4;
+ 		len -= 4;
+ 	}
+ 
+ 	while (len >= 2 && !(relalign & 1)) {
+-		*(u16 *)dst ^= *(u16 *)src;
++		*(u16 *)dst = *(u16 *)src1 ^ *(u16 *)src2;
+ 		dst += 2;
+-		src += 2;
++		src1 += 2;
++		src2 += 2;
+ 		len -= 2;
+ 	}
+ 
+ 	while (len--)
+-		*dst++ ^= *src++;
++		*dst++ = *src1++ ^ *src2++;
+ }
+ EXPORT_SYMBOL_GPL(__crypto_xor);
+ 
+diff --git a/include/crypto/algapi.h b/include/crypto/algapi.h
+index 436c4c2683c7..fd547f946bf8 100644
+--- a/include/crypto/algapi.h
++++ b/include/crypto/algapi.h
+@@ -192,7 +192,7 @@ static inline unsigned int crypto_queue_len(struct crypto_queue *queue)
+ }
+ 
+ void crypto_inc(u8 *a, unsigned int size);
+-void __crypto_xor(u8 *dst, const u8 *src, unsigned int size);
++void __crypto_xor(u8 *dst, const u8 *src1, const u8 *src2, unsigned int size);
+ 
+ static inline void crypto_xor(u8 *dst, const u8 *src, unsigned int size)
+ {
+@@ -207,7 +207,7 @@ static inline void crypto_xor(u8 *dst, const u8 *src, unsigned int size)
+ 			size -= sizeof(unsigned long);
+ 		}
+ 	} else {
+-		__crypto_xor(dst, src, size);
++		__crypto_xor(dst, dst, src, size);
+ 	}
+ }
+ 
 -- 
-1.9.1
+2.9.3
