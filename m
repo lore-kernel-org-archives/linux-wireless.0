@@ -1,51 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:56110 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933712AbdGSTIg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:08:36 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 01/34] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
-Date: Wed, 19 Jul 2017 20:07:49 +0100
-Message-Id: <20170719190822.10857-2-ian@mnementh.co.uk> (sfid-20170719_211040_450941_08BFAE7F)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from gateway30.websitewelcome.com ([192.185.150.24]:32382 "EHLO
+        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751602AbdGRU6B (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jul 2017 16:58:01 -0400
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway30.websitewelcome.com (Postfix) with ESMTP id 9990449CC4
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 15:37:13 -0500 (CDT)
+Date: Tue, 18 Jul 2017 15:37:11 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] wireless: airo: remove unnecessary static in writerids()
+Message-ID: <20170718203711.GA30044@embeddedgus> (sfid-20170718_225804_602404_B7C73BE8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	All the other IO functions are the other way round in this
-driver. Make this one match.
+Remove unnecessary static on local function pointer _writer_.
+Such pointer is initialized before being used, on every
+execution path throughout the function. The static has no
+benefit and, removing it reduces the object file size.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+This issue was detected using Coccinelle and the following semantic patch:
+
+@bad exists@
+position p;
+identifier x;
+type T;
+@@
+
+static T x@p;
+...
+x = <+...x...+>
+
+@@
+identifier x;
+expression e;
+type T;
+position p != bad.p;
+@@
+
+-static
+ T x@p;
+ ... when != x
+     when strict
+?x = e;
+
+In the following log you can see a significant difference in the object
+file size. This log is the output of the size command, before and after
+the code change:
+
+before:
+   text    data     bss     dec     hex filename
+ 113797   19152    1216  134165   20c15 drivers/net/wireless/cisco/airo.o
+
+after:
+   text	   data	    bss	    dec	    hex	filename
+ 113881	  19096	   1152	 134129	  20bf1	drivers/net/wireless/cisco/airo.o
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/cisco/airo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 984c1d0560b1..1acbaaf0f5c9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -230,8 +230,7 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 84143a0..1066d84 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -7837,7 +7837,7 @@ static int writerids(struct net_device *dev, aironet_ioctl *comp) {
+ 	struct airo_info *ai = dev->ml_priv;
+ 	int  ridcode;
+         int  enabled;
+-	static int (* writer)(struct airo_info *, u16 rid, const void *, int, int);
++	int (*writer)(struct airo_info *, u16 rid, const void *, int, int);
+ 	unsigned char *iobuf;
  
--static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
--					uint regaddr, u8 byte)
-+static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
- {
- 	int err_ret;
- 
-@@ -269,8 +268,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
- 			else
--				ret = brcmf_sdiod_f0_writeb(func, addr,
--							    *(u8 *)data);
-+				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
- 		} else {
- 			if (fn)
- 				*(u8 *)data = sdio_readb(func, addr, &ret);
+ 	/* Only super-user can write RIDs */
 -- 
-2.11.0
+2.5.0
