@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49594 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751533AbdGZUqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:46:50 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 10/34] brcmfmac: Rename bcmerror to err
-Date: Wed, 26 Jul 2017 21:25:33 +0100
-Message-Id: <20170726202557.15632-11-ian@mnementh.co.uk> (sfid-20170726_230043_169906_FD9EC74D)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:36483 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751893AbdGRJpp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jul 2017 05:45:45 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: davem@davemloft.net, stas.yakovlev@gmail.com, kvalo@codeaurora.org,
+        sgruszka@redhat.com
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v3 06/10] wireless: iwlegacy: constify attribute_group structures.
+Date: Tue, 18 Jul 2017 15:15:01 +0530
+Message-Id: <1500371102-14758-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170718_114735_934529_BD749350)
+In-Reply-To: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trivial cleanup of nasty variable name
+attribute_group are not supposed to change at runtime. All functions
+working with attribute_group provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Changes in v2:
+              Added cover later.
+Changes in v3:
+              net-next was closed. Now resubmitting it.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 049086f6db97..9d5716d0ad73 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -745,7 +745,7 @@ int
- brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		  u8 *data, uint size)
- {
--	int bcmerror = 0;
-+	int err = 0;
- 	struct sk_buff *pkt;
- 	u32 sdaddr;
- 	uint dsize;
-@@ -770,8 +770,8 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	/* Do the transfer(s) */
- 	while (size) {
- 		/* Set the backplane window to include the start address */
--		bcmerror = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
--		if (bcmerror)
-+		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
-+		if (err)
- 			break;
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 38bf403..329f3a6 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -3464,7 +3464,7 @@ static DEVICE_ATTR(antenna, S_IWUSR | S_IRUGO, il3945_show_antenna,
+ 	NULL
+ };
  
- 		brcmf_dbg(SDIO, "%s %d bytes at offset 0x%08x in window 0x%08x\n",
-@@ -784,9 +784,9 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		skb_put(pkt, dsize);
- 		if (write)
- 			memcpy(pkt->data, data, dsize);
--		bcmerror = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write,
--					      sdaddr, pkt);
--		if (bcmerror) {
-+		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write, sdaddr,
-+					 pkt);
-+		if (err) {
- 			brcmf_err("membytes transfer failed\n");
- 			break;
- 		}
-@@ -813,7 +813,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 
- 	sdio_release_host(sdiodev->func[1]);
- 
--	return bcmerror;
-+	return err;
- }
- 
- int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
+-static struct attribute_group il3945_attribute_group = {
++static const struct attribute_group il3945_attribute_group = {
+ 	.name = NULL,		/* put in device directory */
+ 	.attrs = il3945_sysfs_entries,
+ };
 -- 
-2.11.0
+1.9.1
