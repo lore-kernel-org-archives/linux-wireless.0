@@ -1,97 +1,326 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40866 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752156AbdG1OYK (ORCPT
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:33757 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751334AbdGRJT0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:24:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:19 +0300
-Message-Id: <20170728142337.19183-7-luca@coelho.fi> (sfid-20170728_162416_438930_38588A71)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 06/24] iwlwifi: fw api: fix various kernel-doc warnings
+        Tue, 18 Jul 2017 05:19:26 -0400
+Received: by mail-wr0-f180.google.com with SMTP id a10so20188279wrd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 02:19:25 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au
+Cc: ebiggers@google.com, davem@davemloft.net, dm-devel@redhat.com,
+        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        agk@redhat.com, snitzer@redhat.com,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH v2 2/2] crypto/algapi - make crypto_xor() take separate dst and src arguments
+Date: Tue, 18 Jul 2017 10:19:12 +0100
+Message-Id: <20170718091912.14104-3-ard.biesheuvel@linaro.org> (sfid-20170718_111933_300199_6644FCA8)
+In-Reply-To: <20170718091912.14104-1-ard.biesheuvel@linaro.org>
+References: <20170718091912.14104-1-ard.biesheuvel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+There are quite a number of occurrences in the kernel of the pattern
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+  if (dst != src)
+  	memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
+  crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
+
+or
+
+  crypto_xor(keystream, src, nbytes);
+  memcpy(dst, keystream, nbytes);
+
+where crypto_xor() is preceded or followed by a memcpy() invocation
+that is only there because crypto_xor() uses its output parameter as
+one of the inputs. To avoid having to add new instances of this pattern
+in the arm64 code, which will be refactored to implement non-SIMD
+fallbacks, add an alternative implementation called crypto_xor_cpy(),
+taking separate input and output arguments. This removes the need for
+the separate memcpy().
+
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/cmdhdr.h | 22 +++++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/fw/api/txq.h    |  3 ++-
- 2 files changed, 21 insertions(+), 4 deletions(-)
+ arch/arm/crypto/aes-ce-glue.c       |  4 +---
+ arch/arm/crypto/aes-neonbs-glue.c   |  5 ++---
+ arch/arm64/crypto/aes-glue.c        |  4 +---
+ arch/arm64/crypto/aes-neonbs-glue.c |  5 ++---
+ arch/sparc/crypto/aes_glue.c        |  3 +--
+ arch/x86/crypto/aesni-intel_glue.c  |  4 ++--
+ arch/x86/crypto/blowfish_glue.c     |  3 +--
+ arch/x86/crypto/cast5_avx_glue.c    |  3 +--
+ arch/x86/crypto/des3_ede_glue.c     |  3 +--
+ crypto/ctr.c                        |  3 +--
+ crypto/pcbc.c                       | 12 ++++--------
+ drivers/crypto/vmx/aes_ctr.c        |  3 +--
+ drivers/md/dm-crypt.c               | 11 +++++------
+ include/crypto/algapi.h             | 19 +++++++++++++++++++
+ 14 files changed, 42 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/cmdhdr.h b/drivers/net/wireless/intel/iwlwifi/fw/api/cmdhdr.h
-index fd97cccaedb8..ea4a3f04a83a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/cmdhdr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/cmdhdr.h
-@@ -112,15 +112,24 @@ static inline u32 iwl_cmd_id(u8 opcode, u8 groupid, u8 version)
- #define IWL_ALWAYS_LONG_GROUP	1
+diff --git a/arch/arm/crypto/aes-ce-glue.c b/arch/arm/crypto/aes-ce-glue.c
+index 0f966a8ca1ce..d0a9cec73707 100644
+--- a/arch/arm/crypto/aes-ce-glue.c
++++ b/arch/arm/crypto/aes-ce-glue.c
+@@ -285,9 +285,7 @@ static int ctr_encrypt(struct skcipher_request *req)
  
- /**
-- * struct iwl_cmd_header
-+ * struct iwl_cmd_header - (short) command header format
-  *
-  * This header format appears in the beginning of each command sent from the
-  * driver, and each response/notification received from uCode.
-  */
- struct iwl_cmd_header {
--	u8 cmd;		/* Command ID:  REPLY_RXON, etc. */
-+	/**
-+	 * @cmd: Command ID: REPLY_RXON, etc.
-+	 */
-+	u8 cmd;
-+	/**
-+	 * @group_id: group ID, for commands with groups
-+	 */
- 	u8 group_id;
--	/*
-+	/**
-+	 * @sequence:
-+	 * Sequence number for the command.
-+	 *
- 	 * The driver sets up the sequence number to values of its choosing.
- 	 * uCode does not use this value, but passes it back to the driver
- 	 * when sending the response to each driver-originated command, so
-@@ -150,6 +159,13 @@ struct iwl_cmd_header {
-  * driver, and each response/notification received from uCode.
-  * this is the wide version that contains more information about the command
-  * like length, version and command type
-+ *
-+ * @cmd: command ID, like in &struct iwl_cmd_header
-+ * @group_id: group ID, like in &struct iwl_cmd_header
-+ * @sequence: sequence, like in &struct iwl_cmd_header
-+ * @length: length of the command
-+ * @reserved: reserved
-+ * @version: command version
-  */
- struct iwl_cmd_header_wide {
- 	u8 cmd;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
-index 7e7ebe82729b..805e161641aa 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
-@@ -112,7 +112,7 @@ enum iwl_mvm_tx_fifo {
- };
+ 		ce_aes_ctr_encrypt(tail, NULL, (u8 *)ctx->key_enc,
+ 				   num_rounds(ctx), blocks, walk.iv);
+-		if (tdst != tsrc)
+-			memcpy(tdst, tsrc, nbytes);
+-		crypto_xor(tdst, tail, nbytes);
++		crypto_xor_cpy(tdst, tsrc, tail, nbytes);
+ 		err = skcipher_walk_done(&walk, 0);
+ 	}
+ 	kernel_neon_end();
+diff --git a/arch/arm/crypto/aes-neonbs-glue.c b/arch/arm/crypto/aes-neonbs-glue.c
+index c76377961444..18768f330449 100644
+--- a/arch/arm/crypto/aes-neonbs-glue.c
++++ b/arch/arm/crypto/aes-neonbs-glue.c
+@@ -221,9 +221,8 @@ static int ctr_encrypt(struct skcipher_request *req)
+ 			u8 *dst = walk.dst.virt.addr + blocks * AES_BLOCK_SIZE;
+ 			u8 *src = walk.src.virt.addr + blocks * AES_BLOCK_SIZE;
  
- /**
-- * iwl_tx_queue_cfg_actions - TXQ config options
-+ * enum iwl_tx_queue_cfg_actions - TXQ config options
-  * @TX_QUEUE_CFG_ENABLE_QUEUE: enable a queue
-  * @TX_QUEUE_CFG_TFD_SHORT_FORMAT: use short TFD format
-  */
-@@ -145,6 +145,7 @@ struct iwl_tx_queue_cfg_cmd {
-  * @queue_number: queue number assigned to this RA -TID
-  * @flags: set on failure
-  * @write_pointer: initial value for write pointer
-+ * @reserved: reserved
-  */
- struct iwl_tx_queue_cfg_rsp {
- 	__le16 queue_number;
+-			if (dst != src)
+-				memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
+-			crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
++			crypto_xor_cpy(dst, src, final,
++				       walk.total % AES_BLOCK_SIZE);
+ 
+ 			err = skcipher_walk_done(&walk, 0);
+ 			break;
+diff --git a/arch/arm64/crypto/aes-glue.c b/arch/arm64/crypto/aes-glue.c
+index bcf596b0197e..0da30e3b0e4b 100644
+--- a/arch/arm64/crypto/aes-glue.c
++++ b/arch/arm64/crypto/aes-glue.c
+@@ -241,9 +241,7 @@ static int ctr_encrypt(struct skcipher_request *req)
+ 
+ 		aes_ctr_encrypt(tail, NULL, (u8 *)ctx->key_enc, rounds,
+ 				blocks, walk.iv, first);
+-		if (tdst != tsrc)
+-			memcpy(tdst, tsrc, nbytes);
+-		crypto_xor(tdst, tail, nbytes);
++		crypto_xor_cpy(tdst, tsrc, tail, nbytes);
+ 		err = skcipher_walk_done(&walk, 0);
+ 	}
+ 	kernel_neon_end();
+diff --git a/arch/arm64/crypto/aes-neonbs-glue.c b/arch/arm64/crypto/aes-neonbs-glue.c
+index db2501d93550..9001aec16007 100644
+--- a/arch/arm64/crypto/aes-neonbs-glue.c
++++ b/arch/arm64/crypto/aes-neonbs-glue.c
+@@ -224,9 +224,8 @@ static int ctr_encrypt(struct skcipher_request *req)
+ 			u8 *dst = walk.dst.virt.addr + blocks * AES_BLOCK_SIZE;
+ 			u8 *src = walk.src.virt.addr + blocks * AES_BLOCK_SIZE;
+ 
+-			if (dst != src)
+-				memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
+-			crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
++			crypto_xor_cpy(dst, src, final,
++				       walk.total % AES_BLOCK_SIZE);
+ 
+ 			err = skcipher_walk_done(&walk, 0);
+ 			break;
+diff --git a/arch/sparc/crypto/aes_glue.c b/arch/sparc/crypto/aes_glue.c
+index c90930de76ba..3cd4f6b198b6 100644
+--- a/arch/sparc/crypto/aes_glue.c
++++ b/arch/sparc/crypto/aes_glue.c
+@@ -344,8 +344,7 @@ static void ctr_crypt_final(struct crypto_sparc64_aes_ctx *ctx,
+ 
+ 	ctx->ops->ecb_encrypt(&ctx->key[0], (const u64 *)ctrblk,
+ 			      keystream, AES_BLOCK_SIZE);
+-	crypto_xor((u8 *) keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor_cpy(dst, (u8 *) keystream, src, nbytes);
+ 	crypto_inc(ctrblk, AES_BLOCK_SIZE);
+ }
+ 
+diff --git a/arch/x86/crypto/aesni-intel_glue.c b/arch/x86/crypto/aesni-intel_glue.c
+index 4a55cdcdc008..5c15d6b57329 100644
+--- a/arch/x86/crypto/aesni-intel_glue.c
++++ b/arch/x86/crypto/aesni-intel_glue.c
+@@ -475,8 +475,8 @@ static void ctr_crypt_final(struct crypto_aes_ctx *ctx,
+ 	unsigned int nbytes = walk->nbytes;
+ 
+ 	aesni_enc(ctx, keystream, ctrblk);
+-	crypto_xor(keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor_cpy(dst, keystream, src, nbytes);
++
+ 	crypto_inc(ctrblk, AES_BLOCK_SIZE);
+ }
+ 
+diff --git a/arch/x86/crypto/blowfish_glue.c b/arch/x86/crypto/blowfish_glue.c
+index 17c05531dfd1..f9eca34301e2 100644
+--- a/arch/x86/crypto/blowfish_glue.c
++++ b/arch/x86/crypto/blowfish_glue.c
+@@ -271,8 +271,7 @@ static void ctr_crypt_final(struct bf_ctx *ctx, struct blkcipher_walk *walk)
+ 	unsigned int nbytes = walk->nbytes;
+ 
+ 	blowfish_enc_blk(ctx, keystream, ctrblk);
+-	crypto_xor(keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor_cpy(dst, keystream, src, nbytes);
+ 
+ 	crypto_inc(ctrblk, BF_BLOCK_SIZE);
+ }
+diff --git a/arch/x86/crypto/cast5_avx_glue.c b/arch/x86/crypto/cast5_avx_glue.c
+index 8648158f3916..dbea6020ffe7 100644
+--- a/arch/x86/crypto/cast5_avx_glue.c
++++ b/arch/x86/crypto/cast5_avx_glue.c
+@@ -256,8 +256,7 @@ static void ctr_crypt_final(struct blkcipher_desc *desc,
+ 	unsigned int nbytes = walk->nbytes;
+ 
+ 	__cast5_encrypt(ctx, keystream, ctrblk);
+-	crypto_xor(keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor_cpy(dst, keystream, src, nbytes);
+ 
+ 	crypto_inc(ctrblk, CAST5_BLOCK_SIZE);
+ }
+diff --git a/arch/x86/crypto/des3_ede_glue.c b/arch/x86/crypto/des3_ede_glue.c
+index d6fc59aaaadf..30c0a37f4882 100644
+--- a/arch/x86/crypto/des3_ede_glue.c
++++ b/arch/x86/crypto/des3_ede_glue.c
+@@ -277,8 +277,7 @@ static void ctr_crypt_final(struct des3_ede_x86_ctx *ctx,
+ 	unsigned int nbytes = walk->nbytes;
+ 
+ 	des3_ede_enc_blk(ctx, keystream, ctrblk);
+-	crypto_xor(keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor_cpy(dst, keystream, src, nbytes);
+ 
+ 	crypto_inc(ctrblk, DES3_EDE_BLOCK_SIZE);
+ }
+diff --git a/crypto/ctr.c b/crypto/ctr.c
+index 477d9226ccaa..854d924f9d8e 100644
+--- a/crypto/ctr.c
++++ b/crypto/ctr.c
+@@ -65,8 +65,7 @@ static void crypto_ctr_crypt_final(struct blkcipher_walk *walk,
+ 	unsigned int nbytes = walk->nbytes;
+ 
+ 	crypto_cipher_encrypt_one(tfm, keystream, ctrblk);
+-	crypto_xor(keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor_cpy(dst, keystream, src, nbytes);
+ 
+ 	crypto_inc(ctrblk, bsize);
+ }
+diff --git a/crypto/pcbc.c b/crypto/pcbc.c
+index 29dd2b4a3b85..d9e45a958720 100644
+--- a/crypto/pcbc.c
++++ b/crypto/pcbc.c
+@@ -55,8 +55,7 @@ static int crypto_pcbc_encrypt_segment(struct skcipher_request *req,
+ 	do {
+ 		crypto_xor(iv, src, bsize);
+ 		crypto_cipher_encrypt_one(tfm, dst, iv);
+-		memcpy(iv, dst, bsize);
+-		crypto_xor(iv, src, bsize);
++		crypto_xor_cpy(iv, dst, src, bsize);
+ 
+ 		src += bsize;
+ 		dst += bsize;
+@@ -79,8 +78,7 @@ static int crypto_pcbc_encrypt_inplace(struct skcipher_request *req,
+ 		memcpy(tmpbuf, src, bsize);
+ 		crypto_xor(iv, src, bsize);
+ 		crypto_cipher_encrypt_one(tfm, src, iv);
+-		memcpy(iv, tmpbuf, bsize);
+-		crypto_xor(iv, src, bsize);
++		crypto_xor_cpy(iv, tmpbuf, src, bsize);
+ 
+ 		src += bsize;
+ 	} while ((nbytes -= bsize) >= bsize);
+@@ -127,8 +125,7 @@ static int crypto_pcbc_decrypt_segment(struct skcipher_request *req,
+ 	do {
+ 		crypto_cipher_decrypt_one(tfm, dst, src);
+ 		crypto_xor(dst, iv, bsize);
+-		memcpy(iv, src, bsize);
+-		crypto_xor(iv, dst, bsize);
++		crypto_xor_cpy(iv, dst, src, bsize);
+ 
+ 		src += bsize;
+ 		dst += bsize;
+@@ -153,8 +150,7 @@ static int crypto_pcbc_decrypt_inplace(struct skcipher_request *req,
+ 		memcpy(tmpbuf, src, bsize);
+ 		crypto_cipher_decrypt_one(tfm, src, src);
+ 		crypto_xor(src, iv, bsize);
+-		memcpy(iv, tmpbuf, bsize);
+-		crypto_xor(iv, src, bsize);
++		crypto_xor_cpy(iv, src, tmpbuf, bsize);
+ 
+ 		src += bsize;
+ 	} while ((nbytes -= bsize) >= bsize);
+diff --git a/drivers/crypto/vmx/aes_ctr.c b/drivers/crypto/vmx/aes_ctr.c
+index 9c26d9e8dbea..15a23f7e2e24 100644
+--- a/drivers/crypto/vmx/aes_ctr.c
++++ b/drivers/crypto/vmx/aes_ctr.c
+@@ -104,8 +104,7 @@ static void p8_aes_ctr_final(struct p8_aes_ctr_ctx *ctx,
+ 	pagefault_enable();
+ 	preempt_enable();
+ 
+-	crypto_xor(keystream, src, nbytes);
+-	memcpy(dst, keystream, nbytes);
++	crypto_xor(dst, keystream, src, nbytes);
+ 	crypto_inc(ctrblk, AES_BLOCK_SIZE);
+ }
+ 
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index ebf9e72d479b..44f70b6271d7 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -745,9 +745,8 @@ static int crypt_iv_tcw_whitening(struct crypt_config *cc,
+ 	int i, r;
+ 
+ 	/* xor whitening with sector number */
+-	memcpy(buf, tcw->whitening, TCW_WHITENING_SIZE);
+-	crypto_xor(buf, (u8 *)&sector, 8);
+-	crypto_xor(&buf[8], (u8 *)&sector, 8);
++	crypto_xor_cpy(buf, tcw->whitening, (u8 *)&sector, 8);
++	crypto_xor_cpy(&buf[8], tcw->whitening + 8, (u8 *)&sector, 8);
+ 
+ 	/* calculate crc32 for every 32bit part and xor it */
+ 	desc->tfm = tcw->crc32_tfm;
+@@ -792,10 +791,10 @@ static int crypt_iv_tcw_gen(struct crypt_config *cc, u8 *iv,
+ 	}
+ 
+ 	/* Calculate IV */
+-	memcpy(iv, tcw->iv_seed, cc->iv_size);
+-	crypto_xor(iv, (u8 *)&sector, 8);
++	crypto_xor_cpy(iv, tcw->iv_seed, (u8 *)&sector, 8);
+ 	if (cc->iv_size > 8)
+-		crypto_xor(&iv[8], (u8 *)&sector, cc->iv_size - 8);
++		crypto_xor_cpy(&iv[8], tcw->iv_seed + 8, (u8 *)&sector,
++			       cc->iv_size - 8);
+ 
+ 	return r;
+ }
+diff --git a/include/crypto/algapi.h b/include/crypto/algapi.h
+index fd547f946bf8..e3cebf640c00 100644
+--- a/include/crypto/algapi.h
++++ b/include/crypto/algapi.h
+@@ -211,6 +211,25 @@ static inline void crypto_xor(u8 *dst, const u8 *src, unsigned int size)
+ 	}
+ }
+ 
++static inline void crypto_xor_cpy(u8 *dst, const u8 *src1, const u8 *src2,
++				  unsigned int size)
++{
++	if (IS_ENABLED(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS) &&
++	    __builtin_constant_p(size) &&
++	    (size % sizeof(unsigned long)) == 0) {
++		unsigned long *d = (unsigned long *)dst;
++		unsigned long *s1 = (unsigned long *)src1;
++		unsigned long *s2 = (unsigned long *)src2;
++
++		while (size > 0) {
++			*d++ = *s1++ ^ *s2++;
++			size -= sizeof(unsigned long);
++		}
++	} else {
++		__crypto_xor(dst, src1, src2, size);
++	}
++}
++
+ int blkcipher_walk_done(struct blkcipher_desc *desc,
+ 			struct blkcipher_walk *walk, int err);
+ int blkcipher_walk_virt(struct blkcipher_desc *desc,
 -- 
-2.13.2
+2.9.3
