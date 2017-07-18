@@ -1,89 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:35948 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756570AbdGYBOM (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:61849 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751403AbdGRL6r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:12 -0400
-Received: by mail-pf0-f177.google.com with SMTP id z129so13493132pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:11 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 00/20] mwifiex: "reset" bugfixes and other refactorings
-Date: Mon, 24 Jul 2017 18:13:16 -0700
-Message-Id: <20170725011336.99993-1-briannorris@chromium.org> (sfid-20170725_031425_656837_B36320E6)
+        Tue, 18 Jul 2017 07:58:47 -0400
+From: <mpubbise@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCHv2 3/3] ath10k: push peer type to target for TDLS peers
+Date: Tue, 18 Jul 2017 17:28:14 +0530
+Message-ID: <1500379094-2373-4-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170718_135850_089035_AD7159DC)
+In-Reply-To: <1500379094-2373-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1500379094-2373-1-git-send-email-mpubbise@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-I've previously sent a stack of similar patches (with no cover letter),
-starting at this patch:
+WMI interface for all the firmwares(except QCA6174) does not include the
+type of peer(default/bss/tdls) requested during peer creation, therefore
+target creates a default peer.
 
-[PATCH 01/14] mwifiex: pcie: properly synchronize, disable interrupts in driver callbacks
-http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1405062.html
-https://patchwork.kernel.org/patch/9747263/
+TDLS implementation on 10.4 firmware requires host to configure the
+peer type(tdls) for TDLS peers. This patch adds peer type parameter to the
+existing WMI interface for peer creation to accommodate this requirement.
 
-They fixed several bugs related to the "reset" codepath in this driver,
-in which the driver tries to recover from a dead firmware, as well as making
-various code improvements (e.g., refactorings, removing redunancy, improving
-safety).
+Tested this change on QCA9888(10.4-3.5.1-00018) and QCA988x(10.2.4.70.9-2)
+with ping tests for AP/STA modes.
 
-There were some valid criticisms of the first patch in that series (and some
-real issues I hit with it later on in testing), and in the end, I believe
-the concern there was not actually appearing in practice, so in order to
-make some forward progress, I've dropped that patch (and related changes)
-from this series. I've kept most of the rest and added a few bugfixes along
-the way.
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    1 +
+ drivers/net/wireless/ath/ath10k/wmi.h |    1 +
+ 2 files changed, 2 insertions(+)
 
-Thanks to Johannes for some brainstorming/ideas that yielded the patch
-"mwifiex: unregister wiphy before freeing resources".
-
-Regards,
-Brian
-
-Brian Norris (20):
-  mwifiex: reunite copy-and-pasted remove/reset code
-  mwifiex: reset interrupt status across device reset
-  mwifiex: pcie: don't allow cmd buffer reuse after reset
-  mwifiex: re-register wiphy across reset
-  mwifiex: unregister wiphy before freeing resources
-  mwifiex: don't short-circuit netdev notifiers on interface deletion
-  mwifiex: fixup init_channel_scan_gap error case
-  mwifiex: ensure "disable auto DS" struct is initialized
-  mwifiex: fix misnomers in mwifiex_free_lock_list()
-  mwifiex: make mwifiex_free_cmd_buffer() return void
-  mwifiex: utilize netif_tx_{wake,stop}_all_queues()
-  mwifiex: don't open-code ARRAY_SIZE()
-  mwifiex: drop 'add_tail' param from mwifiex_insert_cmd_to_pending_q()
-  mwifiex: pcie: remove unnecessary masks
-  mwifiex: pcie: unify MSI-X / non-MSI-X interrupt process
-  mwifiex: debugfs: allow card_reset() to cancel things
-  mwifiex: pcie: disable device DMA before unmapping/freeing buffers
-  mwifiex: pcie: remove unnecessary 'pdev' check
-  mwifiex: keep mwifiex_cancel_pending_ioctl() static
-  mwifiex: drop num CPU notice
-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |   4 -
- drivers/net/wireless/marvell/mwifiex/cfp.c         |   4 +-
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      |  15 +--
- drivers/net/wireless/marvell/mwifiex/debugfs.c     |   2 -
- drivers/net/wireless/marvell/mwifiex/init.c        |  32 ++----
- drivers/net/wireless/marvell/mwifiex/main.c        | 124 +++++++--------------
- drivers/net/wireless/marvell/mwifiex/main.h        |   7 +-
- drivers/net/wireless/marvell/mwifiex/pcie.c        | 100 +++--------------
- drivers/net/wireless/marvell/mwifiex/scan.c        |   5 +-
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |   8 +-
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   5 +-
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |   6 +-
- 12 files changed, 87 insertions(+), 225 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index c91d804..b5e5a9e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -6500,6 +6500,7 @@ void ath10k_wmi_start_scan_init(struct ath10k *ar,
+ 	cmd = (struct wmi_peer_create_cmd *)skb->data;
+ 	cmd->vdev_id = __cpu_to_le32(vdev_id);
+ 	ether_addr_copy(cmd->peer_macaddr.addr, peer_addr);
++	cmd->peer_type = __cpu_to_le32(peer_type);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 		   "wmi peer create vdev_id %d peer_addr %pM\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index da0e719..54dabf4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -5876,6 +5876,7 @@ struct wmi_tbtt_offset_event {
+ struct wmi_peer_create_cmd {
+ 	__le32 vdev_id;
+ 	struct wmi_mac_addr peer_macaddr;
++	__le32 peer_type;
+ } __packed;
+ 
+ enum wmi_peer_type {
 -- 
-2.14.0.rc0.284.gd933b75aa4-goog
+1.7.9.5
