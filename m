@@ -1,182 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35121 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752045AbdGaPLV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 11:11:21 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Daniel Wagner <wagi@monom.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>, yi1.li@linux.intel.com,
-        atull@kernel.org, Moritz Fischer <moritz.fischer@ettus.com>,
-        pmladek@suse.com, Johannes Berg <johannes.berg@intel.com>,
-        emmanuel.grumbach@intel.com, luciano.coelho@intel.com,
-        Kalle Valo <kvalo@codeaurora.org>, luto@kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        AKASHI Takahiro <takahiro.akashi@linaro.org>,
-        David Howells <dhowells@redhat.com>, pjones@redhat.com,
-        Hans de Goede <hdegoede@redhat.com>, alan@linux.intel.com,
-        tytso@mit.edu, lkml <linux-kernel@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V5 1/2] firmware: add more flexible request_firmware_async function
-Date: Mon, 31 Jul 2017 17:09:44 +0200
-Message-Id: <20170731150945.8925-1-zajec5@gmail.com> (sfid-20170731_171214_222413_2EA3DA27)
+Received: from mail-bl2nam02on0045.outbound.protection.outlook.com ([104.47.38.45]:12352
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751379AbdGRLCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Jul 2017 07:02:10 -0400
+Date: Tue, 18 Jul 2017 14:01:52 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: imitsyanko@quantenna.com, kvalo@codeaurora.org,
+        avinashp@quantenna.com, smatyukevich@quantenna.com,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 10/11] net: qtnfmac: constify pci_device_id.
+Message-ID: <20170718110150.cmjg2ke6rfvz53jm@bars> (sfid-20170718_130349_206797_51A2F9C3)
+References: <1500315263-3373-1-git-send-email-arvind.yadav.cs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500315263-3373-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+> pci_device_id are not supposed to change at runtime. All functions
+> working with pci_device_id provided by <linux/pci.h> work with
+> const pci_device_id. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> ---
+>  drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+> index 7fc4f0d..02337d8 100644
+> --- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+> +++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+> @@ -1336,7 +1336,7 @@ static SIMPLE_DEV_PM_OPS(qtnf_pcie_pm_ops, qtnf_pcie_suspend,
+>                          qtnf_pcie_resume);
+>  #endif
+> 
+> -static struct pci_device_id qtnf_pcie_devid_table[] = {
+> +static const struct pci_device_id qtnf_pcie_devid_table[] = {
+>         {
+>                 PCIE_VENDOR_ID_QUANTENNA, PCIE_DEVICE_ID_QTN_PEARL,
+>                 PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+> --
+> 2.7.4
 
-So far we got only one function for loading firmware asynchronously:
-request_firmware_nowait. It didn't allow much customization of firmware
-loading process - there is only one bool uevent argument. Moreover this
-bool also controls user helper in an unclear way.
+Thanks !
 
-Some drivers need more flexible helper providing more options. This
-includes control over uevent or warning for the missing firmware. Of
-course this list may grow up in the future.
-
-To handle this easily this patch adds a generic request_firmware_async
-function. It takes struct with options as an argument which will allow
-extending it in the future without massive changes.
-
-This is a really cheap change (no new independent API) which works
-nicely with the existing code. The old request_firmware_nowait is kept
-as a simple helper calling new helper.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V3: Don't expose all FW_OPT_* flags.
-    As Luis noted we want a struct so add struct firmware_opts for real
-    flexibility.
-    Thank you Luis for your review!
-V5: Rebase, update commit message, resend after drvdata discussion
----
- drivers/base/firmware_class.c | 43 ++++++++++++++++++++++++++++++++++---------
- include/linux/firmware.h      | 15 ++++++++++++++-
- 2 files changed, 48 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index b9f907eedbf7..cde85b05e4cb 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -1375,7 +1375,7 @@ static void request_firmware_work_func(struct work_struct *work)
- 	_request_firmware(&fw, fw_work->name, fw_work->device, NULL, 0,
- 			  fw_work->opt_flags);
- 	fw_work->cont(fw, fw_work->context);
--	put_device(fw_work->device); /* taken in request_firmware_nowait() */
-+	put_device(fw_work->device); /* taken in __request_firmware_nowait() */
- 
- 	module_put(fw_work->module);
- 	kfree_const(fw_work->name);
-@@ -1383,10 +1383,9 @@ static void request_firmware_work_func(struct work_struct *work)
- }
- 
- /**
-- * request_firmware_nowait - asynchronous version of request_firmware
-+ * __request_firmware_nowait - asynchronous version of request_firmware
-  * @module: module requesting the firmware
-- * @uevent: sends uevent to copy the firmware image if this flag
-- *	is non-zero else the firmware copy must be done manually.
-+ * @opt_flags: flags that control firmware loading process, see FW_OPT_*
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded
-  * @gfp: allocation flags
-@@ -1405,9 +1404,9 @@ static void request_firmware_work_func(struct work_struct *work)
-  *
-  *		- can't sleep at all if @gfp is GFP_ATOMIC.
-  **/
--int
--request_firmware_nowait(
--	struct module *module, bool uevent,
-+static int
-+__request_firmware_nowait(
-+	struct module *module, unsigned int opt_flags,
- 	const char *name, struct device *device, gfp_t gfp, void *context,
- 	void (*cont)(const struct firmware *fw, void *context))
- {
-@@ -1426,8 +1425,7 @@ request_firmware_nowait(
- 	fw_work->device = device;
- 	fw_work->context = context;
- 	fw_work->cont = cont;
--	fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
--		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
-+	fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
- 
- 	if (!try_module_get(module)) {
- 		kfree_const(fw_work->name);
-@@ -1440,8 +1438,35 @@ request_firmware_nowait(
- 	schedule_work(&fw_work->work);
- 	return 0;
- }
-+
-+int request_firmware_nowait(struct module *module, bool uevent,
-+			    const char *name, struct device *device, gfp_t gfp,
-+			    void *context,
-+			    void (*cont)(const struct firmware *fw, void *context))
-+{
-+	unsigned int opt_flags = FW_OPT_FALLBACK |
-+		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
-+
-+	return __request_firmware_nowait(module, opt_flags, name, device, gfp,
-+					 context, cont);
-+}
- EXPORT_SYMBOL(request_firmware_nowait);
- 
-+int __request_firmware_async(struct module *module, const char *name,
-+			     struct firmware_opts *fw_opts, struct device *dev,
-+			     void *context,
-+			     void (*cont)(const struct firmware *fw, void *context))
-+{
-+	unsigned int opt_flags = FW_OPT_UEVENT;
-+
-+	if (fw_opts->optional)
-+		opt_flags |= FW_OPT_NO_WARN;
-+
-+	return __request_firmware_nowait(module, opt_flags, name, dev,
-+					 GFP_KERNEL, context, cont);
-+}
-+EXPORT_SYMBOL(__request_firmware_async);
-+
- #ifdef CONFIG_PM_SLEEP
- static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
- 
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index b1f9f0ccb8ac..a32b6e67462d 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -82,6 +82,19 @@ static inline int request_firmware_into_buf(const struct firmware **firmware_p,
- {
- 	return -EINVAL;
- }
--
- #endif
-+
-+struct firmware_opts {
-+	bool optional;
-+};
-+
-+int __request_firmware_async(struct module *module, const char *name,
-+			     struct firmware_opts *fw_opts, struct device *dev,
-+			     void *context,
-+			     void (*cont)(const struct firmware *fw, void *context));
-+
-+#define request_firmware_async(name, fw_opts, dev, context, cont)	\
-+	__request_firmware_async(THIS_MODULE, name, fw_opts, dev,	\
-+				 context, cont)
-+
- #endif
--- 
-2.11.0
+Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
