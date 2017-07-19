@@ -1,176 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34809 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751826AbdGEOZK (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34916 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754932AbdGSVyn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 10:25:10 -0400
-Received: by mail-pf0-f196.google.com with SMTP id c24so21412572pfe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jul 2017 07:25:10 -0700 (PDT)
-Date: Wed, 5 Jul 2017 19:55:06 +0530
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] rtlwifi: Fix memory leak when firmware request fails
-Message-ID: <20170705142506.GA13562@symbol-HP-ZBook-15> (sfid-20170705_162517_190944_B30180F7)
+        Wed, 19 Jul 2017 17:54:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR21MB04791ED8A0F0F935176AE9B3CAA60@MWHPR21MB0479.namprd21.prod.outlook.com>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+ <20170719182857.73693-5-andriy.shevchenko@linux.intel.com> <MWHPR21MB04791ED8A0F0F935176AE9B3CAA60@MWHPR21MB0479.namprd21.prod.outlook.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 20 Jul 2017 00:54:42 +0300
+Message-ID: <CAHp75VdYnKGdyy=OwHoWw5Sch9t+E7gd1tqg0YfZjiicR-Q3Jw@mail.gmail.com> (sfid-20170719_235500_884805_7593DD7E)
+Subject: Re: [PATCH v1 4/6] vmbus: Switch to use new generic UUID API
+To: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "sparmaintainer@unisys.com" <sparmaintainer@unisys.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-watchdog@vger.kernel.org" <linux-watchdog@vger.kernel.org>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch will fix memory leak when firmware request fails
+On Wed, Jul 19, 2017 at 11:18 PM, Haiyang Zhang <haiyangz@microsoft.com> wrote:
 
-Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
----
-v2:
-   - Modified patch title
+>>  struct hv_fcopy_hdr {
+>>       __u32 operation;
+>> -     uuid_le service_id0; /* currently unused */
+>> -     uuid_le service_id1; /* currently unused */
+>> +     __u8 service_id0[16]; /* currently unused */
+>> +     __u8 service_id1[16]; /* currently unused */
+>>  } __attribute__((packed));
+>
+> Even user space may not have all guid_t operations, could you still
+> put guid_t here for consistency?
 
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 4 ++++
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 6 ++++++
- 9 files changed, 24 insertions(+)
+I'm not sure how this code has been designed, though uuid_le followed
+by guid_t are kernel internal types mistakenly put to UAPI in the
+first place.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-index 7661cfa..37489b4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-@@ -175,6 +175,8 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_info("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
+Consistency here is how we treat those types in user space, starting
+from v4.13 uuid_be gone from that header. uuid_le is luckily will be
+gone soon.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index bcbb0c6..38f85bf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -176,6 +176,8 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
+> This file is also used by our kernel
+> mode code.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-index 62d9214..dfbbd35 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-@@ -85,6 +85,10 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- 	err = request_firmware_nowait(THIS_MODULE, 1,
- 				      fw_name, rtlpriv->io.dev,
- 				      GFP_KERNEL, hw, rtl_fw_cb);
-+	if (err) {
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
-+	}
- 	return err;
- }
+It will work still the same after this change.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index 16132c6..e38d6f7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -183,6 +183,8 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index 48820bc..6f2d1f0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -177,6 +177,8 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index 2006b09..1ec20ef 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -216,6 +216,8 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl92se_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 7bf9f25..aab8666 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -184,6 +184,8 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
- 	return 0;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index 8c0ac96..b7a5f92 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -195,6 +195,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 					      rtl_fw_cb);
- 		if (err) {
- 			pr_err("Failed to request firmware!\n");
-+			vfree(rtlpriv->rtlhal.pfirmware);
-+			rtlpriv->rtlhal.pfirmware = NULL;
- 			return 1;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index abaf34c..5272fb4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -196,6 +196,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->rtlhal.wowlan_firmware = vzalloc(0x8000);
- 	if (!rtlpriv->rtlhal.wowlan_firmware) {
- 		pr_err("Can't alloc buffer for wowlan fw.\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
- 		return 1;
- 	}
-
-@@ -222,6 +224,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 					      rtl_fw_cb);
- 		if (err) {
- 			pr_err("Failed to request normal firmware!\n");
-+			vfree(rtlpriv->rtlhal.wowlan_firmware);
-+			vfree(rtlpriv->rtlhal.pfirmware);
- 			return 1;
- 		}
- 	}
-@@ -233,6 +237,8 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtl_wowlan_fw_cb);
- 	if (err) {
- 		pr_err("Failed to request wowlan firmware!\n");
-+		vfree(rtlpriv->rtlhal.wowlan_firmware);
-+		vfree(rtlpriv->rtlhal.pfirmware);
- 		return 1;
- 	}
- 	return 0;
---
-1.9.1
+-- 
+With Best Regards,
+Andy Shevchenko
