@@ -1,238 +1,285 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:59580 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1754052AbdGSTNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:13:18 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 27/34] brcmfmac: Remove {r,w}_sdreg32
-Date: Wed, 19 Jul 2017 20:08:15 +0100
-Message-Id: <20170719190822.10857-28-ian@mnementh.co.uk> (sfid-20170719_211322_557990_2085BBFE)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from mail-ua0-f176.google.com ([209.85.217.176]:33554 "EHLO
+        mail-ua0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753281AbdGSIjh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 04:39:37 -0400
+Received: by mail-ua0-f176.google.com with SMTP id y47so29755584uag.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jul 2017 01:39:37 -0700 (PDT)
+From: Hante Meuleman <hante.meuleman@broadcom.com>
+References: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk>
+ <87cdbbc12b504e89d2bd1c33df6a6bf6@mail.gmail.com> <5eb895bd-58cf-70fd-3c00-c8fed86aed79@mnementh.co.uk>
+ <6fe08666ca09bf3c1d4476fdad8ce97a@mail.gmail.com> <222e2bc1-4d8f-8133-4fa7-51a48f3de785@mnementh.co.uk>
+ <0395e3f6-6bd9-cbad-0fe2-9a5d32a9baa6@mnementh.co.uk> <701af0be-87b6-a397-ae29-a5ba75605588@broadcom.com>
+ <feb0cba3-27da-6cab-316f-164867867cd6@mnementh.co.uk>
+In-Reply-To: <feb0cba3-27da-6cab-316f-164867867cd6@mnementh.co.uk>
+MIME-Version: 1.0
+Date: Wed, 19 Jul 2017 10:39:35 +0200
+Message-ID: <1ca886ff99c569faad930b6b4d6c0d3f@mail.gmail.com> (sfid-20170719_103944_451068_D6842FC2)
+Subject: RE: brcmfmac bus level addressing issues.
+To: Ian Molton <ian@mnementh.co.uk>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove yet another IO function from the code and replace with one
-that already exists.
+Dear Ian,
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 88 +++++++++++-----------
- 1 file changed, 42 insertions(+), 46 deletions(-)
+Yes, I was intentionally provocative. Sure, you made no personal attacks,
+but this is how you entered my space; I've been working (partrly) for the
+last 5 years on brcmfmac and to be honest, I don't work much on it
+anymore. But here it is; my screen filled with mails from you with a
+number of patches on brcmfmac and some of them were on code I wrote, and
+then you use words like:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 7d68b375c71a..cc83388b8c72 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -659,30 +659,6 @@ static bool data_ok(struct brcmf_sdio *bus)
- 	       ((u8)(bus->tx_max - bus->tx_seq) & 0x80) == 0;
- }
- 
--/*
-- * Reads a register in the SDIO hardware block. This block occupies a series of
-- * adresses on the 32 bit backplane bus.
-- */
--static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
--{
--	struct brcmf_core *core = bus->sdio_core;
--	int ret;
--
--	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
--
--	return ret;
--}
--
--static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
--{
--	struct brcmf_core *core = bus->sdio_core;
--	int ret;
--
--	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
--
--	return ret;
--}
--
- static int
- brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- {
-@@ -1071,6 +1047,8 @@ static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
- 
- static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- {
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-+	struct brcmf_core *core = bus->sdio_core;
- 	u32 intstatus = 0;
- 	u32 hmb_data;
- 	u8 fcbits;
-@@ -1079,10 +1057,13 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* Read mailbox data and ack that we did so */
--	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
-+	hmb_data = brcmf_sdiod_readl(sdiod, core->base +
-+					__sd_reg(tohostmailboxdata), &ret);
-+
-+	if (!ret)
-+		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailbox),
-+					SMB_INT_ACK, &ret);
- 
--	if (ret == 0)
--		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
- 
- 	/* Dongle recomposed rx frames, accept them again */
-@@ -1151,6 +1132,8 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 
- static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- {
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-+	struct brcmf_core *core = bus->sdio_core;
- 	uint retries = 0;
- 	u16 lastrbc;
- 	u8 hi, lo;
-@@ -1189,7 +1172,8 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 
- 	if (rtx) {
- 		bus->sdcnt.rxrtx++;
--		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
-+		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailbox),
-+					SMB_NAK, &err);
- 
- 		bus->sdcnt.f1regdata++;
- 		if (err == 0)
-@@ -2273,6 +2257,7 @@ static int brcmf_sdio_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 
- static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- {
-+	struct brcmf_core *core = bus->sdio_core;
- 	struct sk_buff *pkt;
- 	struct sk_buff_head pktq;
- 	u32 intstatus = 0;
-@@ -2313,7 +2298,8 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (!bus->intr) {
- 			/* Check device status, signal pending interrupt */
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
-+			intstatus = brcmf_sdiod_readl(bus->sdiodev, core->base +
-+							__sd_reg(intstatus), &ret);
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
-@@ -2397,12 +2383,13 @@ static int brcmf_sdio_tx_ctrlframe(struct brcmf_sdio *bus, u8 *frame, u16 len)
- 
- static void brcmf_sdio_bus_stop(struct device *dev)
- {
--	u32 local_hostintmask;
--	u8 saveclk;
--	int err;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
-+	struct brcmf_core *core = bus->sdio_core;
-+	u32 local_hostintmask;
-+	u8 saveclk;
-+	int err;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -2419,7 +2406,8 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		brcmf_sdio_bus_sleep(bus, false, false);
- 
- 		/* Disable and clear interrupts at the chip level also */
--		w_sdreg32(bus, 0, __sd_reg(hostintmask));
-+		brcmf_sdiod_writel(sdiodev, core->base + __sd_reg(hostintmask), 0, NULL);
-+
- 		local_hostintmask = bus->hostintmask;
- 		bus->hostintmask = 0;
- 
-@@ -2438,7 +2426,8 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 		/* Clear any pending interrupts now that F2 is disabled */
--		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
-+		brcmf_sdiod_writel(sdiodev, core->base + __sd_reg(intstatus),
-+					local_hostintmask, NULL);
- 
- 		sdio_release_host(sdiodev->func[1]);
- 	}
-@@ -2504,6 +2493,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 
- static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- {
-+	struct brcmf_core *core = bus->sdio_core;
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
- 	u32 newstatus = 0;
- 	unsigned long intstatus;
- 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
-@@ -2557,9 +2548,12 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
-+		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(intstatus),
-+				       I_HMB_FC_CHANGE, &err);
-+
-+		newstatus = brcmf_sdiod_readl(sdiod, core->base + __sd_reg(intstatus),
-+						&err);
- 
--		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
- 		bus->sdcnt.f1regdata += 2;
- 		atomic_set(&bus->fcstate,
- 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-@@ -3979,22 +3973,21 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 					 const struct firmware *code,
- 					 void *nvram, u32 nvram_len)
- {
--	struct brcmf_bus *bus_if;
--	struct brcmf_sdio_dev *sdiodev;
--	struct brcmf_sdio *bus;
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio *bus = sdiodev->bus;
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-+	struct brcmf_core *core = bus->sdio_core;
- 	u8 saveclk;
- 
- 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
--	bus_if = dev_get_drvdata(dev);
--	sdiodev = bus_if->bus_priv.sdio;
-+
- 	if (err)
- 		goto fail;
- 
- 	if (!bus_if->drvr)
- 		return;
- 
--	bus = sdiodev->bus;
--
- 	/* try to download image and nvram to the dongle */
- 	bus->alp_only = true;
- 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
-@@ -4025,8 +4018,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	}
- 
- 	/* Enable function 2 (frame transfers) */
--	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
--		  __sd_reg(tosbmailboxdata));
-+	brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailboxdata),
-+				SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
-+
- 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 
-@@ -4036,7 +4030,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
-+		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(hostintmask),
-+			       bus->hostintmask, NULL);
-+
- 
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
--- 
-2.11.0
+- horrid
+- crap
+- awfully
+- hideous
+- spaghetti mess
+
+No matter what, how impersonal code is supposed to be, I took it personal,
+and I got agitated. Now I never directly reply on patches, so I let it be,
+but then you start with "brcmfac bus level addressing issues" and you come
+with claims I really didn't understand.
+
+Stuff like " The PCIe code sets the window *regardless* of wether its
+changed, on *every single* write." Is totally incorrect. Sure if you limit
+yourself to the function brcmf_pcie_buscore_{read,write}32(). But you
+talked about performance, and msgbuf prototocol is where performance
+counts and that don't use those functions. You wrote: " The PCIe code uses
+brcmf_pcie_select_core(), which, ultimately, appears to be totally
+redundant" and that is simply not true. So I decided to answer that mail
+and provoke you a bit. I'm sorry for that, I shouldn't have done that. But
+really you may not be directly insulting persons, but when you write: "
+Can we standardise how this is supposed to work? Its ugly, and its going
+to cause bugs, ultimately" then I just read another negative strong word
+(in this case ugly) and it is partly about code I wrote.
+
+You obviously spent some time on creating all these patches, but why
+provoke/agitate people? Why use such strong words? You may not consider
+them personally, but I just explained why I do. Can you at least
+understand that? Just some word of advice and then I hope we can leave it
+to that. You can achieve much more without those negative strong words,
+the words I listed above are what pop up with me every mail you wrote, not
+the code.
+
+Regards,
+Hante
+
+
+-----Original Message-----
+From: Ian Molton [mailto:ian@mnementh.co.uk]
+Sent: Wednesday, July 19, 2017 12:45 AM
+To: Arend van Spriel; linux-wireless@vger.kernel.org
+Cc: Franky Lin; brcm80211-dev-list@broadcom.com; Hante Meuleman
+Subject: Re: brcmfmac bus level addressing issues.
+
+On 18/07/17 21:44, Arend van Spriel wrote:
+>
+>
+>>> Stop. Listen. Fix it.
+>
+> Hi Ian,
+>
+> Now stop yourself and listen. This is no collaboration in any sense.
+
+Arend - This is not directed at you - you've been polite, and I've no
+issue with you.
+
+I had felt that the initial conflict over this was over, but then Hante
+wrote his last post. I may have been a bit blunt about the code initially,
+but I made *no personal attacks* up until Hante's post (I've just read
+*all* my posts on this thread and checked to be sure). I hop you can
+understand that his comments earlier were well out of line. I've actually
+chosen to take the day off today, before I replied to him with something
+I'd really regret posting. I was furious.
+
+> but you seem to easily disregard us.
+
+Actually, no. You yourself have been helpful and responsive.
+
+> Also you said it yourself all your patches are cleanup. What needs
+> fixing is the gscan feature detection and that one is on me.
+
+Fair enough - I guess now that its in the kernel it needs fixing before
+4.13 - but I would argue that no new features should go into the driver
+for the short term once that is done. Lets give it a good spring clean.
+
+I am, actually, able to put some time into this, and *want* to help - MY
+current employer would benefit greatly from this driver becoming stable.
+
+(as it stands, back to back wpasuplpicant runs make it keel over, as does
+module unload and reload).
+
+> So I am chasing that although I am actually on vacation.
+
+Dude - enjoy your vacation. Seriously.
+
+> As long as my wife does not notice we are ok :-p
+
+Shhh :)
+
+>>> You could at the very least give some feedback on the 29 patches I
+>>> sent cleaning it up.
+>
+> That really has to wait until I return as well as running some tests
+> on older 4329 and some newer chipsets.
+
+Fair. When do you return? No pressure - it just means I know I can hold
+off and do something else on my project until then.
+
+> Actually, Hante is not working full-time on this driver. Neither am I.
+
+Fair enough. He did wax lyrical about his "seniority" on the driver
+though. Pulling rank does not sit well with me.
+
+> Now please stop the insults when you hit some push back or in generalf
+> for that matter.
+
+I'd recommend re-reading these threads. Whilst I'd grant my initial
+comments in the first cut of the patchset were a little harsh, they were
+NOT personally directed.
+
+Hante crossed that line, but I've said my piece on the matter now. I have
+nothing further to say to Hante on the matter and consider it over, if he
+will do the same.
+
+> It is awfully counterproductive for both you and others.
+
+It certainly is - it cost me a days work, as I couldnt think straight
+after this morning.
+
+So - Lets let this be the end of it.
+
+I propose that in the near future we sit down and plan some cleanup work
+for this driver (*after* your vacation). Get it stable, make it a shining
+example of how to do WiFi.
+
+Deal?
+
+-Ian
+
+>
+> Regards,
+> Arend
+>
+>>> -Ian
+>>>
+>>>>
+>>>> Regards, Hante
+>>>>
+>>>> -----Original Message-----
+>>>> From: Ian Molton [mailto:ian@mnementh.co.uk]
+>>>> Sent: Tuesday, July 18, 2017 1:28 PM
+>>>> To: Hante Meuleman; linux-wireless@vger.kernel.org
+>>>> Cc: Arend Van Spriel; Franky Lin
+>>>> Subject: Re: brcmfmac bus level addressing issues.
+>>>>
+>>>> On 18/07/17 11:35, Hante Meuleman wrote:
+>>>>> Hi Ian,
+>>>>>
+>>>>> I've really no idea what you mean.
+>>>>
+>>>> You should look at the code...
+>>>>
+>>>>> brcmf_pcie_select_core is redundant?
+>>>>
+>>>> Essentially yes - there may be a couple of corner cases where the
+>>>> IO accesses are not performed via
+>>>> brcmf_pcie_buscore_{read,write}32() - but other than that,
+>>>> brcmf_pcie_buscore_prep_addr() sets the IO window unconditionally on
+every access.
+>>>>
+>>>>> Care to try to boot a device without this function?
+>>>>
+>>>> I strongly suspect it would work. Perhaps try it? Give me a device
+>>>> and I'll try it.
+>>>>
+>>>>> Called all over the  place? Hell no, it is default pointing to
+>>>>> PCIE2 and functions which need to map the window to another core
+>>>>> will do so, temporarily, but move it back to PCIE2, at least that
+>>>>> is the idea, may be you found a bug?
+>>>>
+>>>> brcmf_pcie_select_core() looks up the core structure from the core
+id.
+>>>>
+>>>> it then sets BRCMF_PCIE_BAR0_WINDOW according to the core base
+address.
+>>>>
+>>>> it actually goes to the length of reading it back and trying again
+>>>> if its not set, even, which is at least a little bit horrifying.
+>>>>
+>>>> ------------
+>>>>
+>>>> brcmf_pcie_buscore_{read,write}32() both call
+>>>> brcmf_pcie_buscore_prep_addr()
+>>>>
+>>>> brcmf_pcie_buscore_prep_addr() *unconditionally* programs
+>>>> BRCMF_PCIE_BAR0_WINDOW on *every single* IO access.
+>>>>
+>>>> If you want inefficient - its right there.
+>>>>
+>>>>
+>>>> The SDIO version of the code is actually considerably more
+>>>> efficient on this point - it at least only programs the window
+>>>> register only when it changes, not on every single IO access.
+>>>>
+>>>>> We are
+>>>>> for sure not going to hide the selecting of the window in the
+>>>>> read/write routines, that would result in a giant amount of
+overhead.
+>>>>
+>>>> Actually it would result in *considerably* less overhead than the
+>>>> current code, that blindly sets the window on every access.
+>>>>
+>>>>> Currently PCIE
+>>>>> devices reach 1.5Gpbs, we need to go faster than that in the near
+>>>> future.
+>>>>
+>>>> I dont need a lesson on writing efficient code, thanks.
+>>>>
+>>>>> We don't want just change that to make it bit nicer..... Why do
+>>>>> you need to see the same in the SDIO and PCIE drivers? SDIO and
+>>>>> PCIE differ in many aspects. Sure some things can be improved in
+>>>>> or the other, but they sure don't need to look alike.
+>>>>
+>>>> I dont "need" to see the same in both drivers. Not where it isnt
+>>>> appropriate.
+>>>>
+>>>> but every part of the drivers that can share code without
+>>>> noticeably impacting performance *should* do so. You should be
+>>>> justifying to me why the code has to be different, not the other
+>>>> way around. Are you sreiously arguing that sharing common code is a
+bad idea?
+>>>>
+>>>>> It may be ugly, but thusfar it has not caused bugs
+>>>>
+>>>> Oh, I bet you it has... try reading the SDIO version (note the
+>>>> reliance on the dangling ->sbwad pointer) and tell me again that
+>>>> this hasnt caused bugs.
+>>>>
+>>>> Right now, the bulk of the driver code is sat on top of at least
+>>>> two bus drivers with differing IO models, and is working via good
+luck alone.
+>>>>
+>>>>> The concept in pcie bus part is simple.
+>>>>
+>>>> And differs completely from the SDIO part.
+>>>>
+>>>>> The main core to select is PCIE2 (once you have booted and
+>>>>> established initial communication with firmware) and every routine
+>>>>> which needs to access another core will change the window
+>>>>> temporarily and set it back once done. Please don't mess with
+>>>>> this, it works, it is clear and it is fast.
+>>>>
+>>>> If is anything but fast. changing the window involves traversiong
+>>>> the list of cores. Every. Single. Time. It doesnt *have* to - but
+>>>> thats what
+>>>> brcmf_chip_get_core() does, and brcmf_pcie_select_core() calls it.
+>>>>
+>>>
+>>
