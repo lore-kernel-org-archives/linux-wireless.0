@@ -1,63 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58488 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754326AbdG3Rhn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Jul 2017 13:37:43 -0400
-Date: Sun, 30 Jul 2017 10:37:25 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
-        linux-watchdog@vger.kernel.org, sparmaintainer@unisys.com,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>, devel@linuxdriverproject.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v1 3/6] staging: unisys: Switch to use new generic UUID
- API
-Message-ID: <20170730173725.GA20606@kroah.com> (sfid-20170730_193751_154948_A4BA7D46)
-References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
- <20170719182857.73693-4-andriy.shevchenko@linux.intel.com>
- <1501063301.29303.247.camel@linux.intel.com>
- <20170730153224.GA31755@kroah.com>
- <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
+Received: from [217.148.43.144] ([217.148.43.144]:56178 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S933723AbdGSTIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:08:42 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 07/34] brcmfmac: Remove brcmf_sdiod_request_data()
+Date: Wed, 19 Jul 2017 20:07:55 +0100
+Message-Id: <20170719190822.10857-8-ian@mnementh.co.uk> (sfid-20170719_210948_109930_5E5266C7)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 30, 2017 at 08:26:48PM +0300, Andy Shevchenko wrote:
-> On Sun, Jul 30, 2017 at 6:32 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Wed, Jul 26, 2017 at 01:01:41PM +0300, Andy Shevchenko wrote:
-> >> On Wed, 2017-07-19 at 21:28 +0300, Andy Shevchenko wrote:
-> >> > There are new types and helpers that are supposed to be used in new
-> >> > code.
-> >> >
-> >> > As a preparation to get rid of legacy types and API functions do
-> >> > the conversion here.
-> >> >
-> >> > While here, re-indent couple of lines to increase readability.
-> >>
-> >> This looks like no user space UUID API is involved, can be routed via
-> >> either tree (uuid or staging).
-> >>
-> >> Anyone to comment?
-> >
-> > Doesn't apply to the staging tree at all :(
-> 
-> No surprises, it was cooked against uuid tree in the first place.
-> If you agree to take it through staging tree I will prepare a rebased version.
-> Does it sound good?
+This function is obfuscating how IO works on this chip. Remove it
+and push its logic into brcmf_sdiod_reg_{read,write}().
 
-You can take it through the uuid tree if it's easier for you, but then
-someone will have to deal with the merge issues...
+Handling of -ENOMEDIUM is altered, but as that's pretty much broken anyway
+we can ignore that.
 
-If it's easier, I can take it to prevent the merge problems.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 241 ++++++++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |   2 +-
+ 2 files changed, 90 insertions(+), 153 deletions(-)
 
-thanks,
-
-greg k-h
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 7eb54539a85e..6df12430a43f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -230,6 +230,44 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
+ }
+ 
++static int
++brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
++{
++	int err = 0, i;
++	u32 addr;
++
++	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
++		return -ENOMEDIUM;
++
++	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
++
++	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
++					&err);
++
++	return err;
++}
++
++static int
++brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
++{
++	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
++	int err = 0;
++
++	if (bar0 != sdiodev->sbwad) {
++		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
++		if (err)
++			return err;
++
++		sdiodev->sbwad = bar0;
++	}
++
++	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
++	return 0;
++}
++
+ static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
+ {
+ 	int err_ret;
+@@ -248,172 +286,85 @@ static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint re
+ 	return err_ret;
+ }
+ 
+-static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+-				    u32 addr, u8 regsz, void *data, bool write)
+-{
+-	struct sdio_func *func;
+-	int ret = -EINVAL;
+-
+-	brcmf_dbg(SDIO, "rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
+-		  write, fn, addr, regsz);
+-
+-	/* only allow byte access on F0 */
+-	if (WARN_ON(regsz > 1 && !fn))
+-		return -EINVAL;
+-	func = sdiodev->func[fn];
+-
+-	switch (regsz) {
+-	case 1:
+-		if (write) {
+-			if (fn)
+-				sdio_writeb(func, *(u8 *)data, addr, &ret);
+-			else
+-				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
+-		} else {
+-			if (fn)
+-				*(u8 *)data = sdio_readb(func, addr, &ret);
+-			else
+-				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
+-		}
+-		break;
+-	case 2:
+-		if (write)
+-			sdio_writew(func, *(u16 *)data, addr, &ret);
+-		else
+-			*(u16 *)data = sdio_readw(func, addr, &ret);
+-		break;
+-	case 4:
+-		if (write)
+-			sdio_writel(func, *(u32 *)data, addr, &ret);
+-		else
+-			*(u32 *)data = sdio_readl(func, addr, &ret);
+-		break;
+-	default:
+-		brcmf_err("invalid size: %d\n", regsz);
+-		break;
+-	}
+-
+-	if (ret)
+-		brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
+-			  write ? "write" : "read", fn, addr, ret);
+-
+-	return ret;
+-}
+-
+ static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 				   u8 regsz, void *data)
+ {
+-	u8 func;
+-	s32 retry = 0;
+ 	int ret;
+ 
+-	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+-		return -ENOMEDIUM;
+-
+ 	/*
+ 	 * figure out how to read the register based on address range
+ 	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
+ 	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
+ 	 * The rest: function 1 silicon backplane core registers
++	 * f0 writes must be bytewise
+ 	 */
+-	if ((addr & ~REG_F0_REG_MASK) == 0)
+-		func = SDIO_FUNC_0;
+-	else
+-		func = SDIO_FUNC_1;
+-
+-	do {
+-		/* for retry wait for 1 ms till bus get settled down */
+-		if (retry)
+-			usleep_range(1000, 2000);
+ 
+-		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
+-					       data, true);
+-
+-	} while (ret != 0 && ret != -ENOMEDIUM &&
+-		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
++	if ((addr & ~REG_F0_REG_MASK) == 0) {
++		if (WARN_ON(regsz > 1))
++			return -EINVAL;
++		ret = brcmf_sdiod_f0_writeb(sdiodev->func[0], *(u8 *)data, addr);
++	}
++	else {
++		switch (regsz) {
++			case 1:
++				sdio_writeb(sdiodev->func[1], *(u8 *)data, addr, &ret);
++				break;
++			case 4:
++				ret = brcmf_sdiod_addrprep(sdiodev, &addr);
++				if (ret)
++					goto done;
+ 
+-	if (ret == -ENOMEDIUM)
+-		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
++				sdio_writel(sdiodev->func[1], *(u32 *)data, addr, &ret);
++				break;
++			default:
++				BUG();
++				ret = -EINVAL;
++				break;
++		}
++	}
+ 
++done:
+ 	return ret;
+ }
+ 
+ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 				   u8 regsz, void *data)
+ {
+-	u8 func;
+-	s32 retry = 0;
+ 	int ret;
+ 
+-	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+-		return -ENOMEDIUM;
+-
+ 	/*
+ 	 * figure out how to read the register based on address range
+ 	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
+ 	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
+ 	 * The rest: function 1 silicon backplane core registers
++	 * f0 reads must be bytewise
+ 	 */
+-	if ((addr & ~REG_F0_REG_MASK) == 0)
+-		func = SDIO_FUNC_0;
+-	else
+-		func = SDIO_FUNC_1;
+-
+-	do {
+-		memset(data, 0, regsz);
+-
+-		/* for retry wait for 1 ms till bus get settled down */
+-		if (retry)
+-			usleep_range(1000, 2000);
+-
+-		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
+-					       data, false);
+-
+-	} while (ret != 0 && ret != -ENOMEDIUM &&
+-		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
+-
+-	if (ret == -ENOMEDIUM)
+-		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
+-
+-	return ret;
+-}
+-
+-static int
+-brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+-{
+-	int err = 0, i;
+-	u32 addr;
+-
+-	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+-		return -ENOMEDIUM;
+-
+-	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
+-
+-	for ( i = 0 ; i < 3 && !err ; i++, addr >>= 8 )
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr & 0xff,
+-					&err);
+-
+-	return err;
+-}
+-
+-static int
+-brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
+-{
+-	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+-	int err = 0;
+-
+-	if (bar0 != sdiodev->sbwad) {
+-		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
+-		if (err)
+-			return err;
+-
+-		sdiodev->sbwad = bar0;
++	if ((addr & ~REG_F0_REG_MASK) == 0) {
++		if (WARN_ON(regsz > 1))
++			return -EINVAL;
++		*(u8 *)data = sdio_f0_readb(sdiodev->func[0], addr, &ret);
+ 	}
++	else {
++		switch (regsz) {
++			case 1:
++				*(u8 *)data = sdio_readb(sdiodev->func[1], addr, &ret);
++				break;
++			case 4:
++				ret = brcmf_sdiod_addrprep(sdiodev, &addr);
++				if (ret)
++					goto done;
+ 
+-	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++				*(u32 *)data = sdio_readl(sdiodev->func[1], addr, &ret);
++				break;
++			default:
++				BUG();
++				ret = -EINVAL;
++				break;
++		}
++	}
+ 
+-	return 0;
++done:
++	return ret;
+ }
+ 
+ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+@@ -437,15 +388,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+-	if (retval)
+-		goto done;
+-
+-	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
+-
+ 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
+ 
+-done:
+ 	if (ret)
+ 		*ret = retval;
+ 
+@@ -470,13 +415,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+-	if (retval)
+-		goto done;
+ 
+-	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+-
+-done:
+ 	if (ret)
+ 		*ret = retval;
+ }
+@@ -884,14 +823,12 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	return bcmerror;
+ }
+ 
+-int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
++int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
+ {
+-	char t_func = (char)fn;
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* issue abort cmd52 command through F0 */
+-	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
+-				 1, &t_func, true);
++	brcmf_sdiod_reg_write(sdiodev, SDIO_CCCR_ABORT, 1, &fn);
+ 
+ 	brcmf_dbg(SDIO, "Exit\n");
+ 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index e3b78db331b5..1e4b4760159f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -339,7 +339,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 		      u8 *data, uint size);
+ 
+ /* Issue an abort to the specified function */
+-int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
++int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn);
+ void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
+ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 			      enum brcmf_sdiod_state state);
+-- 
+2.11.0
