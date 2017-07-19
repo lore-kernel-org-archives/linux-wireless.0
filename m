@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:33266 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbdGQP7g (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 11:59:36 -0400
-Received: by mail-it0-f65.google.com with SMTP id 188so18206478itx.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:59:36 -0700 (PDT)
-MIME-Version: 1.0
-From: Michael Gugino <michael.gugino.2@gmail.com>
-Date: Mon, 17 Jul 2017 11:59:35 -0400
-Message-ID: <CACHT076KPRRyt5KuEOKkjGSh+wrQAFOEzcPx2-ZHfbp=6u9aTQ@mail.gmail.com> (sfid-20170717_175940_493967_A850C09D)
-Subject: [PATCH 1/1] rtl8188eu: add TL-WN722N v2 support
+Received: from [217.148.43.144] ([217.148.43.144]:59552 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751911AbdGSTNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:13:16 -0400
+From: Ian Molton <ian@mnementh.co.uk>
 To: linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
-Content-Type: text/plain; charset="UTF-8"
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 13/34] brcmfmac: Tidy register definitions a little
+Date: Wed, 19 Jul 2017 20:08:01 +0100
+Message-Id: <20170719190822.10857-14-ian@mnementh.co.uk> (sfid-20170719_211320_982023_2896C743)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Gugino <michael.gugino.2@gmail.com>
+Trivial tidy of register definitions.
 
-This patch adds support for USB Device TP-Link TL-WN722N v2.
-VendorID: 0x2357, ProductID: 0x010c
-
-Signed-off-by: Michael Gugino <michael.gugino.2@gmail.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
-drivers/staging/rtl8188eu/os_dep/usb_intf.c | 1 +
-1 file changed, 1 insertion(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
-b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
-index 963235f..d283341 100644
---- a/drivers/staging/rtl8188eu/os_dep/usb_intf.c
-+++ b/drivers/staging/rtl8188eu/os_dep/usb_intf.c
-@@ -43,6 +43,7 @@ static struct usb_device_id rtw_usb_id_tbl[] = {
-{USB_DEVICE(0x2001, 0x330F)}, /* DLink DWA-125 REV D1 */
-{USB_DEVICE(0x2001, 0x3310)}, /* Dlink DWA-123 REV D1 */
-{USB_DEVICE(0x2001, 0x3311)}, /* DLink GO-USB-N150 REV B1 */
-+    {USB_DEVICE(0x2357, 0x010c)}, /* TP-Link TL-WN722N v2 */
-{USB_DEVICE(0x0df6, 0x0076)}, /* Sitecom N150 v2 */
-{}    /* Terminating entry */
-};
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 2f32c9270eaa..e2324a78249b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -51,17 +51,18 @@
+ 
+ /* function 0 vendor specific CCCR registers */
+ 
+-#define SDIO_CCCR_BRCM_CARDCAP			0xf0
++#define SDIO_CCCR_BRCM_CARDCAP		0xf0
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	0x08
++
+ #define SDIO_CCCR_BRCM_CARDCTRL		0xf1
+ #define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	0x02
+-#define SDIO_CCCR_BRCM_SEPINT			0xf2
+ 
+-#define  SDIO_SEPINT_MASK		0x01
+-#define  SDIO_SEPINT_OE			0x02
+-#define  SDIO_SEPINT_ACT_HI		0x04
++#define SDIO_CCCR_BRCM_SEPINT		0xf2
++#define SDIO_SEPINT_MASK			0x01
++#define SDIO_SEPINT_OE				0x02
++#define SDIO_SEPINT_ACT_HI			0x04
+ 
+ /* function 1 miscellaneous registers */
+ 
 -- 
-2.7.4
+2.11.0
