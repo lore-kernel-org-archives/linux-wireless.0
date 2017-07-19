@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.eu2.fugro.com ([46.34.88.152]:37924 "EHLO
-        smtp.eu2.fugro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdG1I3i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 04:29:38 -0400
-From: "Stam, Michel" <m.stam@fugro.com>
-To: George H <ghh19622@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Problem seen with wireless mesh
-Date: Fri, 28 Jul 2017 08:19:26 +0000
-Message-ID: <4e3dbe32b4614c0f976ce2fb8e94d2da@nldataex01.ad.fugro.com> (sfid-20170728_102942_368137_E71CDD4C)
-References: <CAG5S3ZR8ZgNNR8k-iRgRdvZ3Jwhakk4OxYJtvh8ezA4ESf=QMg@mail.gmail.com>
-In-Reply-To: <CAG5S3ZR8ZgNNR8k-iRgRdvZ3Jwhakk4OxYJtvh8ezA4ESf=QMg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from [217.148.43.144] ([217.148.43.144]:56110 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S933712AbdGSTIg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:08:36 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 01/34] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
+Date: Wed, 19 Jul 2017 20:07:49 +0100
+Message-Id: <20170719190822.10857-2-ian@mnementh.co.uk> (sfid-20170719_211040_450941_08BFAE7F)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8gR2VvcmdlLA0KDQpEbyB5b3UgaGFwcGVuIHRvIGJlIHJ1bm5pbmcgQXV0aFNBRSBmb3Ig
-YXV0aGVudGljYXRlZCBtZXNoPyBJJ3ZlIHNlZW4gdGhpcyBnbyB3cm9uZyB3aXRoIGF0aDlrIGNh
-cmRzIHVzaW5nIGhhcmR3YXJlIGVuY3J5cHRpb247IGluIHRoYXQgcGFydGljdWxhciBjYXNlLCB5
-b3UgbWF5IHdhbnQgdG8gbG9hZCB0aGUgbW9kdWxlIHdpdGggbm9od2NyeXB0PTEsIGl0IHNob3Vs
-ZCB3b3JrIHRoZW4uDQoNCktpbmQgcmVnYXJkcywNCg0KTWljaGVsIFN0YW0NCi0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5v
-cmcgW21haWx0bzpsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFs
-ZiBPZiBHZW9yZ2UgSA0KU2VudDogRnJpZGF5LCBKdWx5IDI4LCAyMDE3IDM6NDMgQU0NClRvOiBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFByb2JsZW0gc2VlbiB3aXRo
-IHdpcmVsZXNzIG1lc2gNCg0KSGkNCg0KSSBoYXZlIHR3byB3aXJlbGVzcyBwcm9kdWN0cyBmb3Jt
-aW5nIGEgd2lyZWxlc3MgbWVzaC4gT25lIChsZXQncyBjYWxsDQppdCBBKSBydW5zIDIuNi4zNyBr
-ZXJuZWwgd2hpbGUgdGhlIG90aGVyIChsZXQncyBjYWxsIGl0IEIpIHJ1bnMgMy4xOA0Ka2VybmVs
-LiBUaGUgd2lyZWxlc3MgbWVzaCBiYXNlZCBvbiBJRUVFODAyMTFzIHJ1bnMgc3VjY2Vzc2Z1bGx5
-DQoobWFjODAyMTEgbW9kdWxlKS4NCg0KSSBzZWUgYSBwcm9ibGVtIHdoZXJlIHRoZSBjb21tdW5p
-Y2F0aW9uIGJldHdlZW4gQSB0byBCIGZyZWV6ZXMNCmludGVybWl0dGVudGx5LCBlYWNoIHRpbWUg
-dGhlIGR1cmF0aW9uIGlzIGJldHdlZW4gYSBtaW51dGUgYW5kIHR3bw0KbWludXRlcy4gVGhlIHBy
-b2R1Y3QgQSBpcyBhdCBmYXVsdCBoZXJlLiBEdXJpbmcgdGhpcyBwZXJpb2QsIG5vIHBpbmcNCmZy
-b20gYSBQQyB0byBBIHN1Y2NlZWRzLiBVc2luZyBhIHNlcmlhbCB0ZXJtaW5hbCB0byBBLCBJIGlu
-dmVzdGlnYXRlZA0KYW5kIGZvdW5kOg0KDQoxKSBUb3AgZG9lc24ndCBzaG93IGFueXRoaW5nIHN1
-c3BpY2lvdXMgd2hlbiB0aGUgaXNzdWUgaXMgaGl0LiBUaGUNCnNhbWUgcHJvY2Vzc2VzIGFyZSBz
-ZWVuIGFsd2F5cy4NCg0KMikgVGhlIHdhdGNoZG9nIG9uIEEgaXMgbm90IHRyaWdnZXJlZCB3aGVu
-IHRoZSBpc3N1ZSBpcyBoaXQuDQoNCjMpIEl0J3Mgbm90IGEgZmlyZXdhbGwgaXNzdWUsIGhhZCB0
-cmllZCBjbGVhcmluZyBhbGwgaXB0YWJsZXMgZW50cmllcy4NCg0KNCkgSSBjaGVja2VkIG5ldHN0
-YXQsIG5vdGhpbmcgdGhhdCBnYXZlIGZ1cnRoZXIgY2x1ZXMuDQoNCjUpIEFkZGVkIGRlYnVnIHBy
-aW50aydzIHRocm91Z2ggdGhlIG1lc2ggY29kZSBpbiBtYWM4MDIxMSwgYnV0IEknbSBub3QNCnNl
-ZWluZyBhbnl0aGluZyB3aXRoIHN0cm9uZyBldmlkZW5jZSBzbyBmYXIuDQoNCkFueSB0aXBzIHRv
-IGRlYnVnIHRoZSBpc3N1ZT8gVGhhbmtzLg0KDQo=
+	All the other IO functions are the other way round in this
+driver. Make this one match.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 984c1d0560b1..1acbaaf0f5c9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -230,8 +230,7 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
+ }
+ 
+-static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
+-					uint regaddr, u8 byte)
++static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte, uint regaddr)
+ {
+ 	int err_ret;
+ 
+@@ -269,8 +268,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+ 			else
+-				ret = brcmf_sdiod_f0_writeb(func, addr,
+-							    *(u8 *)data);
++				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data, addr);
+ 		} else {
+ 			if (fn)
+ 				*(u8 *)data = sdio_readb(func, addr, &ret);
+-- 
+2.11.0
