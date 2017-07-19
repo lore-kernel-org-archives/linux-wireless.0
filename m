@@ -1,44 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34628 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752742AbdGNCOK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jul 2017 22:14:10 -0400
-Received: by mail-pg0-f65.google.com with SMTP id j186so8849305pge.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jul 2017 19:14:09 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
+Received: from [217.148.43.144] ([217.148.43.144]:58820 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1752760AbdGSTMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:12:10 -0400
+From: Ian Molton <ian@mnementh.co.uk>
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com, Rosen Penev <rosenp@gmail.com>
-Subject: [PATCH] ath9k: Add Dell Wireless 1802 with wowlan capability
-Date: Thu, 13 Jul 2017 19:10:30 -0700
-Message-Id: <20170714021030.9828-1-rosenp@gmail.com> (sfid-20170714_041413_909071_B568E84C)
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 24/34] brcmfmac: Rename chip.ctx -> chip.bus_priv
+Date: Wed, 19 Jul 2017 20:08:12 +0100
+Message-Id: <20170719190822.10857-25-ian@mnementh.co.uk> (sfid-20170719_211214_272642_15AF6AF3)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the Dell Wireless 1802 card as an AR9462 in the ath9k pci list.
-Note that the wowlan feature is supported and has been tested
-successfully.
+This driver uses the label ctx like its going out of fashion.
 
-Signed-off by: Rosen Penev <rosenp@gmail.com>
+Lets rename this usage of it so that its easier to see whats going on.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 24 +++++++++++-----------
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.h    | 16 +++++++--------
+ 2 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7b7627f85d3a..223606311261 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -388,6 +388,11 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 			 PCI_VENDOR_ID_DELL,
- 			 0x020B),
- 	  .driver_data = ATH9K_PCI_WOW },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0034,
-+			 PCI_VENDOR_ID_DELL,
-+			 0x0300),
-+	  .driver_data = ATH9K_PCI_WOW },
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index bab1bb3e99ae..ae21f16b31de 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -225,18 +225,18 @@ struct sbsocramregs {
  
- 	/* Killer Wireless (2x2) */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ static inline int brcmf_readl(struct brcmf_chip *chip, u32 addr)
+ {
+-	return chip->ops->read32(chip->ctx, addr);
++	return chip->ops->read32(chip->bus_priv, addr);
+ }
+ 
+ static inline void brcmf_writel(struct brcmf_chip *chip, u32 addr, u32 v)
+ {
+-	chip->ops->write32(chip->ctx, addr, v);
++	chip->ops->write32(chip->bus_priv, addr, v);
+ }
+ 
+ static inline void brcmf_writelp(struct brcmf_chip *chip, u32 addr, u32 v)
+ {
+-	chip->ops->write32(chip->ctx, addr, v);
+-	chip->ops->read32(chip->ctx, addr);
++	chip->ops->write32(chip->bus_priv, addr, v);
++	chip->ops->read32(chip->bus_priv, addr);
+ }
+ 
+ static void brcmf_clear_bits(struct brcmf_chip *ci, u32 reg, u32 bits)
+@@ -1025,7 +1025,7 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
+ 	 * specific reset at this point.
+ 	 */
+ 	if (ci->ops->reset) {
+-		ci->ops->reset(ci->ctx, ci);
++		ci->ops->reset(ci->bus_priv, ci);
+ 		brcmf_chip_set_passive(ci);
+ 	}
+ 
+@@ -1097,12 +1097,12 @@ static int brcmf_chip_setup(struct brcmf_chip *chip)
+ 
+ 	/* execute bus core specific setup */
+ 	if (chip->ops->setup)
+-		ret = chip->ops->setup(chip->ctx, chip);
++		ret = chip->ops->setup(chip->bus_priv, chip);
+ 
+ 	return ret;
+ }
+ 
+-struct brcmf_chip *brcmf_chip_attach(void *ctx,
++struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
+ 				     const struct brcmf_buscore_ops *ops)
+ {
+ 	struct brcmf_chip *chip;
+@@ -1126,9 +1126,9 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 	INIT_LIST_HEAD(&chip->cores);
+ 	chip->num_cores = 0;
+ 	chip->ops = ops;
+-	chip->ctx = ctx;
++	chip->bus_priv = bus_priv;
+ 
+-	err = ops->prepare(ctx);
++	err = ops->prepare(bus_priv);
+ 	if (err < 0)
+ 		goto fail;
+ 
+@@ -1249,7 +1249,7 @@ static bool brcmf_chip_cm3_set_active(struct brcmf_chip *chip)
+ 		return false;
+ 	}
+ 
+-	chip->ops->activate(chip->ctx, chip, 0);
++	chip->ops->activate(chip->bus_priv, chip, 0);
+ 
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CM3);
+ 	brcmf_chip_resetcore(core, 0, 0, 0);
+@@ -1275,7 +1275,7 @@ static bool brcmf_chip_cr4_set_active(struct brcmf_chip *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->activate(chip->ctx, chip, rstvec);
++	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CR4);
+@@ -1302,7 +1302,7 @@ static bool brcmf_chip_ca7_set_active(struct brcmf_chip *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->activate(chip->ctx, chip, rstvec);
++	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CA7);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+index 0babb328d155..8698abfb806e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+@@ -50,7 +50,7 @@ struct brcmf_chip {
+ 	void (*resetcore)(struct brcmf_core *core, u32 prereset, u32 reset,
+ 				u32 postreset);
+ 
+-	void *ctx;
++	void *bus_priv;
+ 
+ 	u32 chip;
+ 	u32 chiprev;
+@@ -94,15 +94,15 @@ struct brcmf_core {
+  *	The callback should use the provided @rstvec when non-zero.
+  */
+ struct brcmf_buscore_ops {
+-	u32 (*read32)(void *ctx, u32 addr);
+-	void (*write32)(void *ctx, u32 addr, u32 value);
+-	int (*prepare)(void *ctx);
+-	int (*reset)(void *ctx, struct brcmf_chip *chip);
+-	int (*setup)(void *ctx, struct brcmf_chip *chip);
+-	void (*activate)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
++	u32 (*read32)(void *bus_priv, u32 addr);
++	void (*write32)(void *bus_priv, u32 addr, u32 value);
++	int (*prepare)(void *bus_priv);
++	int (*reset)(void *bus_priv, struct brcmf_chip *chip);
++	int (*setup)(void *bus_priv, struct brcmf_chip *chip);
++	void (*activate)(void *bus_priv, struct brcmf_chip *chip, u32 rstvec);
+ };
+ 
+-struct brcmf_chip *brcmf_chip_attach(void *ctx,
++struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
+ 				     const struct brcmf_buscore_ops *ops);
+ void brcmf_chip_detach(struct brcmf_chip *chip);
+ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 coreid);
 -- 
-2.13.0
+2.11.0
