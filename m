@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46066 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750897AbdGYMoH (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36578 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933226AbdGSPhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 08:44:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Mathias Kresin <dev@kresin.me>
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
-References: <1499498863-6865-1-git-send-email-dev@kresin.me>
-Date: Tue, 25 Jul 2017 15:44:02 +0300
-In-Reply-To: <1499498863-6865-1-git-send-email-dev@kresin.me> (Mathias
-        Kresin's message of "Sat, 8 Jul 2017 09:27:43 +0200")
-Message-ID: <87r2x4it4d.fsf@codeaurora.org> (sfid-20170725_144410_885353_9FD9FD0F)
+        Wed, 19 Jul 2017 11:37:09 -0400
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+From: Gabriel C <nix.or.die@gmail.com>
+Subject: [PATCH] ath10k_htt_rx_amsdu_allowed(): use ath10k_dbg()
+Message-ID: <288fce5b-d738-f0ac-2433-67e1b35a0664@gmail.com> (sfid-20170719_173729_087226_1BEC06CB)
+Date: Wed, 19 Jul 2017 17:37:08 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mathias Kresin <dev@kresin.me> writes:
 
-> If clk_get returns an error, rt2x00dev->clk is set to NULL. In
-> contrast to the common clock framework provided clk_get_rate(), at
-> least the ramips and bcm63xx legacy implementation of the clk API
-> access the rate member of the clk struct without a NULL check. This
-> results into a kernel panic if we do not have a (SoC) clock.
->
-> Call clk_get_rate only if we have a clock to fix the issues. This
-> approach is similar to what is done in the kernel at various places.
-> Usually clk_get_rate() is only called if clk_get_rate() doesn't return
-> an error.
->
-> Signed-off-by: Mathias Kresin <dev@kresin.me>
-> ---
->
-> Resend, the first mail had the wrong list in cc.
+         Each time we get disconencted from AP we get flooded with messages like:
 
-Then you should mark this as v2:
+         ...
+         ath10k_pci 0000:03:00.0: no channel configured; ignoring frame(s)!
+         <until ratelimit kicks in>
+         ath10k_warn: 155 callbacks suppressed
+         ...
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
+         Use ath10k_dbg() here too.
+
+Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
+---
+  drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 398dda978d6e..75d9b59b7e63 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+          */
+
+         if (!rx_status->freq) {
+-               ath10k_warn(ar, "no channel configured; ignoring frame(s)!\n");
++               ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured; ignoring frame(s)!\n");
+                 return false;
+         }
 
 -- 
-Kalle Valo
+2.13.3
