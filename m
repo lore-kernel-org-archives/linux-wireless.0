@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:35375 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750830AbdGVNcf (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36610 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754268AbdGSSZJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Jul 2017 09:32:35 -0400
-Date: Sat, 22 Jul 2017 15:32:28 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] NFC: fix device-allocation error return
-Message-ID: <20170722133228.GE2729@localhost> (sfid-20170722_153306_386961_253D7C35)
-References: <20170709110858.20331-1-johan@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170709110858.20331-1-johan@kernel.org>
+        Wed, 19 Jul 2017 14:25:09 -0400
+From: Gabriel Craciunescu <nix.or.die@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: ryanhsu@qti.qualcomm.com, joe@perches.com, kvalo@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, Gabriel Craciunescu <nix.or.die@gmail.com>
+Subject: [PATCH] ath10k_htt_rx_amsdu_allowed(): use ath10k_dbg()
+Date: Wed, 19 Jul 2017 20:24:54 +0200
+Message-Id: <20170719182454.11267-1-crazy@frugalware.org> (sfid-20170719_202527_580398_7CBF27DA)
+In-Reply-To: <1500481605.25934.40.camel@perches.com>
+References: <1500481605.25934.40.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 09, 2017 at 01:08:58PM +0200, Johan Hovold wrote:
-> A recent change fixing NFC device allocation itself introduced an
-> error-handling bug by returning an error pointer in case device-id
-> allocation failed. This is clearly broken as the callers still expected
-> NULL to be returned on errors as detected by Dan's static checker.
-> 
-> Fix this up by returning NULL in the event that we've run out of memory
-> when allocating a new device id.
-> 
-> Note that the offending commit is marked for stable (3.8) so this fix
-> needs to be backported along with it.
-> 
-> Fixes: 20777bc57c34 ("NFC: fix broken device allocation")
-> Cc: stable <stable@vger.kernel.org>	# 3.8
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Johan Hovold <johan@kernel.org>
+From: Gabriel Craciunescu <nix.or.die@gmail.com>
 
-Samuel or David,
+	Each time we get disconencted from AP we get flooded with messages like:
 
-Could you apply this follow-up fix so that it can be backported along
-with the offending commit (which was just added to the stable queues)?
+	...
+	ath10k_pci 0000:03:00.0: no channel configured; ignoring frame(s)!
+	<until ratelimit kicks in>
+	ath10k_warn: 155 callbacks suppressed
+	...
 
-We would only hit this error path if an ida allocation fails due to OOM;
-so while this is not critical, it would still be nice to get it fixed.
+	Use ath10k_dbg() here too.
 
-Thanks,
-Johan
+Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 398dda978d6e..75d9b59b7e63 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+ 	 */
+ 
+ 	if (!rx_status->freq) {
+-		ath10k_warn(ar, "no channel configured; ignoring frame(s)!\n");
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured; ignoring frame(s)!\n");
+ 		return false;
+ 	}
+ 
+-- 
+2.13.3
