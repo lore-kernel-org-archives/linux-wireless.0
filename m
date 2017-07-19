@@ -1,147 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:48214 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751011AbdGZUpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:45:16 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 16/34] brcmfmac: Cleanup offsetof()
-Date: Wed, 26 Jul 2017 21:25:39 +0100
-Message-Id: <20170726202557.15632-17-ian@mnementh.co.uk> (sfid-20170726_224523_495161_2FCA0D54)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mga03.intel.com ([134.134.136.65]:53208 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933151AbdGSS3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 14:29:08 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-acpi@vger.kernel.org, devel@linuxdriverproject.org,
+        sparmaintainer@unisys.com, devel@driverdev.osuosl.org,
+        linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-efi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v1 6/6] device property: Switch to use new generic UUID API
+Date: Wed, 19 Jul 2017 21:28:57 +0300
+Message-Id: <20170719182857.73693-7-andriy.shevchenko@linux.intel.com> (sfid-20170719_202932_601088_6EB72151)
+In-Reply-To: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a macro to make the code a bit more readable, whilst we're stuck
-with using struct element offsets as register offsets.
+There are new types and helpers that are supposed to be used in new code.
 
+As a preparation to get rid of legacy types and API functions do
+the conversion here.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-acpi@vger.kernel.org
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 35 +++++++++-------------
- 1 file changed, 14 insertions(+), 21 deletions(-)
+ drivers/acpi/property.c | 50 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index a622df81c501..82769276654d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -161,6 +161,8 @@ struct rte_console {
+diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
+index 917c789f953d..a7fdbe083a7e 100644
+--- a/drivers/acpi/property.c
++++ b/drivers/acpi/property.c
+@@ -24,16 +24,14 @@ static int acpi_data_get_property_array(struct acpi_device_data *data,
+ 					acpi_object_type type,
+ 					const union acpi_object **obj);
  
- #define CORE_BUS_REG(base, field) \
- 		(base + offsetof(struct sdpcmd_regs, field))
-+#define __sd_reg(field) \
-+		(offsetof(struct sdpcmd_regs, field))
+-/* ACPI _DSD device properties UUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
+-static const u8 prp_uuid[16] = {
+-	0x14, 0xd8, 0xff, 0xda, 0xba, 0x6e, 0x8c, 0x4d,
+-	0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01
+-};
+-/* ACPI _DSD data subnodes UUID: dbb8e3e6-5886-4ba6-8795-1319f52a966b */
+-static const u8 ads_uuid[16] = {
+-	0xe6, 0xe3, 0xb8, 0xdb, 0x86, 0x58, 0xa6, 0x4b,
+-	0x87, 0x95, 0x13, 0x19, 0xf5, 0x2a, 0x96, 0x6b
+-};
++/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
++static const guid_t prp_guid =
++	GUID_INIT(0xdaffd814, 0x6eba, 0x4d8c,
++		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01);
++/* ACPI _DSD data subnodes GUID: dbb8e3e6-5886-4ba6-8795-1319f52a966b */
++static const guid_t ads_guid =
++	GUID_INIT(0xdbb8e3e6, 0x5886, 0x4ba6,
++		  0x87, 0x95, 0x13, 0x19, 0xf5, 0x2a, 0x96, 0x6b);
  
- /* SDIO function 1 register CHIPCLKCSR */
- /* Force ALP request to backplane */
-@@ -1084,12 +1086,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	brcmf_dbg(SDIO, "Enter\n");
+ static bool acpi_enumerate_nondev_subnodes(acpi_handle scope,
+ 					   const union acpi_object *desc,
+@@ -190,22 +188,23 @@ static bool acpi_enumerate_nondev_subnodes(acpi_handle scope,
+ {
+ 	int i;
  
- 	/* Read mailbox data and ack that we did so */
--	ret = r_sdreg32(bus, &hmb_data,
--			offsetof(struct sdpcmd_regs, tohostmailboxdata));
-+	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
+-	/* Look for the ACPI data subnodes UUID. */
++	/* Look for the ACPI data subnodes GUID. */
+ 	for (i = 0; i < desc->package.count; i += 2) {
+-		const union acpi_object *uuid, *links;
++		const union acpi_object *guid, *links;
  
- 	if (ret == 0)
--		w_sdreg32(bus, SMB_INT_ACK,
--			  offsetof(struct sdpcmd_regs, tosbmailbox));
-+		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
+-		uuid = &desc->package.elements[i];
++		guid = &desc->package.elements[i];
+ 		links = &desc->package.elements[i + 1];
  
- 	/* Dongle recomposed rx frames, accept them again */
-@@ -1197,8 +1197,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 		/*
+-		 * The first element must be a UUID and the second one must be
++		 * The first element must be a GUID and the second one must be
+ 		 * a package.
+ 		 */
+-		if (uuid->type != ACPI_TYPE_BUFFER || uuid->buffer.length != 16
+-		    || links->type != ACPI_TYPE_PACKAGE)
++		if (guid->type != ACPI_TYPE_BUFFER ||
++		    guid->buffer.length != 16 ||
++		    links->type != ACPI_TYPE_PACKAGE)
+ 			break;
  
- 	if (rtx) {
- 		bus->sdcnt.rxrtx++;
--		err = w_sdreg32(bus, SMB_NAK,
--				offsetof(struct sdpcmd_regs, tosbmailbox));
-+		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
+-		if (memcmp(uuid->buffer.pointer, ads_uuid, sizeof(ads_uuid)))
++		if (!guid_equal((guid_t *)guid->buffer.pointer, &ads_guid))
+ 			continue;
  
- 		bus->sdcnt.f1regdata++;
- 		if (err == 0)
-@@ -2322,9 +2321,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (!bus->intr) {
- 			/* Check device status, signal pending interrupt */
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = r_sdreg32(bus, &intstatus,
--					offsetof(struct sdpcmd_regs,
--						 intstatus));
-+			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
-@@ -2430,7 +2427,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		brcmf_sdio_bus_sleep(bus, false, false);
+ 		return acpi_add_nondev_subnodes(scope, links, &data->subnodes,
+@@ -298,26 +297,27 @@ static bool acpi_extract_properties(const union acpi_object *desc,
+ 	if (desc->package.count % 2)
+ 		return false;
  
- 		/* Disable and clear interrupts at the chip level also */
--		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, 0, __sd_reg(hostintmask));
- 		local_hostintmask = bus->hostintmask;
- 		bus->hostintmask = 0;
+-	/* Look for the device properties UUID. */
++	/* Look for the device properties GUID. */
+ 	for (i = 0; i < desc->package.count; i += 2) {
+-		const union acpi_object *uuid, *properties;
++		const union acpi_object *guid, *properties;
  
-@@ -2449,8 +2446,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+-		uuid = &desc->package.elements[i];
++		guid = &desc->package.elements[i];
+ 		properties = &desc->package.elements[i + 1];
  
- 		/* Clear any pending interrupts now that F2 is disabled */
--		w_sdreg32(bus, local_hostintmask,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
+ 		/*
+-		 * The first element must be a UUID and the second one must be
++		 * The first element must be a GUID and the second one must be
+ 		 * a package.
+ 		 */
+-		if (uuid->type != ACPI_TYPE_BUFFER || uuid->buffer.length != 16
+-		    || properties->type != ACPI_TYPE_PACKAGE)
++		if (guid->type != ACPI_TYPE_BUFFER ||
++		    guid->buffer.length != 16 ||
++		    properties->type != ACPI_TYPE_PACKAGE)
+ 			break;
  
- 		sdio_release_host(sdiodev->func[1]);
- 	}
-@@ -2496,7 +2492,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	int ret;
+-		if (memcmp(uuid->buffer.pointer, prp_uuid, sizeof(prp_uuid)))
++		if (!guid_equal((guid_t *)guid->buffer.pointer, &prp_guid))
+ 			continue;
  
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
--	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-+	addr = buscore->base + __sd_reg(intstatus);
- 
- 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
-@@ -2573,11 +2569,9 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
- 
--		err = r_sdreg32(bus, &newstatus,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
- 		bus->sdcnt.f1regdata += 2;
- 		atomic_set(&bus->fcstate,
- 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-@@ -3759,7 +3753,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
- 
- 	/* clear all interrupts */
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
--	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
-+	reg_addr = core->base + __sd_reg(intstatus);
- 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
- 
- 	if (rstvec)
-@@ -4036,7 +4030,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 
- 	/* Enable function 2 (frame transfers) */
- 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
--		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
-+		  __sd_reg(tosbmailboxdata));
- 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 
-@@ -4046,8 +4040,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		w_sdreg32(bus, bus->hostintmask,
--			  offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
- 
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
+ 		/*
+-		 * We found the matching UUID. Now validate the format of the
++		 * We found the matching GUID. Now validate the format of the
+ 		 * package immediately following it.
+ 		 */
+ 		if (!acpi_properties_format_valid(properties))
 -- 
 2.11.0
