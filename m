@@ -1,73 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arabica.frei.media ([176.9.117.169]:41023 "EHLO mail.frei.media"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751964AbdGESod (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 14:44:33 -0400
-From: Matthias Frei <mf@frei.media>
-Content-Type: text/plain; charset=us-ascii
-Subject: [PATCH] ath10k: set a-mpdu reference number in ath10k (receiver)
-Date: Wed, 5 Jul 2017 20:34:10 +0200
-Message-Id: <B8D63297-0A88-42A3-B789-3849895CF201@frei.media> (sfid-20170705_204437_215412_F0065AA4)
-Cc: linux-wireless@vger.kernel.org
-To: ath10k@lists.infradead.org
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:57509 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933137AbdGSP3g (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 11:29:36 -0400
+From: Philipp Zabel <p.zabel@pengutronix.de>
+To: linux-kernel@vger.kernel.org
+Cc: Philipp Zabel <p.zabel@pengutronix.de>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH 049/102] ath10k: explicitly request exclusive reset control
+Date: Wed, 19 Jul 2017 17:25:53 +0200
+Message-Id: <20170719152646.25903-50-p.zabel@pengutronix.de> (sfid-20170719_174309_753453_F81DDBA1)
+In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the a-mpdu reference number in ath10k to make it accessible in the receivers radiotap header. Implemented as in ath9k. 
-The reference number is needed for troubleshooting and research at the receivers site (e.g. to identify mpdu's that were aggregated in an a-mpdu)
+Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+reset lines") started to transition the reset control request API calls
+to explicitly state whether the driver needs exclusive or shared reset
+control behavior. Convert all drivers requesting exclusive resets to the
+explicit API call so the temporary transition helpers can be removed.
 
-Signed-off-by: Matthias Frei <mf@frei.media>
+No functional changes.
+
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
 ---
- drivers/net/wireless/ath/ath10k/core.h   |  3 +++
- drivers/net/wireless/ath/ath10k/htt_rx.c | 14 +++++++++++---
- 2 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/ahb.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index bf09151..82adf55 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -989,6 +989,9 @@ struct ath10k {
- 		u32 reg_ack_cts_timeout_orig;
- 	} fw_coverage;
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index da770af830369..2ad3ed7b89417 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -197,35 +197,40 @@ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
  
-+	/* AMPDU */
-+	u32 ampdu_ref;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 84b6067..a4de02b 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -877,16 +877,24 @@ static void ath10k_htt_rx_h_ppdu(struct ath10k *ar,
- 		status->nss = 0;
- 		status->encoding = RX_ENC_LEGACY;
- 		status->bw = RATE_INFO_BW_20;
--		status->flag &= ~RX_FLAG_MACTIME_END;
--		status->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+		status->flag &= ~(RX_FLAG_MACTIME_END | RX_FLAG_AMPDU_IS_LAST);
-+		status->flag |= RX_FLAG_NO_SIGNAL_VAL | RX_FLAG_AMPDU_DETAILS | RX_FLAG_AMPDU_LAST_KNOWN;
-+
-+		/* set ampdu ref */
-+		status->ampdu_reference = ar->ampdu_ref;
+ 	dev = &ar_ahb->pdev->dev;
  
- 		ath10k_htt_rx_h_signal(ar, status, rxd);
- 		ath10k_htt_rx_h_channel(ar, status, rxd, vdev_id);
- 		ath10k_htt_rx_h_rates(ar, status, rxd);
+-	ar_ahb->core_cold_rst = devm_reset_control_get(dev, "wifi_core_cold");
++	ar_ahb->core_cold_rst = devm_reset_control_get_exclusive(dev,
++								 "wifi_core_cold");
+ 	if (IS_ERR(ar_ahb->core_cold_rst)) {
+ 		ath10k_err(ar, "failed to get core cold rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->core_cold_rst));
+ 		return PTR_ERR(ar_ahb->core_cold_rst);
  	}
  
--	if (is_last_ppdu)
-+	if (is_last_ppdu) {
- 		ath10k_htt_rx_h_mactime(ar, status, rxd);
-+
-+		/* set ampdu last segment flag */
-+		status->flag |= RX_FLAG_AMPDU_IS_LAST;
-+		ar->ampdu_ref++;
-+	}
- }
+-	ar_ahb->radio_cold_rst = devm_reset_control_get(dev, "wifi_radio_cold");
++	ar_ahb->radio_cold_rst = devm_reset_control_get_exclusive(dev,
++								  "wifi_radio_cold");
+ 	if (IS_ERR(ar_ahb->radio_cold_rst)) {
+ 		ath10k_err(ar, "failed to get radio cold rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_cold_rst));
+ 		return PTR_ERR(ar_ahb->radio_cold_rst);
+ 	}
  
- static const char * const tid_to_ac[] = {
+-	ar_ahb->radio_warm_rst = devm_reset_control_get(dev, "wifi_radio_warm");
++	ar_ahb->radio_warm_rst = devm_reset_control_get_exclusive(dev,
++								  "wifi_radio_warm");
+ 	if (IS_ERR(ar_ahb->radio_warm_rst)) {
+ 		ath10k_err(ar, "failed to get radio warm rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_warm_rst));
+ 		return PTR_ERR(ar_ahb->radio_warm_rst);
+ 	}
+ 
+-	ar_ahb->radio_srif_rst = devm_reset_control_get(dev, "wifi_radio_srif");
++	ar_ahb->radio_srif_rst = devm_reset_control_get_exclusive(dev,
++								  "wifi_radio_srif");
+ 	if (IS_ERR(ar_ahb->radio_srif_rst)) {
+ 		ath10k_err(ar, "failed to get radio srif rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_srif_rst));
+ 		return PTR_ERR(ar_ahb->radio_srif_rst);
+ 	}
+ 
+-	ar_ahb->cpu_init_rst = devm_reset_control_get(dev, "wifi_cpu_init");
++	ar_ahb->cpu_init_rst = devm_reset_control_get_exclusive(dev,
++								"wifi_cpu_init");
+ 	if (IS_ERR(ar_ahb->cpu_init_rst)) {
+ 		ath10k_err(ar, "failed to get cpu init rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->cpu_init_rst));
 -- 
-2.7.4
+2.11.0
