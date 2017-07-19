@@ -1,103 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36212 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751286AbdGQPKI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 11:10:08 -0400
-Received: by mail-oi0-f65.google.com with SMTP id n2so18150635oig.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:07 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 05/11] rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
-Date: Mon, 17 Jul 2017 10:09:48 -0500
-Message-Id: <20170717150954.1441-6-Larry.Finger@lwfinger.net> (sfid-20170717_171013_069349_D4ECCE87)
-In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
-References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+Received: from [217.148.43.144] ([217.148.43.144]:33856 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S933051AbdGSTPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:15:52 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 28/34] brcmfmac: Rename buscore->core for consistency
+Date: Wed, 19 Jul 2017 20:08:16 +0100
+Message-Id: <20170719190822.10857-29-ian@mnementh.co.uk> (sfid-20170719_211601_100414_8F27F2D6)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Avoid confusion with unrelated _buscore labels.
 
-Originally, we get legacy rate only, so we extend to get HT and VHT rate.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
-v2 - no changes
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 42 ++++++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 0f36594da76c..f71b44c48ec0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1100,6 +1100,42 @@ int rtlwifi_rate_mapping(struct ieee80211_hw *hw, bool isht, bool isvht,
- }
- EXPORT_SYMBOL(rtlwifi_rate_mapping);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index cc83388b8c72..19f40a1ee418 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2466,14 +2466,11 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
  
-+static u8 _rtl_get_tx_hw_rate(struct ieee80211_hw *hw,
-+			      struct ieee80211_tx_info *info)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ieee80211_tx_rate *r = &info->status.rates[0];
-+	struct ieee80211_rate *txrate;
-+	u8 hw_value = 0x0;
-+
-+	if (r->flags & IEEE80211_TX_RC_MCS) {
-+		/* HT MCS0-15 */
-+		hw_value = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS15] - 15 +
-+			   r->idx;
-+	} else if (r->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		/* VHT MCS0-9, NSS */
-+		if (ieee80211_rate_get_vht_nss(r) == 2)
-+			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_2SS_MCS9];
-+		else
-+			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_1SS_MCS9];
-+
-+		hw_value = hw_value - 9 + ieee80211_rate_get_vht_mcs(r);
-+	} else {
-+		/* legacy */
-+		txrate = ieee80211_get_tx_rate(hw, info);
-+
-+		if (txrate)
-+			hw_value = txrate->hw_value;
-+	}
-+
-+	/* check 5G band */
-+	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G &&
-+	    hw_value < rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M])
-+		hw_value = rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M];
-+
-+	return hw_value;
-+}
-+
- void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		      struct ieee80211_tx_info *info,
- 		      struct ieee80211_sta *sta,
-@@ -1108,12 +1144,10 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
- 	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
--	struct ieee80211_rate *txrate;
-+
- 	__le16 fc = rtl_get_fc(skb);
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_core *buscore = bus->sdio_core;
+-	u32 addr;
++	struct brcmf_core *core = bus->sdio_core;
+ 	unsigned long val;
+ 	int ret;
  
--	txrate = ieee80211_get_tx_rate(hw, info);
--	if (txrate)
--		tcb_desc->hw_rate = txrate->hw_value;
-+	tcb_desc->hw_rate = _rtl_get_tx_hw_rate(hw, info);
+-	addr = buscore->base + __sd_reg(intstatus);
+-
+-	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
++	val = brcmf_sdiod_readl(bus->sdiodev, core->base + __sd_reg(intstatus), &ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+ 		return ret;
+@@ -2483,7 +2480,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
  
- 	if (rtl_is_tx_report_skb(hw, skb))
- 		tcb_desc->use_spe_rpt = 1;
+ 	/* Clear interrupts */
+ 	if (val) {
+-		brcmf_sdiod_writel(bus->sdiodev, addr, val, &ret);
++		brcmf_sdiod_writel(bus->sdiodev, core->base + __sd_reg(intstatus),
++					val, &ret);
+ 		bus->sdcnt.f1regdata++;
+ 		atomic_or(val, &bus->intstatus);
+ 	}
 -- 
-2.12.3
+2.11.0
