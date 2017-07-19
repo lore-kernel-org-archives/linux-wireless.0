@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:36162 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752636AbdGHIyf (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35519 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756162AbdGSTUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Jul 2017 04:54:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <CALnajPDkZi5tOTcghFCRHg8EiLgXXy1nWo+b7R4DxX8iEd1g0Q@mail.gmail.com>
-References: <CALnajPDkZi5tOTcghFCRHg8EiLgXXy1nWo+b7R4DxX8iEd1g0Q@mail.gmail.com>
-From: Sundar Nagarajan <sun.nagarajan@gmail.com>
-Date: Sat, 8 Jul 2017 01:54:33 -0700
-Message-ID: <CALnajPCeYP6W4iECCsDegwTmq7UsPcH04C=K0h-zZQD6pf6rZw@mail.gmail.com> (sfid-20170708_105503_983817_2B56BF82)
-Subject: Fwd: Request to add bluetooth module identifier to net/rfkill/rfkill-gpio.c
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary="001a1142b49caea9ea0553ca7fc2"
+        Wed, 19 Jul 2017 15:20:07 -0400
+From: Gabriel Craciunescu <nix.or.die@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: ryanhsu@qti.qualcomm.com, joe@perches.com, kvalo@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, Gabriel Craciunescu <nix.or.die@gmail.com>
+Subject: [PATCH v3] ath10k: ath10k_htt_rx_amsdu_allowed() use ath10k_dbg()
+Date: Wed, 19 Jul 2017 21:19:55 +0200
+Message-Id: <20170719191955.11518-1-nix.or.die@gmail.com> (sfid-20170719_212023_340868_AFF5532C)
+In-Reply-To: <e41a39fd-87a1-7fc7-158d-cb298e46a754@qca.qualcomm.com>
+References: <e41a39fd-87a1-7fc7-158d-cb298e46a754@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---001a1142b49caea9ea0553ca7fc2
-Content-Type: text/plain; charset="UTF-8"
+Each time we get disconencted from AP we get flooded with messages like:
 
-Hi,
+...
+ath10k_pci 0000:03:00.0: no channel configured; ignoring frame(s)!
+<until ratelimit kicks in>
+ath10k_warn: 155 callbacks suppressed
+...
 
-I have a Cherry Trail laptop with an Atom X5-Z8300. It has a bluetooth
-chip that needs the r8723bs (coexisting RTL 8723BS wifi and
-bluetooth).
+Use ath10k_dbg() here too
 
-I am using linux-next (20150817) with the r8723bs staging driver and
-the firmware and utility from https://github.com/lwfinger/rtl8723bs_bt
-by Larry finger.
+Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-With linux-next the bluetooth works SOMETIMES, but on reboot, it does
-not work any more (no bluetooth interfaces are detected and hciconfig
-shows nothing).
-
-I am a kernel novice, but I saw that another kernel that I had tried
-had the following line added in struct acpi_device_id
-rfkill_acpi_match:
-
-{ "OBDA8723",RFKILL_TYPE_BLUETOOTH }
-
-With the attached patch applied (one line added), my bluetooth works every time.
-
-Does this belong in rfkill-gpio.c, or should I contact someone else?
-
---001a1142b49caea9ea0553ca7fc2
-Content-Type: text/x-patch; charset="US-ASCII";
-	name="0001_linux-next-20170516-rdp_bluetooth.patch"
-Content-Disposition: attachment;
-	filename="0001_linux-next-20170516-rdp_bluetooth.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_j2v10tfv0
-
-ZGlmZiAtLWdpdCBhL25ldC9yZmtpbGwvcmZraWxsLWdwaW8uYyBiL25ldC9yZmtpbGwvcmZraWxs
-LWdwaW8uYwppbmRleCA3NmMwMWNiLi40ZTMyZGVmIDEwMDY0NAotLS0gYS9uZXQvcmZraWxsL3Jm
-a2lsbC1ncGlvLmMKKysrIGIvbmV0L3Jma2lsbC9yZmtpbGwtZ3Bpby5jCkBAIC0xNjMsNiArMTYz
-LDcgQEAgc3RhdGljIGludCByZmtpbGxfZ3Bpb19yZW1vdmUoc3RydWN0IHBsYXRmb3JtX2Rldmlj
-ZSAqcGRldikKIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYWNwaV9kZXZpY2VfaWQgcmZraWxsX2FjcGlf
-bWF0Y2hbXSA9IHsKIAl7ICJCQ000NzUyIiwgUkZLSUxMX1RZUEVfR1BTIH0sCiAJeyAiTE5WNDc1
-MiIsIFJGS0lMTF9UWVBFX0dQUyB9LAorICAgICB7ICJPQkRBODcyMyIsUkZLSUxMX1RZUEVfQkxV
-RVRPT1RIIH0sCiAJeyB9LAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUoYWNwaSwgcmZraWxsX2Fj
-cGlfbWF0Y2gpOwo=
---001a1142b49caea9ea0553ca7fc2--
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 398dda978d6e..75d9b59b7e63 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+ 	 */
+ 
+ 	if (!rx_status->freq) {
+-		ath10k_warn(ar, "no channel configured; ignoring frame(s)!\n");
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured; ignoring frame(s)!\n");
+ 		return false;
+ 	}
+ 
+-- 
+2.13.3
