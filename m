@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:35317 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbdGRJTU (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34919 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752847AbdGSGgd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 05:19:20 -0400
-Received: by mail-wr0-f170.google.com with SMTP id w4so19725928wrb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 02:19:20 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au
-Cc: ebiggers@google.com, davem@davemloft.net, dm-devel@redhat.com,
-        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        agk@redhat.com, snitzer@redhat.com,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH v2 0/2] crypto/algapi - refactor crypto_xor() to avoid memcpy()s
-Date: Tue, 18 Jul 2017 10:19:10 +0100
-Message-Id: <20170718091912.14104-1-ard.biesheuvel@linaro.org> (sfid-20170718_111925_763698_D0E22626)
+        Wed, 19 Jul 2017 02:36:33 -0400
+Received: by mail-pg0-f66.google.com with SMTP id d193so5736515pgc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 23:36:33 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH] mwifiex: add tdls uapsd support module parameter
+Date: Wed, 19 Jul 2017 06:36:27 +0000
+Message-Id: <1500446187-8034-1-git-send-email-huxinming820@gmail.com> (sfid-20170719_083637_434280_206D3740)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 2/2:
+From: Xinming Hu <huxm@marvell.com>
 
-"""
-There are quite a number of occurrences in the kernel of the pattern
+Add module parameter to control tdls uapsd support, which is
+default disabled.
 
-    if (dst != src)
-            memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
-    crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/init.c    | 5 +++++
+ drivers/net/wireless/marvell/mwifiex/main.h    | 1 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 8 +++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-or
-
-    crypto_xor(keystream, src, nbytes);
-    memcpy(dst, keystream, nbytes);
-
-where crypto_xor() is preceded or followed by a memcpy() invocation
-that is only there because crypto_xor() uses its output parameter as
-one of the inputs.
-"""
-
-Patch #1 is a preparatory patch, which is split off for ease of review.
-
-Patch #2 updates all occurrences of crypto_xor() involving a memcpy() to
-use a new API function crypto_xor_cpy() which combines the two operations.
-
-v2: - keep existing crypto_xor() as-is, and add crypto_xor_cpy() for the
-      cases where a redundant memcpy() can be eliminated.
-
-Ard Biesheuvel (2):
-  crypto/algapi - use separate dst and src operands for __crypto_xor()
-  crypto/algapi - make crypto_xor() take separate dst and src arguments
-
- arch/arm/crypto/aes-ce-glue.c       |  4 +---
- arch/arm/crypto/aes-neonbs-glue.c   |  5 ++--
- arch/arm64/crypto/aes-glue.c        |  4 +---
- arch/arm64/crypto/aes-neonbs-glue.c |  5 ++--
- arch/sparc/crypto/aes_glue.c        |  3 +--
- arch/x86/crypto/aesni-intel_glue.c  |  4 ++--
- arch/x86/crypto/blowfish_glue.c     |  3 +--
- arch/x86/crypto/cast5_avx_glue.c    |  3 +--
- arch/x86/crypto/des3_ede_glue.c     |  3 +--
- crypto/algapi.c                     | 25 ++++++++++++--------
- crypto/ctr.c                        |  3 +--
- crypto/pcbc.c                       | 12 ++++------
- drivers/crypto/vmx/aes_ctr.c        |  3 +--
- drivers/md/dm-crypt.c               | 11 ++++-----
- include/crypto/algapi.h             | 23 ++++++++++++++++--
- 15 files changed, 59 insertions(+), 52 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 3ecb59f..2cc8e54 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -25,6 +25,10 @@
+ #include "wmm.h"
+ #include "11n.h"
+ 
++static bool tdls_uapsd;
++module_param(tdls_uapsd, bool, 0000);
++MODULE_PARM_DESC(tdls_uapsd, "tdls uapsd support enable:1, disable:0");
++
+ /*
+  * This function adds a BSS priority table to the table list.
+  *
+@@ -154,6 +158,7 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
+ 	priv->del_list_idx = 0;
+ 	priv->hs2_enabled = false;
+ 	priv->check_tdls_tx = false;
++	priv->tdls_uapsd_support = tdls_uapsd;
+ 	memcpy(priv->tos_to_tid_inv, tos_to_tid_inv, MAX_NUM_TID);
+ 
+ 	mwifiex_init_11h_params(priv);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index f8cf307..ef5eac72 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -660,6 +660,7 @@ struct mwifiex_private {
+ 	u8 check_tdls_tx;
+ 	struct timer_list auto_tdls_timer;
+ 	bool auto_tdls_timer_active;
++	u8 tdls_uapsd_support;
+ 	struct idr ack_status_frames;
+ 	/* spin lock for ack status */
+ 	spinlock_t ack_status_lock;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 534d94a..d5da565 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1789,9 +1789,11 @@ static int mwifiex_cmd_chan_region_cfg(struct mwifiex_private *priv,
+ 		put_unaligned_le16(params->capability, pos);
+ 		config_len += sizeof(params->capability);
+ 
+-		qos_info = params->uapsd_queues | (params->max_sp << 5);
+-		wmm_qos_info = (struct mwifiex_ie_types_qos_info *)(pos +
+-								    config_len);
++		if (priv->tdls_uapsd_support)
++			qos_info = params->uapsd_queues | (params->max_sp << 5);
++		else
++			qos_info = 0;
++		wmm_qos_info = (void *)(pos + config_len);
+ 		wmm_qos_info->header.type = cpu_to_le16(WLAN_EID_QOS_CAPA);
+ 		wmm_qos_info->header.len = cpu_to_le16(sizeof(qos_info));
+ 		wmm_qos_info->qos_info = qos_info;
 -- 
-2.9.3
+1.9.1
