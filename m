@@ -1,240 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:50594 "EHLO mnementh.co.uk"
+Received: from [217.148.43.144] ([217.148.43.144]:56152 "EHLO mnementh.co.uk"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751348AbdGQQsq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:48:46 -0400
+        id S933716AbdGSTIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:08:39 -0400
 From: Ian Molton <ian@mnementh.co.uk>
 To: linux-wireless@vger.kernel.org
 Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com
-Subject: [PATCH 21/29] brcmfmac: Simplify chip probe routine
-Date: Mon, 17 Jul 2017 17:16:29 +0100
-Message-Id: <20170717161637.4652-22-ian@mnementh.co.uk> (sfid-20170717_184901_461484_8F46D1EE)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Subject: [PATCH 05/34] brcmfmac: Remove dead IO code
+Date: Wed, 19 Jul 2017 20:07:53 +0100
+Message-Id: <20170719190822.10857-6-ian@mnementh.co.uk> (sfid-20170719_211046_860626_090B429A)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Renamed routine in line with kernel convention.
-* Improved handling of chips that cannot autoprobe
+	The value passed to brcmf_sdiod_addrprep() is *always* 4
+remove this parameter and the unused code to handle it.
 
 Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 130 +++++++++++++--------
- 1 file changed, 84 insertions(+), 46 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 38794d7c1da8..b3b28e78c49d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -223,17 +223,6 @@ struct sbsocramregs {
- #define	ARMCR4_BSZ_MASK		0x3f
- #define	ARMCR4_BSZ_MULT		8192
- 
--
--static void brcmf_chip_sb_corerev(struct brcmf_chip *ci,
--				  struct brcmf_core *core)
--{
--	u32 regdata;
--
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
--
--	core->rev = SBCOREREV(regdata);
--}
--
- static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
-@@ -482,7 +471,7 @@ static char *brcmf_chip_name(uint chipid, char *buf, uint len)
- 	return buf;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index aee1ecb7260e..c3e909526a1d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -423,7 +423,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
  }
  
--static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
-+static struct brcmf_core *__brcmf_chip_add_core(struct brcmf_chip *ci,
- 					      u16 coreid, u32 base,
- 					      u32 wrapbase)
+ static int
+-brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
++brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
  {
-@@ -490,7 +479,7 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
- 
- 	core = kzalloc(sizeof(*core), GFP_KERNEL);
- 	if (!core)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	core->id = coreid;
- 	core->base = base;
-@@ -502,6 +491,41 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
- 	return core;
- }
- 
-+static struct brcmf_core *brcmf_chip_add_sb_core(struct brcmf_chip *ci,
-+					      u16 coreid, u32 base,
-+					      u32 wrapbase)
-+{
-+	struct brcmf_core *core;
-+	u32 regdata;
-+
-+	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
-+
-+	if (!core)
-+		goto out;
-+
-+	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
-+
-+	core->rev = SBCOREREV(regdata);
-+
-+out:
-+	return core;
-+}
-+
-+static struct brcmf_core *brcmf_chip_add_axi_core(struct brcmf_chip *ci,
-+					      u16 coreid, u32 base,
-+					      u32 wrapbase, u8 rev)
-+{
-+	struct brcmf_core *core;
-+
-+	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
-+
-+	if (core)
-+		core->rev = rev;
-+
-+	return core;
-+}
-+
-+
- /* safety check for chipinfo */
- static int brcmf_chip_cores_check(struct brcmf_chip *ci)
- {
-@@ -900,19 +924,42 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip *ci)
- 			continue;
- 
- 		/* finally a core to be added */
--		core = brcmf_chip_add_core(ci, id, base, wrap);
--		if (IS_ERR(core))
--			return PTR_ERR(core);
--
--		core->rev = rev;
-+		core = brcmf_chip_add_axi_core(ci, id, base, wrap, rev);
-+		if (!core)
-+			return -ENOMEM; //FIXME - and cleanup the allocated cores?
+ 	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+@@ -437,9 +437,7 @@ brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
  	}
+ 
+ 	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-
+-	if (width == 4)
+-		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
  
  	return 0;
  }
+@@ -465,7 +463,7 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
  
--static int brcmf_chip_recognition(struct brcmf_chip *ci)
-+struct brcmf_chip_desc {
-+	u16 id;
-+	u32 base;
-+};
-+
-+static struct brcmf_chip_desc brcmf_4329[] = {
-+	{ BCMA_CORE_CHIPCOMMON,   SI_ENUM_BASE },
-+	{ BCMA_CORE_SDIO_DEV,     BCM4329_CORE_BUS_BASE },
-+	{ BCMA_CORE_INTERNAL_MEM, BCM4329_CORE_SOCRAM_BASE },
-+	{ BCMA_CORE_ARM_CM3,      BCM4329_CORE_ARM_BASE },
-+	{ BCMA_CORE_80211,        0x18001000 },
-+	{ 0 , 0},
-+};
-+
-+static int brcmf_chip_add_static(struct brcmf_chip *ci,
-+				struct brcmf_chip_desc *desc)
-+{
-+	for ( ; desc->id ; desc++ )
-+		brcmf_chip_add_sb_core(ci, desc->id, desc->base, 0);
-+
-+	//FIXME: cleanup if we fail to add a core?
-+
-+	return 0;
-+}
-+
-+
-+static int brcmf_chip_probe(struct brcmf_chip *ci)
- {
--	struct brcmf_core *core;
- 	u32 regdata;
- 	u32 socitype;
- 	int ret;
-@@ -920,11 +967,13 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 	/* Get CC core rev
- 	 * Chipid is assume to be at offset 0 from SI_ENUM_BASE
- 	 * For different chiptypes or old sdio hosts w/o chipcommon,
--	 * other ways of recognition should be added here.
-+	 * other ways of to probe should be added here.
- 	 */
- 	regdata = ci->ops->read32(ci->ctx, CORE_CC_REG(SI_ENUM_BASE, chipid));
-+
- 	ci->chip = regdata & CID_ID_MASK;
- 	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
-+
- 	socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (retval)
+ 		goto done;
  
- 	brcmf_chip_name(ci->chip, ci->name, sizeof(ci->name));
-@@ -936,43 +985,32 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 	switch(socitype) {
- 		case SOCI_SB:
+@@ -498,7 +496,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
  
--		if (ci->chip != BRCM_CC_4329_CHIP_ID) {
--			brcmf_err("SB chip is not supported\n");
--			return -ENODEV;
-+		switch(ci->chip) {
-+			case BRCM_CC_4329_CHIP_ID:
-+				ret = brcmf_chip_add_static(ci, brcmf_4329);
-+				break;
-+			default:
-+				brcmf_err("SB chip is not supported\n");
-+				return -ENODEV;
- 		}
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (retval)
+ 		goto done;
  
-+		if(!ret)
-+			return -ENODEV;
-+
- 		ci->iscoreup = brcmf_chip_sb_iscoreup;
- 		ci->coredisable = brcmf_chip_sb_coredisable;
- 		ci->resetcore = brcmf_chip_sb_resetcore;
+@@ -734,7 +732,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
  
--		core = brcmf_chip_add_core(ci, BCMA_CORE_CHIPCOMMON,
--					   SI_ENUM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_SDIO_DEV,
--					   BCM4329_CORE_BUS_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_INTERNAL_MEM,
--					   BCM4329_CORE_SOCRAM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_ARM_CM3,
--					   BCM4329_CORE_ARM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
- 		break;
- 	case SOCI_AXI:
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
  
-+		if (brcmf_chip_dmp_erom_scan(ci))
-+			return -ENODEV;
-+
- 		ci->iscoreup = brcmf_chip_ai_iscoreup;
- 		ci->coredisable = brcmf_chip_ai_coredisable;
- 		ci->resetcore = brcmf_chip_ai_resetcore;
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		goto done;
  
--		brcmf_chip_dmp_erom_scan(ci);
--
- 		break;
- 	default:
- 		brcmf_err("chip backplane type %u is not supported\n",
-@@ -1093,7 +1131,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	if (err < 0)
- 		goto fail;
+@@ -755,7 +753,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+ 		  addr, pktq->qlen);
  
--	err = brcmf_chip_recognition(chip);
-+	err = brcmf_chip_probe(chip);
- 	if (err < 0)
- 		goto fail;
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -799,7 +797,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 
+ 	memcpy(mypkt->data, buf, nbytes);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 
+ 	if (!err)
+ 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
+@@ -819,7 +817,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		return err;
  
 -- 
 2.11.0
