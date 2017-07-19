@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37826 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752365AbdGaQco (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:32:44 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 04/10] wil6210: check no_fw_recovery in resume failure recovery
-Date: Mon, 31 Jul 2017 19:32:27 +0300
-Message-Id: <1501518753-6339-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183248_634841_77F9C149)
-In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from [217.148.43.144] ([217.148.43.144]:33836 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S933995AbdGSTPu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:15:50 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 15/34] brcmfamc: remove unnecessary call to brcmf_sdiod_set_backplane_window()
+Date: Wed, 19 Jul 2017 20:08:03 +0100
+Message-Id: <20170719190822.10857-16-ian@mnementh.co.uk> (sfid-20170719_211555_764545_83F954F8)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reset 11ad device on resume failure only if no_fw_recovery
-is not set.
+All functions that might require the window address changing call
+brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
+the window is not required.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/ath/wil6210/pm.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index ce1f384..4548829 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -85,7 +85,9 @@ static int wil_resume_keep_radio_on(struct wil6210_priv *wil)
- 	/* Send WMI resume request to the device */
- 	rc = wmi_resume(wil);
- 	if (rc) {
--		wil_err(wil, "device failed to resume (%d), resetting\n", rc);
-+		wil_err(wil, "device failed to resume (%d)\n", rc);
-+		if (no_fw_recovery)
-+			goto out;
- 		rc = wil_down(wil);
- 		if (rc) {
- 			wil_err(wil, "wil_down failed (%d)\n", rc);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index eb388b69418a..ab015bad02f2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -723,11 +723,6 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 
+ 	dev_kfree_skb(pkt);
+ 
+-	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
+-		brcmf_err("FAILED to set window back to 0x%x\n",
+-			  sdiodev->sbwad);
+-
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+ 	return err;
 -- 
-1.9.1
+2.11.0
