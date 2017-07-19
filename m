@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59022 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752173AbdG1PIZ (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:37270 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933133AbdGST1K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 11:08:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: davem@davemloft.net, stas.yakovlev@gmail.com, sgruszka@redhat.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [v3,04/10] ipw2200: constify attribute_group structures
-References: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
-        <20170728150611.96B1A60884@smtp.codeaurora.org>
-Date: Fri, 28 Jul 2017 18:08:21 +0300
-In-Reply-To: <20170728150611.96B1A60884@smtp.codeaurora.org> (Kalle Valo's
-        message of "Fri, 28 Jul 2017 15:06:11 +0000 (UTC)")
-Message-ID: <87inicwqe2.fsf@purkki.adurom.net> (sfid-20170728_170853_893511_F03B8893)
+        Wed, 19 Jul 2017 15:27:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170719182857.73693-7-andriy.shevchenko@linux.intel.com>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com> <20170719182857.73693-7-andriy.shevchenko@linux.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 19 Jul 2017 21:27:08 +0200
+Message-ID: <CAJZ5v0iJNVaUCxu1AfxiWdkLcHFpXzvTD4PQkbuje=XTDTo9Sw@mail.gmail.com> (sfid-20170719_212726_545740_1C23A6E6)
+Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID API
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
+        devel@driverdev.osuosl.org,
+        "open list:NETWORKING DRIVERS (WIRELESS)"
+        <linux-wireless@vger.kernel.org>,
+        "linux-watchdog@vger.kernel.org" <linux-watchdog@vger.kernel.org>,
+        linux-efi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-
-> Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+On Wed, Jul 19, 2017 at 8:28 PM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> There are new types and helpers that are supposed to be used in new code.
 >
->> attribute_group are not supposed to change at runtime. All functions
->> working with attribute_group provided by <linux/sysfs.h> work
->> with const attribute_group. So mark the non-const structs as const.
->> 
->> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
->
-> 4 patches applied to wireless-drivers-next.git, thanks.
->
-> 17830147c40a mwifiex: fix spelling mistake: "Insuffient" -> "Insufficient"
-> 185ffc194800 ipw2100: don't return positive values to PCI probe on error
-> af643fe9bbe0 zd1211rw: fix spelling mistake 'hybernate' -> 'hibernate'
-> e66d70b789d1 brcmfmac: constify pci_device_id
+> As a preparation to get rid of legacy types and API functions do
+> the conversion here.
 
-Please ignore this mail, I have a bug in my patchwork script.
+Please talk to Mika about this one.
 
--- 
-Kalle Valo
+Thanks,
+Rafael
