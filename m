@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40952 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752243AbdG1O0C (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22669 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756102AbdGSSl3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:26:02 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:27 +0300
-Message-Id: <20170728142337.19183-15-luca@coelho.fi> (sfid-20170728_162611_420065_BD760F3E)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 14/24] iwlwifi: pcie: fix A-MSDU on gen2 devices
+        Wed, 19 Jul 2017 14:41:29 -0400
+From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+To: Gabriel Craciunescu <nix.or.die@gmail.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        "joe@perches.com" <joe@perches.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] ath10k_htt_rx_amsdu_allowed(): use ath10k_dbg()
+Date: Wed, 19 Jul 2017 18:41:27 +0000
+Message-ID: <e41a39fd-87a1-7fc7-158d-cb298e46a754@qca.qualcomm.com> (sfid-20170719_204210_832230_652C3A0A)
+References: <1500481605.25934.40.camel@perches.com>
+ <20170719182454.11267-1-crazy@frugalware.org>
+In-Reply-To: <20170719182454.11267-1-crazy@frugalware.org>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 07/19/2017 11:24 AM, Gabriel Craciunescu wrote:
 
-The return status check of iwl_pcie_gen2_build_amsdu
-was buggy. Fix it.
+To make it consistent, maybe rename the patch title starting with ath10k:
 
-Fixes: 6ffe5de35b05 ("iwlwifi: pcie: add AMSDU to gen2")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> From: Gabriel Craciunescu <nix.or.die@gmail.com>
+>
+> 	Each time we get disconencted from AP we get flooded with messages like:
+>
+> 	...
+> 	ath10k_pci 0000:03:00.0: no channel configured; ignoring frame(s)!
+> 	<until ratelimit kicks in>
+> 	ath10k_warn: 155 callbacks suppressed
+> 	...
+>
+> 	Use ath10k_dbg() here too.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 5e85f29220f6..5dc785d4c167 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -422,9 +422,9 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if (amsdu) {
--		if (!iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
--					       tb1_len + IWL_FIRST_TB_SIZE,
--					       hdr_len, dev_cmd))
-+		if (iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
-+					      tb1_len + IWL_FIRST_TB_SIZE,
-+					      hdr_len, dev_cmd))
- 			goto out_err;
- 
- 		/*
--- 
-2.13.2
+You don't need an indentation on every line of the commit.
+
+> Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wirel=
+ess/ath/ath10k/htt_rx.c
+> index 398dda978d6e..75d9b59b7e63 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath1=
+0k *ar,
+>  	 */
+> =20
+>  	if (!rx_status->freq) {
+> -		ath10k_warn(ar, "no channel configured; ignoring frame(s)!\n");
+> +		ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured; ignoring frame(=
+s)!\n");
+>  		return false;
+>  	}
+> =20
+
+--=20
+Ryan Hsu
