@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37742 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751311AbdGQTO4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 15:14:56 -0400
-Received: by mail-wm0-f48.google.com with SMTP id b134so3752648wma.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 12:14:55 -0700 (PDT)
-Subject: Re: BUG: brcmfmac: rework headroom check in .start_xmit() causes
- 43430a1 to fail.
-To: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        davem@davemloft.net
-References: <86761c42-c91d-d4a7-3ba4-314612dd7fd1@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9ad41664-804f-eaf4-de59-ad3308178362@broadcom.com> (sfid-20170717_211459_884780_599ACF1B)
-Date: Mon, 17 Jul 2017 21:14:53 +0200
-MIME-Version: 1.0
-In-Reply-To: <86761c42-c91d-d4a7-3ba4-314612dd7fd1@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+Received: from [217.148.43.144] ([217.148.43.144]:33764 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S933174AbdGSTPm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:15:42 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 30/34] brcmfmac: Correctly handle accesses to SDIO func0
+Date: Wed, 19 Jul 2017 20:08:18 +0100
+Message-Id: <20170719190822.10857-31-ian@mnementh.co.uk> (sfid-20170719_211607_763347_8D64238A)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rather than workaround the restrictions on func0 addressing in the
+driver, set MMC_QUIRK_LENIENT_FN0
 
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 ++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 4 ++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-On 17-07-17 21:03, Ian Molton wrote:
-> Hi folks,
-> 
-> I've found that:
-> 
-> 270a6c1f65fe brcmfmac: rework headroom check in .start_xmit()
-> 
-> Causes the 43430a1 to become non-responsive. The log starts emitting
-> these messages:
-
-A fix is already pending in patchwork:
-
-https://patchwork.kernel.org/patch/9836383/
-
-Thanks,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index dcdebe8e8ff4..42b09a301f5f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -994,6 +994,10 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+ 
+ 	dev = &func->dev;
++
++	/* Set MMC_QUIRK_LENIENT_FN0 for this card */
++	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
++
+ 	/* prohibit ACPI power management for this device */
+ 	brcmf_sdiod_acpi_set_power_manageable(dev, 0);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index a5a05d1a34bf..d0dd69454bbd 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -297,10 +297,10 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
+ /* SDIO device register access interface */
+ /* Functions for accessing SDIO Function 0 */
+ #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
+-	sdio_readb((sdiodev)->func[0], (addr), (r))
++	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
+ 
+ #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
+-	sdio_writeb((sdiodev)->func[0], (v), (addr), (ret))
++	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
+ 
+ /* Functions for accessing SDIO Function 1 */
+ #define brcmf_sdiod_readb(sdiodev, addr, r) \
+-- 
+2.11.0
