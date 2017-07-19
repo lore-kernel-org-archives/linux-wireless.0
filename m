@@ -1,68 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22669 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756102AbdGSSl3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 14:41:29 -0400
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-To: Gabriel Craciunescu <nix.or.die@gmail.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        "joe@perches.com" <joe@perches.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] ath10k_htt_rx_amsdu_allowed(): use ath10k_dbg()
-Date: Wed, 19 Jul 2017 18:41:27 +0000
-Message-ID: <e41a39fd-87a1-7fc7-158d-cb298e46a754@qca.qualcomm.com> (sfid-20170719_204210_832230_652C3A0A)
-References: <1500481605.25934.40.camel@perches.com>
- <20170719182454.11267-1-crazy@frugalware.org>
-In-Reply-To: <20170719182454.11267-1-crazy@frugalware.org>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from [217.148.43.144] ([217.148.43.144]:33680 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1754052AbdGSTPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Jul 2017 15:15:37 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 29/34] brcmfmac: stabilise the value of ->sbwad in use for some xfer routines.
+Date: Wed, 19 Jul 2017 20:08:17 +0100
+Message-Id: <20170719190822.10857-30-ian@mnementh.co.uk> (sfid-20170719_211541_930321_9AA77060)
+In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
+References: <20170719190822.10857-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2017 11:24 AM, Gabriel Craciunescu wrote:
+The IO functions operate within the Chipcommon IO window. Explicitly
+set this, rather than relying on the last initialisation IO access to
+leave it set to the right value by chance.
 
-To make it consistent, maybe rename the patch title starting with ath10k:
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-> From: Gabriel Craciunescu <nix.or.die@gmail.com>
->
-> 	Each time we get disconencted from AP we get flooded with messages like:
->
-> 	...
-> 	ath10k_pci 0000:03:00.0: no channel configured; ignoring frame(s)!
-> 	<until ratelimit kicks in>
-> 	ath10k_warn: 155 callbacks suppressed
-> 	...
->
-> 	Use ath10k_dbg() here too.
-
-You don't need an indentation on every line of the commit.
-
-> Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wirel=
-ess/ath/ath10k/htt_rx.c
-> index 398dda978d6e..75d9b59b7e63 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath1=
-0k *ar,
->  	 */
-> =20
->  	if (!rx_status->freq) {
-> -		ath10k_warn(ar, "no channel configured; ignoring frame(s)!\n");
-> +		ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured; ignoring frame(=
-s)!\n");
->  		return false;
->  	}
-> =20
-
---=20
-Ryan Hsu
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index ab015bad02f2..dcdebe8e8ff4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -528,7 +528,7 @@ int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 
+ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ {
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err = 0;
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
+@@ -551,7 +551,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ {
+ 	struct sk_buff *glom_skb = NULL;
+ 	struct sk_buff *skb;
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err = 0;
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+@@ -592,7 +592,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ {
+ 	struct sk_buff *mypkt;
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err;
+ 
+ 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
+@@ -625,7 +625,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 			 struct sk_buff_head *pktq)
+ {
+ 	struct sk_buff *skb;
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err;
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 19f40a1ee418..2a52f48bdddc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3821,6 +3821,11 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 	if (!bus->sdio_core)
+ 		goto fail;
+ 
++	/* Pick up the CHIPCOMMON core info struct, used for bulk IO in bcmsdh.c */
++	sdiodev->cc_core = brcmf_chip_get_core(bus->ci, BCMA_CORE_CHIPCOMMON);
++	if (!sdiodev->cc_core)
++		goto fail;
++
+ 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
+ 						   BRCMF_BUSTYPE_SDIO,
+ 						   bus->ci->chip,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index e2324a78249b..a5a05d1a34bf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -178,6 +178,7 @@ struct brcmf_sdio_dev {
+ 	struct sdio_func *func[SDIO_MAX_FUNCS];
+ 	u8 num_funcs;			/* Supported funcs on client */
+ 	u32 sbwad;			/* Save backplane window address */
++	struct brcmf_core *cc_core;	/* chipcommon core info struct */
+ 	struct brcmf_sdio *bus;
+ 	struct device *dev;
+ 	struct brcmf_bus *bus_if;
+-- 
+2.11.0
