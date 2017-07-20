@@ -1,78 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44560 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750979AbdGaJvU (ORCPT
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:33936 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964786AbdGTRQm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 05:51:20 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
+        Thu, 20 Jul 2017 13:16:42 -0400
+Received: by mail-pg0-f44.google.com with SMTP id 123so17498730pgj.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 10:16:42 -0700 (PDT)
+Date: Thu, 20 Jul 2017 10:16:38 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Xinming Hu <huxinming820@gmail.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Dmitry Torokhov <dtor@google.com>,
         "rajatja@google.com" <rajatja@google.com>,
         Zhiyuan Yang <yangzy@marvell.com>,
         Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: Re: [PATCH] mwifiex: correct IE parse during association
-Date: Mon, 31 Jul 2017 09:51:13 +0000
-Message-ID: <1501494673195.15931@marvell.com> (sfid-20170731_115149_481545_2984CA8E)
-References: <1500263187-1167-1-git-send-email-huxinming820@gmail.com>,<87mv7owrqi.fsf@purkki.adurom.net>
-In-Reply-To: <87mv7owrqi.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="iso-8859-1"
+Subject: Re: Re: [PATCH] mwifiex: add tdls uapsd support module parameter
+Message-ID: <20170720171636.GA55380@google.com> (sfid-20170720_191646_381696_59AFA850)
+References: <1500446187-8034-1-git-send-email-huxinming820@gmail.com>
+ <20170719200933.GA126381@google.com>
+ <2729342a9145434682181afd4bae1710@SC-EXCH02.marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2729342a9145434682181afd4bae1710@SC-EXCH02.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Hi,
 
-Thanks for the review, I have refactor code to avoid ugly indent in v2.
+On Thu, Jul 20, 2017 at 10:54:16AM +0000, Xinming Hu wrote:
+> Hi Brian,
+> 
+> > -----Original Message-----
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> > Sent: 2017年7月20日 4:10
+> > To: Xinming Hu
+> > Cc: Linux Wireless; Kalle Valo; Dmitry Torokhov; rajatja@google.com; Zhiyuan
+> > Yang; Tim Song; Cathy Luo; Xinming Hu
+> > Subject: [EXT] Re: [PATCH] mwifiex: add tdls uapsd support module parameter
+> > 
+> > External Email
+> > 
+> > ----------------------------------------------------------------------
+> > On Wed, Jul 19, 2017 at 06:36:27AM +0000, Xinming Hu wrote:
+> > > From: Xinming Hu <huxm@marvell.com>
+> > >
+> > > Add module parameter to control tdls uapsd support, which is default
+> > > disabled.
+> > 
+> > Why default disabled, when it looks like it used to be on by default?
+> 
+> Oho, I should comment more in description, it is now confusing.
+> We just fixed an tdls uapsd issue in latest firmware, so try to disable
+> this feature as a workaround to the old firmware. At the same time, 
+> it is optional to enable this feature in specific case.
 
-Regards,
-Simon
-________________________________________
-From: Kalle Valo <kvalo@codeaurora.org>
-Sent: Friday, July 28, 2017 22:39
-To: Xinming Hu
-Cc: Linux Wireless; Brian Norris; Dmitry Torokhov; rajatja@google.com; Zhiyuan Yang; Tim Song; Cathy Luo; Xinming Hu
-Subject: Re: [PATCH] mwifiex: correct IE parse during association
+That helps a bit, thanks.
 
-Xinming Hu <huxinming820@gmail.com> writes:
+> I will add more comments in V2.
+> Please let us know if you have more comments.
 
-> From: Xinming Hu <huxm@marvell.com>
->
-> It is observed that some IEs get missed during association.
-> This patch correct the old IE parse code. sme->ie will be
-> store as wpa ie, wps ie, wapi ie and gen ie accordingly.
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+I won't insist on changes, but for something like this, it seems
+reasonable (if you have really fixed the issue in the latest firmware)
+to just provide the knob to disable as a backup, not as a default. If
+someone is going to update their kernel (to include this patch), but not
+update their firmware, then they probably should know enough to be able
+to provide the module parameter to disable.
 
-[...]
+Or alternatively: how is anyone supposed to know whether their current
+firmware is broken or not? And how is this feature ever going to be
+default-enabled again? New chipsets with new firmware should hopefully
+not have the same bugs, no?
 
-> +             } else {
-> +                     if (pvendor_ie->element_id ==
-> +                         WLAN_EID_VENDOR_SPECIFIC) {
-> +                             /* Test to see if it is a WPA IE,
-> +                              * if not, then it is a gen IE
-> +                              */
-> +                             if (!memcmp(pvendor_ie->oui, wpa_oui,
-> +                                         sizeof(wpa_oui))) {
-> +                                     /* IE is a WPA/WPA2 IE so call
-> +                                      * set_wpa function
-> +                                      */
-> +                                     mwifiex_set_wpa_ie(priv,
-> +                                                        (u8 *)pvendor_ie,
-> +                                                        cur_ie_len);
-
-The indentation is getting ugly here. A helper function or similar would
-really make this more readable.
-
-
-[...]
-
-> +NEXT_IE:
-
-Goto labels in lower case, please.
-
---
-Kalle Valo
+Brian
