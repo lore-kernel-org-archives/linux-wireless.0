@@ -1,238 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:44658 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751087AbdGPLk7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jul 2017 07:40:59 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 15/21] brcmfmac: Simplify chip probe routine
-Date: Sun, 16 Jul 2017 12:21:23 +0100
-Message-Id: <20170716112129.10206-16-ian@mnementh.co.uk> (sfid-20170716_134106_487244_0C04CCD3)
-In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
-References: <20170716112129.10206-1-ian@mnementh.co.uk>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35483 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750728AbdGUEYz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Jul 2017 00:24:55 -0400
+Received: by mail-oi0-f67.google.com with SMTP id h143so3947605oic.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 21:24:55 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 07/10] rtlwifi: btcoex: btcoexist needs rfe_type to make decision
+Date: Thu, 20 Jul 2017 23:24:37 -0500
+Message-Id: <20170721042440.15839-8-Larry.Finger@lwfinger.net> (sfid-20170721_062514_334481_B8096DFC)
+In-Reply-To: <20170721042440.15839-1-Larry.Finger@lwfinger.net>
+References: <20170721042440.15839-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also remove otherwise un-needed chiprev function.
-Also rename in line with typical kernel naming.
----
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 130 +++++++++++++--------
- 1 file changed, 84 insertions(+), 46 deletions(-)
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 38794d7c1da8..b3b28e78c49d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -223,17 +223,6 @@ struct sbsocramregs {
- #define	ARMCR4_BSZ_MASK		0x3f
- #define	ARMCR4_BSZ_MULT		8192
- 
--
--static void brcmf_chip_sb_corerev(struct brcmf_chip *ci,
--				  struct brcmf_core *core)
--{
--	u32 regdata;
--
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
--
--	core->rev = SBCOREREV(regdata);
--}
--
- static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
-@@ -482,7 +471,7 @@ static char *brcmf_chip_name(uint chipid, char *buf, uint len)
- 	return buf;
+btcoex uses rfe_type to configure antenna properly.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 10 ++++++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index e26bbdf3a733..6847b1abb4ab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -200,6 +200,14 @@ u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+ 	return rtlhal->package_type;
  }
  
--static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
-+static struct brcmf_core *__brcmf_chip_add_core(struct brcmf_chip *ci,
- 					      u16 coreid, u32 base,
- 					      u32 wrapbase)
- {
-@@ -490,7 +479,7 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
++static
++u8 rtl_get_hwpg_rfe_type(struct rtl_priv *rtlpriv)
++{
++	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
++
++	return rtlhal->rfe_type;
++}
++
+ /* ************************************
+  *         Hal helper function
+  * ************************************
+@@ -1215,6 +1223,8 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], Package Type = Non-TFBGA\n");
  
- 	core = kzalloc(sizeof(*core), GFP_KERNEL);
- 	if (!core)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	core->id = coreid;
- 	core->base = base;
-@@ -502,6 +491,41 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
- 	return core;
++	btcoexist->board_info.rfe_type = rtl_get_hwpg_rfe_type(rtlpriv);
++
+ 	return true;
  }
  
-+static struct brcmf_core *brcmf_chip_add_sb_core(struct brcmf_chip *ci,
-+					      u16 coreid, u32 base,
-+					      u32 wrapbase)
-+{
-+	struct brcmf_core *core;
-+	u32 regdata;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 8704d632bac8..91ba49586dbe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -153,6 +153,8 @@ struct btc_board_info {
+ 	u8 btdm_ant_pos;
+ 	u8 single_ant_path; /* current used for 8723b only, 1=>s0,  0=>s1 */
+ 	bool tfbga_package;
 +
-+	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
-+
-+	if (!core)
-+		goto out;
-+
-+	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
-+
-+	core->rev = SBCOREREV(regdata);
-+
-+out:
-+	return core;
-+}
-+
-+static struct brcmf_core *brcmf_chip_add_axi_core(struct brcmf_chip *ci,
-+					      u16 coreid, u32 base,
-+					      u32 wrapbase, u8 rev)
-+{
-+	struct brcmf_core *core;
-+
-+	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
-+
-+	if (core)
-+		core->rev = rev;
-+
-+	return core;
-+}
-+
-+
- /* safety check for chipinfo */
- static int brcmf_chip_cores_check(struct brcmf_chip *ci)
- {
-@@ -900,19 +924,42 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip *ci)
- 			continue;
++	u8 rfe_type;
+ };
  
- 		/* finally a core to be added */
--		core = brcmf_chip_add_core(ci, id, base, wrap);
--		if (IS_ERR(core))
--			return PTR_ERR(core);
--
--		core->rev = rev;
-+		core = brcmf_chip_add_axi_core(ci, id, base, wrap, rev);
-+		if (!core)
-+			return -ENOMEM; //FIXME - and cleanup the allocated cores?
- 	}
- 
- 	return 0;
- }
- 
--static int brcmf_chip_recognition(struct brcmf_chip *ci)
-+struct brcmf_chip_desc {
-+	u16 id;
-+	u32 base;
-+};
-+
-+static struct brcmf_chip_desc brcmf_4329[] = {
-+	{ BCMA_CORE_CHIPCOMMON,   SI_ENUM_BASE },
-+	{ BCMA_CORE_SDIO_DEV,     BCM4329_CORE_BUS_BASE },
-+	{ BCMA_CORE_INTERNAL_MEM, BCM4329_CORE_SOCRAM_BASE },
-+	{ BCMA_CORE_ARM_CM3,      BCM4329_CORE_ARM_BASE },
-+	{ BCMA_CORE_80211,        0x18001000 },
-+	{ 0 , 0},
-+};
-+
-+static int brcmf_chip_add_static(struct brcmf_chip *ci,
-+				struct brcmf_chip_desc *desc)
-+{
-+	for ( ; desc->id ; desc++ )
-+		brcmf_chip_add_sb_core(ci, desc->id, desc->base, 0);
-+
-+	//FIXME: cleanup if we fail to add a core?
-+
-+	return 0;
-+}
-+
-+
-+static int brcmf_chip_probe(struct brcmf_chip *ci)
- {
--	struct brcmf_core *core;
- 	u32 regdata;
- 	u32 socitype;
- 	int ret;
-@@ -920,11 +967,13 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 	/* Get CC core rev
- 	 * Chipid is assume to be at offset 0 from SI_ENUM_BASE
- 	 * For different chiptypes or old sdio hosts w/o chipcommon,
--	 * other ways of recognition should be added here.
-+	 * other ways of to probe should be added here.
- 	 */
- 	regdata = ci->ops->read32(ci->ctx, CORE_CC_REG(SI_ENUM_BASE, chipid));
-+
- 	ci->chip = regdata & CID_ID_MASK;
- 	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
-+
- 	socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
- 
- 	brcmf_chip_name(ci->chip, ci->name, sizeof(ci->name));
-@@ -936,43 +985,32 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 	switch(socitype) {
- 		case SOCI_SB:
- 
--		if (ci->chip != BRCM_CC_4329_CHIP_ID) {
--			brcmf_err("SB chip is not supported\n");
--			return -ENODEV;
-+		switch(ci->chip) {
-+			case BRCM_CC_4329_CHIP_ID:
-+				ret = brcmf_chip_add_static(ci, brcmf_4329);
-+				break;
-+			default:
-+				brcmf_err("SB chip is not supported\n");
-+				return -ENODEV;
- 		}
- 
-+		if(!ret)
-+			return -ENODEV;
-+
- 		ci->iscoreup = brcmf_chip_sb_iscoreup;
- 		ci->coredisable = brcmf_chip_sb_coredisable;
- 		ci->resetcore = brcmf_chip_sb_resetcore;
- 
--		core = brcmf_chip_add_core(ci, BCMA_CORE_CHIPCOMMON,
--					   SI_ENUM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_SDIO_DEV,
--					   BCM4329_CORE_BUS_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_INTERNAL_MEM,
--					   BCM4329_CORE_SOCRAM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_ARM_CM3,
--					   BCM4329_CORE_ARM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
- 		break;
- 	case SOCI_AXI:
- 
-+		if (brcmf_chip_dmp_erom_scan(ci))
-+			return -ENODEV;
-+
- 		ci->iscoreup = brcmf_chip_ai_iscoreup;
- 		ci->coredisable = brcmf_chip_ai_coredisable;
- 		ci->resetcore = brcmf_chip_ai_resetcore;
- 
--		brcmf_chip_dmp_erom_scan(ci);
--
- 		break;
- 	default:
- 		brcmf_err("chip backplane type %u is not supported\n",
-@@ -1093,7 +1131,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	if (err < 0)
- 		goto fail;
- 
--	err = brcmf_chip_recognition(chip);
-+	err = brcmf_chip_probe(chip);
- 	if (err < 0)
- 		goto fail;
- 
+ enum btc_dbg_opcode {
 -- 
-2.11.0
+2.12.3
