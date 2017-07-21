@@ -1,106 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37826 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752524AbdGaQcx (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51298 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932094AbdGUKBe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:32:53 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 09/10] wil6210: store FW RF calibration result
-Date: Mon, 31 Jul 2017 19:32:32 +0300
-Message-Id: <1501518753-6339-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183257_854041_6F57B6C8)
-In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 21 Jul 2017 06:01:34 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>
+Subject: Re: [PATCH v2] mwifiex: add tdls uapsd support module parameter
+Date: Fri, 21 Jul 2017 10:01:30 +0000
+Message-ID: <9bdc702a64e1464db6d18b331b2c0000@SC-EXCH02.marvell.com> (sfid-20170721_120138_062268_D4578643)
+References: <1500548753-26752-1-git-send-email-huxinming820@gmail.com>
+In-Reply-To: <1500548753-26752-1-git-send-email-huxinming820@gmail.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-
-Store initial FW RF calibration result in driver. Set this calibration
-result back to FW after each FW reset in order to avoid future calibration
-procedures.
-
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c    | 6 ++++++
- drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
- drivers/net/wireless/ath/wil6210/wmi.c     | 5 +++++
- drivers/net/wireless/ath/wil6210/wmi.h     | 2 ++
- 4 files changed, 19 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b1e2814..b89d017 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1034,6 +1034,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
- 
-+		if (wil->fw_calib_result > 0) {
-+			__le32 val = cpu_to_le32(wil->fw_calib_result |
-+						 (CALIB_RESULT_SIGNATURE << 8));
-+			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
-+		}
-+
- 		wil_release_cpu(wil);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f1488299..9ad7b11 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -171,6 +171,10 @@ struct RGF_ICR {
- #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
- #define RGF_USER_BL			(0x880A3C) /* Boot Loader */
- #define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
-+#define RGF_USER_FW_CALIB_RESULT	(0x880a90) /* b0-7:result
-+						    * b8-15:signature
-+						    */
-+	#define CALIB_RESULT_SIGNATURE	(0x11)
- #define RGF_USER_CLKS_CTL_0		(0x880abc)
- 	#define BIT_USER_CLKS_CAR_AHB_SW_SEL	BIT(1) /* ref clk/PLL */
- 	#define BIT_USER_CLKS_RST_PWGD	BIT(11) /* reset on "power good" */
-@@ -735,6 +739,8 @@ struct wil6210_priv {
- 
- 	enum wmi_ps_profile_type ps_profile;
- 
-+	int fw_calib_result;
-+
- #ifdef CONFIG_PM
- #ifdef CONFIG_PM_SLEEP
- 	struct notifier_block pm_notify;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a9487f2..ffdd2fa 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -344,6 +344,11 @@ static void wmi_evt_ready(struct wil6210_priv *wil, int id, void *d, int len)
- 	strlcpy(wdev->wiphy->fw_version, wil->fw_version,
- 		sizeof(wdev->wiphy->fw_version));
- 
-+	if (len > offsetof(struct wmi_ready_event, rfc_read_calib_result)) {
-+		wil_dbg_wmi(wil, "rfc calibration result %d\n",
-+			    evt->rfc_read_calib_result);
-+		wil->fw_calib_result = evt->rfc_read_calib_result;
-+	}
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 	set_bit(wil_status_fwready, wil->status);
- 	/* let the reset sequence continue */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 4e31c2f..1b426d7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -1300,6 +1300,8 @@ struct wmi_ready_event {
- 	/* enum wmi_phy_capability */
- 	u8 phy_capability;
- 	u8 numof_additional_mids;
-+	u8 rfc_read_calib_result;
-+	u8 reserved[3];
- } __packed;
- 
- /* WMI_NOTIFY_REQ_DONE_EVENTID */
--- 
-1.9.1
+SGksDQoNClBsZWFzZSBkcm9wIHRoaXMgcGF0Y2gsIGFzIHRoZXJlIGlzIGEgcmVwbGFjZSB2ZXJz
+aW9uIGFscmVhZHkuDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBY
+aW5taW5nIEh1IFttYWlsdG86aHV4aW5taW5nODIwQGdtYWlsLmNvbV0NCj4gU2VudDogMjAxN8Tq
+N9TCMjDI1SAxOTowNg0KPiBUbzogTGludXggV2lyZWxlc3MNCj4gQ2M6IEthbGxlIFZhbG87IEJy
+aWFuIE5vcnJpczsgRG1pdHJ5IFRvcm9raG92OyByYWphdGphQGdvb2dsZS5jb207IFpoaXl1YW4N
+Cj4gWWFuZzsgVGltIFNvbmc7IENhdGh5IEx1bzsgWGlubWluZyBIdQ0KPiBTdWJqZWN0OiBbUEFU
+Q0ggdjJdIG13aWZpZXg6IGFkZCB0ZGxzIHVhcHNkIHN1cHBvcnQgbW9kdWxlIHBhcmFtZXRlcg0K
+PiANCj4gRnJvbTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gDQo+IEFuIGlzc3Vl
+IGFib3V0IHRkbHMgdWFwc2Qgd2FzIGZpeGVkIGluIGxhdGVzdCBmaXJtd2FyZSwgdGhpcyBwYXRj
+aCBhZGQgbW9kdWxlDQo+IHBhcmFtZXRlciB0byBjb250cm9sIHRkbHMgdWFwc2Qgc3VwcG9ydCwg
+d2hpY2ggaXMgZGVmYXVsdCBkaXNhYmxlZCwgY291bGQgYmUgYQ0KPiB3b3JrYXJvdW5kIHRvIHRo
+ZSBvbGQgZmlybXdhcmUuIEF0IHRoZSBzYW1lIHRpbWUsIGl0IGlzIG9wdGlvbmFsIHRvIGVuYWJs
+ZSB0aGlzDQo+IGZlYXR1cmUgaW4gc3BlY2lmaWMgY2FzZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6
+IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IENhdGh5IEx1
+byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gLS0tDQo+IHYyOiBhZGQgbW9yZSBjb21tZW50cyBmb3Ig
+ZGlzYWJsZSB0ZGxzX3VhcHNkLiAoQnJpYW4pDQo+IC0tLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbWFydmVsbC9td2lmaWV4L2luaXQuYyAgICB8IDUgKysrKysNCj4gIGRyaXZlcnMvbmV0L3dp
+cmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmggICAgfCAxICsNCj4gIGRyaXZlcnMvbmV0L3dp
+cmVsZXNzL21hcnZlbGwvbXdpZmlleC9zdGFfY21kLmMgfCA4ICsrKysrLS0tDQo+ICAzIGZpbGVz
+IGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2luaXQuYw0KPiBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4gaW5kZXggM2VjYjU5
+Zi4uMmNjOGU1NCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
+d2lmaWV4L2luaXQuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
+ZXgvaW5pdC5jDQo+IEBAIC0yNSw2ICsyNSwxMCBAQA0KPiAgI2luY2x1ZGUgIndtbS5oIg0KPiAg
+I2luY2x1ZGUgIjExbi5oIg0KPiANCj4gK3N0YXRpYyBib29sIHRkbHNfdWFwc2Q7DQo+ICttb2R1
+bGVfcGFyYW0odGRsc191YXBzZCwgYm9vbCwgMDAwMCk7DQo+ICtNT0RVTEVfUEFSTV9ERVNDKHRk
+bHNfdWFwc2QsICJ0ZGxzIHVhcHNkIHN1cHBvcnQgZW5hYmxlOjEsIGRpc2FibGU6MCIpOw0KPiAr
+DQo+ICAvKg0KPiAgICogVGhpcyBmdW5jdGlvbiBhZGRzIGEgQlNTIHByaW9yaXR5IHRhYmxlIHRv
+IHRoZSB0YWJsZSBsaXN0Lg0KPiAgICoNCj4gQEAgLTE1NCw2ICsxNTgsNyBAQCBpbnQgbXdpZmll
+eF9pbml0X3ByaXYoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdikNCj4gIAlwcml2LT5kZWxf
+bGlzdF9pZHggPSAwOw0KPiAgCXByaXYtPmhzMl9lbmFibGVkID0gZmFsc2U7DQo+ICAJcHJpdi0+
+Y2hlY2tfdGRsc190eCA9IGZhbHNlOw0KPiArCXByaXYtPnRkbHNfdWFwc2Rfc3VwcG9ydCA9IHRk
+bHNfdWFwc2Q7DQo+ICAJbWVtY3B5KHByaXYtPnRvc190b190aWRfaW52LCB0b3NfdG9fdGlkX2lu
+diwgTUFYX05VTV9USUQpOw0KPiANCj4gIAltd2lmaWV4X2luaXRfMTFoX3BhcmFtcyhwcml2KTsN
+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWlu
+LmgNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+IGlu
+ZGV4IGY4Y2YzMDcuLmVmNWVhYzcyIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21h
+cnZlbGwvbXdpZmlleC9tYWluLmgNCj4gQEAgLTY2MCw2ICs2NjAsNyBAQCBzdHJ1Y3QgbXdpZmll
+eF9wcml2YXRlIHsNCj4gIAl1OCBjaGVja190ZGxzX3R4Ow0KPiAgCXN0cnVjdCB0aW1lcl9saXN0
+IGF1dG9fdGRsc190aW1lcjsNCj4gIAlib29sIGF1dG9fdGRsc190aW1lcl9hY3RpdmU7DQo+ICsJ
+dTggdGRsc191YXBzZF9zdXBwb3J0Ow0KPiAgCXN0cnVjdCBpZHIgYWNrX3N0YXR1c19mcmFtZXM7
+DQo+ICAJLyogc3BpbiBsb2NrIGZvciBhY2sgc3RhdHVzICovDQo+ICAJc3BpbmxvY2tfdCBhY2tf
+c3RhdHVzX2xvY2s7DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
+L213aWZpZXgvc3RhX2NtZC5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lm
+aWV4L3N0YV9jbWQuYw0KPiBpbmRleCA1MzRkOTRhLi5kNWRhNTY1IDEwMDY0NA0KPiAtLS0gYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvc3RhX2NtZC5jDQo+ICsrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9zdGFfY21kLmMNCj4gQEAgLTE3ODks
+OSArMTc4OSwxMSBAQCBzdGF0aWMgaW50IG13aWZpZXhfY21kX2NoYW5fcmVnaW9uX2NmZyhzdHJ1
+Y3QNCj4gbXdpZmlleF9wcml2YXRlICpwcml2LA0KPiAgCQlwdXRfdW5hbGlnbmVkX2xlMTYocGFy
+YW1zLT5jYXBhYmlsaXR5LCBwb3MpOw0KPiAgCQljb25maWdfbGVuICs9IHNpemVvZihwYXJhbXMt
+PmNhcGFiaWxpdHkpOw0KPiANCj4gLQkJcW9zX2luZm8gPSBwYXJhbXMtPnVhcHNkX3F1ZXVlcyB8
+IChwYXJhbXMtPm1heF9zcCA8PCA1KTsNCj4gLQkJd21tX3Fvc19pbmZvID0gKHN0cnVjdCBtd2lm
+aWV4X2llX3R5cGVzX3Fvc19pbmZvICopKHBvcyArDQo+IC0JCQkJCQkJCSAgICBjb25maWdfbGVu
+KTsNCj4gKwkJaWYgKHByaXYtPnRkbHNfdWFwc2Rfc3VwcG9ydCkNCj4gKwkJCXFvc19pbmZvID0g
+cGFyYW1zLT51YXBzZF9xdWV1ZXMgfCAocGFyYW1zLT5tYXhfc3AgPDwgNSk7DQo+ICsJCWVsc2UN
+Cj4gKwkJCXFvc19pbmZvID0gMDsNCj4gKwkJd21tX3Fvc19pbmZvID0gKHZvaWQgKikocG9zICsg
+Y29uZmlnX2xlbik7DQo+ICAJCXdtbV9xb3NfaW5mby0+aGVhZGVyLnR5cGUgPSBjcHVfdG9fbGUx
+NihXTEFOX0VJRF9RT1NfQ0FQQSk7DQo+ICAJCXdtbV9xb3NfaW5mby0+aGVhZGVyLmxlbiA9IGNw
+dV90b19sZTE2KHNpemVvZihxb3NfaW5mbykpOw0KPiAgCQl3bW1fcW9zX2luZm8tPnFvc19pbmZv
+ID0gcW9zX2luZm87DQo+IC0tDQo+IDEuOS4xDQoNCg==
