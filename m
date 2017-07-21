@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:35621 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752409AbdGGI2d (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:57460 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752811AbdGUHyJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 04:28:33 -0400
-Received: by mail-wr0-f182.google.com with SMTP id k67so36252171wrc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jul 2017 01:28:32 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        =?UTF-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security@kernel.org" <security@kernel.org>
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
- <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
- <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <37617809-d840-fe43-ae0d-71c545f9fab1@broadcom.com> (sfid-20170707_102849_589396_FD13D4BD)
-Date: Fri, 7 Jul 2017 10:28:29 +0200
+        Fri, 21 Jul 2017 03:54:09 -0400
+Date: Fri, 21 Jul 2017 09:54:07 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Cong Wang <xiyou.wangcong@gmail.com>, davem@davemloft.net,
+        Andrew Morton <akpm@osdl.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [Patch net] wl1251: add a missing spin_lock_init()
+Message-ID: <20170721075407.GA21902@amd> (sfid-20170721_095414_061229_7010C044)
+References: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
+In-Reply-To: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--opJtzjQTFsWo+cga
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 7/7/2017 12:32 AM, Linus Torvalds wrote:
-> On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->>
->> Looks fine to me so ...
-> 
-> I really think that if we can't trust 'len', then we have to check
-> against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
-> we'll just have a big 16-bit number instead.
+Hi!
 
-Fair enough. The firmware on the device should have a check in place, 
-but guess what... :-( Anyway, the lower bound depends on the type of 
-management frames. So for action frames it is DOT11_MGMT_HDR_LEN + 1 /* 
-Action Category */ + 1 /* Action */.
+On Thu 2017-07-06 15:00:37, Cong Wang wrote:
+> This fixes the following kernel warning:
+>=20
+>   [ 5668.771453] BUG: spinlock bad magic on CPU#0, kworker/u2:3/9745
+>   [ 5668.771850]  lock: 0xce63ef20, .magic: 00000000, .owner: <none>/-1,
+>   .owner_cpu: 0
+=2E..
+> by adding the missing spin_lock_init().
+>=20
+> Reported-by: Pavel Machek <pavel@ucw.cz>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
 
-Might be better to place the lower bound check in net/wireless/nl80211.c 
-and do that appropriate for the type of management frame. That way it is 
-assured for all wireless drivers.
 
-> And we should do that brcmf_err() that I had in my version, which also
-> let's people know they are being attacked.
+Ping? This is pretty trivial bugfix for an ugly problem. It would be
+nice to take it in.
 
-Ok.
+>  drivers/net/wireless/ti/wl1251/main.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
+/ti/wl1251/main.c
+> index bbf7604..1c539c8 100644
+> --- a/drivers/net/wireless/ti/wl1251/main.c
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -1571,6 +1571,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+> =20
+>  	wl->state =3D WL1251_STATE_OFF;
+>  	mutex_init(&wl->mutex);
+> +	spin_lock_init(&wl->wl_lock);
+> =20
+>  	wl->tx_mgmt_frm_rate =3D DEFAULT_HW_GEN_TX_RATE;
+>  	wl->tx_mgmt_frm_mod =3D DEFAULT_HW_GEN_MODULATION_TYPE;
 
-Regards,
-Arend
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--opJtzjQTFsWo+cga
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAllxsx8ACgkQMOfwapXb+vJshQCgkLqLyYXe1Fo4Ij8SSeXRoqSj
+zDoAoLtOo8VH8gUQW+awUbs76hI1W9C8
+=Oj7f
+-----END PGP SIGNATURE-----
+
+--opJtzjQTFsWo+cga--
