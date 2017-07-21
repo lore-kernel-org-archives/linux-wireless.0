@@ -1,141 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49584 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751527AbdGZUqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:46:49 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 25/34] brcmfmac: Remove repeated calls to brcmf_chip_get_core()
-Date: Wed, 26 Jul 2017 21:25:48 +0100
-Message-Id: <20170726202557.15632-26-ian@mnementh.co.uk> (sfid-20170726_230044_009715_BE308070)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33994 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754556AbdGUVTm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Jul 2017 17:19:42 -0400
+Received: by mail-lf0-f65.google.com with SMTP id p11so3888041lfd.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jul 2017 14:19:41 -0700 (PDT)
+From: Rafal <fatwildcat@gmail.com>
+Date: Fri, 21 Jul 2017 23:19:29 +0200 (CEST)
+To: Dan Williams <dcbw@redhat.com>
+cc: Rafal <fatwildcat@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: brcfmac: add possibility to turn off powersave on wiphy
+In-Reply-To: <1500655872.10725.1.camel@redhat.com>
+Message-ID: <alpine.DEB.2.20.1707212252060.13284@wilk> (sfid-20170721_231946_398972_39D4202C)
+References: <alpine.DEB.2.20.1707211652430.10663@wilk> <1500655872.10725.1.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to repeatdly call brcmf_chip_get_core(), which
-traverses a list of cores every time its called (including during
-register access code!).
+On Fri, 21 Jul 2017, Dan Williams wrote:
 
-Call it once, and store a pointer to the core structure. The existing
-code does nto keep track of users of the cores anyway, and even so, this
-will allow for easier refcounting in future.
+> On Fri, 2017-07-21 at 16:56 +0200, Rafal wrote:
+>> I have a board with ap6212 chip and I have encountered two problems
+>> with the brcmfmac driver operating with this device. First problem I
+>> describe below, second one in separate mail.
+>>
+>>
+>> Namely, I have noticed quite poor connection with the device despite
+>> good signal strength. Ping to the device was very uneven, about 50 -
+>> 100 ms in average, 10 - 20% of packets loss. After some
+>> investigations I have found that problem is caused by powersave
+>> feature on wiphy (BRCMF_C_SET_PM command). When the value is set to
+>> PM_OFF, the problem does not appear - ping is quite stable, ~2ms.
+>> When set to PM_FAST, the ping is bad.
+>>
+>> The brcmfmac driver currently does not have possibility to turn off
+>> the powersave feature. I have added the possibility on 4.11.6 kernel
+>
+> I don't think that's true?  The driver implements the nl80211
+> set_power_mgmt hook, which lets you turn off powersave with 'iw'.  That
+> seems like a much better option than a module parameter.  I know other
+> drivers have the module parameter, but I personally consider that
+> legacy/holdover, given that we have runtime toggles for this kind of
+> thing.
+>
+> brcmf_cfg80211_set_power_mgmt() should do what you need, right?
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 25 +++++++++++++---------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+Yes, it does.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index b4fd832cdabe..3feaf9125b25 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -435,6 +435,7 @@ struct brcmf_sdio_count {
- struct brcmf_sdio {
- 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
- 	struct brcmf_chip *ci;	/* Chip info struct */
-+	struct brcmf_core *sdio_core; /* sdio core info struct */
- 
- 	u32 hostintmask;	/* Copy of Host Interrupt Mask */
- 	atomic_t intstatus;	/* Intstatus bits (events) pending */
-@@ -662,10 +663,9 @@ static bool data_ok(struct brcmf_sdio *bus)
-  */
- static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
- {
--	struct brcmf_core *core;
-+	struct brcmf_core *core = bus->sdio_core;
- 	int ret;
- 
--	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
- 	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
- 
- 	return ret;
-@@ -673,10 +673,9 @@ static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
- 
- static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
- {
--	struct brcmf_core *core;
-+	struct brcmf_core *core = bus->sdio_core;
- 	int ret;
- 
--	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
- 	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
- 
- 	return ret;
-@@ -2484,12 +2483,11 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- 
- static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- {
--	struct brcmf_core *buscore;
-+	struct brcmf_core *buscore = bus->sdio_core;
- 	u32 addr;
- 	unsigned long val;
- 	int ret;
- 
--	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
- 	addr = buscore->base + __sd_reg(intstatus);
- 
- 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
-@@ -3366,13 +3364,14 @@ static void brcmf_sdio_sr_init(struct brcmf_sdio *bus)
- /* enable KSO bit */
- static int brcmf_sdio_kso_init(struct brcmf_sdio *bus)
- {
-+	struct brcmf_core *core = bus->sdio_core;
- 	u8 val;
- 	int err = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	/* KSO bit added in SDIO core rev 12 */
--	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12)
-+	if (core->rev < 12)
- 		return 0;
- 
- 	val = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, &err);
-@@ -3400,6 +3399,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
-+	struct brcmf_core *core = bus->sdio_core;
- 	uint pad_size;
- 	u32 value;
- 	int err;
-@@ -3408,7 +3408,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
- 	 * a device perspective, ie. bus:txglom affects the
- 	 * bus transfers from device to host.
- 	 */
--	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12) {
-+	if (core->rev < 12) {
- 		/* for sdio core rev < 12, disable txgloming */
- 		value = 0;
- 		err = brcmf_iovar_data_set(dev, "bus:txglom", &value,
-@@ -3746,11 +3746,10 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
- 					u32 rstvec)
- {
- 	struct brcmf_sdio_dev *sdiodev = ctx;
--	struct brcmf_core *core;
-+	struct brcmf_core *core = sdiodev->bus->sdio_core;
- 	u32 reg_addr;
- 
- 	/* clear all interrupts */
--	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
- 	reg_addr = core->base + __sd_reg(intstatus);
- 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
- 
-@@ -3831,6 +3830,12 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 		bus->ci = NULL;
- 		goto fail;
- 	}
-+
-+	/* Pick up the SDIO core info struct from chip.c */
-+	bus->sdio_core   = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
-+	if (!bus->sdio_core)
-+		goto fail;
-+
- 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
- 						   BRCMF_BUSTYPE_SDIO,
- 						   bus->ci->chip,
--- 
-2.11.0
+In fact, I needed only a parameter in OF database. This is a bug in the
+device or firmware and I needed to disable the feature for this chip.
+Many device drivers allow to specify in OF database that driver should
+use a quirk. This is similar situation.
+
+I have added the kernel parameter as an additional feature. I thought
+that not all platforms are using devicetree database. But maybe it is a
+bad idea.
+
+Rafal
+
+>
+> Dan
+>
