@@ -1,89 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36459 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754121AbdGCSkq (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52819 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751597AbdGUPIa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jul 2017 14:40:46 -0400
-Received: by mail-oi0-f68.google.com with SMTP id n2so12756020oig.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:45 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 01/11] rtlwifi: btcoex: Add power_on_setting routine
-Date: Mon,  3 Jul 2017 13:40:28 -0500
-Message-Id: <20170703184038.24669-2-Larry.Finger@lwfinger.net> (sfid-20170703_204050_837515_F07C35CA)
-In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
-References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+        Fri, 21 Jul 2017 11:08:30 -0400
+Date: Fri, 21 Jul 2017 17:08:20 +0200
+From: Greg KH <gregkh@linux.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
+Subject: Re: New Realtek driver
+Message-ID: <20170721150820.GC18198@kroah.com> (sfid-20170721_171204_601666_483DBD6A)
+References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
+> Kalle and Greg,
+> 
+> Once again I find myself in the awkward position of needing to submit code
+> to two different trees, i.e. wireless and staging.
+> 
+> The code in question concerns a new Realtek device, the RTL8822BE. The
+> device is already shipping, and Realtek would like it to be available in
+> kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
+> Realtek that 3.14 would not be possible, at least in the wireless tree. What
+> I plan to do is submit the changes in the existing drivers through wireless,
+> and the three totally new drivers through staging. My expectation is that
+> this code would live for a relatively short time there, but going that route
+> would give time for the code to be reviewed properly, but still be available
+> in a kernel driver. All of the new code will be available in a GitHub repo
+> maintained by Realtek for those users whose distros do not configure
+> anything in staging.
+> 
+> For my part, I will push the wireless tree material as fast as I can and
+> hope there is time available near the end of the 4.13-rcX sequence for the
+> material to reach 4.14-rc1.
 
-New btcoex uses it to setup antenna before wifi on.
+Why do you need a staging driver to have changes in the wireless tree?
+Staging drivers should be self-contained and not rely on anything
+outside of it in order to work properly (i.e. don't add code to the real
+kernel only for a staging driver.)
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 6 ++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h      | 1 +
- 3 files changed, 8 insertions(+)
+thanks,
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index ea12b9d63a73..bc523af7ef88 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -608,6 +608,7 @@ extern struct btc_coexist gl_bt_coexist;
- 
- bool exhalbtc_initlize_variables(void);
- bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
-+void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
- void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
- void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
- void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 4d9e33078d4f..9e3623b0423c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -32,6 +32,7 @@
- static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_init_variables = rtl_btc_init_variables,
- 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
-+	.btc_power_on_setting = rtl_btc_power_on_setting,
- 	.btc_init_hw_config = rtl_btc_init_hw_config,
- 	.btc_ips_notify = rtl_btc_ips_notify,
- 	.btc_lps_notify = rtl_btc_lps_notify,
-@@ -116,6 +117,11 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
- 	 */
- }
- 
-+void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
-+{
-+	exhalbtc_power_on_setting(&gl_bt_coexist);
-+}
-+
- void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
- {
- 	u8 bt_exist;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index 40f1ce8c8a06..9becfa59407d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -29,6 +29,7 @@
- 
- void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
- void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
-+void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
- void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
- void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
- void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
--- 
-2.12.3
+greg k-h
