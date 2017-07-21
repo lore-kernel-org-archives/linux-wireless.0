@@ -1,54 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0054.outbound.protection.outlook.com ([104.47.41.54]:14641
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751593AbdG0XH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 19:07:29 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 03/12] qtnfmac: add missing bus lock
-Date: Fri, 28 Jul 2017 02:06:45 +0300
-Message-Id: <20170727230654.30850-4-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010735_592047_2E99B907)
-In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39462 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753684AbdGUPTE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Jul 2017 11:19:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ningyuan Wang <nywang@google.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Print NL80211_BSS_LAST_SEEN_BOOTTIME on scan results
+References: <20170711004746.142837-1-nywang@google.com>
+Date: Fri, 21 Jul 2017 18:18:58 +0300
+In-Reply-To: <20170711004746.142837-1-nywang@google.com> (Ningyuan Wang's
+        message of "Mon, 10 Jul 2017 17:47:46 -0700")
+Message-ID: <87o9sd24yl.fsf@purkki.adurom.net> (sfid-20170721_172021_457654_7F4B5B6B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing bus lock into get_mac_chan_info command.
+Ningyuan Wang <nywang@google.com> writes:
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> This patch allows iw to print NL80211_BSS_LAST_SEEN_BOOTTIME
+> values on scan results.
+>
+> Change-Id: I4e6a3d9999830a83766d59671b42e824421a3414
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 8be96f02888f..f5a294f3c2a4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -1442,6 +1442,9 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
- 
- 	cmd = (struct qlink_cmd_chans_info_get *)cmd_skb->data;
- 	cmd->band = qband;
-+
-+	qtnf_bus_lock(mac->bus);
-+
- 	ret = qtnf_cmd_send_with_reply(mac->bus, cmd_skb, &resp_skb, &res_code,
- 				       sizeof(*resp), &info_len);
- 
-@@ -1465,6 +1468,7 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
- 	ret = qtnf_cmd_resp_fill_channels_info(band, resp, info_len);
- 
- out:
-+	qtnf_bus_unlock(mac->bus);
- 	consume_skb(resp_skb);
- 
- 	return ret;
+Signed-off-by missing and Change-Id should not be included.
+
 -- 
-2.11.0
+Kalle Valo
