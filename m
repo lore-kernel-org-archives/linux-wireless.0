@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:38824 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750727AbdGUEYt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46846 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753899AbdGUP3r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 00:24:49 -0400
-Received: by mail-oi0-f65.google.com with SMTP id p188so3925732oia.5
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 21:24:49 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 00/10] rtlwifi: Set 1 of changes to prepare for RTL8822BE
-Date: Thu, 20 Jul 2017 23:24:30 -0500
-Message-Id: <20170721042440.15839-1-Larry.Finger@lwfinger.net> (sfid-20170721_062515_262133_B5154E54)
+        Fri, 21 Jul 2017 11:29:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Ian Molton <ian@mnementh.co.uk>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Subject: Re: RFC: Broadcom fmac wireless driver cleanup
+References: <20170716112129.10206-1-ian@mnementh.co.uk>
+        <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
+Date: Fri, 21 Jul 2017 18:29:42 +0300
+In-Reply-To: <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Mon, 17 Jul 2017
+ 06:53:53 +0200")
+Message-ID: <87k23124gp.fsf@purkki.adurom.net> (sfid-20170721_173209_013109_1A238BA0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are many changes needed to prepare rtlwifi and family for the
-addition of drivers for the new RTL8822BE. This is the first set of
-patches that implement these changes.
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-These patches follow the following sets:
-[PATCH v4 00/10] Set 3 of changes related to updates of btcoexist
-[PATCH 0/2] rtlwifi: Fix two static errors
-[PATCH] Revert "rtlwifi: btcoex: rtl8723be: fix ant_sel not work"
-[PATCH v2 00/11] Set 4 of changes related to updates of btcoexist
+> On 16 July 2017 at 13:21, Ian Molton <ian@mnementh.co.uk> wrote:
+>> I've been doing some cleanups in the broadcome brcmfmac driver, trying to
+>> understand how it works.
+>>
+>> I think this makes the driver a *lot* more readable.
+>>
+>> Of note:
+>>
+>> * Gets rid of the arbitrary and completely 1:1 mapping of
+>>  struct brcmf_{core,chip}_priv/struct brcmf_{core,chip} structures
+>>  which add unreadability whilst offering no real seperation.
+>>
+>> * The patch titled HACK - stabilise the value of ->sbwad in use
+>>  highlights an issue that is either bizarre undocumented behaviour or a
+>>  genuine bug - without datasheets, I dont know. Essentially the value of=
+ sbwad
+>>  is taken as the base address in several functions, even though it is su=
+bject
+>>  to change should other IO occur that moves the window offset
+>>
+>> Obviously this is a first cut at this and needs substantial cleanup itse=
+lf,
+>> however I wanted to get some idea of wether I should continue working on=
+ this.
+>
+> I looked at 4 random patches and none got any description. Not to
+> mention their chaotic subjects. In this state I can't even review it.
+> If you want to have some change accepted, you've to convince us it's
+> needed. Work on cleaning your patches and resend them. You also need
+> to signed off your changes.
 
-Larry
+And try to stick with max 10-12 patches per patchset rule. More than
+that and it gets difficult for everyone (submitter, reviewers and
+maintainers). And if you are a new with the subsystem, like you are
+here, start with baby steps: send one patch, wait for it to get applied,
+send two, wait, send four, wait etc. This way you learn how things work
+without putting too much burden on the maintainers and things go forward
+smoothly.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
-
-Ping-Ke Shih (10):
-  rtlwifi: Add COMP_HALMAC to debug
-  rtlwifi: define radio_mask for RF, and extend bw
-  rtlwifi: Add phydm structure to main header file
-  rtlwifi: Issue connection notification to phydm.
-  rtlwifi: Add COMP_PHYDM to debug
-  rtlwifi: btcoex: Add send_bt_mp common function, and modify related
-    functions.
-  rtlwifi: btcoex: btcoexist needs rfe_type to make decision
-  rtlwifi: Use mutex to replace spin_lock in cases of IPS and LPS
-  rtlwifi: Add halmac structure to wifi.h
-  rtlwifi: Add phydm debug cmd to debugfs
-
- drivers/net/wireless/realtek/rtlwifi/base.c        |   6 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 238 ++++++++++++++++++---
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  51 +++++
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  29 ++-
- drivers/net/wireless/realtek/rtlwifi/core.c        |  13 ++
- drivers/net/wireless/realtek/rtlwifi/debug.c       |  77 +++++++
- drivers/net/wireless/realtek/rtlwifi/debug.h       |   2 +
- drivers/net/wireless/realtek/rtlwifi/ps.c          |  26 ++-
- drivers/net/wireless/realtek/rtlwifi/usb.c         |   1 -
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 219 ++++++++++++++++++-
- 10 files changed, 601 insertions(+), 61 deletions(-)
-
--- 
-2.12.3
+--=20
+Kalle Valo
