@@ -1,84 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49722 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751023AbdGGJ4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 05:56:32 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        "[4.0+]" <stable@vger.kernel.org>
-Subject: [PATCH] cfg80211: don't change the regulatory HT flags in custom regulatory flows
-Date: Fri,  7 Jul 2017 12:56:16 +0300
-Message-Id: <20170707095616.29450-1-emmanuel.grumbach@intel.com> (sfid-20170707_115636_912882_607436E2)
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33393 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbdGVMvW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Jul 2017 08:51:22 -0400
+Received: by mail-oi0-f66.google.com with SMTP id e124so3693652oig.0
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jul 2017 05:51:22 -0700 (PDT)
+Subject: Re: New Realtek driver
+To: Greg KH <gregkh@linux.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
+References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
+ <20170721150820.GC18198@kroah.com>
+ <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net>
+ <20170722035119.GA31377@kroah.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <f0c99e4c-52bf-0b32-df56-afbcee4b879e@lwfinger.net> (sfid-20170722_145126_395241_7707DDF5)
+Date: Sat, 22 Jul 2017 07:51:20 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170722035119.GA31377@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the regulatory is handled by the driver, don't
-interact with the flags it sets.
-iwlwifi doesn't want to use channel 40 HT40+ for example.
+On 07/21/2017 10:51 PM, Greg KH wrote:
+> On Fri, Jul 21, 2017 at 07:36:41PM -0500, Larry Finger wrote:
+>> On 07/21/2017 10:08 AM, Greg KH wrote:
+>>> On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
+>>>> Kalle and Greg,
+>>>>
+>>>> Once again I find myself in the awkward position of needing to submit code
+>>>> to two different trees, i.e. wireless and staging.
+>>>>
+>>>> The code in question concerns a new Realtek device, the RTL8822BE. The
+>>>> device is already shipping, and Realtek would like it to be available in
+>>>> kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
+>>>> Realtek that 3.14 would not be possible, at least in the wireless tree. What
+>>>> I plan to do is submit the changes in the existing drivers through wireless,
+>>>> and the three totally new drivers through staging. My expectation is that
+>>>> this code would live for a relatively short time there, but going that route
+>>>> would give time for the code to be reviewed properly, but still be available
+>>>> in a kernel driver. All of the new code will be available in a GitHub repo
+>>>> maintained by Realtek for those users whose distros do not configure
+>>>> anything in staging.
+>>>>
+>>>> For my part, I will push the wireless tree material as fast as I can and
+>>>> hope there is time available near the end of the 4.13-rcX sequence for the
+>>>> material to reach 4.14-rc1.
+>>>
+>>> Why do you need a staging driver to have changes in the wireless tree?
+>>> Staging drivers should be self-contained and not rely on anything
+>>> outside of it in order to work properly (i.e. don't add code to the real
+>>> kernel only for a staging driver.)
+>>
+>> Greg,
+>>
+>> To add the new driver to staging without any other changes, I will need to
+>> duplicate a lot of code. That is no problem, other than the duplicate entry
+>> points that will show up in a makeallyes configuration. If that is what you
+>> want, then that is what I will do.
+> 
+> What do you mean by "duplicate entry points"?  Duplicate global symbols?
+> Something else?
 
-Cc: <stable@vger.kernel.org> [4.0+]
-Fixes: b0d7aa59592b ("cfg80211: allow wiphy specific regdomain management")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/reg.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Of course, I meant duplicate global symbols.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5fae296a6a58..29879440626e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -4,6 +4,7 @@
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-+ * Copyright      2017  Intel Deutschland GmbH
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -1483,7 +1484,9 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- {
- 	struct ieee80211_supported_band *sband = wiphy->bands[channel->band];
- 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
-+	const struct ieee80211_regdomain *regd;
- 	unsigned int i;
-+	u32 flags;
- 
- 	if (!is_ht40_allowed(channel)) {
- 		channel->flags |= IEEE80211_CHAN_NO_HT40;
-@@ -1503,17 +1506,30 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 			channel_after = c;
- 	}
- 
-+	regd = get_wiphy_regdom(wiphy);
-+	if (regd) {
-+		const struct ieee80211_reg_rule *reg_rule =
-+			freq_reg_info_regd(MHZ_TO_KHZ(channel->center_freq),
-+					   regd, MHZ_TO_KHZ(20));
-+
-+		flags = reg_rule->flags;
-+	} else {
-+		flags = 0;
-+	}
-+
- 	/*
- 	 * Please note that this assumes target bandwidth is 20 MHz,
- 	 * if that ever changes we also need to change the below logic
- 	 * to include that as well.
- 	 */
--	if (!is_ht40_allowed(channel_before))
-+	if (!is_ht40_allowed(channel_before) ||
-+	    flags & NL80211_RRF_NO_HT40MINUS)
- 		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
- 	else
- 		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
- 
--	if (!is_ht40_allowed(channel_after))
-+	if (!is_ht40_allowed(channel_after) ||
-+	    flags & NL80211_RRF_NO_HT40PLUS)
- 		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
- 	else
- 		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
--- 
-2.9.3
+Larry
