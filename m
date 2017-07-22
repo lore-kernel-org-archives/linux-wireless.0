@@ -1,204 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49560 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751466AbdGZUqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:46:46 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 14/34] brcmfmac: Remove brcmf_sdiod_addrprep()
-Date: Wed, 26 Jul 2017 21:25:37 +0100
-Message-Id: <20170726202557.15632-15-ian@mnementh.co.uk> (sfid-20170726_230043_727953_3C2778CA)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:35697 "EHLO
+        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750865AbdGVUa0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Jul 2017 16:30:26 -0400
+Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
+        by mx08-00252a01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6MKUOYN009072
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jul 2017 21:30:25 +0100
+Received: from mail-wr0-f197.google.com (mail-wr0-f197.google.com [209.85.128.197])
+        by mx08-00252a01.pphosted.com with ESMTP id 2bv3f2r5nr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jul 2017 21:30:24 +0100
+Received: by mail-wr0-f197.google.com with SMTP id x43so20480115wrb.9
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jul 2017 13:30:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <9e616361-da87-6f46-8ee3-4a4f673c3c80@broadcom.com>
+References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+ <03779c4f-b48b-444f-59c5-e10324dc77bd@mnementh.co.uk> <04f1050f-966e-b0c8-7714-ee5065ba69cf@mnementh.co.uk>
+ <9e616361-da87-6f46-8ee3-4a4f673c3c80@broadcom.com>
+From: James Hughes <james.hughes@raspberrypi.org>
+Date: Sat, 22 Jul 2017 21:30:22 +0100
+Message-ID: <CAE_XsMJjTRpY4_F_GTUC86t-TWLhk-mfnMw=TFLvZ=v0-=fS0w@mail.gmail.com> (sfid-20170722_223031_739748_6701E231)
+Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Ian Molton <ian@mnementh.co.uk>,
+        Hans de Goede <hdegoede@redhat.com>,
+        russianneuromancer <russianneuromancer@ya.ru>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function has become trivial enough that it may as well be pushed into
-its callers, which has the side-benefit of clarifying what's going on.
+On 22 July 2017 at 20:53, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 22-07-17 21:19, Ian Molton wrote:
+>> On 22/07/17 20:18, Ian Molton wrote:
+>>> On 22/07/17 19:43, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> When upgrading my devel environment to 4.13-rc1+ I noticed that
+>>>> the brcm43430 sdio wifi on a Chuwi Hi8 plus stopped working:
+>>>
+>>> There is a fix for this:
+>>>
+>>> https://patchwork.kernel.org/patch/9836383/
+>>
+>> Sorry, ignore me - this was a fix for the other 4.13-rc1 regression.
+>> Arend is looking into he other one. It affects me too.
+>>
+>> It appears to be the firmware going astray.
+>
+> It is still an enigma although admittedly I did not put much time in it
+> this week. The change below fixes it as the device goes haywire from
+> this command. At least this was reported by Stefan Wahren ("brcmfmac:
+> BCM43431 won't get probed on Raspberry Pi Zero W") on linux-wireless
+> mailing list. Still I can not explain it. Could be that there is not
+> enough free memory on the device.
+>
+> Regards,
+> Arend
+> ---
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> index d21258d..def120c 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> @@ -159,8 +159,9 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>
+>         brcmf_feat_firmware_capabilities(ifp);
+>         memset(&gscan_cfg, 0, sizeof(gscan_cfg));
+> -       brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
+> -                                 &gscan_cfg, sizeof(gscan_cfg));
+> +       if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID)
+> +               brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
+> "pfn_gscan_cfg",
+> +                                         &gscan_cfg, sizeof(gscan_cfg));
+>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+>         if (drvr->bus_if->wowl_supported)
+>                 brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+>
 
-Remove it, and rename brcmf_sdiod_set_sbaddr_window() to
-brcmf_sdiod_set_backplane_window() as it's easier to understand.
+Any movement on the mailbox issue would be good news for us, it's on
+my list of things to investigate, and has been flagged up by Pi3/Pi0W
+users as a possible cause/symptom of wireless issues. We have a
+catchall thread for these issues here
+https://github.com/raspberrypi/linux/issues/1342, with some extra
+details but this particular mailbox error I've not been able to find a
+way to reliably replicate so far. My Googling hadn't thrown up the
+firmware version being relevant, which is a useful data point, along
+with Arend's patch above. I should be able to take a bit more of a
+look next week, so if anyone  has a way of replicating on a Pi3 I'd
+like to here about it.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-
-# Conflicts:
-#	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 78 ++++++++++++----------
- 1 file changed, 44 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index b2945b463fd3..24775869aee4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -228,41 +228,25 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
- 
--static int brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
--					 u32 address)
-+static int
-+brcmf_sdiod_set_backplane_window(struct brcmf_sdio_dev *sdiodev, u32 addr)
- {
-+	u32 v, bar0 = addr & SBSDIO_SBWINDOW_MASK;
- 	int err = 0, i;
--	u32 addr;
- 
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
-+	if (bar0 == sdiodev->sbwad)
-+		return 0;
- 
--	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
-+	v = bar0 >> 8;
- 
--	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
-+	for (i = 0 ; i < 3 && !err ; i++, v >>= 8)
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
--				   addr & 0xff, &err);
--
--	return err;
--}
--
--static int brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
--{
--	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
--	int err = 0;
--
--	if (bar0 != sdiodev->sbwad) {
--		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
--		if (err)
--			return err;
-+				   v & 0xff, &err);
- 
-+	if (!err)
- 		sdiodev->sbwad = bar0;
--	}
--
--	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
--	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
--	return 0;
-+	return err;
- }
- 
- u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
-@@ -270,11 +254,17 @@ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u32 data = 0;
- 	int retval;
- 
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-+	if (retval)
-+		goto out;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	if (!retval)
- 		data = sdio_readl(sdiodev->func[1], addr, &retval);
- 
-+out:
- 	if (ret)
- 		*ret = retval;
- 
-@@ -286,11 +276,17 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-+	if (retval)
-+		goto out;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	if (!retval)
- 		sdio_writel(sdiodev->func[1], data, addr, &retval);
- 
-+out:
- 	if (ret)
- 		*ret = retval;
- }
-@@ -538,10 +534,13 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
- 		goto done;
- 
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
- 	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
- 
- done:
-@@ -559,10 +558,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
- 		  addr, pktq->qlen);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
- 		goto done;
- 
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
- 	if (pktq->qlen == 1)
- 		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
- 					    pktq->next);
-@@ -604,7 +606,12 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 
- 	memcpy(mypkt->data, buf, nbytes);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-+	if (err)
-+		return err;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	if (!err)
- 		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
-@@ -624,10 +631,13 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
- 		return err;
- 
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
- 	if (pktq->qlen == 1 || !sdiodev->sg_support)
- 		skb_queue_walk(pktq, skb) {
- 			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
-@@ -671,7 +681,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	/* Do the transfer(s) */
- 	while (size) {
- 		/* Set the backplane window to include the start address */
--		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
-+		err = brcmf_sdiod_set_backplane_window(sdiodev, address);
- 		if (err)
- 			break;
- 
-@@ -714,7 +724,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	dev_kfree_skb(pkt);
- 
- 	/* Return the window to backplane enumeration space for core access */
--	if (brcmf_sdiod_set_sbaddr_window(sdiodev, sdiodev->sbwad))
-+	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
- 		brcmf_err("FAILED to set window back to 0x%x\n",
- 			  sdiodev->sbwad);
- 
--- 
-2.11.0
+James, Raspberry Pi.
