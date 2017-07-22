@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:34206 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752233AbdGFMPq (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:38049 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751464AbdGVAgo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 08:15:46 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 21 Jul 2017 20:36:44 -0400
+Received: by mail-oi0-f66.google.com with SMTP id p188so5955372oia.5
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jul 2017 17:36:44 -0700 (PDT)
+Subject: Re: New Realtek driver
+To: Greg KH <gregkh@linux.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
+References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
+ <20170721150820.GC18198@kroah.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net> (sfid-20170722_023649_437714_BC3FE539)
+Date: Fri, 21 Jul 2017 19:36:41 -0500
 MIME-Version: 1.0
-Subject: Re: ath10k: fix indenting in ath10k_wmi_update_noa()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <149932333976.15174.4921279022358234069.stgit@potku.adurom.net>
-References: <149932333976.15174.4921279022358234069.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <297be03668124c6caaddbce6431afbae@eusanexr01a.eu.qualcomm.com> (sfid-20170706_141550_505140_320BC544)
-Date: Thu, 6 Jul 2017 05:15:37 -0700
+In-Reply-To: <20170721150820.GC18198@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-
-> Commit 59ae1d127ac0 ("networking: introduce and use skb_put_data()") introduced
-> a new checkpatch warning:
+On 07/21/2017 10:08 AM, Greg KH wrote:
+> On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
+>> Kalle and Greg,
+>>
+>> Once again I find myself in the awkward position of needing to submit code
+>> to two different trees, i.e. wireless and staging.
+>>
+>> The code in question concerns a new Realtek device, the RTL8822BE. The
+>> device is already shipping, and Realtek would like it to be available in
+>> kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
+>> Realtek that 3.14 would not be possible, at least in the wireless tree. What
+>> I plan to do is submit the changes in the existing drivers through wireless,
+>> and the three totally new drivers through staging. My expectation is that
+>> this code would live for a relatively short time there, but going that route
+>> would give time for the code to be reviewed properly, but still be available
+>> in a kernel driver. All of the new code will be available in a GitHub repo
+>> maintained by Realtek for those users whose distros do not configure
+>> anything in staging.
+>>
+>> For my part, I will push the wireless tree material as fast as I can and
+>> hope there is time available near the end of the 4.13-rcX sequence for the
+>> material to reach 4.14-rc1.
 > 
-> drivers/net/wireless/ath/ath10k/wmi.c:3308: code indent should use tabs where possible
-> 
-> Fix that.
-> 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Why do you need a staging driver to have changes in the wireless tree?
+> Staging drivers should be self-contained and not rely on anything
+> outside of it in order to work properly (i.e. don't add code to the real
+> kernel only for a staging driver.)
 
-Patch applied to ath-next branch of ath.git, thanks.
+Greg,
 
-5784f87df166 ath10k: fix indenting in ath10k_wmi_update_noa()
+To add the new driver to staging without any other changes, I will need to 
+duplicate a lot of code. That is no problem, other than the duplicate entry 
+points that will show up in a makeallyes configuration. If that is what you 
+want, then that is what I will do.
 
--- 
-https://patchwork.kernel.org/patch/9827511/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Larry
