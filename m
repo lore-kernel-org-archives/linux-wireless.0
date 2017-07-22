@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55538 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750822AbdGAD7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2017 23:59:40 -0400
-Date: Sat, 1 Jul 2017 11:59:13 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kbuild-all@01.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v3 09/10] rtlwifi: use debugfs to debug.
-Message-ID: <201707011153.OdPSd2wB%fengguang.wu@intel.com> (sfid-20170701_055945_485832_2E03A3C9)
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:35375 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750830AbdGVNcf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Jul 2017 09:32:35 -0400
+Date: Sat, 22 Jul 2017 15:32:28 +0200
+From: Johan Hovold <johan@kernel.org>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] NFC: fix device-allocation error return
+Message-ID: <20170722133228.GE2729@localhost> (sfid-20170722_153306_386961_253D7C35)
+References: <20170709110858.20331-1-johan@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170628151225.22190-10-Larry.Finger@lwfinger.net>
+In-Reply-To: <20170709110858.20331-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ping-Ke,
+On Sun, Jul 09, 2017 at 01:08:58PM +0200, Johan Hovold wrote:
+> A recent change fixing NFC device allocation itself introduced an
+> error-handling bug by returning an error pointer in case device-id
+> allocation failed. This is clearly broken as the callers still expected
+> NULL to be returned on errors as detected by Dan's static checker.
+> 
+> Fix this up by returning NULL in the event that we've run out of memory
+> when allocating a new device id.
+> 
+> Note that the offending commit is marked for stable (3.8) so this fix
+> needs to be backported along with it.
+> 
+> Fixes: 20777bc57c34 ("NFC: fix broken device allocation")
+> Cc: stable <stable@vger.kernel.org>	# 3.8
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Johan Hovold <johan@kernel.org>
 
-[auto build test WARNING on wireless-drivers-next/master]
-[also build test WARNING on next-20170630]
-[cannot apply to v4.12-rc7]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+Samuel or David,
 
-url:    https://github.com/0day-ci/linux/commits/Larry-Finger/Set-3-of-changes-related-to-updates-of-btcoexist/20170701-003321
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+Could you apply this follow-up fix so that it can be backported along
+with the offending commit (which was just added to the stable queues)?
 
+We would only hit this error path if an ida allocation fails due to OOM;
+so while this is not critical, it would still be nice to get it fixed.
 
-coccinelle warnings: (new ones prefixed by >>)
-
->> drivers/net/wireless/realtek/rtlwifi/debug.c:398:11-27: WARNING opportunity for simple_open, see also structure on line 418
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Thanks,
+Johan
