@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41036 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752115AbdG1O0p (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:38252 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750921AbdGVVeB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:26:45 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sharon Dvir <sharon.dvir@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:26 +0300
-Message-Id: <20170728142337.19183-14-luca@coelho.fi> (sfid-20170728_162700_056885_09228ABA)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 13/24] iwlwifi: mvm: fix uninitialized var while waiting for queues to empty
+        Sat, 22 Jul 2017 17:34:01 -0400
+Received: by mail-qk0-f181.google.com with SMTP id g6so40307498qkf.5
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jul 2017 14:34:01 -0700 (PDT)
+Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: russianneuromancer <russianneuromancer@ya.ru>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <95deba4b-7f63-8bb9-f8ab-c22f1d23985c@broadcom.com> (sfid-20170722_233419_185934_D1FC31CE)
+Date: Sat, 22 Jul 2017 23:33:57 +0200
+MIME-Version: 1.0
+In-Reply-To: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sharon Dvir <sharon.dvir@intel.com>
+On 22-07-17 20:43, Hans de Goede wrote:
+> The real culprit here seems to be:
+> 
+> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac:
+> brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
 
-While waiting for queues to empty,
-If txq_id == IWL_MVM_INVALID_QUEUE for all txq_ids,
-ret is used uninitialized.
-Found by Klocwork.
+So I dug a little deeper in our firmware and as it turns out it is
+indeed a firmware halt which is indicated by 0x10. 0x02 is DEVREADY and
+0x40000 indicates the protocol version.
 
-Fixes: d6d517b7730c ("iwlwifi: add wait for tx queue empty")
-Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 4adc8fecfaef..b196acd18252 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1619,10 +1619,11 @@ static void iwl_mvm_disable_sta_queues(struct iwl_mvm *mvm,
- int iwl_mvm_wait_sta_queues_empty(struct iwl_mvm *mvm,
- 				  struct iwl_mvm_sta *mvm_sta)
- {
--	int i, ret;
-+	int i;
- 
- 	for (i = 0; i < ARRAY_SIZE(mvm_sta->tid_data); i++) {
- 		u16 txq_id;
-+		int ret;
- 
- 		spin_lock_bh(&mvm_sta->lock);
- 		txq_id = mvm_sta->tid_data[i].txq_id;
-@@ -1633,10 +1634,10 @@ int iwl_mvm_wait_sta_queues_empty(struct iwl_mvm *mvm,
- 
- 		ret = iwl_trans_wait_txq_empty(mvm->trans, txq_id);
- 		if (ret)
--			break;
-+			return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
--- 
-2.13.2
+Regards,
+Arend
