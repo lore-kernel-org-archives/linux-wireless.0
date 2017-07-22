@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:46230 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751262AbdGPLnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Jul 2017 07:43:09 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 01/21] net: brcmfmac: Write function depends on size of regs not types.
-Date: Sun, 16 Jul 2017 12:21:09 +0100
-Message-Id: <20170716112129.10206-2-ian@mnementh.co.uk> (sfid-20170716_134314_309485_1FDE1424)
-In-Reply-To: <20170716112129.10206-1-ian@mnementh.co.uk>
-References: <20170716112129.10206-1-ian@mnementh.co.uk>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:37977 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751860AbdGVNXZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Jul 2017 09:23:25 -0400
+Date: Sat, 22 Jul 2017 15:09:54 +0200
+From: Greg KH <gregkh@linux.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
+Subject: Re: New Realtek driver
+Message-ID: <20170722130954.GA9321@kroah.com> (sfid-20170722_152328_536246_D7798F63)
+References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
+ <20170721150820.GC18198@kroah.com>
+ <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net>
+ <20170722035119.GA31377@kroah.com>
+ <f0c99e4c-52bf-0b32-df56-afbcee4b879e@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f0c99e4c-52bf-0b32-df56-afbcee4b879e@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The choice of read/write function depends on the size of the
-device registers, not compipler types.
+On Sat, Jul 22, 2017 at 07:51:20AM -0500, Larry Finger wrote:
+> On 07/21/2017 10:51 PM, Greg KH wrote:
+> > On Fri, Jul 21, 2017 at 07:36:41PM -0500, Larry Finger wrote:
+> > > On 07/21/2017 10:08 AM, Greg KH wrote:
+> > > > On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
+> > > > > Kalle and Greg,
+> > > > > 
+> > > > > Once again I find myself in the awkward position of needing to submit code
+> > > > > to two different trees, i.e. wireless and staging.
+> > > > > 
+> > > > > The code in question concerns a new Realtek device, the RTL8822BE. The
+> > > > > device is already shipping, and Realtek would like it to be available in
+> > > > > kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
+> > > > > Realtek that 3.14 would not be possible, at least in the wireless tree. What
+> > > > > I plan to do is submit the changes in the existing drivers through wireless,
+> > > > > and the three totally new drivers through staging. My expectation is that
+> > > > > this code would live for a relatively short time there, but going that route
+> > > > > would give time for the code to be reviewed properly, but still be available
+> > > > > in a kernel driver. All of the new code will be available in a GitHub repo
+> > > > > maintained by Realtek for those users whose distros do not configure
+> > > > > anything in staging.
+> > > > > 
+> > > > > For my part, I will push the wireless tree material as fast as I can and
+> > > > > hope there is time available near the end of the 4.13-rcX sequence for the
+> > > > > material to reach 4.14-rc1.
+> > > > 
+> > > > Why do you need a staging driver to have changes in the wireless tree?
+> > > > Staging drivers should be self-contained and not rely on anything
+> > > > outside of it in order to work properly (i.e. don't add code to the real
+> > > > kernel only for a staging driver.)
+> > > 
+> > > Greg,
+> > > 
+> > > To add the new driver to staging without any other changes, I will need to
+> > > duplicate a lot of code. That is no problem, other than the duplicate entry
+> > > points that will show up in a makeallyes configuration. If that is what you
+> > > want, then that is what I will do.
+> > 
+> > What do you mean by "duplicate entry points"?  Duplicate global symbols?
+> > Something else?
+> 
+> Of course, I meant duplicate global symbols.
 
+Just make the staging driver only be built as a module then there should
+not be the chance for any global symbols to occur.  We've done that many
+times in the past, probably for these same drivers...
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9b970dc2b922..fd398d27a30c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -266,7 +266,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	func = sdiodev->func[fn];
- 
- 	switch (regsz) {
--	case sizeof(u8):
-+	case 1:
- 		if (write) {
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
-@@ -280,13 +280,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
- 		}
- 		break;
--	case sizeof(u16):
-+	case 2:
- 		if (write)
- 			sdio_writew(func, *(u16 *)data, addr, &ret);
- 		else
- 			*(u16 *)data = sdio_readw(func, addr, &ret);
- 		break;
--	case sizeof(u32):
-+	case 4:
- 		if (write)
- 			sdio_writel(func, *(u32 *)data, addr, &ret);
- 		else
--- 
-2.11.0
+greg k-h
