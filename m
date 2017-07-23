@@ -1,44 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:32872 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751325AbdGQUOX (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:50855 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751957AbdGWAYX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 16:14:23 -0400
-Subject: Re: [PATCH 01/11] rtlwifi: rtl8192de: constify pci_device_id.
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
- <1500314995-3181-2-git-send-email-arvind.yadav.cs@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <452c5c19-b931-624e-72e4-124079b903ef@lwfinger.net> (sfid-20170717_221443_321312_B72B60AA)
-Date: Mon, 17 Jul 2017 15:14:20 -0500
+        Sat, 22 Jul 2017 20:24:23 -0400
+Date: Sun, 23 Jul 2017 02:24:15 +0200 (CEST)
+From: Stefan Wahren <stefan.wahren@i2se.com>
+To: franky.lin@broadcom.com, pieter-paul.giesberts@broadcom.com,
+        kvalo@codeaurora.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        hante.meuleman@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com, linux-wireless@vger.kernel.org
+Message-ID: <1455616686.54674.1500769455061@email.1und1.de> (sfid-20170723_022435_630505_88B7AD9D)
+In-Reply-To: <325e5f1a-2752-6004-a460-a59e8e2c702d@broadcom.com>
+References: <1442361688.41682.1500729531173@email.1und1.de>
+ <325e5f1a-2752-6004-a460-a59e8e2c702d@broadcom.com>
+Subject: Re: brcmfmac: Possible memleak brcmf_sdiod_sgtable_alloc
 MIME-Version: 1.0
-In-Reply-To: <1500314995-3181-2-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/17/2017 01:09 PM, Arvind Yadav wrote:
-> pci_device_id are not supposed to change at runtime. All functions
-> working with pci_device_id provided by <linux/pci.h> work with
-> const pci_device_id. So mark the non-const structs as const.
+
+> Arend van Spriel <arend.vanspriel@broadcom.com> hat am 22. Juli 2017 um 21:40 geschrieben:
 > 
-> File size before:
->     text	   data	    bss	    dec	    hex	filename
->     2833	    945	     12	   3790	    ece realtek/rtlwifi/rtl8192de/sw.o
 > 
-> File size After adding 'const':
->     text	   data	    bss	    dec	    hex	filename
->     2929	    849	     12	   3790	    ece realtek/rtlwifi/rtl8192de/sw.o
+> On 22-07-17 15:18, Stefan Wahren wrote:
+> > Hi,
+> > 
+> > with enabled memleak detector on 4.13-rc1 (Raspberry Pi Zero W) i get the following:
+> > 
+> > root@raspberrypi:/sys/kernel/debug# cat kmemleak
+> > unreferenced object 0xd824e400 (size 1024):
+> >   comm "kworker/0:0", pid 3, jiffies 4294939822 (age 873.420s)
+> >   hex dump (first 32 bytes):
+> >     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> >     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> >   backtrace:
+> >     [<c07f741c>] kmemleak_alloc+0x60/0xc8
+> >     [<c024cb44>] __kmalloc+0x184/0x2f4
+> >     [<c03dc1c8>] sg_kmalloc+0x48/0x4c
+> >     [<c03dc0dc>] __sg_alloc_table+0x78/0x11c
+> >     [<c03dc5d0>] sg_alloc_table+0x2c/0x5c
+> >     [<bf07d7e8>] brcmf_sdiod_sgtable_alloc+0xc0/0x110 [brcmfmac]
+> >     [<bf07b814>] brcmf_sdio_probe+0x24c/0x970 [brcmfmac]
+> >     [<bf07c6fc>] brcmf_ops_sdio_probe+0x17c/0x244 [brcmfmac]
+> >     [<c057d5b4>] sdio_bus_probe+0xb4/0x124
+> >     [<c04add08>] driver_probe_device+0x1d8/0x438
+> >     [<c04ae00c>] __driver_attach+0xa4/0x108
+> >     [<c04abe20>] bus_for_each_dev+0x84/0x98
+> >     [<c04ad644>] driver_attach+0x28/0x30
+> >     [<c04ad084>] bus_add_driver+0xe4/0x24c
+> >     [<c04ae834>] driver_register+0xac/0xf0
+> >     [<c057d7dc>] sdio_register_driver+0x2c/0x34
 > 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> Hi Stefan,
+> 
+> Thanks for the report. Checking elixir it shows two call sites to
+> brcmf_sdiod_sgtable_alloc() [1]. This is rather unexpected. We did move
+> the call so this might be a merge issue.
+> 
+> 4d7928959 sdio.c (Hante Meuleman   2016-02-17 11:27:07 +0100:
+> 3867)     brcmf_sdiod_sgtable_alloc(sdiodev);
+> 
+> e0045bf80 sdio.c (Hante Meuleman   2016-01-19 12:39:24 +0100:
+> 4180)     brcmf_sdiod_sgtable_alloc(bus->sdiodev);
+> 
+> The most recent change is:
+> 
+> commit 4d7928959832 ("brcmfmac: switch to new platform data") found in
+> patchwork [2], which shows the added call, but no removal so the merge
+> issue is probably internal with us (me :-( ).
+> 
+> Again thanks for the report. Below change should fix the issue.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Yes, this fixed the leak. Thanks for you fast reply.
 
-This applies to all 11.
-
-Thanks,
-
-Larry
+> 
+> Regards,
+> Arend
+> 
+> [1]
+> http://elixir.free-electrons.com/linux/latest/ident/brcmf_sdiod_sgtable_alloc
+> [2] https://patchwork.kernel.org/patch/8336231/
+> 
+> ---
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index fbcbb43..ed2c693 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -4174,11 +4174,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
+> brcmf_sdio_dev *sdiodev)
+>                 goto fail;
+>         }
+> 
+> -       /* allocate scatter-gather table. sg support
+> -        * will be disabled upon allocation failure.
+> -        */
+> -       brcmf_sdiod_sgtable_alloc(bus->sdiodev);
+> -
+>         /* Query the F2 block size, set roundup accordingly */
+>         bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
+>         bus->roundup = min(max_roundup, bus->blocksize);
