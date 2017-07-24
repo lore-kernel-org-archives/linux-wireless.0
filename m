@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:55748 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751047AbdGYKWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Jul 2017 06:22:14 -0400
-Date: Tue, 25 Jul 2017 03:22:11 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>
-Subject: Re: [v3] wlcore: add missing nvs file name info for wilink8
-Message-ID: <20170725102211.GT10026@atomide.com> (sfid-20170725_122232_986584_3D0A1B4D)
-References: <8665E2433BC68541A24DFFCA87B70F5B36409500@DFRE01.ent.ti.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:58333 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756791AbdGXW00 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 18:26:26 -0400
+From: Colin King <colin.king@canonical.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: usb: fix spelling mistake: "aggreataon"-> "aggregation"
+Date: Mon, 24 Jul 2017 23:26:23 +0100
+Message-Id: <20170724222623.16652-1-colin.king@canonical.com> (sfid-20170725_003005_531120_BC6D5074)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36409500@DFRE01.ent.ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [170720 05:17]:
-> The following commits:
-> c815fde wlcore: spi: Populate config firmware data
-> d776fc8 wlcore: sdio: Populate config firmware data
-> 
-> Populated the nvs entry for wilink6 and wilink7 only while it is 
-> still needed for wilink8 as well. 
-> This broke user space backward compatibility when upgrading from older 
-> kernels, as the alternate mac address would not be read from the nvs that is 
-> already present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin) 
-> causing mac address change of the wlan interface.
-> 
-> This patch fix this and update the structure field with the same default nvs file 
-> name that has been used before.
-> 
-> In addition, some distros hold a default wl1271-nvs.bin in the file
-> system with a bogus mac address (deadbeef...) that for a wl18xx device
-> also overrides the mac address that is stored inside the device.
-> Warn users about this bogus mac address.
-> 
-> Cc: stable <stable@vger.kernel.org>
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> ---
-> v2->v3: add a check for default deadbeef... mac address and warn about it
-> 
->  drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++++
->  drivers/net/wireless/ti/wlcore/sdio.c |  1 +
->  drivers/net/wireless/ti/wlcore/spi.c  |  1 +
->  3 files changed, 12 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index 60aaa85..37c35aa 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -5961,6 +5961,16 @@ static void wl12xx_derive_mac_addresses(struct wl1271 *wl, u32 oui, u32 nic)
->  	if (nic + WLCORE_NUM_MAC_ADDRESSES - wl->num_mac_addr > 0xffffff)
->  		wl1271_warning("NIC part of the MAC address wraps around!");
->  
-> +	if (oui == 0xdeadbe && nic == 0xef0000)
-> +		wl1271_warning("Detected unconfigured mac address in nvs.\n"
-> +				"in case of using a wl12xx device, your "
-> +				"device performance may not be optimized.\n"
-> +				"Please use the calibrator tool to configure "
-> +				"your device.\n"
-> +				"When using a wl18xx device the nvs file can "
-> +				"be removed as a default mac address is "
-> +				"stored internally.\n");
-> +
->  	for (i = 0; i < wl->num_mac_addr; i++) {
->  		wl->addresses[i].addr[0] = (u8)(oui >> 16);
->  		wl->addresses[i].addr[1] = (u8)(oui >> 8);
+From: Colin Ian King <colin.king@canonical.com>
 
-Hmm so why would we ever even use this bogus nvs file? In addition to warning,
-I think we should just ignore the bogus nvs file completely.
+Trivial fix to spelling mistake in aggr_ctrl module parameter
+message text.
 
-Regards,
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tony
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index f2600b827e81..ebe2c9319948 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -46,7 +46,7 @@ MODULE_PARM_DESC(mfg_mode, "manufacturing mode enable:1, disable:0");
+ 
+ bool aggr_ctrl;
+ module_param(aggr_ctrl, bool, 0000);
+-MODULE_PARM_DESC(aggr_ctrl, "usb tx aggreataon enable:1, disable:0");
++MODULE_PARM_DESC(aggr_ctrl, "usb tx aggregation enable:1, disable:0");
+ 
+ /*
+  * This function registers the device and performs all the necessary
+-- 
+2.11.0
