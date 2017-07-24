@@ -1,122 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37350 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751594AbdGEGFw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:52 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:39 +0300
-Message-Id: <20170705060539.20737-8-luca@coelho.fi> (sfid-20170705_080600_160125_A9025F28)
-In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
-References: <20170705060539.20737-1-luca@coelho.fi>
+Received: from mga09.intel.com ([134.134.136.24]:5011 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751830AbdGXLDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 07:03:51 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: linuxwifi <linuxwifi@intel.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "jprvita@gmail.com" <jprvita@gmail.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "jprvita@endlessm.com" <jprvita@endlessm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: Demote messages about fw flags size to info
+Date: Mon, 24 Jul 2017 11:01:27 +0000
+Message-ID: <1500894086.20057.12.camel@intel.com> (sfid-20170724_130418_250267_501DFF64)
+References: <20170721145147.7572-1-jprvita@endlessm.com>
+In-Reply-To: <20170721145147.7572-1-jprvita@endlessm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 7/7] iwlwifi: mvm: defer setting IWL_MVM_STATUS_IN_HW_RESTART
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-A hardware/firmware error may happen at any point in time. In
-particular, it might happen while mac80211 is in the middle of
-a flow. We observed the following situation:
- * mac80211 is in authentication flow, in ieee80211_prep_connection()
- * iwlwifi firmware crashes, but no error can be reported at this
-   precise point (mostly because the driver method is void, but even
-   if it wasn't we'd just shift to a race condition)
- * mac80211 continues the flow, trying to add the AP station
- * iwlwifi has already set its internal restart flag, and so thinks
-   that adding the station is part of the restart and already set up,
-   so it uses the information that's supposed to already be in the
-   struct
-
-This can happen with any flow in mac80211 and with any information
-we try to preserve across hardware restarts.
-
-To fix this, only set a new HW_RESTART_REQUESTED flag and translate
-that to IN_HW_RESTART once mac80211 actually starts the restart by
-calling our start() method. As a consequence, any mac80211 flow in
-progress at the time of the restart will properly finish (certainly
-with errors), before the restart is attempted.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=195299.
-
-Reported-by: djagoo <dev@djagoo.io>
-Reported-by: Łukasz Siudut <lsiudut@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 6 +++---
- 3 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index bcde1ba0f1c8..c7b1e58e3384 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1084,7 +1084,13 @@ int __iwl_mvm_mac_start(struct iwl_mvm *mvm)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
-+	if (test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status)) {
-+		/*
-+		 * Now convert the HW_RESTART_REQUESTED flag to IN_HW_RESTART
-+		 * so later code will - from now on - see that we're doing it.
-+		 */
-+		set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
-+		clear_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status);
- 		/* Clean up some internal and mac80211 state on restart */
- 		iwl_mvm_restart_cleanup(mvm);
- 	} else {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index eaacfaf37206..ddd8719f27b8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1090,6 +1090,7 @@ struct iwl_mvm {
-  * @IWL_MVM_STATUS_HW_RFKILL: HW RF-kill is asserted
-  * @IWL_MVM_STATUS_HW_CTKILL: CT-kill is active
-  * @IWL_MVM_STATUS_ROC_RUNNING: remain-on-channel is running
-+ * @IWL_MVM_STATUS_HW_RESTART_REQUESTED: HW restart was requested
-  * @IWL_MVM_STATUS_IN_HW_RESTART: HW restart is active
-  * @IWL_MVM_STATUS_IN_D0I3: NIC is in D0i3
-  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-@@ -1101,6 +1102,7 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_HW_RFKILL,
- 	IWL_MVM_STATUS_HW_CTKILL,
- 	IWL_MVM_STATUS_ROC_RUNNING,
-+	IWL_MVM_STATUS_HW_RESTART_REQUESTED,
- 	IWL_MVM_STATUS_IN_HW_RESTART,
- 	IWL_MVM_STATUS_IN_D0I3,
- 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 4d1188b8736a..9c175d5e9d67 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1235,9 +1235,8 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 	 */
- 	if (!mvm->fw_restart && fw_error) {
- 		iwl_mvm_fw_dbg_collect_desc(mvm, &iwl_mvm_dump_desc_assert,
--					    NULL);
--	} else if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART,
--				    &mvm->status)) {
-+					NULL);
-+	} else if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
- 		struct iwl_mvm_reprobe *reprobe;
- 
- 		IWL_ERR(mvm,
-@@ -1268,6 +1267,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 
- 		if (fw_error && mvm->fw_restart > 0)
- 			mvm->fw_restart--;
-+		set_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status);
- 		ieee80211_restart_hw(mvm->hw);
- 	}
- }
--- 
-2.11.0
+T24gRnJpLCAyMDE3LTA3LTIxIGF0IDA3OjUxIC0wNzAwLCBKb8OjbyBQYXVsbyBSZWNoaSBWaXRh
+IHdyb3RlOg0KPiBUaGVzZSBtZXNzYWdlcyBhcmUgbm90IHJlcG9ydGluZyBhIHJlYWwgZXJyb3Is
+IGp1c3QgdGhlIGZhY3QgdGhhdCB0aGUNCj4gZmlybXdhcmUga25vd3MgYWJvdXQgbW9yZSBmbGFn
+cyB0aGVuIHRoZSBkcml2ZXIuDQo+IA0KPiBDdXJyZW50bHkgdGhlc2UgbWVzc2FnZXMgYXJlIHBy
+ZXNlbnRlZCB0byB0aGUgdXNlciBkdXJpbmcgYm9vdCBpZiB0aGVyZQ0KPiBpcyBubyBib290c3Bs
+YXNoIGNvdmVyaW5nIHRoZSBjb25zb2xlLCBzb21ldGltZXMgZXZlbiBpZiB0aGUgYm9vdCBzcGxh
+c2gNCj4gaXMgZW5hYmxlZCBidXQgaGFzIG5vdCBzdGFydGVkIHlldCBieSB0aGUgdGltZSB0aGlz
+IG1lc3NhZ2UgaXMgc2hvd24uDQo+IA0KPiBEZW1vdGluZyBpdCB0byB0aGUgaW5mbyBsZXZlbCBo
+ZWxwcyBoYXZpbmcgYSBjbGVhbiBib290IHByb2Nlc3MuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBK
+b8OjbyBQYXVsbyBSZWNoaSBWaXRhIDxqcHJ2aXRhQGVuZGxlc3NtLmNvbT4NCj4gLS0tDQoNClRo
+ZSBpZGVhIHdpdGggdGhpcyBlcnJvciBpcyB0aGF0IGlmIHRoZSBmaXJtd2FyZSBpcyB0b28gbmV3
+IGFuZCBpbmNsdWRlcw0KYSBUTFYgdGhhdCB3ZSBhcmUgbm90IGF3YXJlIG9mLCB0aGVyZSBjYW4g
+YmUgdW5leHBlY3RlZCBpc3N1ZXMuICBGb3INCmluc3RhbmNlLCBzb21ldGltZXMgdGhlIEZXIEFQ
+SSBjaGFuZ2VzIHNvbWUgb2YgaXRzIHN0cnVjdHVyZXMgYW5kIHdlIHVzZQ0KVExWcyB0byBrbm93
+IHdoaWNoIG9uZSB0byB1c2UuICBJZiBhIG5ldyBzdHJ1Y3QgaXMgaW4gdXNlIGJ5IHRoZQ0KZmly
+bXdhcmUgYnV0IG5vdCBieSB0aGUgZHJpdmVyLCBwcm9ibGVtcyB3aWxsIG9jY3VyLg0KDQpSZWNl
+bnRseSB3ZSBhY2NpZGVudGFsbHkgb21pdHRlZCBvbmUgVExWIGZyb20gdGhlIGRyaXZlciBhbmQg
+cmVsZWFzZWQgYQ0KbmV3IGZpcm13YXJlIHRoYXQgaGFkIGl0IHNldC4uLiBUaGF0J3MgdGhlIGVy
+cm9yIHlvdSBhcmUgY3VycmVudGx5DQpzZWVpbmcuICBXZSBoYXZlIGEgYnVnemlsbGEgZW50cnlb
+MV0gYW5kIGl0IGlzIGZpeGVkIGluIG91ciBpbnRlcm5hbA0KdHJlZS4gIFRoZSBmaXggd2lsbCBi
+ZSBzZW50IHVwc3RyZWFtIGluIHRoZSBuZXh0IC1maXhlcyByb3VuZCB3ZSBzZW5kDQpvdXQuDQoN
+ClRoaXMgc3BlY2lmaWMgY2FzZSBpcyBoYXJtbGVzcywgYnV0IEknZCByYXRoZXIga2VlcCB0aGlz
+IG1lc3NhZ2UgYXMgYW4NCmVycm9yLCBiZWNhdXNlIGluIG90aGVyIHNpdHVhdGlvbnMgaXQgY291
+bGQgbGVhZCB0byB1bmV4cGVjdGVkDQpiZWhhdmlvaXIsIHNvIEkgcHJlZmVyIHRvIGtlZXAgaXQg
+dmVyeSB2aXNpYmxlLg0KDQoNClsxXSBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19i
+dWcuY2dpP2lkPTE5NjE5NQ0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4=
