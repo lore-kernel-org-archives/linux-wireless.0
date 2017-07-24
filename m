@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39374 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39362 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751130AbdGJGxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 02:53:15 -0400
-Date: Mon, 10 Jul 2017 08:52:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mathias Kresin <dev@kresin.me>
-Cc: Jonas Gorski <jonas.gorski@gmail.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
-Message-ID: <20170710065211.GA2808@redhat.com> (sfid-20170710_085330_522743_04CC5DF6)
-References: <1499498863-6865-1-git-send-email-dev@kresin.me>
- <CAOiHx=m5CdOM82R3T7DBwQPNgHTrAA95mt4ZeYWqa-cr5KPGrQ@mail.gmail.com>
- <f3744f76-9909-90a9-012d-ddafbda9ad4a@kresin.me>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f3744f76-9909-90a9-012d-ddafbda9ad4a@kresin.me>
+        id S1755615AbdGXPvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 11:51:14 -0400
+Message-ID: <1500911422.4571.3.camel@redhat.com> (sfid-20170724_175118_896002_7A06BB98)
+Subject: Re: brcfmac: add possibility to turn off powersave on wiphy
+From: Dan Williams <dcbw@redhat.com>
+To: Rafal <fatwildcat@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 24 Jul 2017 10:50:22 -0500
+In-Reply-To: <alpine.DEB.2.20.1707212252060.13284@wilk>
+References: <alpine.DEB.2.20.1707211652430.10663@wilk>
+         <1500655872.10725.1.camel@redhat.com>
+         <alpine.DEB.2.20.1707212252060.13284@wilk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 08, 2017 at 03:37:11PM +0200, Mathias Kresin wrote:
-> 08.07.2017 13:15, Jonas Gorski:
-> >to consumers, to have a consistent API across implementations (with
-> >drivers/clk/clk.c as the reference).
-> >
-> >And there don't seem that many, at least searching for clk_get_rate
-> >gave me only two handful of implementations of which many already
-> >check for NULL.
+On Fri, 2017-07-21 at 23:19 +0200, Rafal wrote:
+> On Fri, 21 Jul 2017, Dan Williams wrote:
 > 
-> I do not necessarily see an error in the archs legacy clock
-> implementation. It rather looks like it works with the common clock
-> framework due the lucky coincident that someone has added (an extra)
-> null check.
+> > On Fri, 2017-07-21 at 16:56 +0200, Rafal wrote:
+> > > I have a board with ap6212 chip and I have encountered two
+> > > problems
+> > > with the brcmfmac driver operating with this device. First
+> > > problem I
+> > > describe below, second one in separate mail.
+> > > 
+> > > 
+> > > Namely, I have noticed quite poor connection with the device
+> > > despite
+> > > good signal strength. Ping to the device was very uneven, about
+> > > 50 -
+> > > 100 ms in average, 10 - 20% of packets loss. After some
+> > > investigations I have found that problem is caused by powersave
+> > > feature on wiphy (BRCMF_C_SET_PM command). When the value is set
+> > > to
+> > > PM_OFF, the problem does not appear - ping is quite stable, ~2ms.
+> > > When set to PM_FAST, the ping is bad.
+> > > 
+> > > The brcmfmac driver currently does not have possibility to turn
+> > > off
+> > > the powersave feature. I have added the possibility on 4.11.6
+> > > kernel
+> > 
+> > I don't think that's true?  The driver implements the nl80211
+> > set_power_mgmt hook, which lets you turn off powersave with
+> > 'iw'.  That
+> > seems like a much better option than a module parameter.  I know
+> > other
+> > drivers have the module parameter, but I personally consider that
+> > legacy/holdover, given that we have runtime toggles for this kind
+> > of
+> > thing.
+> > 
+> > brcmf_cfg80211_set_power_mgmt() should do what you need, right?
 > 
-> I only had a brief look at the common clock framework, but it seams
-> to me one should not pass the error returned by clk_get() and/or
-> call clk_get_rate() at all if there was an error. That is what I've
-> already seen and mentioned in the commit message.
+> Yes, it does.
+> 
+> In fact, I needed only a parameter in OF database. This is a bug in
+> the
+> device or firmware and I needed to disable the feature for this chip.
+> Many device drivers allow to specify in OF database that driver
+> should
+> use a quirk. This is similar situation.
 
-> The only difference here is that we do not have the error check and
-> the clk_get_rate() call in the same function. rt2800_clk_is_20mhz()
-> isn't aware that clk_get() failed. rt2x00dev->clk is set back to
-> NULL in rt2x00soc_probe() in case of an clk_get error.
+Does the power management issue cause problems before any association
+happens?  If not, then I'd suggest 'iw' in startup scripts somewhere. 
+Or better yet, use the normal quirk method of detecting the hardware
+version via IDs or detecting the firmware via version or feature
+strings and quirking on that.
 
-If we need to check clk before clk_get_rate() call, we can remove NULL
-assignment from rt2x00soc_probe() and use IS_ERR_OR_NULL() on
-rt2800_clk_is_20mhz() .
+Dan
 
-Thanks
-Stanislaw
+> I have added the kernel parameter as an additional feature. I thought
+> that not all platforms are using devicetree database. But maybe it is
+> a
+> bad idea.
+> 
+> Rafal
+> 
+> > 
+> > Dan
+> > 
