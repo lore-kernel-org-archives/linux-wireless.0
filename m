@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:51629 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750892AbdGGMBh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 08:01:37 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
-Date: Fri,  7 Jul 2017 13:01:33 +0100
-Message-Id: <1499428893-30750-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170707_140140_467929_3104918C)
+Received: from mout.gmx.net ([212.227.17.20]:62686 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751832AbdGXHTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 03:19:19 -0400
+Subject: Re: Madwifi porting to Ath9k
+To: Arul jothi <aruljkp@gmail.com>
+References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
+ <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de>
+ <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <b91c5424-baaf-c1e1-5d2b-51aad79b6991@rempel-privat.de> (sfid-20170724_091923_731131_9E50996F)
+Date: Mon, 24 Jul 2017 09:19:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The lower level nl80211 code in cfg80211 ensures that "len" is between
-25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) from
-"len" so thats's max of 2280.  However, the action_frame->data[] buffer is
-only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
-overflow.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl
+Content-Type: multipart/mixed; boundary="4ked1aBWP6HQm4L2C6mRnoduxU2foD071";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: Arul jothi <aruljkp@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <b91c5424-baaf-c1e1-5d2b-51aad79b6991@rempel-privat.de>
+Subject: Re: Madwifi porting to Ath9k
+References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
+ <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de>
+ <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
+In-Reply-To: <CAH3WNGQwXVQM9pMA-g_yFc3apb__aUxA1pir75LwifV7pgTA=g@mail.gmail.com>
 
-	memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
-	       le16_to_cpu(action_frame->len));
+--4ked1aBWP6HQm4L2C6mRnoduxU2foD071
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: "freenerguo(郭大兴)" <freenerguo@tencent.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Hi Kalle,
+Am 24.07.2017 um 08:08 schrieb Arul jothi:
+> Hi Oleksij,
+>=20
+>    Thanks for your reply. I am new to the linux wireless.
+> Does ath9k has support for PCF implementation ? I couldn't find any
+> reference about PCF in ath9k.
+>=20
+> Do you mean porting madwifi code to ath9k is straight forward ?.
+> Please give some link or guideliness.
 
-Here is the patch as Linus send it to us and security@kernel.org. I
-removed the lower bound check as that is already done in cfg80211.
-Now I signed off on the patch although formally I suppose Linus should
-sign it off. Putting it out there so people can respond as deemed
-necessary.
+- Isolate PCF code in Madwifi
+- port it to the ath9k if possible
+- do lots of testing
+- send patches for review.
 
-Now fingers crossed whether patchwork will properly deal with the UTF-8
-characters :-p
-
+--=20
 Regards,
-Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Oleksij
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cd1d673..d182a00 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4851,6 +4851,11 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- 		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
- 					GFP_KERNEL);
- 	} else if (ieee80211_is_action(mgmt->frame_control)) {
-+		if (len > BRCMF_FIL_ACTION_FRAME_SIZE + DOT11_MGMT_HDR_LEN) {
-+			brcmf_err("invalid action frame length\n");
-+			err = -EINVAL;
-+			goto exit;
-+		}
- 		af_params = kzalloc(sizeof(*af_params), GFP_KERNEL);
- 		if (af_params == NULL) {
- 			brcmf_err("unable to allocate frame\n");
--- 
-1.9.1
+
+--4ked1aBWP6HQm4L2C6mRnoduxU2foD071--
+
+--PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAll1n3QACgkQHwImuRkmbWkVHAD6A3eZG+btLCmglHiyKc58CWZe
+0W1ARQg27Hs3wz7qEBoBAIWQIW2/xXHbd4LuogBW6MSp+IkHhdFUEbQUfWSltL0/
+=L8mu
+-----END PGP SIGNATURE-----
+
+--PujRACLKTQUiTNW5hSMmN7efQ8j0MTHsl--
