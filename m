@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35854 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750878AbdGGKUi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 06:20:38 -0400
-Date: Fri, 7 Jul 2017 13:19:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        =?utf-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security@kernel.org" <security@kernel.org>
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-Message-ID: <20170707101939.3mgdgc4pvjg6dyyx@mwanda> (sfid-20170707_122042_213442_4DC1C028)
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
- <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
- <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
- <20170707084640.cv3igibbhhmgsmta@mwanda>
- <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
+Received: from mout.gmx.net ([212.227.15.15]:55307 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750896AbdGXGBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 02:01:11 -0400
+Subject: Re: Madwifi porting to Ath9k
+To: Arul jothi <aruljkp@gmail.com>, linux-wireless@vger.kernel.org
+References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de> (sfid-20170724_080115_423675_890E7660)
+Date: Mon, 24 Jul 2017 08:01:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a2496a2e-9258-7cc9-3c04-87886f0029cd@broadcom.com>
+In-Reply-To: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Speaking of underflows:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv
+Content-Type: multipart/mixed; boundary="1FHvlEk4VGVrkjEWV4In0JdATFA82qtlO";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: Arul jothi <aruljkp@gmail.com>, linux-wireless@vger.kernel.org
+Message-ID: <77ba0bc6-f57d-013c-9523-b9d4b2eaa102@rempel-privat.de>
+Subject: Re: Madwifi porting to Ath9k
+References: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
+In-Reply-To: <CAH3WNGT-tYhUr3sTD8gfeUDQQ4ihtVccqEFUAEfxU6q5Ro3wxg@mail.gmail.com>
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-  4913          if (ieee80211_is_probe_resp(mgmt->frame_control)) {
-  4914                  /* Right now the only reason to get a probe response */
-  4915                  /* is for p2p listen response or for p2p GO from     */
-  4916                  /* wpa_supplicant. Unfortunately the probe is send   */
-  4917                  /* on primary ndev, while dongle wants it on the p2p */
-  4918                  /* vif. Since this is only reason for a probe        */
-  4919                  /* response to be sent, the vif is taken from cfg.   */
-  4920                  /* If ever desired to send proberesp for non p2p     */
-  4921                  /* response then data should be checked for          */
-  4922                  /* "DIRECT-". Note in future supplicant will take    */
-  4923                  /* dedicated p2p wdev to do this and then this 'hack'*/
-  4924                  /* is not needed anymore.                            */
-  4925                  ie_offset =  DOT11_MGMT_HDR_LEN +
-  4926                               DOT11_BCN_PRB_FIXED_LEN;
-  4927                  ie_len = len - ie_offset;
-                                 ^^^^^^^^^^^^^^^
-This can underflow.  It's harmless, but it's annoying for me as a static
-checker person because this is the line where I'd like to print a
-warning but everyone will complain it's a "false positive".
+--1FHvlEk4VGVrkjEWV4In0JdATFA82qtlO
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: quoted-printable
 
-  4928                  if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif)
-  4929                          vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-  4930                  err = brcmf_vif_set_mgmt_ie(vif,
-  4931                                              BRCMF_VNDR_IE_PRBRSP_FLAG,
-  4932                                              &buf[ie_offset],
-  4933                                              ie_len);
-  4934                  cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
-  4935                                          GFP_KERNEL);
+Am 23.07.2017 um 15:54 schrieb Arul jothi:
+> Hi,
+>=20
+>   I have AR7161 based board which is using customized madwifi driver
+> with PCF implementation.
+> I need to port the driver to new board based on AR9344.
+> What should be the approach I should take
+>=20
+> 1.       Build Madwifi with current AR9344 Openwrt build
+>=20
+> 2.       Implement PCF with current Ath9k driver.
+>=20
+>=20
+> Please advise which approach I should take. Can someone help me with
+> some clue on that.
+> Thanks in advance.
 
-regards,
-dan carpenter
+In long term it is preferable to extend upstream version of the driver
+(ath9k) aaand upstream you patches as well.
+
+ath9k has big developer community and good testing coverage.
+
+--=20
+Regards,
+Oleksij
+
+
+--1FHvlEk4VGVrkjEWV4In0JdATFA82qtlO--
+
+--hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF4EAREIAAYFAll1jR8ACgkQHwImuRkmbWnydwD/R5ZdS+cR3c1fbA75HKA3Co6h
+4QtwgEBmYspslbdCn9IA+wZz1QMmVD/qwbRQ5F/Ok0p95a1SNOPfH4syCp2WkEuV
+=X4dS
+-----END PGP SIGNATURE-----
+
+--hGnjcQ5AofLXHHbAtCiPppBeofHTIJrgv--
