@@ -1,125 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:36802 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751418AbdGRJTX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41624 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750861AbdGYMdg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 05:19:23 -0400
-Received: by mail-wr0-f181.google.com with SMTP id y43so19869018wrd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 02:19:22 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au
-Cc: ebiggers@google.com, davem@davemloft.net, dm-devel@redhat.com,
-        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        agk@redhat.com, snitzer@redhat.com,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH v2 1/2] crypto/algapi - use separate dst and src operands for __crypto_xor()
-Date: Tue, 18 Jul 2017 10:19:11 +0100
-Message-Id: <20170718091912.14104-2-ard.biesheuvel@linaro.org> (sfid-20170718_111929_085184_81E25991)
-In-Reply-To: <20170718091912.14104-1-ard.biesheuvel@linaro.org>
-References: <20170718091912.14104-1-ard.biesheuvel@linaro.org>
+        Tue, 25 Jul 2017 08:33:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] mwifiex: fix compile warning of unused variable
+References: <1499327433-70786-1-git-send-email-shawn.lin@rock-chips.com>
+        <20170706171152.GA120202@google.com>
+Date: Tue, 25 Jul 2017 15:33:31 +0300
+In-Reply-To: <20170706171152.GA120202@google.com> (Brian Norris's message of
+        "Thu, 6 Jul 2017 10:11:53 -0700")
+Message-ID: <87vamgitlw.fsf@codeaurora.org> (sfid-20170725_143342_697010_B7DE0649)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation of introducing crypto_xor_cpy(), which will use separate
-operands for input and output, modify the __crypto_xor() implementation,
-which it will share with the existing crypto_xor(), which provides the
-actual functionality when not using the inline version.
+Brian Norris <briannorris@chromium.org> writes:
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
- crypto/algapi.c         | 25 ++++++++++++--------
- include/crypto/algapi.h |  4 ++--
- 2 files changed, 17 insertions(+), 12 deletions(-)
+> On Thu, Jul 06, 2017 at 03:50:33PM +0800, Shawn Lin wrote:
+>> We got a compile warning shows below:
+>> 
+>> drivers/net/wireless/marvell/mwifiex/sdio.c: In function
+>> 'mwifiex_sdio_remove':
+>> drivers/net/wireless/marvell/mwifiex/sdio.c:377:6: warning: variable
+>> 'ret' set but not used [-Wunused-but-set-variable]
+>
+> It's probably worth noting that this is not a default warning [1],
+> especially if you resend. It already confused Kalle.
 
-diff --git a/crypto/algapi.c b/crypto/algapi.c
-index e4cc7615a139..aa699ff6c876 100644
---- a/crypto/algapi.c
-+++ b/crypto/algapi.c
-@@ -975,13 +975,15 @@ void crypto_inc(u8 *a, unsigned int size)
- }
- EXPORT_SYMBOL_GPL(crypto_inc);
- 
--void __crypto_xor(u8 *dst, const u8 *src, unsigned int len)
-+void __crypto_xor(u8 *dst, const u8 *src1, const u8 *src2, unsigned int len)
- {
- 	int relalign = 0;
- 
- 	if (!IS_ENABLED(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)) {
- 		int size = sizeof(unsigned long);
--		int d = ((unsigned long)dst ^ (unsigned long)src) & (size - 1);
-+		int d = (((unsigned long)dst ^ (unsigned long)src1) |
-+			 ((unsigned long)dst ^ (unsigned long)src2)) &
-+			(size - 1);
- 
- 		relalign = d ? 1 << __ffs(d) : size;
- 
-@@ -992,34 +994,37 @@ void __crypto_xor(u8 *dst, const u8 *src, unsigned int len)
- 		 * process the remainder of the input using optimal strides.
- 		 */
- 		while (((unsigned long)dst & (relalign - 1)) && len > 0) {
--			*dst++ ^= *src++;
-+			*dst++ = *src1++ ^ *src2++;
- 			len--;
- 		}
- 	}
- 
- 	while (IS_ENABLED(CONFIG_64BIT) && len >= 8 && !(relalign & 7)) {
--		*(u64 *)dst ^= *(u64 *)src;
-+		*(u64 *)dst = *(u64 *)src1 ^  *(u64 *)src2;
- 		dst += 8;
--		src += 8;
-+		src1 += 8;
-+		src2 += 8;
- 		len -= 8;
- 	}
- 
- 	while (len >= 4 && !(relalign & 3)) {
--		*(u32 *)dst ^= *(u32 *)src;
-+		*(u32 *)dst = *(u32 *)src1 ^ *(u32 *)src2;
- 		dst += 4;
--		src += 4;
-+		src1 += 4;
-+		src2 += 4;
- 		len -= 4;
- 	}
- 
- 	while (len >= 2 && !(relalign & 1)) {
--		*(u16 *)dst ^= *(u16 *)src;
-+		*(u16 *)dst = *(u16 *)src1 ^ *(u16 *)src2;
- 		dst += 2;
--		src += 2;
-+		src1 += 2;
-+		src2 += 2;
- 		len -= 2;
- 	}
- 
- 	while (len--)
--		*dst++ ^= *src++;
-+		*dst++ = *src1++ ^ *src2++;
- }
- EXPORT_SYMBOL_GPL(__crypto_xor);
- 
-diff --git a/include/crypto/algapi.h b/include/crypto/algapi.h
-index 436c4c2683c7..fd547f946bf8 100644
---- a/include/crypto/algapi.h
-+++ b/include/crypto/algapi.h
-@@ -192,7 +192,7 @@ static inline unsigned int crypto_queue_len(struct crypto_queue *queue)
- }
- 
- void crypto_inc(u8 *a, unsigned int size);
--void __crypto_xor(u8 *dst, const u8 *src, unsigned int size);
-+void __crypto_xor(u8 *dst, const u8 *src1, const u8 *src2, unsigned int size);
- 
- static inline void crypto_xor(u8 *dst, const u8 *src, unsigned int size)
- {
-@@ -207,7 +207,7 @@ static inline void crypto_xor(u8 *dst, const u8 *src, unsigned int size)
- 			size -= sizeof(unsigned long);
- 		}
- 	} else {
--		__crypto_xor(dst, src, size);
-+		__crypto_xor(dst, dst, src, size);
- 	}
- }
- 
+Exactly, that way I can prioritise the patch accordingly. (W=1 warnings
+are not that important so they go automatically to -next)
+
 -- 
-2.9.3
+Kalle Valo
