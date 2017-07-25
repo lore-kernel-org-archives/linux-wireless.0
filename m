@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:38049 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751464AbdGVAgo (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33622 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756772AbdGYBOW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 20:36:44 -0400
-Received: by mail-oi0-f66.google.com with SMTP id p188so5955372oia.5
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jul 2017 17:36:44 -0700 (PDT)
-Subject: Re: New Realtek driver
-To: Greg KH <gregkh@linux.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
-References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
- <20170721150820.GC18198@kroah.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net> (sfid-20170722_023649_437714_BC3FE539)
-Date: Fri, 21 Jul 2017 19:36:41 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170721150820.GC18198@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 24 Jul 2017 21:14:22 -0400
+Received: by mail-pf0-f172.google.com with SMTP id s70so53108769pfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:22 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 12/20] mwifiex: don't open-code ARRAY_SIZE()
+Date: Mon, 24 Jul 2017 18:13:28 -0700
+Message-Id: <20170725011336.99993-13-briannorris@chromium.org> (sfid-20170725_032023_037934_838DCA5E)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/21/2017 10:08 AM, Greg KH wrote:
-> On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
->> Kalle and Greg,
->>
->> Once again I find myself in the awkward position of needing to submit code
->> to two different trees, i.e. wireless and staging.
->>
->> The code in question concerns a new Realtek device, the RTL8822BE. The
->> device is already shipping, and Realtek would like it to be available in
->> kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
->> Realtek that 3.14 would not be possible, at least in the wireless tree. What
->> I plan to do is submit the changes in the existing drivers through wireless,
->> and the three totally new drivers through staging. My expectation is that
->> this code would live for a relatively short time there, but going that route
->> would give time for the code to be reviewed properly, but still be available
->> in a kernel driver. All of the new code will be available in a GitHub repo
->> maintained by Realtek for those users whose distros do not configure
->> anything in staging.
->>
->> For my part, I will push the wireless tree material as fast as I can and
->> hope there is time available near the end of the 4.13-rcX sequence for the
->> material to reach 4.14-rc1.
-> 
-> Why do you need a staging driver to have changes in the wireless tree?
-> Staging drivers should be self-contained and not rely on anything
-> outside of it in order to work properly (i.e. don't add code to the real
-> kernel only for a staging driver.)
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v2: no change
+---
+ drivers/net/wireless/marvell/mwifiex/cfp.c         | 4 +---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 8 ++------
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 5 ++---
+ 3 files changed, 5 insertions(+), 12 deletions(-)
 
-Greg,
-
-To add the new driver to staging without any other changes, I will need to 
-duplicate a lot of code. That is no problem, other than the duplicate entry 
-points that will show up in a makeallyes configuration. If that is what you 
-want, then that is what I will do.
-
-Larry
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
+index 6e2994308526..bfe84e55df77 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfp.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
+@@ -180,11 +180,9 @@ static struct region_code_mapping region_code_mapping_t[] = {
+ u8 *mwifiex_11d_code_2_region(u8 code)
+ {
+ 	u8 i;
+-	u8 size = sizeof(region_code_mapping_t)/
+-				sizeof(struct region_code_mapping);
+ 
+ 	/* Look for code in mapping table */
+-	for (i = 0; i < size; i++)
++	for (i = 0; i < ARRAY_SIZE(region_code_mapping_t); i++)
+ 		if (region_code_mapping_t[i].code == code)
+ 			return region_code_mapping_t[i].region;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 534d94a206a5..b71ad4de5e54 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -189,9 +189,7 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
+ 	if (pbitmap_rates != NULL) {
+ 		rate_scope->hr_dsss_rate_bitmap = cpu_to_le16(pbitmap_rates[0]);
+ 		rate_scope->ofdm_rate_bitmap = cpu_to_le16(pbitmap_rates[1]);
+-		for (i = 0;
+-		     i < sizeof(rate_scope->ht_mcs_rate_bitmap) / sizeof(u16);
+-		     i++)
++		for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
+ 			rate_scope->ht_mcs_rate_bitmap[i] =
+ 				cpu_to_le16(pbitmap_rates[2 + i]);
+ 		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
+@@ -206,9 +204,7 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
+ 			cpu_to_le16(priv->bitmap_rates[0]);
+ 		rate_scope->ofdm_rate_bitmap =
+ 			cpu_to_le16(priv->bitmap_rates[1]);
+-		for (i = 0;
+-		     i < sizeof(rate_scope->ht_mcs_rate_bitmap) / sizeof(u16);
+-		     i++)
++		for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
+ 			rate_scope->ht_mcs_rate_bitmap[i] =
+ 				cpu_to_le16(priv->bitmap_rates[2 + i]);
+ 		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 2945775e83c5..0fba5b10ef2d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -298,9 +298,8 @@ static int mwifiex_ret_tx_rate_cfg(struct mwifiex_private *priv,
+ 			priv->bitmap_rates[1] =
+ 				le16_to_cpu(rate_scope->ofdm_rate_bitmap);
+ 			for (i = 0;
+-			     i <
+-			     sizeof(rate_scope->ht_mcs_rate_bitmap) /
+-			     sizeof(u16); i++)
++			     i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap);
++			     i++)
+ 				priv->bitmap_rates[2 + i] =
+ 					le16_to_cpu(rate_scope->
+ 						    ht_mcs_rate_bitmap[i]);
+-- 
+2.14.0.rc0.284.gd933b75aa4-goog
