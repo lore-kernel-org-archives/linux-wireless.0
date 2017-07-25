@@ -1,136 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34609 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753848AbdGJMqG (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:33608 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756715AbdGYBOQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 08:46:06 -0400
-Received: by mail-pf0-f196.google.com with SMTP id c24so14381086pfe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 05:46:00 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 17/17] rsi: regulatory enhancements
-Date: Mon, 10 Jul 2017 18:10:48 +0530
-Message-Id: <1499690448-9956-18-git-send-email-amitkarwar@gmail.com> (sfid-20170710_144616_062864_E69E2C8A)
-In-Reply-To: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
-References: <1499690448-9956-1-git-send-email-amitkarwar@gmail.com>
+        Mon, 24 Jul 2017 21:14:16 -0400
+Received: by mail-pf0-f171.google.com with SMTP id s70so53108073pfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:16 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2 05/20] mwifiex: unregister wiphy before freeing resources
+Date: Mon, 24 Jul 2017 18:13:21 -0700
+Message-Id: <20170725011336.99993-6-briannorris@chromium.org> (sfid-20170725_031541_384120_E9B1A337)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+It's possible for some control interfaces (e.g., scans, set freq) to be
+active after we've stopped our main work queue and the netif TX queues.
+These don't get completely shut out until we've unregistered the wdevs
+and wiphy.
 
-Below regulatory changes are included this patch
-* Country code is saved as it will be used in bgscan.
-* Region codes are mapped according to RSI region codes.
-* Radar flag settings are moved under the check if 5GHZ band
-  is enabled.
+So let's only free command buffers and poison our lists after
+wiphy_unregister().
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+This resolves various use-after-free issues seen when resetting the
+device.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 49 ++++++++++++++++++++++-------
- drivers/net/wireless/rsi/rsi_main.h         |  8 +++++
- 2 files changed, 45 insertions(+), 12 deletions(-)
+new in v2
+---
+ drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+ drivers/net/wireless/marvell/mwifiex/main.c | 7 ++++++-
+ drivers/net/wireless/marvell/mwifiex/main.h | 1 +
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index d094b0a..c91d6ef 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1163,6 +1163,21 @@ static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
- 	return 0;	
- }
- 
-+static int rsi_map_region_code(enum nl80211_dfs_regions region_code)
-+{
-+	switch (region_code) {
-+	case NL80211_DFS_FCC:
-+		return RSI_REGION_FCC;
-+	case NL80211_DFS_ETSI:
-+		return RSI_REGION_ETSI;
-+	case NL80211_DFS_JP:
-+		return RSI_REGION_TELEC;
-+	case NL80211_DFS_UNSET:
-+		return RSI_REGION_WORLD;
-+	}
-+	return RSI_REGION_WORLD;
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 3ecb59f7405b..de96675e43d5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -418,7 +418,10 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
+ 	wake_up_interruptible(&adapter->hs_activate_wait_q);
 +}
-+
- static void rsi_reg_notify(struct wiphy *wiphy,
- 			   struct regulatory_request *request)
- {
-@@ -1170,23 +1185,33 @@ static void rsi_reg_notify(struct wiphy *wiphy,
- 	struct ieee80211_channel *ch;
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct rsi_hw * adapter = hw->priv; 
-+	struct rsi_common *common = adapter->priv;
- 	int i;
--
--	sband = wiphy->bands[NL80211_BAND_5GHZ];
- 	
--	for (i = 0; i < sband->n_channels; i++) {
--		ch = &sband->channels[i];
--		if (ch->flags & IEEE80211_CHAN_DISABLED)
--			continue;
-+	mutex_lock(&common->mutex);
-+
-+	rsi_dbg(INFO_ZONE, "country = %s dfs_region = %d\n",
-+		request->alpha2, request->dfs_region);
-+
-+	if (common->num_supp_bands > 1) {
-+		sband = wiphy->bands[NL80211_BAND_5GHZ];
  
--		if (ch->flags & IEEE80211_CHAN_RADAR)
--			ch->flags |= IEEE80211_CHAN_NO_IR;
-+		for (i = 0; i < sband->n_channels; i++) {
-+			ch = &sband->channels[i];
-+			if (ch->flags & IEEE80211_CHAN_DISABLED)
-+				continue;
-+
-+			if (ch->flags & IEEE80211_CHAN_RADAR)
-+				ch->flags |= IEEE80211_CHAN_NO_IR;
-+		}
++void mwifiex_free_cmd_buffers(struct mwifiex_adapter *adapter)
++{
+ 	/* Free lock variables */
+ 	mwifiex_free_lock_list(adapter);
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 9c8f7bcfef8b..77e491720664 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -653,6 +653,7 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
+ 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
+ 		mwifiex_shutdown_drv(adapter);
++		mwifiex_free_cmd_buffers(adapter);
  	}
-+	adapter->dfs_region = rsi_map_region_code(request->dfs_region);
-+	rsi_dbg(INFO_ZONE, "RSI region code = %d\n", adapter->dfs_region);
- 	
--	rsi_dbg(INFO_ZONE,
--		"country = %s dfs_region = %d\n",
--		request->alpha2, request->dfs_region);
--	adapter->dfs_region = request->dfs_region;
-+	adapter->country[0] = request->alpha2[0];
-+	adapter->country[1] = request->alpha2[1];
+ 
+ 	init_failed = true;
+@@ -1404,11 +1405,13 @@ static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
+ 			mwifiex_del_virtual_intf(adapter->wiphy, &priv->wdev);
+ 		rtnl_unlock();
+ 	}
+-	vfree(adapter->chan_stats);
+ 
+ 	wiphy_unregister(adapter->wiphy);
+ 	wiphy_free(adapter->wiphy);
+ 	adapter->wiphy = NULL;
 +
-+	mutex_unlock(&common->mutex);
++	vfree(adapter->chan_stats);
++	mwifiex_free_cmd_buffers(adapter);
  }
  
- static struct ieee80211_ops mac80211_ops = {
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 485b97a..6a8e8e7 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -170,6 +170,13 @@ struct xtended_desc {
- 	u16 reserved;
- };
+ /*
+@@ -1515,6 +1518,7 @@ mwifiex_reinit_sw(struct mwifiex_adapter *adapter)
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "info: %s: shutdown mwifiex\n", __func__);
+ 		mwifiex_shutdown_drv(adapter);
++		mwifiex_free_cmd_buffers(adapter);
+ 	}
  
-+enum rsi_dfs_regions {
-+	RSI_REGION_FCC = 0,
-+	RSI_REGION_ETSI,
-+	RSI_REGION_TELEC,
-+	RSI_REGION_WORLD
-+};
-+
- struct rsi_hw;
+ 	complete_all(adapter->fw_done);
+@@ -1662,6 +1666,7 @@ mwifiex_add_card(void *card, struct completion *fw_done,
+ 	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
+ 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
+ 		mwifiex_shutdown_drv(adapter);
++		mwifiex_free_cmd_buffers(adapter);
+ 	}
+ err_kmalloc:
+ 	mwifiex_free_adapter(adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index f8cf3079ac7d..62ce4e81f695 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1078,6 +1078,7 @@ int mwifiex_get_debug_info(struct mwifiex_private *,
  
- struct rsi_common {
-@@ -287,6 +294,7 @@ struct rsi_hw {
- 	struct eepromrw_info eeprom;
- 	u32 interrupt_status;
- 	u8 dfs_region;
-+	char country[2];
- 	void *rsi_dev;
- 	struct rsi_host_intf_ops *host_intf_ops;
- 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
+ int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter);
+ int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
++void mwifiex_free_cmd_buffers(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
 -- 
-2.7.4
+2.14.0.rc0.284.gd933b75aa4-goog
