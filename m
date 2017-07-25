@@ -1,67 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f46.google.com ([74.125.83.46]:33843 "EHLO
-        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750896AbdGESIS (ORCPT
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:36895 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756607AbdGYBOZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 14:08:18 -0400
-Received: by mail-pg0-f46.google.com with SMTP id t186so128607027pgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jul 2017 11:08:18 -0700 (PDT)
-Date: Wed, 5 Jul 2017 11:08:15 -0700
+        Mon, 24 Jul 2017 21:14:25 -0400
+Received: by mail-pg0-f48.google.com with SMTP id y129so63969552pgy.4
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:24 -0700 (PDT)
 From: Brian Norris <briannorris@chromium.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-        Xinming Hu <huxm@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ganapathi Bhat <gbhat@marvell.com>,
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-kernel@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: uninit wakeup info when failed to add card
-Message-ID: <20170705180813.GA115427@google.com> (sfid-20170705_200854_146171_2B5EDDA9)
-References: <1499068470-8022-1-git-send-email-jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499068470-8022-1-git-send-email-jeffy.chen@rock-chips.com>
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 15/20] mwifiex: pcie: unify MSI-X / non-MSI-X interrupt process
+Date: Mon, 24 Jul 2017 18:13:31 -0700
+Message-Id: <20170725011336.99993-16-briannorris@chromium.org> (sfid-20170725_031749_451713_2A99B7E8)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 03, 2017 at 03:54:30PM +0800, Jeffy Chen wrote:
-> We inited wakeup info at the beginning of mwifiex_add_card, so we need
-> to uninit it in the error handling.
-> 
-> It's much the same as what we did in:
-> 36908c4 mwifiex: uninit wakeup info when removing device
+After removing the interrupt loop in commit 5d5ddb5e0d9b ("mwifiex:
+pcie: don't loop/retry interrupt status checks"), there is practically
+zero difference between mwifiex_process_pcie_int() (which handled legacy
+PCI interrupts and MSI interrupts) and mwifiex_process_msix_int() (which
+handled MSI-X interrupts). Let's add the one relevant line to
+mwifiex_process_pcie_int() and kill the copy-and-paste.
 
-Yeah, I noticed I hadn't covered all the error cases, so your change is
-part of the fix. But you're not covering the error paths when the
-firmware doesn't load correctly -- this happens asynchronously to
-mwifiex_add_card(). i.e., you need to fixup the error paths in
-_mwifiex_fw_dpc() too.
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+new in v2
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 68 ++---------------------------
+ 1 file changed, 3 insertions(+), 65 deletions(-)
 
-Brian
-
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> 
-> ---
-> 
->  drivers/net/wireless/marvell/mwifiex/main.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> index f2600b8..17d2cbe 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -1655,6 +1655,8 @@ mwifiex_add_card(void *card, struct completion *fw_done,
->  		mwifiex_shutdown_drv(adapter);
->  	}
->  err_kmalloc:
-> +	if (adapter->irq_wakeup >= 0)
-> +		device_init_wakeup(adapter->dev, false);
->  	mwifiex_free_adapter(adapter);
->  
->  err_init_sw:
-> -- 
-> 2.1.4
-> 
-> 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 2f4da08f127c..c08ebb55a7e8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2417,7 +2417,7 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+  * In case of Rx packets received, the packets are uploaded from card to
+  * host and processed accordingly.
+  */
+-static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
++static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ {
+ 	int ret;
+ 	u32 pcie_ireg = 0;
+@@ -2492,75 +2492,13 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 	mwifiex_dbg(adapter, INTR,
+ 		    "info: cmd_sent=%d data_sent=%d\n",
+ 		    adapter->cmd_sent, adapter->data_sent);
+-	if (!card->msi_enable && adapter->ps_state != PS_STATE_SLEEP)
++	if (!card->msi_enable && !card->msix_enable &&
++				 adapter->ps_state != PS_STATE_SLEEP)
+ 		mwifiex_pcie_enable_host_int(adapter);
+ 
+ 	return 0;
+ }
+ 
+-static int mwifiex_process_msix_int(struct mwifiex_adapter *adapter)
+-{
+-	int ret;
+-	u32 pcie_ireg;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&adapter->int_lock, flags);
+-	/* Clear out unused interrupts */
+-	pcie_ireg = adapter->int_status;
+-	adapter->int_status = 0;
+-	spin_unlock_irqrestore(&adapter->int_lock, flags);
+-
+-	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
+-		mwifiex_dbg(adapter, INTR,
+-			    "info: TX DNLD Done\n");
+-		ret = mwifiex_pcie_send_data_complete(adapter);
+-		if (ret)
+-			return ret;
+-	}
+-	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
+-		mwifiex_dbg(adapter, INTR,
+-			    "info: Rx DATA\n");
+-		ret = mwifiex_pcie_process_recv_data(adapter);
+-		if (ret)
+-			return ret;
+-	}
+-	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
+-		mwifiex_dbg(adapter, INTR,
+-			    "info: Rx EVENT\n");
+-		ret = mwifiex_pcie_process_event_ready(adapter);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	if (pcie_ireg & HOST_INTR_CMD_DONE) {
+-		if (adapter->cmd_sent) {
+-			mwifiex_dbg(adapter, INTR,
+-				    "info: CMD sent Interrupt\n");
+-			adapter->cmd_sent = false;
+-		}
+-		/* Handle command response */
+-		ret = mwifiex_pcie_process_cmd_complete(adapter);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	mwifiex_dbg(adapter, INTR,
+-		    "info: cmd_sent=%d data_sent=%d\n",
+-		    adapter->cmd_sent, adapter->data_sent);
+-
+-	return 0;
+-}
+-
+-static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+-{
+-	struct pcie_service_card *card = adapter->card;
+-
+-	if (card->msix_enable)
+-		return mwifiex_process_msix_int(adapter);
+-	else
+-		return mwifiex_process_pcie_int(adapter);
+-}
+-
+ /*
+  * This function downloads data from driver to card.
+  *
+-- 
+2.14.0.rc0.284.gd933b75aa4-goog
