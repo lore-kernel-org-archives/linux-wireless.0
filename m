@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3750 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751348AbdGRHOv (ORCPT
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:34283 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756570AbdGYBO0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 03:14:51 -0400
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-To: Gabriel C <nix.or.die@gmail.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: ath10k_htt_rx_amsdu_allowed() noise
-Date: Tue, 18 Jul 2017 07:14:19 +0000
-Message-ID: <79f47b0b-eb71-db71-2700-e30b01b11c76@qca.qualcomm.com> (sfid-20170718_091522_308478_1D7512A3)
-References: <edbe270b-ba70-b844-f814-53d04d07d253@gmail.com>
-In-Reply-To: <edbe270b-ba70-b844-f814-53d04d07d253@gmail.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+        Mon, 24 Jul 2017 21:14:26 -0400
+Received: by mail-pg0-f54.google.com with SMTP id 123so64047721pgj.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:25 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 16/20] mwifiex: debugfs: allow card_reset() to cancel things
+Date: Mon, 24 Jul 2017 18:13:32 -0700
+Message-Id: <20170725011336.99993-17-briannorris@chromium.org> (sfid-20170725_031748_810916_9BE369EF)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/16/2017 03:56 PM, Gabriel C wrote:
+The card_reset() implementation should be setting our state flags and
+cancelling commands for us (i.e., in mwifiex_shutdown_drv()), so let's
+not do it here.
 
->
-> Can ath10k_warn() be ath10k_dbg() there ? Maybe this ?
->
+Also, this debugfs file is useful for testing and debugging the reset
+feature, so we shouldn't do extra preparatory steps here, as that might
+cause different reset behavior, which could either cause new bugs or
+paper over existing ones that this debug feature should otherwise help
+us catch.
 
-Looks good to me.
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+new in v2
+---
+ drivers/net/wireless/marvell/mwifiex/debugfs.c | 2 --
+ 1 file changed, 2 deletions(-)
 
->
-> From d4138d936635ca7b69ed7f7b0cda4914f0f07917 Mon Sep 17 00:00:00 2001
-> From: Gabriel Craciunescu <nix.or.die@gmail.com>
-> Date: Mon, 17 Jul 2017 00:45:29 +0200
-> Subject: [PATCH] ath10k_htt_rx_amsdu_allowed(): change ath10k_warn() to t=
-h10k_dbg()
->
-> Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wirel=
-ess/ath/ath10k/htt_rx.c
-> index 398dda978d6e..ad0306cd6ee1 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath1=
-0k *ar,
->          */
->
->         if (!rx_status->freq) {
-> -               ath10k_warn(ar, "no channel configured; ignoriframe(s)!\n=
-");
-> +               ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured, ig=
-noring frame(s)!\n");
->                 return false;
->         }
->
-
-Can you send this as patch for reviewing, please?
-
---=20
-Ryan Hsu
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index f6f105a7d3ff..6f4239be609d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -940,8 +940,6 @@ mwifiex_reset_write(struct file *file,
+ 
+ 	if (adapter->if_ops.card_reset) {
+ 		dev_info(adapter->dev, "Resetting per request\n");
+-		adapter->hw_status = MWIFIEX_HW_STATUS_RESET;
+-		mwifiex_cancel_all_pending_cmd(adapter);
+ 		adapter->if_ops.card_reset(adapter);
+ 	}
+ 
+-- 
+2.14.0.rc0.284.gd933b75aa4-goog
