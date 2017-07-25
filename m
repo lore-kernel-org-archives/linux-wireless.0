@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:58114 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933435AbdGSTLD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:11:03 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 22/34] brcmfmac: Rename axi functions for clarity.
-Date: Wed, 19 Jul 2017 20:08:10 +0100
-Message-Id: <20170719190822.10857-23-ian@mnementh.co.uk> (sfid-20170719_211107_105245_6E5D3C0A)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:38624 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756809AbdGYBO3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 21:14:29 -0400
+Received: by mail-pg0-f53.google.com with SMTP id s4so63909742pgr.5
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:29 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 20/20] mwifiex: drop num CPU notice
+Date: Mon, 24 Jul 2017 18:13:36 -0700
+Message-Id: <20170725011336.99993-21-briannorris@chromium.org> (sfid-20170725_031608_287741_B7E2E452)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions are poorly named. for the sake of one character,
-correct this.
+This print isn't very useful. It's also different between
+mwifiex_add_card() and mwifiex_reinit_sw(), and I'd like to consolidate
+them eventually.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+new in v2
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index b3b28e78c49d..1485463794ff 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -239,7 +239,7 @@ static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
- 	return SSB_TMSLOW_CLOCK == regdata;
- }
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 0448dcc07139..13fc7b6ed11d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1619,10 +1619,8 @@ mwifiex_add_card(void *card, struct completion *fw_done,
+ 	adapter->cmd_wait_q.status = 0;
+ 	adapter->scan_wait_q_woken = false;
  
--static bool brcmf_chip_ai_iscoreup(struct brcmf_core *core)
-+static bool brcmf_chip_axi_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
- 	u32 regdata;
-@@ -340,7 +340,7 @@ static void brcmf_chip_sb_coredisable(struct brcmf_core *core,
- 	udelay(1);
- }
+-	if ((num_possible_cpus() > 1) || adapter->iface_type == MWIFIEX_USB) {
++	if ((num_possible_cpus() > 1) || adapter->iface_type == MWIFIEX_USB)
+ 		adapter->rx_work_enabled = true;
+-		pr_notice("rx work enabled, cpus %d\n", num_possible_cpus());
+-	}
  
--static void brcmf_chip_ai_coredisable(struct brcmf_core *core,
-+static void brcmf_chip_axi_coredisable(struct brcmf_core *core,
- 				      u32 prereset, u32 reset)
- {
- 	struct brcmf_chip *ci = core->chip;
-@@ -432,14 +432,14 @@ static void brcmf_chip_sb_resetcore(struct brcmf_core *core, u32 prereset,
- 	udelay(1);
- }
- 
--static void brcmf_chip_ai_resetcore(struct brcmf_core *core, u32 prereset,
-+static void brcmf_chip_axi_resetcore(struct brcmf_core *core, u32 prereset,
- 				    u32 reset, u32 postreset)
- {
- 	struct brcmf_chip *ci = core->chip;
- 	int count;
- 
- 	/* must disable first to work for arbitrary current core state */
--	brcmf_chip_ai_coredisable(core, prereset, reset);
-+	brcmf_chip_axi_coredisable(core, prereset, reset);
- 
- 	count = 0;
- 
-@@ -1007,9 +1007,9 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
- 		if (brcmf_chip_dmp_erom_scan(ci))
- 			return -ENODEV;
- 
--		ci->iscoreup = brcmf_chip_ai_iscoreup;
--		ci->coredisable = brcmf_chip_ai_coredisable;
--		ci->resetcore = brcmf_chip_ai_resetcore;
-+		ci->iscoreup = brcmf_chip_axi_iscoreup;
-+		ci->coredisable = brcmf_chip_axi_coredisable;
-+		ci->resetcore = brcmf_chip_axi_resetcore;
- 
- 		break;
- 	default:
+ 	adapter->workqueue =
+ 		alloc_workqueue("MWIFIEX_WORK_QUEUE",
 -- 
-2.11.0
+2.14.0.rc0.284.gd933b75aa4-goog
