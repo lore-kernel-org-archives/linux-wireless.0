@@ -1,102 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36437 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751857AbdGBSMv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40132 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750723AbdGYFgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Jul 2017 14:12:51 -0400
-Received: by mail-oi0-f66.google.com with SMTP id n2so10037809oig.3
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Jul 2017 11:12:51 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v4 04/10] rtlwifi: add amplifier type for 8812ae
-Date: Sun,  2 Jul 2017 13:12:33 -0500
-Message-Id: <20170702181239.17911-5-Larry.Finger@lwfinger.net> (sfid-20170702_201258_375899_B83D870B)
-In-Reply-To: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+        Tue, 25 Jul 2017 01:36:41 -0400
+Message-ID: <1500960997.20057.39.camel@coelho.fi> (sfid-20170725_073647_974974_061BE2BE)
+From: Luca Coelho <luca@coelho.fi>
+To: Kyle McMartin <kyle@infradead.org>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
+        linux-firmware@kernel.org,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Date: Tue, 25 Jul 2017 08:36:37 +0300
+In-Reply-To: <1498578162.22048.77.camel@coelho.fi>
+References: <1498578162.22048.77.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi firmwares update 2017-06-27
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Ping?
 
-With correct amplifier_type, the phy praser can choose correct parameters.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - no changes
-v3 - no changes
-v4 - no changes
----
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 41 +++++++++++++++++++++-
- 1 file changed, 40 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 2bc6bace069c..8f4abb3d7669 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -2966,6 +2966,44 @@ static void _rtl8812ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
- 	}
- }
- 
-+static void _rtl8812ae_read_amplifier_type(struct ieee80211_hw *hw, u8 *hwinfo,
-+					   bool autoload_fail)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+
-+	u8 ext_type_pa_2g_a  = (hwinfo[0xBD] & BIT(2))      >> 2; /* 0xBD[2] */
-+	u8 ext_type_pa_2g_b  = (hwinfo[0xBD] & BIT(6))      >> 6; /* 0xBD[6] */
-+	u8 ext_type_pa_5g_a  = (hwinfo[0xBF] & BIT(2))      >> 2; /* 0xBF[2] */
-+	u8 ext_type_pa_5g_b  = (hwinfo[0xBF] & BIT(6))      >> 6; /* 0xBF[6] */
-+	/* 0xBD[1:0] */
-+	u8 ext_type_lna_2g_a = (hwinfo[0xBD] & (BIT(1) | BIT(0))) >> 0;
-+	/* 0xBD[5:4] */
-+	u8 ext_type_lna_2g_b = (hwinfo[0xBD] & (BIT(5) | BIT(4))) >> 4;
-+	/* 0xBF[1:0] */
-+	u8 ext_type_lna_5g_a = (hwinfo[0xBF] & (BIT(1) | BIT(0))) >> 0;
-+	/* 0xBF[5:4] */
-+	u8 ext_type_lna_5g_b = (hwinfo[0xBF] & (BIT(5) | BIT(4))) >> 4;
-+
-+	_rtl8812ae_read_pa_type(hw, hwinfo, autoload_fail);
-+
-+	/* [2.4G] Path A and B are both extPA */
-+	if ((rtlhal->pa_type_2g & (BIT(5) | BIT(4))) == (BIT(5) | BIT(4)))
-+		rtlhal->type_gpa  = ext_type_pa_2g_b  << 2 | ext_type_pa_2g_a;
-+
-+	/* [5G] Path A and B are both extPA */
-+	if ((rtlhal->pa_type_5g & (BIT(1) | BIT(0))) == (BIT(1) | BIT(0)))
-+		rtlhal->type_apa  = ext_type_pa_5g_b  << 2 | ext_type_pa_5g_a;
-+
-+	/* [2.4G] Path A and B are both extLNA */
-+	if ((rtlhal->lna_type_2g & (BIT(7) | BIT(3))) == (BIT(7) | BIT(3)))
-+		rtlhal->type_glna = ext_type_lna_2g_b << 2 | ext_type_lna_2g_a;
-+
-+	/* [5G] Path A and B are both extLNA */
-+	if ((rtlhal->lna_type_5g & (BIT(7) | BIT(3))) == (BIT(7) | BIT(3)))
-+		rtlhal->type_alna = ext_type_lna_5g_b << 2 | ext_type_lna_5g_a;
-+}
-+
- static void _rtl8821ae_read_pa_type(struct ieee80211_hw *hw, u8 *hwinfo,
- 				    bool autoload_fail)
- {
-@@ -3114,7 +3152,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
- 					       hwinfo);
- 
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
--		_rtl8812ae_read_pa_type(hw, hwinfo, rtlefuse->autoload_failflag);
-+		_rtl8812ae_read_amplifier_type(hw, hwinfo,
-+					       rtlefuse->autoload_failflag);
- 		_rtl8812ae_read_bt_coexist_info_from_hwpg(hw,
- 				rtlefuse->autoload_failflag, hwinfo);
- 	} else {
--- 
-2.12.3
+On Tue, 2017-06-27 at 18:42 +0300, Luca Coelho wrote:
+> Hi Kyle,
+> 
+> We have some updates for our -27 firmware version (on supported devices)
+> and versions -29 and -31 that will be supported by the iwlwifi driver on
+> v4.13.
+> 
+> Please pull or let me know if there are any issues.
+> 
+> Cheers,
+> Luca.
+> 
+> 
+> The following changes since commit 7d2c913dcd1be083350d97a8cb1eba24cfacbc8a:
+> 
+>   ath10k: update year in license (2017-06-22 12:06:02 -0700)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2017-06-27
+> 
+> for you to fetch changes up to d392df8feda805e37022686d76be96de407a9e18:
+> 
+>   iwlwifi: add new firmware for 3168, 7265D, 8000C and 8265 (2017-06-27 14:45:20 +0300)
+> 
+> ----------------------------------------------------------------
+> Update and add new firmwares for 3168, 7265D, 8000C and 8265
+> 
+> * new -29 for 3168 and 7265D;
+> * new -31 for 8000C and 8265;
+> * updated -27 for 3168, 7265D, 8000C and 8265.
+> 
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (1):
+>       iwlwifi: update -27 firmware for 3168, 7265D, 8000C and 8265
+> 
+> Johannes Berg (1):
+>       iwlwifi: add new firmware for 3168, 7265D, 8000C and 8265
+> 
+>  WHENCE                 |  20 ++++++++++++++++----
+>  iwlwifi-3168-27.ucode  | Bin 1032168 -> 1032436 bytes
+>  iwlwifi-3168-29.ucode  | Bin 0 -> 1036372 bytes
+>  iwlwifi-7265D-27.ucode | Bin 1032452 -> 1032740 bytes
+>  iwlwifi-7265D-29.ucode | Bin 0 -> 1036528 bytes
+>  iwlwifi-8000C-27.ucode | Bin 2227284 -> 2227284 bytes
+>  iwlwifi-8000C-31.ucode | Bin 0 -> 2309768 bytes
+>  iwlwifi-8265-27.ucode  | Bin 2234528 -> 2234528 bytes
+>  iwlwifi-8265-31.ucode  | Bin 0 -> 2303024 bytes
+>  9 files changed, 16 insertions(+), 4 deletions(-)
+>  create mode 100644 iwlwifi-3168-29.ucode
+>  create mode 100644 iwlwifi-7265D-29.ucode
+>  create mode 100644 iwlwifi-8000C-31.ucode
+>  create mode 100644 iwlwifi-8265-31.ucode
