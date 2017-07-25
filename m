@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35153 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdGRIvW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34752 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750839AbdGYNOe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 04:51:22 -0400
-Received: by mail-io0-f171.google.com with SMTP id k71so9834912iod.2
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 01:51:22 -0700 (PDT)
+        Tue, 25 Jul 2017 09:14:34 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Icenowy Zheng <icenowy@aosc.io>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-sunxi@googlegroups.com
+Subject: Re: [PATCH] dt-bindings: add device tree binding for Allwinner XR819 SDIO Wi-Fi
+References: <20170718072940.17872-1-icenowy@aosc.io>
+Date: Tue, 25 Jul 2017 16:14:28 +0300
+In-Reply-To: <20170718072940.17872-1-icenowy@aosc.io> (Icenowy Zheng's message
+        of "Tue, 18 Jul 2017 15:29:40 +0800")
+Message-ID: <87bmo8irpn.fsf@codeaurora.org> (sfid-20170725_151450_673100_BDF39982)
 MIME-Version: 1.0
-In-Reply-To: <20170718083956.GA5813@gondor.apana.org.au>
-References: <20170710134548.20234-1-ard.biesheuvel@linaro.org>
- <20170710134548.20234-3-ard.biesheuvel@linaro.org> <20170718083956.GA5813@gondor.apana.org.au>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Tue, 18 Jul 2017 09:51:21 +0100
-Message-ID: <CAKv+Gu_9S4GHmoUE-H8ZLra90OYNPjOwVGi0PJ02WFNDe6udeg@mail.gmail.com> (sfid-20170718_105132_170287_395869F0)
-Subject: Re: [PATCH 2/2] crypto/algapi - make crypto_xor() take separate dst
- and src arguments
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        Eric Biggers <ebiggers@google.com>,
-        "David S. Miller" <davem@davemloft.net>, dm-devel@redhat.com,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "Alasdair G. Kergon" <agk@redhat.com>, snitzer@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 July 2017 at 09:39, Herbert Xu <herbert@gondor.apana.org.au> wrote:
-> On Mon, Jul 10, 2017 at 02:45:48PM +0100, Ard Biesheuvel wrote:
->> There are quite a number of occurrences in the kernel of the pattern
->>
->>     if (dst != src)
->>             memcpy(dst, src, walk.total % AES_BLOCK_SIZE);
->>     crypto_xor(dst, final, walk.total % AES_BLOCK_SIZE);
->>
->> or
->>
->>     crypto_xor(keystream, src, nbytes);
->>     memcpy(dst, keystream, nbytes);
->
-> What keeping crypto_xor as it is and adding a new entry point for
-> the 4-argument case?
->
+Icenowy Zheng <icenowy@aosc.io> writes:
 
-Also fine.
+> Allwinner XR819 is a SDIO Wi-Fi chip, which has the functionality to use
+> an out-of-band interrupt pin instead of SDIO in-band interrupt.
+>
+> Add the device tree binding of this chip, in order to make it possible
+> to add this interrupt pin to device trees.
+>
+> Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+> ---
+>  .../bindings/net/wireless/allwinner,xr819.txt      | 37 ++++++++++++++++++++++
+>  1 file changed, 37 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+>
+> diff --git
+> a/Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+> b/Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+> new file mode 100644
+> index 000000000000..64dd9c1c0584
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+> @@ -0,0 +1,37 @@
+> +Allwinner XRadio wireless SDIO devices
+> +
+> +This node provides properties for controlling the XRadio wireless device. The
+> +node is expected to be specified as a child node to the SDIO controller that
+> +connects the device to the system.
+> +
+> +Required properties:
+> +
+> + - compatible : Should be "allwinner,xr819".
+> +
+> +Optional properties:
+> + - interrupt-parent : the phandle for the interrupt controller to which the
+> +	device interrupts are connected.
+> + - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+> +	When not specified the device will use in-band SDIO interrupts.
+
+Where is the driver which uses this? I don't see it in
+drivers/net/wireless but I guess that's not a blocker for the bindings?
+
+-- 
+Kalle Valo
