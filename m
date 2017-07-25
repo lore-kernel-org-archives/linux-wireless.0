@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50168 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46066 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751585AbdG0JyN (ORCPT
+        with ESMTP id S1750897AbdGYMoH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 05:54:13 -0400
+        Tue, 25 Jul 2017 08:44:07 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v4 01/10] rtlwifi: Fill in_4way field by driver
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-        <20170702181239.17911-2-Larry.Finger@lwfinger.net>
-Date: Thu, 27 Jul 2017 12:54:08 +0300
-In-Reply-To: <20170702181239.17911-2-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Sun, 2 Jul 2017 13:12:30 -0500")
-Message-ID: <874ltyxl1b.fsf@purkki.adurom.net> (sfid-20170727_115424_257630_6D4B6E69)
+To: Mathias Kresin <dev@kresin.me>
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: call clk_get_rate only if we have a clock
+References: <1499498863-6865-1-git-send-email-dev@kresin.me>
+Date: Tue, 25 Jul 2017 15:44:02 +0300
+In-Reply-To: <1499498863-6865-1-git-send-email-dev@kresin.me> (Mathias
+        Kresin's message of "Sat, 8 Jul 2017 09:27:43 +0200")
+Message-ID: <87r2x4it4d.fsf@codeaurora.org> (sfid-20170725_144410_885353_9FD9FD0F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Mathias Kresin <dev@kresin.me> writes:
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
+> If clk_get returns an error, rt2x00dev->clk is set to NULL. In
+> contrast to the common clock framework provided clk_get_rate(), at
+> least the ramips and bcm63xx legacy implementation of the clk API
+> access the rate member of the clk struct without a NULL check. This
+> results into a kernel panic if we do not have a (SoC) clock.
 >
-> Because it isn't always correct to use EAPOL to check 4-way,
-> we add a timer to handle exception.
+> Call clk_get_rate only if we have a clock to fix the issues. This
+> approach is similar to what is done in the kernel at various places.
+> Usually clk_get_rate() is only called if clk_get_rate() doesn't return
+> an error.
 >
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+> Signed-off-by: Mathias Kresin <dev@kresin.me>
+> ---
+>
+> Resend, the first mail had the wrong list in cc.
 
-[...]
+Then you should mark this as v2:
 
-> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-> @@ -1408,6 +1408,11 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
->  
->  		return true;
->  	} else if (ETH_P_PAE == ether_type) {
-> +		/* EAPOL is seens as in-4way */
-> +		rtlpriv->btcoexist.btc_info.in_4way = true;
-> +		rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
-> +	rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
-> +
->  		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
->  			 "802.1X %s EAPOL pkt!!\n", (is_tx) ? "Tx" : "Rx");
-
-The indentation looks wrong.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
 
 -- 
 Kalle Valo
