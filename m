@@ -1,100 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f169.google.com ([209.85.217.169]:36211 "EHLO
-        mail-ua0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751357AbdGRKfH (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34943 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752155AbdGYOuB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 06:35:07 -0400
-Received: by mail-ua0-f169.google.com with SMTP id 35so18025545uax.3
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 03:35:07 -0700 (PDT)
-From: Hante Meuleman <hante.meuleman@broadcom.com>
-References: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk>
-In-Reply-To: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk>
+        Tue, 25 Jul 2017 10:50:01 -0400
+Received: by mail-wm0-f66.google.com with SMTP id r77so3427995wmd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jul 2017 07:50:01 -0700 (PDT)
+From: Rafal <fatwildcat@gmail.com>
+Date: Tue, 25 Jul 2017 16:49:53 +0200 (CEST)
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+cc: Rafal <fatwildcat@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: brcmfmac: 43430, additional delay after core out of reset
+In-Reply-To: <59773630.5020407@broadcom.com>
+Message-ID: <alpine.DEB.2.20.1707251614560.4934@wilk> (sfid-20170725_165006_606006_17CC1FC6)
+References: <alpine.DEB.2.20.1707211817260.11359@wilk> <59773630.5020407@broadcom.com>
 MIME-Version: 1.0
-Date: Tue, 18 Jul 2017 12:35:05 +0200
-Message-ID: <87cdbbc12b504e89d2bd1c33df6a6bf6@mail.gmail.com> (sfid-20170718_123512_339261_51330391)
-Subject: RE: brcmfmac bus level addressing issues.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ian,
+On Tue, 25 Jul 2017, Arend van Spriel wrote:
 
-I've really no idea what you mean. Brcmf_pcie_select_core is redundant?
-Care to try to boot a device without this function? Called all over the
-place? Hell no, it is default pointing to PCIE2 and functions which need
-to map the window to another core will do so, temporarily, but move it
-back to PCIE2, at least that is the idea, may be you found a bug? We are
-for sure not going to hide the selecting of the window in the read/write
-routines, that would result in a giant amount of overhead. Currently PCIE
-devices reach 1.5Gpbs, we need to go faster than that in the near future.
-We don't want just change that to make it bit nicer..... Why do you need
-to see the same in the SDIO and PCIE drivers? SDIO and PCIE differ in many
-aspects. Sure some things can be improved in or the other, but they sure
-don't need to look alike.
+> On 7/21/2017 6:20 PM, Rafal wrote:
+>> Again, ap6212 device on board. When the module gets unloaded and then
+>> loaded again, sometimes the driver fails to bring up the device - it
+>> stops with the following errors:
+>> 
+>> [  125.668000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command
+>> and terminate frame
+>> [  125.676000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command
+>> and terminate frame
+>> [  125.680000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command
+>> and terminate frame
+>> [  125.684000] brcmfmac: brcmf_sdio_dpc: failed backplane access over
+>> SDIO, halting operation
+>> [  125.684000] brcmfmac: brcmf_proto_bcdc_query_dcmd:
+>> brcmf_proto_bcdc_msg failed w/status -84
+>> [  125.684000] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr
+>> failed, -84
+>> [  125.684000] brcmfmac: brcmf_bus_started: failed: -84
+>> 
+>> I have made some investigations and it looks the problem is caused by
+>> too short time between getting CM3 core out of reset and first
+>> communication attempt with the device. It looks the device needs about
+>> 50ms to boot up. Usually the appropriate delay is introduced by function
+>> sdio_enable_func which is called just after activation of the core to
+>> enable F2 function on device. Usually the sdio function introduces the
+>> needed 50ms delay and everything is OK. But sometimes the function
+>> returns immediately. In this case the driver breaks down with the above
+>> error. But if the additional delay is added in place of
+>> sdio_enable_func, everything is okay.
+>
+> Hi Rafal,
+>
+> That is an interesting find. I took a dive into the SDIO code. After enabling 
+> F2 there are actually three signals from the device that indicate its 
+> readiness to handle communication with the host. However, none of them are 
+> waited for before activating higher layer operations in the driver. So 
+> instead of the delay it may be better to wait for the device to come up 
+> properly and indicate its readiness. If we do need this delay I would rather 
+> put it in sdio.c. Anyway, if I come up with a patch for testing would you be 
+> willing to give it a spin. Thanks for digging deeper.
+>
+> Regards,
+> Arend
 
-It may be ugly, but thusfar it has not caused bugs (and there won't be
-large changes in the near future where it will cause bugs). The concept in
-pcie bus part is simple. The main core to select is PCIE2 (once you have
-booted and established initial communication with firmware) and every
-routine which needs to access another core will change the window
-temporarily and set it back once done. Please don't mess with this, it
-works, it is clear and it is fast.
+I don't insist to add the fix. After sending this email I have started
+to think about many things. But, at first, the facts. Below is the
+output from two runs of the driver without the additional delay. I have
+added some traces in the driver, namely, four pr_info calls: one call in
+brcmf_chip_cm3_set_active, just before brcmf_chip_resetcore. Two calls
+surrounding sdio_enable_func call to turn on the F2 and one call at
+brcmf_c_preinit_dcmds begin, just before attempt to obtain
+cur_etheraddr. Below are two outputs: one successful, one with failure:
 
-Regards,
-Hante
 
------Original Message-----
-From: Ian Molton [mailto:ian@mnementh.co.uk]
-Sent: Tuesday, July 18, 2017 11:45 AM
-To: linux-wireless@vger.kernel.org
-Cc: Arend Van Spriel; Franky Lin; Hante Meuleman
-Subject: RFC: brcmfmac bus level addressing issues.
+[13065.924000] brcmfmac: >> brcmf_chip_cm3_set_active: before brcmf_chip_resetcore
+[13065.928000] brcmfmac: >> brcmf_sdio_firmware_callback: before sdio_enable_func
+[13065.928000] brcmfmac: >> brcmf_sdio_firmware_callback: after sdio_enable_func
+[13065.928000] brcmfmac: >> brcmf_c_preinit_dcmds: begin
+[13065.928000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command and terminate frame
 
-Hi folks,
 
-Its come to my attention that there is a substantial disparity between the
-PCIe and SDIO variants of the driver when it comes to handlign writes via
-the backplane.
+[13211.944000] brcmfmac: >> brcmf_chip_cm3_set_active: before brcmf_chip_resetcore
+[13211.948000] brcmfmac: >> brcmf_sdio_firmware_callback: before sdio_enable_func
+[13211.984000] brcmfmac: >> brcmf_sdio_firmware_callback: after sdio_enable_func
+[13211.984000] brcmfmac: >> brcmf_c_preinit_dcmds: begin
+[13211.984000] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jun  6 2014 14:50:39 version 7.10.226.49 (r) FWID 01-8962686a
 
-The SDIO bus code checks, upon every (32 bit) access, wether the backplane
-window is in the right place, and only updates it if it has actually
-changed.
 
-The PCIe code sets the window *regardless* of wether its changed, on
-*every single* write.
+As you can see in the first output, it was only one tick between core
+reset and getting cur_etheraddr iovar (device has 250Hz timer). In
+second output it was some delay in sdio_enable_func, about 40ms. It is
+not an accident - always when sdio_enable_func returns immediately,
+gettting iovar fails and always when sdio_enable_func waits, getting
+iovar finishes successfully.
 
-The SDIO code has no explicit selection of the window address based on the
-core selected.
+You can believe me that F2 function is disabled before the enable call in
+both cases, i.e. SDIO_CCCR_IOEx register is set to 2. You can believe me
+also that sleep added before brcmf_chip_resetcore does not help, but
+sleep added just after brcmf_chip_resetcore - helps.
 
-The PCIe code uses brcmf_pcie_select_core(), which, ultimately, appears to
-be totally redundant, due to the above mentioned 32 bit access code
-setting the window register regardless of its current value.
+Now, what are my doubts. I'm wondering why enable_timeout for F1 is set
+to 0 but for F2 is set to 3000 (3 seconds)? Does it mean that
+SDIO_CCCR_IORx register value should be changed by device (firmware?)
+when it is ready to operate, but from some reason it responds sometimes
+when is not ready? I'm not familiar with the ideas, how it should
+work. Is it a bug in the ap6212 device firmware? If so, the problem
+occurrence may depend not only on the chip version, but also on firmware
+version?
 
-------------------------------------
-
-Can we standardise how this is supposed to work? Its ugly, and its going
-to cause bugs, ultimately. I suspect its probably the cause of the code I
-mentioned in my recent patch titled "brcmfmac: HACK - stabilise the value
-of ->sbwad in use for some xfer routines."
-
-We really *dont* want to call brcmf_pcie_select_core() all over the place.
-Its inefficient, traversing a list as it does, when all it does is return
-a pointer that never actually changes, to the core structures that contain
-addressing info.
-
-I'd propose we do what I've done in my SDIO patch set - we call
-brcmf_chip_get_core() *once* after the chip has been probed, and store the
-pointer returned.
-
-The window register setting can be hidden in the read32/write32 buscore
-ops, and will never be incorrect from that point, and the code can simply
-use a flat address space model. A single if() has got to be less costly
-than writing the register on overy single read32/write32...
-
-Anyhow, whatever we decide to do, can we do the same thing in both bus
-drivers?
-
--Ian
+Rafal
