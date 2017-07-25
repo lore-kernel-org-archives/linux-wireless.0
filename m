@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:37611 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751539AbdGZVIU (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:33609 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756724AbdGYBOQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 17:08:20 -0400
-Received: by mail-wm0-f44.google.com with SMTP id c184so91696155wmd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2017 14:08:20 -0700 (PDT)
-Subject: Re: brcmfmac4356-pcie 4.13 regression (frequent kernel panics) not
- fixed by recent 4.13 regression fix
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: russianneuromancer@ya.ru, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Igor Nikolic <nikolic.igor@gmail.com>
-References: <b3b9dd19-a20d-ac4e-70f1-6059e7ec7d20@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <1570e9f5-a52c-77d6-d391-ee8cff9fc3db@broadcom.com> (sfid-20170726_230824_395073_3934C5F7)
-Date: Wed, 26 Jul 2017 23:08:17 +0200
-MIME-Version: 1.0
-In-Reply-To: <b3b9dd19-a20d-ac4e-70f1-6059e7ec7d20@redhat.com>
-Content-Type: text/plain; charset=utf-8
+        Mon, 24 Jul 2017 21:14:16 -0400
+Received: by mail-pf0-f177.google.com with SMTP id s70so53108148pfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:16 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 06/20] mwifiex: don't short-circuit netdev notifiers on interface deletion
+Date: Mon, 24 Jul 2017 18:13:22 -0700
+Message-Id: <20170725011336.99993-7-briannorris@chromium.org> (sfid-20170725_031830_899599_61F73E8A)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-07-17 23:03, Hans de Goede wrote:
-> Hi,
-> 
-> I've been seeing frequent kernel panics on wifi activity
-> (scp-ing a lot of files) with 4.13 on 2 different systems
-> which both use a brcmfmac4356-pcie wifi chip.
-> 
-> This is with this fix:
-> https://www.spinics.net/lists/linux-wireless/msg164178.html
-> already applied.
-> 
-> Here is a picture of the panic:
-> 
-> https://fedorapeople.org/~jwrdegoede/brcmfmac4356-pcie-4.13-panic.jpg
-> 
-> Reverting commit 270a6c1f65fe ("brcmfmac: rework headroom check in
-> .start_xmit()"):
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit?id=270a6c1f65fe68a28a5d39cd405592c550b496c7
-> 
-> 
-> seems to fix this (I can no longer quickly reproduce the panic
-> by scp-ing a large amount of files).
-> 
-> Note I've first reverted the:
-> https://www.spinics.net/lists/linux-wireless/msg164178.html
-> fix so that I could cleanly revert commit 270a6c1f65fe.
-> 
-> Given that no code seems to use the statics commit 270a6c1f65fe
-> offers and it has been the cause of 2 different regressions now,
-> it might be best to just revert 270a6c1f65fe for 4.13.
+When we leave the delete interface function, there are still netdev
+hooks that might try to process the device. We're short-circuiting some
+of that by changing the interface type and clearing ieee80211_ptr. This
+means we skip NETDEV_UNREGISTER_FINAL in cfg80211. Fortunately, that is
+currently a no-op.
 
-Hi Hans,
+We don't need most of the cleanup here anyway:
 
-I suspect this patch [1] fixes that. Can you verify? And yes, I messed
-up. Sorry.
+ * the connection state will get (un)set as part of the disconnect
+   process (which cfg80211 already initiates for us)
+ * the interface type doesn't actually need to be cleared at all (it'll
+   trigger a WARN_ON() in cfg80211 if we do)
+ * the iee80211_ptr isn't really "ours" to clear anyway
 
-Regards,
-Arend
+So stop resetting those 3 things.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v2: no change
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 06ad2d50f9b0..f86a8a69d060 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3123,11 +3123,7 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		priv->dfs_chan_sw_workqueue = NULL;
+ 	}
+ 	/* Clear the priv in adapter */
+-	priv->netdev->ieee80211_ptr = NULL;
+ 	priv->netdev = NULL;
+-	priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+-
+-	priv->media_connected = false;
+ 
+ 	switch (priv->bss_mode) {
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+-- 
+2.14.0.rc0.284.gd933b75aa4-goog
