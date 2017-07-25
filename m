@@ -1,67 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53390 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751454AbdG0K4y (ORCPT
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:36899 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756801AbdGYBO2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 06:56:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v4 09/10] rtlwifi: use debugfs to debug.
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-        <20170702181239.17911-10-Larry.Finger@lwfinger.net>
-        <87vamew5d9.fsf@purkki.adurom.net> <5979C2EA.4080101@broadcom.com>
-Date: Thu, 27 Jul 2017 13:56:49 +0300
-In-Reply-To: <5979C2EA.4080101@broadcom.com> (Arend van Spriel's message of
-        "Thu, 27 Jul 2017 12:39:38 +0200")
-Message-ID: <871sp2ywpa.fsf@kamboji.qca.qualcomm.com> (sfid-20170727_125658_251182_BF8687BE)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 24 Jul 2017 21:14:28 -0400
+Received: by mail-pg0-f44.google.com with SMTP id y129so63969736pgy.4
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:28 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 17/20] mwifiex: pcie: disable device DMA before unmapping/freeing buffers
+Date: Mon, 24 Jul 2017 18:13:33 -0700
+Message-Id: <20170725011336.99993-18-briannorris@chromium.org> (sfid-20170725_031621_381703_90ECCAF6)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+In testing the mwifiex reset code path, I've noticed KASAN complaining
+about some "overwritten poison values" in our RX buffer descriptors.
+Because KASAN didn't notice this at the time of a CPU write, this seems
+to suggest that the device is writing to this memory.
 
-> On 7/27/2017 12:17 PM, Kalle Valo wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>
->>> From: Ping-Ke Shih <pkshih@realtek.com>
->>>
->>> Use debugfs to dump register and btcoex status.
->>
->> The title is useless and the commit log does not mention anything about
->> what files are added and to which location.
->>
->>> The kbuild test robot <lkp@intel.com> suggested a change to use
->>> simple_open() instead of a local routine.
->>
->> This comment doesn't belong to commit log, it should be in the changelog.
->>
->>> +void rtl_debugfs_add_topdir(void)
->>> +{
->>> +	debugfs_topdir = debugfs_create_dir("rtlwifi", NULL);
->>> +}
->>> +
->>> +void rtl_debugfs_remove_topdir(void)
->>> +{
->>> +	debugfs_remove_recursive(debugfs_topdir);
->>> +}
->>
->> I'm surprised to see that rtlwifi creates it's own top level debugfs
->> directory and does not use wiphy->debugfsdir. So how is this supposed to
->> work when we have multiple rtlwifi devices on the same system?
->
-> In brcmfmac we also have our own top level debugfs dir because we do
-> wiphy_new()/wiphy_register() kinda late. To cover the multiple devices
-> issue we create a subdir per device, ie.
-> /sys/kernel/debug/brcmfmac/mmc0:0001:1/.
+This makes a little sense, because when resetting, we don't necessarily
+expect the device to be responsive, so we don't have a chance to disable
+everything cleanly.
 
-Yeah, that's fine. If rtlwifi does the same that's good but document
-that in the commit log.
+We can at least take the precaution of disabling DMA for the device
+though, and in my testing that seems to clear up this particular issue.
 
+This patch reorders the removal path so that we disable the device
+*before* releasing our last PCIe buffers, and it clears/sets the bus
+master feature from the PCI device when resetting.
+
+Along the way, remove the insufficient (and confusing) error path in
+mwifiex_pcie_up_dev() (it doesn't unwind things well enough, and it
+doesn't propagate its errors upward anyway).
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+new in v2
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index c08ebb55a7e8..a1907e8e620f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2958,15 +2958,17 @@ static void mwifiex_cleanup_pcie(struct mwifiex_adapter *adapter)
+ 				    "Failed to write driver not-ready signature\n");
+ 	}
+ 
+-	mwifiex_pcie_free_buffers(adapter);
+-
+ 	if (pdev) {
++		pci_disable_device(pdev);
++
+ 		pci_iounmap(pdev, card->pci_mmap);
+ 		pci_iounmap(pdev, card->pci_mmap1);
+ 		pci_disable_device(pdev);
+ 		pci_release_region(pdev, 2);
+ 		pci_release_region(pdev, 0);
+ 	}
++
++	mwifiex_pcie_free_buffers(adapter);
+ }
+ 
+ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+@@ -3142,7 +3144,6 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	int ret;
+ 	struct pci_dev *pdev = card->dev;
+ 
+ 	/* tx_buf_size might be changed to 3584 by firmware during
+@@ -3150,11 +3151,9 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+ 	 */
+ 	adapter->tx_buf_size = card->pcie.tx_buf_size;
+ 
+-	ret = mwifiex_pcie_alloc_buffers(adapter);
+-	if (!ret)
+-		return;
++	mwifiex_pcie_alloc_buffers(adapter);
+ 
+-	pci_iounmap(pdev, card->pci_mmap1);
++	pci_set_master(pdev);
+ }
+ 
+ /* This function cleans up the PCI-E host memory space. */
+@@ -3162,10 +3161,13 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
++	struct pci_dev *pdev = card->dev;
+ 
+ 	if (mwifiex_write_reg(adapter, reg->drv_rdy, 0x00000000))
+ 		mwifiex_dbg(adapter, ERROR, "Failed to write driver not-ready signature\n");
+ 
++	pci_clear_master(pdev);
++
+ 	adapter->seq_num = 0;
+ 
+ 	mwifiex_pcie_free_buffers(adapter);
 -- 
-Kalle Valo
+2.14.0.rc0.284.gd933b75aa4-goog
