@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:35832 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756664AbdGYBON (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51470 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751897AbdGYMwF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:13 -0400
-Received: by mail-pf0-f180.google.com with SMTP id h29so18021339pfd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:13 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 02/20] mwifiex: reset interrupt status across device reset
-Date: Mon, 24 Jul 2017 18:13:18 -0700
-Message-Id: <20170725011336.99993-3-briannorris@chromium.org> (sfid-20170725_031514_073169_EDA481FB)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+        Tue, 25 Jul 2017 08:52:05 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: x86@kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/2] wl3501_cs: reduce stack size for KASAN
+References: <20170710144425.2238584-1-arnd@arndb.de>
+        <20170710144425.2238584-2-arnd@arndb.de>
+Date: Tue, 25 Jul 2017 15:52:00 +0300
+In-Reply-To: <20170710144425.2238584-2-arnd@arndb.de> (Arnd Bergmann's message
+        of "Mon, 10 Jul 2017 16:44:25 +0200")
+Message-ID: <87mv7sisr3.fsf@codeaurora.org> (sfid-20170725_145233_913653_9AF0F2E0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When resetting the device, we might have queued up interrupts that
-didn't get a chance to finish processing. We really don't need to handle
-them at this point; we just want to make sure they don't cause us to try
-to process old commands from before the device was reset.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: no change
----
- drivers/net/wireless/marvell/mwifiex/main.c | 1 +
- 1 file changed, 1 insertion(+)
+> Inlining functions with local variables can lead to excessive stack usage
+> with KASAN after a previous patch that modifies the outsb/insb helpers
+> on x86.
+>
+> drivers/net/wireless/wl3501_cs.c: In function 'wl3501_rx_interrupt':
+> drivers/net/wireless/wl3501_cs.c:1103:1: error: the frame size of 2232 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+>
+> Marking the two callers of insb/outb 'noinline' prevents the compiler
+> from adding up the stack usage for each of the local variables passed
+> into those, reducing the maximum stack frame size to 800 bytes with
+> KASAN again.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 8615099468da..275cf8dc4f2a 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1366,6 +1366,7 @@ static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
- 
- 	adapter->surprise_removed = true;
- 	mwifiex_terminate_workqueue(adapter);
-+	adapter->int_status = 0;
- 
- 	/* Stop data */
- 	for (i = 0; i < adapter->priv_num; i++) {
+Arnd, based on the discussion I'm dropping. Please let me know if I
+should take this still.
+
 -- 
-2.14.0.rc0.284.gd933b75aa4-goog
+Kalle Valo
