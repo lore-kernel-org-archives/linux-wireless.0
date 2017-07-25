@@ -1,103 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35706 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753570AbdGCSkv (ORCPT
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:33219 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750948AbdGYMOn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jul 2017 14:40:51 -0400
-Received: by mail-oi0-f68.google.com with SMTP id l130so20125350oib.2
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jul 2017 11:40:51 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/11] rtlwifi: Add rtl_get_hal_edca_param() to generate register's format of EDCA.
-Date: Mon,  3 Jul 2017 13:40:33 -0500
-Message-Id: <20170703184038.24669-7-Larry.Finger@lwfinger.net> (sfid-20170703_204057_528823_73CB1E1E)
-In-Reply-To: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
-References: <20170703184038.24669-1-Larry.Finger@lwfinger.net>
+        Tue, 25 Jul 2017 08:14:43 -0400
+Received: by mail-wr0-f171.google.com with SMTP id v105so87942914wrb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jul 2017 05:14:43 -0700 (PDT)
+Message-ID: <59773630.5020407@broadcom.com> (sfid-20170725_141448_182425_8CD2F7AA)
+Date: Tue, 25 Jul 2017 14:14:40 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+To: Rafal <fatwildcat@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: brcmfmac: 43430, additional delay after core out of reset
+References: <alpine.DEB.2.20.1707211817260.11359@wilk>
+In-Reply-To: <alpine.DEB.2.20.1707211817260.11359@wilk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 7/21/2017 6:20 PM, Rafal wrote:
+> Again, ap6212 device on board. When the module gets unloaded and then
+> loaded again, sometimes the driver fails to bring up the device - it
+> stops with the following errors:
+>
+> [  125.668000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command
+> and terminate frame
+> [  125.676000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command
+> and terminate frame
+> [  125.680000] brcmfmac: brcmf_sdio_txfail: sdio error, abort command
+> and terminate frame
+> [  125.684000] brcmfmac: brcmf_sdio_dpc: failed backplane access over
+> SDIO, halting operation
+> [  125.684000] brcmfmac: brcmf_proto_bcdc_query_dcmd:
+> brcmf_proto_bcdc_msg failed w/status -84
+> [  125.684000] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr
+> failed, -84
+> [  125.684000] brcmfmac: brcmf_bus_started: failed: -84
+>
+> I have made some investigations and it looks the problem is caused by
+> too short time between getting CM3 core out of reset and first
+> communication attempt with the device. It looks the device needs about
+> 50ms to boot up. Usually the appropriate delay is introduced by function
+> sdio_enable_func which is called just after activation of the core to
+> enable F2 function on device. Usually the sdio function introduces the
+> needed 50ms delay and everything is OK. But sometimes the function
+> returns immediately. In this case the driver breaks down with the above
+> error. But if the additional delay is added in place of
+> sdio_enable_func, everything is okay.
 
-Convert from the value of ieee80211_tx_queue_params to Realtek's
-register value.
+Hi Rafal,
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 36 +++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/base.h |  4 ++++
- 2 files changed, 40 insertions(+)
+That is an interesting find. I took a dive into the SDIO code. After 
+enabling F2 there are actually three signals from the device that 
+indicate its readiness to handle communication with the host. However, 
+none of them are waited for before activating higher layer operations in 
+the driver. So instead of the delay it may be better to wait for the 
+device to come up properly and indicate its readiness. If we do need 
+this delay I would rather put it in sdio.c. Anyway, if I come up with a 
+patch for testing would you be willing to give it a spin. Thanks for 
+digging deeper.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 38c8e94d2d6b..5e9e25a4ba3d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1558,6 +1558,42 @@ void rtl_wait_tx_report_acked(struct ieee80211_hw *hw, u32 wait_ms)
- 			 "Wait 1ms (%d/%d) to disable key.\n", i, wait_ms);
- 	}
- }
-+
-+u32 rtl_get_hal_edca_param(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif,
-+			   enum wireless_mode wirelessmode,
-+			   struct ieee80211_tx_queue_params *param)
-+{
-+	u32 reg = 0;
-+	u8 sifstime = 10;
-+	u8 slottime = 20;
-+
-+	/* AIFS = AIFSN * slot time + SIFS */
-+	switch (wirelessmode) {
-+	case WIRELESS_MODE_A:
-+	case WIRELESS_MODE_N_24G:
-+	case WIRELESS_MODE_N_5G:
-+	case WIRELESS_MODE_AC_5G:
-+	case WIRELESS_MODE_AC_24G:
-+		sifstime = 16;
-+		slottime = 9;
-+		break;
-+	case WIRELESS_MODE_G:
-+		slottime = (vif->bss_conf.use_short_slot ? 9 : 20);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	reg |= (param->txop & 0x7FF) << 16;
-+	reg |= (fls(param->cw_max) & 0xF) << 12;
-+	reg |= (fls(param->cw_min) & 0xF) << 8;
-+	reg |= (param->aifs & 0x0F) * slottime + sifstime;
-+
-+	return reg;
-+}
-+EXPORT_SYMBOL_GPL(rtl_get_hal_edca_param);
-+
- /*********************************************************
-  *
-  * functions called by core.c
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
-index ab7d81904d25..4371dd4f75cb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.h
-@@ -135,6 +135,10 @@ void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf,
- 			   u8 c2h_cmd_len);
- bool rtl_check_tx_report_acked(struct ieee80211_hw *hw);
- void rtl_wait_tx_report_acked(struct ieee80211_hw *hw, u32 wait_ms);
-+u32 rtl_get_hal_edca_param(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif,
-+			   enum wireless_mode wirelessmode,
-+			   struct ieee80211_tx_queue_params *param);
- 
- void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
- void rtl_collect_scan_list(struct ieee80211_hw *hw, struct sk_buff *skb);
--- 
-2.12.3
+Regards,
+Arend
