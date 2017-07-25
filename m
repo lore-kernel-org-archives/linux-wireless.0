@@ -1,176 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0045.outbound.protection.outlook.com ([104.47.33.45]:52128
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751633AbdG0XHg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 19:07:36 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 05/12] qtnfmac: implement reporting current channel
-Date: Fri, 28 Jul 2017 02:06:47 +0300
-Message-Id: <20170727230654.30850-6-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010741_323213_9BD50470)
-In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:34277 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756778AbdGYBOX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Jul 2017 21:14:23 -0400
+Received: by mail-pg0-f45.google.com with SMTP id 123so64047407pgj.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:23 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 13/20] mwifiex: drop 'add_tail' param from mwifiex_insert_cmd_to_pending_q()
+Date: Mon, 24 Jul 2017 18:13:29 -0700
+Message-Id: <20170725011336.99993-14-briannorris@chromium.org> (sfid-20170725_031755_857601_5F48F3D1)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement current channel reporting functionality. Current operating
-channel can be obtained either directly using cfg80211 get_channel
-callback or from stats reported by cfg80211 survey_dump callback.
+It's always called with 'true' -- we only determine it 'false' locally
+within this function. So drop the parameter.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+Also, this should be 'bool' (since we use true/false), not 'u32'.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 62 ++++++++++++++++++++++-
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  2 +-
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  2 +-
- 3 files changed, 62 insertions(+), 4 deletions(-)
+v2: no change
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 5 +++--
+ drivers/net/wireless/marvell/mwifiex/main.h   | 3 +--
+ drivers/net/wireless/marvell/mwifiex/scan.c   | 5 ++---
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 23f180b7d43c..ef8089c163bc 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -593,6 +593,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	     struct cfg80211_connect_params *sme)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 6ff8e84b01e0..3f5e822673bf 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -664,7 +664,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 	    cmd_no == HostCmd_CMD_802_11_SCAN_EXT) {
+ 		mwifiex_queue_scan_cmd(priv, cmd_node);
+ 	} else {
+-		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node, true);
++		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node);
+ 		queue_work(adapter->workqueue, &adapter->main_work);
+ 		if (cmd_node->wait_q_enabled)
+ 			ret = mwifiex_wait_queue_complete(adapter, cmd_node);
+@@ -682,11 +682,12 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+  */
+ void
+ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+-				struct cmd_ctrl_node *cmd_node, u32 add_tail)
++				struct cmd_ctrl_node *cmd_node)
  {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
-+	struct cfg80211_chan_def chandef;
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
+ 	struct host_cmd_ds_command *host_cmd = NULL;
+ 	u16 command;
+ 	unsigned long flags;
++	bool add_tail = true;
  
-@@ -605,9 +606,20 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	bss_cfg = &vif->bss_cfg;
- 	memset(bss_cfg, 0, sizeof(*bss_cfg));
+ 	host_cmd = (struct host_cmd_ds_command *) (cmd_node->cmd_skb->data);
+ 	if (!host_cmd) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 2bee5cdf1fc8..909bd1ad3838 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1088,8 +1088,7 @@ void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
+ 			      struct cmd_ctrl_node *cmd_node);
  
-+	if (sme->channel) {
-+		/* FIXME: need to set proper nl80211_channel_type value */
-+		cfg80211_chandef_create(&chandef, sme->channel,
-+					NL80211_CHAN_HT20);
-+		/* fall-back to minimal safe chandef description */
-+		if (!cfg80211_chandef_valid(&chandef))
-+			cfg80211_chandef_create(&chandef, sme->channel,
-+						NL80211_CHAN_HT20);
-+
-+		memcpy(&bss_cfg->chandef, &chandef, sizeof(bss_cfg->chandef));
-+	}
-+
- 	bss_cfg->ssid_len = sme->ssid_len;
- 	memcpy(&bss_cfg->ssid, sme->ssid, bss_cfg->ssid_len);
--	bss_cfg->chandef.chan = sme->channel;
- 	bss_cfg->auth_type = sme->auth_type;
- 	bss_cfg->privacy = sme->privacy;
- 	bss_cfg->mfp = sme->mfp;
-@@ -683,10 +695,15 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct ieee80211_supported_band *sband;
-+	struct cfg80211_chan_def *bss_chandef;
- 	struct ieee80211_channel *chan;
- 	struct qtnf_chan_stats stats;
-+	struct qtnf_vif *vif;
- 	int ret;
+ void mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+-				     struct cmd_ctrl_node *cmd_node,
+-				     u32 addtail);
++				     struct cmd_ctrl_node *cmd_node);
  
-+	vif = qtnf_netdev_get_priv(dev);
-+	bss_chandef = &vif->bss_cfg.chandef;
-+
- 	sband = wiphy->bands[NL80211_BAND_2GHZ];
- 	if (sband && idx >= sband->n_channels) {
- 		idx -= sband->n_channels;
-@@ -705,6 +722,10 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 	survey->channel = chan;
- 	survey->filled = 0x0;
+ int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter);
+ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index ae9630b49342..16eaeae74979 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1534,8 +1534,7 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
+ 			list_del(&cmd_node->list);
+ 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+ 					       flags);
+-			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
+-							true);
++			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node);
+ 			queue_work(adapter->workqueue, &adapter->main_work);
  
-+	if (bss_chandef->chan)
-+		if (chan->hw_value == bss_chandef->chan->hw_value)
-+			survey->filled |= SURVEY_INFO_IN_USE;
-+
- 	ret = qtnf_cmd_get_chan_stats(mac, chan->hw_value, &stats);
- 	switch (ret) {
- 	case 0:
-@@ -743,6 +764,42 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
+ 			/* Perform internal scan synchronously */
+@@ -2033,7 +2032,7 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ 					    struct cmd_ctrl_node, list);
+ 		list_del(&cmd_node->list);
+ 		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+-		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node, true);
++		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node);
+ 	}
  
-+static int
-+qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
-+		 struct cfg80211_chan_def *chandef)
-+{
-+	struct net_device *ndev = wdev->netdev;
-+	struct qtnf_bss_config *bss_cfg;
-+	struct qtnf_vif *vif;
-+
-+	if (!ndev)
-+		return -ENODEV;
-+
-+	vif = qtnf_netdev_get_priv(wdev->netdev);
-+	bss_cfg = &vif->bss_cfg;
-+
-+	switch (vif->wdev.iftype) {
-+	case NL80211_IFTYPE_STATION:
-+		if (vif->sta_state == QTNF_STA_DISCONNECTED) {
-+			pr_warn("%s: STA disconnected\n", ndev->name);
-+			return -ENODATA;
-+		}
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		if (!(vif->bss_status & QTNF_STATE_AP_START)) {
-+			pr_warn("%s: AP not started\n", ndev->name);
-+			return -ENODATA;
-+		}
-+		break;
-+	default:
-+		pr_err("unsupported vif type (%d)\n", vif->wdev.iftype);
-+		return -ENODATA;
-+	}
-+
-+	memcpy(chandef, &bss_cfg->chandef, sizeof(*chandef));
-+	return 0;
-+}
-+
- static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.add_virtual_intf	= qtnf_add_virtual_intf,
- 	.change_virtual_intf	= qtnf_change_virtual_intf,
-@@ -764,7 +821,8 @@ static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.scan			= qtnf_scan,
- 	.connect		= qtnf_connect,
- 	.disconnect		= qtnf_disconnect,
--	.dump_survey		= qtnf_dump_survey
-+	.dump_survey		= qtnf_dump_survey,
-+	.get_channel		= qtnf_get_channel
- };
- 
- static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index a1ce12082e10..c8c0685f81b3 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2036,7 +2036,7 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
- 
- 	if (bss_cfg->chandef.chan)
--		cmd->freq = cpu_to_le16(bss_cfg->chandef.chan->center_freq);
-+		cmd->channel = cpu_to_le16(bss_cfg->chandef.chan->hw_value);
- 
- 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index dd01c0b4f632..6c6940b503a4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -384,7 +384,7 @@ enum qlink_sta_connect_flags {
- struct qlink_cmd_connect {
- 	struct qlink_cmd chdr;
- 	__le32 flags;
--	__le16 freq;
-+	__le16 channel;
- 	__le16 bg_scan_period;
- 	u8 bssid[ETH_ALEN];
- 	u8 payload[0];
+ 	return;
 -- 
-2.11.0
+2.14.0.rc0.284.gd933b75aa4-goog
