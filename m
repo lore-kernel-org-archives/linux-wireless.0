@@ -1,112 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35356 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751446AbdGaNHh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48802 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750732AbdGYL4P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 09:07:37 -0400
-Received: by mail-pf0-f195.google.com with SMTP id q85so26148064pfq.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 06:07:37 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 2/2] mwifiex: pcie: compatible with wifi-only image while extract wifi-part fw
-Date: Mon, 31 Jul 2017 13:07:27 +0000
-Message-Id: <1501506447-31851-2-git-send-email-huxinming820@gmail.com> (sfid-20170731_150740_617177_7ACE065B)
-In-Reply-To: <1501506447-31851-1-git-send-email-huxinming820@gmail.com>
-References: <1501506447-31851-1-git-send-email-huxinming820@gmail.com>
+        Tue, 25 Jul 2017 07:56:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: Re: [PATCH 8/8] qtnfmac: implement scan timeout
+References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
+        <20170620195517.18373-9-sergey.matyukevich.os@quantenna.com>
+        <87o9t949yu.fsf@purkki.adurom.net>
+        <20170629164903.adst7rihexlrb643@bars>
+Date: Tue, 25 Jul 2017 14:56:11 +0300
+In-Reply-To: <20170629164903.adst7rihexlrb643@bars> (Sergey Matyukevich's
+        message of "Thu, 29 Jun 2017 19:49:04 +0300")
+Message-ID: <87k22wk9wk.fsf@codeaurora.org> (sfid-20170725_135619_642490_804F2806)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Sometimes, we might using wifi-only firmware with a combo firmware name,
-in this case, do not need to filter bluetooth part from header.
+> On Tue, Jun 27, 2017 at 08:27:37PM +0300, Kalle Valo wrote:
+>> 
+>> External Email
+>> 
+>> 
+>> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+>> 
+>> > Userspace tools may hang on scan in the case when scan completion event
+>> > is not returned by firmware. This patch implements the scan timeout
+>> > to avoid such situation.
+>> >
+>> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+>> 
+>> [...]
+>> 
+>> > +static __always_inline void qtnf_wmac_lock(struct qtnf_wmac *mac)
+>> > +{
+>> > +     mutex_lock(&mac->mac_lock);
+>> > +}
+>> > +
+>> > +static __always_inline void qtnf_wmac_unlock(struct qtnf_wmac *mac)
+>> > +{
+>> > +     mutex_unlock(&mac->mac_lock);
+>> > +}
+>> 
+>> Why? These look pointless to me.
+>
+> Could you please clarify a bit. You mean, locking/unlocking directly instead of
+> using inline wrappers ?
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 26 +++++++++++++++++++-------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+Yeah, these kind of simple locking wrappers should not be used. They
+only add confusion.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3da1eeb..dc4e054 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1985,7 +1985,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
-  * (3) wifi image.
-  *
-  * This function bypass the header and bluetooth part, return
-- * the offset of tail wifi-only part.
-+ * the offset of tail wifi-only part. if the image is already wifi-only,
-+ * that is start with CMD1, return 0.
-  */
- 
- static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-@@ -1993,7 +1994,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 	const struct mwifiex_fw_data *fwdata;
- 	u32 offset = 0, data_len, dnld_cmd;
- 	int ret = 0;
--	bool cmd7_before = false;
-+	bool cmd7_before = false, first_cmd = false;
- 
- 	while (1) {
- 		/* Check for integer and buffer overflow */
-@@ -2014,20 +2015,29 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 
- 		switch (dnld_cmd) {
- 		case MWIFIEX_FW_DNLD_CMD_1:
--			if (!cmd7_before) {
--				mwifiex_dbg(adapter, ERROR,
--					    "no cmd7 before cmd1!\n");
-+			if (offset + data_len < data_len) {
-+				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
- 				ret = -1;
- 				goto done;
- 			}
--			if (offset + data_len < data_len) {
--				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-+
-+			/* Image start with cmd1, already wifi-only firmware*/
-+			if (!first_cmd) {
-+				mwifiex_dbg(adapter, MSG,
-+					    "input wifi-only firmware\n");
-+				return 0;
-+			}
-+
-+			if (!cmd7_before) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "no cmd7 before cmd1!\n");
- 				ret = -1;
- 				goto done;
- 			}
- 			offset += data_len;
- 			break;
- 		case MWIFIEX_FW_DNLD_CMD_5:
-+			first_cmd = true;
- 			/* Check for integer overflow */
- 			if (offset + data_len < data_len) {
- 				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-@@ -2037,6 +2047,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 			offset += data_len;
- 			break;
- 		case MWIFIEX_FW_DNLD_CMD_6:
-+			first_cmd = true;
- 			/* Check for integer overflow */
- 			if (offset + data_len < data_len) {
- 				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-@@ -2053,6 +2064,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 			}
- 			goto done;
- 		case MWIFIEX_FW_DNLD_CMD_7:
-+			first_cmd = true;
- 			cmd7_before = true;
- 			break;
- 		default:
 -- 
-1.9.1
+Kalle Valo
