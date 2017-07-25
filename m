@@ -1,105 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34314 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751861AbdGFOmK (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33614 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756753AbdGYBOS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:42:10 -0400
-Received: by mail-pf0-f194.google.com with SMTP id c24so564340pfe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:42:09 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: [v3 07/21] rsi: USB tx headroom cleanup
-Date: Thu,  6 Jul 2017 20:07:10 +0530
-Message-Id: <1499351844-2046-8-git-send-email-amitkarwar@gmail.com> (sfid-20170706_164212_774982_88B25813)
-In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+        Mon, 24 Jul 2017 21:14:18 -0400
+Received: by mail-pf0-f174.google.com with SMTP id s70so53108408pfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:18 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 08/20] mwifiex: ensure "disable auto DS" struct is initialized
+Date: Mon, 24 Jul 2017 18:13:24 -0700
+Message-Id: <20170725011336.99993-9-briannorris@chromium.org> (sfid-20170725_032006_338097_16DD7AA6)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+The .idle_time field *should* be unused, but technically, we're allowing
+unitialized stack garbage to pass all the way through to the firmware
+host command. Let's zero it out instead.
 
-USB headroom is added while submitting the data to URB as per
-firmware's requirement. This logic is moved to rsi_usb_card_write() so
-that caller need not worry about it.
-
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 41 +++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+v2: no change
+---
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 1d7bb9d..25f6195 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -29,19 +29,24 @@
-  * Return: status: 0 on success, a negative error code on failure.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 42997e05d90f..43ecd621d1ef 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -654,9 +654,9 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
   */
- static int rsi_usb_card_write(struct rsi_hw *adapter,
--			      void *buf,
-+			      u8 *buf,
- 			      u16 len,
- 			      u8 endpoint)
+ int mwifiex_disable_auto_ds(struct mwifiex_private *priv)
  {
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
- 	int status;
--	s32 transfer;
-+	u8 *seg = dev->tx_buffer;
-+	int transfer;
-+	int ep = dev->bulkout_endpoint_addr[endpoint - 1];
+-	struct mwifiex_ds_auto_ds auto_ds;
+-
+-	auto_ds.auto_ds = DEEP_SLEEP_OFF;
++	struct mwifiex_ds_auto_ds auto_ds = {
++		.auto_ds = DEEP_SLEEP_OFF,
++	};
  
-+	memset(seg, 0, len + RSI_USB_TX_HEAD_ROOM);
-+	memcpy(seg + RSI_USB_TX_HEAD_ROOM, buf, len);
-+	len += RSI_USB_TX_HEAD_ROOM;
-+	transfer = len;
- 	status = usb_bulk_msg(dev->usbdev,
--			      usb_sndbulkpipe(dev->usbdev,
--			      dev->bulkout_endpoint_addr[endpoint - 1]),
--			      buf,
--			      len,
-+			      usb_sndbulkpipe(dev->usbdev, ep),
-+			      (void *)seg,
-+			      (int)len,
- 			      &transfer,
- 			      HZ * 5);
- 
-@@ -68,23 +73,19 @@ static int rsi_write_multiple(struct rsi_hw *adapter,
- 			      u8 *data,
- 			      u32 count)
- {
--	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
--	u8 *seg = dev->tx_buffer;
-+	struct rsi_91x_usbdev *dev =
-+		(struct rsi_91x_usbdev *)adapter->rsi_dev;
- 
--	if (dev->write_fail)
--		return 0;
-+	if (!adapter)
-+		return -ENODEV;
- 
--	if (endpoint == MGMT_EP) {
--		memset(seg, 0, RSI_USB_TX_HEAD_ROOM);
--		memcpy(seg + RSI_USB_TX_HEAD_ROOM, data, count);
--	} else {
--		seg = ((u8 *)data - RSI_USB_TX_HEAD_ROOM);
--	}
-+	if (endpoint == 0)
-+		return -EINVAL;
-+
-+	if (dev->write_fail)
-+		return -ENETDOWN;
- 
--	return rsi_usb_card_write(adapter,
--				  seg,
--				  count + RSI_USB_TX_HEAD_ROOM,
--				  endpoint);
-+	return rsi_usb_card_write(adapter, data, count, endpoint);
- }
- 
- /**
+ 	return mwifiex_send_cmd(priv, HostCmd_CMD_802_11_PS_MODE_ENH,
+ 				DIS_AUTO_PS, BITMAP_AUTO_DS, &auto_ds, true);
 -- 
-2.7.4
+2.14.0.rc0.284.gd933b75aa4-goog
