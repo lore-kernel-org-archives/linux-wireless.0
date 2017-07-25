@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58746 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44092 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751897AbdG1PHI (ORCPT
+        with ESMTP id S1750732AbdGYLvK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 11:07:08 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: wl3501_cs: fix spelling mistake: "Insupported" -> "Unsupported"
+        Tue, 25 Jul 2017 07:51:10 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170727220954.12105-1-colin.king@canonical.com>
-References: <20170727220954.12105-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20170728150707.E230B60884@smtp.codeaurora.org> (sfid-20170728_170724_195381_B9094264)
-Date: Fri, 28 Jul 2017 15:07:07 +0000 (UTC)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>, Greg KH <gregkh@linux.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
+Subject: Re: New Realtek driver
+References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
+        <617F6F88-FA7B-4BB1-8DFE-AA17D0C540DF@holtmann.org>
+        <daf881fc-918e-7716-2b09-20abe74f6cb3@lwfinger.net>
+Date: Tue, 25 Jul 2017 14:51:04 +0300
+In-Reply-To: <daf881fc-918e-7716-2b09-20abe74f6cb3@lwfinger.net> (Larry
+        Finger's message of "Fri, 21 Jul 2017 21:04:37 -0500")
+Message-ID: <87o9s8ka53.fsf@codeaurora.org> (sfid-20170725_135117_786725_FED0B11A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Trivial fix to spelling mistake in printk message
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> On 07/21/2017 05:13 AM, Marcel Holtmann wrote:
+>> Hi Larry,
+>>
+>>> Once again I find myself in the awkward position of needing to
+>>> submit code to two different trees, i.e. wireless and staging.
+>>>
+>>> The code in question concerns a new Realtek device, the RTL8822BE.
+>>> The device is already shipping, and Realtek would like it to be
+>>> available in kernel 3.14. As it consists of ~120,000 new lines of
+>>> code, I have assured Realtek that 3.14 would not be possible, at
+>>> least in the wireless tree. What I plan to do is submit the changes
+>>> in the existing drivers through wireless, and the three totally new
+>>> drivers through staging. My expectation is that this code would
+>>> live for a relatively short time there, but going that route would
+>>> give time for the code to be reviewed properly, but still be
+>>> available in a kernel driver. All of the new code will be available
+>>> in a GitHub repo maintained by Realtek for those users whose
+>>> distros do not configure anything in staging.
+>>>
+>>> For my part, I will push the wireless tree material as fast as I
+>>> can and hope there is time available near the end of the 4.13-rcX
+>>> sequence for the material to reach 4.14-rc1.
+>>
+>> I really do not understand the need for staging if there is already
+>> active cleanup and submission to wireless-drivers happening. I find
+>> it also unfair to others who submit code to linux-wireless and have
+>> it reviewed there before it gets merged.
+>>
+>> Also the faster it gets into wireless-drivers the faster it can be
+>> available via linux-backports. Seems many companies have used
+>> linux-backports successfully to deal with older kernel versions.
+>
+> The part that is being submitted to wireless drivers is only a small
+> part of the entire effort.
+>
+> Beyond that is the new driver with roughly 120,000 lines of code that
+> have not yet been seen by any reviewers.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-fcc870d76a2c wl3501_cs: fix spelling mistake: "Insupported" -> "Unsupported"
+120 kLOC is a lot, why is the driver so big? I would like to take a
+quick look, is the code available somewhere?
 
 -- 
-https://patchwork.kernel.org/patch/9867579/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
