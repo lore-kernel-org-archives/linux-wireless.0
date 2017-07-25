@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56838 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751042AbdG0LDi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 07:03:38 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from muru.com ([72.249.23.125]:55760 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750980AbdGYL6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Jul 2017 07:58:09 -0400
+Date: Tue, 25 Jul 2017 04:58:06 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>
+Subject: Re: [v3] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170725115805.GU10026@atomide.com> (sfid-20170725_135851_969576_0550E145)
+References: <8665E2433BC68541A24DFFCA87B70F5B36409500@DFRE01.ent.ti.com>
+ <20170725102211.GT10026@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3640DDC7@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-Subject: Re: [for-4.13] brcmfmac: fix memleak due to calling
- brcmf_sdiod_sgtable_alloc() twice
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170727110338.5E36560908@smtp.codeaurora.org> (sfid-20170727_130342_269326_A836F29C)
-Date: Thu, 27 Jul 2017 11:03:38 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3640DDC7@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+* Reizer, Eyal <eyalr@ti.com> [170725 04:33]:
+> > From: Tony Lindgren [mailto:tony@atomide.com]
+> > Hmm so why would we ever even use this bogus nvs file? In addition to
+> > warning,
+> > I think we should just ignore the bogus nvs file completely.
+> > 
+> While it looks bogus, it is still at least a valid mac address and the chip will function
+> Using it.
+> Wilink6/7 doesn't have a  default mac address in hardware (wilink8 does have one)
+> so we need to assign one for it so It can work, even if not optimally until configured 
+> using the calibrator tool and a unique mac address is assigned to it.
 
-> Due to a bugfix in wireless tree and the commit mentioned below a merge
-> was needed which went haywire. So the submitted change resulted in the
-> function brcmf_sdiod_sgtable_alloc() being called twice during the probe
-> thus leaking the memory of the first call.
-> 
-> Cc: stable@vger.kernel.org # 4.6.x
-> Fixes: 4d7928959832 ("brcmfmac: switch to new platform data")
-> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Tested-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+But it's not a unique mac address. What we should do in that case is
+use a random mac address just like many USB devices do.
 
-Patch applied to wireless-drivers.git, thanks.
+Regards,
 
-5f5d03143de5 brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice
-
--- 
-https://patchwork.kernel.org/patch/9864681/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Tony
