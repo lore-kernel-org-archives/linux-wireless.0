@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44356 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751585AbdGZVDX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 17:03:23 -0400
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: russianneuromancer@ya.ru, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Igor Nikolic <nikolic.igor@gmail.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: brcmfmac4356-pcie 4.13 regression (frequent kernel panics) not fixed
- by recent 4.13 regression fix
-Message-ID: <b3b9dd19-a20d-ac4e-70f1-6059e7ec7d20@redhat.com> (sfid-20170726_230327_508256_0ACDC375)
-Date: Wed, 26 Jul 2017 23:03:19 +0200
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:60229 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750757AbdGYSWd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Jul 2017 14:22:33 -0400
+Date: Tue, 25 Jul 2017 11:22:32 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+        Mark Greer <mgreer@animalcreek.com>
+Subject: Re: [PATCH 00/23] neard: Support TI Std & Pro tags, fixups, etc.
+Message-ID: <20170725182232.GA13245@animalcreek.com> (sfid-20170725_202238_056733_D47294C4)
+References: <20170615182516.4508-1-mgreer@animalcreek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170615182516.4508-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Jun 15, 2017 at 11:24:53AM -0700, Mark Greer wrote:
+> This is an assortment of commits that make some fixups, do some general
+> tightening of NDEF data checking, add support for TI Standard and Pro
+> Type 5 tags, and stop issuing the Read Multiple Blocks command when
+> formatting a Type 5 tag.  The reasoning for each change is in the
+> individual commit descriptions.
+> 
+> For convenience, a branch with these commits is available in the
+> submit/updates-v1 branch here:
+> 
+> 	https://github.com/animalcreek/neard.git
+> 
+> Mark Greer (23):
+>   ndef: Add default language ("en") for Text records
+>   ndef: Fix use of uninitialized variable in property_get_type()
+>   ndef: Unrecognized WKTs should return RECORD_TYPE_UNKNOWN
+>   ndef: Verify RTD record type name encodings
+>   ndef: Discard records containing errors
+>   ndef: Validate text data in WKT Text records
+>   adapter: Return '-errno' when socket() call fails
+>   adapter: Return '-errno' when connect() call fails
+>   adapter: Clear timeout handle when check presence timer stopped
+>   adapter: Clear timer handle when DEP timer stopped
+>   adapter: Do not poll when there is an active tag
+>   nfctype2: Don't read tags with bad magic number
+>   nfctype5: Reduce noise when tag is moved out of range
+>   nfctype5: Add space between 'if' and first '('
+>   nfctype5: Remove superfluous parentheses
+>   nfctype5: Rework code that identifies ST Micro Type 5 tags
+>   nfctype5: Add support for TI Standard and Pro Type 5 tag
+>   nfctype5: Remove useless initialization
+>   nfctype5: Don't issue RMB command when formatting
+>   nfctype5: Discard extra byte in RMB response data
+>   nfctype5: Fix formatting
+>   nfctools: Move nciattach macros & enums to nciattach.c
+>   nfc_copy: Update nfc_copy.h to match Linux kernel's version
+> 
+>  include/nfc_copy.h          |  63 +++++----
+>  plugins/nfctype2.c          |   1 +
+>  plugins/nfctype5.c          | 320 ++++++++++++++++++++++++--------------------
+>  src/adapter.c               |  15 ++-
+>  src/ndef.c                  |  43 +++++-
+>  tools/nciattach.c           |  12 ++
+>  tools/nfctool/llcp-decode.c |  14 +-
+>  tools/nfctool/snep-decode.c |  12 +-
+>  8 files changed, 290 insertions(+), 190 deletions(-)
 
-I've been seeing frequent kernel panics on wifi activity
-(scp-ing a lot of files) with 4.13 on 2 different systems
-which both use a brcmfmac4356-pcie wifi chip.
-
-This is with this fix:
-https://www.spinics.net/lists/linux-wireless/msg164178.html
-already applied.
-
-Here is a picture of the panic:
-
-https://fedorapeople.org/~jwrdegoede/brcmfmac4356-pcie-4.13-panic.jpg
-
-Reverting commit 270a6c1f65fe ("brcmfmac: rework headroom check in .start_xmit()"):
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit?id=270a6c1f65fe68a28a5d39cd405592c550b496c7
-
-seems to fix this (I can no longer quickly reproduce the panic
-by scp-ing a large amount of files).
-
-Note I've first reverted the:
-https://www.spinics.net/lists/linux-wireless/msg164178.html
-fix so that I could cleanly revert commit 270a6c1f65fe.
-
-Given that no code seems to use the statics commit 270a6c1f65fe
-offers and it has been the cause of 2 different regressions now,
-it might be best to just revert 270a6c1f65fe for 4.13.
-
-Regards,
-
-Hans
+Ping?
