@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45532 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751852AbdGDOKm (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33611 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756746AbdGYBOS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2017 10:10:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org,
+        Mon, 24 Jul 2017 21:14:18 -0400
+Received: by mail-pf0-f174.google.com with SMTP id s70so53108258pfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:18 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>,
         Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/14] mwifiex: re-register wiphy across reset
-References: <20170525001119.64791-1-briannorris@chromium.org>
-        <20170525001119.64791-5-briannorris@chromium.org>
-        <87fufk2hmm.fsf@purkki.adurom.net>
-        <20170601173954.GA138807@google.com> <87inka77md.fsf@codeaurora.org>
-        <1496999018.2424.5.camel@sipsolutions.net>
-        <20170621182706.GB92340@google.com>
-        <1498136554.2246.9.camel@sipsolutions.net>
-        <20170627204858.GB93674@google.com>
-Date: Tue, 04 Jul 2017 17:10:24 +0300
-In-Reply-To: <20170627204858.GB93674@google.com> (Brian Norris's message of
-        "Tue, 27 Jun 2017 13:48:59 -0700")
-Message-ID: <87podgi97z.fsf@kamboji.qca.qualcomm.com> (sfid-20170704_161105_261969_1DE0E3A4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 07/20] mwifiex: fixup init_channel_scan_gap error case
+Date: Mon, 24 Jul 2017 18:13:23 -0700
+Message-Id: <20170725011336.99993-8-briannorris@chromium.org> (sfid-20170725_032001_756856_344AEB4F)
+In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
+References: <20170725011336.99993-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(I was on vacation and inbox exploded again)
+In reading through _mwifiex_fw_dpc(), I noticed that after we've
+registered our wiphy, we still have error paths that don't free it back
+up. Let's do that.
 
-Brian Norris <briannorris@chromium.org> writes:
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v2: no change
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> On Thu, Jun 22, 2017 at 03:02:34PM +0200, Johannes Berg wrote:
->> On Wed, 2017-06-21 at 11:27 -0700, Brian Norris wrote:
->
->> > > Without checking the code now, it seems entirely plausible that
->> > > this is
->> > > holding some lock that would lock out the control path entirely,
->> > > for
->> > > the duration until the wiphy is actually unregistered?
->> > > 
->> > > Actually, you can't unregister with the relevant locks held
->> > > (without
->> > > causing deadlocks), so perhaps it's marking the wiphy as
->> > > unavailable so
->> > > that all operations fail?
->> > 
->> > One of the above two sounds along the right line. But it's something
->> > I couldn't really figure out how to do quite right.
->> > 
->> > Dumb question: how would I mark the wiphy as unavailable? Is there
->> > something I can do at the cfg80211 level? Or would I really have to
->> > guard all the cfg80211 entry points into mwifiex with a flag or lock?
->> 
->> There isn't really a good way to do this. You can, of course, call
->> wiphy_unregister(), but if you could do that you'd already have the
->> problem solved, I think?
->
-> That's probably along the right track. There are still some things we'd
-> need to do properly before that though, and this is where all the
-> problems are so far. (Also, this is what Kalle was already objecting to;
-> he didn't think we should be unregistering/recreating the wiphy, but I
-> think he ended up softening on that a bit.)
-
-Just to clarify I was more like hoping there would be a better way to do
-it, not really objecting the current method, but I didn't realise that
-of course it's harder to do a transparent firmware restart with fullmac
-design. And certainly what are you doing now is much much better than
-doing nothing after a firmware crash.
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 77e491720664..0448dcc07139 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -588,7 +588,7 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	if (mwifiex_init_channel_scan_gap(adapter)) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "could not init channel stats table\n");
+-		goto err_init_fw;
++		goto err_init_chan_scan;
+ 	}
+ 
+ 	if (driver_mode) {
+@@ -636,6 +636,7 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 
+ err_add_intf:
+ 	vfree(adapter->chan_stats);
++err_init_chan_scan:
+ 	wiphy_unregister(adapter->wiphy);
+ 	wiphy_free(adapter->wiphy);
+ err_init_fw:
 -- 
-Kalle Valo
+2.14.0.rc0.284.gd933b75aa4-goog
