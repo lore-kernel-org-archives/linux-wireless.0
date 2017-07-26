@@ -1,193 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:56134 "EHLO mnementh.co.uk"
+Received: from [217.148.43.144] ([217.148.43.144]:49560 "EHLO mnementh.co.uk"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933714AbdGSTIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:08:38 -0400
+        id S1751466AbdGZUqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:46 -0400
 From: Ian Molton <ian@mnementh.co.uk>
 To: linux-wireless@vger.kernel.org
 Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com
-Subject: [PATCH 03/34] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-Date: Wed, 19 Jul 2017 20:07:51 +0100
-Message-Id: <20170719190822.10857-4-ian@mnementh.co.uk> (sfid-20170719_210846_373734_750444D5)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Subject: [PATCH 14/34] brcmfmac: Remove brcmf_sdiod_addrprep()
+Date: Wed, 26 Jul 2017 21:25:37 +0100
+Message-Id: <20170726202557.15632-15-ian@mnementh.co.uk> (sfid-20170726_230043_727953_3C2778CA)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	This large function is concealing a LOT of obscure logic about
-how the hardware functions. Time to split it up.
+This function has become trivial enough that it may as well be pushed into
+its callers, which has the side-benefit of clarifying what's going on.
 
-This first patch splits the function into two pieces - read and write,
-doing away with the rw flag in the process.
+Remove it, and rename brcmf_sdiod_set_sbaddr_window() to
+brcmf_sdiod_set_backplane_window() as it's easier to understand.
 
 Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+
+# Conflicts:
+#	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
- 1 file changed, 73 insertions(+), 21 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 78 ++++++++++++----------
+ 1 file changed, 44 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index db983168ceba..5b9a21d6b6b2 100644
+index b2945b463fd3..24775869aee4 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -300,8 +300,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	return ret;
+@@ -228,41 +228,25 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
  }
  
--static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
--				   u8 regsz, void *data, bool write)
-+static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+				   u8 regsz, void *data)
+-static int brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
+-					 u32 address)
++static int
++brcmf_sdiod_set_backplane_window(struct brcmf_sdio_dev *sdiodev, u32 addr)
  {
- 	u8 func;
- 	s32 retry = 0;
-@@ -322,13 +322,66 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		func = SDIO_FUNC_1;
++	u32 v, bar0 = addr & SBSDIO_SBWINDOW_MASK;
+ 	int err = 0, i;
+-	u32 addr;
  
- 	do {
--		if (!write)
--			memset(data, 0, regsz);
- 		/* for retry wait for 1 ms till bus get settled down */
- 		if (retry)
- 			usleep_range(1000, 2000);
-+
-+		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
-+					       data, true);
-+
-+	} while (ret != 0 && ret != -ENOMEDIUM &&
-+		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+
-+	if (ret == -ENOMEDIUM)
-+		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+	else if (ret != 0) {
-+		/*
-+		 * SleepCSR register access can fail when
-+		 * waking up the device so reduce this noise
-+		 * in the logs.
-+		 */
-+		if (addr != SBSDIO_FUNC1_SLEEPCSR)
-+			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
-+		else
-+			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
-+	}
-+
-+	return ret;
-+}
-+
-+static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+				   u8 regsz, void *data)
-+{
-+	u8 func;
-+	s32 retry = 0;
-+	int ret;
-+
-+	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
-+		return -ENOMEDIUM;
-+
-+	/*
-+	 * figure out how to read the register based on address range
-+	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
-+	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
-+	 * The rest: function 1 silicon backplane core registers
-+	 */
-+	if ((addr & ~REG_F0_REG_MASK) == 0)
-+		func = SDIO_FUNC_0;
-+	else
-+		func = SDIO_FUNC_1;
-+
-+	do {
-+		memset(data, 0, regsz);
-+
-+		/* for retry wait for 1 ms till bus get settled down */
-+		if (retry)
-+			usleep_range(1000, 2000);
-+
- 		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, write);
-+					       data, false);
-+
- 	} while (ret != 0 && ret != -ENOMEDIUM &&
- 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
+-	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+-		return -ENOMEDIUM;
++	if (bar0 == sdiodev->sbwad)
++		return 0;
  
-@@ -341,12 +394,13 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		 * in the logs.
- 		 */
- 		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", func, addr, ret);
-+			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
- 		else
--			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", func, addr, ret);
-+			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
- 	}
-+
- 	return ret;
+-	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
++	v = bar0 >> 8;
+ 
+-	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
++	for (i = 0 ; i < 3 && !err ; i++, v >>= 8)
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
+-				   addr & 0xff, &err);
+-
+-	return err;
+-}
+-
+-static int brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
+-{
+-	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+-	int err = 0;
+-
+-	if (bar0 != sdiodev->sbwad) {
+-		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
+-		if (err)
+-			return err;
++				   v & 0xff, &err);
+ 
++	if (!err)
+ 		sdiodev->sbwad = bar0;
+-	}
+-
+-	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	return 0;
++	return err;
  }
  
-@@ -364,13 +418,11 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- 	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
- 
- 	for (i = 0; i < 3; i++) {
--		err = brcmf_sdiod_regrw_helper(sdiodev,
--					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       1, &addr[i], true);
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
-+					&err);
- 		if (err) {
- 			brcmf_err("failed at addr: 0x%0x\n",
- 				  SBSDIO_FUNC1_SBADDRLOW + i);
--			break;
- 		}
- 	}
- 
-@@ -405,8 +457,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+@@ -270,11 +254,17 @@ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	u32 data = 0;
  	int retval;
  
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
--					  false);
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
++	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
++	if (retval)
++		goto out;
++
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
  
+ 	if (!retval)
+ 		data = sdio_readl(sdiodev->func[1], addr, &retval);
+ 
++out:
  	if (ret)
-@@ -424,8 +475,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
--					  false);
-+
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
-+
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 		*ret = retval;
  
- done:
-@@ -441,8 +493,8 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+@@ -286,11 +276,17 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ {
  	int retval;
  
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
--					  true);
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
++	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
++	if (retval)
++		goto out;
 +
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!retval)
+ 		sdio_writel(sdiodev->func[1], data, addr, &retval);
+ 
++out:
  	if (ret)
  		*ret = retval;
  }
-@@ -456,8 +508,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
+@@ -538,10 +534,13 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
+ 	if (err)
  		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
--					  true);
+ 
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
 +
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+ 	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
  
  done:
- 	if (ret)
+@@ -559,10 +558,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+ 		  addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
+ 	if (err)
+ 		goto done;
+ 
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
+ 	if (pktq->qlen == 1)
+ 		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
+ 					    pktq->next);
+@@ -604,7 +606,12 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 
+ 	memcpy(mypkt->data, buf, nbytes);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
++	if (err)
++		return err;
++
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!err)
+ 		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+@@ -624,10 +631,13 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, &addr);
++	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
+ 	if (err)
+ 		return err;
+ 
++	addr &= SBSDIO_SB_OFT_ADDR_MASK;
++	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++
+ 	if (pktq->qlen == 1 || !sdiodev->sg_support)
+ 		skb_queue_walk(pktq, skb) {
+ 			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
+@@ -671,7 +681,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	/* Do the transfer(s) */
+ 	while (size) {
+ 		/* Set the backplane window to include the start address */
+-		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
++		err = brcmf_sdiod_set_backplane_window(sdiodev, address);
+ 		if (err)
+ 			break;
+ 
+@@ -714,7 +724,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	dev_kfree_skb(pkt);
+ 
+ 	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdiod_set_sbaddr_window(sdiodev, sdiodev->sbwad))
++	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
+ 		brcmf_err("FAILED to set window back to 0x%x\n",
+ 			  sdiodev->sbwad);
+ 
 -- 
 2.11.0
