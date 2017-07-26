@@ -1,1160 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40822 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751725AbdG1OX7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:23:59 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:14 +0300
-Message-Id: <20170728142337.19183-2-luca@coelho.fi> (sfid-20170728_162404_673152_AF9A180D)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 01/24] iwlwifi: refactor out paging code
+Received: from [217.148.43.144] ([217.148.43.144]:33896 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751053AbdGZU0M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:26:12 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 03/34] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
+Date: Wed, 26 Jul 2017 21:25:26 +0100
+Message-Id: <20170726202557.15632-4-ian@mnementh.co.uk> (sfid-20170726_222633_124929_7CBC0710)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+	This large function is concealing a LOT of obscure logic about
+how the hardware functions. Time to split it up.
 
-Refactor the paging code from mvm to be used by different opmodes.
+This first patch splits the function into two pieces - read and write,
+doing away with the rw flag in the process.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/intel/iwlwifi/Makefile     |   1 +
- drivers/net/wireless/intel/iwlwifi/fw/api.h     |  43 +++
- drivers/net/wireless/intel/iwlwifi/fw/paging.c  | 417 ++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h |  99 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h |  44 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c |  12 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 344 +------------------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  12 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c    |   2 +
- 9 files changed, 572 insertions(+), 402 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/paging.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
+ 1 file changed, 73 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index 20bd261223af..186a5b2fb6e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -11,6 +11,7 @@ iwlwifi-$(CONFIG_IWLDVM) += cfg/1000.o cfg/2000.o cfg/5000.o cfg/6000.o
- iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
- iwlwifi-objs		+= iwl-trans.o
- iwlwifi-objs		+= fw/notif-wait.o
-+iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 2b441ce91d5f..1ee0f91b6c50 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 	return ret;
+ }
  
- iwlwifi-objs += $(iwlwifi-m)
+-static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-				   u8 regsz, void *data, bool write)
++static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				 u8 regsz, void *data)
+ {
+ 	u8 func;
+ 	s32 retry = 0;
+@@ -324,13 +324,66 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		func = SDIO_FUNC_1;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api.h b/drivers/net/wireless/intel/iwlwifi/fw/api.h
-index 0e107f916ce3..f9bcbaf87ce2 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api.h
-@@ -226,4 +226,47 @@ struct iwl_phy_db_cmd {
- 	u8 data[];
- } __packed;
- 
-+#define NUM_OF_FW_PAGING_BLOCKS	33 /* 32 for data and 1 block for CSS */
+ 	do {
+-		if (!write)
+-			memset(data, 0, regsz);
+ 		/* for retry wait for 1 ms till bus get settled down */
+ 		if (retry)
+ 			usleep_range(1000, 2000);
 +
-+/**
-+ * struct iwl_fw_paging_cmd - paging layout
-+ *
-+ * Send to FW the paging layout in the driver.
-+ *
-+ * @flags: various flags for the command
-+ * @block_size: the block size in powers of 2
-+ * @block_num: number of blocks specified in the command.
-+ * @device_phy_addr: virtual addresses from device side
-+ */
-+struct iwl_fw_paging_cmd {
-+	__le32 flags;
-+	__le32 block_size;
-+	__le32 block_num;
-+	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
-+} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
++		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
++					       data, true);
 +
-+/**
-+ * enum iwl_fw_item_id - FW item IDs
-+ *
-+ * @IWL_FW_ITEM_ID_PAGING: Address of the pages that the FW will upload
-+ *	download
-+ */
-+enum iwl_fw_item_id {
-+	IWL_FW_ITEM_ID_PAGING = 3,
-+};
++	} while (ret != 0 && ret != -ENOMEDIUM &&
++		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
 +
-+/**
-+ * struct iwl_fw_get_item_cmd - get an item from the fw
-+ * @item_id: ID of item to obtain, see &enum iwl_fw_item_id
-+ */
-+struct iwl_fw_get_item_cmd {
-+	__le32 item_id;
-+} __packed; /* FW_GET_ITEM_CMD_API_S_VER_1 */
-+
-+struct iwl_fw_get_item_resp {
-+	__le32 item_id;
-+	__le32 item_byte_cnt;
-+	__le32 item_val;
-+} __packed; /* FW_GET_ITEM_RSP_S_VER_1 */
-+
- #endif /* __iwl_fw_api_h__*/
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/paging.c b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-new file mode 100644
-index 000000000000..2f4044922be3
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-@@ -0,0 +1,417 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include "iwl-drv.h"
-+#include "runtime.h"
-+
-+/* FIXME */
-+#define FW_PAGING_BLOCK_CMD 0x4f
-+#define FW_GET_ITEM_CMD 0x1a
-+
-+void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt)
-+{
-+	int i;
-+
-+	if (!fwrt->fw_paging_db[0].fw_paging_block)
-+		return;
-+
-+	for (i = 0; i < NUM_OF_FW_PAGING_BLOCKS; i++) {
-+		struct iwl_fw_paging *paging = &fwrt->fw_paging_db[i];
-+
-+		if (!paging->fw_paging_block) {
-+			IWL_DEBUG_FW(fwrt,
-+				     "Paging: block %d already freed, continue to next page\n",
-+				     i);
-+
-+			continue;
-+		}
-+		dma_unmap_page(fwrt->trans->dev, paging->fw_paging_phys,
-+			       paging->fw_paging_size, DMA_BIDIRECTIONAL);
-+
-+		__free_pages(paging->fw_paging_block,
-+			     get_order(paging->fw_paging_size));
-+		paging->fw_paging_block = NULL;
-+	}
-+	kfree(fwrt->trans->paging_download_buf);
-+	fwrt->trans->paging_download_buf = NULL;
-+	fwrt->trans->paging_db = NULL;
-+
-+	memset(fwrt->fw_paging_db, 0, sizeof(fwrt->fw_paging_db));
-+}
-+IWL_EXPORT_SYMBOL(iwl_free_fw_paging);
-+
-+static int iwl_alloc_fw_paging_mem(struct iwl_fw_runtime *fwrt,
-+				   const struct fw_img *image)
-+{
-+	struct page *block;
-+	dma_addr_t phys = 0;
-+	int blk_idx, order, num_of_pages, size, dma_enabled;
-+
-+	if (fwrt->fw_paging_db[0].fw_paging_block)
-+		return 0;
-+
-+	dma_enabled = is_device_dma_capable(fwrt->trans->dev);
-+
-+	/* ensure BLOCK_2_EXP_SIZE is power of 2 of PAGING_BLOCK_SIZE */
-+	BUILD_BUG_ON(BIT(BLOCK_2_EXP_SIZE) != PAGING_BLOCK_SIZE);
-+
-+	num_of_pages = image->paging_mem_size / FW_PAGING_SIZE;
-+	fwrt->num_of_paging_blk =
-+		DIV_ROUND_UP(num_of_pages, NUM_OF_PAGE_PER_GROUP);
-+	fwrt->num_of_pages_in_last_blk =
-+		num_of_pages -
-+		NUM_OF_PAGE_PER_GROUP * (fwrt->num_of_paging_blk - 1);
-+
-+	IWL_DEBUG_FW(fwrt,
-+		     "Paging: allocating mem for %d paging blocks, each block holds 8 pages, last block holds %d pages\n",
-+		     fwrt->num_of_paging_blk,
-+		     fwrt->num_of_pages_in_last_blk);
-+
-+	/*
-+	 * Allocate CSS and paging blocks in dram.
-+	 */
-+	for (blk_idx = 0; blk_idx < fwrt->num_of_paging_blk + 1; blk_idx++) {
-+		/* For CSS allocate 4KB, for others PAGING_BLOCK_SIZE (32K) */
-+		size = blk_idx ? PAGING_BLOCK_SIZE : FW_PAGING_SIZE;
-+		order = get_order(size);
-+		block = alloc_pages(GFP_KERNEL, order);
-+		if (!block) {
-+			/* free all the previous pages since we failed */
-+			iwl_free_fw_paging(fwrt);
-+			return -ENOMEM;
-+		}
-+
-+		fwrt->fw_paging_db[blk_idx].fw_paging_block = block;
-+		fwrt->fw_paging_db[blk_idx].fw_paging_size = size;
-+
-+		if (dma_enabled) {
-+			phys = dma_map_page(fwrt->trans->dev, block, 0,
-+					    PAGE_SIZE << order,
-+					    DMA_BIDIRECTIONAL);
-+			if (dma_mapping_error(fwrt->trans->dev, phys)) {
-+				/*
-+				 * free the previous pages and the current one
-+				 * since we failed to map_page.
-+				 */
-+				iwl_free_fw_paging(fwrt);
-+				return -ENOMEM;
-+			}
-+			fwrt->fw_paging_db[blk_idx].fw_paging_phys = phys;
-+		} else {
-+			fwrt->fw_paging_db[blk_idx].fw_paging_phys =
-+				PAGING_ADDR_SIG |
-+				blk_idx << BLOCK_2_EXP_SIZE;
-+		}
-+
-+		if (!blk_idx)
-+			IWL_DEBUG_FW(fwrt,
-+				     "Paging: allocated 4K(CSS) bytes (order %d) for firmware paging.\n",
-+				     order);
++	if (ret == -ENOMEDIUM) {
++		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
++	} else if (ret != 0) {
++		/*
++		 * SleepCSR register access can fail when
++		 * waking up the device so reduce this noise
++		 * in the logs.
++		 */
++		if (addr != SBSDIO_FUNC1_SLEEPCSR)
++			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
 +		else
-+			IWL_DEBUG_FW(fwrt,
-+				     "Paging: allocated 32K bytes (order %d) for firmware paging.\n",
-+				     order);
++			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
 +	}
-+
-+	return 0;
-+}
-+
-+static int iwl_fill_paging_mem(struct iwl_fw_runtime *fwrt,
-+			       const struct fw_img *image)
-+{
-+	int sec_idx, idx;
-+	u32 offset = 0;
-+
-+	/*
-+	 * find where is the paging image start point:
-+	 * if CPU2 exist and it's in paging format, then the image looks like:
-+	 * CPU1 sections (2 or more)
-+	 * CPU1_CPU2_SEPARATOR_SECTION delimiter - separate between CPU1 to CPU2
-+	 * CPU2 sections (not paged)
-+	 * PAGING_SEPARATOR_SECTION delimiter - separate between CPU2
-+	 * non paged to CPU2 paging sec
-+	 * CPU2 paging CSS
-+	 * CPU2 paging image (including instruction and data)
-+	 */
-+	for (sec_idx = 0; sec_idx < image->num_sec; sec_idx++) {
-+		if (image->sec[sec_idx].offset == PAGING_SEPARATOR_SECTION) {
-+			sec_idx++;
-+			break;
-+		}
-+	}
-+
-+	/*
-+	 * If paging is enabled there should be at least 2 more sections left
-+	 * (one for CSS and one for Paging data)
-+	 */
-+	if (sec_idx >= image->num_sec - 1) {
-+		IWL_ERR(fwrt, "Paging: Missing CSS and/or paging sections\n");
-+		iwl_free_fw_paging(fwrt);
-+		return -EINVAL;
-+	}
-+
-+	/* copy the CSS block to the dram */
-+	IWL_DEBUG_FW(fwrt, "Paging: load paging CSS to FW, sec = %d\n",
-+		     sec_idx);
-+
-+	memcpy(page_address(fwrt->fw_paging_db[0].fw_paging_block),
-+	       image->sec[sec_idx].data,
-+	       fwrt->fw_paging_db[0].fw_paging_size);
-+	dma_sync_single_for_device(fwrt->trans->dev,
-+				   fwrt->fw_paging_db[0].fw_paging_phys,
-+				   fwrt->fw_paging_db[0].fw_paging_size,
-+				   DMA_BIDIRECTIONAL);
-+
-+	IWL_DEBUG_FW(fwrt,
-+		     "Paging: copied %d CSS bytes to first block\n",
-+		     fwrt->fw_paging_db[0].fw_paging_size);
-+
-+	sec_idx++;
-+
-+	/*
-+	 * copy the paging blocks to the dram
-+	 * loop index start from 1 since that CSS block already copied to dram
-+	 * and CSS index is 0.
-+	 * loop stop at num_of_paging_blk since that last block is not full.
-+	 */
-+	for (idx = 1; idx < fwrt->num_of_paging_blk; idx++) {
-+		struct iwl_fw_paging *block = &fwrt->fw_paging_db[idx];
-+
-+		memcpy(page_address(block->fw_paging_block),
-+		       image->sec[sec_idx].data + offset,
-+		       block->fw_paging_size);
-+		dma_sync_single_for_device(fwrt->trans->dev,
-+					   block->fw_paging_phys,
-+					   block->fw_paging_size,
-+					   DMA_BIDIRECTIONAL);
-+
-+		IWL_DEBUG_FW(fwrt,
-+			     "Paging: copied %d paging bytes to block %d\n",
-+			     fwrt->fw_paging_db[idx].fw_paging_size,
-+			     idx);
-+
-+		offset += fwrt->fw_paging_db[idx].fw_paging_size;
-+	}
-+
-+	/* copy the last paging block */
-+	if (fwrt->num_of_pages_in_last_blk > 0) {
-+		struct iwl_fw_paging *block = &fwrt->fw_paging_db[idx];
-+
-+		memcpy(page_address(block->fw_paging_block),
-+		       image->sec[sec_idx].data + offset,
-+		       FW_PAGING_SIZE * fwrt->num_of_pages_in_last_blk);
-+		dma_sync_single_for_device(fwrt->trans->dev,
-+					   block->fw_paging_phys,
-+					   block->fw_paging_size,
-+					   DMA_BIDIRECTIONAL);
-+
-+		IWL_DEBUG_FW(fwrt,
-+			     "Paging: copied %d pages in the last block %d\n",
-+			     fwrt->num_of_pages_in_last_blk, idx);
-+	}
-+
-+	return 0;
-+}
-+
-+static int iwl_save_fw_paging(struct iwl_fw_runtime *fwrt,
-+			      const struct fw_img *fw)
-+{
-+	int ret;
-+
-+	ret = iwl_alloc_fw_paging_mem(fwrt, fw);
-+	if (ret)
-+		return ret;
-+
-+	return iwl_fill_paging_mem(fwrt, fw);
-+}
-+
-+/* send paging cmd to FW in case CPU2 has paging image */
-+static int iwl_send_paging_cmd(struct iwl_fw_runtime *fwrt,
-+			       const struct fw_img *fw)
-+{
-+	struct iwl_fw_paging_cmd paging_cmd = {
-+		.flags = cpu_to_le32(PAGING_CMD_IS_SECURED |
-+				     PAGING_CMD_IS_ENABLED |
-+				     (fwrt->num_of_pages_in_last_blk <<
-+				      PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
-+		.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
-+		.block_num = cpu_to_le32(fwrt->num_of_paging_blk),
-+	};
-+	struct iwl_host_cmd hcmd = {
-+		.id = iwl_cmd_id(FW_PAGING_BLOCK_CMD, IWL_ALWAYS_LONG_GROUP, 0),
-+		.len = { sizeof(paging_cmd), },
-+		.data = { &paging_cmd, },
-+	};
-+	int blk_idx;
-+
-+	/* loop for for all paging blocks + CSS block */
-+	for (blk_idx = 0; blk_idx < fwrt->num_of_paging_blk + 1; blk_idx++) {
-+		dma_addr_t addr = fwrt->fw_paging_db[blk_idx].fw_paging_phys;
-+		__le32 phy_addr;
-+
-+		addr = addr >> PAGE_2_EXP_SIZE;
-+		phy_addr = cpu_to_le32(addr);
-+		paging_cmd.device_phy_addr[blk_idx] = phy_addr;
-+	}
-+
-+	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
-+}
-+
-+/*
-+ * Send paging item cmd to FW in case CPU2 has paging image
-+ */
-+static int iwl_trans_get_paging_item(struct iwl_fw_runtime *fwrt)
-+{
-+	int ret;
-+	struct iwl_fw_get_item_cmd fw_get_item_cmd = {
-+		.item_id = cpu_to_le32(IWL_FW_ITEM_ID_PAGING),
-+	};
-+	struct iwl_fw_get_item_resp *item_resp;
-+	struct iwl_host_cmd cmd = {
-+		.id = iwl_cmd_id(FW_GET_ITEM_CMD, IWL_ALWAYS_LONG_GROUP, 0),
-+		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
-+		.data = { &fw_get_item_cmd, },
-+		.len = { sizeof(fw_get_item_cmd), },
-+	};
-+
-+	ret = iwl_trans_send_cmd(fwrt->trans, &cmd);
-+	if (ret) {
-+		IWL_ERR(fwrt,
-+			"Paging: Failed to send FW_GET_ITEM_CMD cmd (err = %d)\n",
-+			ret);
-+		return ret;
-+	}
-+
-+	item_resp = (void *)((struct iwl_rx_packet *)cmd.resp_pkt)->data;
-+	if (item_resp->item_id != cpu_to_le32(IWL_FW_ITEM_ID_PAGING)) {
-+		IWL_ERR(fwrt,
-+			"Paging: got wrong item in FW_GET_ITEM_CMD resp (item_id = %u)\n",
-+			le32_to_cpu(item_resp->item_id));
-+		ret = -EIO;
-+		goto exit;
-+	}
-+
-+	/* Add an extra page for headers */
-+	fwrt->trans->paging_download_buf = kzalloc(PAGING_BLOCK_SIZE +
-+						  FW_PAGING_SIZE,
-+						  GFP_KERNEL);
-+	if (!fwrt->trans->paging_download_buf) {
-+		ret = -ENOMEM;
-+		goto exit;
-+	}
-+	fwrt->trans->paging_req_addr = le32_to_cpu(item_resp->item_val);
-+	fwrt->trans->paging_db = fwrt->fw_paging_db;
-+	IWL_DEBUG_FW(fwrt,
-+		     "Paging: got paging request address (paging_req_addr 0x%08x)\n",
-+		     fwrt->trans->paging_req_addr);
-+
-+exit:
-+	iwl_free_resp(&cmd);
 +
 +	return ret;
 +}
 +
-+int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type)
++static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				u8 regsz, void *data)
 +{
-+	const struct fw_img *fw = &fwrt->fw->img[type];
++	u8 func;
++	s32 retry = 0;
 +	int ret;
 +
-+	if (fwrt->trans->cfg->gen2)
-+		return 0;
++	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
++		return -ENOMEDIUM;
 +
 +	/*
-+	 * Configure and operate fw paging mechanism.
-+	 * The driver configures the paging flow only once.
-+	 * The CPU2 paging image is included in the IWL_UCODE_INIT image.
++	 * figure out how to read the register based on address range
++	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
++	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
++	 * The rest: function 1 silicon backplane core registers
 +	 */
-+	if (!fw->paging_mem_size)
-+		return 0;
++	if ((addr & ~REG_F0_REG_MASK) == 0)
++		func = SDIO_FUNC_0;
++	else
++		func = SDIO_FUNC_1;
 +
-+	/*
-+	 * When dma is not enabled, the driver needs to copy / write
-+	 * the downloaded / uploaded page to / from the smem.
-+	 * This gets the location of the place were the pages are
-+	 * stored.
-+	 */
-+	if (!is_device_dma_capable(fwrt->trans->dev)) {
-+		ret = iwl_trans_get_paging_item(fwrt);
-+		if (ret) {
-+			IWL_ERR(fwrt, "failed to get FW paging item\n");
-+			return ret;
-+		}
-+	}
++	do {
++		memset(data, 0, regsz);
 +
-+	ret = iwl_save_fw_paging(fwrt, fw);
-+	if (ret) {
-+		IWL_ERR(fwrt, "failed to save the FW paging image\n");
-+		return ret;
-+	}
++		/* for retry wait for 1 ms till bus get settled down */
++		if (retry)
++			usleep_range(1000, 2000);
 +
-+	ret = iwl_send_paging_cmd(fwrt, fw);
-+	if (ret) {
-+		IWL_ERR(fwrt, "failed to send the paging cmd\n");
-+		iwl_free_fw_paging(fwrt);
-+		return ret;
-+	}
+ 		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
+-					       data, write);
++					       data, false);
 +
-+	return 0;
-+}
-+IWL_EXPORT_SYMBOL(iwl_init_paging);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-new file mode 100644
-index 000000000000..c5d564305d30
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -0,0 +1,99 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#ifndef __iwl_fw_runtime_h__
-+#define __iwl_fw_runtime_h__
-+
-+#include "iwl-config.h"
-+#include "iwl-trans.h"
-+#include "img.h"
-+#include "api.h"
-+
-+/**
-+ * struct iwl_fw_runtime - runtime data for firmware
-+ * @fw: firmware image
-+ * @cfg: NIC configuration
-+ * @dev: device pointer
-+ * @fw_paging_db: paging database
-+ * @num_of_paging_blk: number of paging blocks
-+ * @num_of_pages_in_last_blk: number of pages in the last block
-+ */
-+struct iwl_fw_runtime {
-+	struct iwl_trans *trans;
-+	const struct iwl_fw *fw;
-+	struct device *dev;
-+
-+	/* Paging */
-+	struct iwl_fw_paging fw_paging_db[NUM_OF_FW_PAGING_BLOCKS];
-+	u16 num_of_paging_blk;
-+	u16 num_of_pages_in_last_blk;
-+};
-+
-+static inline void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt,
-+				       struct iwl_trans *trans,
-+				       const struct iwl_fw *fw)
-+{
-+	memset(fwrt, 0, sizeof(*fwrt));
-+	fwrt->trans = trans;
-+	fwrt->fw = fw;
-+	fwrt->dev = trans->dev;
-+}
-+
-+int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type);
-+void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt);
-+
-+#endif /* __iwl_fw_runtime_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index aad265dcfaf5..e1a29cde92d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -1000,44 +1000,6 @@ struct iwl_nvm_access_cmd {
- 	u8 data[];
- } __packed; /* NVM_ACCESS_CMD_API_S_VER_2 */
+ 	} while (ret != 0 && ret != -ENOMEDIUM &&
+ 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
  
--#define NUM_OF_FW_PAGING_BLOCKS	33 /* 32 for data and 1 block for CSS */
--
--/**
-- * struct iwl_fw_paging_cmd - paging layout
-- *
-- * (FW_PAGING_BLOCK_CMD = 0x4f)
-- *
-- * Send to FW the paging layout in the driver.
-- *
-- * @flags: various flags for the command
-- * @block_size: the block size in powers of 2
-- * @block_num: number of blocks specified in the command.
-- * @device_phy_addr: virtual addresses from device side
-- */
--struct iwl_fw_paging_cmd {
--	__le32 flags;
--	__le32 block_size;
--	__le32 block_num;
--	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
--} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
--
--/*
-- * Fw items ID's
-- *
-- * @IWL_FW_ITEM_ID_PAGING: Address of the pages that the FW will upload
-- *	download
-- */
--enum iwl_fw_item_id {
--	IWL_FW_ITEM_ID_PAGING = 3,
--};
--
--/*
-- * struct iwl_fw_get_item_cmd - get an item from the fw
-- */
--struct iwl_fw_get_item_cmd {
--	__le32 item_id;
--} __packed; /* FW_GET_ITEM_CMD_API_S_VER_1 */
--
- #define CONT_REC_COMMAND_SIZE	80
- #define ENABLE_CONT_RECORDING	0x15
- #define DISABLE_CONT_RECORDING	0x16
-@@ -1058,12 +1020,6 @@ struct iwl_continuous_record_cmd {
- 		sizeof(struct iwl_continuous_record_mode)];
- } __packed;
- 
--struct iwl_fw_get_item_resp {
--	__le32 item_id;
--	__le32 item_byte_cnt;
--	__le32 item_val;
--} __packed; /* FW_GET_ITEM_RSP_S_VER_1 */
--
- /**
-  * struct iwl_nvm_access_resp_ver2 - response to NVM_ACCESS_CMD
-  * @offset: offset in bytes into the section
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 1602b360353c..ba32753fda5a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -694,8 +694,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	/* Make room for fw's virtual image pages, if it exists */
- 	if (!mvm->trans->cfg->gen2 &&
- 	    mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
--	    mvm->fw_paging_db[0].fw_paging_block)
--		file_len += mvm->num_of_paging_blk *
-+	    mvm->fwrt.fw_paging_db[0].fw_paging_block)
-+		file_len += mvm->fwrt.num_of_paging_blk *
- 			(sizeof(*dump_data) +
- 			 sizeof(struct iwl_fw_error_dump_paging) +
- 			 PAGING_BLOCK_SIZE);
-@@ -833,12 +833,12 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	/* Dump fw's virtual image */
- 	if (!mvm->trans->cfg->gen2 &&
- 	    mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
--	    mvm->fw_paging_db[0].fw_paging_block) {
--		for (i = 1; i < mvm->num_of_paging_blk + 1; i++) {
-+	    mvm->fwrt.fw_paging_db[0].fw_paging_block) {
-+		for (i = 1; i < mvm->fwrt.num_of_paging_blk + 1; i++) {
- 			struct iwl_fw_error_dump_paging *paging;
- 			struct page *pages =
--				mvm->fw_paging_db[i].fw_paging_block;
--			dma_addr_t addr = mvm->fw_paging_db[i].fw_paging_phys;
-+				mvm->fwrt.fw_paging_db[i].fw_paging_block;
-+			dma_addr_t addr = mvm->fwrt.fw_paging_db[i].fw_paging_phys;
- 
- 			dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PAGING);
- 			dump_data->len = cpu_to_le32(sizeof(*paging) +
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 79e7a7a285dc..47715eec22e6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -144,134 +144,6 @@ static int iwl_mvm_send_dqa_cmd(struct iwl_mvm *mvm)
+@@ -343,12 +396,13 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		 * in the logs.
+ 		 */
+ 		if (addr != SBSDIO_FUNC1_SLEEPCSR)
+-			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
+-				  write ? "write" : "read", func, addr, ret);
++			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
+ 		else
+-			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
+-				  write ? "write" : "read", func, addr, ret);
++			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
+ 	}
++
  	return ret;
  }
  
--void iwl_free_fw_paging(struct iwl_mvm *mvm)
--{
--	int i;
--
--	if (!mvm->fw_paging_db[0].fw_paging_block)
--		return;
--
--	for (i = 0; i < NUM_OF_FW_PAGING_BLOCKS; i++) {
--		struct iwl_fw_paging *paging = &mvm->fw_paging_db[i];
--
--		if (!paging->fw_paging_block) {
--			IWL_DEBUG_FW(mvm,
--				     "Paging: block %d already freed, continue to next page\n",
--				     i);
--
--			continue;
--		}
--		dma_unmap_page(mvm->trans->dev, paging->fw_paging_phys,
--			       paging->fw_paging_size, DMA_BIDIRECTIONAL);
--
--		__free_pages(paging->fw_paging_block,
--			     get_order(paging->fw_paging_size));
--		paging->fw_paging_block = NULL;
--	}
--	kfree(mvm->trans->paging_download_buf);
--	mvm->trans->paging_download_buf = NULL;
--	mvm->trans->paging_db = NULL;
--
--	memset(mvm->fw_paging_db, 0, sizeof(mvm->fw_paging_db));
--}
--
--static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
--{
--	int sec_idx, idx;
--	u32 offset = 0;
--
--	/*
--	 * find where is the paging image start point:
--	 * if CPU2 exist and it's in paging format, then the image looks like:
--	 * CPU1 sections (2 or more)
--	 * CPU1_CPU2_SEPARATOR_SECTION delimiter - separate between CPU1 to CPU2
--	 * CPU2 sections (not paged)
--	 * PAGING_SEPARATOR_SECTION delimiter - separate between CPU2
--	 * non paged to CPU2 paging sec
--	 * CPU2 paging CSS
--	 * CPU2 paging image (including instruction and data)
--	 */
--	for (sec_idx = 0; sec_idx < image->num_sec; sec_idx++) {
--		if (image->sec[sec_idx].offset == PAGING_SEPARATOR_SECTION) {
--			sec_idx++;
+@@ -366,13 +420,11 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ 	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
+ 
+ 	for (i = 0; i < 3; i++) {
+-		err = brcmf_sdiod_regrw_helper(sdiodev,
+-					       SBSDIO_FUNC1_SBADDRLOW + i,
+-					       1, &addr[i], true);
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
++				  &err);
+ 		if (err) {
+ 			brcmf_err("failed at addr: 0x%0x\n",
+ 				  SBSDIO_FUNC1_SBADDRLOW + i);
 -			break;
--		}
--	}
--
--	/*
--	 * If paging is enabled there should be at least 2 more sections left
--	 * (one for CSS and one for Paging data)
--	 */
--	if (sec_idx >= image->num_sec - 1) {
--		IWL_ERR(mvm, "Paging: Missing CSS and/or paging sections\n");
--		iwl_free_fw_paging(mvm);
--		return -EINVAL;
--	}
--
--	/* copy the CSS block to the dram */
--	IWL_DEBUG_FW(mvm, "Paging: load paging CSS to FW, sec = %d\n",
--		     sec_idx);
--
--	memcpy(page_address(mvm->fw_paging_db[0].fw_paging_block),
--	       image->sec[sec_idx].data,
--	       mvm->fw_paging_db[0].fw_paging_size);
--	dma_sync_single_for_device(mvm->trans->dev,
--				   mvm->fw_paging_db[0].fw_paging_phys,
--				   mvm->fw_paging_db[0].fw_paging_size,
--				   DMA_BIDIRECTIONAL);
--
--	IWL_DEBUG_FW(mvm,
--		     "Paging: copied %d CSS bytes to first block\n",
--		     mvm->fw_paging_db[0].fw_paging_size);
--
--	sec_idx++;
--
--	/*
--	 * copy the paging blocks to the dram
--	 * loop index start from 1 since that CSS block already copied to dram
--	 * and CSS index is 0.
--	 * loop stop at num_of_paging_blk since that last block is not full.
--	 */
--	for (idx = 1; idx < mvm->num_of_paging_blk; idx++) {
--		struct iwl_fw_paging *block = &mvm->fw_paging_db[idx];
--
--		memcpy(page_address(block->fw_paging_block),
--		       image->sec[sec_idx].data + offset,
--		       block->fw_paging_size);
--		dma_sync_single_for_device(mvm->trans->dev,
--					   block->fw_paging_phys,
--					   block->fw_paging_size,
--					   DMA_BIDIRECTIONAL);
--
--
--		IWL_DEBUG_FW(mvm,
--			     "Paging: copied %d paging bytes to block %d\n",
--			     mvm->fw_paging_db[idx].fw_paging_size,
--			     idx);
--
--		offset += mvm->fw_paging_db[idx].fw_paging_size;
--	}
--
--	/* copy the last paging block */
--	if (mvm->num_of_pages_in_last_blk > 0) {
--		struct iwl_fw_paging *block = &mvm->fw_paging_db[idx];
--
--		memcpy(page_address(block->fw_paging_block),
--		       image->sec[sec_idx].data + offset,
--		       FW_PAGING_SIZE * mvm->num_of_pages_in_last_blk);
--		dma_sync_single_for_device(mvm->trans->dev,
--					   block->fw_paging_phys,
--					   block->fw_paging_size,
--					   DMA_BIDIRECTIONAL);
--
--		IWL_DEBUG_FW(mvm,
--			     "Paging: copied %d pages in the last block %d\n",
--			     mvm->num_of_pages_in_last_blk, idx);
--	}
--
--	return 0;
--}
--
- void iwl_mvm_mfu_assert_dump_notif(struct iwl_mvm *mvm,
- 				   struct iwl_rx_cmd_buffer *rxb)
- {
-@@ -293,178 +165,6 @@ void iwl_mvm_mfu_assert_dump_notif(struct iwl_mvm *mvm,
- 			       le32_to_cpu(dump_data[i]));
- }
+ 		}
+ 	}
  
--static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
--				   const struct fw_img *image)
--{
--	struct page *block;
--	dma_addr_t phys = 0;
--	int blk_idx, order, num_of_pages, size, dma_enabled;
--
--	if (mvm->fw_paging_db[0].fw_paging_block)
--		return 0;
--
--	dma_enabled = is_device_dma_capable(mvm->trans->dev);
--
--	/* ensure BLOCK_2_EXP_SIZE is power of 2 of PAGING_BLOCK_SIZE */
--	BUILD_BUG_ON(BIT(BLOCK_2_EXP_SIZE) != PAGING_BLOCK_SIZE);
--
--	num_of_pages = image->paging_mem_size / FW_PAGING_SIZE;
--	mvm->num_of_paging_blk =
--		DIV_ROUND_UP(num_of_pages, NUM_OF_PAGE_PER_GROUP);
--	mvm->num_of_pages_in_last_blk =
--		num_of_pages -
--		NUM_OF_PAGE_PER_GROUP * (mvm->num_of_paging_blk - 1);
--
--	IWL_DEBUG_FW(mvm,
--		     "Paging: allocating mem for %d paging blocks, each block holds 8 pages, last block holds %d pages\n",
--		     mvm->num_of_paging_blk,
--		     mvm->num_of_pages_in_last_blk);
--
--	/*
--	 * Allocate CSS and paging blocks in dram.
--	 */
--	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
--		/* For CSS allocate 4KB, for others PAGING_BLOCK_SIZE (32K) */
--		size = blk_idx ? PAGING_BLOCK_SIZE : FW_PAGING_SIZE;
--		order = get_order(size);
--		block = alloc_pages(GFP_KERNEL, order);
--		if (!block) {
--			/* free all the previous pages since we failed */
--			iwl_free_fw_paging(mvm);
--			return -ENOMEM;
--		}
--
--		mvm->fw_paging_db[blk_idx].fw_paging_block = block;
--		mvm->fw_paging_db[blk_idx].fw_paging_size = size;
--
--		if (dma_enabled) {
--			phys = dma_map_page(mvm->trans->dev, block, 0,
--					    PAGE_SIZE << order,
--					    DMA_BIDIRECTIONAL);
--			if (dma_mapping_error(mvm->trans->dev, phys)) {
--				/*
--				 * free the previous pages and the current one
--				 * since we failed to map_page.
--				 */
--				iwl_free_fw_paging(mvm);
--				return -ENOMEM;
--			}
--			mvm->fw_paging_db[blk_idx].fw_paging_phys = phys;
--		} else {
--			mvm->fw_paging_db[blk_idx].fw_paging_phys =
--				PAGING_ADDR_SIG |
--				blk_idx << BLOCK_2_EXP_SIZE;
--		}
--
--		if (!blk_idx)
--			IWL_DEBUG_FW(mvm,
--				     "Paging: allocated 4K(CSS) bytes (order %d) for firmware paging.\n",
--				     order);
--		else
--			IWL_DEBUG_FW(mvm,
--				     "Paging: allocated 32K bytes (order %d) for firmware paging.\n",
--				     order);
--	}
--
--	return 0;
--}
--
--static int iwl_save_fw_paging(struct iwl_mvm *mvm,
--			      const struct fw_img *fw)
--{
--	int ret;
--
--	ret = iwl_alloc_fw_paging_mem(mvm, fw);
--	if (ret)
--		return ret;
--
--	return iwl_fill_paging_mem(mvm, fw);
--}
--
--/* send paging cmd to FW in case CPU2 has paging image */
--static int iwl_send_paging_cmd(struct iwl_mvm *mvm, const struct fw_img *fw)
--{
--	struct iwl_fw_paging_cmd paging_cmd = {
--		.flags = cpu_to_le32(PAGING_CMD_IS_SECURED |
--				     PAGING_CMD_IS_ENABLED |
--				     (mvm->num_of_pages_in_last_blk <<
--				      PAGING_CMD_NUM_OF_PAGES_IN_LAST_GRP_POS)),
--		.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
--		.block_num = cpu_to_le32(mvm->num_of_paging_blk),
--	};
--	int blk_idx;
--
--	/* loop for for all paging blocks + CSS block */
--	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
--		dma_addr_t addr = mvm->fw_paging_db[blk_idx].fw_paging_phys;
--		__le32 phy_addr;
--
--		addr = addr >> PAGE_2_EXP_SIZE;
--		phy_addr = cpu_to_le32(addr);
--		paging_cmd.device_phy_addr[blk_idx] = phy_addr;
--	}
--
--	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(FW_PAGING_BLOCK_CMD,
--						    IWL_ALWAYS_LONG_GROUP, 0),
--				    0, sizeof(paging_cmd), &paging_cmd);
--}
--
--/*
-- * Send paging item cmd to FW in case CPU2 has paging image
-- */
--static int iwl_trans_get_paging_item(struct iwl_mvm *mvm)
--{
--	int ret;
--	struct iwl_fw_get_item_cmd fw_get_item_cmd = {
--		.item_id = cpu_to_le32(IWL_FW_ITEM_ID_PAGING),
--	};
--
--	struct iwl_fw_get_item_resp *item_resp;
--	struct iwl_host_cmd cmd = {
--		.id = iwl_cmd_id(FW_GET_ITEM_CMD, IWL_ALWAYS_LONG_GROUP, 0),
--		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
--		.data = { &fw_get_item_cmd, },
--	};
--
--	cmd.len[0] = sizeof(struct iwl_fw_get_item_cmd);
--
--	ret = iwl_mvm_send_cmd(mvm, &cmd);
--	if (ret) {
--		IWL_ERR(mvm,
--			"Paging: Failed to send FW_GET_ITEM_CMD cmd (err = %d)\n",
--			ret);
--		return ret;
--	}
--
--	item_resp = (void *)((struct iwl_rx_packet *)cmd.resp_pkt)->data;
--	if (item_resp->item_id != cpu_to_le32(IWL_FW_ITEM_ID_PAGING)) {
--		IWL_ERR(mvm,
--			"Paging: got wrong item in FW_GET_ITEM_CMD resp (item_id = %u)\n",
--			le32_to_cpu(item_resp->item_id));
--		ret = -EIO;
--		goto exit;
--	}
--
--	/* Add an extra page for headers */
--	mvm->trans->paging_download_buf = kzalloc(PAGING_BLOCK_SIZE +
--						  FW_PAGING_SIZE,
--						  GFP_KERNEL);
--	if (!mvm->trans->paging_download_buf) {
--		ret = -ENOMEM;
--		goto exit;
--	}
--	mvm->trans->paging_req_addr = le32_to_cpu(item_resp->item_val);
--	mvm->trans->paging_db = mvm->fw_paging_db;
--	IWL_DEBUG_FW(mvm,
--		     "Paging: got paging request address (paging_req_addr 0x%08x)\n",
--		     mvm->trans->paging_req_addr);
--
--exit:
--	iwl_free_resp(&cmd);
--
--	return ret;
--}
--
- static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 			 struct iwl_rx_packet *pkt, void *data)
- {
-@@ -544,48 +244,6 @@ static bool iwl_wait_phy_db_entry(struct iwl_notif_wait_data *notif_wait,
- 	return false;
- }
+@@ -407,8 +459,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
  
--static int iwl_mvm_init_paging(struct iwl_mvm *mvm)
--{
--	const struct fw_img *fw = &mvm->fw->img[mvm->cur_ucode];
--	int ret;
--
--	/*
--	 * Configure and operate fw paging mechanism.
--	 * The driver configures the paging flow only once.
--	 * The CPU2 paging image is included in the IWL_UCODE_INIT image.
--	 */
--	if (!fw->paging_mem_size)
--		return 0;
--
--	/*
--	 * When dma is not enabled, the driver needs to copy / write
--	 * the downloaded / uploaded page to / from the smem.
--	 * This gets the location of the place were the pages are
--	 * stored.
--	 */
--	if (!is_device_dma_capable(mvm->trans->dev)) {
--		ret = iwl_trans_get_paging_item(mvm);
--		if (ret) {
--			IWL_ERR(mvm, "failed to get FW paging item\n");
--			return ret;
--		}
--	}
--
--	ret = iwl_save_fw_paging(mvm, fw);
--	if (ret) {
--		IWL_ERR(mvm, "failed to save the FW paging image\n");
--		return ret;
--	}
--
--	ret = iwl_send_paging_cmd(mvm, fw);
--	if (ret) {
--		IWL_ERR(mvm, "failed to send the paging cmd\n");
--		iwl_free_fw_paging(mvm);
--		return ret;
--	}
--
--	return 0;
--}
- static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 					 enum iwl_ucode_type ucode_type)
- {
-@@ -1495,7 +1153,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+-					  false);
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
+ 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
  	if (ret)
- 		return ret;
- 
--	return iwl_mvm_init_paging(mvm);
-+	return iwl_init_paging(&mvm->fwrt, mvm->cur_ucode);
- }
- 
- int iwl_mvm_up(struct iwl_mvm *mvm)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index eaacfaf37206..f8fe15cd80c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -87,6 +87,7 @@
- #include "fw-api.h"
- #include "constants.h"
- #include "tof.h"
-+#include "fw/runtime.h"
- 
- #define IWL_MVM_MAX_ADDRESSES		5
- /* RSSI offset for WkP */
-@@ -815,10 +816,7 @@ struct iwl_mvm {
- 	/* NVM sections */
- 	struct iwl_nvm_section nvm_sections[NVM_MAX_NUM_SECTIONS];
- 
--	/* Paging section */
--	struct iwl_fw_paging fw_paging_db[NUM_OF_FW_PAGING_BLOCKS];
--	u16 num_of_paging_blk;
--	u16 num_of_pages_in_last_blk;
-+	struct iwl_fw_runtime fwrt;
- 
- 	/* EEPROM MAC addresses */
- 	struct mac_address addresses[IWL_MVM_MAX_ADDRESSES];
-@@ -1571,9 +1569,6 @@ void iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- void iwl_mvm_rx_umac_scan_iter_complete_notif(struct iwl_mvm *mvm,
- 					      struct iwl_rx_cmd_buffer *rxb);
- 
--/* Paging */
--void iwl_free_fw_paging(struct iwl_mvm *mvm);
--
- /* MVM debugfs */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir);
-@@ -1798,8 +1793,7 @@ void iwl_mvm_enable_ac_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 
- static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
- {
--	if (!iwl_mvm_has_new_tx_api(mvm))
--		iwl_free_fw_paging(mvm);
-+	iwl_free_fw_paging(&mvm->fwrt);
- 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
- 	mvm->fw_dbg_conf = FW_DBG_INVALID;
- 	iwl_trans_stop_device(mvm->trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 4d1188b8736a..8c49ac903c8c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -580,6 +580,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	mvm->fw = fw;
- 	mvm->hw = hw;
- 
-+	iwl_fw_runtime_init(&mvm->fwrt, trans, fw);
+@@ -426,8 +477,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+-					  false);
 +
- 	mvm->init_status = 0;
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
++
+ 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
  
- 	if (iwl_mvm_has_new_rx_api(mvm)) {
+ done:
+@@ -443,8 +495,8 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+-					  true);
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
++
+ 	if (ret)
+ 		*ret = retval;
+ }
+@@ -458,8 +510,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+-					  true);
++
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+ 
+ done:
+ 	if (ret)
 -- 
-2.13.2
+2.11.0
