@@ -1,45 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38932 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752206AbdGCM2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jul 2017 08:28:31 -0400
-From: Stefan Assmann <sassmann@kpanic.de>
-To: devel@driverdev.osuosl.org
-Cc: linux-wireless@vger.kernel.org, sassmann@kpanic.de
-Subject: [PATCH] rtl8723bs: fix build when DEBUG_RTL871X is defined
-Date: Mon,  3 Jul 2017 14:27:33 +0200
-Message-Id: <20170703122733.28512-1-sassmann@kpanic.de> (sfid-20170703_142834_670630_32A17D26)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from [217.148.43.144] ([217.148.43.144]:33876 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1750942AbdGZU0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:26:11 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 02/34] brcmfmac: Register sizes on hardware are not dependent on compiler types
+Date: Wed, 26 Jul 2017 21:25:25 +0100
+Message-Id: <20170726202557.15632-3-ian@mnementh.co.uk> (sfid-20170726_222629_276673_FC986955)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Defining DEBUG_RTL871X in rtw_debug.h causes the following compile error:
-  CC [M]  drivers/staging/rtl8723bs/core/rtw_mlme.o
-In file included from drivers/staging/rtl8723bs/core/rtw_mlme.c:18:0:
-drivers/staging/rtl8723bs/core/rtw_mlme.c: In function ‘rtw_restruct_sec_ie’:
-drivers/staging/rtl8723bs/core/rtw_mlme.c:2502:19: error: ‘ndissecuritytype’ undeclared (first use in thisfunction)
+The 4 IO functions in this patch are incorrect as they use compiler types
+to determine how many bytes to send to the hardware.
 
-Remove the no longer existing parameter.
-
-Signed-off-by: Stefan Assmann <sassmann@kpanic.de>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/staging/rtl8723bs/core/rtw_mlme.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/rtl8723bs/core/rtw_mlme.c b/drivers/staging/rtl8723bs/core/rtw_mlme.c
-index 9e35573..f97f35a 100644
---- a/drivers/staging/rtl8723bs/core/rtw_mlme.c
-+++ b/drivers/staging/rtl8723bs/core/rtw_mlme.c
-@@ -2498,8 +2498,7 @@ sint rtw_restruct_sec_ie(struct adapter *adapter, u8 *in_ie, u8 *out_ie, uint in
- 	uint	ndisauthmode = psecuritypriv->ndisauthtype;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index f585dfd89453..2b441ce91d5f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -264,7 +264,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 	func = sdiodev->func[fn];
  
- 	RT_TRACE(_module_rtl871x_mlme_c_, _drv_notice_,
--		 ("+rtw_restruct_sec_ie: ndisauthmode =%d ndissecuritytype =%d\n",
--		  ndisauthmode, ndissecuritytype));
-+		 ("+rtw_restruct_sec_ie: ndisauthmode =%d\n", ndisauthmode));
+ 	switch (regsz) {
+-	case sizeof(u8):
++	case 1:
+ 		if (write) {
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+@@ -278,13 +278,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
+ 		}
+ 		break;
+-	case sizeof(u16):
++	case 2:
+ 		if (write)
+ 			sdio_writew(func, *(u16 *)data, addr, &ret);
+ 		else
+ 			*(u16 *)data = sdio_readw(func, addr, &ret);
+ 		break;
+-	case sizeof(u32):
++	case 4:
+ 		if (write)
+ 			sdio_writel(func, *(u32 *)data, addr, &ret);
+ 		else
+@@ -368,7 +368,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ 	for (i = 0; i < 3; i++) {
+ 		err = brcmf_sdiod_regrw_helper(sdiodev,
+ 					       SBSDIO_FUNC1_SBADDRLOW + i,
+-					       sizeof(u8), &addr[i], true);
++					       1, &addr[i], true);
+ 		if (err) {
+ 			brcmf_err("failed at addr: 0x%0x\n",
+ 				  SBSDIO_FUNC1_SBADDRLOW + i);
+@@ -407,7 +407,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
  
- 	/* copy fixed ie only */
- 	memcpy(out_ie, in_ie, 12);
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+ 					  false);
+ 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
+@@ -423,10 +423,10 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+ 					  false);
+ 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 
+@@ -443,7 +443,7 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+ 					  true);
+ 	if (ret)
+ 		*ret = retval;
+@@ -455,10 +455,10 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+ 					  true);
+ 
+ done:
+@@ -876,7 +876,7 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+ 
+ 	/* issue abort cmd52 command through F0 */
+ 	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
+-				 sizeof(t_func), &t_func, true);
++				 1, &t_func, true);
+ 
+ 	brcmf_dbg(SDIO, "Exit\n");
+ 	return 0;
 -- 
-2.9.4
+2.11.0
