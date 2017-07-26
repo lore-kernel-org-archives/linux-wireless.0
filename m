@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38440 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752085AbdG1O2U (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:28:20 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/3] rsi: use macro for allocating USB buffer
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1499783273-15428-1-git-send-email-amitkarwar@gmail.com>
-References: <1499783273-15428-1-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Message-Id: <20170728142819.99A416022C@smtp.codeaurora.org> (sfid-20170728_162826_170959_908DBF8D)
-Date: Fri, 28 Jul 2017 14:28:19 +0000 (UTC)
+Received: from mga07.intel.com ([134.134.136.100]:13949 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750989AbdGZKDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 06:03:31 -0400
+Message-ID: <1501063383.29303.248.camel@linux.intel.com> (sfid-20170726_120347_105777_35504D89)
+Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID
+ API
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
+        devel@driverdev.osuosl.org,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org,
+        linux-efi <linux-efi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Date: Wed, 26 Jul 2017 13:03:03 +0300
+In-Reply-To: <6349641.0fe8FCM51k@aspire.rjw.lan>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+         <2908341.aERReitNcd@aspire.rjw.lan>
+         <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com>
+         <6349641.0fe8FCM51k@aspire.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+On Wed, 2017-07-26 at 02:27 +0200, Rafael J. Wysocki wrote:
+> On Wednesday, July 26, 2017 03:35:01 AM Andy Shevchenko wrote:
+> > On Wed, Jul 26, 2017 at 3:21 AM, Rafael J. Wysocki <rjw@rjwysocki.ne
+> > t> wrote:
 
-> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> > > Andy, do you want me to apply this?
+> > 
+> > If you would like to.
+> > 
+> > The patch is now pretty independent since necessary stuff made
+> > v4.13-rc1.
 > 
-> 4 bytes is fixed size for reading or writing USB register. We
-> will use a macro instead of hardcoding this.
-> 
-> Fixes: b97e9b94ad75c ("rsi: Add new host interface operations")
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> OK
 
-3 patches applied to wireless-drivers-next.git, thanks.
-
-523b724a769b rsi: use macro for allocating USB buffer
-59f73e2ae185 rsi: check length before USB read/write register
-e6249e15fea2 rsi: fix static checker warning
+Thanks!
 
 -- 
-https://patchwork.kernel.org/patch/9834829/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
