@@ -1,63 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:50486 "EHLO mnementh.co.uk"
+Received: from [217.148.43.144] ([217.148.43.144]:49336 "EHLO mnementh.co.uk"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751431AbdGRJp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 05:45:28 -0400
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
+        id S1751011AbdGZUq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:28 -0400
 From: Ian Molton <ian@mnementh.co.uk>
-Subject: RFC: brcmfmac bus level addressing issues.
-Message-ID: <aacfa1fd-ac34-b3c1-b078-4b6a5eefe4ca@mnementh.co.uk> (sfid-20170718_114532_889895_E7108656)
-Date: Tue, 18 Jul 2017 10:45:25 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 32/34] brcmfmac: Replace function index with function pointer
+Date: Wed, 26 Jul 2017 21:25:55 +0100
+Message-Id: <20170726202557.15632-33-ian@mnementh.co.uk> (sfid-20170726_224631_827137_1CC4BE9F)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks,
+In preparation for removing the function array, remove all code that
+refers to function by index and replace with pointers to the function
+itself.
 
-Its come to my attention that there is a substantial disparity between
-the PCIe and SDIO variants of the driver when it comes to handlign
-writes via the backplane.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 
-The SDIO bus code checks, upon every (32 bit) access, wether the
-backplane window is in the right place, and only updates it if it has
-actually changed.
+# Conflicts:
+#	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 86 ++++++++++++----------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 14 ++--
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    | 14 ++--
+ 3 files changed, 61 insertions(+), 53 deletions(-)
 
-The PCIe code sets the window *regardless* of wether its changed, on
-*every single* write.
-
-The SDIO code has no explicit selection of the window address based on
-the core selected.
-
-The PCIe code uses brcmf_pcie_select_core(), which, ultimately, appears
-to be totally redundant, due to the above mentioned 32 bit access code
-setting the window register regardless of its current value.
-
-------------------------------------
-
-Can we standardise how this is supposed to work? Its ugly, and its going
-to cause bugs, ultimately. I suspect its probably the cause of the code
-I mentioned in my recent patch titled "brcmfmac: HACK - stabilise the
-value of ->sbwad in use for some xfer routines."
-
-We really *dont* want to call brcmf_pcie_select_core() all over the
-place. Its inefficient, traversing a list as it does, when all it does
-is return a pointer that never actually changes, to the core structures
-that contain addressing info.
-
-I'd propose we do what I've done in my SDIO patch set - we call
-brcmf_chip_get_core() *once* after the chip has been probed, and store
-the pointer returned.
-
-The window register setting can be hidden in the read32/write32 buscore
-ops, and will never be incorrect from that point, and the code can
-simply use a flat address space model. A single if() has got to be less
-costly than writing the register on overy single read32/write32...
-
-Anyhow, whatever we decide to do, can we do the same thing in both bus
-drivers?
-
--Ian
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index da0654c50db9..5787348003d9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -148,7 +148,8 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 
+ 		/* must configure SDIO_CCCR_IENx to enable irq */
+ 		data = brcmf_sdiod_func0_rb(sdiodev, SDIO_CCCR_IENx, &ret);
+-		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
++		data |= SDIO_CCCR_IEN_FUNC1 | SDIO_CCCR_IEN_FUNC2 |
++			SDIO_CCCR_IEN_BIT0;
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
+ 
+ 		/* redirect, configure and enable io for interrupt signal */
+@@ -291,8 +292,9 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		*ret = retval;
+ }
+ 
+-static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
+-				 u32 addr, struct sk_buff *pkt)
++static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev,
++				 struct sdio_func *func, u32 addr,
++				 struct sk_buff *pkt)
+ {
+ 	unsigned int req_sz;
+ 	int err;
+@@ -301,13 +303,17 @@ static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	req_sz = pkt->len + 3;
+ 	req_sz &= (uint)~3;
+ 
+-	if (fn == 1)
+-		err = sdio_memcpy_fromio(sdiodev->func[fn],
+-					 ((u8 *)(pkt->data)), addr, req_sz);
+-	else
+-		/* function 2 read is FIFO operation */
+-		err = sdio_readsb(sdiodev->func[fn],
+-				  ((u8 *)(pkt->data)), addr, req_sz);
++	switch (func->num) {
++	case 1:
++		err = sdio_memcpy_fromio(func, ((u8 *)(pkt->data)), addr,
++					 req_sz);
++		break;
++	case 2:
++		err = sdio_readsb(func, ((u8 *)(pkt->data)), addr, req_sz);
++		break;
++	default:
++		BUG();
++	};
+ 
+ 	if (err == -ENOMEDIUM)
+ 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
+@@ -315,8 +321,9 @@ static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	return err;
+ }
+ 
+-static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
+-				  u32 addr, struct sk_buff *pkt)
++static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev,
++				  struct sdio_func *func, u32 addr,
++				  struct sk_buff *pkt)
+ {
+ 	unsigned int req_sz;
+ 	int err;
+@@ -325,8 +332,7 @@ static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	req_sz = pkt->len + 3;
+ 	req_sz &= (uint)~3;
+ 
+-	err = sdio_memcpy_toio(sdiodev->func[fn], addr,
+-			       ((u8 *)(pkt->data)), req_sz);
++	err = sdio_memcpy_toio(func, addr, ((u8 *)(pkt->data)), req_sz);
+ 
+ 	if (err == -ENOMEDIUM)
+ 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
+@@ -337,7 +343,7 @@ static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
+ /**
+  * brcmf_sdiod_sglist_rw - SDIO interface function for block data access
+  * @sdiodev: brcmfmac sdio device
+- * @fn: SDIO function number
++ * @func: SDIO function
+  * @write: direction flag
+  * @addr: dongle memory address as source/destination
+  * @pkt: skb pointer
+@@ -346,7 +352,8 @@ static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
+  * stack for block data access. It assumes that the skb passed down by the
+  * caller has already been padded and aligned.
+  */
+-static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
++static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev,
++				 struct sdio_func *func,
+ 				 bool write, u32 addr,
+ 				 struct sk_buff_head *pktlist)
+ {
+@@ -372,7 +379,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 		req_sz = 0;
+ 		skb_queue_walk(pktlist, pkt_next)
+ 			req_sz += pkt_next->len;
+-		req_sz = ALIGN(req_sz, sdiodev->func[fn]->cur_blksize);
++		req_sz = ALIGN(req_sz, func->cur_blksize);
+ 		while (req_sz > PAGE_SIZE) {
+ 			pkt_next = brcmu_pkt_buf_get_skb(PAGE_SIZE);
+ 			if (pkt_next == NULL) {
+@@ -391,7 +398,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 		target_list = &local_list;
+ 	}
+ 
+-	func_blk_sz = sdiodev->func[fn]->cur_blksize;
++	func_blk_sz = func->cur_blksize;
+ 	max_req_sz = sdiodev->max_request_size;
+ 	max_seg_cnt = min_t(unsigned short, sdiodev->max_segment_count,
+ 			    target_list->qlen);
+@@ -408,10 +415,10 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
+ 	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
+ 	mmc_cmd.arg = write ? 1<<31 : 0;	/* write flag  */
+-	mmc_cmd.arg |= (fn & 0x7) << 28;	/* SDIO func num */
+-	mmc_cmd.arg |= 1<<27;			/* block mode */
++	mmc_cmd.arg |= (func->num & 0x7) << 28;	/* SDIO func num */
++	mmc_cmd.arg |= 1 << 27;			/* block mode */
+ 	/* for function 1 the addr will be incremented */
+-	mmc_cmd.arg |= (fn == 1) ? 1<<26 : 0;
++	mmc_cmd.arg |= (func->num == 1) ? 1 << 26 : 0;
+ 	mmc_cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
+ 	mmc_req.cmd = &mmc_cmd;
+ 	mmc_req.data = &mmc_dat;
+@@ -457,11 +464,11 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 		mmc_cmd.arg |= (addr & 0x1FFFF) << 9;	/* address */
+ 		mmc_cmd.arg |= mmc_dat.blocks & 0x1FF;	/* block count */
+ 		/* incrementing addr for function 1 */
+-		if (fn == 1)
++		if (func->num == 1)
+ 			addr += req_sz;
+ 
+-		mmc_set_data_timeout(&mmc_dat, sdiodev->func[fn]->card);
+-		mmc_wait_for_req(sdiodev->func[fn]->card->host, &mmc_req);
++		mmc_set_data_timeout(&mmc_dat, func->card);
++		mmc_wait_for_req(func->card->host, &mmc_req);
+ 
+ 		ret = mmc_cmd.error ? mmc_cmd.error : mmc_dat.error;
+ 		if (ret == -ENOMEDIUM) {
+@@ -541,7 +548,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
++	err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr, pkt);
+ 
+ done:
+ 	return err;
+@@ -566,13 +573,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (pktq->qlen == 1)
+-		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
++		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr,
+ 					    pktq->next);
+ 	else if (!sdiodev->sg_support) {
+ 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
+ 		if (!glom_skb)
+ 			return -ENOMEM;
+-		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
++		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr,
+ 					    glom_skb);
+ 		if (err)
+ 			goto done;
+@@ -582,8 +589,8 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 			skb_pull(glom_skb, skb->len);
+ 		}
+ 	} else
+-		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, false, addr,
+-					    pktq);
++		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func[2], false,
++					    addr, pktq);
+ 
+ done:
+ 	brcmu_pkt_buf_free_skb(glom_skb);
+@@ -614,7 +621,8 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!err)
+-		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
++		err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[2], addr,
++					     mypkt);
+ 
+ 	brcmu_pkt_buf_free_skb(mypkt);
+ 
+@@ -640,14 +648,14 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	if (pktq->qlen == 1 || !sdiodev->sg_support)
+ 		skb_queue_walk(pktq, skb) {
+-			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
++			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[2],
+ 						     addr, skb);
+ 			if (err)
+ 				break;
+ 		}
+ 	else
+-		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
+-					    pktq);
++		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func[2], true,
++					    addr, pktq);
+ 
+ 	return err;
+ }
+@@ -696,10 +704,10 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 
+ 		if (write) {
+ 			memcpy(pkt->data, data, dsize);
+-			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_1,
++			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[1],
+ 						     sdaddr, pkt);
+ 		} else {
+-			err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_1,
++			err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[1],
+ 						    sdaddr, pkt);
+ 		}
+ 
+@@ -728,12 +736,12 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	return err;
+ }
+ 
+-int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
++int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, struct sdio_func *func)
+ {
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* Issue abort cmd52 command through F0 */
+-	brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT, fn, NULL);
++	brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT, func->num, NULL);
+ 
+ 	brcmf_dbg(SDIO, "Exit\n");
+ 	return 0;
+@@ -1104,7 +1112,7 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ 
+ 	func = container_of(dev, struct sdio_func, dev);
+ 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
+-	if (func->num != SDIO_FUNC_1)
++	if (func->num != 1)
+ 		return 0;
+ 
+ 
+@@ -1133,7 +1141,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
+ 	struct sdio_func *func = container_of(dev, struct sdio_func, dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
+-	if (func->num != SDIO_FUNC_2)
++	if (func->num != 2)
+ 		return 0;
+ 
+ 	brcmf_sdiod_freezer_off(sdiodev);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 230a24cb6c0a..e90271e14255 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1150,7 +1150,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 		  rtx ? ", send NAK" : "");
+ 
+ 	if (abort)
+-		brcmf_sdiod_abort(bus->sdiodev, SDIO_FUNC_2);
++		brcmf_sdiod_abort(bus->sdiodev, bus->sdiodev->func[2]);
+ 
+ 	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_RF_TERM,
+ 			   &err);
+@@ -1200,7 +1200,7 @@ static void brcmf_sdio_txfail(struct brcmf_sdio *bus)
+ 	brcmf_err("sdio error, abort command and terminate frame\n");
+ 	bus->sdcnt.tx_sderrs++;
+ 
+-	brcmf_sdiod_abort(sdiodev, SDIO_FUNC_2);
++	brcmf_sdiod_abort(sdiodev, sdiodev->func[2]);
+ 	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_WF_TERM, NULL);
+ 	bus->sdcnt.f1regdata++;
+ 
+@@ -2062,7 +2062,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
+ 	int ntail, ret;
+ 
+ 	sdiodev = bus->sdiodev;
+-	blksize = sdiodev->func[SDIO_FUNC_2]->cur_blksize;
++	blksize = sdiodev->func[2]->cur_blksize;
+ 	/* sg entry alignment should be a divisor of block size */
+ 	WARN_ON(blksize % bus->sgentry_align);
+ 
+@@ -2432,7 +2432,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 
+ 		/* Turn off the bus (F2), free any pending packets */
+ 		brcmf_dbg(INTR, "disable SDIO interrupts\n");
+-		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
++		sdio_disable_func(sdiodev->func[2]);
+ 
+ 		/* Clear any pending interrupts now that F2 is disabled */
+ 		brcmf_sdiod_writel(sdiodev, core->base + __sd_reg(intstatus),
+@@ -4041,7 +4041,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailboxdata),
+ 			   SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
+ 
+-	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
++	err = sdio_enable_func(sdiodev->func[2]);
+ 
+ 
+ 	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
+@@ -4057,7 +4057,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
+ 		/* Disable F2 again */
+-		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
++		sdio_disable_func(sdiodev->func[2]);
+ 		goto release;
+ 	}
+ 
+@@ -4200,7 +4200,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	sdio_claim_host(bus->sdiodev->func[1]);
+ 
+ 	/* Disable F2 to clear any intermediate frame state on the dongle */
+-	sdio_disable_func(bus->sdiodev->func[SDIO_FUNC_2]);
++	sdio_disable_func(bus->sdiodev->func[2]);
+ 
+ 	bus->rxflow = false;
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 227c90198a8e..3d41bd94f97c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -24,9 +24,6 @@
+ /* Maximum number of I/O funcs */
+ #define NUM_SDIO_FUNCS	3
+ 
+-#define SDIO_FUNC_1		1
+-#define SDIO_FUNC_2		2
+-
+ #define SDIOD_FBR_SIZE		0x100
+ 
+ /* io_en */
+@@ -45,11 +42,13 @@
+ #define REG_F0_REG_MASK		0x7FF
+ #define REG_F1_MISC_MASK	0x1FFFF
+ 
+-/* as of sdiod rev 0, supports 3 functions */
+-#define SBSDIO_NUM_FUNCTION		3
+-
+ /* function 0 vendor specific CCCR registers */
+ 
++/* Interrupt enable bits for func 1 and 2 */
++#define SDIO_CCCR_IEN_BIT0		BIT(0)
++#define SDIO_CCCR_IEN_FUNC1		BIT(1)
++#define SDIO_CCCR_IEN_FUNC2		BIT(2)
++
+ #define SDIO_CCCR_BRCM_CARDCAP		0xf0
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
+@@ -350,7 +349,8 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 		      u8 *data, uint size);
+ 
+ /* Issue an abort to the specified function */
+-int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn);
++int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, struct sdio_func *func);
++
+ void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
+ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 			      enum brcmf_sdiod_state state);
+-- 
+2.11.0
