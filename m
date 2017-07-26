@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:38114 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752191AbdGLO37 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 10:29:59 -0400
-Received: by mail-it0-f49.google.com with SMTP id k192so14030550ith.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 07:29:58 -0700 (PDT)
-Date: Wed, 12 Jul 2017 10:29:01 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for-4.13] brcmfmac: fix regression in
- brcmf_sdio_txpkt_hdalign()
-Message-ID: <20170712142901.evso24vh3jfj6umk@localhost> (sfid-20170712_163002_717256_D2FC3EA1)
-References: <1499851968-18768-1-git-send-email-arend.vanspriel@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499851968-18768-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from [217.148.43.144] ([217.148.43.144]:49546 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751011AbdGZUqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:42 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 17/34] brcmfmac: Remove unused macro.
+Date: Wed, 26 Jul 2017 21:25:40 +0100
+Message-Id: <20170726202557.15632-18-ian@mnementh.co.uk> (sfid-20170726_230043_443463_C13227AC)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 12, 2017 at 10:32:48AM +0100, Arend van Spriel wrote:
-> Recent change in brcmf_sdio_txpkt_hdalign() changed the
-> behavior and now always returns 0. This resulted in a
-> regression which basically renders the device useless.
+This macro is used exactly nowhere in the code. Delete it.
 
-Should this go via netdev as well, or just wait for Kalle (returning
-on Sunday)?
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 82769276654d..b4fd832cdabe 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -159,8 +159,6 @@ struct rte_console {
+ /* manfid tuple length, include tuple, link bytes */
+ #define SBSDIO_CIS_MANFID_TUPLE_LEN	6
+ 
+-#define CORE_BUS_REG(base, field) \
+-		(base + offsetof(struct sdpcmd_regs, field))
+ #define __sd_reg(field) \
+ 		(offsetof(struct sdpcmd_regs, field))
+ 
 -- 
-Bob Copeland %% https://bobcopeland.com/
+2.11.0
