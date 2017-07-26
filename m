@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32235 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752546AbdGaQch (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:32:37 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 00/10] wil6210 patches
-Date: Mon, 31 Jul 2017 19:32:23 +0300
-Message-Id: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183243_406978_D4937CF4)
+Received: from [217.148.43.144] ([217.148.43.144]:33940 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1750942AbdGZU0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:26:17 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 08/34] brcmfmac: Fix uninitialised variable
+Date: Wed, 26 Jul 2017 21:25:31 +0100
+Message-Id: <20170726202557.15632-9-ian@mnementh.co.uk> (sfid-20170726_222626_091928_AA10179C)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patches incude:
-- wil6210 bug fixes
-- Addition of runtime PM support
+	Unlikely to be a problem, but brcmf_sdiod_regrb() is
+not symmetric with brcmf_sdiod_regrl() in this regard.
 
-Dedy Lansky (2):
-  wil6210: support FW RSSI reporting
-  wil6210: store FW RF calibration result
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Gidon Studinski (1):
-  wil6210: make debugfs compilation optional
-
-Hamad Kadmany (3):
-  wil6210: protect against invalid length of tx management frame
-  wil6210: allow configuring scan timers
-  wil6210: fix interface-up check
-
-Lazar Alexei (1):
-  wil6210: run-time PM when interface down
-
-Maya Erez (3):
-  wil6210: check no_fw_recovery in resume failure recovery
-  wil6210: add statistics for suspend time
-  wil6210: notify wiphy on wowlan support
-
- drivers/net/wireless/ath/wil6210/cfg80211.c |  42 ++++++++--
- drivers/net/wireless/ath/wil6210/debugfs.c  | 121 +++++++++++++++++++++++++---
- drivers/net/wireless/ath/wil6210/ethtool.c  |  15 ++++
- drivers/net/wireless/ath/wil6210/main.c     |  12 ++-
- drivers/net/wireless/ath/wil6210/netdev.c   |  18 ++++-
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  38 +++++++++
- drivers/net/wireless/ath/wil6210/pm.c       |  90 ++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/txrx.c     |   6 +-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  31 ++++++-
- drivers/net/wireless/ath/wil6210/wmi.c      |  14 +++-
- drivers/net/wireless/ath/wil6210/wmi.h      |   8 +-
- 11 files changed, 358 insertions(+), 37 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index f703d7be6a85..73f2194a854f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -367,7 +367,7 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 
+ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ {
+-	u8 data;
++	u8 data = 0;
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
 -- 
-1.9.1
+2.11.0
