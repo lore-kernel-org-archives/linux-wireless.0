@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55694 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751670AbdG0K77 (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:35587 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751441AbdGZIt2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 06:59:59 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [net] wl1251: add a missing spin_lock_init()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
-References: <1499378437-4971-1-git-send-email-xiyou.wangcong@gmail.com>
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: netdev@vger.kernel.org, pavel@ucw.cz,
-        linux-wireless@vger.kernel.org,
-        Cong Wang <xiyou.wangcong@gmail.com>
-Message-Id: <20170727105959.4B7B0607A3@smtp.codeaurora.org> (sfid-20170727_130003_283588_065E9548)
-Date: Thu, 27 Jul 2017 10:59:59 +0000 (UTC)
+        Wed, 26 Jul 2017 04:49:28 -0400
+From: Daniel Stone <daniels@collabora.com>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>
+Subject: [PATCH v2] brcmfmac: Don't grow SKB by negative size
+Date: Wed, 26 Jul 2017 09:49:24 +0100
+Message-Id: <20170726084924.27546-1-daniels@collabora.com> (sfid-20170726_104935_027087_ACFCE7DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cong Wang <xiyou.wangcong@gmail.com> wrote:
+The commit to rework the headroom check in start_xmit() now calls
+pxskb_expand_head() unconditionally if the header is CoW. Unfortunately,
+it does so with the delta between the extant headroom and the header
+length, which may be negative if there is already sufficient headroom.
 
-> This fixes the following kernel warning:
-> 
->   [ 5668.771453] BUG: spinlock bad magic on CPU#0, kworker/u2:3/9745
->   [ 5668.771850]  lock: 0xce63ef20, .magic: 00000000, .owner: <none>/-1,
->   .owner_cpu: 0
->   [ 5668.772277] CPU: 0 PID: 9745 Comm: kworker/u2:3 Tainted: G        W
->   4.12.0-03002-gec979a4-dirty #40
->   [ 5668.772796] Hardware name: Nokia RX-51 board
->   [ 5668.773071] Workqueue: phy1 wl1251_irq_work
->   [ 5668.773345] [<c010c9e4>] (unwind_backtrace) from [<c010a274>]
->   (show_stack+0x10/0x14)
->   [ 5668.773803] [<c010a274>] (show_stack) from [<c01545a4>]
->   (do_raw_spin_lock+0x6c/0xa0)
->   [ 5668.774230] [<c01545a4>] (do_raw_spin_lock) from [<c06ca578>]
->   (_raw_spin_lock_irqsave+0x10/0x18)
->   [ 5668.774658] [<c06ca578>] (_raw_spin_lock_irqsave) from [<c048c010>]
->   (wl1251_op_tx+0x38/0x5c)
->   [ 5668.775115] [<c048c010>] (wl1251_op_tx) from [<c06a12e8>]
->   (ieee80211_tx_frags+0x188/0x1c0)
->   [ 5668.775543] [<c06a12e8>] (ieee80211_tx_frags) from [<c06a138c>]
->   (__ieee80211_tx+0x6c/0x130)
->   [ 5668.775970] [<c06a138c>] (__ieee80211_tx) from [<c06a3dbc>]
->   (ieee80211_tx+0xdc/0x104)
->   [ 5668.776367] [<c06a3dbc>] (ieee80211_tx) from [<c06a4af0>]
->   (__ieee80211_subif_start_xmit+0x454/0x8c8)
->   [ 5668.776824] [<c06a4af0>] (__ieee80211_subif_start_xmit) from
->   [<c06a4f94>] (ieee80211_subif_start_xmit+0x30/0x2fc)
->   [ 5668.777343] [<c06a4f94>] (ieee80211_subif_start_xmit) from
->   [<c0578848>] (dev_hard_start_xmit+0x80/0x118)
->   ...
-> 
-> by adding the missing spin_lock_init().
-> 
-> Reported-by: Pavel Machek <pavel@ucw.cz>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
-> Acked-by: Pavel Machek <pavel@ucw.cz>
+pskb_expand_head() does allow for size being 0, in which case it just
+copies, so clamp the header delta to zero.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Opening Chrome (and all my tabs) on a PCIE device was enough to reliably
+hit this.
 
-6e9aae179f29 wl1251: add a missing spin_lock_init()
+Fixes: 270a6c1f65fe ("brcmfmac: rework headroom check in .start_xmit()")
+Signed-off-by: Daniel Stone <daniels@collabora.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: James Hughes <james.hughes@raspberrypi.org>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+Really sorry, I forgot to re-run format-patch after fixing the initial
+patch. I've run out of coffee. :(
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 2153e8062b4c..42dbd5a8c220 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -215,6 +215,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	/* Make sure there's enough writeable headroom */
+ 	if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
+ 		head_delta = drvr->hdrlen - skb_headroom(skb);
++		head_delta = max(head_delta, 0);
+ 
+ 		brcmf_dbg(INFO, "%s: insufficient headroom (%d)\n",
+ 			  brcmf_ifname(ifp), head_delta);
 -- 
-https://patchwork.kernel.org/patch/9829083/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.2
