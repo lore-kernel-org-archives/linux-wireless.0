@@ -1,148 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36447 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751810AbdGBSNA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Jul 2017 14:13:00 -0400
-Received: by mail-oi0-f65.google.com with SMTP id n2so10037954oig.3
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Jul 2017 11:13:00 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v4 08/10] rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
-Date: Sun,  2 Jul 2017 13:12:37 -0500
-Message-Id: <20170702181239.17911-9-Larry.Finger@lwfinger.net> (sfid-20170702_201305_674424_551EA94C)
-In-Reply-To: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+Received: from [217.148.43.144] ([217.148.43.144]:33902 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1750942AbdGZU0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:26:13 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 04/34] brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
+Date: Wed, 26 Jul 2017 21:25:27 +0100
+Message-Id: <20170726202557.15632-5-ian@mnementh.co.uk> (sfid-20170726_222622_012822_85DDDBF3)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+	This function sets the address of the IO window used for
+SDIO accesses onto the backplane of the chip.
 
-Use rtlpriv instead of rtlhal as argument, so driver and btcoex use
-the same definitions.
+It currently uses 3 separate masks despite the full mask being
+defined in the code already. Remove the separate masks and clean up.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+
+# Conflicts:
+#	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
 ---
-v2 - no changes
-v3 - no changes
-v4 - no changes
----
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      | 16 ---------
- .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  3 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 42 ++++++++++------------
- 3 files changed, 19 insertions(+), 42 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c   | 17 +++++------------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h |  3 ---
+ 2 files changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 2ac989a4b2bb..02dff4c3f664 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -43,22 +43,6 @@
- #define RT_SDIO_INTERFACE	3
- #define DEV_BUS_TYPE		RT_PCI_INTERFACE
- 
--/* IC type */
--#define RTL_HW_TYPE(adapter)	(rtl_hal((struct rtl_priv *)adapter)->hw_type)
--
--#define IS_NEW_GENERATION_IC(adapter)		\
--			(RTL_HW_TYPE(adapter) >= HARDWARE_TYPE_RTL8192EE)
--#define IS_HARDWARE_TYPE_8812(adapter)		\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8812AE)
--#define IS_HARDWARE_TYPE_8821(adapter)		\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8821AE)
--#define IS_HARDWARE_TYPE_8723A(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723AE)
--#define IS_HARDWARE_TYPE_8723B(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8723BE)
--#define IS_HARDWARE_TYPE_8192E(adapter)	\
--			(RTL_HW_TYPE(adapter) == HARDWARE_TYPE_RTL8192EE)
--
- #include "halbtc8192e2ant.h"
- #include "halbtc8723b1ant.h"
- #include "halbtc8723b2ant.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-index 1b124eade846..5657b1e34ad0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-@@ -352,11 +352,10 @@ u32 rtl92c_get_txdma_status(struct ieee80211_hw *hw)
- void rtl92c_enable_interrupt(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 1ee0f91b6c50..7b2184d1e365 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -410,23 +410,16 @@ static int
+ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 	int err = 0, i;
+-	u8 addr[3];
++	u32 addr;
  
--	if (IS_HARDWARE_TYPE_8192CE(rtlhal)) {
-+	if (IS_HARDWARE_TYPE_8192CE(rtlpriv)) {
- 		rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] &
- 				0xFFFFFFFF);
- 		rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] &
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 4c6d01eb065d..f77acd329e0e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -314,35 +314,29 @@ enum hardware_type {
- 	HARDWARE_TYPE_RTL8192EE,
- 	HARDWARE_TYPE_RTL8821AE,
- 	HARDWARE_TYPE_RTL8812AE,
-+	HARDWARE_TYPE_RTL8822BE,
+ 	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+ 		return -ENOMEDIUM;
  
- 	/* keep it last */
- 	HARDWARE_TYPE_NUM
- };
+-	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
+-	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
+-	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
++	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
  
--#define IS_HARDWARE_TYPE_8192SU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SU)
--#define IS_HARDWARE_TYPE_8192SE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
--#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
--#define IS_HARDWARE_TYPE_8192CU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU)
--#define IS_HARDWARE_TYPE_8192DE(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
--#define IS_HARDWARE_TYPE_8192DU(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192DU)
--#define IS_HARDWARE_TYPE_8723E(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723E)
--#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
--	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
--#define	IS_HARDWARE_TYPE_8192S(rtlhal)			\
--(IS_HARDWARE_TYPE_8192SE(rtlhal) || IS_HARDWARE_TYPE_8192SU(rtlhal))
--#define	IS_HARDWARE_TYPE_8192C(rtlhal)			\
--(IS_HARDWARE_TYPE_8192CE(rtlhal) || IS_HARDWARE_TYPE_8192CU(rtlhal))
--#define	IS_HARDWARE_TYPE_8192D(rtlhal)			\
--(IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
--#define	IS_HARDWARE_TYPE_8723(rtlhal)			\
--(IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
-+#define RTL_HW_TYPE(rtlpriv)	(rtl_hal((struct rtl_priv *)rtlpriv)->hw_type)
-+#define IS_NEW_GENERATION_IC(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) >= HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8192CE(rtlpriv)		\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192CE)
-+#define IS_HARDWARE_TYPE_8812(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8812AE)
-+#define IS_HARDWARE_TYPE_8821(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8821AE)
-+#define IS_HARDWARE_TYPE_8723A(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723AE)
-+#define IS_HARDWARE_TYPE_8723B(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8723BE)
-+#define IS_HARDWARE_TYPE_8192E(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8192EE)
-+#define IS_HARDWARE_TYPE_8822B(rtlpriv)			\
-+			(RTL_HW_TYPE(rtlpriv) == HARDWARE_TYPE_RTL8822BE)
+-	for (i = 0; i < 3; i++) {
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
+-				  &err);
+-		if (err) {
+-			brcmf_err("failed at addr: 0x%0x\n",
+-				  SBSDIO_FUNC1_SBADDRLOW + i);
+-		}
+-	}
++	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
++				  addr & 0xff, &err);
  
- #define RX_HAL_IS_CCK_RATE(rxmcs)			\
- 	((rxmcs) == DESC_RATE1M ||			\
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index f3da32fc6360..e3b78db331b5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -133,9 +133,6 @@
+ 
+ /* valid bits in SBSDIO_FUNC1_SBADDRxxx regs */
+ 
+-#define SBSDIO_SBADDRLOW_MASK		0x80	/* Valid bits in SBADDRLOW */
+-#define SBSDIO_SBADDRMID_MASK		0xff	/* Valid bits in SBADDRMID */
+-#define SBSDIO_SBADDRHIGH_MASK		0xffU	/* Valid bits in SBADDRHIGH */
+ /* Address bits from SBADDR regs */
+ #define SBSDIO_SBWINDOW_MASK		0xffff8000
+ 
 -- 
-2.12.3
+2.11.0
