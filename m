@@ -1,77 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:33936 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964786AbdGTRQm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jul 2017 13:16:42 -0400
-Received: by mail-pg0-f44.google.com with SMTP id 123so17498730pgj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 10:16:42 -0700 (PDT)
-Date: Thu, 20 Jul 2017 10:16:38 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Xinming Hu <huxinming820@gmail.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: Re: Re: [PATCH] mwifiex: add tdls uapsd support module parameter
-Message-ID: <20170720171636.GA55380@google.com> (sfid-20170720_191646_381696_59AFA850)
-References: <1500446187-8034-1-git-send-email-huxinming820@gmail.com>
- <20170719200933.GA126381@google.com>
- <2729342a9145434682181afd4bae1710@SC-EXCH02.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <2729342a9145434682181afd4bae1710@SC-EXCH02.marvell.com>
+Received: from [217.148.43.144] ([217.148.43.144]:49584 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751527AbdGZUqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:49 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 25/34] brcmfmac: Remove repeated calls to brcmf_chip_get_core()
+Date: Wed, 26 Jul 2017 21:25:48 +0100
+Message-Id: <20170726202557.15632-26-ian@mnementh.co.uk> (sfid-20170726_230044_009715_BE308070)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+There is no need to repeatdly call brcmf_chip_get_core(), which
+traverses a list of cores every time its called (including during
+register access code!).
 
-On Thu, Jul 20, 2017 at 10:54:16AM +0000, Xinming Hu wrote:
-> Hi Brian,
-> 
-> > -----Original Message-----
-> > From: Brian Norris [mailto:briannorris@chromium.org]
-> > Sent: 2017年7月20日 4:10
-> > To: Xinming Hu
-> > Cc: Linux Wireless; Kalle Valo; Dmitry Torokhov; rajatja@google.com; Zhiyuan
-> > Yang; Tim Song; Cathy Luo; Xinming Hu
-> > Subject: [EXT] Re: [PATCH] mwifiex: add tdls uapsd support module parameter
-> > 
-> > External Email
-> > 
-> > ----------------------------------------------------------------------
-> > On Wed, Jul 19, 2017 at 06:36:27AM +0000, Xinming Hu wrote:
-> > > From: Xinming Hu <huxm@marvell.com>
-> > >
-> > > Add module parameter to control tdls uapsd support, which is default
-> > > disabled.
-> > 
-> > Why default disabled, when it looks like it used to be on by default?
-> 
-> Oho, I should comment more in description, it is now confusing.
-> We just fixed an tdls uapsd issue in latest firmware, so try to disable
-> this feature as a workaround to the old firmware. At the same time, 
-> it is optional to enable this feature in specific case.
+Call it once, and store a pointer to the core structure. The existing
+code does nto keep track of users of the cores anyway, and even so, this
+will allow for easier refcounting in future.
 
-That helps a bit, thanks.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 25 +++++++++++++---------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-> I will add more comments in V2.
-> Please let us know if you have more comments.
-
-I won't insist on changes, but for something like this, it seems
-reasonable (if you have really fixed the issue in the latest firmware)
-to just provide the knob to disable as a backup, not as a default. If
-someone is going to update their kernel (to include this patch), but not
-update their firmware, then they probably should know enough to be able
-to provide the module parameter to disable.
-
-Or alternatively: how is anyone supposed to know whether their current
-firmware is broken or not? And how is this feature ever going to be
-default-enabled again? New chipsets with new firmware should hopefully
-not have the same bugs, no?
-
-Brian
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index b4fd832cdabe..3feaf9125b25 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -435,6 +435,7 @@ struct brcmf_sdio_count {
+ struct brcmf_sdio {
+ 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
+ 	struct brcmf_chip *ci;	/* Chip info struct */
++	struct brcmf_core *sdio_core; /* sdio core info struct */
+ 
+ 	u32 hostintmask;	/* Copy of Host Interrupt Mask */
+ 	atomic_t intstatus;	/* Intstatus bits (events) pending */
+@@ -662,10 +663,9 @@ static bool data_ok(struct brcmf_sdio *bus)
+  */
+ static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+ {
+-	struct brcmf_core *core;
++	struct brcmf_core *core = bus->sdio_core;
+ 	int ret;
+ 
+-	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
+ 
+ 	return ret;
+@@ -673,10 +673,9 @@ static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+ 
+ static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+ {
+-	struct brcmf_core *core;
++	struct brcmf_core *core = bus->sdio_core;
+ 	int ret;
+ 
+-	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
+ 
+ 	return ret;
+@@ -2484,12 +2483,11 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_core *buscore;
++	struct brcmf_core *buscore = bus->sdio_core;
+ 	u32 addr;
+ 	unsigned long val;
+ 	int ret;
+ 
+-	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	addr = buscore->base + __sd_reg(intstatus);
+ 
+ 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
+@@ -3366,13 +3364,14 @@ static void brcmf_sdio_sr_init(struct brcmf_sdio *bus)
+ /* enable KSO bit */
+ static int brcmf_sdio_kso_init(struct brcmf_sdio *bus)
+ {
++	struct brcmf_core *core = bus->sdio_core;
+ 	u8 val;
+ 	int err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	/* KSO bit added in SDIO core rev 12 */
+-	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12)
++	if (core->rev < 12)
+ 		return 0;
+ 
+ 	val = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, &err);
+@@ -3400,6 +3399,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_core *core = bus->sdio_core;
+ 	uint pad_size;
+ 	u32 value;
+ 	int err;
+@@ -3408,7 +3408,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 	 * a device perspective, ie. bus:txglom affects the
+ 	 * bus transfers from device to host.
+ 	 */
+-	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12) {
++	if (core->rev < 12) {
+ 		/* for sdio core rev < 12, disable txgloming */
+ 		value = 0;
+ 		err = brcmf_iovar_data_set(dev, "bus:txglom", &value,
+@@ -3746,11 +3746,10 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 					u32 rstvec)
+ {
+ 	struct brcmf_sdio_dev *sdiodev = ctx;
+-	struct brcmf_core *core;
++	struct brcmf_core *core = sdiodev->bus->sdio_core;
+ 	u32 reg_addr;
+ 
+ 	/* clear all interrupts */
+-	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
+ 	reg_addr = core->base + __sd_reg(intstatus);
+ 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
+ 
+@@ -3831,6 +3830,12 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 		bus->ci = NULL;
+ 		goto fail;
+ 	}
++
++	/* Pick up the SDIO core info struct from chip.c */
++	bus->sdio_core   = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
++	if (!bus->sdio_core)
++		goto fail;
++
+ 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
+ 						   BRCMF_BUSTYPE_SDIO,
+ 						   bus->ci->chip,
+-- 
+2.11.0
