@@ -1,84 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:50020 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751294AbdGQQrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:47:37 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 29/29] brcmfmac: HACK - stabilise the value of ->sbwad in use for some xfer routines.
-Date: Mon, 17 Jul 2017 17:16:37 +0100
-Message-Id: <20170717161637.4652-30-ian@mnementh.co.uk> (sfid-20170717_184742_225192_B08149F9)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:34705 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751103AbdGZIud (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 04:50:33 -0400
+Received: by mail-wr0-f177.google.com with SMTP id 12so128822327wrb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2017 01:50:33 -0700 (PDT)
+Message-ID: <597857D6.4010508@broadcom.com> (sfid-20170726_105037_633637_0B367216)
+Date: Wed, 26 Jul 2017 10:50:30 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+To: Stefan Wahren <stefan.wahren@i2se.com>
+CC: Franky Lin <franky.lin@broadcom.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-rpi-kernel@lists.infradead.org,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>
+Subject: Re: brcmfmac: BCM43431 won't get probed on Raspberry Pi Zero W
+References: <384537059.123625.1498678388857@email.1und1.de> <1133935948.74840.1500297053336@email.1und1.de> <CA+8PC_eKn_LddvcpYG=V6vD7qZfVNEmmzR3gWXxWO80SNKR-3Q@mail.gmail.com> <1389331679.85833.1500323470395@email.1und1.de> <314866679.136055.1501049965582@email.1und1.de>
+In-Reply-To: <314866679.136055.1501049965582@email.1und1.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We probably need to look up the value in future, but this has to be
-better for now.
+On 7/26/2017 8:19 AM, Stefan Wahren wrote:
+> Hi,
+>
+>> Stefan Wahren <stefan.wahren@i2se.com> hat am 17. Juli 2017 um 22:31 geschrieben:
+>>
+>>
+>> Hi,
+>>
+>>> Franky Lin <franky.lin@broadcom.com> hat am 17. Juli 2017 um 21:50 geschrieben:
+>>>
+>>>
+>>> On Mon, Jul 17, 2017 at 6:10 AM, Stefan Wahren <stefan.wahren@i2se.com> wrote:
+>>>> Hi,
+>>>>
+>>>>> Stefan Wahren <stefan.wahren@i2se.com> hat am 28. Juni 2017 um 21:33 geschrieben:
+>>>>>
+>>>>>
+>>>>> Hi,
+>>>>>
+>>>>> i'm currently working on Raspberry Pi Zero W for Mainline. Here is my first patch series [1].
+>>>>>
+>>>>> Unfortunately i didn't get brcmfmac (connected via SDIO) probed with this patch series against 4.12.0-rc5-next-20170616+
+>>>>>
+>>>>> [    8.389167] brcmfmac: F1 signature read @0x18000000=0x1541a9a6
+>>>>> [    8.735111] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: May 27 2016 00:13:38 version 7.45.41.26 (r640327) FWID 01-df77e4a7
+>>>>> [    8.786016] brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+>>>>> [   11.288798] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>>>>> [   11.292822] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+>>>>> [   13.848777] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>>>>> [   13.852974] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+>>>>> [   16.408762] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>>>>> [   16.413004] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+>>>>> [   18.968769] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>>>>> [   18.972965] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+>>>>> [   21.528743] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>>>>> [   21.532924] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+>>>>> [   24.088745] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>>>>> [   24.092948] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+>>>>> [   26.648764] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
+>>>>> [   26.648789] brcmfmac: brcmf_cfg80211_attach: Failed to get D11 version (-110)
+>>>>> [   26.648831] brcmfmac: brcmf_bus_started: failed: -12
+>>>>> [   26.648842] brcmfmac: brcmf_sdio_firmware_callback: dongle is not responding
+>>>>>
+>>> ...
+>>> Can you please try to comment out the following lines in
+>>> brcmf_feat_attach? That's the only suspicious line that interact with
+>>> firmware in the patch.
+>>>
+>>> + brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
+>>> +                                            &gscan_cfg, sizeof(gscan_cfg));
+>>
+>> after commenting out this line, the issue doesn't appear.
+>>
+>
+> what are the plans to fix this regression?
 
-During my cleanup I uncovered this. The value of ->sbwad is essentially
-un-known in several functions, and this will lead to tears should the code
-be modified in ways that *should* be OK, but in practice may move the IO
-window.
+I am a bit in doubt about this one. We can avoid the firmware config 
+above for bcm4343x devices as a short term fix. However, I would like to 
+root cause the issue. Received a Pi Zero over here so gearing it up.
 
-Classic house-of-cards bug, by the look of it.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index ab015bad02f2..37fddc6e34ce 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -59,6 +59,11 @@
- 
- #define BRCMF_DEFAULT_RXGLOM_SIZE	32  /* max rx frames in glom chain */
- 
-+/* This is a huge hack - we should look up this value and refer to that - who knows if it varies from chip to chip...
-+ * however this has got to be better than just letting ->sbwad dangle after the last bit of IO during setup
-+ */
-+#define FIXME_CHIPCOMMON_BASE 0x18000000
-+
- struct brcmf_sdiod_freezer {
- 	atomic_t freezing;
- 	atomic_t thread_count;
-@@ -528,7 +533,7 @@ int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 
- int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- {
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = FIXME_CHIPCOMMON_BASE;
- 	int err = 0;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
-@@ -551,7 +556,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- {
- 	struct sk_buff *glom_skb = NULL;
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = FIXME_CHIPCOMMON_BASE;
- 	int err = 0;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
-@@ -592,7 +597,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = FIXME_CHIPCOMMON_BASE;
- 	int err;
- 
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-@@ -625,7 +630,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 			 struct sk_buff_head *pktq)
- {
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = FIXME_CHIPCOMMON_BASE;
- 	int err;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
--- 
-2.11.0
+Regards,
+Arend
