@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:35656 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752031AbdGDSNx (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:37366 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750813AbdGZH7E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2017 14:13:53 -0400
-Received: by mail-pf0-f176.google.com with SMTP id c73so118285639pfk.2
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jul 2017 11:13:52 -0700 (PDT)
-Date: Tue, 4 Jul 2017 11:13:44 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Dison River <pwn2river@gmail.com>
-Cc: samuel@sortiz.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, qca_merez@qca.qualcomm.com,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        jakub.kicinski@netronome.com, davem@davemloft.net,
-        oss-drivers@netronome.com, security@kernel.org,
-        wil6210@qca.qualcomm.com
-Subject: Re: 'skb' buffer address information leakage
-Message-ID: <20170704111344.416fadc5@xeon-e3> (sfid-20170704_201413_606969_ED36EFDD)
-In-Reply-To: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
-References: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com>
+        Wed, 26 Jul 2017 03:59:04 -0400
+Received: by mail-qk0-f176.google.com with SMTP id z18so805334qka.4
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2017 00:59:03 -0700 (PDT)
+Message-ID: <59784BC5.2070109@broadcom.com> (sfid-20170726_095907_809614_F2458F74)
+Date: Wed, 26 Jul 2017 09:59:01 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Stefan Wahren <stefan.wahren@i2se.com>
+CC: franky.lin@broadcom.com, pieter-paul.giesberts@broadcom.com,
+        kvalo@codeaurora.org, hante.meuleman@broadcom.com,
+        brcm80211-dev-list.pdl@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: brcmfmac: Possible memleak brcmf_sdiod_sgtable_alloc
+References: <1442361688.41682.1500729531173@email.1und1.de> <325e5f1a-2752-6004-a460-a59e8e2c702d@broadcom.com> <1455616686.54674.1500769455061@email.1und1.de> <1781803691.135971.1501049549490@email.1und1.de>
+In-Reply-To: <1781803691.135971.1501049549490@email.1und1.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 4 Jul 2017 13:12:18 +0800
-Dison River <pwn2river@gmail.com> wrote:
+On 7/26/2017 8:12 AM, Stefan Wahren wrote:
+> Hi Arend,
+>
+>> Stefan Wahren <stefan.wahren@i2se.com> hat am 23. Juli 2017 um 02:24 geschrieben:
+>>
+>>
+>>
+>>> Arend van Spriel <arend.vanspriel@broadcom.com> hat am 22. Juli 2017 um 21:40 geschrieben:
+>>>
+>>>
+>>> On 22-07-17 15:18, Stefan Wahren wrote:
+>>>> Hi,
+>>>>
+>>>> with enabled memleak detector on 4.13-rc1 (Raspberry Pi Zero W) i get the following:
+>>>>
+>>>> root@raspberrypi:/sys/kernel/debug# cat kmemleak
+>>>> unreferenced object 0xd824e400 (size 1024):
+>>>>    comm "kworker/0:0", pid 3, jiffies 4294939822 (age 873.420s)
+>>>>    hex dump (first 32 bytes):
+>>>>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>>>>      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>>>>    backtrace:
+>>>>      [<c07f741c>] kmemleak_alloc+0x60/0xc8
+>>>>      [<c024cb44>] __kmalloc+0x184/0x2f4
+>>>>      [<c03dc1c8>] sg_kmalloc+0x48/0x4c
+>>>>      [<c03dc0dc>] __sg_alloc_table+0x78/0x11c
+>>>>      [<c03dc5d0>] sg_alloc_table+0x2c/0x5c
+>>>>      [<bf07d7e8>] brcmf_sdiod_sgtable_alloc+0xc0/0x110 [brcmfmac]
+>>>>      [<bf07b814>] brcmf_sdio_probe+0x24c/0x970 [brcmfmac]
+>>>>      [<bf07c6fc>] brcmf_ops_sdio_probe+0x17c/0x244 [brcmfmac]
+>>>>      [<c057d5b4>] sdio_bus_probe+0xb4/0x124
+>>>>      [<c04add08>] driver_probe_device+0x1d8/0x438
+>>>>      [<c04ae00c>] __driver_attach+0xa4/0x108
+>>>>      [<c04abe20>] bus_for_each_dev+0x84/0x98
+>>>>      [<c04ad644>] driver_attach+0x28/0x30
+>>>>      [<c04ad084>] bus_add_driver+0xe4/0x24c
+>>>>      [<c04ae834>] driver_register+0xac/0xf0
+>>>>      [<c057d7dc>] sdio_register_driver+0x2c/0x34
+>>>
+>>> Hi Stefan,
+>>>
+>>> Thanks for the report. Checking elixir it shows two call sites to
+>>> brcmf_sdiod_sgtable_alloc() [1]. This is rather unexpected. We did move
+>>> the call so this might be a merge issue.
+>>>
+>>> 4d7928959 sdio.c (Hante Meuleman   2016-02-17 11:27:07 +0100:
+>>> 3867)     brcmf_sdiod_sgtable_alloc(sdiodev);
+>>>
+>>> e0045bf80 sdio.c (Hante Meuleman   2016-01-19 12:39:24 +0100:
+>>> 4180)     brcmf_sdiod_sgtable_alloc(bus->sdiodev);
+>>>
+>>> The most recent change is:
+>>>
+>>> commit 4d7928959832 ("brcmfmac: switch to new platform data") found in
+>>> patchwork [2], which shows the added call, but no removal so the merge
+>>> issue is probably internal with us (me :-( ).
+>>>
+>>> Again thanks for the report. Below change should fix the issue.
+>>
+>> Yes, this fixed the leak. Thanks for you fast reply.
+>
+> do you plan to send a proper patch for this?
 
-> Hi all:
-> I'd found several address leaks of "skb" buffer.When i have a
-> arbitrary address write vulnerability in kernel(enabled kASLR),I can
-> use skb's address find sk_destruct's address and overwrite it. And
-> then,invoke close(sock_fd) function can trigger the
-> shellcode(sk_destruct func).
-> 
-> In kernel 4.12-rc7
-> drivers/net/irda/vlsi_ir.c:326           seq_printf(seq, "skb=%p
-> data=%p hw=%p\n", rd->skb, rd->buf, rd->hw);
-> drivers/net/ethernet/netronome/nfp/nfp_net_debugfs.c:167
->          seq_printf(file, " frag=%p", skb);
-> drivers/net/wireless/ath/wil6210/debugfs.c:926           seq_printf(s,
-> "  SKB = 0x%p\n", skb);
-> 
-> Thanks.
+Sure. Catching up after my vacation.
 
-Debugfs support is optional with Netronome. If concerned about security,
-then it should be disabled.
-
-The WIIL6210 driver debugfs has other worse address leaks.
-The whole debugfs support in this driver should be made optional
-(or removed).
-
-The VLSI /oroc interface likewise should just be removed (or made
-optional). Most distributions do not build IRDA anymore anyway.
+Regards,
+Arend
