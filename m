@@ -1,94 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:46258 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751024AbdGZUmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:42:03 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 26/34] brcmfmac: General cleaning up. whitespace and comments fix.
-Date: Wed, 26 Jul 2017 21:25:49 +0100
-Message-Id: <20170726202557.15632-27-ian@mnementh.co.uk> (sfid-20170726_224207_310502_0B86F1D7)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37611 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751539AbdGZVIU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 17:08:20 -0400
+Received: by mail-wm0-f44.google.com with SMTP id c184so91696155wmd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2017 14:08:20 -0700 (PDT)
+Subject: Re: brcmfmac4356-pcie 4.13 regression (frequent kernel panics) not
+ fixed by recent 4.13 regression fix
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: russianneuromancer@ya.ru, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Igor Nikolic <nikolic.igor@gmail.com>
+References: <b3b9dd19-a20d-ac4e-70f1-6059e7ec7d20@redhat.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <1570e9f5-a52c-77d6-d391-ee8cff9fc3db@broadcom.com> (sfid-20170726_230824_395073_3934C5F7)
+Date: Wed, 26 Jul 2017 23:08:17 +0200
+MIME-Version: 1.0
+In-Reply-To: <b3b9dd19-a20d-ac4e-70f1-6059e7ec7d20@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tidy code, fix whitespace, remove useless debug code.
+On 26-07-17 23:03, Hans de Goede wrote:
+> Hi,
+> 
+> I've been seeing frequent kernel panics on wifi activity
+> (scp-ing a lot of files) with 4.13 on 2 different systems
+> which both use a brcmfmac4356-pcie wifi chip.
+> 
+> This is with this fix:
+> https://www.spinics.net/lists/linux-wireless/msg164178.html
+> already applied.
+> 
+> Here is a picture of the panic:
+> 
+> https://fedorapeople.org/~jwrdegoede/brcmfmac4356-pcie-4.13-panic.jpg
+> 
+> Reverting commit 270a6c1f65fe ("brcmfmac: rework headroom check in
+> .start_xmit()"):
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit?id=270a6c1f65fe68a28a5d39cd405592c550b496c7
+> 
+> 
+> seems to fix this (I can no longer quickly reproduce the panic
+> by scp-ing a large amount of files).
+> 
+> Note I've first reverted the:
+> https://www.spinics.net/lists/linux-wireless/msg164178.html
+> fix so that I could cleanly revert commit 270a6c1f65fe.
+> 
+> Given that no code seems to use the statics commit 270a6c1f65fe
+> offers and it has been the cause of 2 different regressions now,
+> it might be best to just revert 270a6c1f65fe for 4.13.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 24 ++++++++++++++--------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+Hi Hans,
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 3feaf9125b25..9ef137d6eb3f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -642,11 +642,13 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 
- static void pkt_align(struct sk_buff *p, int len, int align)
- {
--	uint datalign;
--	datalign = (unsigned long)(p->data);
-+	uint datalign = (unsigned long)(p->data);
-+
- 	datalign = roundup(datalign, (align)) - datalign;
-+
- 	if (datalign)
- 		skb_pull(p, datalign);
-+
- 	__skb_trim(p, len);
- }
- 
-@@ -2467,10 +2469,9 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 
- static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- {
--	struct brcmf_sdio_dev *sdiodev;
-+	struct brcmf_sdio_dev *sdiodev = bus->sdiodev;
- 	unsigned long flags;
- 
--	sdiodev = bus->sdiodev;
- 	if (sdiodev->oob_irq_requested) {
- 		spin_lock_irqsave(&sdiodev->irq_en_lock, flags);
- 		if (!sdiodev->irq_en && !atomic_read(&bus->ipend)) {
-@@ -3765,15 +3766,23 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	u32 val, rev;
- 
- 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
-+
-+	/* Force 4339 chips over rev2 to use the same ID */
-+	/* This is borderline tolerable whilst there is only two exceptions */
-+	/* But could be handled better */
- 	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
--	     sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
--	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+		sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
-+		addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
-+
- 		if (rev >= 2) {
- 			val &= ~CID_ID_MASK;
- 			val |= BRCM_CC_4339_CHIP_ID;
- 		}
-+
- 	}
-+
- 	return val;
- }
- 
-@@ -3804,9 +3813,6 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 	sdiodev = bus->sdiodev;
- 	sdio_claim_host(sdiodev->func[1]);
- 
--	pr_debug("F1 signature read @0x18000000=0x%4x\n",
--		 brcmf_sdiod_readl(sdiodev, SI_ENUM_BASE, NULL));
--
- 	/*
- 	 * Force PLL off until brcmf_chip_attach()
- 	 * programs PLL control regs
--- 
-2.11.0
+I suspect this patch [1] fixes that. Can you verify? And yes, I messed
+up. Sorry.
+
+Regards,
+Arend
