@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:34425 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755367AbdGCNjB (ORCPT
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:44479 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751210AbdGZTGo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Jul 2017 09:39:01 -0400
-From: Rob Clark <robdclark@gmail.com>
-To: linux-arm-msm@vger.kernel.org
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, Rob Clark <robdclark@gmail.com>
-Subject: [PATCH] wcn36xx: check dma_mapping_error()
-Date: Mon,  3 Jul 2017 09:38:45 -0400
-Message-Id: <20170703133845.13638-1-robdclark@gmail.com> (sfid-20170703_170242_224028_8CEA9E63)
+        Wed, 26 Jul 2017 15:06:44 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
+        devel@driverdev.osuosl.org,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org,
+        linux-efi <linux-efi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID API
+Date: Wed, 26 Jul 2017 20:58:44 +0200
+Message-ID: <16514141.pv8EQG4iRb@aspire.rjw.lan> (sfid-20170726_210703_760401_CFE390B7)
+In-Reply-To: <1501063383.29303.248.camel@linux.intel.com>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com> <6349641.0fe8FCM51k@aspire.rjw.lan> <1501063383.29303.248.camel@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes splat:
+On Wednesday, July 26, 2017 01:03:03 PM Andy Shevchenko wrote:
+> On Wed, 2017-07-26 at 02:27 +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, July 26, 2017 03:35:01 AM Andy Shevchenko wrote:
+> > > On Wed, Jul 26, 2017 at 3:21 AM, Rafael J. Wysocki <rjw@rjwysocki.ne
+> > > t> wrote:
+> 
+> > > > Andy, do you want me to apply this?
+> > > 
+> > > If you would like to.
+> > > 
+> > > The patch is now pretty independent since necessary stuff made
+> > > v4.13-rc1.
+> > 
+> > OK
+> 
+> Thanks!
 
-  wcn36xx a204000.wcnss:smd-edge:wcnss:wifi: DMA-API: device driver failed to check map error[device address=0x00000000b45ba000] [size=3872 bytes] [mapped as single]
-  ------------[ cut here ]------------
-  WARNING: CPU: 0 PID: 0 at ../lib/dma-debug.c:1167 check_unmap+0x474/0x8d0
-  Modules linked in: bnep(E) arc4(E) wcn36xx(E) mac80211(E) btqcomsmd(E) btqca(E) bluetooth(E) cfg80211(E) ecdh_generic(E) rfkill(E) vfat(E) fat(E) wcnss_ctrl qcom_wcnss_pil(E) mdt_loader(E) qcom_common(E) remoteproc(E) crc32_ce(E) virtio_ring(E) snd_soc_lpass_apq8016(E) snd_soc_lpass_cpu(E) virtio(E) snd_soc_lpass_platform(E) leds_gpio(E) snd_soc_hdmi_codec(E) snd_soc_apq8016_sbc(E) snd_soc_msm8916_digital(E) snd_soc_core(E) qcom_spmi_temp_alarm(E) ac97_bus(E) snd_pcm_dmaengine(E) snd_seq(E) snd_seq_device(E) snd_pcm(E) spi_qup(E) nvmem_qfprom(E) snd_timer(E) snd(E) soundcore(E) msm_rng(E) qcom_tsens(E) nvmem_core(E) uas(E) usb_storage(E) dm9601(E) cdc_ether(E) usbnet(E) mii(E) mmc_block(E) sdhci_msm(E) sdhci_pltfm(E) qcom_spmi_vadc(E) qcom_vadc_common(PE) clk_smd_rpm(E) industrialio(E)
-   qcom_smd_regulator(E) pinctrl_spmi_mpp(E) pinctrl_spmi_gpio(E) rtc_pm8xxx(E) adv7511(E) smd_rpm(E) qcom_spmi_pmic(E) regmap_spmi(E) phy_msm_usb(E) usb3503(E) extcon_usb_gpio(E) ci_hdrc_msm(E) ci_hdrc(E) qcom_hwspinlock(E) udc_core(E) extcon_core(E) ehci_msm(E) i2c_qup(E) sdhci(E) msm(E) mmc_core(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) fb_sys_fops(E) spmi_pmic_arb(E) drm(E) spmi(E) qcom_smd(E) rpmsg_core smsm(E) gpio_keys(E) smp2p(E) smem(E) hwspinlock_core(E) sunrpc(E) scsi_transport_iscsi(E)
-  CPU: 0 PID: 0 Comm: swapper/0 Tainted: P            E   4.12.0-rc7+ #1476
-  Hardware name: qualcomm dragonboard410c/dragonboard410c, BIOS 2017.07-rc1-00234-g22fa70a-dirty 06/26/2017
-  task: ffff000009049780 task.stack: ffff000009030000
-  PC is at check_unmap+0x474/0x8d0
-  LR is at check_unmap+0x474/0x8d0
-  ...
-  Mapped at:
-   dma_entry_alloc+0x68/0xa8
-   debug_dma_map_page+0x94/0x148
-   wcn36xx_dxe_fill_skb.isra.1+0xbc/0xf8 [wcn36xx]
-   wcn36xx_dxe_init+0x244/0x398 [wcn36xx]
-   wcn36xx_start+0xf4/0x298 [wcn36xx]
-
-Signed-off-by: Rob Clark <robdclark@gmail.com>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 87dfdaf..d5c810a 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -289,6 +289,11 @@ static int wcn36xx_dxe_fill_skb(struct device *dev, struct wcn36xx_dxe_ctl *ctl)
- 					 skb_tail_pointer(skb),
- 					 WCN36XX_PKT_SIZE,
- 					 DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, dxe->dst_addr_l)) {
-+		dev_err(dev, "unable to map skb\n");
-+		kfree_skb(skb);
-+		return -ENOMEM;
-+	}
- 	ctl->skb = skb;
- 
- 	return 0;
--- 
-2.9.4
+Applied now, thanks!
