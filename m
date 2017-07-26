@@ -1,49 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:32987 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751312AbdGQSKI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 14:10:08 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 00/11] constify net pci_device_id
-Date: Mon, 17 Jul 2017 23:39:48 +0530
-Message-Id: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201345_317136_6BA9F9CE)
+Received: from [217.148.43.144] ([217.148.43.144]:49608 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751539AbdGZUqw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:52 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 24/34] brcmfmac: Rename chip.ctx -> chip.bus_priv
+Date: Wed, 26 Jul 2017 21:25:47 +0100
+Message-Id: <20170726202557.15632-25-ian@mnementh.co.uk> (sfid-20170726_230050_479673_142FC806)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+This driver uses the label ctx like its going out of fashion.
 
-Arvind Yadav (11):
-  [PATCH 01/11] rtlwifi: rtl8192de: constify pci_device_id.
-  [PATCH 02/11] rtlwifi: rtl8192se: constify pci_device_id.
-  [PATCH 03/11] rtlwifi: rtl8821ae: constify pci_device_id.
-  [PATCH 04/11] rtlwifi: rtl8723ae: constify pci_device_id.
-  [PATCH 05/11] rtlwifi: rtl8723be: constify pci_device_id.
-  [PATCH 06/11] rtlwifi: rtl8188ee: constify pci_device_id.
-  [PATCH 07/11] rtlwifi: rtl8192ee: constify pci_device_id.
-  [PATCH 08/11] net: cadence: macb: constify pci_device_id.
-  [PATCH 09/11] net: ec_bhf: constify pci_device_id.
-  [PATCH 10/11] net: qtnfmac: constify pci_device_id.
-  [PATCH 11/11] net: brcmfmac: constify pci_device_id.
+Lets rename this usage of it so that its easier to see whats going on.
 
- drivers/net/ethernet/cadence/macb_pci.c                 | 2 +-
- drivers/net/ethernet/ec_bhf.c                           | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 +-
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c     | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c     | 2 +-
- 11 files changed, 11 insertions(+), 11 deletions(-)
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 24 +++++++++++-----------
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.h    | 16 +++++++--------
+ 2 files changed, 20 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 9cfabf4a7f62..0b70d61cc912 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -222,18 +222,18 @@ struct sbsocramregs {
+ 
+ static inline int brcmf_readl(struct brcmf_chip *chip, u32 addr)
+ {
+-	return chip->ops->read32(chip->ctx, addr);
++	return chip->ops->read32(chip->bus_priv, addr);
+ }
+ 
+ static inline void brcmf_writel(struct brcmf_chip *chip, u32 addr, u32 v)
+ {
+-	chip->ops->write32(chip->ctx, addr, v);
++	chip->ops->write32(chip->bus_priv, addr, v);
+ }
+ 
+ static inline void brcmf_writelp(struct brcmf_chip *chip, u32 addr, u32 v)
+ {
+-	chip->ops->write32(chip->ctx, addr, v);
+-	chip->ops->read32(chip->ctx, addr);
++	chip->ops->write32(chip->bus_priv, addr, v);
++	chip->ops->read32(chip->bus_priv, addr);
+ }
+ 
+ static void brcmf_clear_bits(struct brcmf_chip *ci, u32 reg, u32 bits)
+@@ -1018,7 +1018,7 @@ static int brcmf_chip_probe(struct brcmf_chip *ci)
+ 	 * specific reset at this point.
+ 	 */
+ 	if (ci->ops->reset) {
+-		ci->ops->reset(ci->ctx, ci);
++		ci->ops->reset(ci->bus_priv, ci);
+ 		brcmf_chip_set_passive(ci);
+ 	}
+ 
+@@ -1089,12 +1089,12 @@ static int brcmf_chip_setup(struct brcmf_chip *chip)
+ 
+ 	/* execute bus core specific setup */
+ 	if (chip->ops->setup)
+-		ret = chip->ops->setup(chip->ctx, chip);
++		ret = chip->ops->setup(chip->bus_priv, chip);
+ 
+ 	return ret;
+ }
+ 
+-struct brcmf_chip *brcmf_chip_attach(void *ctx,
++struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
+ 				     const struct brcmf_buscore_ops *ops)
+ {
+ 	struct brcmf_chip *chip;
+@@ -1118,9 +1118,9 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 	INIT_LIST_HEAD(&chip->cores);
+ 	chip->num_cores = 0;
+ 	chip->ops = ops;
+-	chip->ctx = ctx;
++	chip->bus_priv = bus_priv;
+ 
+-	err = ops->prepare(ctx);
++	err = ops->prepare(bus_priv);
+ 	if (err < 0)
+ 		goto fail;
+ 
+@@ -1241,7 +1241,7 @@ static bool brcmf_chip_cm3_set_active(struct brcmf_chip *chip)
+ 		return false;
+ 	}
+ 
+-	chip->ops->activate(chip->ctx, chip, 0);
++	chip->ops->activate(chip->bus_priv, chip, 0);
+ 
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CM3);
+ 	brcmf_chip_resetcore(core, 0, 0, 0);
+@@ -1267,7 +1267,7 @@ static bool brcmf_chip_cr4_set_active(struct brcmf_chip *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->activate(chip->ctx, chip, rstvec);
++	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CR4);
+@@ -1294,7 +1294,7 @@ static bool brcmf_chip_ca7_set_active(struct brcmf_chip *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->activate(chip->ctx, chip, rstvec);
++	chip->ops->activate(chip->bus_priv, chip, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_ARM_CA7);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+index 060bfa896bf1..680875423f91 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+@@ -50,7 +50,7 @@ struct brcmf_chip {
+ 	void (*resetcore)(struct brcmf_core *core, u32 prereset, u32 reset,
+ 			  u32 postreset);
+ 
+-	void *ctx;
++	void *bus_priv;
+ 
+ 	u32 chip;
+ 	u32 chiprev;
+@@ -94,15 +94,15 @@ struct brcmf_core {
+  *	The callback should use the provided @rstvec when non-zero.
+  */
+ struct brcmf_buscore_ops {
+-	u32 (*read32)(void *ctx, u32 addr);
+-	void (*write32)(void *ctx, u32 addr, u32 value);
+-	int (*prepare)(void *ctx);
+-	int (*reset)(void *ctx, struct brcmf_chip *chip);
+-	int (*setup)(void *ctx, struct brcmf_chip *chip);
+-	void (*activate)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
++	u32 (*read32)(void *bus_priv, u32 addr);
++	void (*write32)(void *bus_priv, u32 addr, u32 value);
++	int (*prepare)(void *bus_priv);
++	int (*reset)(void *bus_priv, struct brcmf_chip *chip);
++	int (*setup)(void *bus_priv, struct brcmf_chip *chip);
++	void (*activate)(void *bus_priv, struct brcmf_chip *chip, u32 rstvec);
+ };
+ 
+-struct brcmf_chip *brcmf_chip_attach(void *ctx,
++struct brcmf_chip *brcmf_chip_attach(void *bus_priv,
+ 				     const struct brcmf_buscore_ops *ops);
+ void brcmf_chip_detach(struct brcmf_chip *chip);
+ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 coreid);
 -- 
-2.7.4
+2.11.0
