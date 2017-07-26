@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42644 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752141AbdG1Plb (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:47104 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751529AbdGZMJi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 11:41:31 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: remove dummy function call
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170628075711.GA8101@symbol-HP-ZBook-15>
-References: <20170628075711.GA8101@symbol-HP-ZBook-15>
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        linux-wireless@vger.kernel.org
-Message-Id: <20170728154130.D551F6090D@smtp.codeaurora.org> (sfid-20170728_174134_914305_D81C3710)
-Date: Fri, 28 Jul 2017 15:41:30 +0000 (UTC)
+        Wed, 26 Jul 2017 08:09:38 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.13] brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice
+Date: Wed, 26 Jul 2017 13:09:24 +0100
+Message-Id: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170726_140942_393349_9E9D60D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Souptick Joarder <jrdr.linux@gmail.com> wrote:
+Due to a bugfix in wireless tree and the commit mentioned below a merge
+was needed which went haywire. So the submitted change resulted in the
+function brcmf_sdiod_sgtable_alloc() being called twice during the probe
+thus leaking the memory of the first call.
 
-> _rtl92cu_init_usb_aggregation() can be removed as it is dummy one
-> 
-> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: stable@vger.kernel.org # 4.6.x
+Fixes: 4d7928959832 ("brcmfmac: switch to new platform data")
+Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
+Tested-by: Stefan Wahren <stefan.wahren@i2se.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-f81372ed8b1e rtlwifi: remove dummy function call
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index c3ecec6..f355612 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4175,11 +4175,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 		goto fail;
+ 	}
+ 
+-	/* allocate scatter-gather table. sg support
+-	 * will be disabled upon allocation failure.
+-	 */
+-	brcmf_sdiod_sgtable_alloc(bus->sdiodev);
+-
+ 	/* Query the F2 block size, set roundup accordingly */
+ 	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
+ 	bus->roundup = min(max_roundup, bus->blocksize);
 -- 
-https://patchwork.kernel.org/patch/9813583/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
