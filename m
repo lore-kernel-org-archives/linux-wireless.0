@@ -1,170 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:49576 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751522AbdGZUqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:46:47 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+Received: from mout.kundenserver.de ([212.227.126.133]:54239 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750816AbdGZGMe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 02:12:34 -0400
+Date: Wed, 26 Jul 2017 08:12:29 +0200 (CEST)
+From: Stefan Wahren <stefan.wahren@i2se.com>
+To: franky.lin@broadcom.com, pieter-paul.giesberts@broadcom.com,
+        kvalo@codeaurora.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
         hante.meuleman@broadcom.com
-Subject: [PATCH 11/34] brcmfmac: Split brcmf_sdiod_buffrw function up.
-Date: Wed, 26 Jul 2017 21:25:34 +0100
-Message-Id: <20170726202557.15632-12-ian@mnementh.co.uk> (sfid-20170726_230043_875200_502FEC2D)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Cc: brcm80211-dev-list.pdl@broadcom.com, linux-wireless@vger.kernel.org
+Message-ID: <1781803691.135971.1501049549490@email.1und1.de> (sfid-20170726_081238_149368_5F917CBF)
+In-Reply-To: <1455616686.54674.1500769455061@email.1und1.de>
+References: <1442361688.41682.1500729531173@email.1und1.de>
+ <325e5f1a-2752-6004-a460-a59e8e2c702d@broadcom.com>
+ <1455616686.54674.1500769455061@email.1und1.de>
+Subject: Re: brcmfmac: Possible memleak brcmf_sdiod_sgtable_alloc
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function needs to be split up into separate read / write variants
-for clarity.
+Hi Arend,
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> Stefan Wahren <stefan.wahren@i2se.com> hat am 23. Juli 2017 um 02:24 geschrieben:
+> 
+> 
+> 
+> > Arend van Spriel <arend.vanspriel@broadcom.com> hat am 22. Juli 2017 um 21:40 geschrieben:
+> > 
+> > 
+> > On 22-07-17 15:18, Stefan Wahren wrote:
+> > > Hi,
+> > > 
+> > > with enabled memleak detector on 4.13-rc1 (Raspberry Pi Zero W) i get the following:
+> > > 
+> > > root@raspberrypi:/sys/kernel/debug# cat kmemleak
+> > > unreferenced object 0xd824e400 (size 1024):
+> > >   comm "kworker/0:0", pid 3, jiffies 4294939822 (age 873.420s)
+> > >   hex dump (first 32 bytes):
+> > >     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >   backtrace:
+> > >     [<c07f741c>] kmemleak_alloc+0x60/0xc8
+> > >     [<c024cb44>] __kmalloc+0x184/0x2f4
+> > >     [<c03dc1c8>] sg_kmalloc+0x48/0x4c
+> > >     [<c03dc0dc>] __sg_alloc_table+0x78/0x11c
+> > >     [<c03dc5d0>] sg_alloc_table+0x2c/0x5c
+> > >     [<bf07d7e8>] brcmf_sdiod_sgtable_alloc+0xc0/0x110 [brcmfmac]
+> > >     [<bf07b814>] brcmf_sdio_probe+0x24c/0x970 [brcmfmac]
+> > >     [<bf07c6fc>] brcmf_ops_sdio_probe+0x17c/0x244 [brcmfmac]
+> > >     [<c057d5b4>] sdio_bus_probe+0xb4/0x124
+> > >     [<c04add08>] driver_probe_device+0x1d8/0x438
+> > >     [<c04ae00c>] __driver_attach+0xa4/0x108
+> > >     [<c04abe20>] bus_for_each_dev+0x84/0x98
+> > >     [<c04ad644>] driver_attach+0x28/0x30
+> > >     [<c04ad084>] bus_add_driver+0xe4/0x24c
+> > >     [<c04ae834>] driver_register+0xac/0xf0
+> > >     [<c057d7dc>] sdio_register_driver+0x2c/0x34
+> > 
+> > Hi Stefan,
+> > 
+> > Thanks for the report. Checking elixir it shows two call sites to
+> > brcmf_sdiod_sgtable_alloc() [1]. This is rather unexpected. We did move
+> > the call so this might be a merge issue.
+> > 
+> > 4d7928959 sdio.c (Hante Meuleman   2016-02-17 11:27:07 +0100:
+> > 3867)     brcmf_sdiod_sgtable_alloc(sdiodev);
+> > 
+> > e0045bf80 sdio.c (Hante Meuleman   2016-01-19 12:39:24 +0100:
+> > 4180)     brcmf_sdiod_sgtable_alloc(bus->sdiodev);
+> > 
+> > The most recent change is:
+> > 
+> > commit 4d7928959832 ("brcmfmac: switch to new platform data") found in
+> > patchwork [2], which shows the added call, but no removal so the merge
+> > issue is probably internal with us (me :-( ).
+> > 
+> > Again thanks for the report. Below change should fix the issue.
+> 
+> Yes, this fixed the leak. Thanks for you fast reply.
 
-# Conflicts:
-#	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 69 +++++++++++++++-------
- 1 file changed, 47 insertions(+), 22 deletions(-)
+do you plan to send a proper patch for this?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9d5716d0ad73..858ad2d8706b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -413,8 +413,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		*ret = retval;
- }
- 
--static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
--			     bool write, u32 addr, struct sk_buff *pkt)
-+static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
-+				 u32 addr, struct sk_buff *pkt)
- {
- 	unsigned int req_sz;
- 	int err;
-@@ -423,18 +423,36 @@ static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	req_sz = pkt->len + 3;
- 	req_sz &= (uint)~3;
- 
--	if (write)
--		err = sdio_memcpy_toio(sdiodev->func[fn], addr,
--				       ((u8 *)(pkt->data)), req_sz);
--	else if (fn == 1)
--		err = sdio_memcpy_fromio(sdiodev->func[fn], ((u8 *)(pkt->data)),
--					 addr, req_sz);
-+	if (fn == 1)
-+		err = sdio_memcpy_fromio(sdiodev->func[fn],
-+					 ((u8 *)(pkt->data)), addr, req_sz);
- 	else
- 		/* function 2 read is FIFO operation */
--		err = sdio_readsb(sdiodev->func[fn], ((u8 *)(pkt->data)), addr,
--				  req_sz);
-+		err = sdio_readsb(sdiodev->func[fn],
-+				  ((u8 *)(pkt->data)), addr, req_sz);
-+
-+	if (err == -ENOMEDIUM)
-+		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+
-+	return err;
-+}
-+
-+static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
-+				  u32 addr, struct sk_buff *pkt)
-+{
-+	unsigned int req_sz;
-+	int err;
-+
-+	/* Single skb use the standard mmc interface */
-+	req_sz = pkt->len + 3;
-+	req_sz &= (uint)~3;
-+
-+	err = sdio_memcpy_toio(sdiodev->func[fn], addr,
-+			       ((u8 *)(pkt->data)), req_sz);
-+
- 	if (err == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+
- 	return err;
- }
- 
-@@ -642,7 +660,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- 	if (err)
- 		goto done;
- 
--	err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr, pkt);
-+	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
- 
- done:
- 	return err;
-@@ -664,14 +682,14 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 		goto done;
- 
- 	if (pktq->qlen == 1)
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
--					 pktq->next);
-+		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
-+					    pktq->next);
- 	else if (!sdiodev->sg_support) {
- 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
- 		if (!glom_skb)
- 			return -ENOMEM;
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
--					 glom_skb);
-+		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
-+					    glom_skb);
- 		if (err)
- 			goto done;
- 
-@@ -695,6 +713,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 	int err;
- 
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-+
- 	if (!mypkt) {
- 		brcmf_err("brcmu_pkt_buf_get_skb failed: len %d\n",
- 			  nbytes);
-@@ -706,10 +725,10 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 	err = brcmf_sdiod_addrprep(sdiodev, &addr);
- 
- 	if (!err)
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
--					 mypkt);
-+		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
- 
- 	brcmu_pkt_buf_free_skb(mypkt);
-+
- 	return err;
- 
- }
-@@ -729,8 +748,8 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 
- 	if (pktq->qlen == 1 || !sdiodev->sg_support)
- 		skb_queue_walk(pktq, skb) {
--			err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true,
--						 addr, skb);
-+			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
-+						     addr, skb);
- 			if (err)
- 				break;
- 		}
-@@ -782,10 +801,16 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		sdaddr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 		skb_put(pkt, dsize);
--		if (write)
-+
-+		if (write) {
- 			memcpy(pkt->data, data, dsize);
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write, sdaddr,
--					 pkt);
-+			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_1,
-+						     sdaddr, pkt);
-+		} else {
-+			err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_1,
-+						    sdaddr, pkt);
-+		}
-+
- 		if (err) {
- 			brcmf_err("membytes transfer failed\n");
- 			break;
--- 
-2.11.0
+> 
+> > 
+> > Regards,
+> > Arend
+> > 
+> > [1]
+> > http://elixir.free-electrons.com/linux/latest/ident/brcmf_sdiod_sgtable_alloc
+> > [2] https://patchwork.kernel.org/patch/8336231/
+> > 
+> > ---
+> > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > index fbcbb43..ed2c693 100644
+> > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > @@ -4174,11 +4174,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
+> > brcmf_sdio_dev *sdiodev)
+> >                 goto fail;
+> >         }
+> > 
+> > -       /* allocate scatter-gather table. sg support
+> > -        * will be disabled upon allocation failure.
+> > -        */
+> > -       brcmf_sdiod_sgtable_alloc(bus->sdiodev);
+> > -
+> >         /* Query the F2 block size, set roundup accordingly */
+> >         bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
+> >         bus->roundup = min(max_roundup, bus->blocksize);
