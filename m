@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:59670 "EHLO mnementh.co.uk"
+Received: from [217.148.43.144] ([217.148.43.144]:50098 "EHLO mnementh.co.uk"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1754083AbdGSTNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:13:25 -0400
+        id S1751057AbdGZUrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:47:55 -0400
 From: Ian Molton <ian@mnementh.co.uk>
 To: linux-wireless@vger.kernel.org
 Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com
-Subject: [PATCH 18/34] brcmfmac: Rename SOC_AI to SOC_AXI
-Date: Wed, 19 Jul 2017 20:08:06 +0100
-Message-Id: <20170719190822.10857-19-ian@mnementh.co.uk> (sfid-20170719_211338_028584_4E17DD30)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Subject: [PATCH 13/34] brcmfmac: Tidy register definitions a little
+Date: Wed, 26 Jul 2017 21:25:36 +0100
+Message-Id: <20170726202557.15632-14-ian@mnementh.co.uk> (sfid-20170726_230050_616390_1FA5F3DA)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This #define is poorly named. Correct it.
-
-At the same time, convert the if..elseif...else it is used in to a switch
-for clarity.
+Trivial tidy of register definitions.
 
 Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 05f22ff81d60..7b8ba7192e1a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -30,7 +30,7 @@
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 4c81ea24d19c..fb4f24dfc99d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -51,17 +51,18 @@
  
- /* SOC Interconnect types (aka chip types) */
- #define SOCI_SB		0
--#define SOCI_AI		1
-+#define SOCI_AXI	1
+ /* function 0 vendor specific CCCR registers */
  
- /* PL-368 DMP definitions */
- #define DMP_DESC_TYPE_MSK	0x0000000F
-@@ -927,7 +927,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
- 		  ci->pub.chiprev);
+-#define SDIO_CCCR_BRCM_CARDCAP			0xf0
++#define SDIO_CCCR_BRCM_CARDCAP		0xf0
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	0x08
++
+ #define SDIO_CCCR_BRCM_CARDCTRL		0xf1
+ #define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	0x02
+-#define SDIO_CCCR_BRCM_SEPINT			0xf2
  
--	if (socitype == SOCI_SB) {
-+	switch(socitype) {
-+		case SOCI_SB:
- 		if (ci->pub.chip != BRCM_CC_4329_CHIP_ID) {
- 			brcmf_err("SB chip is not supported\n");
- 			return -ENODEV;
-@@ -951,13 +952,15 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
+-#define  SDIO_SEPINT_MASK		0x01
+-#define  SDIO_SEPINT_OE			0x02
+-#define  SDIO_SEPINT_ACT_HI		0x04
++#define SDIO_CCCR_BRCM_SEPINT		0xf2
++#define SDIO_SEPINT_MASK			0x01
++#define SDIO_SEPINT_OE				0x02
++#define SDIO_SEPINT_ACT_HI			0x04
  
- 		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
- 		brcmf_chip_sb_corerev(ci, core);
--	} else if (socitype == SOCI_AI) {
-+		break;
-+	case SOCI_AXI:
- 		ci->iscoreup = brcmf_chip_ai_iscoreup;
- 		ci->coredisable = brcmf_chip_ai_coredisable;
- 		ci->resetcore = brcmf_chip_ai_resetcore;
+ /* function 1 miscellaneous registers */
  
- 		brcmf_chip_dmp_erom_scan(ci);
--	} else {
-+		break;
-+	default:
- 		brcmf_err("chip backplane type %u is not supported\n",
- 			  socitype);
- 		return -ENODEV;
 -- 
 2.11.0
