@@ -1,38 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ecemailfilter.ece.umd.edu ([129.2.90.4]:52117 "EHLO
-        mailfilter.ece.umd.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754931AbdGKO4V (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 10:56:21 -0400
-Received: from mail-qk0-f197.google.com (mail-qk0-f197.google.com [209.85.220.197]) by mailfilter.ece.umd.edu with ESMTP id RpYOz6386Y6An4nJ for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 10:56:20 -0400 (EDT)
-Received: by mail-qk0-f197.google.com with SMTP id a195so1398568qkb.13
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2017 07:56:20 -0700 (PDT)
-Date: Tue, 11 Jul 2017 10:56:17 -0400
-From: "S. Gilles" <sgilles@math.umd.edu>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: [BUG] brcmfmac: BRCM4354 cannot connect since commit 270a6c1f65
-Message-ID: <20170711145617.puao7oybvpv3it72@number18.npnth.net> (sfid-20170711_165625_554602_B17F3A39)
-References: <20170711122125.5epcjhcyneiwxyse@number18.npnth.net>
- <d5775426-f1bd-c2ce-89a8-e11472815787@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <d5775426-f1bd-c2ce-89a8-e11472815787@broadcom.com>
+Received: from [217.148.43.144] ([217.148.43.144]:49594 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751533AbdGZUqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:50 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 10/34] brcmfmac: Rename bcmerror to err
+Date: Wed, 26 Jul 2017 21:25:33 +0100
+Message-Id: <20170726202557.15632-11-ian@mnementh.co.uk> (sfid-20170726_230043_169906_FD9EC74D)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-07-11T14:35:07+0200, Arend van Spriel wrote:
-> [...]
-> 
-> Looking at the diff of the bad commit, I came up with the patch below.
-> Can you try it and let me know the result?
+Trivial cleanup of nasty variable name
 
-That seems to fix everything for me, thanks for the quick patch!
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Thanks,
-S. Gilles
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 049086f6db97..9d5716d0ad73 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -745,7 +745,7 @@ int
+ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 		  u8 *data, uint size)
+ {
+-	int bcmerror = 0;
++	int err = 0;
+ 	struct sk_buff *pkt;
+ 	u32 sdaddr;
+ 	uint dsize;
+@@ -770,8 +770,8 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 	/* Do the transfer(s) */
+ 	while (size) {
+ 		/* Set the backplane window to include the start address */
+-		bcmerror = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
+-		if (bcmerror)
++		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
++		if (err)
+ 			break;
+ 
+ 		brcmf_dbg(SDIO, "%s %d bytes at offset 0x%08x in window 0x%08x\n",
+@@ -784,9 +784,9 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 		skb_put(pkt, dsize);
+ 		if (write)
+ 			memcpy(pkt->data, data, dsize);
+-		bcmerror = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write,
+-					      sdaddr, pkt);
+-		if (bcmerror) {
++		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write, sdaddr,
++					 pkt);
++		if (err) {
+ 			brcmf_err("membytes transfer failed\n");
+ 			break;
+ 		}
+@@ -813,7 +813,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+-	return bcmerror;
++	return err;
+ }
+ 
+ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
+-- 
+2.11.0
