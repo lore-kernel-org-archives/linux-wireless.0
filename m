@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34563 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751300AbdGQOe0 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33455 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751210AbdGZGgA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 10:34:26 -0400
-Received: by mail-oi0-f66.google.com with SMTP id d77so18024428oig.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 07:34:26 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH] Revert "rtlwifi: btcoex: rtl8723be: fix ant_sel not work"
-Date: Mon, 17 Jul 2017 09:34:19 -0500
-Message-Id: <20170717143419.12865-1-Larry.Finger@lwfinger.net> (sfid-20170717_163430_903602_3447B7E4)
+        Wed, 26 Jul 2017 02:36:00 -0400
+Subject: Re: [PATCH v2 00/10] Constify attribute_group structures
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1499758370-24871-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <87fudkiskz.fsf@codeaurora.org>
+Cc: sgruszka@redhat.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Message-ID: <9af8fd47-ca11-1308-d526-e08eb7998d85@gmail.com> (sfid-20170726_083620_731179_90C02139)
+Date: Wed, 26 Jul 2017 12:05:16 +0530
+MIME-Version: 1.0
+In-Reply-To: <87fudkiskz.fsf@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit f95d95a7cd5514549dcf6ba754f0ee834cce3e1f.
+Hi Kalle,
 
-With commit f95d95a7cd55 ("rtlwifi: btcoex: rtl8723be: fix ant_sel not
-work"), the kernel has a NULL pointer dereference oops. This content and
-the proper fix will be included in a later patch.
 
-Fixes: f95d95a7cd55 ("rtlwifi: btcoex: rtl8723be: fix ant_sel not work")
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-Kalle,
+On Tuesday 25 July 2017 06:25 PM, Kalle Valo wrote:
+> Arvind Yadav <arvind.yadav.cs@gmail.com> writes:
+>
+>> attribute_groups are not supposed to change at runtime. So mark the
+>> non-const structs as const.
+>>
+>> Arvind Yadav (10):
+>>    [PATCH v2 01/10] net: cdc_ncm: constify attribute_group structures.
+>>    [PATCH v2 02/10] net: can: at91_can: constify attribute_group structures.
+>>    [PATCH v2 03/10] net: can: janz-ican3: constify attribute_group structures.
+>>    [PATCH v2 04/10] wireless: ipw2200: constify attribute_group structures.
+>>    [PATCH v2 05/10] wireless: ipw2100: constify attribute_group structures.
+>>    [PATCH v2 06/10] wireless: iwlegacy: constify attribute_group structures.
+>>    [PATCH v2 07/10] wireless: iwlegacy: Constify attribute_group structures.
+>>    [PATCH v2 08/10] arcnet: com20020-pci: constify attribute_group structures.
+>>    [PATCH v2 09/10] net: bonding: constify attribute_group structures.
+>>    [PATCH v2 10/10] net: chelsio: cxgb3: constify attribute_group structures.
+> Via which tree were you planning to push these? Is it ok if I take the
+> wireless patches to my tree?
+>
+I have push these changes to linux-branch. you can take this to your branch.
 
-This patch needs to be applied to kernel 4.13. Sorry that it slipped
-through.
-
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 3 ---
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 -
- 2 files changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 2a7ad5ffe997..cd5dc6dcb19f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -846,9 +846,6 @@ static bool _rtl8723be_init_mac(struct ieee80211_hw *hw)
- 		return false;
- 	}
- 
--	if (rtlpriv->cfg->ops->get_btc_status())
--		rtlpriv->btcoexist.btc_ops->btc_power_on_setting(rtlpriv);
--
- 	bytetmp = rtl_read_byte(rtlpriv, REG_MULTI_FUNC_CTRL);
- 	rtl_write_byte(rtlpriv, REG_MULTI_FUNC_CTRL, bytetmp | BIT(3));
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index fb1ebb01133f..70723e67b7d7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2547,7 +2547,6 @@ struct bt_coexist_info {
- struct rtl_btc_ops {
- 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
- 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
--	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
- 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
- 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
- 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
--- 
-2.12.3
+~arvind
