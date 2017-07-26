@@ -1,59 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42191 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750812AbdGJI6L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 04:58:11 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6A8sogU089593
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 04:57:56 -0400
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bjufqdms4-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 04:57:56 -0400
-Received: from localhost
-        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <rui.teng@linux.vnet.ibm.com>;
-        Mon, 10 Jul 2017 02:57:55 -0600
-From: Rui Teng <rui.teng@linux.vnet.ibm.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org,
-        Rui Teng <rui.teng@linux.vnet.ibm.com>
-Subject: [PATCH] drivers/staging/wilc1000: fix sparse warning: right shift by bigger than source value
-Date: Mon, 10 Jul 2017 16:57:31 +0800
-Message-Id: <20170710085731.28397-1-rui.teng@linux.vnet.ibm.com> (sfid-20170710_105845_329453_23FCEDA0)
+Received: from [217.148.43.144] ([217.148.43.144]:48238 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751450AbdGZUpV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:45:21 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 29/34] brcmfmac: stabilise the value of ->sbwad in use for some xfer routines.
+Date: Wed, 26 Jul 2017 21:25:52 +0100
+Message-Id: <20170726202557.15632-30-ian@mnementh.co.uk> (sfid-20170726_224527_536833_19C5AD00)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch sets memory to zero directly to avoid unnecessary shift and
-bitwise operations on bool type, which can fix a sparse warning and also
-improve performance.
+The IO functions operate within the Chipcommon IO window. Explicitly
+set this, rather than relying on the last initialisation IO access to
+leave it set to the right value by chance.
 
-Signed-off-by: Rui Teng <rui.teng@linux.vnet.ibm.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/staging/wilc1000/host_interface.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2568dfc15181..036c5c19a016 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2416,10 +2416,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
- 		goto ERRORHANDLER;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 6884d1f0b935..26b39f0ffdd4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -529,7 +529,7 @@ int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
  
- 	pu8CurrByte = wid.val;
--	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
--	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-+	memset(pu8CurrByte, 0, 4);
-+	*pu8CurrByte = (strHostIfSetMulti->enabled & 0xFF);
-+	pu8CurrByte += 4;
+ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ {
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err = 0;
  
- 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
- 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
+@@ -552,7 +552,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ {
+ 	struct sk_buff *glom_skb = NULL;
+ 	struct sk_buff *skb;
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err = 0;
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+@@ -593,7 +593,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ {
+ 	struct sk_buff *mypkt;
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err;
+ 
+ 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
+@@ -626,7 +626,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 			 struct sk_buff_head *pktq)
+ {
+ 	struct sk_buff *skb;
+-	u32 addr = sdiodev->sbwad;
++	u32 addr = sdiodev->cc_core->base;
+ 	int err;
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index b06018e589bb..91a17ef63a6b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3838,6 +3838,11 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 	if (!bus->sdio_core)
+ 		goto fail;
+ 
++	/* Pick up the CHIPCOMMON core info struct, for bulk IO in bcmsdh.c */
++	sdiodev->cc_core = brcmf_chip_get_core(bus->ci, BCMA_CORE_CHIPCOMMON);
++	if (!sdiodev->cc_core)
++		goto fail;
++
+ 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
+ 						   BRCMF_BUSTYPE_SDIO,
+ 						   bus->ci->chip,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index fb4f24dfc99d..1ab95011adb0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -178,6 +178,7 @@ struct brcmf_sdio_dev {
+ 	struct sdio_func *func[SDIO_MAX_FUNCS];
+ 	u8 num_funcs;			/* Supported funcs on client */
+ 	u32 sbwad;			/* Save backplane window address */
++	struct brcmf_core *cc_core;	/* chipcommon core info struct */
+ 	struct brcmf_sdio *bus;
+ 	struct device *dev;
+ 	struct brcmf_bus *bus_if;
 -- 
 2.11.0
