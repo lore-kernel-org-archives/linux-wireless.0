@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31726 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbdGGJdo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 05:33:44 -0400
-Date: Fri, 7 Jul 2017 12:33:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: johan@kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] NFC: fix broken device allocation
-Message-ID: <20170707093334.zhnn3jrtqosbqdib@mwanda> (sfid-20170707_113353_036601_697FCBE1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from [217.148.43.144] ([217.148.43.144]:49540 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751466AbdGZUqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:40 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 28/34] brcmfmac: Rename buscore->core for consistency
+Date: Wed, 26 Jul 2017 21:25:51 +0100
+Message-Id: <20170726202557.15632-29-ian@mnementh.co.uk> (sfid-20170726_230043_301923_8777F865)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johan Hovold,
+Avoid confusion with unrelated _buscore labels.
 
-The patch 20777bc57c34: "NFC: fix broken device allocation" from Mar
-30, 2017, leads to the following static checker warning:
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-	drivers/nfc/pn533/pn533.c:2653 pn533_register_device()
-	error: 'priv->nfc_dev' dereferencing possible ERR_PTR()
-
-drivers/nfc/pn533/pn533.c
-  2639          skb_queue_head_init(&priv->resp_q);
-  2640          skb_queue_head_init(&priv->fragment_skb);
-  2641  
-  2642          INIT_LIST_HEAD(&priv->cmd_queue);
-  2643  
-  2644          priv->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
-  2645                                             priv->ops->tx_header_len +
-  2646                                             PN533_CMD_DATAEXCH_HEAD_LEN,
-  2647                                             priv->ops->tx_tail_len);
-
-We changed this to return error pointers as well as NULL.  When
-functions return a NULL as well as error pointers, then NULL is supposed
-to be a special case of success but here it's just a failure.  That's
-messy and bug prone.
-
-  2648          if (!priv->nfc_dev) {
-  2649                  rc = -ENOMEM;
-  2650                  goto destroy_wq;
-  2651          }
-  2652  
-  2653          nfc_set_parent_dev(priv->nfc_dev, parent);
-                                   ^^^^^^^^^^^^^
-Oops.
-
-  2654          nfc_set_drvdata(priv->nfc_dev, priv);
-  2655  
-  2656          rc = nfc_register_device(priv->nfc_dev);
-  2657          if (rc)
-  2658                  goto free_nfc_dev;
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index bee377fcc48f..b06018e589bb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2475,14 +2475,12 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_core *buscore = bus->sdio_core;
+-	u32 addr;
++	struct brcmf_core *core = bus->sdio_core;
+ 	unsigned long val;
+ 	int ret;
+ 
+-	addr = buscore->base + __sd_reg(intstatus);
+-
+-	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
++	val = brcmf_sdiod_readl(bus->sdiodev, core->base + __sd_reg(intstatus),
++				&ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+ 		return ret;
+@@ -2492,7 +2490,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ 	/* Clear interrupts */
+ 	if (val) {
+-		brcmf_sdiod_writel(bus->sdiodev, addr, val, &ret);
++		brcmf_sdiod_writel(bus->sdiodev,
++				   core->base + __sd_reg(intstatus), val, &ret);
+ 		bus->sdcnt.f1regdata++;
+ 		atomic_or(val, &bus->intstatus);
+ 	}
+-- 
+2.11.0
