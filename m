@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38156 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752332AbdGSIWK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 04:22:10 -0400
-Date: Wed, 19 Jul 2017 11:21:52 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Kaufman, Liad" <liad.kaufman@intel.com>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Dvir, Sharon" <sharon.dvir@intel.com>,
-        "Sharon, Sara" <sara.sharon@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH] iwlwifi: pcie: Fix error code in iwl_trans_pcie_alloc()
-Message-ID: <20170719082152.6onumaup6js3zud4@mwanda> (sfid-20170719_102217_371002_604F8DF9)
-References: <20170712075300.sbd2vlwqf4rriale@mwanda>
- <1500445417.22048.254.camel@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500445417.22048.254.camel@intel.com>
+Received: from [217.148.43.144] ([217.148.43.144]:49404 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751454AbdGZUqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:46:33 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 30/34] brcmfmac: Correctly handle accesses to SDIO func0
+Date: Wed, 26 Jul 2017 21:25:53 +0100
+Message-Id: <20170726202557.15632-31-ian@mnementh.co.uk> (sfid-20170726_224636_963060_B5FCD275)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oops, heh, sorry.  I switched computers so I first one wasn't in my
-outbox.
+Rather than workaround the restrictions on func0 addressing in the
+driver, set MMC_QUIRK_LENIENT_FN0
 
-regards,
-dan carpenter
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 ++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 4 ++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 26b39f0ffdd4..95149c686c5f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -994,6 +994,10 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
+ 
+ 	dev = &func->dev;
++
++	/* Set MMC_QUIRK_LENIENT_FN0 for this card */
++	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
++
+ 	/* prohibit ACPI power management for this device */
+ 	brcmf_sdiod_acpi_set_power_manageable(dev, 0);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 1ab95011adb0..8a976c89cf63 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -297,10 +297,10 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
+ /* SDIO device register access interface */
+ /* Functions for accessing SDIO Function 0 */
+ #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
+-	sdio_readb((sdiodev)->func[0], (addr), (r))
++	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
+ 
+ #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
+-	sdio_writeb((sdiodev)->func[0], (v), (addr), (ret))
++	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
+ 
+ /* Functions for accessing SDIO Function 1 */
+ #define brcmf_sdiod_readb(sdiodev, addr, r) \
+-- 
+2.11.0
