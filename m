@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:35979 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdGFRPN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 13:15:13 -0400
-Received: by mail-wr0-f180.google.com with SMTP id c11so11492356wrc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 10:15:12 -0700 (PDT)
-Subject: Re: Command equivalent in iw
-To: Ben Greear <greearb@candelatech.com>,
-        Emmanuel Grumbach <egrumbach@gmail.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <a496cdaa-41f3-53e1-bb4f-2843d5bd8b12@lwfinger.net>
- <CANUX_P3E9OASgfHykWsFjN1ii__sM=-8wWKr+6+rMk6GP2utvg@mail.gmail.com>
- <e98f1f21-d053-c5f0-5d17-8344cc5918ce@candelatech.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <4b3ed62e-ed4c-b63b-5adf-c80b9a3cd33a@broadcom.com> (sfid-20170706_191516_741635_9EF5B921)
-Date: Thu, 6 Jul 2017 19:15:10 +0200
-MIME-Version: 1.0
-In-Reply-To: <e98f1f21-d053-c5f0-5d17-8344cc5918ce@candelatech.com>
-Content-Type: text/plain; charset=utf-8
+Received: from [217.148.43.144] ([217.148.43.144]:33848 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1750952AbdGZU0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:26:09 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 01/34] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
+Date: Wed, 26 Jul 2017 21:25:24 +0100
+Message-Id: <20170726202557.15632-2-ian@mnementh.co.uk> (sfid-20170726_222621_477378_D5323498)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06-07-17 16:36, Ben Greear wrote:
-> 
-> 
-> On 07/06/2017 12:38 AM, Emmanuel Grumbach wrote:
->> On Thu, Jul 6, 2017 at 5:51 AM, Larry Finger
->> <Larry.Finger@lwfinger.net> wrote:
->>>
->>> Someone using the rtlwifi code that is posted at GitHub wants to know
->>> the iw equivalent of "iwpriv wlan0 bandcfg" to limit the wireless
->>> interface to 802.11b, 802.11g, or 802.11n. I only use simple iw
->>> commands, and I could not answer the question.
->>
->> This seems to be a private IOCTL and I can't find the code for that
->> handler in the kernel today. Even in wireless extensions..
->> I am not aware of something like this with iw today.
->>
->> In iwlwifi we have module parameter for this since this should really
->> be used seldom.
-> 
-> I have some patches for wpa_supplicant and the wifi stack (and ath10k)
-> that lets this work,
-> but it is fairly invasive, somewhat tricky to configure the supplicant
-> properly,
-> and the kernel related patches were rejected some time back, so
-> it will only live in my trees for the foreseeable future.
-> 
-> If it is important to someone, they can find my kernels and hostapd and
-> such here
-> and maybe google for past email from me about such things for hints:
-> 
-> https://github.com/greearb
+	All the other IO functions are the other way round in this
+driver. Make this one match.
 
-So what has been accepted in the kernel a while ago is to do the above
-through devicetree configuration as it is considered a system use-case.
-This was done by
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-commit e691ac2f75b69bee743f0370d79454ba4429b175
-Author: Rafał Miłecki <rafal@milecki.pl>
-Date:   Wed Jan 4 18:58:31 2017 +0100
-
-    cfg80211: support ieee80211-freq-limit DT property
-
-The DT property is handled by cfg80211 in net/wireless/of.c.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 984c1d0560b1..f585dfd89453 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -230,8 +230,8 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
+ }
+ 
+-static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
+-					uint regaddr, u8 byte)
++static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte,
++					uint regaddr)
+ {
+ 	int err_ret;
+ 
+@@ -269,8 +269,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+ 			else
+-				ret = brcmf_sdiod_f0_writeb(func, addr,
+-							    *(u8 *)data);
++				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data,
++							    addr);
+ 		} else {
+ 			if (fn)
+ 				*(u8 *)data = sdio_readb(func, addr, &ret);
+-- 
+2.11.0
