@@ -1,219 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41012 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752056AbdG1O0b (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:26:31 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Mordechai Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 28 Jul 2017 17:23:29 +0300
-Message-Id: <20170728142337.19183-17-luca@coelho.fi> (sfid-20170728_162635_431051_5FF685DE)
-In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
-References: <20170728142337.19183-1-luca@coelho.fi>
-Subject: [PATCH 16/24] iwlwifi: implement fseq version mismatch warning
+Received: from [217.148.43.144] ([217.148.43.144]:33912 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751103AbdGZU0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Jul 2017 16:26:13 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
+Subject: [PATCH 05/34] brcmfmac: Remove dead IO code
+Date: Wed, 26 Jul 2017 21:25:28 +0100
+Message-Id: <20170726202557.15632-6-ian@mnementh.co.uk> (sfid-20170726_222622_541666_B52E0524)
+In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechai Goodstein <mordechay.goodstein@intel.com>
+	The value passed to brcmf_sdiod_addrprep() is *always* 4
+remove this parameter and the unused code to handle it.
 
-During init, the FW checks whether the FSEQ value matches what it
-expects.  If it doesn't match, we print a warning to let integrators
-clearly know that something is wrong.  This can happen if another core
-(i.e. not WiFi) has updated the FSEQ version.  This notification is
-only sent by the FW in production, for development firmwares, an
-assertion is triggered instead.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/intel/iwlwifi/Makefile        |  1 +
- drivers/net/wireless/intel/iwlwifi/fw/api/alive.h  | 16 ++++
- .../net/wireless/intel/iwlwifi/fw/api/commands.h   |  7 ++
- drivers/net/wireless/intel/iwlwifi/fw/common_rx.c  | 88 ++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |  3 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  4 +-
- 6 files changed, 118 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index fd12b7394c5c..5dcb4a848dba 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -12,6 +12,7 @@ iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
- iwlwifi-objs		+= iwl-trans.o
- iwlwifi-objs		+= fw/notif-wait.o
- iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
-+iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o
- 
- iwlwifi-objs += $(iwlwifi-m)
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h b/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
-index 6af6a9b32b69..3684a3e180e5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
-@@ -187,4 +187,20 @@ struct iwl_card_state_notif {
- 	__le32 flags;
- } __packed; /* CARD_STATE_NTFY_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_fseq_ver_mismatch_nty - Notification about version
-+ *
-+ * This notification does not have a direct impact on the init flow.
-+ * It means that another core (not WiFi) has initiated the FSEQ flow
-+ * and updated the FSEQ version.  The driver only prints an error when
-+ * this occurs.
-+ *
-+ * @aux_read_fseq_ver: auxiliary read FSEQ version
-+ * @wifi_fseq_ver: FSEQ version (embedded in WiFi)
-+ */
-+struct iwl_fseq_ver_mismatch_ntf {
-+	__le32 aux_read_fseq_ver;
-+	__le32 wifi_fseq_ver;
-+} __packed; /* FSEQ_VER_MISMATCH_NTFY_API_S_VER_1 */
-+
- #endif /* __iwl_fw_api_alive_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-index 34fceb26447d..c7b8cffdf281 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-@@ -652,6 +652,13 @@ enum iwl_system_subcmd_ids {
- 	 * @INIT_EXTENDED_CFG_CMD: &struct iwl_init_extended_cfg_cmd
- 	 */
- 	INIT_EXTENDED_CFG_CMD = 0x03,
-+
-+	/**
-+	 * @FSEQ_VER_MISMATCH_NTF: Notification about fseq version
-+	 *	mismatch during init.  The format is specified in
-+	 *	&struct iwl_fseq_ver_mismatch_ntf.
-+	 */
-+	FSEQ_VER_MISMATCH_NTF = 0xFF,
- };
- 
- #endif /* __iwl_fw_api_commands_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/common_rx.c b/drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
-new file mode 100644
-index 000000000000..6f75985eea66
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
-@@ -0,0 +1,88 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include "iwl-drv.h"
-+#include "runtime.h"
-+#include "fw/api/commands.h"
-+#include "fw/api/alive.h"
-+
-+static void iwl_fwrt_fseq_ver_mismatch(struct iwl_fw_runtime *fwrt,
-+				       struct iwl_rx_cmd_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_fseq_ver_mismatch_ntf *fseq = (void *)pkt->data;
-+
-+	IWL_ERR(fwrt, "FSEQ version mismatch (aux: %d, wifi: %d)\n",
-+		__le32_to_cpu(fseq->aux_read_fseq_ver),
-+		__le32_to_cpu(fseq->wifi_fseq_ver));
-+}
-+
-+void iwl_fwrt_handle_notification(struct iwl_fw_runtime *fwrt,
-+				  struct iwl_rx_cmd_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	u32 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
-+
-+	switch (cmd) {
-+	case WIDE_ID(SYSTEM_GROUP, FSEQ_VER_MISMATCH_NTF):
-+		iwl_fwrt_fseq_ver_mismatch(fwrt, rxb);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+IWL_EXPORT_SYMBOL(iwl_fwrt_handle_notification);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 75575290a3e4..66bea6545690 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -150,4 +150,7 @@ void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt);
- 
- void iwl_get_shared_mem_conf(struct iwl_fw_runtime *fwrt);
- 
-+void iwl_fwrt_handle_notification(struct iwl_fw_runtime *fwrt,
-+				  struct iwl_rx_cmd_buffer *rxb);
-+
- #endif /* __iwl_fw_runtime_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 4d591fdc61f2..d0ffdf5fa3a5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1006,8 +1006,10 @@ static void iwl_mvm_rx_common(struct iwl_mvm *mvm,
- 		list_add_tail(&entry->list, &mvm->async_handlers_list);
- 		spin_unlock(&mvm->async_handlers_lock);
- 		schedule_work(&mvm->async_handlers_wk);
--		break;
-+		return;
- 	}
-+
-+	iwl_fwrt_handle_notification(&mvm->fwrt, rxb);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 7b2184d1e365..609a934c1658 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -425,7 +425,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
  }
  
- static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
+ static int
+-brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
++brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
+ {
+ 	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+@@ -439,9 +439,7 @@ brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
+ 	}
+ 
+ 	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-
+-	if (width == 4)
+-		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	return 0;
+ }
+@@ -467,7 +465,7 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (retval)
+ 		goto done;
+ 
+@@ -500,7 +498,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (retval)
+ 		goto done;
+ 
+@@ -736,7 +734,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -757,7 +755,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+ 		  addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -801,7 +799,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 
+ 	memcpy(mypkt->data, buf, nbytes);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 
+ 	if (!err)
+ 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
+@@ -821,7 +819,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		return err;
+ 
 -- 
-2.13.2
+2.11.0
