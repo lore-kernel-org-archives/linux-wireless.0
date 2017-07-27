@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37300 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751074AbdGEGFs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41184 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750836AbdG0JgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:33 +0300
-Message-Id: <20170705060539.20737-2-luca@coelho.fi> (sfid-20170705_080553_511790_009D5917)
-In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
-References: <20170705060539.20737-1-luca@coelho.fi>
-Subject: [PATCH 1/7] iwlwifi: dvm: prevent an out of bounds access
+        Thu, 27 Jul 2017 05:36:24 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: correct channel stat buffer overflows
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170630012354.98931-1-briannorris@chromium.org>
+References: <20170630012354.98931-1-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        stable@vger.kernel.org, Avinash Patil <patila@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Message-Id: <20170727093624.061F96095E@smtp.codeaurora.org> (sfid-20170727_113644_732496_56CF68D8)
+Date: Thu, 27 Jul 2017 09:36:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Brian Norris <briannorris@chromium.org> wrote:
 
-iwlagn_check_ratid_empty takes the tid as a parameter, but
-it doesn't check that it is not IWL_TID_NON_QOS.
-Since IWL_TID_NON_QOS = 8 and iwl_priv::tid_data is an array
-with 8 entries, accessing iwl_priv::tid_data[IWL_TID_NON_QOS]
-is a bad idea.
-This happened in iwlagn_rx_reply_tx. Since
-iwlagn_check_ratid_empty is relevant only to check whether
-we can open A-MPDU, this flow is irrelevant if tid is
-IWL_TID_NON_QOS. Call iwlagn_check_ratid_empty only inside
-the
-	if (tid != IWL_TID_NON_QOS)
+> mwifiex records information about various channels as it receives scan
+> information. It does this by appending to a buffer that was sized
+> to the max number of supported channels on any band, but there are
+> numerous problems:
+> 
+> (a) scans can return info from more than one band (e.g., both 2.4 and 5
+>     GHz), so the determined "max" is not large enough
+> (b) some firmware appears to return multiple results for a given
+>     channel, so the max *really* isn't large enough
+> (c) there is no bounds checking when stashing these stats, so problems
+>     (a) and (b) can easily lead to buffer overflows
+> 
+> Let's patch this by setting a slightly-more-correct max (that accounts
+> for a combination of both 2.4G and 5G bands) and adding a bounds check
+> when writing to our statistics buffer.
+> 
+> Due to problem (b), we still might not properly report all known survey
+> information (e.g., with "iw <dev> survey dump"), since duplicate results
+> (or otherwise "larger than expected" results) will cause some
+> truncation. But that's a problem for a future bugfix.
+> 
+> (And because of this known deficiency, only log the excess at the WARN
+> level, since that isn't visible by default in this driver and would
+> otherwise be a bit too noisy.)
+> 
+> Fixes: bf35443314ac ("mwifiex: channel statistics support for mwifiex")
+> Cc: <stable@vger.kernel.org>
+> Cc: Avinash Patil <patila@marvell.com>
+> Cc: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Reviewed-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> Reviewed-by: Ganapathi Bhat <gbhat@marvell.com>
 
-a few lines earlier in the function.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Cc: <stable@vger.kernel.org>
-Reported-by: Seraphime Kirkovski <kirkseraph@gmail.com>
-Tested-by: Seraphime Kirkovski <kirkseraph@gmail.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+4b5dde2d6234 mwifiex: correct channel stat buffer overflows
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-index adaa2f0097cc..fb40ddfced99 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-@@ -1189,11 +1189,11 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb)
- 				next_reclaimed;
- 			IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
- 						  next_reclaimed);
-+			iwlagn_check_ratid_empty(priv, sta_id, tid);
- 		}
- 
- 		iwl_trans_reclaim(priv->trans, txq_id, ssn, &skbs);
- 
--		iwlagn_check_ratid_empty(priv, sta_id, tid);
- 		freed = 0;
- 
- 		/* process frames */
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9818269/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
