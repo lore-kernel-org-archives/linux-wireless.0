@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35519 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756162AbdGSTUH (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52620 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751554AbdG0WG0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:20:07 -0400
-From: Gabriel Craciunescu <nix.or.die@gmail.com>
-To: ath10k@lists.infradead.org
-Cc: ryanhsu@qti.qualcomm.com, joe@perches.com, kvalo@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, Gabriel Craciunescu <nix.or.die@gmail.com>
-Subject: [PATCH v3] ath10k: ath10k_htt_rx_amsdu_allowed() use ath10k_dbg()
-Date: Wed, 19 Jul 2017 21:19:55 +0200
-Message-Id: <20170719191955.11518-1-nix.or.die@gmail.com> (sfid-20170719_212023_340868_AFF5532C)
-In-Reply-To: <e41a39fd-87a1-7fc7-158d-cb298e46a754@qca.qualcomm.com>
-References: <e41a39fd-87a1-7fc7-158d-cb298e46a754@qca.qualcomm.com>
+        Thu, 27 Jul 2017 18:06:26 -0400
+From: Colin King <colin.king@canonical.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: fix spelling mistake: "Insuffient" -> "Insufficient"
+Date: Thu, 27 Jul 2017 23:06:22 +0100
+Message-Id: <20170727220622.11957-1-colin.king@canonical.com> (sfid-20170728_000649_834313_6C56585E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each time we get disconencted from AP we get flooded with messages like:
+From: Colin Ian King <colin.king@canonical.com>
 
-...
-ath10k_pci 0000:03:00.0: no channel configured; ignoring frame(s)!
-<until ratelimit kicks in>
-ath10k_warn: 155 callbacks suppressed
-...
+Trivial fix to spelling mistake in mwifiex_dbg debug message
 
-Use ath10k_dbg() here too
-
-Signed-off-by: Gabriel Craciunescu <nix.or.die@gmail.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ drivers/net/wireless/marvell/mwifiex/tdls.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 398dda978d6e..75d9b59b7e63 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1514,7 +1514,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
- 	 */
+diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
+index 39cd677d4159..e76af2866a19 100644
+--- a/drivers/net/wireless/marvell/mwifiex/tdls.c
++++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
+@@ -130,7 +130,7 @@ mwifiex_tdls_append_rates_ie(struct mwifiex_private *priv,
  
- 	if (!rx_status->freq) {
--		ath10k_warn(ar, "no channel configured; ignoring frame(s)!\n");
-+		ath10k_dbg(ar, ATH10K_DBG_HTT, "no channel configured; ignoring frame(s)!\n");
- 		return false;
+ 	if (skb_tailroom(skb) < rates_size + 4) {
+ 		mwifiex_dbg(priv->adapter, ERROR,
+-			    "Insuffient space while adding rates\n");
++			    "Insufficient space while adding rates\n");
+ 		return -ENOMEM;
  	}
  
 -- 
-2.13.3
+2.11.0
