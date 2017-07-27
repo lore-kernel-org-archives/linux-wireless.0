@@ -1,51 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:13949 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750989AbdGZKDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 06:03:31 -0400
-Message-ID: <1501063383.29303.248.camel@linux.intel.com> (sfid-20170726_120347_105777_35504D89)
-Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID
- API
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
-        devel@driverdev.osuosl.org,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        linux-watchdog@vger.kernel.org,
-        linux-efi <linux-efi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Wed, 26 Jul 2017 13:03:03 +0300
-In-Reply-To: <6349641.0fe8FCM51k@aspire.rjw.lan>
-References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
-         <2908341.aERReitNcd@aspire.rjw.lan>
-         <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com>
-         <6349641.0fe8FCM51k@aspire.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-dm3nam03on0053.outbound.protection.outlook.com ([104.47.41.53]:39360
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751524AbdG0XHr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 19:07:47 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 09/12] qtnfmac: implement scan timeout
+Date: Fri, 28 Jul 2017 02:06:51 +0300
+Message-Id: <20170727230654.30850-10-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010752_205254_029D3E4C)
+In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-07-26 at 02:27 +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 26, 2017 03:35:01 AM Andy Shevchenko wrote:
-> > On Wed, Jul 26, 2017 at 3:21 AM, Rafael J. Wysocki <rjw@rjwysocki.ne
-> > t> wrote:
+Userspace tools may hang on scan in the case when scan completion event
+is not returned by firmware. This patch implements the scan timeout
+to avoid such situation.
 
-> > > Andy, do you want me to apply this?
-> > 
-> > If you would like to.
-> > 
-> > The patch is now pretty independent since necessary stuff made
-> > v4.13-rc1.
-> 
-> OK
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 22 ++++++++++++++++++----
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.h |  4 ++++
+ drivers/net/wireless/quantenna/qtnfmac/core.c     |  2 ++
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  3 +++
+ drivers/net/wireless/quantenna/qtnfmac/event.c    |  2 ++
+ 5 files changed, 29 insertions(+), 4 deletions(-)
 
-Thanks!
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index ac8fdc1db482..856fa6e8327e 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -579,19 +579,33 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
++static void qtnf_scan_timeout(unsigned long data)
++{
++	struct qtnf_wmac *mac = (struct qtnf_wmac *)data;
++
++	pr_warn("mac%d scan timed out\n", mac->macid);
++	qtnf_scan_done(mac, true);
++}
++
+ static int
+ qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ {
+ 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+-	int ret;
+ 
+ 	mac->scan_req = request;
+ 
+-	ret = qtnf_cmd_send_scan(mac);
+-	if (ret)
++	if (qtnf_cmd_send_scan(mac)) {
+ 		pr_err("MAC%u: failed to start scan\n", mac->macid);
++		mac->scan_req = NULL;
++		return -EFAULT;
++	}
+ 
+-	return ret;
++	mac->scan_timeout.data = (unsigned long)mac;
++	mac->scan_timeout.function = qtnf_scan_timeout;
++	mod_timer(&mac->scan_timeout,
++		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
++
++	return 0;
+ }
+ 
+ static int
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+index 5bd33124a7c8..6a4af52522b8 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+@@ -34,10 +34,14 @@ static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
+ 		.aborted = aborted,
+ 	};
+ 
++	mutex_lock(&mac->mac_lock);
++
+ 	if (mac->scan_req) {
+ 		cfg80211_scan_done(mac->scan_req, &info);
+ 		mac->scan_req = NULL;
+ 	}
++
++	mutex_unlock(&mac->mac_lock);
+ }
+ 
+ #endif /* _QTN_FMAC_CFG80211_H_ */
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 17d17e332a8b..5e60180482d1 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -288,6 +288,8 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
+ 		mac->iflist[i].mac = mac;
+ 		mac->iflist[i].vifid = i;
+ 		qtnf_sta_list_init(&mac->iflist[i].sta_list);
++		mutex_init(&mac->mac_lock);
++		init_timer(&mac->scan_timeout);
+ 	}
+ 
+ 	qtnf_mac_init_primary_intf(mac);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 099aad76afeb..066fcd1095a0 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -46,6 +46,7 @@
+ #define QTNF_MAX_EVENT_QUEUE_LEN	255
+ #define QTNF_DEFAULT_BG_SCAN_PERIOD	300
+ #define QTNF_MAX_BG_SCAN_PERIOD		0xffff
++#define QTNF_SCAN_TIMEOUT_SEC		15
+ 
+ #define QTNF_DEF_BSS_PRIORITY		0
+ #define QTNF_DEF_WDOG_TIMEOUT		5
+@@ -147,6 +148,8 @@ struct qtnf_wmac {
+ 	struct cfg80211_scan_request *scan_req;
+ 	struct cfg80211_chan_def chandef;
+ 	struct cfg80211_chan_def csa_chandef;
++	struct mutex mac_lock;	/* lock during wmac speicific ops */
++	struct timer_list scan_timeout;
+ };
+ 
+ struct qtnf_hw_info {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 43d2e7fd6e02..0fc2814eafad 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -345,6 +345,8 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
++	if (timer_pending(&mac->scan_timeout))
++		del_timer_sync(&mac->scan_timeout);
+ 	qtnf_scan_done(mac, le32_to_cpu(status->flags) & QLINK_SCAN_ABORTED);
+ 
+ 	return 0;
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.11.0
