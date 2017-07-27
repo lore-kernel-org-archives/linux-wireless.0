@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:60564 "EHLO
-        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751322AbdGRI7I (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51490 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750836AbdG0J7e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 04:59:08 -0400
-Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
-        by mx08-00252a01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6I8uddp023274
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 09:59:07 +0100
-Received: from mail-wr0-f200.google.com (mail-wr0-f200.google.com [209.85.128.200])
-        by mx08-00252a01.pphosted.com with ESMTP id 2bq7hehggh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 09:59:07 +0100
-Received: by mail-wr0-f200.google.com with SMTP id z53so1603831wrz.10
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 01:59:07 -0700 (PDT)
+        Thu, 27 Jul 2017 05:59:34 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH v4 02/10] rtlwifi: Add BT_MP_INFO to c2h handler.
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+        <20170702181239.17911-3-Larry.Finger@lwfinger.net>
+Date: Thu, 27 Jul 2017 12:59:30 +0300
+In-Reply-To: <20170702181239.17911-3-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Sun, 2 Jul 2017 13:12:31 -0500")
+Message-ID: <87zibqw67x.fsf@purkki.adurom.net> (sfid-20170727_115938_983907_317EEC85)
 MIME-Version: 1.0
-In-Reply-To: <CA+8PC_eKn_LddvcpYG=V6vD7qZfVNEmmzR3gWXxWO80SNKR-3Q@mail.gmail.com>
-References: <384537059.123625.1498678388857@email.1und1.de>
- <1133935948.74840.1500297053336@email.1und1.de> <CA+8PC_eKn_LddvcpYG=V6vD7qZfVNEmmzR3gWXxWO80SNKR-3Q@mail.gmail.com>
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Tue, 18 Jul 2017 09:59:06 +0100
-Message-ID: <CAE_XsMJ-Ssd_uY2qr1GcL5emO46akee+CjMAeP9pBmY0cfZe3Q@mail.gmail.com> (sfid-20170718_105914_107473_E2243125)
-Subject: Re: brcmfmac: BCM43431 won't get probed on Raspberry Pi Zero W
-To: Franky Lin <franky.lin@broadcom.com>
-Cc: Stefan Wahren <stefan.wahren@i2se.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        linux-rpi-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->
-> Can you please try to comment out the following lines in
-> brcmf_feat_attach? That's the only suspicious line that interact with
-> firmware in the patch.
->
-> + brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
-> +                                            &gscan_cfg, sizeof(gscan_cfg));
->
-> I don't have a pi zero w but will try to see if I can reproduce it on a pi 3.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Franky/Arend, if a ZeroW would help now and in future Pi Wifi issues,
-I can get one to you. Email me off list.
+> From: Ping-Ke Shih <pkshih@realtek.com>
+>
+> We use H2C to ask BT's status, and C2H will return the status.
+>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-James
+[...]
 
->>> [2] - https://www.kraxel.org/cgit/linux/log/?h=bcm2837
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -327,7 +327,22 @@ static void halbtc_aggregation_check(struct btc_coexist *btcoexist)
+>  
+>  static u32 halbtc_get_bt_patch_version(struct btc_coexist *btcoexist)
+>  {
+> -	return 0;
+> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> +	u8 cmd_buffer[4] = {0};
+> +	u8 oper_ver = 0;
+> +	u8 req_num = 0x0E;
+> +
+> +	if (btcoexist->bt_info.bt_real_fw_ver)
+> +		goto label_done;
+> +
+> +	cmd_buffer[0] |= (oper_ver & 0x0f);	/* Set OperVer */
+> +	cmd_buffer[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
+> +	cmd_buffer[1] = 0; /* BT_OP_GET_BT_VERSION = 0 */
+> +	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, 4,
+> +					&cmd_buffer[0]);
+> +
+> +label_done:
+> +	return btcoexist->bt_info.bt_real_fw_ver;
+>  }
+
+I don't remember if I have mentioned before but there's way too much
+magic numbers. There should an enum for all req_num values and
+cmd_buffer should be a struct so that is serves as documentation at the
+same time. No need to resend because of this but take this into account
+in the future.
+
+As an example rsi driver is having similar problems and Prameela is
+fixing those:
+
+https://patchwork.kernel.org/patch/9832895/
+
+-- 
+Kalle Valo
