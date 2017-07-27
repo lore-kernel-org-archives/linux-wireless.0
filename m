@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37312 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751913AbdGEGFt (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52458 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751729AbdG0WBN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2017 02:05:49 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Jul 2017 09:05:35 +0300
-Message-Id: <20170705060539.20737-4-luca@coelho.fi> (sfid-20170705_080558_642000_5D45B8F9)
-In-Reply-To: <20170705060539.20737-1-luca@coelho.fi>
-References: <20170705060539.20737-1-luca@coelho.fi>
-Subject: [PATCH 3/7] iwlwifi: mvm: fix a NULL pointer dereference of error in recovery
+        Thu, 27 Jul 2017 18:01:13 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix spelling mistake: "Iinitialization" -> "initialization"
+Date: Thu, 27 Jul 2017 23:01:10 +0100
+Message-Id: <20170727220110.11655-1-colin.king@canonical.com> (sfid-20170728_000128_030948_6B202FC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Sometimes, we can have an firmware crash while trying to
-recover from a previous firmware problem.
-When that happens, lots of things can go wrong. For example
-the stations don't get added properly to mvm->fw_id_to_mac_id.
+Trivial fix to spelling mistake in netdev_err message
 
-Mac80211 tries to stop A-MPDU upon reconfig but in case of
-a firmware crash we will bail out fairly early and in the
-end, we won't delete the A-MPDU Rx timeout.
-When that timer expired after a double firmware crash,
-we end up dereferencing mvm->fw_id_to_mac_id[sta_id]
-which is NULL.
-
-Fixes: 10b2b2019d81 ("iwlwifi: mvm: add infrastructure for tracking BA session in driver")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 4df5f13fcdae..4a6df45b73df 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -277,6 +277,18 @@ static void iwl_mvm_rx_agg_session_expired(unsigned long data)
- 
- 	/* Timer expired */
- 	sta = rcu_dereference(ba_data->mvm->fw_id_to_mac_id[ba_data->sta_id]);
-+
-+	/*
-+	 * sta should be valid unless the following happens:
-+	 * The firmware asserts which triggers a reconfig flow, but
-+	 * the reconfig fails before we set the pointer to sta into
-+	 * the fw_id_to_mac_id pointer table. Mac80211 can't stop
-+	 * A-MDPU and hence the timer continues to run. Then, the
-+	 * timer expires and sta is NULL.
-+	 */
-+	if (!sta)
-+		goto unlock;
-+
- 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
- 	ieee80211_stop_rx_ba_session_offl(mvm_sta->vif,
- 					  sta->addr, ba_data->tid);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1266dcccad30..119f3459b5bb 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -813,7 +813,7 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 		wilc_wlan_cleanup(dev);
+ _fail_locks_:
+ 		wlan_deinit_locks(dev);
+-		netdev_err(dev, "WLAN Iinitialization FAILED\n");
++		netdev_err(dev, "WLAN initialization FAILED\n");
+ 	} else {
+ 		netdev_dbg(dev, "wilc1000 already initialized\n");
+ 	}
 -- 
 2.11.0
