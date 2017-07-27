@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:38252 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750921AbdGVVeB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56614 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751014AbdG0LDD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Jul 2017 17:34:01 -0400
-Received: by mail-qk0-f181.google.com with SMTP id g6so40307498qkf.5
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Jul 2017 14:34:01 -0700 (PDT)
-Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: russianneuromancer <russianneuromancer@ya.ru>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <95deba4b-7f63-8bb9-f8ab-c22f1d23985c@broadcom.com> (sfid-20170722_233419_185934_D1FC31CE)
-Date: Sat, 22 Jul 2017 23:33:57 +0200
+        Thu, 27 Jul 2017 07:03:03 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [for-v4.13,V4] brcmfmac: Don't grow SKB by negative size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170726112410.22353-1-daniels@collabora.com>
+References: <20170726112410.22353-1-daniels@collabora.com>
+To: Daniel Stone <daniels@collabora.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>
+Message-Id: <20170727110303.105046081B@smtp.codeaurora.org> (sfid-20170727_130307_133457_FFA23F7E)
+Date: Thu, 27 Jul 2017 11:03:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-07-17 20:43, Hans de Goede wrote:
-> The real culprit here seems to be:
+Daniel Stone <daniels@collabora.com> wrote:
+
+> The commit to rework the headroom check in start_xmit() now calls
+> pxskb_expand_head() unconditionally if the header is CoW. Unfortunately,
+> it does so with the delta between the extant headroom and the header
+> length, which may be negative if there is already sufficient headroom.
 > 
-> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac:
-> brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+> pskb_expand_head() does allow for size being 0, in which case it just
+> copies, so clamp the header delta to zero.
+> 
+> Opening Chrome (and all my tabs) on a PCIE device was enough to reliably
+> hit this.
+> 
+> Fixes: 270a6c1f65fe ("brcmfmac: rework headroom check in .start_xmit()")
+> Signed-off-by: Daniel Stone <daniels@collabora.com>
+> Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> Cc: James Hughes <james.hughes@raspberrypi.org>
+> Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+> Cc: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Cc: Franky Lin <franky.lin@broadcom.com>
+> Tested-by: Hans de Goede <hdegoede@redhat.com>
 
-So I dug a little deeper in our firmware and as it turns out it is
-indeed a firmware halt which is indicated by 0x10. 0x02 is DEVREADY and
-0x40000 indicates the protocol version.
+Patch applied to wireless-drivers.git, thanks.
 
-Regards,
-Arend
+58f36b4526ad brcmfmac: Don't grow SKB by negative size
+
+-- 
+https://patchwork.kernel.org/patch/9864575/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
