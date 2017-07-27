@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49826 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36158 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752198AbdGUHgk (ORCPT
+        with ESMTP id S1750981AbdG0KYU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 03:36:40 -0400
+        Thu, 27 Jul 2017 06:24:20 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Michael Gugino <michael.gugino.2@gmail.com>,
-        linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] rtl8188eu: add TL-WN722N v2 support
-References: <CACHT076KPRRyt5KuEOKkjGSh+wrQAFOEzcPx2-ZHfbp=6u9aTQ@mail.gmail.com>
-        <20170717162357.GD9786@kroah.com>
-Date: Fri, 21 Jul 2017 10:36:36 +0300
-In-Reply-To: <20170717162357.GD9786@kroah.com> (Greg KH's message of "Mon, 17
-        Jul 2017 18:23:57 +0200")
-Message-ID: <87vamm1bsr.fsf@purkki.adurom.net> (sfid-20170721_093659_575559_B0AA4E8F)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH v4 09/10] rtlwifi: use debugfs to debug.
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+        <20170702181239.17911-10-Larry.Finger@lwfinger.net>
+Date: Thu, 27 Jul 2017 13:24:16 +0300
+In-Reply-To: <20170702181239.17911-10-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Sun, 2 Jul 2017 13:12:38 -0500")
+Message-ID: <87r2x2w52n.fsf@purkki.adurom.net> (sfid-20170727_122424_299047_DE4EB6D8)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg KH <gregkh@linuxfoundation.org> writes:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> On Mon, Jul 17, 2017 at 11:59:35AM -0400, Michael Gugino wrote:
->> From: Michael Gugino <michael.gugino.2@gmail.com>
->> 
->> This patch adds support for USB Device TP-Link TL-WN722N v2.
->> VendorID: 0x2357, ProductID: 0x010c
->> 
->> Signed-off-by: Michael Gugino <michael.gugino.2@gmail.com>
->> ---
->> drivers/staging/rtl8188eu/os_dep/usb_intf.c | 1 +
->> 1 file changed, 1 insertion(+)
+> From: Ping-Ke Shih <pkshih@realtek.com>
 >
-> You just sent two different patches, with the same subject, and both
-> were corrupted :(
+> Use debugfs to dump register and btcoex status. The kbuild test robot
+> <lkp@intel.com> suggested a change to use simple_open() instead of
+> a local routine.
 >
-> Please fix your email client (test it by sending it to yourself first),
-> and try again.
->
-> Also, use scripts/get_maintainer.pl to get the correct mailing list...
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-And please use "staging:" prefix for staging patches. This way it's
-easier to filter them in mailbox and in patchwork.
+[...]
+
+> +	if (count < 3) {
+> +		/*printk("argument size is less than 3\n");*/
+> +		return -EFAULT;
+> +	}
+
+> +	if (num !=  3) {
+> +		/*printk("invalid write_reg parameter!\n");*/
+> +		return count;
+> +	}
+
+> +	default:
+> +		/*printk("error write length=%d", len);*/
+> +		break;
+> +	}
+
+Dead code.
+
+> +	/* add for debug */
+> +	rtl_debug_add_one(hw);
+
+> +	/* remove form debug */
+> +	rtl_debug_remove_one(hw);
+
+The comments are useless, the function name already tells the same.
 
 -- 
 Kalle Valo
