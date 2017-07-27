@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34061 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40324 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbdGSIXR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 04:23:17 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-CC: "Kaufman, Liad" <liad.kaufman@intel.com>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Dvir, Sharon" <sharon.dvir@intel.com>,
-        "Sharon, Sara" <sara.sharon@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH] iwlwifi: pcie: Fix error code in iwl_trans_pcie_alloc()
-Date: Wed, 19 Jul 2017 08:23:12 +0000
-Message-ID: <1500452591.22048.263.camel@intel.com> (sfid-20170719_102322_282643_E8F52AA2)
-References: <20170712075300.sbd2vlwqf4rriale@mwanda>
-         <1500445417.22048.254.camel@intel.com>
-         <20170719082152.6onumaup6js3zud4@mwanda>
-In-Reply-To: <20170719082152.6onumaup6js3zud4@mwanda>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        id S1750965AbdG0LUv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 07:20:51 -0400
+From: Stefano Brivio <sbrivio@redhat.com>
+To: netdev@vger.kernel.org
+Cc: "David S . Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>, Jouni Malinen <j@w1.fi>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH net] intersil/hostap: Fix outdated comment about dev->destructor
+Date: Thu, 27 Jul 2017 13:20:15 +0200
+Message-Id: <0824ed85fd45846da65fc919ae22df9d7ebf2f97.1501150507.git.sbrivio@redhat.com> (sfid-20170727_132057_860262_E57BF7D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE3LTA3LTE5IGF0IDExOjIxICswMzAwLCBEYW4gQ2FycGVudGVyIHdyb3RlOg0K
-PiBPb3BzLCBoZWgsIHNvcnJ5LiAgSSBzd2l0Y2hlZCBjb21wdXRlcnMgc28gSSBmaXJzdCBvbmUg
-d2Fzbid0IGluIG15DQo+IG91dGJveC4NCg0KTm8gd29ycmllcywgYmV0dGVyIHNhZmUgdGhhbiBz
-b3JyeS4gOikNCg0KLS0NCkx1Y2Eu
+After commit cf124db566e6 ("net: Fix inconsistent teardown and
+release of private netdev state."), setting
+'dev->needs_free_netdev' ensures device data is released, and
+'dev->destructor' is not used anymore.
+
+Fixes: cf124db566e6 ("net: Fix inconsistent teardown and release of private netdev state.")
+Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
+---
+Despite checkpatch.pl warning against unnecessary changes, this
+outdated comment might lead to confusion -- making this change
+actually necessary, perhaps.
+
+ drivers/net/wireless/intersil/hostap/hostap_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_main.c b/drivers/net/wireless/intersil/hostap/hostap_main.c
+index a3c066f90afc..012930d35434 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_main.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_main.c
+@@ -125,8 +125,8 @@ void hostap_remove_interface(struct net_device *dev, int rtnl_locked,
+ 	else
+ 		unregister_netdev(dev);
+ 
+-	/* dev->destructor = free_netdev() will free the device data, including
+-	 * private data, when removing the device */
++	/* 'dev->needs_free_netdev = true' implies device data, including
++	 * private data, will be freed when the device is removed */
+ }
+ 
+ 
+-- 
+2.9.4
