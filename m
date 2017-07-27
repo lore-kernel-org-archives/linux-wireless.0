@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35905 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751828AbdGFOnL (ORCPT
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:36766 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750878AbdG0Jwc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:43:11 -0400
-Received: by mail-pf0-f195.google.com with SMTP id z6so555545pfk.3
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:43:11 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: [v3 17/21] rsi: rename variable in_sdio_litefi_irq
-Date: Thu,  6 Jul 2017 20:07:20 +0530
-Message-Id: <1499351844-2046-18-git-send-email-amitkarwar@gmail.com> (sfid-20170706_170042_646029_FFA4AF47)
-In-Reply-To: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
-References: <1499351844-2046-1-git-send-email-amitkarwar@gmail.com>
+        Thu, 27 Jul 2017 05:52:32 -0400
+Received: by mail-wr0-f173.google.com with SMTP id y43so141413103wrd.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jul 2017 02:52:31 -0700 (PDT)
+Message-ID: <5979B7DD.2070704@broadcom.com> (sfid-20170727_115238_581741_E4F42812)
+Date: Thu, 27 Jul 2017 11:52:29 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+To: Ian Molton <ian@mnementh.co.uk>
+CC: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com
+Subject: Re: Patch v4: Clean up brcmfmac driver
+References: <20170726202557.15632-1-ian@mnementh.co.uk> <878tjaxv1z.fsf@purkki.adurom.net> <4f2b9f3c-2fb1-3f43-ee96-127404e726c6@mnementh.co.uk>
+In-Reply-To: <4f2b9f3c-2fb1-3f43-ee96-127404e726c6@mnementh.co.uk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+On 7/27/2017 11:47 AM, Ian Molton wrote:
+> On 27/07/17 07:17, Kalle Valo wrote:
+>>> Here's a v4 of the cleanup patchset - checkpatch clean(er - I have purposely
+>>> left some warnings unaddressed).
+>>>
+>>> I also dropped an accidental adjustment of a debug macro from v3.
+>> Like I said already last time, please split the patchset into reasonable
+>> sizes (and submit one patchset at a time). I will automatically drop
+>> patchbombs like this.
+>
+> How many patches would you like at once?
 
-The variable in_sdio_litefi_irq is renamed to sdio_irq_task,
-as it is more relevant here.
+Hi Ian,
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_sdio.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+~10-15 patches should be fine although I am simply ploughing through the 
+lot right now.
 
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index f11f818..cbbc0448 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -104,7 +104,7 @@ struct receive_info {
- 
- struct rsi_91x_sdiodev {
- 	struct sdio_func *pfunction;
--	struct task_struct *in_sdio_litefi_irq;
-+	struct task_struct *sdio_irq_task;
- 	struct receive_info rx_info;
- 	u32 next_read_delay;
- 	u32 sdio_high_speed_enable;
--- 
-2.7.4
+Regards,
+Arend
