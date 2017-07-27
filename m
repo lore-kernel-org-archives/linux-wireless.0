@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39362 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755615AbdGXPvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 11:51:14 -0400
-Message-ID: <1500911422.4571.3.camel@redhat.com> (sfid-20170724_175118_896002_7A06BB98)
-Subject: Re: brcfmac: add possibility to turn off powersave on wiphy
-From: Dan Williams <dcbw@redhat.com>
-To: Rafal <fatwildcat@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 24 Jul 2017 10:50:22 -0500
-In-Reply-To: <alpine.DEB.2.20.1707212252060.13284@wilk>
-References: <alpine.DEB.2.20.1707211652430.10663@wilk>
-         <1500655872.10725.1.camel@redhat.com>
-         <alpine.DEB.2.20.1707212252060.13284@wilk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-dm3nam03on0054.outbound.protection.outlook.com ([104.47.41.54]:14641
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751593AbdG0XH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 19:07:29 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 03/12] qtnfmac: add missing bus lock
+Date: Fri, 28 Jul 2017 02:06:45 +0300
+Message-Id: <20170727230654.30850-4-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010735_592047_2E99B907)
+In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-07-21 at 23:19 +0200, Rafal wrote:
-> On Fri, 21 Jul 2017, Dan Williams wrote:
-> 
-> > On Fri, 2017-07-21 at 16:56 +0200, Rafal wrote:
-> > > I have a board with ap6212 chip and I have encountered two
-> > > problems
-> > > with the brcmfmac driver operating with this device. First
-> > > problem I
-> > > describe below, second one in separate mail.
-> > > 
-> > > 
-> > > Namely, I have noticed quite poor connection with the device
-> > > despite
-> > > good signal strength. Ping to the device was very uneven, about
-> > > 50 -
-> > > 100 ms in average, 10 - 20% of packets loss. After some
-> > > investigations I have found that problem is caused by powersave
-> > > feature on wiphy (BRCMF_C_SET_PM command). When the value is set
-> > > to
-> > > PM_OFF, the problem does not appear - ping is quite stable, ~2ms.
-> > > When set to PM_FAST, the ping is bad.
-> > > 
-> > > The brcmfmac driver currently does not have possibility to turn
-> > > off
-> > > the powersave feature. I have added the possibility on 4.11.6
-> > > kernel
-> > 
-> > I don't think that's true?  The driver implements the nl80211
-> > set_power_mgmt hook, which lets you turn off powersave with
-> > 'iw'.  That
-> > seems like a much better option than a module parameter.  I know
-> > other
-> > drivers have the module parameter, but I personally consider that
-> > legacy/holdover, given that we have runtime toggles for this kind
-> > of
-> > thing.
-> > 
-> > brcmf_cfg80211_set_power_mgmt() should do what you need, right?
-> 
-> Yes, it does.
-> 
-> In fact, I needed only a parameter in OF database. This is a bug in
-> the
-> device or firmware and I needed to disable the feature for this chip.
-> Many device drivers allow to specify in OF database that driver
-> should
-> use a quirk. This is similar situation.
+Add missing bus lock into get_mac_chan_info command.
 
-Does the power management issue cause problems before any association
-happens?  If not, then I'd suggest 'iw' in startup scripts somewhere. 
-Or better yet, use the normal quirk method of detecting the hardware
-version via IDs or detecting the firmware via version or feature
-strings and quirking on that.
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Dan
-
-> I have added the kernel parameter as an additional feature. I thought
-> that not all platforms are using devicetree database. But maybe it is
-> a
-> bad idea.
-> 
-> Rafal
-> 
-> > 
-> > Dan
-> > 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 8be96f02888f..f5a294f3c2a4 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1442,6 +1442,9 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+ 
+ 	cmd = (struct qlink_cmd_chans_info_get *)cmd_skb->data;
+ 	cmd->band = qband;
++
++	qtnf_bus_lock(mac->bus);
++
+ 	ret = qtnf_cmd_send_with_reply(mac->bus, cmd_skb, &resp_skb, &res_code,
+ 				       sizeof(*resp), &info_len);
+ 
+@@ -1465,6 +1468,7 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+ 	ret = qtnf_cmd_resp_fill_channels_info(band, resp, info_len);
+ 
+ out:
++	qtnf_bus_unlock(mac->bus);
+ 	consume_skb(resp_skb);
+ 
+ 	return ret;
+-- 
+2.11.0
