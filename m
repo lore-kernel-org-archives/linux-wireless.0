@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33609 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756724AbdGYBOQ (ORCPT
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:37499 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751547AbdG0Kjl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:16 -0400
-Received: by mail-pf0-f177.google.com with SMTP id s70so53108148pfs.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:16 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 06/20] mwifiex: don't short-circuit netdev notifiers on interface deletion
-Date: Mon, 24 Jul 2017 18:13:22 -0700
-Message-Id: <20170725011336.99993-7-briannorris@chromium.org> (sfid-20170725_031830_899599_61F73E8A)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+        Thu, 27 Jul 2017 06:39:41 -0400
+Received: by mail-wr0-f170.google.com with SMTP id 33so85378808wrz.4
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jul 2017 03:39:41 -0700 (PDT)
+Message-ID: <5979C2EA.4080101@broadcom.com> (sfid-20170727_123956_200882_BCB516EC)
+Date: Thu, 27 Jul 2017 12:39:38 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH v4 09/10] rtlwifi: use debugfs to debug.
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>        <20170702181239.17911-10-Larry.Finger@lwfinger.net> <87vamew5d9.fsf@purkki.adurom.net>
+In-Reply-To: <87vamew5d9.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we leave the delete interface function, there are still netdev
-hooks that might try to process the device. We're short-circuiting some
-of that by changing the interface type and clearing ieee80211_ptr. This
-means we skip NETDEV_UNREGISTER_FINAL in cfg80211. Fortunately, that is
-currently a no-op.
+On 7/27/2017 12:17 PM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>
+>> Use debugfs to dump register and btcoex status.
+>
+> The title is useless and the commit log does not mention anything about
+> what files are added and to which location.
+>
+>> The kbuild test robot <lkp@intel.com> suggested a change to use
+>> simple_open() instead of a local routine.
+>
+> This comment doesn't belong to commit log, it should be in the changelog.
+>
+>> +void rtl_debugfs_add_topdir(void)
+>> +{
+>> +	debugfs_topdir = debugfs_create_dir("rtlwifi", NULL);
+>> +}
+>> +
+>> +void rtl_debugfs_remove_topdir(void)
+>> +{
+>> +	debugfs_remove_recursive(debugfs_topdir);
+>> +}
+>
+> I'm surprised to see that rtlwifi creates it's own top level debugfs
+> directory and does not use wiphy->debugfsdir. So how is this supposed to
+> work when we have multiple rtlwifi devices on the same system?
 
-We don't need most of the cleanup here anyway:
+In brcmfmac we also have our own top level debugfs dir because we do 
+wiphy_new()/wiphy_register() kinda late. To cover the multiple devices 
+issue we create a subdir per device, ie. 
+/sys/kernel/debug/brcmfmac/mmc0:0001:1/.
 
- * the connection state will get (un)set as part of the disconnect
-   process (which cfg80211 already initiates for us)
- * the interface type doesn't actually need to be cleared at all (it'll
-   trigger a WARN_ON() in cfg80211 if we do)
- * the iee80211_ptr isn't really "ours" to clear anyway
-
-So stop resetting those 3 things.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: no change
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 06ad2d50f9b0..f86a8a69d060 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3123,11 +3123,7 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		priv->dfs_chan_sw_workqueue = NULL;
- 	}
- 	/* Clear the priv in adapter */
--	priv->netdev->ieee80211_ptr = NULL;
- 	priv->netdev = NULL;
--	priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
--
--	priv->media_connected = false;
- 
- 	switch (priv->bss_mode) {
- 	case NL80211_IFTYPE_UNSPECIFIED:
--- 
-2.14.0.rc0.284.gd933b75aa4-goog
+Regards,
+Arend
