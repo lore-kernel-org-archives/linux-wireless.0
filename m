@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:32887 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbdGQVbo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55218 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751466AbdG0K6g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 17:31:44 -0400
-Received: by mail-wr0-f176.google.com with SMTP id a10so1856701wrd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 14:31:43 -0700 (PDT)
-Subject: Re: BUG: brcmfmac: add firmware feature detection for gscan feature
- breaks 43430a1
-To: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-References: <25c47ffe-af3e-fb85-ed5b-ff1987cfd93f@mnementh.co.uk>
- <e6635794-7c35-1a46-2d5b-68824c7b0657@mnementh.co.uk>
- <ff344ee3-3feb-6886-8007-d8ed00386424@broadcom.com>
- <c322c7c6-823b-0d36-8968-101d143b3220@mnementh.co.uk>
- <6c512250-5299-0cad-675b-e7780e999b58@broadcom.com>
- <246dc2f3-5cfd-7e89-6244-50fa2f546306@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0271ee86-ba99-fc50-46cd-b796f614fa19@broadcom.com> (sfid-20170717_233148_297468_582FEA2C)
-Date: Mon, 17 Jul 2017 23:31:41 +0200
+        Thu, 27 Jul 2017 06:58:36 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <246dc2f3-5cfd-7e89-6244-50fa2f546306@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252
+Subject: Re: [-next] rtlwifi: kfree entry until after entry->bssid has been
+ accessed
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170630100843.9188-1-colin.king@canonical.com>
+References: <20170630100843.9188-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20170727105836.02AB5607C8@smtp.codeaurora.org> (sfid-20170727_125856_105180_8A981663)
+Date: Thu, 27 Jul 2017 10:58:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Colin Ian King <colin.king@canonical.com> wrote:
 
-
-On 17-07-17 22:41, Ian Molton wrote:
-> On 17/07/17 21:36, Arend van Spriel wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
->> In <debugfs_mountpoint>/brcmfmac/*/forensics, but you have to load the
->> driver with modules parameter 'ignore_probe_fail=1' to avoid the driver
->> remove tearing down all debugfs stuff.
+> The current code kfree's entry and then dereferences it by accessing
+> entry->bssid.  Avoid the dereference-after-free by moving the kfree
+> after the access to entry->bssid.
 > 
-> modinfo shows:
+> Detected by CoverityScan, CID#1448600 ("Read from pointer after free")
 > 
-> parm:           txglomsz:Maximum tx packet chain size [SDIO] (int)
-> parm:           debug:Level of debug output (int)
-> parm:           p2pon:Enable legacy p2p management functionality (int)
-> parm:           feature_disable:Disable features (int)
-> parm:           alternative_fw_path:Alternative firmware path (string)
-> parm:           fcmode:Mode of firmware signalled flow control (int)
-> parm:           roamoff:Do not use internal roaming engine (int)
-> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Seems you did not build with CONFIG_BRCMDBG?
+Patch applied to wireless-drivers-next.git, thanks.
 
-common.c:
+d0116f6f7b30 rtlwifi: kfree entry until after entry->bssid has been accessed
 
-#ifdef DEBUG
-/* always succeed brcmf_bus_started() */
-static int brcmf_ignore_probe_fail;
-module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
-MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
-#endif
+-- 
+https://patchwork.kernel.org/patch/9819083/
 
-Regards,
-Arend
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
