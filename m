@@ -1,77 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51490 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56838 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750836AbdG0J7e (ORCPT
+        with ESMTP id S1751042AbdG0LDi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 05:59:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v4 02/10] rtlwifi: Add BT_MP_INFO to c2h handler.
-References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
-        <20170702181239.17911-3-Larry.Finger@lwfinger.net>
-Date: Thu, 27 Jul 2017 12:59:30 +0300
-In-Reply-To: <20170702181239.17911-3-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Sun, 2 Jul 2017 13:12:31 -0500")
-Message-ID: <87zibqw67x.fsf@purkki.adurom.net> (sfid-20170727_115938_983907_317EEC85)
+        Thu, 27 Jul 2017 07:03:38 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [for-4.13] brcmfmac: fix memleak due to calling
+ brcmf_sdiod_sgtable_alloc() twice
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1501070969-15984-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170727110338.5E36560908@smtp.codeaurora.org> (sfid-20170727_130342_269326_A836F29C)
+Date: Thu, 27 Jul 2017 11:03:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> We use H2C to ask BT's status, and C2H will return the status.
->
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+> Due to a bugfix in wireless tree and the commit mentioned below a merge
+> was needed which went haywire. So the submitted change resulted in the
+> function brcmf_sdiod_sgtable_alloc() being called twice during the probe
+> thus leaking the memory of the first call.
+> 
+> Cc: stable@vger.kernel.org # 4.6.x
+> Fixes: 4d7928959832 ("brcmfmac: switch to new platform data")
+> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
+> Tested-by: Stefan Wahren <stefan.wahren@i2se.com>
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-[...]
+Patch applied to wireless-drivers.git, thanks.
 
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -327,7 +327,22 @@ static void halbtc_aggregation_check(struct btc_coexist *btcoexist)
->  
->  static u32 halbtc_get_bt_patch_version(struct btc_coexist *btcoexist)
->  {
-> -	return 0;
-> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> +	u8 cmd_buffer[4] = {0};
-> +	u8 oper_ver = 0;
-> +	u8 req_num = 0x0E;
-> +
-> +	if (btcoexist->bt_info.bt_real_fw_ver)
-> +		goto label_done;
-> +
-> +	cmd_buffer[0] |= (oper_ver & 0x0f);	/* Set OperVer */
-> +	cmd_buffer[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
-> +	cmd_buffer[1] = 0; /* BT_OP_GET_BT_VERSION = 0 */
-> +	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, 4,
-> +					&cmd_buffer[0]);
-> +
-> +label_done:
-> +	return btcoexist->bt_info.bt_real_fw_ver;
->  }
-
-I don't remember if I have mentioned before but there's way too much
-magic numbers. There should an enum for all req_num values and
-cmd_buffer should be a struct so that is serves as documentation at the
-same time. No need to resend because of this but take this into account
-in the future.
-
-As an example rsi driver is having similar problems and Prameela is
-fixing those:
-
-https://patchwork.kernel.org/patch/9832895/
+5f5d03143de5 brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9864681/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
