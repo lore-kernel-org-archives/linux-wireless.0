@@ -1,118 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33876 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1750942AbdGZU0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:26:11 -0400
-From: Ian Molton <ian@mnementh.co.uk>
+Received: from mail-dm3nam03on0046.outbound.protection.outlook.com ([104.47.41.46]:26496
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751582AbdG0XH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 19:07:27 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 02/34] brcmfmac: Register sizes on hardware are not dependent on compiler types
-Date: Wed, 26 Jul 2017 21:25:25 +0100
-Message-Id: <20170726202557.15632-3-ian@mnementh.co.uk> (sfid-20170726_222629_276673_FC986955)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 02/12] qtnfmac: regulatory configuration for self-managed setup
+Date: Fri, 28 Jul 2017 02:06:44 +0300
+Message-Id: <20170727230654.30850-3-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010733_483026_71DB9D56)
+In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 4 IO functions in this patch are incorrect as they use compiler types
-to determine how many bytes to send to the hardware.
+Regdomain information needs to be registered with cfg80211
+for devices with REGULATORY_WIPHY_SELF_MANAGED flag set.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index f585dfd89453..2b441ce91d5f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -264,7 +264,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	func = sdiodev->func[fn];
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 7f70b0aae069..e288b1d4432a 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -873,6 +873,15 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+ 	}
  
- 	switch (regsz) {
--	case sizeof(u8):
-+	case 1:
- 		if (write) {
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
-@@ -278,13 +278,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
- 		}
- 		break;
--	case sizeof(u16):
-+	case 2:
- 		if (write)
- 			sdio_writew(func, *(u16 *)data, addr, &ret);
- 		else
- 			*(u16 *)data = sdio_readw(func, addr, &ret);
- 		break;
--	case sizeof(u32):
-+	case 4:
- 		if (write)
- 			sdio_writel(func, *(u32 *)data, addr, &ret);
- 		else
-@@ -368,7 +368,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- 	for (i = 0; i < 3; i++) {
- 		err = brcmf_sdiod_regrw_helper(sdiodev,
- 					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       sizeof(u8), &addr[i], true);
-+					       1, &addr[i], true);
- 		if (err) {
- 			brcmf_err("failed at addr: 0x%0x\n",
- 				  SBSDIO_FUNC1_SBADDRLOW + i);
-@@ -407,7 +407,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
-@@ -423,10 +423,10 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
-@@ -443,7 +443,7 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  true);
- 	if (ret)
- 		*ret = retval;
-@@ -455,10 +455,10 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  true);
- 
- done:
-@@ -876,7 +876,7 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
- 
- 	/* issue abort cmd52 command through F0 */
- 	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
--				 sizeof(t_func), &t_func, true);
-+				 1, &t_func, true);
- 
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
+ 	ret = wiphy_register(wiphy);
++	if (ret < 0)
++		goto out;
++
++	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
++		ret = regulatory_set_wiphy_regd(wiphy, hw_info->rd);
++	else if (isalpha(hw_info->rd->alpha2[0]) &&
++		 isalpha(hw_info->rd->alpha2[1]))
++		ret = regulatory_hint(wiphy, hw_info->rd->alpha2);
++
+ out:
+ 	if (ret) {
+ 		kfree(iface_comb);
 -- 
 2.11.0
