@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:36809 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751838AbdGDFMT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2017 01:12:19 -0400
+Received: from mail-dm3nam03on0073.outbound.protection.outlook.com ([104.47.41.73]:40347
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751113AbdG0XHV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 19:07:21 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2] qtnfmac: add more features to driver
+Date: Fri, 28 Jul 2017 02:06:42 +0300
+Message-Id: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010726_825737_92E0D3A9)
 MIME-Version: 1.0
-From: Dison River <pwn2river@gmail.com>
-Date: Tue, 4 Jul 2017 13:12:18 +0800
-Message-ID: <CAJsXRPEZV=ugCAxngtVRt+=GZfnwf1abxu8Q_DSaPeXuTYpsVw@mail.gmail.com> (sfid-20170704_071254_860824_4F635A95)
-Subject: 'skb' buffer address information leakage
-To: samuel@sortiz.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, qca_merez@qca.qualcomm.com,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        jakub.kicinski@netronome.com, davem@davemloft.net,
-        oss-drivers@netronome.com, security@kernel.org,
-        wil6210@qca.qualcomm.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all:
-I'd found several address leaks of "skb" buffer.When i have a
-arbitrary address write vulnerability in kernel(enabled kASLR),I can
-use skb's address find sk_destruct's address and overwrite it. And
-then,invoke close(sock_fd) function can trigger the
-shellcode(sk_destruct func).
+This patch series adds more features and fixes to qtnfmac driver:
+- regulatory support updates
+- get_channel handler
+- dump_survey handler
+- channel_switch handler
+- update message structures to prepare for adding AP_VLAN
+- cleanup and fixes
 
-In kernel 4.12-rc7
-drivers/net/irda/vlsi_ir.c:326           seq_printf(seq, "skb=%p
-data=%p hw=%p\n", rd->skb, rd->buf, rd->hw);
-drivers/net/ethernet/netronome/nfp/nfp_net_debugfs.c:167
-         seq_printf(file, " frag=%p", skb);
-drivers/net/wireless/ath/wil6210/debugfs.c:926           seq_printf(s,
-"  SKB = 0x%p\n", skb);
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
 
-Thanks.
+v1 -> v2
+- remove AP_VLAN support: to be submitted separately as RFC
+- split patches with multiple changes into a smaller chunks
+
+cfg80211.c   |  315 ++++++++++++++++++++++++++++++--------
+cfg80211.h   |    4 
+commands.c   |  486 ++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+commands.h   |    5 
+core.c       |    5 
+core.h       |   27 ++-
+event.c      |   67 +++++++-
+qlink.h      |  202 ++++++++++++++++++++++--
+qlink_util.c |   26 +--
+qlink_util.h |   10 -
+10 files changed, 992 insertions(+), 155 deletions(-)
