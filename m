@@ -1,127 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f177.google.com ([209.85.213.177]:34157 "EHLO
-        mail-yb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751316AbdGQTuz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 15:50:55 -0400
-Received: by mail-yb0-f177.google.com with SMTP id z37so4048592ybh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 12:50:55 -0700 (PDT)
+Received: from mail-dm3nam03on0071.outbound.protection.outlook.com ([104.47.41.71]:30304
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751635AbdG0XHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 19:07:41 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 07/12] qtnfmac: move current channel info from vif to mac
+Date: Fri, 28 Jul 2017 02:06:49 +0300
+Message-Id: <20170727230654.30850-8-sergey.matyukevich.os@quantenna.com> (sfid-20170728_010746_503017_486D686F)
+In-Reply-To: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
+References: <20170727230654.30850-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <1133935948.74840.1500297053336@email.1und1.de>
-References: <384537059.123625.1498678388857@email.1und1.de> <1133935948.74840.1500297053336@email.1und1.de>
-From: Franky Lin <franky.lin@broadcom.com>
-Date: Mon, 17 Jul 2017 12:50:34 -0700
-Message-ID: <CA+8PC_eKn_LddvcpYG=V6vD7qZfVNEmmzR3gWXxWO80SNKR-3Q@mail.gmail.com> (sfid-20170717_215058_441066_1833318B)
-Subject: Re: brcmfmac: BCM43431 won't get probed on Raspberry Pi Zero W
-To: Stefan Wahren <stefan.wahren@i2se.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        linux-rpi-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 17, 2017 at 6:10 AM, Stefan Wahren <stefan.wahren@i2se.com> wrote:
-> Hi,
->
->> Stefan Wahren <stefan.wahren@i2se.com> hat am 28. Juni 2017 um 21:33 geschrieben:
->>
->>
->> Hi,
->>
->> i'm currently working on Raspberry Pi Zero W for Mainline. Here is my first patch series [1].
->>
->> Unfortunately i didn't get brcmfmac (connected via SDIO) probed with this patch series against 4.12.0-rc5-next-20170616+
->>
->> [    8.389167] brcmfmac: F1 signature read @0x18000000=0x1541a9a6
->> [    8.735111] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: May 27 2016 00:13:38 version 7.45.41.26 (r640327) FWID 01-df77e4a7
->> [    8.786016] brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
->> [   11.288798] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->> [   11.292822] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
->> [   13.848777] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->> [   13.852974] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
->> [   16.408762] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->> [   16.413004] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
->> [   18.968769] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->> [   18.972965] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
->> [   21.528743] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->> [   21.532924] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
->> [   24.088745] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->> [   24.092948] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
->> [   26.648764] brcmfmac: brcmf_proto_bcdc_query_dcmd: brcmf_proto_bcdc_msg failed w/status -110
->> [   26.648789] brcmfmac: brcmf_cfg80211_attach: Failed to get D11 version (-110)
->> [   26.648831] brcmfmac: brcmf_bus_started: failed: -12
->> [   26.648842] brcmfmac: brcmf_sdio_firmware_callback: dongle is not responding
->>
->> I already tried the additional patches from Gerd Hofmann's repo [2], but this didn't improve anything.
->>
->> Any ideas what could be the problem?
->
-> i found out that 4.12 didn't have the problem and rebased my changes [3].
->
-> Now 4.13-rc1 is out and i bisected the regression:
->
-> 5771a8c08880cdca3bfb4a3fc6d309d6bba20877 bad
-> 6f7da290413ba713f0cdd9ff1a2a9bb129ef4f6c good
-> e5f76a2e0e84ca2a215ecbf6feae88780d055c56 bad
-> 1849f800fba32cd5a0b647f824f11426b85310d8 good
-> ca7bbc845e0aa2d9d6d252e72f0a2602ebd16361 bad
-> 0c90e9c6b5549825e410b6589ad6c4478f81ebad good
-> 44e179da0e27a1cc1001becefa0931634dbafae3 bad
-> 219569ad0c41df7a7f999a2cad688c6b6ce173e2 bad
-> fb53905cf2c3db6eb1ce37a37c5002456fa7ee20 bad
-> 37a5be0cfca6487bbdf423a09dfe70e9bfb049db bad
-> a3b2ba8666b7947eb323368b5c6f751450e61766 bad
-> 21f569af9ab3608382482166ae9aba802b097e3f bad
-> 94ed6ffb7965aa09409a5ff7d17b2f84ed085c3c bad
-> a95cfad947d5f40cfbf9ad3019575aac1d8ac7a6 good
->
-> 9fe929aaace6a3019dd64a70063cc7b0bb956a4e bad
->
-> brcmfmac: add firmware feature detection for gscan feature
-> Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
-> invalid version.
->
-> Unfortunately this commit cannot be simply reverted and i wasn't sure about the dependencies. So i need to revert the following commits to get it running with 4.13-rc1:
->
+Wireless cfg80211 core supplies channel settings in cfg80211_ap_settings
+structure for each BSS in multiple BSS configuration. On the other hand
+all the virtual interfaces on one radio are using the same PHY settings
+including channel.
 
-Can you please try to comment out the following lines in
-brcmf_feat_attach? That's the only suspicious line that interact with
-firmware in the patch.
+Move chandef structure from vif to mac structure in order to mantain
+the only instance of cfg80211_chan_def structure in qtnf_wmac
+rather than its multiple copies in qtnf_vif.
 
-+ brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
-+                                            &gscan_cfg, sizeof(gscan_cfg));
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 38 +++++++++++++++--------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++--
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  2 +-
+ 3 files changed, 29 insertions(+), 17 deletions(-)
 
-I don't have a pi zero w but will try to see if I can reproduce it on a pi 3.
-
-Regards,
-Franky
-
-> 123fef3fd4ae6052bad5cf1623c49845d16a6c67
-> 2526ff21aa77c205f72e8263335f20b7d7e636fc
-> b8a64f0e96c2b258321ee03975aeb0f5e88a055b
-> 69897f390b006948ca4cfa37174fa653a0ef7223
-> 42596f761449595e3f0f18ce57c88472ad2d6160
-> efc2c1fa8e145b60a7805fa9b6c92ac0746fccc3
-> 94ed6ffb7965aa09409a5ff7d17b2f84ed085c3c
-> 9fe929aaace6a3019dd64a70063cc7b0bb956a4e
->
-> Would be nice to get this fixed.
->
-> Regards
-> Stefan
->
-> [3] - https://github.com/lategoodbye/rpi-zero/commits/rpi-zero-w-v2
->
->>
->> Thanks
->> Stefan
->>
->> [1] - http://lists.infradead.org/pipermail/linux-rpi-kernel/2017-June/006598.html
->> [2] - https://www.kraxel.org/cgit/linux/log/?h=bcm2837
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index ef8089c163bc..d47050934f00 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -266,11 +266,19 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			 struct cfg80211_ap_settings *settings)
+ {
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
++	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct qtnf_bss_config *bss_cfg;
+ 	int ret;
+ 
+-	bss_cfg = &vif->bss_cfg;
++	if (!cfg80211_chandef_identical(&mac->chandef, &settings->chandef)) {
++		memcpy(&mac->chandef, &settings->chandef, sizeof(mac->chandef));
++		if (vif->vifid != 0)
++			pr_warn("%s: unexpected chan %u (%u MHz)\n", dev->name,
++				settings->chandef.chan->hw_value,
++				settings->chandef.chan->center_freq);
++	}
+ 
++	bss_cfg = &vif->bss_cfg;
+ 	memset(bss_cfg, 0, sizeof(*bss_cfg));
+ 
+ 	bss_cfg->bcn_period = settings->beacon_interval;
+@@ -281,8 +289,6 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	bss_cfg->ssid_len = settings->ssid_len;
+ 	memcpy(&bss_cfg->ssid, settings->ssid, bss_cfg->ssid_len);
+ 
+-	memcpy(&bss_cfg->chandef, &settings->chandef,
+-	       sizeof(struct cfg80211_chan_def));
+ 	memcpy(&bss_cfg->crypto, &settings->crypto,
+ 	       sizeof(struct cfg80211_crypto_settings));
+ 
+@@ -593,6 +599,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	     struct cfg80211_connect_params *sme)
+ {
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
++	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct cfg80211_chan_def chandef;
+ 	struct qtnf_bss_config *bss_cfg;
+ 	int ret;
+@@ -615,7 +622,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 			cfg80211_chandef_create(&chandef, sme->channel,
+ 						NL80211_CHAN_HT20);
+ 
+-		memcpy(&bss_cfg->chandef, &chandef, sizeof(bss_cfg->chandef));
++		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
+ 	}
+ 
+ 	bss_cfg->ssid_len = sme->ssid_len;
+@@ -695,14 +702,14 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct ieee80211_supported_band *sband;
+-	struct cfg80211_chan_def *bss_chandef;
++	struct cfg80211_chan_def *chandef;
+ 	struct ieee80211_channel *chan;
+ 	struct qtnf_chan_stats stats;
+ 	struct qtnf_vif *vif;
+ 	int ret;
+ 
+ 	vif = qtnf_netdev_get_priv(dev);
+-	bss_chandef = &vif->bss_cfg.chandef;
++	chandef = &mac->chandef;
+ 
+ 	sband = wiphy->bands[NL80211_BAND_2GHZ];
+ 	if (sband && idx >= sband->n_channels) {
+@@ -722,9 +729,10 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ 	survey->channel = chan;
+ 	survey->filled = 0x0;
+ 
+-	if (bss_chandef->chan)
+-		if (chan->hw_value == bss_chandef->chan->hw_value)
+-			survey->filled |= SURVEY_INFO_IN_USE;
++	if (chandef->chan) {
++		if (chan->hw_value == chandef->chan->hw_value)
++			survey->filled = SURVEY_INFO_IN_USE;
++	}
+ 
+ 	ret = qtnf_cmd_get_chan_stats(mac, chan->hw_value, &stats);
+ 	switch (ret) {
+@@ -736,7 +744,7 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ 			break;
+ 		}
+ 
+-		survey->filled = SURVEY_INFO_TIME |
++		survey->filled |= SURVEY_INFO_TIME |
+ 				 SURVEY_INFO_TIME_SCAN |
+ 				 SURVEY_INFO_TIME_BUSY |
+ 				 SURVEY_INFO_TIME_RX |
+@@ -768,15 +776,14 @@ static int
+ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		 struct cfg80211_chan_def *chandef)
+ {
++	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct net_device *ndev = wdev->netdev;
+-	struct qtnf_bss_config *bss_cfg;
+ 	struct qtnf_vif *vif;
+ 
+ 	if (!ndev)
+ 		return -ENODEV;
+ 
+ 	vif = qtnf_netdev_get_priv(wdev->netdev);
+-	bss_cfg = &vif->bss_cfg;
+ 
+ 	switch (vif->wdev.iftype) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -796,7 +803,12 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return -ENODATA;
+ 	}
+ 
+-	memcpy(chandef, &bss_cfg->chandef, sizeof(*chandef));
++	if (!cfg80211_chandef_valid(&mac->chandef)) {
++		pr_err("invalid channel settings on %s\n", ndev->name);
++		return -ENODATA;
++	}
++
++	memcpy(chandef, &mac->chandef, sizeof(*chandef));
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index c8c0685f81b3..a3c3dddb194c 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -185,7 +185,7 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif)
+ {
+ 	struct sk_buff *cmd_skb;
+ 	struct qtnf_bss_config *bss_cfg = &vif->bss_cfg;
+-	struct cfg80211_chan_def *chandef = &bss_cfg->chandef;
++	struct cfg80211_chan_def *chandef = &vif->mac->chandef;
+ 	struct qlink_tlv_channel *qchan;
+ 	struct qlink_auth_encr aen;
+ 	u16 res_code = QLINK_CMD_RESULT_OK;
+@@ -2035,8 +2035,8 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 
+ 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
+ 
+-	if (bss_cfg->chandef.chan)
+-		cmd->channel = cpu_to_le16(bss_cfg->chandef.chan->hw_value);
++	if (vif->mac->chandef.chan)
++		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
+ 
+ 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index b2d050c4f1e2..6830ff45976d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -67,7 +67,6 @@ struct qtnf_bss_config {
+ 	u16 auth_type;
+ 	bool privacy;
+ 	enum nl80211_mfp mfp;
+-	struct cfg80211_chan_def chandef;
+ 	struct cfg80211_crypto_settings crypto;
+ 	u16 bg_scan_period;
+ 	u32 connect_flags;
+@@ -141,6 +140,7 @@ struct qtnf_wmac {
+ 	struct qtnf_mac_info macinfo;
+ 	struct qtnf_vif iflist[QTNF_MAX_INTF];
+ 	struct cfg80211_scan_request *scan_req;
++	struct cfg80211_chan_def chandef;
+ };
+ 
+ struct qtnf_hw_info {
+-- 
+2.11.0
