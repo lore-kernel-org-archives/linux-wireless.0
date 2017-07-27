@@ -1,95 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34465 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751325AbdGQPKK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 11:10:10 -0400
-Received: by mail-oi0-f67.google.com with SMTP id d77so18146639oig.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 08:10:10 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 07/11] rtlwifi: Add TX/RX throughput statistics in period
-Date: Mon, 17 Jul 2017 10:09:50 -0500
-Message-Id: <20170717150954.1441-8-Larry.Finger@lwfinger.net> (sfid-20170717_171028_202262_208504DE)
-In-Reply-To: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
-References: <20170717150954.1441-1-Larry.Finger@lwfinger.net>
+Received: from [217.148.43.144] ([217.148.43.144]:51386 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1750836AbdG0KMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Jul 2017 06:12:07 -0400
+Subject: Re: Patch v4: Clean up brcmfmac driver
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <878tjaxv1z.fsf@purkki.adurom.net>
+ <4f2b9f3c-2fb1-3f43-ee96-127404e726c6@mnementh.co.uk>
+ <5979B7DD.2070704@broadcom.com>
+ <70c68acd-ea90-d6c5-d2ce-3f361ef915db@mnementh.co.uk>
+ <5979BBEA.9020801@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <a17f85f7-1fe0-5fc1-2883-5d64877c0025@mnementh.co.uk> (sfid-20170727_121211_684282_CD65EB75)
+Date: Thu, 27 Jul 2017 11:12:04 +0100
+MIME-Version: 1.0
+In-Reply-To: <5979BBEA.9020801@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 27/07/17 11:09, Arend van Spriel wrote:
+>>
+>> Hi Arend,
+>>
+>> Noted for future series. I take it I shouldn't re-spin if you're going
+>> through them already?
+> 
+> My "guess" is a v5 is likely ;-)
 
-The statistic variables use u64 to get higher precision.
+No prob. I've spotted a gem in it myself (FIXME comment that crept
+through). I'll split it into two series at v5 then.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
-v2 - no changes
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 16 ++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 15 +++++++++++----
- 2 files changed, 27 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 9e6fcdde7475..f6baa2d00c72 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1999,6 +1999,22 @@ void rtl_watchdog_wq_callback(void *data)
- 	rtlpriv->link_info.tx_busy_traffic = tx_busy_traffic;
- 	rtlpriv->link_info.higher_busyrxtraffic = higher_busyrxtraffic;
- 
-+	rtlpriv->stats.txbytesunicast_inperiod =
-+		rtlpriv->stats.txbytesunicast -
-+		rtlpriv->stats.txbytesunicast_last;
-+	rtlpriv->stats.rxbytesunicast_inperiod =
-+		rtlpriv->stats.rxbytesunicast -
-+		rtlpriv->stats.rxbytesunicast_last;
-+	rtlpriv->stats.txbytesunicast_last = rtlpriv->stats.txbytesunicast;
-+	rtlpriv->stats.rxbytesunicast_last = rtlpriv->stats.rxbytesunicast;
-+
-+	rtlpriv->stats.txbytesunicast_inperiod_tp =
-+		(u32)(rtlpriv->stats.txbytesunicast_inperiod * 8 / 2 /
-+		1024 / 1024);
-+	rtlpriv->stats.rxbytesunicast_inperiod_tp =
-+		(u32)(rtlpriv->stats.rxbytesunicast_inperiod * 8 / 2 /
-+		1024 / 1024);
-+
- 	/* <3> DM */
- 	if (!rtlpriv->cfg->mod_params->disable_watchdog)
- 		rtlpriv->cfg->ops->dm_watchdog(hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 90f3c019bc04..8d8e104507d6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1013,10 +1013,17 @@ struct init_gain {
- };
- 
- struct wireless_stats {
--	unsigned long txbytesunicast;
--	unsigned long txbytesmulticast;
--	unsigned long txbytesbroadcast;
--	unsigned long rxbytesunicast;
-+	u64 txbytesunicast;
-+	u64 txbytesmulticast;
-+	u64 txbytesbroadcast;
-+	u64 rxbytesunicast;
-+
-+	u64 txbytesunicast_inperiod;
-+	u64 rxbytesunicast_inperiod;
-+	u32 txbytesunicast_inperiod_tp;
-+	u32 rxbytesunicast_inperiod_tp;
-+	u64 txbytesunicast_last;
-+	u64 rxbytesunicast_last;
- 
- 	long rx_snr_db[4];
- 	/*Correct smoothed ss in Dbm, only used
--- 
-2.12.3
+-Ian
