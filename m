@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:35241 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbdGFRL4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56066 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750836AbdG0KIQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 13:11:56 -0400
-Received: by mail-pf0-f181.google.com with SMTP id c73so3959099pfk.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 10:11:56 -0700 (PDT)
-Date: Thu, 6 Jul 2017 10:11:53 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH] mwifiex: fix compile warning of unused variable
-Message-ID: <20170706171152.GA120202@google.com> (sfid-20170706_191203_279299_11D9A475)
-References: <1499327433-70786-1-git-send-email-shawn.lin@rock-chips.com>
+        Thu, 27 Jul 2017 06:08:16 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH v4 01/10] rtlwifi: Fill in_4way field by driver
+References: <20170702181239.17911-1-Larry.Finger@lwfinger.net>
+        <20170702181239.17911-2-Larry.Finger@lwfinger.net>
+        <874ltyxl1b.fsf@purkki.adurom.net> <5979B8D4.8080003@broadcom.com>
+Date: Thu, 27 Jul 2017 13:08:10 +0300
+In-Reply-To: <5979B8D4.8080003@broadcom.com> (Arend van Spriel's message of
+        "Thu, 27 Jul 2017 11:56:36 +0200")
+Message-ID: <87h8xyyyyd.fsf@kamboji.qca.qualcomm.com> (sfid-20170727_120820_265062_06B0D94C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499327433-70786-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 06, 2017 at 03:50:33PM +0800, Shawn Lin wrote:
-> We got a compile warning shows below:
-> 
-> drivers/net/wireless/marvell/mwifiex/sdio.c: In function
-> 'mwifiex_sdio_remove':
-> drivers/net/wireless/marvell/mwifiex/sdio.c:377:6: warning: variable
-> 'ret' set but not used [-Wunused-but-set-variable]
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-It's probably worth noting that this is not a default warning [1],
-especially if you resend. It already confused Kalle.
+> On 7/27/2017 11:54 AM, Kalle Valo wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>
+>>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>>
+>>> Because it isn't always correct to use EAPOL to check 4-way,
+>>> we add a timer to handle exception.
+>>>
+>>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+>>> Cc: Birming Chiu <birming@realtek.com>
+>>> Cc: Shaofu <shaofu@realtek.com>
+>>> Cc: Steven Ting <steventing@realtek.com>
+>>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+>>> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+>>> @@ -1408,6 +1408,11 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+>>>
+>>>   		return true;
+>>>   	} else if (ETH_P_PAE == ether_type) {
+>>> +		/* EAPOL is seens as in-4way */
+>>> +		rtlpriv->btcoexist.btc_info.in_4way = true;
+>>> +		rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
+>>> +	rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
+>>> +
+>>>   		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+>>>   			 "802.1X %s EAPOL pkt!!\n", (is_tx) ? "Tx" : "Rx");
+>>
+>> The indentation looks wrong.
+>
+> That wrongly indented line seems a bit redundant anyway :-p
 
-[1] In Makefile:
+Heh, indeed :)
 
-# These warnings generated too much noise in a regular build.
-# Use make W=1 to enable them (see scripts/Makefile.extrawarn)
-KBUILD_CFLAGS += $(call cc-disable-warning, unused-but-set-variable)
-
-> Per the code, it didn't check if mwifiex_sdio_read_fw_status
-> finish successfully. We should at least check the return of
-> mwifiex_sdio_read_fw_status, otherwise the following check of
-> firmware_stat and adapter->mfg_mode is pointless as the device
-> is probably dead.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index f81a006..fd5183c 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -390,7 +390,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
->  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
->  
->  	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
-> -	if (firmware_stat == FIRMWARE_READY_SDIO && !adapter->mfg_mode) {
-> +	if (!ret && firmware_stat == FIRMWARE_READY_SDIO &&
-> +	    !adapter->mfg_mode) {
-
-The PCIe driver has the same code structure. Might change both, if
-you're changing one of them? The PCIe one is technically safe I guess,
-since it will write to the 'firmware_stat' variable regardless of
-success or failure, whereas this SDIO one will not. But it would keep
-things clear and obvious.
-
-With (or without) that change:
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-Brian
-
->  		mwifiex_deauthenticate_all(adapter);
->  
->  		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-> -- 
-> 1.9.1
-> 
-> 
+-- 
+Kalle Valo
