@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26242 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751927AbdGFMSJ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40876 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752059AbdG1OYL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 08:18:09 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] ath10k: Make CE layer bus agnostic
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1498625306-21900-1-git-send-email-govinds@qti.qualcomm.com>
-References: <1498625306-21900-1-git-send-email-govinds@qti.qualcomm.com>
-To: Govind Singh <govinds@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Govind Singh <govinds@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <63060d6b10074d43ac9877099a61e6a2@eusanexr01a.eu.qualcomm.com> (sfid-20170706_141812_803376_CFB95335)
-Date: Thu, 6 Jul 2017 05:18:05 -0700
+        Fri, 28 Jul 2017 10:24:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:21 +0300
+Message-Id: <20170728142337.19183-9-luca@coelho.fi> (sfid-20170728_162425_531494_F14BF28A)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 08/24] iwlwifi: mvm: check family instead of new TX API for workarounds
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@qti.qualcomm.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Remove bus specific dependencies from CE layer
-> to have common CE layer across multiple targets.
-> This is required for adding support for WCN3990
-> chipset support as WCN3990 chipset uses SNOC
-> bus interface with Copy Engine endpoint.
-> 
-> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+There are two workarounds because RSS is currently broken on A000
+devices due to firmware issues, but checking for the new TX API
+doesn't really make sense. Check the hardware family instead of
+the new TX API - there's nothing better to check since it's just
+a temporary workaround.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-641fe28ad305 ath10k: make CE layer bus agnostic
-f9e18304544e ath10k: add copy engine register MAP for wcn3990 target
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 58f846610e5d..e04bf2f7c1ba 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1118,7 +1118,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 
+ 	/* Init RSS configuration */
+ 	/* TODO - remove a000 disablement when we have RXQ config API */
+-	if (iwl_mvm_has_new_rx_api(mvm) && !iwl_mvm_has_new_tx_api(mvm)) {
++	if (iwl_mvm_has_new_rx_api(mvm) &&
++	    mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_A000) {
+ 		ret = iwl_send_rss_cfg_cmd(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to configure RSS queues: %d\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index ab6c6bf79565..44f144c58720 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4280,7 +4280,8 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	/* TODO - remove a000 disablement when we have RXQ config API */
+-	if (!iwl_mvm_has_new_rx_api(mvm) || iwl_mvm_has_new_tx_api(mvm))
++	if (!iwl_mvm_has_new_rx_api(mvm) ||
++	    mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000)
+ 		return;
+ 
+ 	notif->cookie = mvm->queue_sync_cookie;
 -- 
-https://patchwork.kernel.org/patch/9813463/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.2
