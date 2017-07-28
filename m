@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:55730 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751351AbdGQQQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:16:54 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 09/29] brcmfmac: Remove noisy debugging.
-Date: Mon, 17 Jul 2017 17:16:17 +0100
-Message-Id: <20170717161637.4652-10-ian@mnementh.co.uk> (sfid-20170717_181657_924817_DD34BA9E)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from smtp.codeaurora.org ([198.145.29.96]:32866 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752235AbdG1QzE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Jul 2017 12:55:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: davem@davemloft.net, stas.yakovlev@gmail.com, sgruszka@redhat.com,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [v3,04/10] ipw2200: constify attribute_group structures
+References: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
+        <20170728150611.96B1A60884@smtp.codeaurora.org>
+        <87inicwqe2.fsf@purkki.adurom.net>
+Date: Fri, 28 Jul 2017 19:54:56 +0300
+In-Reply-To: <87inicwqe2.fsf@purkki.adurom.net> (Kalle Valo's message of "Fri,
+        28 Jul 2017 18:08:21 +0300")
+Message-ID: <87379gwlgf.fsf@purkki.adurom.net> (sfid-20170728_185533_947607_484E717F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you need debugging this low level, you're doing something wrong.
-Remove these noisy debug statements so the code is more readable.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>
+>> Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+>>
+>>> attribute_group are not supposed to change at runtime. All functions
+>>> working with attribute_group provided by <linux/sysfs.h> work
+>>> with const attribute_group. So mark the non-const structs as const.
+>>> 
+>>> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+>>
+>> 4 patches applied to wireless-drivers-next.git, thanks.
+>>
+>> 17830147c40a mwifiex: fix spelling mistake: "Insuffient" -> "Insufficient"
+>> 185ffc194800 ipw2100: don't return positive values to PCI probe on error
+>> af643fe9bbe0 zd1211rw: fix spelling mistake 'hybernate' -> 'hibernate'
+>> e66d70b789d1 brcmfmac: constify pci_device_id
+>
+> Please ignore this mail, I have a bug in my patchwork script.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 9145dda11e5a..7dd6af689ac8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -372,9 +372,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u8 data = 0;
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
--	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
- 	if (ret)
- 		*ret = retval;
-@@ -387,8 +385,6 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u32 data = 0;
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
- 
- 	if (ret)
-@@ -402,7 +398,6 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
- 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
- 
- 	if (ret)
-@@ -414,7 +409,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
- 
- 	if (ret)
- 		*ret = retval;
+The reason was that Dave had already applied these patches but my script
+failed to detect that. I need to fix my script.
+
 -- 
-2.11.0
+Kalle Valo
