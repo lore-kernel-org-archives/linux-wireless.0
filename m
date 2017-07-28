@@ -1,132 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:36895 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756607AbdGYBOZ (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:14055 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751917AbdG1OGF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2017 21:14:25 -0400
-Received: by mail-pg0-f48.google.com with SMTP id y129so63969552pgy.4
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2017 18:14:24 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 15/20] mwifiex: pcie: unify MSI-X / non-MSI-X interrupt process
-Date: Mon, 24 Jul 2017 18:13:31 -0700
-Message-Id: <20170725011336.99993-16-briannorris@chromium.org> (sfid-20170725_031749_451713_2A99B7E8)
-In-Reply-To: <20170725011336.99993-1-briannorris@chromium.org>
-References: <20170725011336.99993-1-briannorris@chromium.org>
+        Fri, 28 Jul 2017 10:06:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: David Miller <davem@davemloft.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: pull-request: wireless-drivers-next 2017-07-28
+Date: Fri, 28 Jul 2017 14:05:59 +0000
+Message-ID: <87d18kvepm.fsf@kamboji.qca.qualcomm.com> (sfid-20170728_160625_601868_1BD7455A)
+References: <87h8xwvevj.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87h8xwvevj.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Fri, 28 Jul 2017 17:02:24 +0300")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After removing the interrupt loop in commit 5d5ddb5e0d9b ("mwifiex:
-pcie: don't loop/retry interrupt status checks"), there is practically
-zero difference between mwifiex_process_pcie_int() (which handled legacy
-PCI interrupts and MSI interrupts) and mwifiex_process_msix_int() (which
-handled MSI-X interrupts). Let's add the one relevant line to
-mwifiex_process_pcie_int() and kill the copy-and-paste.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-new in v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 68 ++---------------------------
- 1 file changed, 3 insertions(+), 65 deletions(-)
+> Hi Dave,
+>
+> here's a pull request for net, more info the signed tag below. Please
+> let me know if there are any problems.
+>
+> Kalle
+>
+> The following changes since commit d755cbc26e8295ae8e5d30425364e093b4247a=
+85:
+>
+>   Merge tag 'iwlwifi-for-kalle-2017-07-21' of git://git.kernel.org/pub/sc=
+m/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-07-21 14:33:27 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.gi=
+t tags/wireless-drivers-for-davem-2017-07-28
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 2f4da08f127c..c08ebb55a7e8 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2417,7 +2417,7 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
-  * In case of Rx packets received, the packets are uploaded from card to
-  * host and processed accordingly.
-  */
--static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
-+static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- {
- 	int ret;
- 	u32 pcie_ireg = 0;
-@@ -2492,75 +2492,13 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- 	mwifiex_dbg(adapter, INTR,
- 		    "info: cmd_sent=%d data_sent=%d\n",
- 		    adapter->cmd_sent, adapter->data_sent);
--	if (!card->msi_enable && adapter->ps_state != PS_STATE_SLEEP)
-+	if (!card->msi_enable && !card->msix_enable &&
-+				 adapter->ps_state != PS_STATE_SLEEP)
- 		mwifiex_pcie_enable_host_int(adapter);
- 
- 	return 0;
- }
- 
--static int mwifiex_process_msix_int(struct mwifiex_adapter *adapter)
--{
--	int ret;
--	u32 pcie_ireg;
--	unsigned long flags;
--
--	spin_lock_irqsave(&adapter->int_lock, flags);
--	/* Clear out unused interrupts */
--	pcie_ireg = adapter->int_status;
--	adapter->int_status = 0;
--	spin_unlock_irqrestore(&adapter->int_lock, flags);
--
--	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
--		mwifiex_dbg(adapter, INTR,
--			    "info: TX DNLD Done\n");
--		ret = mwifiex_pcie_send_data_complete(adapter);
--		if (ret)
--			return ret;
--	}
--	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
--		mwifiex_dbg(adapter, INTR,
--			    "info: Rx DATA\n");
--		ret = mwifiex_pcie_process_recv_data(adapter);
--		if (ret)
--			return ret;
--	}
--	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
--		mwifiex_dbg(adapter, INTR,
--			    "info: Rx EVENT\n");
--		ret = mwifiex_pcie_process_event_ready(adapter);
--		if (ret)
--			return ret;
--	}
--
--	if (pcie_ireg & HOST_INTR_CMD_DONE) {
--		if (adapter->cmd_sent) {
--			mwifiex_dbg(adapter, INTR,
--				    "info: CMD sent Interrupt\n");
--			adapter->cmd_sent = false;
--		}
--		/* Handle command response */
--		ret = mwifiex_pcie_process_cmd_complete(adapter);
--		if (ret)
--			return ret;
--	}
--
--	mwifiex_dbg(adapter, INTR,
--		    "info: cmd_sent=%d data_sent=%d\n",
--		    adapter->cmd_sent, adapter->data_sent);
--
--	return 0;
--}
--
--static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
--{
--	struct pcie_service_card *card = adapter->card;
--
--	if (card->msix_enable)
--		return mwifiex_process_msix_int(adapter);
--	else
--		return mwifiex_process_pcie_int(adapter);
--}
--
- /*
-  * This function downloads data from driver to card.
-  *
--- 
-2.14.0.rc0.284.gd933b75aa4-goog
+Argh, the subject is of course wrong and it should be:
+
+pull-request: wireless-drivers 2017-07-28
+
+So this pull request is for net tree to get these two brcmfmac fixes to
+4.13. Otherwise the pull request is correct so I don't submit a new one
+(but let me know if you prefer that).
+
+--=20
+Kalle Valo=
