@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33250 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755444AbdGKHcC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34416 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752359AbdG1PRp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2017 03:32:02 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: stas.yakovlev@gmail.com, kvalo@codeaurora.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 00/10] Constify attribute_group structures
-Date: Tue, 11 Jul 2017 13:01:29 +0530
-Message-Id: <1499758291-24821-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170711_093309_048902_A51B3662)
+        Fri, 28 Jul 2017 11:17:45 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v4,01/10] rtlwifi: Fill in_4way field by driver
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170702181239.17911-2-Larry.Finger@lwfinger.net>
+References: <20170702181239.17911-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170728151744.962376074A@smtp.codeaurora.org> (sfid-20170728_171749_045771_C9A46B7F)
+Date: Fri, 28 Jul 2017 15:17:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-attribute_groups are not supposed to change at runtime. So mark the
-non-const structs as const.
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Arvind Yadav (10):
-  [PATCH v2 01/10] net: cdc_ncm: constify attribute_group structures.
-  [PATCH v2 02/10] net: can: at91_can: constify attribute_group structures.
-  [PATCH v2 03/10] net: can: janz-ican3: constify attribute_group structures.
-  [PATCH v2 04/10] wireless: ipw2200: constify attribute_group structures.
-  [PATCH v2 05/10] wireless: ipw2100: constify attribute_group structures.
-  [PATCH v2 06/10] wireless: iwlegacy: constify attribute_group structures.
-  [PATCH v2 07/10] wireless: iwlegacy: Constify attribute_group structures.
-  [PATCH v2 08/10] arcnet: com20020-pci: constify attribute_group structures.
-  [PATCH v2 09/10] net: bonding: constify attribute_group structures.
-  [PATCH v2 10/10] net: chelsio: cxgb3: constify attribute_group structures.
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Because it isn't always correct to use EAPOL to check 4-way,
+> we add a timer to handle exception.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
- drivers/net/arcnet/com20020-pci.c               | 2 +-
- drivers/net/bonding/bond_sysfs.c                | 2 +-
- drivers/net/can/at91_can.c                      | 2 +-
- drivers/net/can/janz-ican3.c                    | 2 +-
- drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c | 8 ++++++--
- drivers/net/usb/cdc_ncm.c                       | 2 +-
- drivers/net/wireless/intel/ipw2x00/ipw2100.c    | 2 +-
- drivers/net/wireless/intel/ipw2x00/ipw2200.c    | 2 +-
- drivers/net/wireless/intel/iwlegacy/3945-mac.c  | 2 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c  | 2 +-
- 10 files changed, 15 insertions(+), 11 deletions(-)
+8 patches applied to wireless-drivers-next.git, thanks.
+
+11f35c950466 rtlwifi: Fill in_4way field by driver
+6aad6075ccd5 rtlwifi: Add BT_MP_INFO to c2h handler.
+881d53ab1f43 rtlwifi: Add board type for 8723be and 8192ee
+ca0e657bda7e rtlwifi: add amplifier type for 8812ae
+66970e38e544 rtlwifi: Update 8723be new phy parameters and its parser.
+6ec9dfbc057c rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
+e7c528615e34 rtlwifi: Uses addr1 instead DA to determine broadcast and multicast addr.
+58438d9ae172 rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
 
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9821735/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
