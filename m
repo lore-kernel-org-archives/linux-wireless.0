@@ -1,118 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:56118 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933713AbdGSTIh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:08:37 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 02/34] brcmfmac: Register sizes on hardware are not dependent on compiler types
-Date: Wed, 19 Jul 2017 20:07:50 +0100
-Message-Id: <20170719190822.10857-3-ian@mnementh.co.uk> (sfid-20170719_211045_084249_171E494B)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from paleale.coelho.fi ([176.9.41.70]:41004 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752283AbdG1O01 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Jul 2017 10:26:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:28 +0300
+Message-Id: <20170728142337.19183-16-luca@coelho.fi> (sfid-20170728_162630_852008_1E0B8FE7)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 15/24] iwlwifi: mvm: support fw reading empty OTP
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 4 IO functions in this patch are incorrect as they use compiler types
-to determine how many bytes to send to the hardware.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+If the OTP is empty, the NVM_GET_INFO command returns
+with flags' bit(0) on. This means the FW returns the
+default values for working with. This is allowed, so
+use this returned data.
+
+Fixes: e9e1ba3dbf00 ("iwlwifi: mvm: support getting nvm data from firmware")
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h | 10 +++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c        |  7 ++-----
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 1acbaaf0f5c9..db983168ceba 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -263,7 +263,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	func = sdiodev->func[fn];
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index d4c01f3dce32..00bc7a25dece 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -164,8 +164,16 @@ struct iwl_nvm_get_info {
+ } __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_S_VER_1 */
  
- 	switch (regsz) {
--	case sizeof(u8):
-+	case 1:
- 		if (write) {
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
-@@ -276,13 +276,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
- 		}
- 		break;
--	case sizeof(u16):
-+	case 2:
- 		if (write)
- 			sdio_writew(func, *(u16 *)data, addr, &ret);
- 		else
- 			*(u16 *)data = sdio_readw(func, addr, &ret);
- 		break;
--	case sizeof(u32):
-+	case 4:
- 		if (write)
- 			sdio_writel(func, *(u32 *)data, addr, &ret);
- 		else
-@@ -366,7 +366,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- 	for (i = 0; i < 3; i++) {
- 		err = brcmf_sdiod_regrw_helper(sdiodev,
- 					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       sizeof(u8), &addr[i], true);
-+					       1, &addr[i], true);
- 		if (err) {
- 			brcmf_err("failed at addr: 0x%0x\n",
- 				  SBSDIO_FUNC1_SBADDRLOW + i);
-@@ -405,7 +405,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
+ /**
++ * enum iwl_nvm_info_general_flags - flags in NVM_GET_INFO resp
++ * @NVM_GENERAL_FLAGS_EMPTY_OTP: 1 if OTP is empty
++ */
++enum iwl_nvm_info_general_flags {
++	NVM_GENERAL_FLAGS_EMPTY_OTP	= BIT(0),
++};
++
++/**
+  * struct iwl_nvm_get_info_general - general NVM data
+- * @flags: 1 - empty, 0 - valid
++ * @flags: bit 0: 1 - empty, 0 - non-empty
+  * @nvm_version: nvm version
+  * @board_type: board type
+  * @reserved: reserved
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index dac7e542a190..5cc749261ce3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -576,11 +576,8 @@ int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
+ 	}
  
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 	rsp = (void *)hcmd.resp_pkt->data;
+-	if (le32_to_cpu(rsp->general.flags)) {
+-		IWL_ERR(mvm, "Invalid NVM data from FW\n");
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
++		IWL_INFO(mvm, "OTP is empty\n");
  
-@@ -421,10 +421,10 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
-@@ -441,7 +441,7 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  true);
- 	if (ret)
- 		*ret = retval;
-@@ -453,10 +453,10 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  true);
- 
- done:
-@@ -874,7 +874,7 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
- 
- 	/* issue abort cmd52 command through F0 */
- 	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
--				 sizeof(t_func), &t_func, true);
-+				 1, &t_func, true);
- 
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
+ 	mvm->nvm_data = kzalloc(sizeof(*mvm->nvm_data) +
+ 				sizeof(struct ieee80211_channel) *
 -- 
-2.11.0
+2.13.2
