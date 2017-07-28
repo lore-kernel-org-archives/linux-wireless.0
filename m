@@ -1,72 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway30.websitewelcome.com ([192.185.150.24]:43392 "EHLO
-        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751500AbdGRVDA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57260 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752236AbdG1PEC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 17:03:00 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway30.websitewelcome.com (Postfix) with ESMTP id 978FE5E138
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2017 15:41:07 -0500 (CDT)
-Date: Tue, 18 Jul 2017 15:41:06 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] rtlwifi: remove useless code
-Message-ID: <20170718204106.GA9905@embeddedgus> (sfid-20170718_230304_548859_60C8420B)
+        Fri, 28 Jul 2017 11:04:02 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [11/11] brcmfmac: constify pci_device_id
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500315402-3439-1-git-send-email-arvind.yadav.cs@gmail.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: arend.vanspriel@broadcom.com, hante.meuleman@broadcom.com,
+        franky.lin@broadcom.com, wright.feng@cypress.com,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Message-Id: <20170728150401.C25B360A18@smtp.codeaurora.org> (sfid-20170728_170416_601756_2C4A4BE7)
+Date: Fri, 28 Jul 2017 15:04:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove useless local variables last_read_point and last_txw_point and
-the code related.
+Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 6 ------
- 1 file changed, 6 deletions(-)
+> pci_device_id are not supposed to change at runtime. All functions
+> working with pci_device_id provided by <linux/pci.h> work with
+> const pci_device_id. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-index 55f238a..c58393e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-@@ -478,7 +478,6 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u16 read_point = 0, write_point = 0, remind_cnt = 0;
- 	u32 tmp_4byte = 0;
--	static u16 last_read_point;
- 	static bool start_rx;
- 
- 	tmp_4byte = rtl_read_dword(rtlpriv, REG_RXQ_TXBD_IDX);
-@@ -506,7 +505,6 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
- 
- 	rtlpci->rx_ring[queue_index].next_rx_rp = write_point;
- 
--	last_read_point = read_point;
- 	return remind_cnt;
- }
- 
-@@ -917,7 +915,6 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u16 cur_tx_rp = 0;
- 	u16 cur_tx_wp = 0;
--	static u16 last_txw_point;
- 	static bool over_run;
- 	u32 tmp = 0;
- 	u8 q_idx = *val;
-@@ -951,9 +948,6 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 				rtl_write_word(rtlpriv,
- 					       get_desc_addr_fr_q_idx(q_idx),
- 					       ring->cur_tx_wp);
--
--				if (q_idx == 1)
--					last_txw_point = cur_tx_wp;
- 			}
- 
- 			if (ring->avl_desc < (max_tx_desc - 15)) {
+Patch applied to wireless-drivers-next.git, thanks.
+
+e66d70b789d1 brcmfmac: constify pci_device_id
+
 -- 
-2.5.0
+https://patchwork.kernel.org/patch/9845919/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
