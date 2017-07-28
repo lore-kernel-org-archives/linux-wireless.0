@@ -1,33 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33181 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdGKBdW (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40970 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752260AbdG1O0K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Jul 2017 21:33:22 -0400
-Received: by mail-oi0-f66.google.com with SMTP id f134so13928138oig.0
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jul 2017 18:33:22 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+        Fri, 28 Jul 2017 10:26:10 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 0/2] rtlwifi: Fix two static errors
-Date: Mon, 10 Jul 2017 20:33:11 -0500
-Message-Id: <20170711013313.3478-1-Larry.Finger@lwfinger.net> (sfid-20170711_033337_939368_675658E5)
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:25 +0300
+Message-Id: <20170728142337.19183-13-luca@coelho.fi> (sfid-20170728_162615_358886_2605622E)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 12/24] iwlwifi: mvm: fix the FIFO numbers in A000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter reported two problems found in changes that were merged
-into kernel 4.12. One of them involves twp variables that might not
-be initialized. The second is a potential use after free error.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+The FIFO numbering is different in A000 devices. This
+means that we routed BE packets to BK FIFO. Fix this.
 
-Ping-Ke Shih (2):
-  rtlwifi: fix static checker warning of uninitialized symbol.
-  rtlwifi: fix static checker warning of dereferencing freed memory
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h   | 12 ++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  9 ++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  8 ++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       |  2 +-
+ 5 files changed, 32 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/realtek/rtlwifi/base.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
+index 805e161641aa..87c1e36a9c5a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
+@@ -111,6 +111,18 @@ enum iwl_mvm_tx_fifo {
+ 	IWL_MVM_TX_FIFO_CMD = 7,
+ };
+ 
++enum iwl_gen2_tx_fifo {
++	IWL_GEN2_TX_FIFO_CMD = 0,
++	IWL_GEN2_EDCA_TX_FIFO_BK,
++	IWL_GEN2_EDCA_TX_FIFO_BE,
++	IWL_GEN2_EDCA_TX_FIFO_VI,
++	IWL_GEN2_EDCA_TX_FIFO_VO,
++	IWL_GEN2_TRIG_TX_FIFO_BK,
++	IWL_GEN2_TRIG_TX_FIFO_BE,
++	IWL_GEN2_TRIG_TX_FIFO_VI,
++	IWL_GEN2_TRIG_TX_FIFO_VO,
++};
++
+ /**
+  * enum iwl_tx_queue_cfg_actions - TXQ config options
+  * @TX_QUEUE_CFG_ENABLE_QUEUE: enable a queue
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 1546d54e2ebd..604db47c8c21 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -80,6 +80,13 @@ const u8 iwl_mvm_ac_to_tx_fifo[] = {
+ 	IWL_MVM_TX_FIFO_BK,
+ };
+ 
++const u8 iwl_mvm_ac_to_gen2_tx_fifo[] = {
++	IWL_GEN2_EDCA_TX_FIFO_VO,
++	IWL_GEN2_EDCA_TX_FIFO_VI,
++	IWL_GEN2_EDCA_TX_FIFO_BE,
++	IWL_GEN2_EDCA_TX_FIFO_BK,
++};
++
+ struct iwl_mvm_mac_iface_iterator_data {
+ 	struct iwl_mvm *mvm;
+ 	struct ieee80211_vif *vif;
+@@ -774,7 +781,7 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP);
+ 
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+-		u8 txf = iwl_mvm_ac_to_tx_fifo[i];
++		u8 txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, i);
+ 
+ 		cmd->ac[txf].cw_min =
+ 			cpu_to_le16(mvmvif->queue_params[i].cw_min);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index e9440ef3022f..74948f875a3f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1291,6 +1291,14 @@ static inline bool iwl_mvm_is_ctdp_supported(struct iwl_mvm *mvm)
+ }
+ 
+ extern const u8 iwl_mvm_ac_to_tx_fifo[];
++extern const u8 iwl_mvm_ac_to_gen2_tx_fifo[];
++
++static inline u8 iwl_mvm_mac_ac_to_tx_fifo(struct iwl_mvm *mvm,
++					   enum ieee80211_ac_numbers ac)
++{
++	return iwl_mvm_has_new_tx_api(mvm) ?
++		iwl_mvm_ac_to_gen2_tx_fifo[ac] : iwl_mvm_ac_to_tx_fifo[ac];
++}
+ 
+ struct iwl_rate_info {
+ 	u8 plcp;	/* uCode API:  IWL_RATE_6M_PLCP, etc. */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 4df5f13fcdae..4adc8fecfaef 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -315,7 +315,7 @@ static int iwl_mvm_tdls_sta_init(struct iwl_mvm *mvm,
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		iwl_mvm_enable_ac_txq(mvm, mvmsta->hw_queue[ac],
+ 				      mvmsta->hw_queue[ac],
+-				      iwl_mvm_ac_to_tx_fifo[ac], 0,
++				      iwl_mvm_mac_ac_to_tx_fifo(mvm, ac), 0,
+ 				      wdg_timeout);
+ 		mvmsta->tfd_queue_msk |= BIT(mvmsta->hw_queue[ac]);
+ 	}
+@@ -745,7 +745,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	struct iwl_trans_txq_scd_cfg cfg = {
+-		.fifo = iwl_mvm_ac_to_tx_fifo[ac],
++		.fifo = iwl_mvm_mac_ac_to_tx_fifo(mvm, ac),
+ 		.sta_id = mvmsta->sta_id,
+ 		.tid = tid,
+ 		.frame_limit = IWL_FRAME_LIMIT,
+@@ -1303,7 +1303,7 @@ static void iwl_mvm_realloc_queues_after_restart(struct iwl_mvm *mvm,
+ 			u16 seq = IEEE80211_SEQ_TO_SN(tid_data->seq_number);
+ 
+ 			cfg.tid = i;
+-			cfg.fifo = iwl_mvm_ac_to_tx_fifo[ac];
++			cfg.fifo = iwl_mvm_mac_ac_to_tx_fifo(mvm, ac);
+ 			cfg.aggregate = (txq_id >= IWL_MVM_DQA_MIN_DATA_QUEUE ||
+ 					 txq_id ==
+ 					 IWL_MVM_DQA_BSS_CLIENT_QUEUE);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index f263a1902e27..cccff1073e3b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -751,7 +751,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	max_amsdu_len = sta->max_amsdu_len;
+ 
+ 	/* the Tx FIFO to which this A-MSDU will be routed */
+-	txf = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
++	txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, tid_to_mac80211_ac[tid]);
+ 
+ 	/*
+ 	 * Don't send an AMSDU that will be longer than the TXF.
 -- 
-2.12.3
+2.13.2
