@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34061 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751312AbdGQSKQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38440 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752085AbdG1O2U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 14:10:16 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 03/11] rtlwifi: rtl8821ae: constify pci_device_id.
-Date: Mon, 17 Jul 2017 23:39:51 +0530
-Message-Id: <1500314995-3181-4-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201159_092103_21FE48AB)
-In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Fri, 28 Jul 2017 10:28:20 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] rsi: use macro for allocating USB buffer
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1499783273-15428-1-git-send-email-amitkarwar@gmail.com>
+References: <1499783273-15428-1-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20170728142819.99A416022C@smtp.codeaurora.org> (sfid-20170728_162826_170959_908DBF8D)
+Date: Fri, 28 Jul 2017 14:28:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
 
-File size before:
-   text	   data	    bss	    dec	    hex	filename
-   2491	    960	      0	   3451	    d7b	realtek/rtlwifi/rtl8821ae/sw.o
+> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> 
+> 4 bytes is fixed size for reading or writing USB register. We
+> will use a macro instead of hardcoding this.
+> 
+> Fixes: b97e9b94ad75c ("rsi: Add new host interface operations")
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-File size After adding 'const':
-   text	   data	    bss	    dec	    hex	filename
-   2587	    864	      0	   3451	    d7b	realtek/rtlwifi/rtl8821ae/sw.o
+3 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+523b724a769b rsi: use macro for allocating USB buffer
+59f73e2ae185 rsi: check length before USB read/write register
+e6249e15fea2 rsi: fix static checker warning
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index d71d277..d94e179 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -424,7 +424,7 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
- 	.maps[RTL_RC_VHT_RATE_2SS_MCS9] = DESC_RATEVHT2SS_MCS9,
- };
- 
--static struct pci_device_id rtl8821ae_pci_ids[] = {
-+static const struct pci_device_id rtl8821ae_pci_ids[] = {
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8812, rtl8821ae_hal_cfg)},
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8821, rtl8821ae_hal_cfg)},
- 	{},
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9834829/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
