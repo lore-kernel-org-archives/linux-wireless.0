@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:14055 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751917AbdG1OGF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41048 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752129AbdG1O0x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:06:05 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: David Miller <davem@davemloft.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: pull-request: wireless-drivers-next 2017-07-28
-Date: Fri, 28 Jul 2017 14:05:59 +0000
-Message-ID: <87d18kvepm.fsf@kamboji.qca.qualcomm.com> (sfid-20170728_160625_601868_1BD7455A)
-References: <87h8xwvevj.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87h8xwvevj.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Fri, 28 Jul 2017 17:02:24 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 28 Jul 2017 10:26:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:33 +0300
+Message-Id: <20170728142337.19183-21-luca@coelho.fi> (sfid-20170728_162715_924264_7AF4A3C8)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 20/24] iwlwifi: mvm: require AP_LINK_PS for TVQM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Hi Dave,
->
-> here's a pull request for net, more info the signed tag below. Please
-> let me know if there are any problems.
->
-> Kalle
->
-> The following changes since commit d755cbc26e8295ae8e5d30425364e093b4247a=
-85:
->
->   Merge tag 'iwlwifi-for-kalle-2017-07-21' of git://git.kernel.org/pub/sc=
-m/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-07-21 14:33:27 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.gi=
-t tags/wireless-drivers-for-davem-2017-07-28
+Since the TXQ timer freeze code will not properly handle the
+large TVQM queue numbers, warn if we get into that code when
+we have TVQM. Also, just to catch this earlier, warn if the
+firmware image doesn't support AP_LINK_PS but we're running
+on HW using TVQM.
 
-Argh, the subject is of course wrong and it should be:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-pull-request: wireless-drivers 2017-07-28
-
-So this pull request is for net tree to get these two brcmfmac fixes to
-4.13. Otherwise the pull request is correct so I don't submit a new one
-(but let me know if you prefer that).
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 44f144c58720..a2e0acc23adc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -445,8 +445,18 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
+ 	if (iwl_mvm_has_new_rx_api(mvm))
+ 		ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
+-	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_STA_PM_NOTIF))
++
++	if (fw_has_capa(&mvm->fw->ucode_capa,
++			IWL_UCODE_TLV_CAPA_STA_PM_NOTIF)) {
+ 		ieee80211_hw_set(hw, AP_LINK_PS);
++	} else if (WARN_ON(iwl_mvm_has_new_tx_api(mvm))) {
++		/*
++		 * we absolutely need this for the new TX API since that comes
++		 * with many more queues than the current code can deal with
++		 * for station powersave
++		 */
++		return -EINVAL;
++	}
+ 
+ 	if (mvm->trans->num_rx_queues > 1)
+ 		ieee80211_hw_set(hw, USES_RSS);
+@@ -2399,6 +2409,14 @@ static void __iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
+ 	unsigned long txqs = 0, tids = 0;
+ 	int tid;
+ 
++	/*
++	 * If we have TVQM then we get too high queue numbers - luckily
++	 * we really shouldn't get here with that because such hardware
++	 * should have firmware supporting buffer station offload.
++	 */
++	if (WARN_ON(iwl_mvm_has_new_tx_api(mvm)))
++		return;
++
+ 	spin_lock_bh(&mvmsta->lock);
+ 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++) {
+ 		struct iwl_mvm_tid_data *tid_data = &mvmsta->tid_data[tid];
+-- 
+2.13.2
