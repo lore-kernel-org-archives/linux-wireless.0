@@ -1,76 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:47270 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751100AbdGGUJ1 (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:46932 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752124AbdG1Rth (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 16:09:27 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
-Date: Fri,  7 Jul 2017 21:09:06 +0100
-Message-Id: <1499458154-18358-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170707_220931_969579_00B388A3)
+        Fri, 28 Jul 2017 13:49:37 -0400
+Date: Fri, 28 Jul 2017 18:49:30 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: AP mode with Broadcom 4330
+Message-ID: <20170728174930.GA3313@n2100.armlinux.org.uk> (sfid-20170728_194941_516850_11395071)
+References: <20170728141503.GU31807@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170728141503.GU31807@n2100.armlinux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The lower level nl80211 code in cfg80211 ensures that "len" is between
-25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) from
-"len" so thats's max of 2280.  However, the action_frame->data[] buffer is
-only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
-overflow.
+On Fri, Jul 28, 2017 at 03:15:03PM +0100, Russell King - ARM Linux wrote:
+> Hi,
+> 
+> I've been struggling yesterday and today trying to configure AP mode
+> with the Broadcom 4330 on a SolidRun Hummingboard2, using the 2013
+> firmware:
+> 
+> Firmware version = wl0: Jan 23 2013 17:47:32 version 5.90.195.114 FWID 01-f9e7e464
+> 
+> People tell me that this works with SR's 3.14 kernel, but I'd prefer
+> to use mainline (4.13-rc2).  Whenever I try to configure AP mode via
+> Network Manager or hostapd (on Debian Jessie), the SSID I ask for and
+> the MAC address does not appear on other wifi clients.  wlan0's
+> MAC is 6c:ad:f8:1d:4c:d9.
 
-	memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
-	       le16_to_cpu(action_frame->len));
+I've just found the cause of this.  What it comes down to is this commit:
 
-Cc: stable@vger.kernel.org # 3.9.x
-Fixes: 18e2f61db3b70 ("brcmfmac: P2P action frame tx.")
-Reported-by: "freenerguo(郭大兴)" <freenerguo@tencent.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- V2:
-  - added Fixes: tag and Cc: for stable kernels.
-  - Cc: patch to netdev list.
----
-Hi David,
+commit a44aa4001a86d46f936ca449e5d6c268446bfae2
+Author: Hante Meuleman <meuleman@broadcom.com>
+Date:   Wed Dec 3 21:05:33 2014 +0100
 
-Here is the patch as Linus send it to us and security@kernel.org. I
-removed the lower bound check as that is already done in cfg80211.
-Now I signed off on the patch although formally I suppose Linus should
-sign it off. Putting it out there so people can respond as deemed
-necessary.
+    brcmfmac: add multiple BSS support.
 
-The reason for submitting it to your tree is the fact that Kalle is
-on vacation for next 10 days or so which was indicated to me by Johannes.
-The patch applies to the master branch of your net repository. For
-reference V1 of this patch can be found here [1].
+    This patch adds support for multiple BSS interfaces (AP). In
+    total three AP configurations can be created. In order to use
+    multiple BSS firmware needs to support it.
 
-Regards,
-Arend
+    Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+    Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+    Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+    Signed-off-by: Arend van Spriel <arend@broadcom.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-[1] https://patchwork.kernel.org/patch/9829977/
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
- 1 file changed, 5 insertions(+)
+which adds this hunk to brcmf_cfg80211_start_ap()
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cd1d673..d182a00 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4851,6 +4851,11 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- 		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
- 					GFP_KERNEL);
- 	} else if (ieee80211_is_action(mgmt->frame_control)) {
-+		if (len > BRCMF_FIL_ACTION_FRAME_SIZE + DOT11_MGMT_HDR_LEN) {
-+			brcmf_err("invalid action frame length\n");
-+			err = -EINVAL;
-+			goto exit;
-+		}
- 		af_params = kzalloc(sizeof(*af_params), GFP_KERNEL);
- 		if (af_params == NULL) {
- 			brcmf_err("unable to allocate frame\n");
+        if (dev_role == NL80211_IFTYPE_AP) {
++               if ((brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) && (!mbss))
++                       brcmf_fil_iovar_int_set(ifp, "mbss", 1);
++
+
+What this is saying is: "if the device supports MBSS, and MBSS was not
+requested (from ifp->vif->mbss), then *ENABLE* MBSS."  That's clearly
+nonsense.
+
+Replacing that "(!mbss)" with "mbss" results in AP mode working on the
+4330.  However, I suspect:
+
+		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS))
+			brcmf_fil_iovar_int_set(ifp, "mbss", mbss);
+
+actually makes much more sense.
+
+Given that this is direct firmware interaction, I can't say which is
+correct - all I can say is that mainline kernels are currently broken.
+
 -- 
-1.9.1
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
