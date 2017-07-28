@@ -1,110 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:59475 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751046AbdGaQLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:11:08 -0400
-From: Sven Joachim <svenjoac@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2] rtlwifi: Fix fallback firmware loading
-References: <87k22sq0de.fsf@turtle.gmx.de> <87a83noaxw.fsf@turtle.gmx.de>
-        <d1c1790d-015d-4dae-8532-42701737eea3@lwfinger.net>
-Date: Mon, 31 Jul 2017 18:10:45 +0200
-In-Reply-To: <d1c1790d-015d-4dae-8532-42701737eea3@lwfinger.net> (Larry
-        Finger's message of "Sun, 30 Jul 2017 18:57:57 -0500")
-Message-ID: <87d18gmvsq.fsf_-_@turtle.gmx.de> (sfid-20170731_181113_061448_971F5D06)
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37611 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752505AbdG1TuY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Jul 2017 15:50:24 -0400
+Received: by mail-wm0-f44.google.com with SMTP id t201so4545506wmt.0
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Jul 2017 12:50:23 -0700 (PDT)
+Subject: Re: AP mode with Broadcom 4330
+To: Russell King - ARM Linux <linux@armlinux.org.uk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+References: <20170728141503.GU31807@n2100.armlinux.org.uk>
+ <20170728174930.GA3313@n2100.armlinux.org.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com> (sfid-20170728_215030_031962_4BD41F29)
+Date: Fri, 28 Jul 2017 21:50:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170728174930.GA3313@n2100.armlinux.org.uk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit f70e4df2b384 ("rtlwifi: Add code to read new versions of
-firmware") added code to load an old firmware file if the new one is
-not available.  Unfortunately that code is never reached because
-request_firmware_nowait() does not wait for the firmware to show up
-and returns 0 even if the file is not there.
+On 28-07-17 19:49, Russell King - ARM Linux wrote:
+> On Fri, Jul 28, 2017 at 03:15:03PM +0100, Russell King - ARM Linux wrote:
+>> Hi,
+>>
+>> I've been struggling yesterday and today trying to configure AP mode
+>> with the Broadcom 4330 on a SolidRun Hummingboard2, using the 2013
+>> firmware:
+>>
+>> Firmware version = wl0: Jan 23 2013 17:47:32 version 5.90.195.114 FWID 01-f9e7e464
+>>
+>> People tell me that this works with SR's 3.14 kernel, but I'd prefer
+>> to use mainline (4.13-rc2).  Whenever I try to configure AP mode via
+>> Network Manager or hostapd (on Debian Jessie), the SSID I ask for and
+>> the MAC address does not appear on other wifi clients.  wlan0's
+>> MAC is 6c:ad:f8:1d:4c:d9.
+> 
+> I've just found the cause of this.  What it comes down to is this commit:
 
-Use the existing fallback mechanism introduced by commit 62009b7f1279
-("rtlwifi: rtl8192cu: Add new firmware") instead.
+Hi Russell,
 
-Fixes: f70e4df2b384 ("rtlwifi: Add code to read new versions of firmware")
-Cc: stable@vger.kernel.org
-Signed-off-by: Sven Joachim <svenjoac@gmx.de>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 17 +++++------------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 17 +++++------------
- 2 files changed, 10 insertions(+), 24 deletions(-)
+I noticed in your log that mbss was set to 1 so I was going to look at
+that, but you clearly beat me to it ;-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index 56c05c4e1499..f47d839f388d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -187,18 +187,10 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl_fw_cb);
- 	if (err) {
--		/* Failed to get firmware. Check if old version available */
--		fw_name = "rtlwifi/rtl8723befw.bin";
--		pr_info("Using firmware %s\n", fw_name);
--		err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
--					      rtlpriv->io.dev, GFP_KERNEL, hw,
--					      rtl_fw_cb);
--		if (err) {
--			pr_err("Failed to request firmware!\n");
--			vfree(rtlpriv->rtlhal.pfirmware);
--			rtlpriv->rtlhal.pfirmware = NULL;
--			return 1;
--		}
-+		pr_err("Failed to request firmware!\n");
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
-+		return 1;
- 	}
- 	return 0;
- }
-@@ -289,6 +281,7 @@ static const struct rtl_hal_cfg rtl8723be_hal_cfg = {
- 	.bar_id = 2,
- 	.write_readback = true,
- 	.name = "rtl8723be_pci",
-+	.alt_fw_name = "rtlwifi/rtl8723befw.bin",
- 	.ops = &rtl8723be_hal_ops,
- 	.mod_params = &rtl8723be_mod_params,
- 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index ec2d577ba85b..5925edf7877f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -216,18 +216,10 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl_fw_cb);
- 	if (err) {
--		/* Failed to get firmware. Check if old version available */
--		fw_name = "rtlwifi/rtl8821aefw.bin";
--		pr_info("Using firmware %s\n", fw_name);
--		err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
--					      rtlpriv->io.dev, GFP_KERNEL, hw,
--					      rtl_fw_cb);
--		if (err) {
--			pr_err("Failed to request normal firmware!\n");
--			vfree(rtlpriv->rtlhal.wowlan_firmware);
--			vfree(rtlpriv->rtlhal.pfirmware);
--			return 1;
--		}
-+		pr_err("Failed to request normal firmware!\n");
-+		vfree(rtlpriv->rtlhal.wowlan_firmware);
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		return 1;
- 	}
- 	/*load wowlan firmware*/
- 	pr_info("Using firmware %s\n", wowlan_fw_name);
-@@ -331,6 +323,7 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
- 	.bar_id = 2,
- 	.write_readback = true,
- 	.name = "rtl8821ae_pci",
-+	.alt_fw_name = "rtlwifi/rtl8821aefw.bin",
- 	.ops = &rtl8821ae_hal_ops,
- 	.mod_params = &rtl8821ae_mod_params,
- 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
--- 
-2.13.3
+> commit a44aa4001a86d46f936ca449e5d6c268446bfae2
+> Author: Hante Meuleman <meuleman@broadcom.com>
+> Date:   Wed Dec 3 21:05:33 2014 +0100
+> 
+>     brcmfmac: add multiple BSS support.
+> 
+>     This patch adds support for multiple BSS interfaces (AP). In
+>     total three AP configurations can be created. In order to use
+>     multiple BSS firmware needs to support it.
+> 
+>     Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>     Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>     Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>     Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> which adds this hunk to brcmf_cfg80211_start_ap()
+> 
+>         if (dev_role == NL80211_IFTYPE_AP) {
+> +               if ((brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) && (!mbss))
+> +                       brcmf_fil_iovar_int_set(ifp, "mbss", 1);
+> +
+> 
+> What this is saying is: "if the device supports MBSS, and MBSS was not
+> requested (from ifp->vif->mbss), then *ENABLE* MBSS."  That's clearly
+> nonsense.
+
+I was going to agree with you, but having second thoughts. There are
+actually two use-cases that need to be handled properly. The regular AP
+case and the MBSS case. In case of MBSS the initial AP interface will
+have mbss set to false and subsequent AP interfaces will have mbss set
+to true, but in firmware this has to be configured inverted. That is
+what the code above is doing. However, this indeed breaks the regular AP
+case for firmwares that abuse that setting for testing purposes (no idea
+why that is in a released firmware).
+
+> Replacing that "(!mbss)" with "mbss" results in AP mode working on the
+> 4330.  However, I suspect:
+> 
+> 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS))
+> 			brcmf_fil_iovar_int_set(ifp, "mbss", mbss);
+> 
+> actually makes much more sense.
+> 
+> Given that this is direct firmware interaction, I can't say which is
+> correct - all I can say is that mainline kernels are currently broken.
+
+Indeed. I have to come up with a proper fix for both scenarios. Thanks
+for the report.
+
+Regards,
+Arend
