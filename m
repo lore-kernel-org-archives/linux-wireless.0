@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:57003 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753418AbdGNKHK (ORCPT
+Received: from smtp.eu2.fugro.com ([46.34.88.152]:37924 "EHLO
+        smtp.eu2.fugro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdG1I3i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Jul 2017 06:07:10 -0400
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        kvalo@codeaurora.org, sara.sharon@intel.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH v2] iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
-Date: Fri, 14 Jul 2017 12:06:59 +0200
-Message-Id: <20170714100659.26369-1-christophe.jaillet@wanadoo.fr> (sfid-20170714_120737_694906_F68DEA15)
+        Fri, 28 Jul 2017 04:29:38 -0400
+From: "Stam, Michel" <m.stam@fugro.com>
+To: George H <ghh19622@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Problem seen with wireless mesh
+Date: Fri, 28 Jul 2017 08:19:26 +0000
+Message-ID: <4e3dbe32b4614c0f976ce2fb8e94d2da@nldataex01.ad.fugro.com> (sfid-20170728_102942_368137_E71CDD4C)
+References: <CAG5S3ZR8ZgNNR8k-iRgRdvZ3Jwhakk4OxYJtvh8ezA4ESf=QMg@mail.gmail.com>
+In-Reply-To: <CAG5S3ZR8ZgNNR8k-iRgRdvZ3Jwhakk4OxYJtvh8ezA4ESf=QMg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should free 'wgds.pointer' here as done a few lines above in another
-error handling path.
-It was allocated within 'acpi_evaluate_object()'.
-
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-v2: rebase after 7fe90e0e3d60 ("iwlwifi: mvm: refactor geo init")
-
-
-Moreovern a comment in '/drivers/acpi/acpica/utalloc.c' states that:
-/* [...] Note: The caller should use acpi_os_free to free this
- * buffer created via ACPI_ALLOCATE_BUFFER.
- */
-
-So, at the end of this function:
-	out_free:
-		kfree(wgds.pointer);
-should maybe be:
-	out_free:
-		acpi_os_free(wgds.pointer);
-
-If correct, several places should be fixed accordingly.
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 79e7a7a285dc..82863e9273eb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1275,8 +1275,10 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
- 
- 			entry = &wifi_pkg->package.elements[idx++];
- 			if ((entry->type != ACPI_TYPE_INTEGER) ||
--			    (entry->integer.value > U8_MAX))
--				return -EINVAL;
-+			    (entry->integer.value > U8_MAX)) {
-+				ret = -EINVAL;
-+				goto out_free;
-+			}
- 
- 			mvm->geo_profiles[i].values[j] = entry->integer.value;
- 		}
--- 
-2.11.0
+SGVsbG8gR2VvcmdlLA0KDQpEbyB5b3UgaGFwcGVuIHRvIGJlIHJ1bm5pbmcgQXV0aFNBRSBmb3Ig
+YXV0aGVudGljYXRlZCBtZXNoPyBJJ3ZlIHNlZW4gdGhpcyBnbyB3cm9uZyB3aXRoIGF0aDlrIGNh
+cmRzIHVzaW5nIGhhcmR3YXJlIGVuY3J5cHRpb247IGluIHRoYXQgcGFydGljdWxhciBjYXNlLCB5
+b3UgbWF5IHdhbnQgdG8gbG9hZCB0aGUgbW9kdWxlIHdpdGggbm9od2NyeXB0PTEsIGl0IHNob3Vs
+ZCB3b3JrIHRoZW4uDQoNCktpbmQgcmVnYXJkcywNCg0KTWljaGVsIFN0YW0NCi0tLS0tT3JpZ2lu
+YWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5v
+cmcgW21haWx0bzpsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFs
+ZiBPZiBHZW9yZ2UgSA0KU2VudDogRnJpZGF5LCBKdWx5IDI4LCAyMDE3IDM6NDMgQU0NClRvOiBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFByb2JsZW0gc2VlbiB3aXRo
+IHdpcmVsZXNzIG1lc2gNCg0KSGkNCg0KSSBoYXZlIHR3byB3aXJlbGVzcyBwcm9kdWN0cyBmb3Jt
+aW5nIGEgd2lyZWxlc3MgbWVzaC4gT25lIChsZXQncyBjYWxsDQppdCBBKSBydW5zIDIuNi4zNyBr
+ZXJuZWwgd2hpbGUgdGhlIG90aGVyIChsZXQncyBjYWxsIGl0IEIpIHJ1bnMgMy4xOA0Ka2VybmVs
+LiBUaGUgd2lyZWxlc3MgbWVzaCBiYXNlZCBvbiBJRUVFODAyMTFzIHJ1bnMgc3VjY2Vzc2Z1bGx5
+DQoobWFjODAyMTEgbW9kdWxlKS4NCg0KSSBzZWUgYSBwcm9ibGVtIHdoZXJlIHRoZSBjb21tdW5p
+Y2F0aW9uIGJldHdlZW4gQSB0byBCIGZyZWV6ZXMNCmludGVybWl0dGVudGx5LCBlYWNoIHRpbWUg
+dGhlIGR1cmF0aW9uIGlzIGJldHdlZW4gYSBtaW51dGUgYW5kIHR3bw0KbWludXRlcy4gVGhlIHBy
+b2R1Y3QgQSBpcyBhdCBmYXVsdCBoZXJlLiBEdXJpbmcgdGhpcyBwZXJpb2QsIG5vIHBpbmcNCmZy
+b20gYSBQQyB0byBBIHN1Y2NlZWRzLiBVc2luZyBhIHNlcmlhbCB0ZXJtaW5hbCB0byBBLCBJIGlu
+dmVzdGlnYXRlZA0KYW5kIGZvdW5kOg0KDQoxKSBUb3AgZG9lc24ndCBzaG93IGFueXRoaW5nIHN1
+c3BpY2lvdXMgd2hlbiB0aGUgaXNzdWUgaXMgaGl0LiBUaGUNCnNhbWUgcHJvY2Vzc2VzIGFyZSBz
+ZWVuIGFsd2F5cy4NCg0KMikgVGhlIHdhdGNoZG9nIG9uIEEgaXMgbm90IHRyaWdnZXJlZCB3aGVu
+IHRoZSBpc3N1ZSBpcyBoaXQuDQoNCjMpIEl0J3Mgbm90IGEgZmlyZXdhbGwgaXNzdWUsIGhhZCB0
+cmllZCBjbGVhcmluZyBhbGwgaXB0YWJsZXMgZW50cmllcy4NCg0KNCkgSSBjaGVja2VkIG5ldHN0
+YXQsIG5vdGhpbmcgdGhhdCBnYXZlIGZ1cnRoZXIgY2x1ZXMuDQoNCjUpIEFkZGVkIGRlYnVnIHBy
+aW50aydzIHRocm91Z2ggdGhlIG1lc2ggY29kZSBpbiBtYWM4MDIxMSwgYnV0IEknbSBub3QNCnNl
+ZWluZyBhbnl0aGluZyB3aXRoIHN0cm9uZyBldmlkZW5jZSBzbyBmYXIuDQoNCkFueSB0aXBzIHRv
+IGRlYnVnIHRoZSBpc3N1ZT8gVGhhbmtzLg0KDQo=
