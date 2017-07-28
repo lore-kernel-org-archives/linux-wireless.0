@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33948 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751420AbdGZU0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2017 16:26:17 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 09/34] brcmfmac: Remove noisy debugging.
-Date: Wed, 26 Jul 2017 21:25:32 +0100
-Message-Id: <20170726202557.15632-10-ian@mnementh.co.uk> (sfid-20170726_222622_789360_9B70C444)
-In-Reply-To: <20170726202557.15632-1-ian@mnementh.co.uk>
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38132 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752091AbdG1O1G (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Jul 2017 10:27:06 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,01/17] rsi: add common structures needed for command packets
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1499690448-9956-2-git-send-email-amitkarwar@gmail.com>
+References: <1499690448-9956-2-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20170728142706.0B189609FD@smtp.codeaurora.org> (sfid-20170728_162710_774574_D290BFF1)
+Date: Fri, 28 Jul 2017 14:27:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you need debugging this low level, you're doing something wrong.
-Remove these noisy debug statements so the code is more readable.
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> 
+> All internal management packets (command packets) use some common
+> fields and some packet specific fields for packet descriptors.
+> This patch adds some common structures which are needed for all
+> command packets.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 73f2194a854f..049086f6db97 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -370,9 +370,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u8 data = 0;
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
--	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
- 	if (ret)
- 		*ret = retval;
-@@ -385,8 +383,6 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u32 data = 0;
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
- 
- 	if (ret)
-@@ -400,7 +396,6 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
- 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
- 
- 	if (ret)
-@@ -412,7 +407,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
- 
- 	if (ret)
- 		*ret = retval;
+17 patches applied to wireless-drivers-next.git, thanks.
+
+6c8ab76d6ae9 rsi: add common structures needed for command packets
+9a629fafe7d8 rsi: immediate wakeup bit and priority for TX command packets
+6abdf2c19346 rsi: Update in tx command frame radio capabilities
+dff80fc5fe4f rsi: remove unnecessary check for 802.11 management packet
+59e006dc77c4 rsi: Update peer notify command frame
+3a9828c92ba1 rsi: Update aggregation parameters command frame
+5c7ca1bbf200 rsi: Update baseband RF programming frame
+f04854fa3c38 rsi: update set_channel command frame
+de1d1813a8ca rsi: update vap capabilities command frame
+a84faab0fdb6 rsi: update set_key command frame
+2a58900bf59d rsi: set_key enhancements
+b3115e8a4267 rsi: update autorate request command frame
+bcb283d27f65 rsi: block/unblock data queues as per connection status
+79e590d924de rsi: update tx command frame block/unblock data
+5059afacee88 rsi: Remove internal header from Tx status skb
+86583258499c rsi: Send rx filter frame to device when interface is down
+d7203a83f065 rsi: regulatory enhancements
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9832877/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
