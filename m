@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38744 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58544 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbdG0KcH (ORCPT
+        with ESMTP id S1751628AbdG1PGM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Jul 2017 06:32:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ian Molton <ian@mnementh.co.uk>
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com
-Subject: Re: Patch v4: Clean up brcmfmac driver
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
-        <878tjaxv1z.fsf@purkki.adurom.net>
-        <4f2b9f3c-2fb1-3f43-ee96-127404e726c6@mnementh.co.uk>
-Date: Thu, 27 Jul 2017 13:31:59 +0300
-In-Reply-To: <4f2b9f3c-2fb1-3f43-ee96-127404e726c6@mnementh.co.uk> (Ian
-        Molton's message of "Thu, 27 Jul 2017 10:47:36 +0100")
-Message-ID: <8760eeyxuo.fsf@kamboji.qca.qualcomm.com> (sfid-20170727_123210_966768_3E876F6B)
+        Fri, 28 Jul 2017 11:06:12 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v3,04/10] ipw2200: constify attribute_group structures
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: davem@davemloft.net, stas.yakovlev@gmail.com, sgruszka@redhat.com,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170728150611.96B1A60884@smtp.codeaurora.org> (sfid-20170728_170631_006904_6017A4F7)
+Date: Fri, 28 Jul 2017 15:06:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ian Molton <ian@mnementh.co.uk> writes:
+Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
 
-> On 27/07/17 07:17, Kalle Valo wrote:
->>> Here's a v4 of the cleanup patchset - checkpatch clean(er - I have purposely
->>> left some warnings unaddressed).
->>>
->>> I also dropped an accidental adjustment of a debug macro from v3.
->> Like I said already last time, please split the patchset into reasonable
->> sizes (and submit one patchset at a time). I will automatically drop
->> patchbombs like this.
->
-> How many patches would you like at once?
+> attribute_group are not supposed to change at runtime. All functions
+> working with attribute_group provided by <linux/sysfs.h> work
+> with const attribute_group. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-Check my previous email:
+4 patches applied to wireless-drivers-next.git, thanks.
 
-https://lkml.kernel.org/r/87k23124gp.fsf@purkki.adurom.net
+17830147c40a mwifiex: fix spelling mistake: "Insuffient" -> "Insufficient"
+185ffc194800 ipw2100: don't return positive values to PCI probe on error
+af643fe9bbe0 zd1211rw: fix spelling mistake 'hybernate' -> 'hibernate'
+e66d70b789d1 brcmfmac: constify pci_device_id
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9847373/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
