@@ -1,94 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:46196 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751291AbdGQQmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:42:05 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 26/29] brcmfmac: General cleaning up. whitespace and comments fix.
-Date: Mon, 17 Jul 2017 17:16:34 +0100
-Message-Id: <20170717161637.4652-27-ian@mnementh.co.uk> (sfid-20170717_184209_179075_2BD3B6CE)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from paleale.coelho.fi ([176.9.41.70]:41042 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752310AbdG1O0t (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Jul 2017 10:26:49 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:35 +0300
+Message-Id: <20170728142337.19183-23-luca@coelho.fi> (sfid-20170728_162700_601308_16208E58)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 22/24] iwlwifi: mvm: rename p2p-specific sta functions to include p2p in the names
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tidy code, fix whitespace, remove useless debug code.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+The iwl_mvm_add_bcast_sta() and the iwl_mvm_rm_bcast_sta() functions
+are only called in P2P flows.  Add _p2p_ to the function names to make
+this explicit.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 24 ++++++++++++++--------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h      | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index aa43e3087908..96f4416ad106 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -642,11 +642,13 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index b8373923cfa9..d0fd46f9597c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1428,7 +1428,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 		if (ret)
+ 			goto out_unref_phy;
  
- static void pkt_align(struct sk_buff *p, int len, int align)
+-		ret = iwl_mvm_add_bcast_sta(mvm, vif);
++		ret = iwl_mvm_add_p2p_bcast_sta(mvm, vif);
+ 		if (ret)
+ 			goto out_unbind;
+ 
+@@ -1558,7 +1558,7 @@ static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
+ 		mvm->p2p_device_vif = NULL;
+-		iwl_mvm_rm_bcast_sta(mvm, vif);
++		iwl_mvm_rm_p2p_bcast_sta(mvm, vif);
+ 		iwl_mvm_binding_remove_vif(mvm, vif);
+ 		iwl_mvm_phy_ctxt_unref(mvm, mvmvif->phy_ctxt);
+ 		mvmvif->phy_ctxt = NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index b196acd18252..5c707c62f1dc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2106,7 +2106,7 @@ int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+  * @mvm: the mvm component
+  * @vif: the interface to which the broadcast station is added
+  * @bsta: the broadcast station to add. */
+-int iwl_mvm_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++int iwl_mvm_add_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
  {
--	uint datalign;
--	datalign = (unsigned long)(p->data);
-+	uint datalign = (unsigned long)(p->data);
-+
- 	datalign = roundup(datalign, (align)) - datalign;
-+
- 	if (datalign)
- 		skb_pull(p, datalign);
-+
- 	__skb_trim(p, len);
- }
- 
-@@ -2460,10 +2462,9 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 
- static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm_int_sta *bsta = &mvmvif->bcast_sta;
+@@ -2137,7 +2137,7 @@ void iwl_mvm_dealloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+  * Send the FW a request to remove the station from it's internal data
+  * structures, and in addition remove it from the local data structure.
+  */
+-int iwl_mvm_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++int iwl_mvm_rm_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
  {
--	struct brcmf_sdio_dev *sdiodev;
-+	struct brcmf_sdio_dev *sdiodev = bus->sdiodev;
- 	unsigned long flags;
+ 	int ret;
  
--	sdiodev = bus->sdiodev;
- 	if (sdiodev->oob_irq_requested) {
- 		spin_lock_irqsave(&sdiodev->irq_en_lock, flags);
- 		if (!sdiodev->irq_en && !atomic_read(&bus->ipend)) {
-@@ -3754,15 +3755,23 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	u32 val, rev;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 05fecbe87da4..6f1d358f3008 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -533,9 +533,9 @@ void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm);
  
- 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
-+
-+	/* Force 4339 chips over rev2 to use the same ID */
-+	/* This is borderline tolerable whilst there is only two exceptions */
-+	/* But could be handled better */
- 	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
--	     sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
--	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+		sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
-+		addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
-+
- 		if (rev >= 2) {
- 			val &= ~CID_ID_MASK;
- 			val |= BRCM_CC_4339_CHIP_ID;
- 		}
-+
- 	}
-+
- 	return val;
- }
- 
-@@ -3793,9 +3802,6 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 	sdiodev = bus->sdiodev;
- 	sdio_claim_host(sdiodev->func[1]);
- 
--	pr_debug("F1 signature read @0x18000000=0x%4x\n",
--		 brcmf_sdiod_readl(sdiodev, SI_ENUM_BASE, NULL));
--
- 	/*
- 	 * Force PLL off until brcmf_chip_attach()
- 	 * programs PLL control regs
+ int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+-int iwl_mvm_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_add_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_send_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+-int iwl_mvm_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_rm_p2p_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm,
 -- 
-2.11.0
+2.13.2
