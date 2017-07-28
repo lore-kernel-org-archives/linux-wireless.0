@@ -1,91 +1,440 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:32841 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756401AbdGLLtj (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40838 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752078AbdG1OYB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2017 07:49:39 -0400
-Received: by mail-qk0-f182.google.com with SMTP id a66so4990930qkb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jul 2017 04:49:39 -0700 (PDT)
-Message-ID: <59660CC3.9030809@broadcom.com> (sfid-20170712_134945_365012_E2DCBB39)
-Date: Wed, 12 Jul 2017 13:49:23 +0200
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-MIME-Version: 1.0
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-CC: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH V2] brcmfmac: fix possible buffer overflow in brcmf_cfg80211_mgmt_tx()
-References: <1499458154-18358-1-git-send-email-arend.vanspriel@broadcom.com>
-In-Reply-To: <1499458154-18358-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        Fri, 28 Jul 2017 10:24:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:16 +0300
+Message-Id: <20170728142337.19183-4-luca@coelho.fi> (sfid-20170728_162407_031979_8B0C9A7D)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 03/24] iwlwifi: track current firmware image in common code
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/7/2017 10:09 PM, Arend van Spriel wrote:
-> The lower level nl80211 code in cfg80211 ensures that "len" is between
-> 25 and NL80211_ATTR_FRAME (2304).  We subtract DOT11_MGMT_HDR_LEN (24) from
-> "len" so thats's max of 2280.  However, the action_frame->data[] buffer is
-> only BRCMF_FIL_ACTION_FRAME_SIZE (1800) bytes long so this memcpy() can
-> overflow.
->
-> 	memcpy(action_frame->data, &buf[DOT11_MGMT_HDR_LEN],
-> 	       le16_to_cpu(action_frame->len));
->
-> Cc: stable@vger.kernel.org # 3.9.x
-> Fixes: 18e2f61db3b70 ("brcmfmac: P2P action frame tx.")
-> Reported-by: "freenerguo(郭大兴)" <freenerguo@tencent.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
->   V2:
->    - added Fixes: tag and Cc: for stable kernels.
->    - Cc: patch to netdev list.
-> ---
-> Hi David,
->
-> Here is the patch as Linus send it to us and security@kernel.org. I
-> removed the lower bound check as that is already done in cfg80211.
-> Now I signed off on the patch although formally I suppose Linus should
-> sign it off. Putting it out there so people can respond as deemed
-> necessary.
->
-> The reason for submitting it to your tree is the fact that Kalle is
-> on vacation for next 10 days or so which was indicated to me by Johannes.
-> The patch applies to the master branch of your net repository. For
-> reference V1 of this patch can be found here [1].
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Dave,
+Track the current firmware image in the common code instead
+of in the opmode so that later patches can access it there
+in a common way.
 
-Not sure if you missed this one. It is addressing a reported security 
-issue and intended for the net repository, not net-next which is 
-obviously closed [2].
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h  | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 12 ++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c  |  6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c      | 14 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c     | 12 ++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c   | 23 ++++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c      |  6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c   | 10 +++++-----
+ 9 files changed, 52 insertions(+), 42 deletions(-)
 
-Regards,
-Arend
-
-[2] http://vger.kernel.org/~davem/net-next.html
-
-> Regards,
-> Arend
->
-> [1] https://patchwork.kernel.org/patch/9829977/
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
->   1 file changed, 5 insertions(+)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index cd1d673..d182a00 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -4851,6 +4851,11 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
->   		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
->   					GFP_KERNEL);
->   	} else if (ieee80211_is_action(mgmt->frame_control)) {
-> +		if (len > BRCMF_FIL_ACTION_FRAME_SIZE + DOT11_MGMT_HDR_LEN) {
-> +			brcmf_err("invalid action frame length\n");
-> +			err = -EINVAL;
-> +			goto exit;
-> +		}
->   		af_params = kzalloc(sizeof(*af_params), GFP_KERNEL);
->   		if (af_params == NULL) {
->   			brcmf_err("unable to allocate frame\n");
->
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 185902ce7e13..c483a76cb0e5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -85,6 +85,8 @@ struct iwl_fwrt_shared_mem_cfg {
+  * @num_of_paging_blk: number of paging blocks
+  * @num_of_pages_in_last_blk: number of pages in the last block
+  * @smem_cfg: saved firmware SMEM configuration
++ * @cur_fw_img: current firmware image, must be maintained by
++ *	the driver by calling &iwl_fw_set_current_image()
+  */
+ struct iwl_fw_runtime {
+ 	struct iwl_trans *trans;
+@@ -96,6 +98,8 @@ struct iwl_fw_runtime {
+ 	u16 num_of_paging_blk;
+ 	u16 num_of_pages_in_last_blk;
+ 
++	enum iwl_ucode_type cur_fw_img;
++
+ 	/* memory configuration */
+ 	struct iwl_fwrt_shared_mem_cfg smem_cfg;
+ };
+@@ -110,6 +114,12 @@ static inline void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt,
+ 	fwrt->dev = trans->dev;
+ }
+ 
++static inline void iwl_fw_set_current_image(struct iwl_fw_runtime *fwrt,
++					    enum iwl_ucode_type cur_fw_img)
++{
++	fwrt->cur_fw_img = cur_fw_img;
++}
++
+ int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type);
+ void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index c1c9c489edc9..9991494314e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -84,7 +84,7 @@ static ssize_t iwl_dbgfs_ctdp_budget_read(struct file *file,
+ 	int pos, budget;
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR)
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR)
+ 		return -EIO;
+ 
+ 	mutex_lock(&mvm->mutex);
+@@ -105,7 +105,7 @@ static ssize_t iwl_dbgfs_stop_ctdp_write(struct iwl_mvm *mvm, char *buf,
+ 	int ret;
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR)
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR)
+ 		return -EIO;
+ 
+ 	mutex_lock(&mvm->mutex);
+@@ -122,7 +122,7 @@ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
+ 	u32 flush_arg;
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR)
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR)
+ 		return -EIO;
+ 
+ 	if (kstrtou32(buf, 0, &flush_arg))
+@@ -155,7 +155,7 @@ static ssize_t iwl_dbgfs_sta_drain_write(struct iwl_mvm *mvm, char *buf,
+ 	int sta_id, drain, ret;
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR)
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR)
+ 		return -EIO;
+ 
+ 	if (sscanf(buf, "%d %d", &sta_id, &drain) != 2)
+@@ -192,7 +192,7 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file, char __user *user_buf,
+ 		return -EINVAL;
+ 
+ 	/* default is to dump the entire data segment */
+-	img = &mvm->fw->img[mvm->cur_ucode];
++	img = &mvm->fw->img[mvm->fwrt.cur_fw_img];
+ 	ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+ 	len = img->sec[IWL_UCODE_SECTION_DATA].len;
+ 
+@@ -224,7 +224,7 @@ static ssize_t iwl_dbgfs_sram_write(struct iwl_mvm *mvm, char *buf,
+ 	if (!iwl_mvm_firmware_running(mvm))
+ 		return -EINVAL;
+ 
+-	img = &mvm->fw->img[mvm->cur_ucode];
++	img = &mvm->fw->img[mvm->fwrt.cur_fw_img];
+ 	img_offset = img->sec[IWL_UCODE_SECTION_DATA].offset;
+ 	img_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 9d54005b6d50..0c12e604f22b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -572,7 +572,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (!mvm->cfg->dccm_offset || !mvm->cfg->dccm_len) {
+ 		const struct fw_img *img;
+ 
+-		img = &mvm->fw->img[mvm->cur_ucode];
++		img = &mvm->fw->img[mvm->fwrt.cur_fw_img];
+ 		sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+ 		sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+ 	} else {
+@@ -693,7 +693,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 
+ 	/* Make room for fw's virtual image pages, if it exists */
+ 	if (!mvm->trans->cfg->gen2 &&
+-	    mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
++	    mvm->fw->img[mvm->fwrt.cur_fw_img].paging_mem_size &&
+ 	    mvm->fwrt.fw_paging_db[0].fw_paging_block)
+ 		file_len += mvm->fwrt.num_of_paging_blk *
+ 			(sizeof(*dump_data) +
+@@ -832,7 +832,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 
+ 	/* Dump fw's virtual image */
+ 	if (!mvm->trans->cfg->gen2 &&
+-	    mvm->fw->img[mvm->cur_ucode].paging_mem_size &&
++	    mvm->fw->img[mvm->fwrt.cur_fw_img].paging_mem_size &&
+ 	    mvm->fwrt.fw_paging_db[0].fw_paging_block) {
+ 		for (i = 1; i < mvm->fwrt.num_of_paging_blk + 1; i++) {
+ 			struct iwl_fw_error_dump_paging *paging;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 161b7452baa2..08108620b977 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -251,7 +251,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_alive_data alive_data;
+ 	const struct fw_img *fw;
+ 	int ret, i;
+-	enum iwl_ucode_type old_type = mvm->cur_ucode;
++	enum iwl_ucode_type old_type = mvm->fwrt.cur_fw_img;
+ 	static const u16 alive_cmd[] = { MVM_ALIVE };
+ 	struct iwl_sf_region st_fwrd_space;
+ 
+@@ -264,7 +264,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 		fw = iwl_get_ucode_image(mvm->fw, ucode_type);
+ 	if (WARN_ON(!fw))
+ 		return -EINVAL;
+-	mvm->cur_ucode = ucode_type;
++	iwl_fw_set_current_image(&mvm->fwrt, ucode_type);
+ 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
+ 
+ 	iwl_init_notification_wait(&mvm->notif_wait, &alive_wait,
+@@ -273,7 +273,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 
+ 	ret = iwl_trans_start_fw(mvm->trans, fw, ucode_type == IWL_UCODE_INIT);
+ 	if (ret) {
+-		mvm->cur_ucode = old_type;
++		iwl_fw_set_current_image(&mvm->fwrt, old_type);
+ 		iwl_remove_notification(&mvm->notif_wait, &alive_wait);
+ 		return ret;
+ 	}
+@@ -297,13 +297,13 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 				"SecBoot CPU1 Status: 0x%x, CPU2 Status: 0x%x\n",
+ 				iwl_read_prph(trans, SB_CPU_1_STATUS),
+ 				iwl_read_prph(trans, SB_CPU_2_STATUS));
+-		mvm->cur_ucode = old_type;
++		iwl_fw_set_current_image(&mvm->fwrt, old_type);
+ 		return ret;
+ 	}
+ 
+ 	if (!alive_data.valid) {
+ 		IWL_ERR(mvm, "Loaded ucode is not valid!\n");
+-		mvm->cur_ucode = old_type;
++		iwl_fw_set_current_image(&mvm->fwrt, old_type);
+ 		return -EIO;
+ 	}
+ 
+@@ -432,7 +432,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_phy_cfg_cmd phy_cfg_cmd;
+-	enum iwl_ucode_type ucode_type = mvm->cur_ucode;
++	enum iwl_ucode_type ucode_type = mvm->fwrt.cur_fw_img;
+ 
+ 	/* Set parameters */
+ 	phy_cfg_cmd.phy_cfg = cpu_to_le32(iwl_mvm_get_phy_config(mvm));
+@@ -1064,7 +1064,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 	if (ret)
+ 		return ret;
+ 
+-	return iwl_init_paging(&mvm->fwrt, mvm->cur_ucode);
++	return iwl_init_paging(&mvm->fwrt, mvm->fwrt.cur_fw_img);
+ }
+ 
+ int iwl_mvm_up(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 739e7cbea82f..988f4c331d15 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -754,7 +754,6 @@ struct iwl_mvm {
+ 	 */
+ 	struct iwl_mvm_vif *bf_allowed_vif;
+ 
+-	enum iwl_ucode_type cur_ucode;
+ 	bool hw_registered;
+ 	bool calibrating;
+ 	u32 error_event_table[2];
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 8c49ac903c8c..60f0c9975538 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -621,9 +621,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	}
+ 	mvm->sf_state = SF_UNINIT;
+ 	if (iwl_mvm_has_new_tx_api(mvm))
+-		mvm->cur_ucode = IWL_UCODE_REGULAR;
++		iwl_fw_set_current_image(&mvm->fwrt, IWL_UCODE_REGULAR);
+ 	else
+-		mvm->cur_ucode = IWL_UCODE_INIT;
++		iwl_fw_set_current_image(&mvm->fwrt, IWL_UCODE_INIT);
+ 	mvm->drop_bcn_ap_mode = true;
+ 
+ 	mutex_init(&mvm->mutex);
+@@ -1133,7 +1133,7 @@ static bool iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
+ 	 * Stop the device if we run OPERATIONAL firmware or if we are in the
+ 	 * middle of the calibrations.
+ 	 */
+-	return state && (mvm->cur_ucode != IWL_UCODE_INIT || calibrating);
++	return state && (mvm->fwrt.cur_fw_img != IWL_UCODE_INIT || calibrating);
+ }
+ 
+ static void iwl_mvm_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+@@ -1263,7 +1263,7 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ 		reprobe->dev = mvm->trans->dev;
+ 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
+ 		schedule_work(&reprobe->work);
+-	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR &&
++	} else if (mvm->fwrt.cur_fw_img == IWL_UCODE_REGULAR &&
+ 		   mvm->hw_registered) {
+ 		/* don't let the transport/FW power down */
+ 		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
+@@ -1441,7 +1441,7 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
+ 
+ 	IWL_DEBUG_RPM(mvm, "MVM entering D0i3\n");
+ 
+-	if (WARN_ON_ONCE(mvm->cur_ucode != IWL_UCODE_REGULAR))
++	if (WARN_ON_ONCE(mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR))
+ 		return -EINVAL;
+ 
+ 	set_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
+@@ -1667,7 +1667,7 @@ int _iwl_mvm_exit_d0i3(struct iwl_mvm *mvm)
+ 
+ 	IWL_DEBUG_RPM(mvm, "MVM exiting D0i3\n");
+ 
+-	if (WARN_ON_ONCE(mvm->cur_ucode != IWL_UCODE_REGULAR))
++	if (WARN_ON_ONCE(mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR))
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&mvm->d0i3_suspend_mutex);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index e684811f8e8b..c05e5ac565ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -186,7 +186,7 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 		if (!mvmvif->queue_params[ac].uapsd)
+ 			continue;
+ 
+-		if (mvm->cur_ucode != IWL_UCODE_WOWLAN)
++		if (mvm->fwrt.cur_fw_img != IWL_UCODE_WOWLAN)
+ 			cmd->flags |=
+ 				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
+ 
+@@ -220,14 +220,15 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 				    BIT(IEEE80211_AC_BK))) {
+ 		cmd->flags |= cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK);
+ 		cmd->snooze_interval = cpu_to_le16(IWL_MVM_PS_SNOOZE_INTERVAL);
+-		cmd->snooze_window = (mvm->cur_ucode == IWL_UCODE_WOWLAN) ?
+-			cpu_to_le16(IWL_MVM_WOWLAN_PS_SNOOZE_WINDOW) :
+-			cpu_to_le16(IWL_MVM_PS_SNOOZE_WINDOW);
++		cmd->snooze_window =
++			(mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN) ?
++				cpu_to_le16(IWL_MVM_WOWLAN_PS_SNOOZE_WINDOW) :
++				cpu_to_le16(IWL_MVM_PS_SNOOZE_WINDOW);
+ 	}
+ 
+ 	cmd->uapsd_max_sp = mvm->hw->uapsd_max_sp_len;
+ 
+-	if (mvm->cur_ucode == IWL_UCODE_WOWLAN || cmd->flags &
++	if (mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN || cmd->flags &
+ 	    cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
+ 		cmd->rx_data_timeout_uapsd =
+ 			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
+@@ -502,7 +503,7 @@ static int iwl_mvm_power_send_cmd(struct iwl_mvm *mvm,
+ 	struct iwl_mac_power_cmd cmd = {};
+ 
+ 	iwl_mvm_power_build_cmd(mvm, vif, &cmd,
+-				mvm->cur_ucode != IWL_UCODE_WOWLAN);
++				mvm->fwrt.cur_fw_img != IWL_UCODE_WOWLAN);
+ 	iwl_mvm_power_log(mvm, &cmd);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	memcpy(&iwl_mvm_vif_from_mac80211(vif)->mac_pwr_cmd, &cmd, sizeof(cmd));
+@@ -525,8 +526,8 @@ int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
+ 		cmd.flags |= cpu_to_le16(DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+-	if ((mvm->cur_ucode == IWL_UCODE_WOWLAN) ? mvm->disable_power_off_d3 :
+-	    mvm->disable_power_off)
++	if ((mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN) ?
++			mvm->disable_power_off_d3 : mvm->disable_power_off)
+ 		cmd.flags &=
+ 			cpu_to_le16(~DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK);
+ #endif
+@@ -933,7 +934,7 @@ static int iwl_mvm_power_set_ba(struct iwl_mvm *mvm,
+ 	if (!mvmvif->bf_data.bf_enabled)
+ 		return 0;
+ 
+-	if (mvm->cur_ucode == IWL_UCODE_WOWLAN)
++	if (mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN)
+ 		cmd.ba_escape_timer = cpu_to_le32(IWL_BA_ESCAPE_TIMER_D3);
+ 
+ 	mvmvif->bf_data.ba_enabled = !(!mvmvif->pm_enabled ||
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 453a785a3ea5..a638bd69a1f9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -629,7 +629,7 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR) {
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
+ 		ret = -EIO;
+ 		goto out;
+ 	}
+@@ -680,7 +680,7 @@ static int iwl_mvm_tzone_set_trip_temp(struct thermal_zone_device *device,
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR) {
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
+ 		ret = -EIO;
+ 		goto out;
+ 	}
+@@ -795,7 +795,7 @@ static int iwl_mvm_tcool_set_cur_state(struct thermal_cooling_device *cdev,
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->cur_ucode != IWL_UCODE_REGULAR) {
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
+ 		ret = -EIO;
+ 		goto unlock;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index fc5a490880d0..4e80c8fa4741 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -464,8 +464,8 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ 		IWL_ERR(mvm,
+ 			"Not valid error log pointer 0x%08X for %s uCode\n",
+ 			base,
+-			(mvm->cur_ucode == IWL_UCODE_INIT)
+-					? "Init" : "RT");
++			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT)
++			? "Init" : "RT");
+ 		return;
+ 	}
+ 
+@@ -500,7 +500,7 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+ 	struct iwl_error_event_table table;
+ 	u32 val;
+ 
+-	if (mvm->cur_ucode == IWL_UCODE_INIT) {
++	if (mvm->fwrt.cur_fw_img == IWL_UCODE_INIT) {
+ 		if (!base)
+ 			base = mvm->fw->init_errlog_ptr;
+ 	} else {
+@@ -512,8 +512,8 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+ 		IWL_ERR(mvm,
+ 			"Not valid error log pointer 0x%08X for %s uCode\n",
+ 			base,
+-			(mvm->cur_ucode == IWL_UCODE_INIT)
+-					? "Init" : "RT");
++			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT)
++			? "Init" : "RT");
+ 		return;
+ 	}
+ 
+-- 
+2.13.2
