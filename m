@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51347 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754838AbdGVDv2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40886 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752163AbdG1OYM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 23:51:28 -0400
-Date: Sat, 22 Jul 2017 05:51:20 +0200
-From: Greg KH <gregkh@linux.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Birming Chiu <birming@realtek.com>, Pkshih <pkshih@realtek.com>
-Subject: Re: New Realtek driver
-Message-ID: <20170722035119.GA31377@kroah.com> (sfid-20170722_055132_194715_117DF39C)
-References: <50a63e7a-045a-3386-661a-5bfe077e5b0a@lwfinger.net>
- <20170721150820.GC18198@kroah.com>
- <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2cf70a42-6665-1da9-7c38-32751f2dc981@lwfinger.net>
+        Fri, 28 Jul 2017 10:24:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:22 +0300
+Message-Id: <20170728142337.19183-10-luca@coelho.fi> (sfid-20170728_162428_479036_F5874FE5)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 09/24] iwlwifi: mvm: byte-swap constant instead of variable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 21, 2017 at 07:36:41PM -0500, Larry Finger wrote:
-> On 07/21/2017 10:08 AM, Greg KH wrote:
-> > On Thu, Jul 20, 2017 at 08:18:13PM -0500, Larry Finger wrote:
-> > > Kalle and Greg,
-> > > 
-> > > Once again I find myself in the awkward position of needing to submit code
-> > > to two different trees, i.e. wireless and staging.
-> > > 
-> > > The code in question concerns a new Realtek device, the RTL8822BE. The
-> > > device is already shipping, and Realtek would like it to be available in
-> > > kernel 3.14. As it consists of ~120,000 new lines of code, I have assured
-> > > Realtek that 3.14 would not be possible, at least in the wireless tree. What
-> > > I plan to do is submit the changes in the existing drivers through wireless,
-> > > and the three totally new drivers through staging. My expectation is that
-> > > this code would live for a relatively short time there, but going that route
-> > > would give time for the code to be reviewed properly, but still be available
-> > > in a kernel driver. All of the new code will be available in a GitHub repo
-> > > maintained by Realtek for those users whose distros do not configure
-> > > anything in staging.
-> > > 
-> > > For my part, I will push the wireless tree material as fast as I can and
-> > > hope there is time available near the end of the 4.13-rcX sequence for the
-> > > material to reach 4.14-rc1.
-> > 
-> > Why do you need a staging driver to have changes in the wireless tree?
-> > Staging drivers should be self-contained and not rely on anything
-> > outside of it in order to work properly (i.e. don't add code to the real
-> > kernel only for a staging driver.)
-> 
-> Greg,
-> 
-> To add the new driver to staging without any other changes, I will need to
-> duplicate a lot of code. That is no problem, other than the duplicate entry
-> points that will show up in a makeallyes configuration. If that is what you
-> want, then that is what I will do.
+From: Johannes Berg <johannes.berg@intel.com>
 
-What do you mean by "duplicate entry points"?  Duplicate global symbols?
-Something else?
+Convention has it to byte-swap the constant instead of the variable
+when doing bit checks. This also generates better code when the swap
+is actually needed, since the constant can be swapped at compile-time.
 
-confused,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 13733252c1fb..6b8e57b7234a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -851,7 +851,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 
+ 	rcu_read_lock();
+ 
+-	if (le16_to_cpu(desc->status) & IWL_RX_MPDU_STATUS_SRC_STA_FOUND) {
++	if (desc->status & cpu_to_le16(IWL_RX_MPDU_STATUS_SRC_STA_FOUND)) {
+ 		u8 id = desc->sta_id_flags & IWL_RX_MPDU_SIF_STA_ID_MASK;
+ 
+ 		if (!WARN_ON_ONCE(id >= ARRAY_SIZE(mvm->fw_id_to_mac_id))) {
+-- 
+2.13.2
