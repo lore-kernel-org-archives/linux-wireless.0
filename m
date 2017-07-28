@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50381 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751828AbdGMWsd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57238 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751882AbdG1QvQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jul 2017 18:48:33 -0400
-From: Colin King <colin.king@canonical.com>
-To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] zd1211rw: fix spelling mistake 'hybernate' -> 'hibernate'
-Date: Thu, 13 Jul 2017 23:48:29 +0100
-Message-Id: <20170713224829.15459-1-colin.king@canonical.com> (sfid-20170714_004903_302366_3FBFA62C)
+        Fri, 28 Jul 2017 12:51:16 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: rt2x00: make const array glrt_table static
+References: <20170711114733.15387-1-colin.king@canonical.com>
+        <20170728150130.336D06095E@smtp.codeaurora.org>
+Date: Fri, 28 Jul 2017 19:51:11 +0300
+In-Reply-To: <20170728150130.336D06095E@smtp.codeaurora.org> (Kalle Valo's
+        message of "Fri, 28 Jul 2017 15:01:30 +0000 (UTC)")
+Message-ID: <877eyswlmo.fsf@purkki.adurom.net> (sfid-20170728_185121_200706_9DB70F8A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Trivial fix to spelling mistake in PDEBUG debug message.
+> Colin Ian King <colin.king@canonical.com> wrote:
+>
+>> From: Colin Ian King <colin.king@canonical.com>
+>> 
+>> Don't populate array glrt_table on the stack but make it static.
+>> Makes the object code a smaller by over 670 bytes:
+>> 
+>> Before:
+>>    text	   data	    bss	    dec	    hex	filename
+>>  131772	   4733	      0	 136505	  21539	rt2800lib.o
+>> 
+>> After:
+>>    text	   data	    bss	    dec	    hex	filename
+>>  131043	   4789	      0	 135832	  21298	rt2800lib.o
+>> 
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>
+> Patch applied to wireless-drivers-next.git, thanks.
+>
+> 17830147c40a mwifiex: fix spelling mistake: "Insuffient" -> "Insufficient"
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/zydas/zd1211rw/zd_rf_rf2959.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Dave had applied this earlier and my script failed to detect that. Hence
+the commit above is wrong.
 
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_rf_rf2959.c b/drivers/net/wireless/zydas/zd1211rw/zd_rf_rf2959.c
-index a93f657a41c7..d4e512f50945 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_rf_rf2959.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_rf_rf2959.c
-@@ -61,7 +61,7 @@ static void dump_regwrite(u32 rw)
- 
- 	switch (reg) {
- 	case 0:
--		PDEBUG("reg0 CFG1 ref_sel %d hybernate %d rf_vco_reg_en %d"
-+		PDEBUG("reg0 CFG1 ref_sel %d hibernate %d rf_vco_reg_en %d"
- 		       " if_vco_reg_en %d if_vga_en %d",
- 		       bits(rw, 14, 15), bit(rw, 3), bit(rw, 2), bit(rw, 1),
- 		       bit(rw, 0));
+commit bf98bd0be1ba509c5e6d77524ffac192f1edb2dd
+Author:     Colin Ian King <colin.king@canonical.com>
+AuthorDate: Tue Jul 11 12:47:33 2017 +0100
+Commit:     David S. Miller <davem@davemloft.net>
+CommitDate: Thu Jul 13 09:23:56 2017 -0700
+
+    rt2x00: make const array glrt_table static
+
 -- 
-2.11.0
+Kalle Valo
