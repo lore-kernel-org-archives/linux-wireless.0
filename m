@@ -1,374 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:59602 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751911AbdGSTNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:13:20 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 32/34] brcmfmac: Replace function index with function pointer
-Date: Wed, 19 Jul 2017 20:08:20 +0100
-Message-Id: <20170719190822.10857-33-ian@mnementh.co.uk> (sfid-20170719_211325_805701_BEF212AD)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from paleale.coelho.fi ([176.9.41.70]:41058 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752330AbdG1O05 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Jul 2017 10:26:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:24 +0300
+Message-Id: <20170728142337.19183-12-luca@coelho.fi> (sfid-20170728_162710_233393_8EC80665)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 11/24] iwlwifi: mvm: refactor beacon template command code
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for removing the function array, remove all code that
-refers to function by index and replace with pointers to the function
-itself.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+We currently support 3 different versions of the beacon template
+command and the code does some tricks in order to reuse what is
+possible across these versions.  But it is a bit complicated to read
+and soon there will be one more variation that the driver needs
+implement, which would complicate it even further.
+
+Refactor the way we send beacon template commands, which increases the
+code size a bit, but makes it much easier to read.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 69 +++++++++++-----------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 14 ++---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    | 14 ++---
- 3 files changed, 49 insertions(+), 48 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    |  31 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 202 +++++++++++++---------
+ 2 files changed, 138 insertions(+), 95 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 89cf71d98cee..43a9c28738b3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -148,7 +148,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index d20baedead98..95dbed609f3e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -766,7 +766,8 @@ struct iwl_mac_beacon_cmd_v6 {
+ } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_6 */
  
- 		/* must configure SDIO_CCCR_IENx to enable irq */
- 		data = brcmf_sdiod_func0_rb(sdiodev, SDIO_CCCR_IENx, &ret);
--		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
-+		data |= SDIO_CCCR_IEN_FUNC1 | SDIO_CCCR_IEN_FUNC2 | SDIO_CCCR_IEN_BIT0;
- 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
- 
- 		/* redirect, configure and enable io for interrupt signal */
-@@ -290,7 +290,8 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		*ret = retval;
- }
- 
--static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
-+static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev,
-+				struct sdio_func *func,
- 				u32 addr, struct sk_buff *pkt)
- {
- 	unsigned int req_sz;
-@@ -300,13 +301,12 @@ static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	req_sz = pkt->len + 3;
- 	req_sz &= (uint)~3;
- 
--	if (fn == 1)
--		err = sdio_memcpy_fromio(sdiodev->func[fn],
--				((u8 *)(pkt->data)), addr, req_sz);
-+	if (func->num == 1)
-+		err = sdio_memcpy_fromio(func, ((u8 *)(pkt->data)), addr,
-+						req_sz);
- 	else
- 		/* function 2 read is FIFO operation */
--		err = sdio_readsb(sdiodev->func[fn],
--				((u8 *)(pkt->data)), addr, req_sz);
-+		err = sdio_readsb(func, ((u8 *)(pkt->data)), addr, req_sz);
- 
- 	if (err == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-@@ -314,7 +314,8 @@ static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	return err;
- }
- 
--static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
-+static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev,
-+				struct sdio_func *func,
- 				u32 addr, struct sk_buff *pkt)
- {
- 	unsigned int req_sz;
-@@ -324,8 +325,7 @@ static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	req_sz = pkt->len + 3;
- 	req_sz &= (uint)~3;
- 
--	err = sdio_memcpy_toio(sdiodev->func[fn], addr,
--			       ((u8 *)(pkt->data)), req_sz);
-+	err = sdio_memcpy_toio(func, addr, ((u8 *)(pkt->data)), req_sz);
- 
- 	if (err == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-@@ -336,7 +336,7 @@ static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
  /**
-  * brcmf_sdiod_sglist_rw - SDIO interface function for block data access
-  * @sdiodev: brcmfmac sdio device
-- * @fn: SDIO function number
-+ * @func: SDIO function
-  * @write: direction flag
-  * @addr: dongle memory address as source/destination
-  * @pkt: skb pointer
-@@ -345,9 +345,10 @@ static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
-  * stack for block data access. It assumes that the skb passed down by the
-  * caller has already been padded and aligned.
+- * struct iwl_mac_beacon_cmd_data - data of beacon template with offloaded CSA
++ * struct iwl_mac_beacon_cmd_v7 - beacon template command with offloaded CSA
++ * @tx: the tx commands associated with the beacon frame
+  * @template_id: currently equal to the mac context id of the coresponding
+  *  mac.
+  * @tim_idx: the offset of the tim IE in the beacon
+@@ -775,23 +776,14 @@ struct iwl_mac_beacon_cmd_v6 {
+  * @csa_offset: offset to the CSA IE if present
+  * @frame: the template of the beacon frame
   */
--static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
--				 bool write, u32 addr,
--				 struct sk_buff_head *pktlist)
-+static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev,
-+					struct sdio_func *func,
-+					bool write, u32 addr,
-+					struct sk_buff_head *pktlist)
- {
- 	unsigned int req_sz, func_blk_sz, sg_cnt, sg_data_sz, pkt_offset;
- 	unsigned int max_req_sz, orig_offset, dst_offset;
-@@ -371,7 +372,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 		req_sz = 0;
- 		skb_queue_walk(pktlist, pkt_next)
- 			req_sz += pkt_next->len;
--		req_sz = ALIGN(req_sz, sdiodev->func[fn]->cur_blksize);
-+		req_sz = ALIGN(req_sz, func->cur_blksize);
- 		while (req_sz > PAGE_SIZE) {
- 			pkt_next = brcmu_pkt_buf_get_skb(PAGE_SIZE);
- 			if (pkt_next == NULL) {
-@@ -390,7 +391,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 		target_list = &local_list;
- 	}
+-struct iwl_mac_beacon_cmd_data {
++struct iwl_mac_beacon_cmd_v7 {
++	struct iwl_tx_cmd tx;
+ 	__le32 template_id;
+ 	__le32 tim_idx;
+ 	__le32 tim_size;
+ 	__le32 ecsa_offset;
+ 	__le32 csa_offset;
+ 	struct ieee80211_hdr frame[0];
+-};
+-
+-/**
+- * struct iwl_mac_beacon_cmd_v7 - beacon template command with offloaded CSA
+- * @tx: the tx commands associated with the beacon frame
+- * @data: see &iwl_mac_beacon_cmd_data
+- */
+-struct iwl_mac_beacon_cmd_v7 {
+-	struct iwl_tx_cmd tx;
+-	struct iwl_mac_beacon_cmd_data data;
+ } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
  
--	func_blk_sz = sdiodev->func[fn]->cur_blksize;
-+	func_blk_sz = func->cur_blksize;
- 	max_req_sz = sdiodev->max_request_size;
- 	max_seg_cnt = min_t(unsigned short, sdiodev->max_segment_count,
- 			    target_list->qlen);
-@@ -407,10 +408,10 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
- 	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
- 	mmc_cmd.arg = write ? 1<<31 : 0;	/* write flag  */
--	mmc_cmd.arg |= (fn & 0x7) << 28;	/* SDIO func num */
-+	mmc_cmd.arg |= (func->num & 0x7) << 28;	/* SDIO func num */
- 	mmc_cmd.arg |= 1<<27;			/* block mode */
- 	/* for function 1 the addr will be incremented */
--	mmc_cmd.arg |= (fn == 1) ? 1<<26 : 0;
-+	mmc_cmd.arg |= (func->num == 1) ? 1<<26 : 0;
- 	mmc_cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
- 	mmc_req.cmd = &mmc_cmd;
- 	mmc_req.data = &mmc_dat;
-@@ -456,11 +457,11 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 		mmc_cmd.arg |= (addr & 0x1FFFF) << 9;	/* address */
- 		mmc_cmd.arg |= mmc_dat.blocks & 0x1FF;	/* block count */
- 		/* incrementing addr for function 1 */
--		if (fn == 1)
-+		if (func->num == 1)
- 			addr += req_sz;
+ /**
+@@ -799,13 +791,24 @@ struct iwl_mac_beacon_cmd_v7 {
+  * @byte_cnt: byte count of the beacon frame
+  * @flags: for future use
+  * @reserved: reserved
+- * @data: see &iwl_mac_beacon_cmd_data
++ * @template_id: currently equal to the mac context id of the coresponding
++ *  mac.
++ * @tim_idx: the offset of the tim IE in the beacon
++ * @tim_size: the length of the tim IE
++ * @ecsa_offset: offset to the ECSA IE if present
++ * @csa_offset: offset to the CSA IE if present
++ * @frame: the template of the beacon frame
+  */
+ struct iwl_mac_beacon_cmd {
+ 	__le16 byte_cnt;
+ 	__le16 flags;
+ 	__le64 reserved;
+-	struct iwl_mac_beacon_cmd_data data;
++	__le32 template_id;
++	__le32 tim_idx;
++	__le32 tim_size;
++	__le32 ecsa_offset;
++	__le32 csa_offset;
++	struct ieee80211_hdr frame[0];
+ } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
  
--		mmc_set_data_timeout(&mmc_dat, sdiodev->func[fn]->card);
--		mmc_wait_for_req(sdiodev->func[fn]->card->host, &mmc_req);
-+		mmc_set_data_timeout(&mmc_dat, func->card);
-+		mmc_wait_for_req(func->card->host, &mmc_req);
- 
- 		ret = mmc_cmd.error ? mmc_cmd.error : mmc_dat.error;
- 		if (ret == -ENOMEDIUM) {
-@@ -540,7 +541,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
- 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
--	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
-+	err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr, pkt);
- 
- done:
- 	return err;
-@@ -565,13 +566,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	if (pktq->qlen == 1)
--		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
-+		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr,
- 					 pktq->next);
- 	else if (!sdiodev->sg_support) {
- 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
- 		if (!glom_skb)
- 			return -ENOMEM;
--		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
-+		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr,
- 					 glom_skb);
- 		if (err)
- 			goto done;
-@@ -581,7 +582,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 			skb_pull(glom_skb, skb->len);
- 		}
- 	} else
--		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, false, addr,
-+		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func[2], false, addr,
- 					    pktq);
- 
- done:
-@@ -613,7 +614,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	if (!err)
--		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
-+		err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[2], addr, mypkt);
- 
- 	brcmu_pkt_buf_free_skb(mypkt);
- 
-@@ -639,13 +640,13 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 
- 	if (pktq->qlen == 1 || !sdiodev->sg_support)
- 		skb_queue_walk(pktq, skb) {
--			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
-+			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[2],
- 						 addr, skb);
- 			if (err)
- 				break;
- 		}
- 	else
--		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
-+		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func[2], true, addr,
- 					    pktq);
- 
- 	return err;
-@@ -695,11 +696,11 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 
- 		if (write) {
- 			memcpy(pkt->data, data, dsize);
--			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_1,
-+			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[1],
- 						      sdaddr, pkt);
- 		}
- 		else {
--			err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_1,
-+			err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[1],
- 						      sdaddr, pkt);
- 		}
- 
-@@ -728,12 +729,12 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	return err;
+ struct iwl_beacon_notif {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index d130bdd76368..1546d54e2ebd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1048,83 +1048,26 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
+ 	return ie - beacon;
  }
  
--int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
-+int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, struct sdio_func *func)
+-static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
+-					struct ieee80211_vif *vif,
+-					struct sk_buff *beacon)
++static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
++				    struct ieee80211_vif *vif,
++				    struct sk_buff *beacon,
++				    struct iwl_tx_cmd *tx)
  {
- 	brcmf_dbg(SDIO, "Enter\n");
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	struct iwl_host_cmd cmd = {
+-		.id = BEACON_TEMPLATE_CMD,
+-		.flags = CMD_ASYNC,
+-	};
+-	union {
+-		struct iwl_mac_beacon_cmd_v6 beacon_cmd_v6;
+-		struct iwl_mac_beacon_cmd_v7 beacon_cmd;
+-	} u = {};
+-	struct iwl_mac_beacon_cmd beacon_cmd = {};
+ 	struct ieee80211_tx_info *info;
+-	u32 beacon_skb_len;
+ 	u32 rate, tx_flags;
  
- 	/* Issue abort cmd52 command through F0 */
--	brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT, fn, NULL);
-+	brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT, func->num, NULL);
+-	if (WARN_ON(!beacon))
+-		return -EINVAL;
+-
+-	beacon_skb_len = beacon->len;
+-
+-	if (fw_has_capa(&mvm->fw->ucode_capa,
+-			IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD)) {
+-		u32 csa_offset, ecsa_offset;
+-
+-		csa_offset = iwl_mvm_find_ie_offset(beacon->data,
+-						    WLAN_EID_CHANNEL_SWITCH,
+-						    beacon_skb_len);
+-		ecsa_offset =
+-			iwl_mvm_find_ie_offset(beacon->data,
+-					       WLAN_EID_EXT_CHANSWITCH_ANN,
+-					       beacon_skb_len);
+-
+-		if (iwl_mvm_has_new_tx_api(mvm)) {
+-			beacon_cmd.data.template_id =
+-				cpu_to_le32((u32)mvmvif->id);
+-			beacon_cmd.data.ecsa_offset = cpu_to_le32(ecsa_offset);
+-			beacon_cmd.data.csa_offset = cpu_to_le32(csa_offset);
+-			beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon_skb_len);
+-			if (vif->type == NL80211_IFTYPE_AP)
+-				iwl_mvm_mac_ctxt_set_tim(mvm,
+-							 &beacon_cmd.data.tim_idx,
+-							 &beacon_cmd.data.tim_size,
+-							 beacon->data,
+-							 beacon_skb_len);
+-			cmd.len[0] = sizeof(beacon_cmd);
+-			cmd.data[0] = &beacon_cmd;
+-			goto send;
+-
+-		} else {
+-			u.beacon_cmd.data.ecsa_offset =
+-				cpu_to_le32(ecsa_offset);
+-			u.beacon_cmd.data.csa_offset = cpu_to_le32(csa_offset);
+-			cmd.len[0] = sizeof(u.beacon_cmd);
+-			cmd.data[0] = &u;
+-		}
+-	} else {
+-		cmd.len[0] = sizeof(u.beacon_cmd_v6);
+-		cmd.data[0] = &u;
+-	}
+-
+-	/* TODO: for now the beacon template id is set to be the mac context id.
+-	 * Might be better to handle it as another resource ... */
+-	u.beacon_cmd_v6.template_id = cpu_to_le32((u32)mvmvif->id);
+ 	info = IEEE80211_SKB_CB(beacon);
  
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
-@@ -1104,7 +1105,7 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ 	/* Set up TX command fields */
+-	u.beacon_cmd_v6.tx.len = cpu_to_le16((u16)beacon_skb_len);
+-	u.beacon_cmd_v6.tx.sta_id = mvmvif->bcast_sta.sta_id;
+-	u.beacon_cmd_v6.tx.life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
++	tx->len = cpu_to_le16((u16)beacon->len);
++	tx->sta_id = mvmvif->bcast_sta.sta_id;
++	tx->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+ 	tx_flags = TX_CMD_FLG_SEQ_CTL | TX_CMD_FLG_TSF;
+ 	tx_flags |=
+ 		iwl_mvm_bt_coex_tx_prio(mvm, (void *)beacon->data, info, 0) <<
+ 						TX_CMD_FLG_BT_PRIO_POS;
+-	u.beacon_cmd_v6.tx.tx_flags = cpu_to_le32(tx_flags);
++	tx->tx_flags = cpu_to_le32(tx_flags);
  
- 	func = container_of(dev, struct sdio_func, dev);
- 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
--	if (func->num != SDIO_FUNC_1)
-+	if (func->num != 1)
- 		return 0;
- 
- 
-@@ -1133,7 +1134,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
- 	struct sdio_func *func = container_of(dev, struct sdio_func, dev);
- 
- 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
--	if (func->num != SDIO_FUNC_2)
-+	if (func->num != 2)
- 		return 0;
- 
- 	brcmf_sdiod_freezer_off(sdiodev);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 9b8bd870c1fc..c94625b6549f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1144,7 +1144,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 		  rtx ? ", send NAK" : "");
- 
- 	if (abort)
--		brcmf_sdiod_abort(bus->sdiodev, SDIO_FUNC_2);
-+		brcmf_sdiod_abort(bus->sdiodev, bus->sdiodev->func[2]);
- 
- 	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_RF_TERM, &err);
- 	bus->sdcnt.f1regdata++;
-@@ -1193,7 +1193,7 @@ static void brcmf_sdio_txfail(struct brcmf_sdio *bus)
- 	brcmf_err("sdio error, abort command and terminate frame\n");
- 	bus->sdcnt.tx_sderrs++;
- 
--	brcmf_sdiod_abort(sdiodev, SDIO_FUNC_2);
-+	brcmf_sdiod_abort(sdiodev, sdiodev->func[2]);
- 	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_WF_TERM, NULL);
- 	bus->sdcnt.f1regdata++;
- 
-@@ -2055,7 +2055,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
- 	int ntail, ret;
- 
- 	sdiodev = bus->sdiodev;
--	blksize = sdiodev->func[SDIO_FUNC_2]->cur_blksize;
-+	blksize = sdiodev->func[2]->cur_blksize;
- 	/* sg entry alignment should be a divisor of block size */
- 	WARN_ON(blksize % bus->sgentry_align);
- 
-@@ -2423,7 +2423,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 
- 		/* Turn off the bus (F2), free any pending packets */
- 		brcmf_dbg(INTR, "disable SDIO interrupts\n");
--		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
-+		sdio_disable_func(sdiodev->func[2]);
- 
- 		/* Clear any pending interrupts now that F2 is disabled */
- 		brcmf_sdiod_writel(sdiodev, core->base + __sd_reg(intstatus),
-@@ -4024,7 +4024,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailboxdata),
- 				SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
- 
--	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
-+	err = sdio_enable_func(sdiodev->func[2]);
- 
- 
- 	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
-@@ -4040,7 +4040,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
- 		/* Disable F2 again */
--		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
-+		sdio_disable_func(sdiodev->func[2]);
- 		goto release;
+ 	if (!fw_has_capa(&mvm->fw->ucode_capa,
+ 			 IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION)) {
+@@ -1133,7 +1076,7 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
+ 					     mvm->mgmt_last_antenna_idx);
  	}
  
-@@ -4183,7 +4183,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	sdio_claim_host(bus->sdiodev->func[1]);
+-	u.beacon_cmd_v6.tx.rate_n_flags =
++	tx->rate_n_flags =
+ 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
+ 			    RATE_MCS_ANT_POS);
  
- 	/* Disable F2 to clear any intermediate frame state on the dongle */
--	sdio_disable_func(bus->sdiodev->func[SDIO_FUNC_2]);
-+	sdio_disable_func(bus->sdiodev->func[2]);
+@@ -1141,29 +1084,126 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
+ 		rate = IWL_FIRST_OFDM_RATE;
+ 	} else {
+ 		rate = IWL_FIRST_CCK_RATE;
+-		u.beacon_cmd_v6.tx.rate_n_flags |=
+-					cpu_to_le32(RATE_MCS_CCK_MSK);
++		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
+ 	}
+-	u.beacon_cmd_v6.tx.rate_n_flags |=
+-		cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
  
- 	bus->rxflow = false;
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index cae21d14042d..bc9e9bcf40e2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -24,9 +24,6 @@
- /* Maximum number of I/O funcs */
- #define NUM_SDIO_FUNCS	3
- 
--#define SDIO_FUNC_1		1
--#define SDIO_FUNC_2		2
--
- #define SDIOD_FBR_SIZE		0x100
- 
- /* io_en */
-@@ -45,11 +42,13 @@
- #define REG_F0_REG_MASK		0x7FF
- #define REG_F1_MISC_MASK	0x1FFFF
- 
--/* as of sdiod rev 0, supports 3 functions */
--#define SBSDIO_NUM_FUNCTION		3
--
- /* function 0 vendor specific CCCR registers */
- 
-+/* Interrupt enable bits for func 1 and 2 */
-+#define SDIO_CCCR_IEN_BIT0		(1 << 0)
-+#define SDIO_CCCR_IEN_FUNC1		(1 << 1)
-+#define SDIO_CCCR_IEN_FUNC2		(1 << 2)
+-	/* Set up TX beacon command fields */
+-	if (vif->type == NL80211_IFTYPE_AP)
+-		iwl_mvm_mac_ctxt_set_tim(mvm, &u.beacon_cmd_v6.tim_idx,
+-					 &u.beacon_cmd_v6.tim_size,
+-					 beacon->data,
+-					 beacon_skb_len);
++	tx->rate_n_flags |= cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
++}
 +
- #define SDIO_CCCR_BRCM_CARDCAP		0xf0
- #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
- #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
-@@ -349,7 +348,8 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		      u8 *data, uint size);
++static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
++					    struct sk_buff *beacon,
++					    void *data, int len)
++{
++	struct iwl_host_cmd cmd = {
++		.id = BEACON_TEMPLATE_CMD,
++		.flags = CMD_ASYNC,
++	};
  
- /* Issue an abort to the specified function */
--int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn);
-+int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, struct sdio_func *func);
+-send:
+-	/* Submit command */
++	cmd.len[0] = len;
++	cmd.data[0] = data;
+ 	cmd.dataflags[0] = 0;
+-	cmd.len[1] = beacon_skb_len;
++	cmd.len[1] = beacon->len;
+ 	cmd.data[1] = beacon->data;
+ 	cmd.dataflags[1] = IWL_HCMD_DFL_DUP;
+ 
+ 	return iwl_mvm_send_cmd(mvm, &cmd);
+ }
+ 
++static int iwl_mvm_mac_ctxt_send_beacon_v6(struct iwl_mvm *mvm,
++					   struct ieee80211_vif *vif,
++					   struct sk_buff *beacon)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mac_beacon_cmd_v6 beacon_cmd = {};
 +
- void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 			      enum brcmf_sdiod_state state);
++	iwl_mvm_mac_ctxt_set_tx(mvm, vif, beacon, &beacon_cmd.tx);
++
++	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
++
++	if (vif->type == NL80211_IFTYPE_AP)
++		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
++					 &beacon_cmd.tim_size,
++					 beacon->data, beacon->len);
++
++	return iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
++						sizeof(beacon_cmd));
++}
++
++static int iwl_mvm_mac_ctxt_send_beacon_v7(struct iwl_mvm *mvm,
++					   struct ieee80211_vif *vif,
++					   struct sk_buff *beacon)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mac_beacon_cmd_v7 beacon_cmd = {};
++
++	iwl_mvm_mac_ctxt_set_tx(mvm, vif, beacon, &beacon_cmd.tx);
++
++	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
++
++	if (vif->type == NL80211_IFTYPE_AP)
++		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
++					 &beacon_cmd.tim_size,
++					 beacon->data, beacon->len);
++
++	beacon_cmd.csa_offset =
++		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
++						   WLAN_EID_CHANNEL_SWITCH,
++						   beacon->len));
++	beacon_cmd.ecsa_offset =
++		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
++						   WLAN_EID_EXT_CHANSWITCH_ANN,
++						   beacon->len));
++
++	return iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
++						sizeof(beacon_cmd));
++}
++
++static int iwl_mvm_mac_ctxt_send_beacon_v8(struct iwl_mvm *mvm,
++					   struct ieee80211_vif *vif,
++					   struct sk_buff *beacon)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mac_beacon_cmd beacon_cmd = {};
++
++	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
++	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
++
++	if (vif->type == NL80211_IFTYPE_AP)
++		iwl_mvm_mac_ctxt_set_tim(mvm,
++					 &beacon_cmd.tim_idx,
++					 &beacon_cmd.tim_size,
++					 beacon->data, beacon->len);
++
++	beacon_cmd.csa_offset =
++		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
++						   WLAN_EID_CHANNEL_SWITCH,
++						   beacon->len));
++	beacon_cmd.ecsa_offset =
++		cpu_to_le32(iwl_mvm_find_ie_offset(beacon->data,
++						   WLAN_EID_EXT_CHANSWITCH_ANN,
++						   beacon->len));
++
++	return iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
++						sizeof(beacon_cmd));
++}
++
++static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
++					struct ieee80211_vif *vif,
++					struct sk_buff *beacon)
++{
++	if (WARN_ON(!beacon))
++		return -EINVAL;
++
++	if (!fw_has_capa(&mvm->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD))
++		return iwl_mvm_mac_ctxt_send_beacon_v6(mvm, vif, beacon);
++
++	if (!iwl_mvm_has_new_tx_api(mvm))
++		return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
++
++	return iwl_mvm_mac_ctxt_send_beacon_v8(mvm, vif, beacon);
++}
++
+ /* The beacon template for the AP/GO/IBSS has changed and needs update */
+ int iwl_mvm_mac_ctxt_beacon_changed(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif)
 -- 
-2.11.0
+2.13.2
