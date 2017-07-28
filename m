@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:35686 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbdGGKFF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41036 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752115AbdG1O0p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 06:05:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170707095616.29450-1-emmanuel.grumbach@intel.com>
-References: <20170707095616.29450-1-emmanuel.grumbach@intel.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Fri, 7 Jul 2017 13:04:59 +0300
-Message-ID: <CANUX_P1LeizD5CT-_g=2OqLnS4uN-1riTYnxMa2dEwFezp53Fg@mail.gmail.com> (sfid-20170707_120517_844372_080BC9DF)
-Subject: Re: [PATCH] cfg80211: don't change the regulatory HT flags in custom
- regulatory flows
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "[4.0+]" <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 28 Jul 2017 10:26:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sharon Dvir <sharon.dvir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:26 +0300
+Message-Id: <20170728142337.19183-14-luca@coelho.fi> (sfid-20170728_162700_056885_09228ABA)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 13/24] iwlwifi: mvm: fix uninitialized var while waiting for queues to empty
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 7, 2017 at 12:56 PM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> When the regulatory is handled by the driver, don't
-> interact with the flags it sets.
-> iwlwifi doesn't want to use channel 40 HT40+ for example.
->
-> Cc: <stable@vger.kernel.org> [4.0+]
-> Fixes: b0d7aa59592b ("cfg80211: allow wiphy specific regdomain management")
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sharon Dvir <sharon.dvir@intel.com>
 
-I sent a v2 for this, but forgot to change the subject to PATCH v2...
-Sorry for the mess.
-In the v2, I just changed the commit log.
+While waiting for queues to empty,
+If txq_id == IWL_MVM_INVALID_QUEUE for all txq_ids,
+ret is used uninitialized.
+Found by Klocwork.
 
-> ---
->  net/wireless/reg.c | 20 ++++++++++++++++++--
->  1 file changed, 18 insertions(+), 2 deletions(-)
->
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 5fae296a6a58..29879440626e 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -4,6 +4,7 @@
->   * Copyright 2007      Johannes Berg <johannes@sipsolutions.net>
->   * Copyright 2008-2011 Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
->   * Copyright 2013-2014  Intel Mobile Communications GmbH
-> + * Copyright      2017  Intel Deutschland GmbH
->   *
->   * Permission to use, copy, modify, and/or distribute this software for any
->   * purpose with or without fee is hereby granted, provided that the above
-> @@ -1483,7 +1484,9 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
->  {
->         struct ieee80211_supported_band *sband = wiphy->bands[channel->band];
->         struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
-> +       const struct ieee80211_regdomain *regd;
->         unsigned int i;
-> +       u32 flags;
->
->         if (!is_ht40_allowed(channel)) {
->                 channel->flags |= IEEE80211_CHAN_NO_HT40;
-> @@ -1503,17 +1506,30 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
->                         channel_after = c;
->         }
->
-> +       regd = get_wiphy_regdom(wiphy);
-> +       if (regd) {
-> +               const struct ieee80211_reg_rule *reg_rule =
-> +                       freq_reg_info_regd(MHZ_TO_KHZ(channel->center_freq),
-> +                                          regd, MHZ_TO_KHZ(20));
-> +
-> +               flags = reg_rule->flags;
-> +       } else {
-> +               flags = 0;
-> +       }
-> +
->         /*
->          * Please note that this assumes target bandwidth is 20 MHz,
->          * if that ever changes we also need to change the below logic
->          * to include that as well.
->          */
-> -       if (!is_ht40_allowed(channel_before))
-> +       if (!is_ht40_allowed(channel_before) ||
-> +           flags & NL80211_RRF_NO_HT40MINUS)
->                 channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
->         else
->                 channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
->
-> -       if (!is_ht40_allowed(channel_after))
-> +       if (!is_ht40_allowed(channel_after) ||
-> +           flags & NL80211_RRF_NO_HT40PLUS)
->                 channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
->         else
->                 channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
-> --
-> 2.9.3
->
+Fixes: d6d517b7730c ("iwlwifi: add wait for tx queue empty")
+Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 4adc8fecfaef..b196acd18252 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1619,10 +1619,11 @@ static void iwl_mvm_disable_sta_queues(struct iwl_mvm *mvm,
+ int iwl_mvm_wait_sta_queues_empty(struct iwl_mvm *mvm,
+ 				  struct iwl_mvm_sta *mvm_sta)
+ {
+-	int i, ret;
++	int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(mvm_sta->tid_data); i++) {
+ 		u16 txq_id;
++		int ret;
+ 
+ 		spin_lock_bh(&mvm_sta->lock);
+ 		txq_id = mvm_sta->tid_data[i].txq_id;
+@@ -1633,10 +1634,10 @@ int iwl_mvm_wait_sta_queues_empty(struct iwl_mvm *mvm,
+ 
+ 		ret = iwl_trans_wait_txq_empty(mvm->trans, txq_id);
+ 		if (ret)
+-			break;
++			return ret;
+ 	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+-- 
+2.13.2
