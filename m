@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34416 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752359AbdG1PRp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41020 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752092AbdG1O0f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2017 11:17:45 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v4,01/10] rtlwifi: Fill in_4way field by driver
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170702181239.17911-2-Larry.Finger@lwfinger.net>
-References: <20170702181239.17911-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20170728151744.962376074A@smtp.codeaurora.org> (sfid-20170728_171749_045771_C9A46B7F)
-Date: Fri, 28 Jul 2017 15:17:44 +0000 (UTC)
+        Fri, 28 Jul 2017 10:26:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 28 Jul 2017 17:23:34 +0300
+Message-Id: <20170728142337.19183-22-luca@coelho.fi> (sfid-20170728_162639_341215_6961304C)
+In-Reply-To: <20170728142337.19183-1-luca@coelho.fi>
+References: <20170728142337.19183-1-luca@coelho.fi>
+Subject: [PATCH 21/24] iwlwifi: mvm: simplify bufferable MMPDU check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Because it isn't always correct to use EAPOL to check 4-way,
-> we add a timer to handle exception.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+There's no need to spell out the cases when we can just
+use ieee80211_is_bufferable_mmpdu().
 
-8 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-11f35c950466 rtlwifi: Fill in_4way field by driver
-6aad6075ccd5 rtlwifi: Add BT_MP_INFO to c2h handler.
-881d53ab1f43 rtlwifi: Add board type for 8723be and 8192ee
-ca0e657bda7e rtlwifi: add amplifier type for 8812ae
-66970e38e544 rtlwifi: Update 8723be new phy parameters and its parser.
-6ec9dfbc057c rtlwifi: Rename rtl_desc92_rate to rtl_desc_rate
-e7c528615e34 rtlwifi: Uses addr1 instead DA to determine broadcast and multicast addr.
-58438d9ae172 rtlwifi: move IS_HARDWARE_TYPE_xxx checker to wifi.h
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index a2e0acc23adc..b8373923cfa9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -816,9 +816,7 @@ static void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
+ 	/* treat non-bufferable MMPDUs as broadcast if sta is sleeping */
+ 	if (unlikely(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER &&
+ 		     ieee80211_is_mgmt(hdr->frame_control) &&
+-		     !ieee80211_is_deauth(hdr->frame_control) &&
+-		     !ieee80211_is_disassoc(hdr->frame_control) &&
+-		     !ieee80211_is_action(hdr->frame_control)))
++		     !ieee80211_is_bufferable_mmpdu(hdr->frame_control)))
+ 		sta = NULL;
+ 
+ 	if (sta) {
 -- 
-https://patchwork.kernel.org/patch/9821735/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.2
