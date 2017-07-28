@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31169 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751707AbdGGIuV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43260 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752217AbdG1PnT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Jul 2017 04:50:21 -0400
-Date: Fri, 7 Jul 2017 11:49:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?utf-8?B?ZnJlZW5lcmd1byjpg63lpKflhbQp?= <freenerguo@tencent.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        "security@kernel.org" <security@kernel.org>
-Subject: Re: [PATCH] brcmfmac: buffer overflow in brcmf_cfg80211_mgmt_tx()
-Message-ID: <20170707084919.aaybvtw2t6dyjgv7@mwanda> (sfid-20170707_105025_305374_6FA2F059)
-References: <88f27bfd328f4ccdb0d6b7ff7e710819@MWHPR06MB3230.namprd06.prod.outlook.com>
- <d2c78377-5608-b6c3-07d8-17dfc56a5c7e@broadcom.com>
- <CA+55aFxGacqVMDN0pETkd9Ho554wR8ACvTZhxK6p6M6CtUc_DA@mail.gmail.com>
- <871spsej2d.fsf@kamboji.qca.qualcomm.com>
+        Fri, 28 Jul 2017 11:43:19 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871spsej2d.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: rtlwifi: rtl8821ae: Fix HW_VAR_NAV_UPPER operation
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170713074323.r7rjpnp6ghrdtjgx@mwanda>
+References: <20170713074323.r7rjpnp6ghrdtjgx@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Masanari Iida <standby24x7@gmail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20170728154319.6B1E96090D@smtp.codeaurora.org> (sfid-20170728_174323_765760_FA955621)
+Date: Fri, 28 Jul 2017 15:43:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 07, 2017 at 11:40:26AM +0300, Kalle Valo wrote:
-> Linus Torvalds <torvalds@linux-foundation.org> writes:
-> 
-> > On Thu, Jul 6, 2017 at 10:11 AM, Arend van Spriel
-> > <arend.vanspriel@broadcom.com> wrote:
-> >>
-> >> Looks fine to me so ...
-> >
-> > I really think that if we can't trust 'len', then we have to check
-> > against the lower bound of DOT11_MGMT_HDR_LEN too, because otherwise
-> > we'll just have a big 16-bit number instead.
-> >
-> > And we should do that brcmf_err() that I had in my version, which also
-> > let's people know they are being attacked.
-> 
-> I hope brcmf_err() is ratelimited so that the attacker cannot spam the
-> logs too much.
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-The attacker already has CAP_NET_ADMIN here so you're probably already
-toasted.
+> The cast here is wrong.  We want to cast the pointer but we accidentally
+> do a no-op cast of the value.  We normally want to set us_nav_upper to
+> WIFI_NAV_UPPER_US (30000) but because of this bug we instead set it to
+> 184 on little endian systems and 0 on big endian ones.
+> 
+> Fixes: 3c05bedb5fef ("Staging: rtl8812ae: Add Realtek 8821 PCI WIFI driver")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+> index 2bc6bace069c..230f92a48f3c 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+> @@ -779,7 +779,7 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+>  			_rtl8821ae_resume_tx_beacon(hw);
+>  		break; }
+>  	case HW_VAR_NAV_UPPER: {
+> -		u32	us_nav_upper = ((u32)*val);
+> +		u32	us_nav_upper = *(u32 *)val;
+>  
+>  		if (us_nav_upper > HAL_92C_NAV_UPPER_UNIT * 0xFF) {
+>  			RT_TRACE(rtlpriv, COMP_INIT , DBG_WARNING,
 
-regards,
-dan carpenter
+Patch applied to wireless-drivers-next.git, thanks.
+
+d28ac7be15c7 rtlwifi: rtl8821ae: Fix HW_VAR_NAV_UPPER operation
+
+-- 
+https://patchwork.kernel.org/patch/9837847/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
