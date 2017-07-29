@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34916 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754932AbdGSVyn (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:42972 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751668AbdG2Wan (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 17:54:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <MWHPR21MB04791ED8A0F0F935176AE9B3CAA60@MWHPR21MB0479.namprd21.prod.outlook.com>
-References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
- <20170719182857.73693-5-andriy.shevchenko@linux.intel.com> <MWHPR21MB04791ED8A0F0F935176AE9B3CAA60@MWHPR21MB0479.namprd21.prod.outlook.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 20 Jul 2017 00:54:42 +0300
-Message-ID: <CAHp75VdYnKGdyy=OwHoWw5Sch9t+E7gd1tqg0YfZjiicR-Q3Jw@mail.gmail.com> (sfid-20170719_235500_884805_7593DD7E)
-Subject: Re: [PATCH v1 4/6] vmbus: Switch to use new generic UUID API
-To: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "sparmaintainer@unisys.com" <sparmaintainer@unisys.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-watchdog@vger.kernel.org" <linux-watchdog@vger.kernel.org>,
-        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 29 Jul 2017 18:30:43 -0400
+Date: Sat, 29 Jul 2017 15:30:42 -0700 (PDT)
+Message-Id: <20170729.153042.505134537790079396.davem@davemloft.net> (sfid-20170730_003057_669962_DB0FD464)
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-07-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87d18kvepm.fsf@kamboji.qca.qualcomm.com>
+References: <87h8xwvevj.fsf@kamboji.qca.qualcomm.com>
+        <87d18kvepm.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 11:18 PM, Haiyang Zhang <haiyangz@microsoft.com> wrote:
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Fri, 28 Jul 2017 14:05:59 +0000
 
->>  struct hv_fcopy_hdr {
->>       __u32 operation;
->> -     uuid_le service_id0; /* currently unused */
->> -     uuid_le service_id1; /* currently unused */
->> +     __u8 service_id0[16]; /* currently unused */
->> +     __u8 service_id1[16]; /* currently unused */
->>  } __attribute__((packed));
->
-> Even user space may not have all guid_t operations, could you still
-> put guid_t here for consistency?
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+>> Hi Dave,
+>>
+>> here's a pull request for net, more info the signed tag below. Please
+>> let me know if there are any problems.
+>>
+>> Kalle
+>>
+>> The following changes since commit d755cbc26e8295ae8e5d30425364e093b4247a85:
+>>
+>>   Merge tag 'iwlwifi-for-kalle-2017-07-21' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-07-21 14:33:27 +0300)
+>>
+>> are available in the git repository at:
+>>
+>>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-07-28
+> 
+> Argh, the subject is of course wrong and it should be:
+> 
+> pull-request: wireless-drivers 2017-07-28
 
-I'm not sure how this code has been designed, though uuid_le followed
-by guid_t are kernel internal types mistakenly put to UAPI in the
-first place.
+Yeah that makes more sense. :)
 
-Consistency here is how we treat those types in user space, starting
-from v4.13 uuid_be gone from that header. uuid_le is luckily will be
-gone soon.
+> So this pull request is for net tree to get these two brcmfmac fixes to
+> 4.13. Otherwise the pull request is correct so I don't submit a new one
+> (but let me know if you prefer that).
 
-> This file is also used by our kernel
-> mode code.
-
-It will work still the same after this change.
-
--- 
-With Best Regards,
-Andy Shevchenko
+Pulled, thanks Kalle.
