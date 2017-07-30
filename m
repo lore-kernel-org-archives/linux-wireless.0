@@ -1,240 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:33790 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S933995AbdGSTPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2017 15:15:46 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 21/34] brcmfmac: Simplify chip probe routine
-Date: Wed, 19 Jul 2017 20:08:09 +0100
-Message-Id: <20170719190822.10857-22-ian@mnementh.co.uk> (sfid-20170719_211550_244188_D0F4CD03)
-In-Reply-To: <20170719190822.10857-1-ian@mnementh.co.uk>
-References: <20170719190822.10857-1-ian@mnementh.co.uk>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58488 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754326AbdG3Rhn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 30 Jul 2017 13:37:43 -0400
+Date: Sun, 30 Jul 2017 10:37:25 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org, sparmaintainer@unisys.com,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>, devel@linuxdriverproject.org,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v1 3/6] staging: unisys: Switch to use new generic UUID
+ API
+Message-ID: <20170730173725.GA20606@kroah.com> (sfid-20170730_193751_154948_A4BA7D46)
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+ <20170719182857.73693-4-andriy.shevchenko@linux.intel.com>
+ <1501063301.29303.247.camel@linux.intel.com>
+ <20170730153224.GA31755@kroah.com>
+ <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Renamed routine in line with kernel convention.
-* Improved handling of chips that cannot autoprobe
+On Sun, Jul 30, 2017 at 08:26:48PM +0300, Andy Shevchenko wrote:
+> On Sun, Jul 30, 2017 at 6:32 PM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Wed, Jul 26, 2017 at 01:01:41PM +0300, Andy Shevchenko wrote:
+> >> On Wed, 2017-07-19 at 21:28 +0300, Andy Shevchenko wrote:
+> >> > There are new types and helpers that are supposed to be used in new
+> >> > code.
+> >> >
+> >> > As a preparation to get rid of legacy types and API functions do
+> >> > the conversion here.
+> >> >
+> >> > While here, re-indent couple of lines to increase readability.
+> >>
+> >> This looks like no user space UUID API is involved, can be routed via
+> >> either tree (uuid or staging).
+> >>
+> >> Anyone to comment?
+> >
+> > Doesn't apply to the staging tree at all :(
+> 
+> No surprises, it was cooked against uuid tree in the first place.
+> If you agree to take it through staging tree I will prepare a rebased version.
+> Does it sound good?
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 130 +++++++++++++--------
- 1 file changed, 84 insertions(+), 46 deletions(-)
+You can take it through the uuid tree if it's easier for you, but then
+someone will have to deal with the merge issues...
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 38794d7c1da8..b3b28e78c49d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -223,17 +223,6 @@ struct sbsocramregs {
- #define	ARMCR4_BSZ_MASK		0x3f
- #define	ARMCR4_BSZ_MULT		8192
- 
--
--static void brcmf_chip_sb_corerev(struct brcmf_chip *ci,
--				  struct brcmf_core *core)
--{
--	u32 regdata;
--
--	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
--
--	core->rev = SBCOREREV(regdata);
--}
--
- static bool brcmf_chip_sb_iscoreup(struct brcmf_core *core)
- {
- 	struct brcmf_chip *ci = core->chip;
-@@ -482,7 +471,7 @@ static char *brcmf_chip_name(uint chipid, char *buf, uint len)
- 	return buf;
- }
- 
--static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
-+static struct brcmf_core *__brcmf_chip_add_core(struct brcmf_chip *ci,
- 					      u16 coreid, u32 base,
- 					      u32 wrapbase)
- {
-@@ -490,7 +479,7 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
- 
- 	core = kzalloc(sizeof(*core), GFP_KERNEL);
- 	if (!core)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	core->id = coreid;
- 	core->base = base;
-@@ -502,6 +491,41 @@ static struct brcmf_core *brcmf_chip_add_core(struct brcmf_chip *ci,
- 	return core;
- }
- 
-+static struct brcmf_core *brcmf_chip_add_sb_core(struct brcmf_chip *ci,
-+					      u16 coreid, u32 base,
-+					      u32 wrapbase)
-+{
-+	struct brcmf_core *core;
-+	u32 regdata;
-+
-+	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
-+
-+	if (!core)
-+		goto out;
-+
-+	regdata = ci->ops->read32(ci->ctx, CORE_SB(core->base, sbidhigh));
-+
-+	core->rev = SBCOREREV(regdata);
-+
-+out:
-+	return core;
-+}
-+
-+static struct brcmf_core *brcmf_chip_add_axi_core(struct brcmf_chip *ci,
-+					      u16 coreid, u32 base,
-+					      u32 wrapbase, u8 rev)
-+{
-+	struct brcmf_core *core;
-+
-+	core = __brcmf_chip_add_core(ci, coreid, base, wrapbase);
-+
-+	if (core)
-+		core->rev = rev;
-+
-+	return core;
-+}
-+
-+
- /* safety check for chipinfo */
- static int brcmf_chip_cores_check(struct brcmf_chip *ci)
- {
-@@ -900,19 +924,42 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip *ci)
- 			continue;
- 
- 		/* finally a core to be added */
--		core = brcmf_chip_add_core(ci, id, base, wrap);
--		if (IS_ERR(core))
--			return PTR_ERR(core);
--
--		core->rev = rev;
-+		core = brcmf_chip_add_axi_core(ci, id, base, wrap, rev);
-+		if (!core)
-+			return -ENOMEM; //FIXME - and cleanup the allocated cores?
- 	}
- 
- 	return 0;
- }
- 
--static int brcmf_chip_recognition(struct brcmf_chip *ci)
-+struct brcmf_chip_desc {
-+	u16 id;
-+	u32 base;
-+};
-+
-+static struct brcmf_chip_desc brcmf_4329[] = {
-+	{ BCMA_CORE_CHIPCOMMON,   SI_ENUM_BASE },
-+	{ BCMA_CORE_SDIO_DEV,     BCM4329_CORE_BUS_BASE },
-+	{ BCMA_CORE_INTERNAL_MEM, BCM4329_CORE_SOCRAM_BASE },
-+	{ BCMA_CORE_ARM_CM3,      BCM4329_CORE_ARM_BASE },
-+	{ BCMA_CORE_80211,        0x18001000 },
-+	{ 0 , 0},
-+};
-+
-+static int brcmf_chip_add_static(struct brcmf_chip *ci,
-+				struct brcmf_chip_desc *desc)
-+{
-+	for ( ; desc->id ; desc++ )
-+		brcmf_chip_add_sb_core(ci, desc->id, desc->base, 0);
-+
-+	//FIXME: cleanup if we fail to add a core?
-+
-+	return 0;
-+}
-+
-+
-+static int brcmf_chip_probe(struct brcmf_chip *ci)
- {
--	struct brcmf_core *core;
- 	u32 regdata;
- 	u32 socitype;
- 	int ret;
-@@ -920,11 +967,13 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 	/* Get CC core rev
- 	 * Chipid is assume to be at offset 0 from SI_ENUM_BASE
- 	 * For different chiptypes or old sdio hosts w/o chipcommon,
--	 * other ways of recognition should be added here.
-+	 * other ways of to probe should be added here.
- 	 */
- 	regdata = ci->ops->read32(ci->ctx, CORE_CC_REG(SI_ENUM_BASE, chipid));
-+
- 	ci->chip = regdata & CID_ID_MASK;
- 	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
-+
- 	socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
- 
- 	brcmf_chip_name(ci->chip, ci->name, sizeof(ci->name));
-@@ -936,43 +985,32 @@ static int brcmf_chip_recognition(struct brcmf_chip *ci)
- 	switch(socitype) {
- 		case SOCI_SB:
- 
--		if (ci->chip != BRCM_CC_4329_CHIP_ID) {
--			brcmf_err("SB chip is not supported\n");
--			return -ENODEV;
-+		switch(ci->chip) {
-+			case BRCM_CC_4329_CHIP_ID:
-+				ret = brcmf_chip_add_static(ci, brcmf_4329);
-+				break;
-+			default:
-+				brcmf_err("SB chip is not supported\n");
-+				return -ENODEV;
- 		}
- 
-+		if(!ret)
-+			return -ENODEV;
-+
- 		ci->iscoreup = brcmf_chip_sb_iscoreup;
- 		ci->coredisable = brcmf_chip_sb_coredisable;
- 		ci->resetcore = brcmf_chip_sb_resetcore;
- 
--		core = brcmf_chip_add_core(ci, BCMA_CORE_CHIPCOMMON,
--					   SI_ENUM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_SDIO_DEV,
--					   BCM4329_CORE_BUS_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_INTERNAL_MEM,
--					   BCM4329_CORE_SOCRAM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_ARM_CM3,
--					   BCM4329_CORE_ARM_BASE, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
--		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
--		brcmf_chip_sb_corerev(ci, core);
--
- 		break;
- 	case SOCI_AXI:
- 
-+		if (brcmf_chip_dmp_erom_scan(ci))
-+			return -ENODEV;
-+
- 		ci->iscoreup = brcmf_chip_ai_iscoreup;
- 		ci->coredisable = brcmf_chip_ai_coredisable;
- 		ci->resetcore = brcmf_chip_ai_resetcore;
- 
--		brcmf_chip_dmp_erom_scan(ci);
--
- 		break;
- 	default:
- 		brcmf_err("chip backplane type %u is not supported\n",
-@@ -1093,7 +1131,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	if (err < 0)
- 		goto fail;
- 
--	err = brcmf_chip_recognition(chip);
-+	err = brcmf_chip_probe(chip);
- 	if (err < 0)
- 		goto fail;
- 
--- 
-2.11.0
+If it's easier, I can take it to prevent the merge problems.
+
+thanks,
+
+greg k-h
