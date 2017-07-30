@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:35171 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750896AbdGFOwq (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:34161 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751065AbdG3ICe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Jul 2017 10:52:46 -0400
-Received: by mail-qk0-f173.google.com with SMTP id 16so4239075qkg.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jul 2017 07:52:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87tw302caj.fsf@purkki.adurom.net>
-References: <1497624881-2315-1-git-send-email-amit.karwar@redpinesignals.com>
- <1497624881-2315-8-git-send-email-amit.karwar@redpinesignals.com> <87tw302caj.fsf@purkki.adurom.net>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Thu, 6 Jul 2017 20:22:44 +0530
-Message-ID: <CAEhWJFmFNXAN6gUfFzst9-TUL_U7uR1ieG4ZqMzzQF=87E-qEg@mail.gmail.com> (sfid-20170706_165249_209514_9A083FD3)
-Subject: Re: [v2 07/20] rsi: correct the logic of deriving queue number
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 30 Jul 2017 04:02:34 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Malcolm Priestley <tvboxspy@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH][BUG] rtlwifi: rtl_pci_probe: Fix fail path of _rtl_pci_find_adapter
+Date: Sun, 30 Jul 2017 09:02:19 +0100
+Message-Id: <20170730080219.5925-1-tvboxspy@gmail.com> (sfid-20170730_100252_890989_C0BED9CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 12:02 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> Maximum valid queue number is 0x5. So anding with 0x7 should be
->> ok here.
->>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> The separate From header is missing which you had in v1.
+_rtl_pci_find_adapter fail path will jump to label fail3 for
+unsupported adapter types.
 
-Thanks. This is corrected in v3.
+However, on course for fail3 there will be call rtl_deinit_core
+before rtl_init_core.
 
-Regards,
-Amitkumar
+For the inclusion of checking pci_iounmap this fail can be moved to
+fail2.
+
+Fixes
+[    4.492963] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[    4.493067] IP: rtl_deinit_core+0x31/0x90 [rtlwifi]
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org>
+---
+Although this is the first time I have encounted this bug in 4.13-rc1
+there are some historical references so I have included stable.
+
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 032b6317690d..08dc8919ef60 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -2257,7 +2257,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	/* find adapter */
+ 	if (!_rtl_pci_find_adapter(pdev, hw)) {
+ 		err = -ENODEV;
+-		goto fail3;
++		goto fail2;
+ 	}
+ 
+ 	/* Init IO handler */
+@@ -2318,10 +2318,10 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	pci_set_drvdata(pdev, NULL);
+ 	rtl_deinit_core(hw);
+ 
++fail2:
+ 	if (rtlpriv->io.pci_mem_start != 0)
+ 		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
+ 
+-fail2:
+ 	pci_release_regions(pdev);
+ 	complete(&rtlpriv->firmware_loading_complete);
+ 
+-- 
+2.11.0
