@@ -1,102 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43578 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750837AbdGWHJA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Jul 2017 03:09:00 -0400
-Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>
-Cc: russianneuromancer <russianneuromancer@ya.ru>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
- <03779c4f-b48b-444f-59c5-e10324dc77bd@mnementh.co.uk>
- <04f1050f-966e-b0c8-7714-ee5065ba69cf@mnementh.co.uk>
- <9e616361-da87-6f46-8ee3-4a4f673c3c80@broadcom.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <d6c43415-186d-ea1d-c1da-f68020267508@redhat.com> (sfid-20170723_091105_089055_D726F121)
-Date: Sun, 23 Jul 2017 09:08:57 +0200
-MIME-Version: 1.0
-In-Reply-To: <9e616361-da87-6f46-8ee3-4a4f673c3c80@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34179 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751446AbdGaNHe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jul 2017 09:07:34 -0400
+Received: by mail-pf0-f195.google.com with SMTP id t86so4168372pfe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 06:07:34 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 1/2] mwifiex: make addba request command clean
+Date: Mon, 31 Jul 2017 13:07:26 +0000
+Message-Id: <1501506447-31851-1-git-send-email-huxinming820@gmail.com> (sfid-20170731_150737_728482_DE2520CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Xinming Hu <huxm@marvell.com>
 
-On 22-07-17 21:53, Arend van Spriel wrote:
-> On 22-07-17 21:19, Ian Molton wrote:
->> On 22/07/17 20:18, Ian Molton wrote:
->>> On 22/07/17 19:43, Hans de Goede wrote:
->>>> Hi,
->>>>
->>>> When upgrading my devel environment to 4.13-rc1+ I noticed that
->>>> the brcm43430 sdio wifi on a Chuwi Hi8 plus stopped working:
->>>
->>> There is a fix for this:
->>>
->>> https://patchwork.kernel.org/patch/9836383/
->>
->> Sorry, ignore me - this was a fix for the other 4.13-rc1 regression.
->> Arend is looking into he other one. It affects me too.
->>
->> It appears to be the firmware going astray.
-> 
-> It is still an enigma although admittedly I did not put much time in it
-> this week. The change below fixes it as the device goes haywire from
-> this command. At least this was reported by Stefan Wahren ("brcmfmac:
-> BCM43431 won't get probed on Raspberry Pi Zero W") on linux-wireless
-> mailing list. Still I can not explain it. Could be that there is not
-> enough free memory on the device.
+uninitilized variable, such as .add_req_result might be magic stack
+value. Initialize the structure to make it clean.
 
-As mentioned in my original mail, switching firmware version seems to
-fix this. linux-firmware has:
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/11n.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-[hans@shalem ~]$ strings brcm-firmware/brcmfmac43430-sdio.bin.7.45.41.26.ucode1043.2060 | tail -n1
-43430a1-roml/sdio-g-p2p-pool-pno-pktfilter-keepalive-aoe-mchan-tdls-proptxstatus-ampduhostreorder-lpc-sr-bcmcps Version: 7.45.41.26 CRC: a75d4f1b Date: Mon 2016-08-29 20:53:22 CEST Ucode Ver: 1043.2060 FWID: 01-4527cfab
-
-Where as this one (from the android image on the tablet) does work:
-
-[hans@shalem ~]$ strings brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054 | tail -n1
-43430a1-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-ampduhostreorder-lpc-wl11u-rcc-fmc-wepso-okc-anqpo-11nprop-ndoe-tdls-hs20sta-clm_4335_ss-hwapwar-ivwar-srfast Version: 7.45.77.0 CRC: c1a399d4 Date: Wed 2016-03-30 11:31:45 CST Ucode Ver: 1043.2054 FWID: 01-ee8a6268
-
-Here: https://www.spinics.net/lists/linux-wireless/msg164304.html
-you write that the firmware in linux-firmware does not have the
-gscan feature, the check for which is causing the issue, enabled,
-could it be the other firmware build does have it enabled? It does seem
-to have a bunch of extra things enabled. Maybe there simply is an error
-in the error-handling in the firmware when it is disabled ?
-
-I've put all firmware versions I have here:
-
-http://jwrdegoede.danny.cz/brcm-firmware/
-
-Regards,
-
-Hans
-
-
-
-> 
-> Regards,
-> Arend
-> ---
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> index d21258d..def120c 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> @@ -159,8 +159,9 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
-> 
->          brcmf_feat_firmware_capabilities(ifp);
->          memset(&gscan_cfg, 0, sizeof(gscan_cfg));
-> -       brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
-> -                                 &gscan_cfg, sizeof(gscan_cfg));
-> +       if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID)
-> +               brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
-> "pfn_gscan_cfg",
-> +                                         &gscan_cfg, sizeof(gscan_cfg));
->          brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
->          if (drvr->bus_if->wowl_supported)
->                  brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
-> 
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index 16c77c2..7252069 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -572,6 +572,8 @@ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
+ 
+ 	mwifiex_dbg(priv->adapter, CMD, "cmd: %s: tid %d\n", __func__, tid);
+ 
++	memset(&add_ba_req, 0, sizeof(add_ba_req));
++
+ 	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
+ 	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
+ 	    priv->adapter->is_hw_11ac_capable &&
+-- 
+1.9.1
