@@ -1,78 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:34326 "EHLO
-        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751178AbdGQJN0 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35356 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751446AbdGaNHh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 05:13:26 -0400
-Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
-        by mx08-00252a01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6H9DFnm031811
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 10:13:25 +0100
-Received: from mail-wr0-f200.google.com (mail-wr0-f200.google.com [209.85.128.200])
-        by mx08-00252a01.pphosted.com with ESMTP id 2bq7heh1uy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 10:13:25 +0100
-Received: by mail-wr0-f200.google.com with SMTP id u89so5809597wrc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2017 02:13:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
-References: <20170716112129.10206-1-ian@mnementh.co.uk> <CACna6rxQNqdpuiq2mF3EJQ694AHa74tVex06vp53kqjrwoNkog@mail.gmail.com>
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Mon, 17 Jul 2017 10:13:23 +0100
-Message-ID: <CAE_XsMLVjT1kGmQBciADQwHKS+AgytzxePyQrYnGQQqanFj9jw@mail.gmail.com> (sfid-20170717_111331_648953_EF724764)
-Subject: Re: RFC: Broadcom fmac wireless driver cleanup
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Ian Molton <ian@mnementh.co.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 31 Jul 2017 09:07:37 -0400
+Received: by mail-pf0-f195.google.com with SMTP id q85so26148064pfq.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 06:07:37 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 2/2] mwifiex: pcie: compatible with wifi-only image while extract wifi-part fw
+Date: Mon, 31 Jul 2017 13:07:27 +0000
+Message-Id: <1501506447-31851-2-git-send-email-huxinming820@gmail.com> (sfid-20170731_150740_617177_7ACE065B)
+In-Reply-To: <1501506447-31851-1-git-send-email-huxinming820@gmail.com>
+References: <1501506447-31851-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 July 2017 at 05:53, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
-> On 16 July 2017 at 13:21, Ian Molton <ian@mnementh.co.uk> wrote:
->> I've been doing some cleanups in the broadcome brcmfmac driver, trying t=
-o
->> understand how it works.
->>
->> I think this makes the driver a *lot* more readable.
->>
->> Of note:
->>
->> * Gets rid of the arbitrary and completely 1:1 mapping of
->>  struct brcmf_{core,chip}_priv/struct brcmf_{core,chip} structures
->>  which add unreadability whilst offering no real seperation.
->>
->> * The patch titled HACK - stabilise the value of ->sbwad in use
->>  highlights an issue that is either bizarre undocumented behaviour or a
->>  genuine bug - without datasheets, I dont know. Essentially the value of=
- sbwad
->>  is taken as the base address in several functions, even though it is su=
-bject
->>  to change should other IO occur that moves the window offset
->>
->> Obviously this is a first cut at this and needs substantial cleanup itse=
-lf,
->> however I wanted to get some idea of wether I should continue working on=
- this.
->
-> I looked at 4 random patches and none got any description. Not to
-> mention their chaotic subjects. In this state I can't even review it.
-> If you want to have some change accepted, you've to convince us it's
-> needed. Work on cleaning your patches and resend them. You also need
-> to signed off your changes.
->
-> --
-> Rafa=C5=82
+From: Xinming Hu <huxm@marvell.com>
 
-As someone who is interested in any bug fixes to this driver (Device
-is used on Raspberry Pi3/0W and we have a number of issues reported
-which we are actively investigating), it would be very useful to more
-clearly split out any actual fixes vs simply tidying up (Yes, I agree
-the driver is mostly incomprehensible). Perhaps asking the
-list/maintainers for comments on any located issues/bugs fixes would
-be a useful starting point, along with ensuring the description gives
-a good explanation of what the suspect issue is.
+Sometimes, we might using wifi-only firmware with a combo firmware name,
+in this case, do not need to filter bluetooth part from header.
 
-James
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 26 +++++++++++++++++++-------
+ 1 file changed, 19 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 3da1eeb..dc4e054 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1985,7 +1985,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+  * (3) wifi image.
+  *
+  * This function bypass the header and bluetooth part, return
+- * the offset of tail wifi-only part.
++ * the offset of tail wifi-only part. if the image is already wifi-only,
++ * that is start with CMD1, return 0.
+  */
+ 
+ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
+@@ -1993,7 +1994,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
+ 	const struct mwifiex_fw_data *fwdata;
+ 	u32 offset = 0, data_len, dnld_cmd;
+ 	int ret = 0;
+-	bool cmd7_before = false;
++	bool cmd7_before = false, first_cmd = false;
+ 
+ 	while (1) {
+ 		/* Check for integer and buffer overflow */
+@@ -2014,20 +2015,29 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
+ 
+ 		switch (dnld_cmd) {
+ 		case MWIFIEX_FW_DNLD_CMD_1:
+-			if (!cmd7_before) {
+-				mwifiex_dbg(adapter, ERROR,
+-					    "no cmd7 before cmd1!\n");
++			if (offset + data_len < data_len) {
++				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
+ 				ret = -1;
+ 				goto done;
+ 			}
+-			if (offset + data_len < data_len) {
+-				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
++
++			/* Image start with cmd1, already wifi-only firmware*/
++			if (!first_cmd) {
++				mwifiex_dbg(adapter, MSG,
++					    "input wifi-only firmware\n");
++				return 0;
++			}
++
++			if (!cmd7_before) {
++				mwifiex_dbg(adapter, ERROR,
++					    "no cmd7 before cmd1!\n");
+ 				ret = -1;
+ 				goto done;
+ 			}
+ 			offset += data_len;
+ 			break;
+ 		case MWIFIEX_FW_DNLD_CMD_5:
++			first_cmd = true;
+ 			/* Check for integer overflow */
+ 			if (offset + data_len < data_len) {
+ 				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
+@@ -2037,6 +2047,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
+ 			offset += data_len;
+ 			break;
+ 		case MWIFIEX_FW_DNLD_CMD_6:
++			first_cmd = true;
+ 			/* Check for integer overflow */
+ 			if (offset + data_len < data_len) {
+ 				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
+@@ -2053,6 +2064,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
+ 			}
+ 			goto done;
+ 		case MWIFIEX_FW_DNLD_CMD_7:
++			first_cmd = true;
+ 			cmd7_before = true;
+ 			break;
+ 		default:
+-- 
+1.9.1
