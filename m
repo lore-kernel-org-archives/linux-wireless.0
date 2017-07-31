@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33061 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751417AbdGQSKT (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:35818 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752327AbdGaM7T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 14:10:19 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 04/11] rtlwifi: rtl8723ae: constify pci_device_id.
-Date: Mon, 17 Jul 2017 23:39:52 +0530
-Message-Id: <1500314995-3181-5-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201046_997351_371D864E)
-In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Mon, 31 Jul 2017 08:59:19 -0400
+Date: Mon, 31 Jul 2017 13:59:02 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: AP mode with Broadcom 4330
+Message-ID: <20170731125902.GW31807@n2100.armlinux.org.uk> (sfid-20170731_145926_849328_F426D0CB)
+References: <20170728141503.GU31807@n2100.armlinux.org.uk>
+ <20170728174930.GA3313@n2100.armlinux.org.uk>
+ <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+On Fri, Jul 28, 2017 at 09:50:21PM +0200, Arend van Spriel wrote:
+> I was going to agree with you, but having second thoughts. There are
+> actually two use-cases that need to be handled properly. The regular AP
+> case and the MBSS case. In case of MBSS the initial AP interface will
+> have mbss set to false and subsequent AP interfaces will have mbss set
+> to true, but in firmware this has to be configured inverted. That is
+> what the code above is doing. However, this indeed breaks the regular AP
+> case for firmwares that abuse that setting for testing purposes (no idea
+> why that is in a released firmware).
 
-File size before:
-   text	   data	    bss	    dec	    hex	filename
-   2775	    912	      0	   3687	    e67	realtek/rtlwifi/rtl8723ae/sw.o
+Maybe detect the BCRM_TEST_SSID string in the firmware file (as it's
+broken up amongst other data, it's not trivial) and disable mbss for
+such firmware?  Alternatively, maybe blacklist mbss for some firmware
+versions?
 
-File size After adding 'const':
-   text	   data	    bss	    dec	    hex	filename
-   2839	    848	      0	   3687	    e67	realtek/rtlwifi/rtl8723ae/sw.o
+Do the firmware versions that include this "abuse" actually have
+functional mbss?
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+There's also the obvious question: which firmware is recommended for
+the 4330?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 7bf9f25..87dc271 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -367,7 +367,7 @@ static const struct rtl_hal_cfg rtl8723e_hal_cfg = {
- 	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
- };
- 
--static struct pci_device_id rtl8723e_pci_ids[] = {
-+static const struct pci_device_id rtl8723e_pci_ids[] = {
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8723, rtl8723e_hal_cfg)},
- 	{},
- };
 -- 
-2.7.4
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
