@@ -1,147 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:47956 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751291AbdGQQoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:44:13 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 16/29] brcmfmac: Cleanup offsetof()
-Date: Mon, 17 Jul 2017 17:16:24 +0100
-Message-Id: <20170717161637.4652-17-ian@mnementh.co.uk> (sfid-20170717_184416_422380_40C7E9E6)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37826 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752555AbdGaQcs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:32:48 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 06/10] wil6210: add statistics for suspend time
+Date: Mon, 31 Jul 2017 19:32:29 +0300
+Message-Id: <1501518753-6339-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183251_830569_8FF4E882)
+In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a macro to make the code a bit more readable, whilst we're stuck
-with using struct element offsets as register offsets.
+Add statistics for total, min and max suspend time, that
+calculates the time the 11ad device was in suspend.
+Those statistics will help to estimate the power impact
+of d3hot feature.
 
-
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 35 +++++++++-------------
- 1 file changed, 14 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
+ drivers/net/wireless/ath/wil6210/main.c    |  2 ++
+ drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
+ 4 files changed, 40 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 152905e985d2..6b8583c37b92 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -161,6 +161,8 @@ struct rte_console {
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 8a0e64c..97d79a9 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1669,6 +1669,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
  
- #define CORE_BUS_REG(base, field) \
- 		(base + offsetof(struct sdpcmd_regs, field))
-+#define __sd_reg(field) \
-+		(offsetof(struct sdpcmd_regs, field))
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
++	wil->suspend_stats.min_suspend_time = ULONG_MAX;
++	wil->suspend_stats.collection_start = ktime_get();
  
- /* SDIO function 1 register CHIPCLKCSR */
- /* Force ALP request to backplane */
-@@ -1078,12 +1080,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	brcmf_dbg(SDIO, "Enter\n");
+ 	return len;
+ }
+@@ -1680,18 +1682,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	static char text[400];
+ 	int n;
++	unsigned long long stats_collection_time =
++		ktime_to_us(ktime_sub(ktime_get(),
++				      wil->suspend_stats.collection_start));
  
- 	/* Read mailbox data and ack that we did so */
--	ret = r_sdreg32(bus, &hmb_data,
--			offsetof(struct sdpcmd_regs, tohostmailboxdata));
-+	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
+ 	n = snprintf(text, sizeof(text),
+ 		     "Suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n",
++		     "rejected by host:%ld rejected by device:%ld\n"
++		     "total suspend time:%lld min suspend time:%lld\n"
++		     "max suspend time:%lld stats collection time: %lld\n",
+ 		     wil->suspend_stats.successful_suspends,
+ 		     wil->suspend_stats.failed_suspends,
+ 		     wil->suspend_stats.successful_resumes,
+ 		     wil->suspend_stats.failed_resumes,
+ 		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device);
++		     wil->suspend_stats.rejected_by_device,
++		     wil->suspend_stats.total_suspend_time,
++		     wil->suspend_stats.min_suspend_time,
++		     wil->suspend_stats.max_suspend_time,
++		     stats_collection_time);
  
- 	if (ret == 0)
--		w_sdreg32(bus, SMB_INT_ACK,
--			  offsetof(struct sdpcmd_regs, tosbmailbox));
-+		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
+ 	n = min_t(int, n, sizeof(text));
  
- 	/* Dongle recomposed rx frames, accept them again */
-@@ -1190,8 +1190,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+@@ -1864,6 +1875,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
  
- 	if (rtx) {
- 		bus->sdcnt.rxrtx++;
--		err = w_sdreg32(bus, SMB_NAK,
--				offsetof(struct sdpcmd_regs, tosbmailbox));
-+		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
  
- 		bus->sdcnt.f1regdata++;
- 		if (err == 0)
-@@ -2315,9 +2314,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (!bus->intr) {
- 			/* Check device status, signal pending interrupt */
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = r_sdreg32(bus, &intstatus,
--					offsetof(struct sdpcmd_regs,
--						 intstatus));
-+			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
-@@ -2423,7 +2420,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		brcmf_sdio_bus_sleep(bus, false, false);
++	wil->suspend_stats.collection_start = ktime_get();
++
+ 	return 0;
+ }
  
- 		/* Disable and clear interrupts at the chip level also */
--		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, 0, __sd_reg(hostintmask));
- 		local_hostintmask = bus->hostintmask;
- 		bus->hostintmask = 0;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index daf944a..8968c2c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
  
-@@ -2442,8 +2439,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+ 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
++	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
++	wil->suspend_stats.min_suspend_time = ULONG_MAX;
  
- 		/* Clear any pending interrupts now that F2 is disabled */
--		w_sdreg32(bus, local_hostintmask,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
+ 	return 0;
  
- 		sdio_release_host(sdiodev->func[1]);
- 	}
-@@ -2489,7 +2485,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	int ret;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 976c9aa..4a18f8e 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -321,6 +321,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
+ 	wil_dbg_pm(wil, "suspend: %s => %d\n",
+ 		   is_runtime ? "runtime" : "system", rc);
  
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
--	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-+	addr = buscore->base + __sd_reg(intstatus);
++	if (!rc)
++		wil->suspend_stats.suspend_start_time = ktime_get();
++
+ 	return rc;
+ }
  
- 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
-@@ -2564,11 +2560,9 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
+@@ -330,6 +333,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 	bool keep_radio_on = ndev->flags & IFF_UP &&
+ 			     wil->keep_radio_on_during_sleep;
++	unsigned long long suspend_time_usec = 0;
  
--		err = r_sdreg32(bus, &newstatus,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
- 		bus->sdcnt.f1regdata += 2;
- 		atomic_set(&bus->fcstate,
- 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-@@ -3748,7 +3742,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
  
- 	/* clear all interrupts */
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
--	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
-+	reg_addr = core->base + __sd_reg(intstatus);
- 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
+@@ -347,9 +351,21 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
+ 	else
+ 		rc = wil_resume_radio_off(wil);
  
- 	if (rstvec)
-@@ -4023,7 +4017,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
++	if (rc)
++		goto out;
++
++	suspend_time_usec =
++		ktime_to_us(ktime_sub(ktime_get(),
++				      wil->suspend_stats.suspend_start_time));
++	wil->suspend_stats.total_suspend_time += suspend_time_usec;
++	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
++		wil->suspend_stats.min_suspend_time = suspend_time_usec;
++	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
++		wil->suspend_stats.max_suspend_time = suspend_time_usec;
++
+ out:
+-	wil_dbg_pm(wil, "resume: %s => %d\n",
+-		   is_runtime ? "runtime" : "system", rc);
++	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
++		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
+ 	return rc;
+ }
  
- 	/* Enable function 2 (frame transfers) */
- 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
--		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
-+		  __sd_reg(tosbmailboxdata));
- 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 69103b0..f1488299 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -90,6 +90,11 @@ struct wil_suspend_stats {
+ 	unsigned long failed_resumes;
+ 	unsigned long rejected_by_device;
+ 	unsigned long rejected_by_host;
++	unsigned long long total_suspend_time;
++	unsigned long long min_suspend_time;
++	unsigned long long max_suspend_time;
++	ktime_t collection_start;
++	ktime_t suspend_start_time;
+ };
  
- 
-@@ -4033,8 +4027,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		w_sdreg32(bus, bus->hostintmask,
--			  offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
- 
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
+ /* Calculate MAC buffer size for the firmware. It includes all overhead,
 -- 
-2.11.0
+1.9.1
