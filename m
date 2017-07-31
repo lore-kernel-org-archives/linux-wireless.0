@@ -1,239 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:38841 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750793AbdGUEY4 (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33518 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbdGaJth (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 00:24:56 -0400
-Received: by mail-oi0-f68.google.com with SMTP id p188so3925884oia.5
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 21:24:56 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/10] rtlwifi: Use mutex to replace spin_lock in cases of IPS and LPS
-Date: Thu, 20 Jul 2017 23:24:38 -0500
-Message-Id: <20170721042440.15839-9-Larry.Finger@lwfinger.net> (sfid-20170721_062512_550197_C20E66B8)
-In-Reply-To: <20170721042440.15839-1-Larry.Finger@lwfinger.net>
-References: <20170721042440.15839-1-Larry.Finger@lwfinger.net>
+        Mon, 31 Jul 2017 05:49:37 -0400
+Received: by mail-pg0-f67.google.com with SMTP id u185so7756101pgb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 02:49:36 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [v2 PATCH] mwifiex: correct IE parse during association
+Date: Mon, 31 Jul 2017 09:49:24 +0000
+Message-Id: <1501494564-31012-1-git-send-email-huxinming820@gmail.com> (sfid-20170731_114941_057355_D62F81D5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Xinming Hu <huxm@marvell.com>
 
-Enter/leavel IPS and LPS are large critical section, and they can't use sleep
-function because running in atomic-context, which own a spin_lock.
-In commit 460884ad ("rtlwifi: Fix enter/exit power_save"), it moves LPS
-functions to thread-context, so this commit can simply change LPS's spin lock
-to mutex.
+It is observed that some IEs get missed during association.
+This patch correct the old IE parse code. sme->ie will be
+store as wpa ie, wps ie, wapi ie and gen ie accordingly.
 
-Considering IPS functions, rtl_ips_nic_on() may be called by TX tasklet
-(softirq-context) that check whether packet is auth frame. Fortunately,
-current mac80211 will ask driver to leave IPS using op_config with changed flag
-IEEE80211_CONF_CHANGE_IDLE, before issuing auth frame, so IPS functions can run
-in thread-context and use mutex to protect critical section, too.
-In addition to above conversion, this commit removes some useless spin locks.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c |  6 ++----
- drivers/net/wireless/realtek/rtlwifi/ps.c   | 24 ++++++++++--------------
- drivers/net/wireless/realtek/rtlwifi/usb.c  |  1 -
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 10 ++--------
- 4 files changed, 14 insertions(+), 27 deletions(-)
+v2: refactor code to avoid ugly intent (Kalle)
+---
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 115 +++++++++++------------
+ 1 file changed, 55 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index c145cfe27216..d933392dfc04 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -552,7 +552,8 @@ int rtl_init_core(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 43ecd62..a6077ab 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -811,8 +811,8 @@ int mwifiex_drv_set_power(struct mwifiex_private *priv, u32 *ps_mode)
+  * is checked to determine WPA version. If buffer length is zero, the existing
+  * WPA IE is reset.
+  */
+-static int mwifiex_set_wpa_ie_helper(struct mwifiex_private *priv,
+-				     u8 *ie_data_ptr, u16 ie_len)
++static int mwifiex_set_wpa_ie(struct mwifiex_private *priv,
++			      u8 *ie_data_ptr, u16 ie_len)
+ {
+ 	if (ie_len) {
+ 		if (ie_len > sizeof(priv->wpa_ie)) {
+@@ -1351,101 +1351,96 @@ static int mwifiex_reg_mem_ioctl_reg_rw(struct mwifiex_private *priv,
+ mwifiex_set_gen_ie_helper(struct mwifiex_private *priv, u8 *ie_data_ptr,
+ 			  u16 ie_len)
+ {
+-	int ret = 0;
+ 	struct ieee_types_vendor_header *pvendor_ie;
+ 	const u8 wpa_oui[] = { 0x00, 0x50, 0xf2, 0x01 };
+ 	const u8 wps_oui[] = { 0x00, 0x50, 0xf2, 0x04 };
+-	u16 unparsed_len = ie_len;
+-	int find_wpa_ie = 0;
++	u16 unparsed_len = ie_len, cur_ie_len;
  
- 	/* <4> locks */
- 	mutex_init(&rtlpriv->locks.conf_mutex);
--	spin_lock_init(&rtlpriv->locks.ips_lock);
-+	mutex_init(&rtlpriv->locks.ips_mutex);
-+	mutex_init(&rtlpriv->locks.lps_mutex);
- 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
- 	spin_lock_init(&rtlpriv->locks.h2c_lock);
- 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
-@@ -562,9 +563,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	spin_lock_init(&rtlpriv->locks.c2hcmd_lock);
- 	spin_lock_init(&rtlpriv->locks.scan_list_lock);
- 	spin_lock_init(&rtlpriv->locks.cck_and_rw_pagea_lock);
--	spin_lock_init(&rtlpriv->locks.check_sendpkt_lock);
- 	spin_lock_init(&rtlpriv->locks.fw_ps_lock);
--	spin_lock_init(&rtlpriv->locks.lps_lock);
- 	spin_lock_init(&rtlpriv->locks.iqk_lock);
- 	/* <5> init list */
- 	INIT_LIST_HEAD(&rtlpriv->entry_list);
-@@ -1230,7 +1229,6 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
--		rtl_ips_nic_on(hw);
- 
- 		mac->link_state = MAC80211_LINKING;
- 		/* Dul mac */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index c64544158516..972ed58f20d6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -289,7 +289,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 
- 	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
- 
--	spin_lock(&rtlpriv->locks.ips_lock);
-+	mutex_lock(&rtlpriv->locks.ips_mutex);
- 	if (ppsc->inactiveps) {
- 		rtstate = ppsc->rfpwr_state;
- 
-@@ -308,7 +308,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 									ppsc->inactive_pwrstate);
- 		}
- 	}
--	spin_unlock(&rtlpriv->locks.ips_lock);
-+	mutex_unlock(&rtlpriv->locks.ips_mutex);
- }
- EXPORT_SYMBOL_GPL(rtl_ips_nic_on);
- 
-@@ -417,7 +417,6 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	unsigned long flag;
- 
- 	if (!ppsc->fwctrl_lps)
- 		return;
-@@ -438,7 +437,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 	if (mac->link_state != MAC80211_LINKED)
- 		return;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 
- 	/* Don't need to check (ppsc->dot11_psmode == EACTIVE), because
- 	 * bt_ccoexist may ask to enter lps.
-@@ -448,7 +447,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 		 "Enter 802.11 power save mode...\n");
- 	rtl_lps_set_psmode(hw, EAUTOPS);
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- /* Interrupt safe routine to leave the leisure power save mode.*/
-@@ -457,9 +456,8 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	unsigned long flag;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 
- 	if (ppsc->fwctrl_lps) {
- 		if (ppsc->dot11_psmode != EACTIVE) {
-@@ -480,7 +478,7 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
- 			rtl_lps_set_psmode(hw, EACTIVE);
- 		}
- 	}
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- /* For sw LPS*/
-@@ -570,7 +568,6 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
--	unsigned long flag;
- 
- 	if (!rtlpriv->psc.swctrl_lps)
- 		return;
-@@ -583,9 +580,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
- 	}
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- void rtl_swlps_rfon_wq_callback(void *data)
-@@ -602,7 +599,6 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	unsigned long flag;
- 	u8 sleep_intv;
- 
- 	if (!rtlpriv->psc.sw_ps_enabled)
-@@ -626,9 +622,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	}
- 	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- 
- 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
- 	    !RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 5590d07d0918..7a1cb69b6ec8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -967,7 +967,6 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
- 	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
--		rtl_ips_nic_on(hw);
- 	}
- 
- 	if (rtlpriv->psc.sw_ps_enabled) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 597f12025e6b..6c261b16a17d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2336,17 +2336,14 @@ struct rtl_hal_cfg {
- struct rtl_locks {
- 	/* mutex */
- 	struct mutex conf_mutex;
--	struct mutex ps_mutex;
-+	struct mutex ips_mutex;	/* mutex for enter/leave IPS */
-+	struct mutex lps_mutex;	/* mutex for enter/leave LPS */
- 
- 	/*spin lock */
--	spinlock_t ips_lock;
- 	spinlock_t irq_th_lock;
--	spinlock_t irq_pci_lock;
--	spinlock_t tx_lock;
- 	spinlock_t h2c_lock;
- 	spinlock_t rf_ps_lock;
- 	spinlock_t rf_lock;
--	spinlock_t lps_lock;
- 	spinlock_t waitq_lock;
- 	spinlock_t entry_list_lock;
- 	spinlock_t usb_lock;
-@@ -2359,9 +2356,6 @@ struct rtl_locks {
- 	/*Dual mac*/
- 	spinlock_t cck_and_rw_pagea_lock;
- 
--	/*Easy concurrent*/
--	spinlock_t check_sendpkt_lock;
+ 	/* If the passed length is zero, reset the buffer */
+ 	if (!ie_len) {
+ 		priv->gen_ie_buf_len = 0;
+ 		priv->wps.session_enable = false;
 -
- 	spinlock_t iqk_lock;
- };
+ 		return 0;
+-	} else if (!ie_data_ptr) {
++	} else if (!ie_data_ptr ||
++		   ie_len <= sizeof(struct ieee_types_header)) {
+ 		return -1;
+ 	}
+ 	pvendor_ie = (struct ieee_types_vendor_header *) ie_data_ptr;
  
+ 	while (pvendor_ie) {
++		cur_ie_len = pvendor_ie->len + sizeof(struct ieee_types_header);
++
++		if (pvendor_ie->element_id == WLAN_EID_RSN) {
++			/* IE is a WPA/WPA2 IE so call set_wpa function */
++			mwifiex_set_wpa_ie(priv, (u8 *)pvendor_ie, cur_ie_len);
++			priv->wps.session_enable = false;
++			goto next_ie;
++		}
++
++		if (pvendor_ie->element_id == WLAN_EID_BSS_AC_ACCESS_DELAY) {
++			/* IE is a WAPI IE so call set_wapi function */
++			mwifiex_set_wapi_ie(priv, (u8 *)pvendor_ie,
++					    cur_ie_len);
++			goto next_ie;
++		}
++
+ 		if (pvendor_ie->element_id == WLAN_EID_VENDOR_SPECIFIC) {
+-			/* Test to see if it is a WPA IE, if not, then it is a
+-			 * gen IE
++			/* Test to see if it is a WPA IE, if not, then
++			 * it is a gen IE
+ 			 */
+ 			if (!memcmp(pvendor_ie->oui, wpa_oui,
+ 				    sizeof(wpa_oui))) {
+-				find_wpa_ie = 1;
+-				break;
++				/* IE is a WPA/WPA2 IE so call set_wpa function
++				 */
++				mwifiex_set_wpa_ie(priv, (u8 *)pvendor_ie,
++						   cur_ie_len);
++				priv->wps.session_enable = false;
++				goto next_ie;
+ 			}
+ 
+-			/* Test to see if it is a WPS IE, if so, enable
+-			 * wps session flag
+-			 */
+ 			if (!memcmp(pvendor_ie->oui, wps_oui,
+ 				    sizeof(wps_oui))) {
++				/* Test to see if it is a WPS IE,
++				 * if so, enable wps session flag
++				 */
+ 				priv->wps.session_enable = true;
+ 				mwifiex_dbg(priv->adapter, MSG,
+-					    "info: WPS Session Enabled.\n");
+-				ret = mwifiex_set_wps_ie(priv,
+-							 (u8 *)pvendor_ie,
+-							 unparsed_len);
++					    "WPS Session Enabled.\n");
++				mwifiex_set_wps_ie(priv, (u8 *)pvendor_ie,
++						   cur_ie_len);
++				goto next_ie;
+ 			}
+ 		}
+ 
+-		if (pvendor_ie->element_id == WLAN_EID_RSN) {
+-			find_wpa_ie = 1;
+-			break;
+-		}
++		/* Saved in gen_ie, such as P2P IE.etc.*/
+ 
+-		if (pvendor_ie->element_id == WLAN_EID_BSS_AC_ACCESS_DELAY) {
+-		/* IE is a WAPI IE so call set_wapi function */
+-			ret = mwifiex_set_wapi_ie(priv, (u8 *)pvendor_ie,
+-						  unparsed_len);
+-			return ret;
++		/* Verify that the passed length is not larger than the
++		 * available space remaining in the buffer
++		 */
++		if (cur_ie_len <
++		    (sizeof(priv->gen_ie_buf) - priv->gen_ie_buf_len)) {
++			/* Append the passed data to the end
++			 * of the genIeBuffer
++			 */
++			memcpy(priv->gen_ie_buf + priv->gen_ie_buf_len,
++			       (u8 *)pvendor_ie, cur_ie_len);
++			/* Increment the stored buffer length by the
++			 * size passed
++			 */
++			priv->gen_ie_buf_len += cur_ie_len;
+ 		}
+ 
+-		unparsed_len -= (pvendor_ie->len +
+-				 sizeof(struct ieee_types_header));
++next_ie:
++		unparsed_len -= cur_ie_len;
+ 
+ 		if (unparsed_len <= sizeof(struct ieee_types_header))
+ 			pvendor_ie = NULL;
+ 		else
+ 			pvendor_ie = (struct ieee_types_vendor_header *)
+-				(((u8 *)pvendor_ie) + pvendor_ie->len +
+-				 sizeof(struct ieee_types_header));
+-	}
+-
+-	if (find_wpa_ie) {
+-		/* IE is a WPA/WPA2 IE so call set_wpa function */
+-		ret = mwifiex_set_wpa_ie_helper(priv, (u8 *)pvendor_ie,
+-						unparsed_len);
+-		priv->wps.session_enable = false;
+-		return ret;
++				(((u8 *)pvendor_ie) + cur_ie_len);
+ 	}
+ 
+-	/*
+-	 * Verify that the passed length is not larger than the
+-	 * available space remaining in the buffer
+-	 */
+-	if (ie_len < (sizeof(priv->gen_ie_buf) - priv->gen_ie_buf_len)) {
+-
+-		/* Append the passed data to the end of the
+-		   genIeBuffer */
+-		memcpy(priv->gen_ie_buf + priv->gen_ie_buf_len, ie_data_ptr,
+-		       ie_len);
+-		/* Increment the stored buffer length by the
+-		   size passed */
+-		priv->gen_ie_buf_len += ie_len;
+-	} else {
+-		/* Passed data does not fit in the remaining
+-		   buffer space */
+-		ret = -1;
+-	}
+-
+-	/* Return 0, or -1 for error case */
+-	return ret;
++	return 0;
+ }
+ 
+ /*
 -- 
-2.12.3
+1.9.1
