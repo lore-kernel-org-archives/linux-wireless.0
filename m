@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35483 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750728AbdGUEYz (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37826 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752555AbdGaQcv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Jul 2017 00:24:55 -0400
-Received: by mail-oi0-f67.google.com with SMTP id h143so3947605oic.2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2017 21:24:55 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 07/10] rtlwifi: btcoex: btcoexist needs rfe_type to make decision
-Date: Thu, 20 Jul 2017 23:24:37 -0500
-Message-Id: <20170721042440.15839-8-Larry.Finger@lwfinger.net> (sfid-20170721_062514_334481_B8096DFC)
-In-Reply-To: <20170721042440.15839-1-Larry.Finger@lwfinger.net>
-References: <20170721042440.15839-1-Larry.Finger@lwfinger.net>
+        Mon, 31 Jul 2017 12:32:51 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 08/10] wil6210: fix interface-up check
+Date: Mon, 31 Jul 2017 19:32:31 +0300
+Message-Id: <1501518753-6339-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183255_473697_979DDD87)
+In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-btcoex uses rfe_type to configure antenna properly.
+While wil_open is executed, any call to netif_running
+would return a success. In case there are failures
+within wil_open, should not treat the device as if it
+is already opened in relevant functions (like FW recovery
+and runtime suspend check).
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Fix that by checking the device up flag instead.
+
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 10 ++++++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  2 ++
- 2 files changed, 12 insertions(+)
+ drivers/net/wireless/ath/wil6210/main.c | 3 ++-
+ drivers/net/wireless/ath/wil6210/pm.c   | 4 +++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index e26bbdf3a733..6847b1abb4ab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -200,6 +200,14 @@ u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
- 	return rtlhal->package_type;
- }
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 8968c2c..b1e2814 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -394,10 +394,11 @@ static void wil_fw_error_worker(struct work_struct *work)
+ 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+ 						fw_error_worker);
+ 	struct wireless_dev *wdev = wil->wdev;
++	struct net_device *ndev = wil_to_ndev(wil);
  
-+static
-+u8 rtl_get_hwpg_rfe_type(struct rtl_priv *rtlpriv)
-+{
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+
-+	return rtlhal->rfe_type;
-+}
-+
- /* ************************************
-  *         Hal helper function
-  * ************************************
-@@ -1215,6 +1223,8 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "[BTCoex], Package Type = Non-TFBGA\n");
+ 	wil_dbg_misc(wil, "fw error worker\n");
  
-+	btcoexist->board_info.rfe_type = rtl_get_hwpg_rfe_type(rtlpriv);
-+
- 	return true;
- }
+-	if (!netif_running(wil_to_ndev(wil))) {
++	if (!(ndev->flags & IFF_UP)) {
+ 		wil_info(wil, "No recovery - interface is down\n");
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 4a18f8e..4f61dc1 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -24,6 +24,7 @@ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime)
+ {
+ 	int rc = 0;
+ 	struct wireless_dev *wdev = wil->wdev;
++	struct net_device *ndev = wil_to_ndev(wil);
+ 	bool wmi_only = test_bit(WMI_FW_CAPABILITY_WMI_ONLY,
+ 				 wil->fw_capabilities);
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 8704d632bac8..91ba49586dbe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -153,6 +153,8 @@ struct btc_board_info {
- 	u8 btdm_ant_pos;
- 	u8 single_ant_path; /* current used for 8723b only, 1=>s0,  0=>s1 */
- 	bool tfbga_package;
+@@ -35,7 +36,8 @@ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime)
+ 		rc = -EPERM;
+ 		goto out;
+ 	}
+-	if (!netif_running(wil_to_ndev(wil))) {
 +
-+	u8 rfe_type;
- };
- 
- enum btc_dbg_opcode {
++	if (!(ndev->flags & IFF_UP)) {
+ 		/* can always sleep when down */
+ 		wil_dbg_pm(wil, "Interface is down\n");
+ 		goto out;
 -- 
-2.12.3
+1.9.1
