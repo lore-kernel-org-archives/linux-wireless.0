@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33277 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751409AbdGRJpm (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36072 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751054AbdGaLOt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2017 05:45:42 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: davem@davemloft.net, stas.yakovlev@gmail.com, kvalo@codeaurora.org,
-        sgruszka@redhat.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v3 05/10] wireless: ipw2100: constify attribute_group structures.
-Date: Tue, 18 Jul 2017 15:15:00 +0530
-Message-Id: <1500371102-14758-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170718_114817_982530_F86CB7B7)
-In-Reply-To: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1500371102-14758-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Mon, 31 Jul 2017 07:14:49 -0400
+Received: by mail-pf0-f196.google.com with SMTP id t83so1145176pfj.3
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 04:14:49 -0700 (PDT)
+Date: Mon, 31 Jul 2017 16:44:45 +0530
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v4] rtlwifi: Replace hardcode value with macro
+Message-ID: <20170731111445.GA4844@symbol-HP-ZBook-15> (sfid-20170731_131453_374514_AB0AA839)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-attribute_group are not supposed to change at runtime. All functions
-working with attribute_group provided by <linux/sysfs.h> work
-with const attribute_group. So mark the non-const structs as const.
+In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+and hw->max_rate_tries are replaced by macro.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
 ---
-Changes in v2:
-              Added cover later.
-Changes in v3:
-              net-next was closed. Now resubmitting it.
+ drivers/net/wireless/realtek/rtlwifi/base.c | 1 -
+ 1 file changed, 1 deletion(-)
 
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index f45d093..52f2d0b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -422,7 +422,6 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 	hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index aaaca4d..ccbe745 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -4324,7 +4324,7 @@ static ssize_t store_rf_kill(struct device *d, struct device_attribute *attr,
- 	NULL,
- };
- 
--static struct attribute_group ipw2100_attribute_group = {
-+static const struct attribute_group ipw2100_attribute_group = {
- 	.attrs = ipw2100_sysfs_entries,
- };
- 
--- 
+ 	/* TODO: Correct this value for our hw */
+-	/* defined these hard code values */
+ 	hw->max_listen_interval = MAX_LISTEN_INTERVAL;
+ 	hw->max_rate_tries = MAX_RATE_TRIES;
+ 	/* hw->max_rates = 1; */
+--
 1.9.1
