@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33941 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751366AbdGQSKO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 14:10:14 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 02/11] rtlwifi: rtl8192se: constify pci_device_id.
-Date: Mon, 17 Jul 2017 23:39:50 +0530
-Message-Id: <1500314995-3181-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170717_201326_266020_792853C5)
-In-Reply-To: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1500314995-3181-1-git-send-email-arvind.yadav.cs@gmail.com>
+Received: from mga06.intel.com ([134.134.136.31]:30963 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751037AbdGaRWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jul 2017 13:22:00 -0400
+Message-ID: <1501521625.29303.308.camel@linux.intel.com> (sfid-20170731_192217_174796_3A1DBB81)
+Subject: Re: [PATCH v1 3/6] staging: unisys: Switch to use new generic UUID
+ API
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org, sparmaintainer@unisys.com,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>, devel@linuxdriverproject.org,
+        Christoph Hellwig <hch@lst.de>
+Date: Mon, 31 Jul 2017 20:20:25 +0300
+In-Reply-To: <20170730173725.GA20606@kroah.com>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+         <20170719182857.73693-4-andriy.shevchenko@linux.intel.com>
+         <1501063301.29303.247.camel@linux.intel.com>
+         <20170730153224.GA31755@kroah.com>
+         <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
+         <20170730173725.GA20606@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+On Sun, 2017-07-30 at 10:37 -0700, Greg Kroah-Hartman wrote:
+> On Sun, Jul 30, 2017 at 08:26:48PM +0300, Andy Shevchenko wrote:
+> > On Sun, Jul 30, 2017 at 6:32 PM, Greg Kroah-Hartman
+> > <gregkh@linuxfoundation.org> wrote:
 
-File size before:
-   text	   data	    bss	    dec	    hex	filename
-   2817	   1040	      0	   3857	    f11 realtek/rtlwifi/rtl8192se/sw.o
+> > > Doesn't apply to the staging tree at all :(
+> > 
+> > No surprises, it was cooked against uuid tree in the first place.
+> > If you agree to take it through staging tree I will prepare a
+> > rebased version.
+> > Does it sound good?
+> 
+> You can take it through the uuid tree if it's easier for you, but then
+> someone will have to deal with the merge issues...
+> 
+> If it's easier, I can take it to prevent the merge problems.
 
-File size After adding 'const':
-   text	   data	    bss	    dec	    hex	filename
-   3009	    848	      0	   3857	    f11 realtek/rtlwifi/rtl8192se/sw.o
+Yep! There are so many conflicts that would be better just to push
+through your tree.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have just sent a v2 of this patch separately.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index 2006b09..201100e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -396,7 +396,7 @@ static const struct rtl_hal_cfg rtl92se_hal_cfg = {
- 	.maps[RTL_RC_HT_RATEMCS15] = DESC_RATEMCS15,
- };
- 
--static struct pci_device_id rtl92se_pci_ids[] = {
-+static const struct pci_device_id rtl92se_pci_ids[] = {
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8192, rtl92se_hal_cfg)},
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8171, rtl92se_hal_cfg)},
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8172, rtl92se_hal_cfg)},
 -- 
-2.7.4
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
