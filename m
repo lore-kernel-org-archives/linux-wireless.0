@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:50546 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751348AbdGQQsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2017 12:48:43 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Subject: [PATCH 10/29] brcmfmac: Rename bcmerror to err
-Date: Mon, 17 Jul 2017 17:16:18 +0100
-Message-Id: <20170717161637.4652-11-ian@mnementh.co.uk> (sfid-20170717_184852_051486_97096AE4)
-In-Reply-To: <20170717161637.4652-1-ian@mnementh.co.uk>
-References: <20170717161637.4652-1-ian@mnementh.co.uk>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37826 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752566AbdGaQct (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:32:49 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 07/10] wil6210: notify wiphy on wowlan support
+Date: Mon, 31 Jul 2017 19:32:30 +0300
+Message-Id: <1501518753-6339-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170731_183300_418270_A24E55E5)
+In-Reply-To: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501518753-6339-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trivial cleanup of nasty variable name
+Set wowlan to indicate that 11ad device can wake-up
+on any trigger and disconnect.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 7dd6af689ac8..f97b2234044f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -747,7 +747,7 @@ int
- brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		  u8 *data, uint size)
- {
--	int bcmerror = 0;
-+	int err = 0;
- 	struct sk_buff *pkt;
- 	u32 sdaddr;
- 	uint dsize;
-@@ -772,8 +772,8 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	/* Do the transfer(s) */
- 	while (size) {
- 		/* Set the backplane window to include the start address */
--		bcmerror = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
--		if (bcmerror)
-+		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
-+		if (err)
- 			break;
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index c860c0c..61e872c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -34,6 +34,12 @@
+ module_param(scan_timeout, uint, 0644);
+ MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
  
- 		brcmf_dbg(SDIO, "%s %d bytes at offset 0x%08x in window 0x%08x\n",
-@@ -786,9 +786,9 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		skb_put(pkt, dsize);
- 		if (write)
- 			memcpy(pkt->data, data, dsize);
--		bcmerror = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write,
-+		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write,
- 					      sdaddr, pkt);
--		if (bcmerror) {
-+		if (err) {
- 			brcmf_err("membytes transfer failed\n");
- 			break;
- 		}
-@@ -815,7 +815,7 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
++#ifdef CONFIG_PM
++static struct wiphy_wowlan_support wil_wowlan_support = {
++	.flags = WIPHY_WOWLAN_ANY | WIPHY_WOWLAN_DISCONNECT,
++};
++#endif
++
+ #define CHAN60G(_channel, _flags) {				\
+ 	.band			= NL80211_BAND_60GHZ,		\
+ 	.center_freq		= 56160 + (2160 * (_channel)),	\
+@@ -1819,6 +1825,10 @@ static void wil_wiphy_init(struct wiphy *wiphy)
  
- 	sdio_release_host(sdiodev->func[1]);
- 
--	return bcmerror;
-+	return err;
+ 	wiphy->n_vendor_commands = ARRAY_SIZE(wil_nl80211_vendor_commands);
+ 	wiphy->vendor_commands = wil_nl80211_vendor_commands;
++
++#ifdef CONFIG_PM
++	wiphy->wowlan = &wil_wowlan_support;
++#endif
  }
  
- int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
+ struct wireless_dev *wil_cfg80211_init(struct device *dev)
 -- 
-2.11.0
+1.9.1
