@@ -1,111 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43262 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752498AbdHIHjl (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:33387 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751857AbdHAMlH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 03:39:41 -0400
-Message-ID: <1502264372.15969.167.camel@coelho.fi> (sfid-20170809_093944_126125_213EF244)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Date: Wed, 09 Aug 2017 10:39:32 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-hUl5+axkPYHkfOFU+8Tr"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2017-08-09
+        Tue, 1 Aug 2017 08:41:07 -0400
+Received: by mail-qt0-f173.google.com with SMTP id a18so8124533qta.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 05:41:07 -0700 (PDT)
+Subject: Re: [PATCH 1/3] brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in
+ AP/opensecurity mode
+To: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <bbe8b942-fba4-8c26-eff5-203b192528f2@broadcom.com> (sfid-20170801_144114_516438_464B2CF7)
+Date: Tue, 1 Aug 2017 14:41:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01-08-17 10:48, Wright Feng wrote:
+> When setting wpa_auth to WPA_AUTH_NONE(1) in AP mode with WEP secuirty,
+> firmware will set privacy bit and add WPA OUI in VENDOR IE in beacon and
+> probe response. It confuses the supplicant in sation client by the
+> security type from softAP beacon and we will see [WPA-?] in scan result.
+> So we set WPA_AUTH_DISABLED in softAP mode with opensecurity.
+> 
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index a31ea10..54588d2 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -3854,6 +3854,7 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
+>  static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+>  {
+>  	s32 err;
+> +	s32 wpa_val;
+>  
+>  	/* set auth */
+>  	err = brcmf_fil_bsscfg_int_set(ifp, "auth", 0);
+> @@ -3868,7 +3869,11 @@ static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+>  		return err;
+>  	}
+>  	/* set upper-layer auth */
+> -	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", WPA_AUTH_NONE);
+> +	if (brcmf_is_ibssmode(ifp->vif))
+> +		wpa_val = WPA_AUTH_NONE;
+> +	else
+> +		wpa_val = WPA_AUTH_DISABLED;
+> +	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", wpa_val);
 
---=-hUl5+axkPYHkfOFU+8Tr
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Is WPA_AUTH_NONE ok for IBSS mode? Not sure why it is handled
+differently. Is it because you do not want to change things for IBSS
+mode as you did not try that?
 
-Hi Kalle,
-
-Here is the third set of fixes for 4.13.  More details in the tag
-description.
-
-This includes both series I sent out, the first one, with v2 of the
-second patch, with an improved commit message, and the second one, which
-contains the mac80211 patch as well.
-
-I have sent this out before and kbuildbot didn't find any issues.=20
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 368bd88ebb64cabe4a1ec727659214bb8d693707=
-:
-
-  Merge tag 'iwlwifi-for-kalle-2017-08-02' of git://git.kernel.org/pub/scm/=
-linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-08-03 11:01:11 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2018-08-09
-
-for you to fetch changes up to 20fc690f38d17b8f961101a477a9aa0841fb6e20:
-
-  iwlwifi: mvm: send delba upon rx ba session timeout (2017-08-09 10:05:01 =
-+0300)
-
-----------------------------------------------------------------
-Some more fixes for 4.13
-
-* Fix a memory leak in the SAR code;
-* Fix a stuck queue case in AP mode;
-* Convert a WARN to a simple debug in a legitimate race case (from
-  which we can recover);
-* Fix a severe throughput aggregation on 9000-family devices due to
-  aggregation issues.
-
-----------------------------------------------------------------
-Avraham Stern (1):
-      iwlwifi: mvm: start mac queues when deferred tx frames are purged
-
-Christophe Jaillet (1):
-      iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm=
-_sar_get_wgds_table()'
-
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU
-
-Naftali Goldstein (2):
-      mac80211: add api to start ba session timer expired flow
-      iwlwifi: mvm: send delba upon rx ba session timeout
-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 10 ++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  4 ++--
- include/net/mac80211.h                            | 15 +++++++++++++++
- net/mac80211/agg-rx.c                             | 22 +++++++++++++++++++=
-++-
- 6 files changed, 59 insertions(+), 10 deletions(-)
---=-hUl5+axkPYHkfOFU+8Tr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlmKvDQACgkQoUecoho8
-xfovxxAAhmSkBkah2k1c9vOLuwxDYXs7u4TyLmelw7fkRzRkFOX0KXUXCS+OnoB+
-PhxB+sIsqb9iysrY6hr5kARcX2o+5mO3CcYrUce7yDzcEgy4aoOSLpEr7qLfcaHM
-vHVWl22scYs7MR3NfhHOeBvNNXqcCW/Dg4+9yiah2v1z1GE/QBVlLi+xXDg/7aIs
-mtNWdAmzwWm7ieG8EaQ31guzv0D601HyqDukJS+ywA723kF+8kUYgoCAHlAgcETz
-LGPhLnyK1KaFWjLrFLMA1FWqYWE4080YpTTWW1KFR1H7w/KVZQx0teKwc74BhEjI
-8MdIgp5Ndc10a5hqu0WB9SXWT3QAt4BKG1AYZEmdbcT5z5lwJp8pTZWAkhtWYLXf
-edYo/qYZtSn43jkpogYUgC211SJchY8ZzB6bOqyHV+hL9rKOXT3TfuxNbae0/rnS
-P9Je3M9IxsdQ4AT9fBLN6bRwlNt+7DOI4SVrdtZ4+wiQ7JmjxXzkjZXSVh81lMTq
-PnglECq7HLnM86RI/yWkvrgjM0ONNf5O6MKFqIxTrIFZzS6rBcISkKavEWQJfy0Z
-5MUABeRYUCvTZvwH+O9kSbNokzOSz1+S0gMESkhUIDwl7YZvJ1lJ5ePT8s/a4TbS
-CYqBqI4eJWZG64s7VfMdutYHxIW3WZeKs9ob3D5BwWTs+ddS0S4=
-=XFn9
------END PGP SIGNATURE-----
-
---=-hUl5+axkPYHkfOFU+8Tr--
+Regards,
+Arend
