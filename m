@@ -1,139 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43820 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751011AbdHaOrp (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:38523 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdHAJKQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 10:47:45 -0400
-Date: Thu, 31 Aug 2017 16:47:43 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>, xiyou.wangcong@gmail.com,
-        torvalds@linux-foundation.org, akpm@linux-foundation.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH] wl1251: add a missing spin_lock_init()
-Message-ID: <20170831144743.GA21261@amd> (sfid-20170831_164804_447703_82D77954)
-References: <87pobdt8qc.fsf@kamboji.qca.qualcomm.com>
- <20170830.101143.2305098064824357647.davem@davemloft.net>
- <87val5rmh8.fsf@kamboji.qca.qualcomm.com>
- <20170830.105447.125174575140677062.davem@davemloft.net>
- <87fuc8s5v9.fsf@kamboji.qca.qualcomm.com>
- <20170831065204.GA17812@amd>
- <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="7JfCtLOvnd9MIVvH"
-In-Reply-To: <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com>
+        Tue, 1 Aug 2017 05:10:16 -0400
+Received: by mail-pf0-f194.google.com with SMTP id e3so1574504pfc.5
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:10:15 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [PATCH 4/8] rsi: add support for U-APSD power save
+Date: Tue,  1 Aug 2017 14:35:48 +0530
+Message-Id: <1501578352-10795-5-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111019_453902_B7A97390)
+In-Reply-To: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Karun Eagalapati <karun256@gmail.com>
 
---7JfCtLOvnd9MIVvH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch adds support for U-APSD power save. Configuration
+frame is downloaded to firmware with default settings and
+support is advertised to mac80211
 
-=46rom: Cong Wang <xiyou.wangcong@gmail.com>
-
-wl1251: add a missing spin_lock_init()
-   =20
-This fixes the following kernel warning:
-   =20
- [ 5668.771453] BUG: spinlock bad magic on CPU#0, kworker/u2:3/9745
- [ 5668.771850]  lock: 0xce63ef20, .magic: 00000000, .owner: <none>/-1,
- .owner_cpu: 0
- [ 5668.772277] CPU: 0 PID: 9745 Comm: kworker/u2:3 Tainted: G        W
- 4.12.0-03002-gec979a4-dirty #40
- [ 5668.772796] Hardware name: Nokia RX-51 board
- [ 5668.773071] Workqueue: phy1 wl1251_irq_work
- [ 5668.773345] [<c010c9e4>] (unwind_backtrace) from [<c010a274>]
- (show_stack+0x10/0x14)
- [ 5668.773803] [<c010a274>] (show_stack) from [<c01545a4>]
- (do_raw_spin_lock+0x6c/0xa0)
- [ 5668.774230] [<c01545a4>] (do_raw_spin_lock) from [<c06ca578>]
- (_raw_spin_lock_irqsave+0x10/0x18)
- [ 5668.774658] [<c06ca578>] (_raw_spin_lock_irqsave) from [<c048c010>]
- (wl1251_op_tx+0x38/0x5c)
- [ 5668.775115] [<c048c010>] (wl1251_op_tx) from [<c06a12e8>]
- (ieee80211_tx_frags+0x188/0x1c0)
- [ 5668.775543] [<c06a12e8>] (ieee80211_tx_frags) from [<c06a138c>]
- (__ieee80211_tx+0x6c/0x130)
- [ 5668.775970] [<c06a138c>] (__ieee80211_tx) from [<c06a3dbc>]
- (ieee80211_tx+0xdc/0x104)
- [ 5668.776367] [<c06a3dbc>] (ieee80211_tx) from [<c06a4af0>]
- (__ieee80211_subif_start_xmit+0x454/0x8c8)
- [ 5668.776824] [<c06a4af0>] (__ieee80211_subif_start_xmit) from
- [<c06a4f94>] (ieee80211_subif_start_xmit+0x30/0x2fc)
- [ 5668.777343] [<c06a4f94>] (ieee80211_subif_start_xmit) from
- [<c0578848>] (dev_hard_start_xmit+0x80/0x118)
-=2E..
-   =20
-    by adding the missing spin_lock_init().
-   =20
-Reported-by: Pavel Machek <pavel@ucw.cz>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
-Acked-by: Pavel Machek <pavel@ucw.cz>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Pavel Machek <pavel@ucw.cz>
-Cc: stable@kernel.org
-
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 19 +++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  3 +++
+ drivers/net/wireless/rsi/rsi_91x_ps.c       | 18 ++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_main.h         |  1 +
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  6 ++++++
+ 5 files changed, 47 insertions(+)
 
-> >> Yeah, you are right there. I did actually ponder which I tree should
-> >> commit it back in July but due to various reasons decided differently.
-> >
-> > Can we still get the fix to v4.13-final? :-).
->=20
-> I'm not planning to submit pull requests to 4.13 anymore. If you think
-> this is so important that it needs to be applied in the last minute (I
-> don't) you could always try to convince Dave to take it directly.
->=20
-> Or better yet, push it to the stable tree. If the merge window opens on
-> Sunday I suspect that the commit will be in Linus' tree sometime next
-> week. Then you can submit the request to the stable team to take it.
-
-I don't think we should use stable tree as an excuse for not fixing
-the bugs in mainline. Original patch is from Jul 6, thats 7 weeks ago.
-
-Dave, Linus -- can you still take the patch?
-
-Thanks,
-								Pavel
-
-
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/t=
-i/wl1251/main.c
-index 08f0477..9915d83 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1571,6 +1571,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
-=20
- 	wl->state =3D WL1251_STATE_OFF;
- 	mutex_init(&wl->mutex);
-+	spin_lock_init(&wl->wl_lock);
-=20
- 	wl->tx_mgmt_frm_rate =3D DEFAULT_HW_GEN_TX_RATE;
- 	wl->tx_mgmt_frm_mod =3D DEFAULT_HW_GEN_MODULATION_TYPE;
-
-
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---7JfCtLOvnd9MIVvH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlmoIY8ACgkQMOfwapXb+vKSWQCdE/a4LL+Pa55ni6WOlhCa+Vv1
-XzcAnRKBGbrsApwcPZdfM1KC+sn3FXaq
-=4uNE
------END PGP SIGNATURE-----
-
---7JfCtLOvnd9MIVvH--
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 38f4e59..dfa952e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -327,6 +327,7 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
+ 	struct rsi_common *common = adapter->priv;
+ 	int ret = -EOPNOTSUPP;
+ 
++	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
+ 	mutex_lock(&common->mutex);
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -561,6 +562,16 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
+ 		/* Update DTIM period and listen interval */
+ 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
+ 		adapter->ps_info.listen_interval = conf->listen_interval;
++
++	/* If U-APSD is updated, send ps parameters to firmware */
++	if (bss->assoc) {
++		if (common->uapsd_bitmap) {
++			rsi_dbg(INFO_ZONE, "Configuring UAPSD\n");
++			rsi_conf_uapsd(adapter);
++		}
++	} else {
++		common->uapsd_bitmap = 0;
++	}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_CQM) {
+@@ -642,6 +653,12 @@ static int rsi_mac80211_conf_tx(struct ieee80211_hw *hw,
+ 	memcpy(&common->edca_params[idx],
+ 	       params,
+ 	       sizeof(struct ieee80211_tx_queue_params));
++
++	if (params->uapsd)
++		common->uapsd_bitmap |= idx;
++	else
++		common->uapsd_bitmap &= (~idx);
++
+ 	mutex_unlock(&common->mutex);
+ 
+ 	return 0;
+@@ -1312,6 +1329,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 
+ 	hw->max_rates = 1;
+ 	hw->max_rate_tries = MAX_RETRIES;
++	hw->uapsd_queues = RSI_IEEE80211_UAPSD_QUEUES;
++	hw->uapsd_max_sp_len = IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL;
+ 
+ 	hw->max_tx_aggregation_subframes = 6;
+ 	rsi_register_rates_channels(adapter, NL80211_BAND_2GHZ);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 1758d84..2568945 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1425,6 +1425,9 @@ int rsi_send_ps_request(struct rsi_hw *adapter, bool enable)
+ 		ps->desc.desc_dword0.len_qno |= cpu_to_le16(RSI_PS_DISABLE_IND);
+ 		ps->desc.desc_dword3.token = cpu_to_le16(RSI_WAKEUP_REQUEST);
+ 	}
++
++	ps->ps_uapsd_acs = common->uapsd_bitmap;
++
+ 	ps->ps_sleep.sleep_type = ps_info->sleep_type;
+ 	ps->ps_sleep.num_bcns_per_lis_int =
+ 		cpu_to_le16(ps_info->num_bcns_per_lis_int);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_ps.c b/drivers/net/wireless/rsi/rsi_91x_ps.c
+index 5762363..a20b2cb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_ps.c
++++ b/drivers/net/wireless/rsi/rsi_91x_ps.c
+@@ -124,6 +124,23 @@ void rsi_disable_ps(struct rsi_hw *adapter)
+ 	rsi_modify_ps_state(adapter, PS_DISABLE_REQ_SENT);
+ }
+ 
++/* This function configures UAPSD powersave */
++void rsi_conf_uapsd(struct rsi_hw *adapter)
++{
++	int ret;
++
++	if (adapter->ps_state != PS_ENABLED)
++		return;
++
++	ret = rsi_send_ps_request(adapter, false);
++	if (!ret)
++		ret = rsi_send_ps_request(adapter, true);
++	if (ret)
++		rsi_dbg(ERR_ZONE,
++			"%s: Failed to send PS request to device\n",
++			__func__);
++}
++
+ /* This function Processes powersave confirmation */
+ int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg)
+ {
+@@ -147,3 +164,4 @@ int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg)
+ 
+ 	return 0;
+ }
++
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 9aada0b..d2cc47e 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -243,6 +243,7 @@ struct rsi_common {
+ 	u16 oper_mode;
+ 	u8 lp_ps_handshake_mode;
+ 	u8 ulp_ps_handshake_mode;
++	u8 uapsd_bitmap;
+ 	u8 rf_power_val;
+ 	u8 wlan_rf_power_mode;
+ 	u8 obm_ant_sel_val;
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index c5d114d..b22103f 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -181,6 +181,12 @@
+ #define RSI_SLEEP_REQUEST		1
+ #define RSI_WAKEUP_REQUEST		2
+ 
++#define RSI_IEEE80211_UAPSD_QUEUES \
++	(IEEE80211_WMM_IE_STA_QOSINFO_AC_VO | \
++	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI | \
++	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE | \
++	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
++
+ enum opmode {
+ 	STA_OPMODE = 1,
+ 	AP_OPMODE = 2
+-- 
+2.7.4
