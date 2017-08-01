@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34731 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751008AbdHAJJ6 (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:32911 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751166AbdHAJje (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:09:58 -0400
-Received: by mail-pg0-f67.google.com with SMTP id y192so1741346pgd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:09:58 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Tue, 1 Aug 2017 05:39:34 -0400
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 0/8] rsi driver enhancements
-Date: Tue,  1 Aug 2017 14:35:44 +0530
-Message-Id: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111002_492599_FDC88EAB)
+        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com
+Subject: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan feature enabled
+Date: Tue,  1 Aug 2017 16:48:07 +0800
+Message-Id: <1501577287-28904-3-git-send-email-wright.feng@cypress.com> (sfid-20170801_113938_402105_5EF85E15)
+In-Reply-To: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+The num_different_channels in wiphy info is not correct when firmware
+supports mchan. When mchan is on, num_different_channels is always
+overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
+num_different_channels setting forward.
 
-This patch series brings in few enhancements in rsi driver
-like rfkill support, U-APSD and Legacy power save support,
-antenna and RTS threshold configuration, improvements in
-reading SDIO buffer status.
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Karun Eagalapati (6):
-  rsi: add support for legacy power save
-  rsi: add support for U-APSD power save
-  rsi: rename sdio_read_buffer_status_register
-  rsi: buffer full check optimization
-  rsi: buffer available interrupt handling
-  rsi: RTS threshold configuration
-
-Pavani Muthyala (1):
-  rsi: update set_antenna command frame
-
-pavani.muthyala (1):
-  rsi: add support for rf-kill functionality
-
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_hal.c      |   7 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  72 +++++++++++-
- drivers/net/wireless/rsi/rsi_91x_main.c     |   2 +
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 105 +++++++++++++++--
- drivers/net/wireless/rsi/rsi_91x_ps.c       | 167 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  40 ++++---
- drivers/net/wireless/rsi/rsi_main.h         |  11 +-
- drivers/net/wireless/rsi/rsi_mgmt.h         |  52 +++++++++
- drivers/net/wireless/rsi/rsi_ps.h           |  78 +++++++++++++
- drivers/net/wireless/rsi/rsi_sdio.h         |   3 +-
- 12 files changed, 511 insertions(+), 29 deletions(-)
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_ps.c
- create mode 100644 drivers/net/wireless/rsi/rsi_ps.h
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 54588d2..3dcb139 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6318,6 +6318,8 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	if (p2p) {
+ 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
+ 			combo[c].num_different_channels = 2;
++		else
++			combo[c].num_different_channels = 1;
+ 		wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 					  BIT(NL80211_IFTYPE_P2P_GO) |
+ 					  BIT(NL80211_IFTYPE_P2P_DEVICE);
+@@ -6327,10 +6329,10 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 				       BIT(NL80211_IFTYPE_P2P_GO);
+ 	} else {
++		combo[c].num_different_channels = 1;
+ 		c0_limits[i].max = 1;
+ 		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
+ 	}
+-	combo[c].num_different_channels = 1;
+ 	combo[c].max_interfaces = i;
+ 	combo[c].n_limits = i;
+ 	combo[c].limits = c0_limits;
 -- 
-2.7.4
+1.9.1
