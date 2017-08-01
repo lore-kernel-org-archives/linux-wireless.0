@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:37072 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932467AbdHWTdJ (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34836 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751727AbdHAJKF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 15:33:09 -0400
-Received: by mail-lf0-f68.google.com with SMTP id s12so298786lfk.4
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2017 12:33:09 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH v2] ath10k: sdio: remove unused struct member
-Date: Wed, 23 Aug 2017 21:32:58 +0200
-Message-Id: <1503516778-5835-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20170823_213320_566276_F67E996B)
+        Tue, 1 Aug 2017 05:10:05 -0400
+Received: by mail-pg0-f67.google.com with SMTP id l64so1723438pge.2
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:10:05 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
+Subject: [PATCH 1/8] rsi: add support for rf-kill functionality
+Date: Tue,  1 Aug 2017 14:35:45 +0530
+Message-Id: <1501578352-10795-2-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111007_987215_D5719177)
+In-Reply-To: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-irq_wq in struct ath10k_sdio is a remnant from an earlier
-version of the sdio patchset.
+From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
 
-Its use was removed as a result of Kalle's review, but somehow
-the struct member survived.
+This patch implements rfkill_poll handler. Also, necessary changes
+are done in interface up and down handler to support rfkill
+functionality.
 
-It is not used and can therefore safely be removed.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
-V2: Fix typo in commit log (It's -> Its)
----
- drivers/net/wireless/ath/ath10k/sdio.c | 4 ----
- drivers/net/wireless/ath/ath10k/sdio.h | 2 --
- 2 files changed, 6 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 48268f0..03a69e5 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -1344,8 +1344,6 @@ static void ath10k_sdio_irq_handler(struct sdio_func *func)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index c91d6ef..193f922 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -279,11 +279,12 @@ static int rsi_mac80211_start(struct ieee80211_hw *hw)
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
  
- 	sdio_claim_host(ar_sdio->func);
- 
--	wake_up(&ar_sdio->irq_wq);
++	rsi_dbg(ERR_ZONE, "===> Interface UP <===\n");
+ 	mutex_lock(&common->mutex);
+ 	common->iface_down = false;
+-	mutex_unlock(&common->mutex);
 -
- 	if (ret && ret != -ECANCELED)
- 		ath10k_warn(ar, "failed to process pending SDIO interrupts: %d\n",
- 			    ret);
-@@ -2000,8 +1998,6 @@ static int ath10k_sdio_probe(struct sdio_func *func,
- 		goto err_free_bmi_buf;
- 	}
++	wiphy_rfkill_start_polling(hw->wiphy);
+ 	rsi_send_rx_filter_frame(common, 0);
++	mutex_unlock(&common->mutex);
  
--	init_waitqueue_head(&ar_sdio->irq_wq);
--
- 	for (i = 0; i < ATH10K_SDIO_BUS_REQUEST_MAX_NUM; i++)
- 		ath10k_sdio_free_bus_req(ar, &ar_sdio->bus_req[i]);
+ 	return 0;
+ }
+@@ -299,8 +300,10 @@ static void rsi_mac80211_stop(struct ieee80211_hw *hw)
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
  
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
-index 3f61c67..4ff7b54 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.h
-+++ b/drivers/net/wireless/ath/ath10k/sdio.h
-@@ -210,8 +210,6 @@ struct ath10k_sdio {
- 	/* temporary buffer for BMI requests */
- 	u8 *bmi_buf;
++	rsi_dbg(ERR_ZONE, "===> Interface DOWN <===\n");
+ 	mutex_lock(&common->mutex);
+ 	common->iface_down = true;
++	wiphy_rfkill_stop_polling(hw->wiphy);
  
--	wait_queue_head_t irq_wq;
--
- 	bool is_disabled;
+ 	/* Block all rx frames */
+ 	rsi_send_rx_filter_frame(common, 0xffff);
+@@ -1214,6 +1217,19 @@ static void rsi_reg_notify(struct wiphy *wiphy,
+ 	mutex_unlock(&common->mutex);
+ }
  
- 	struct workqueue_struct *workqueue;
++static void rsi_mac80211_rfkill_poll(struct ieee80211_hw *hw)
++{
++	struct rsi_hw *adapter = hw->priv;
++	struct rsi_common *common = adapter->priv;
++
++	mutex_lock(&common->mutex);
++	if (common->fsm_state != FSM_MAC_INIT_DONE)
++		wiphy_rfkill_set_hw_state(hw->wiphy, true);
++	else
++		wiphy_rfkill_set_hw_state(hw->wiphy, false);
++	mutex_unlock(&common->mutex);
++}
++
+ static struct ieee80211_ops mac80211_ops = {
+ 	.tx = rsi_mac80211_tx,
+ 	.start = rsi_mac80211_start,
+@@ -1232,6 +1248,7 @@ static struct ieee80211_ops mac80211_ops = {
+ 	.sta_remove = rsi_mac80211_sta_remove,
+ 	.set_antenna = rsi_mac80211_set_antenna,
+ 	.get_antenna = rsi_mac80211_get_antenna,
++	.rfkill_poll = rsi_mac80211_rfkill_poll,
+ };
+ 
+ /**
 -- 
 2.7.4
