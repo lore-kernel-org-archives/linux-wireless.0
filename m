@@ -1,147 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35191 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932146AbdHWO3n (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33525 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750854AbdHAW6s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 10:29:43 -0400
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH v2] at76c50x-usb: check memory allocation failure
-Date: Wed, 23 Aug 2017 19:59:16 +0530
-Message-Id: <1503498556-13835-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170823_162948_797716_876FE853)
+        Tue, 1 Aug 2017 18:58:48 -0400
+Received: by mail-pf0-f174.google.com with SMTP id d67so13477636pfc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 15:58:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1500894086.20057.12.camel@intel.com>
+References: <20170721145147.7572-1-jprvita@endlessm.com> <1500894086.20057.12.camel@intel.com>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Date: Tue, 1 Aug 2017 15:58:47 -0700
+Message-ID: <CAOcMMifW4mVPj1TVkzQPdvT0YO6p1DUObNinzWv2_ZtCbfk9Mg@mail.gmail.com> (sfid-20170802_005910_976832_1E118010)
+Subject: Re: [PATCH] iwlwifi: Demote messages about fw flags size to info
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: linuxwifi <linuxwifi@intel.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "jprvita@gmail.com" <jprvita@gmail.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check memory allocation failure and return -ENOMEM rather than just
-retuning void.
+Hello Luca,
 
-Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
----
- drivers/net/wireless/atmel/at76c50x-usb.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+On Mon, Jul 24, 2017 at 4:01 AM, Coelho, Luciano
+<luciano.coelho@intel.com> wrote:
+> On Fri, 2017-07-21 at 07:51 -0700, Jo=C3=A3o Paulo Rechi Vita wrote:
 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index 09defbc..ceb453b 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -932,7 +932,7 @@ static int at76_set_autorate_fallback(struct at76_priv *priv, int onoff)
- 	return ret;
- }
- 
--static void at76_dump_mib_mac_addr(struct at76_priv *priv)
-+static int at76_dump_mib_mac_addr(struct at76_priv *priv)
- {
- 	int i;
- 	int ret;
-@@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
- 					 GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
- 			   sizeof(struct mib_mac_addr));
-@@ -961,7 +961,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
- 	kfree(m);
- }
- 
--static void at76_dump_mib_mac_wep(struct at76_priv *priv)
-+static int at76_dump_mib_mac_wep(struct at76_priv *priv)
- {
- 	int i;
- 	int ret;
-@@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
- 	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
- 			   sizeof(struct mib_mac_wep));
-@@ -999,14 +999,14 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
- 	kfree(m);
- }
- 
--static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
-+static int at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- {
- 	int ret;
- 	struct mib_mac_mgmt *m = kmalloc(sizeof(struct mib_mac_mgmt),
- 					 GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
- 			   sizeof(struct mib_mac_mgmt));
-@@ -1037,13 +1037,13 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 	kfree(m);
- }
- 
--static void at76_dump_mib_mac(struct at76_priv *priv)
-+static int at76_dump_mib_mac(struct at76_priv *priv)
- {
- 	int ret;
- 	struct mib_mac *m = kmalloc(sizeof(struct mib_mac), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct mib_mac));
- 	if (ret < 0) {
-@@ -1074,13 +1074,13 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 	kfree(m);
- }
- 
--static void at76_dump_mib_phy(struct at76_priv *priv)
-+static int at76_dump_mib_phy(struct at76_priv *priv)
- {
- 	int ret;
- 	struct mib_phy *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct mib_phy));
- 	if (ret < 0) {
-@@ -1107,13 +1107,13 @@ static void at76_dump_mib_phy(struct at76_priv *priv)
- 	kfree(m);
- }
- 
--static void at76_dump_mib_local(struct at76_priv *priv)
-+static int at76_dump_mib_local(struct at76_priv *priv)
- {
- 	int ret;
- 	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
- 	if (ret < 0) {
-@@ -1132,13 +1132,13 @@ static void at76_dump_mib_local(struct at76_priv *priv)
- 	kfree(m);
- }
- 
--static void at76_dump_mib_mdomain(struct at76_priv *priv)
-+static int at76_dump_mib_mdomain(struct at76_priv *priv)
- {
- 	int ret;
- 	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
- 			   sizeof(struct mib_mdomain));
--- 
-2.7.4
+(...)
+
+>> Currently these messages are presented to the user during boot if there
+>> is no bootsplash covering the console, sometimes even if the boot splash
+>> is enabled but has not started yet by the time this message is shown.
+>>
+
+I should have provided another piece of information here: all of this
+happens even when booting with the 'quiet' kernel parameter.
+
+> This specific case is harmless, but I'd rather keep this message as an
+> error, because in other situations it could lead to unexpected
+> behavioir, so I prefer to keep it very visible.
+>
+>
+
+I see your point, and I understand the purpose of these messages. I'm
+wondering if perhaps having them at the warning level would give them
+enough visibility, while still keeping a clean boot process to the end
+user. If so, I can send an updated patch.
+
+Thanks for your reply and for pointing to the fix for the root cause
+of that message.
+
+Cheers,
+
+...........................................................................=
+...........
+Jo=C3=A3o Paulo Rechi Vita  |  +1.415.851.5778  |  Endless
