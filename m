@@ -1,44 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.cypress.com ([157.95.67.100]:59756 "EHLO
-        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751607AbdHAPxq (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36420 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdHAJKW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 11:53:46 -0400
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
- <1501577287-28904-2-git-send-email-wright.feng@cypress.com>
- <6a914bee-383e-a45c-a805-f49716fc9ccf@broadcom.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <64c1343e-8797-9cbe-20c9-61b223122ecf@cypress.com> (sfid-20170801_175404_545088_C0B78113)
-Date: Tue, 1 Aug 2017 23:10:42 +0800
-MIME-Version: 1.0
-In-Reply-To: <6a914bee-383e-a45c-a805-f49716fc9ccf@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 1 Aug 2017 05:10:22 -0400
+Received: by mail-pf0-f193.google.com with SMTP id t83so1589475pfj.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:10:22 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [PATCH 6/8] rsi: buffer full check optimization
+Date: Tue,  1 Aug 2017 14:35:50 +0530
+Message-Id: <1501578352-10795-7-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111025_438781_2618DBBE)
+In-Reply-To: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Karun Eagalapati <karun256@gmail.com>
 
+We get buffer full event from firmware whenever Tx queue is full
+Host should stop writing packets after this and resume after
+buffer free event.
+Buffer status checking is optimized for once in 4 times if
+BUFF_FULL condition is not set, otherwise once for every
+packet.
 
-On 08/01/2017 8:43, Arend van Spriel wrote:
-> 
-> 
-> On 01-08-17 10:48, Wright Feng wrote:
->> From: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
->>
->> These changes add support for CYW4373 SDIO/USB chipset.
-> 
-> Could you summarize 4373 features, ie. is it 11n or 11ac? How much
-> streams does it support? That kind of stuff.
-Sure. 4373 is a 1x1 dual-band 11ac chip with 20/40/80Mhz channel 
-support. It's a WiFi/BT combo chip with SDIO/USB bus support.
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 16 +++++++++++++++-
+ drivers/net/wireless/rsi/rsi_sdio.h         |  1 +
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-> 
-> Regards,
-> Arend
-> .
-> 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 9b94ba7..94a9fcd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -271,6 +271,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
+ 					"%s: ==> BUFFER_AVAILABLE <==\n",
+ 					__func__);
+ 				dev->rx_info.buf_available_counter++;
++				dev->buff_status_updated = true;
+ 				break;
+ 
+ 			case FIRMWARE_ASSERT_IND:
+@@ -333,7 +334,14 @@ int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num)
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	u8 buf_status = 0;
+ 	int status = 0;
++	static int counter = 4;
+ 
++	if (!dev->buff_status_updated && counter) {
++		counter--;
++		goto out;
++	}
++
++	dev->buff_status_updated = false;
+ 	status = rsi_sdio_read_register(common->priv,
+ 					RSI_DEVICE_BUFFER_STATUS_REGISTER,
+ 					&buf_status);
+@@ -368,10 +376,16 @@ int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num)
+ 		dev->rx_info.semi_buffer_full = false;
+ 	}
+ 
++	if (dev->rx_info.mgmt_buffer_full || dev->rx_info.buf_full_counter)
++		counter = 1;
++	else
++		counter = 4;
++
++out:
+ 	if ((q_num == MGMT_SOFT_Q) && (dev->rx_info.mgmt_buffer_full))
+ 		return QUEUE_FULL;
+ 
+-	if (dev->rx_info.buffer_full)
++	if ((q_num < MGMT_SOFT_Q) && (dev->rx_info.buffer_full))
+ 		return QUEUE_FULL;
+ 
+ 	return QUEUE_NOT_FULL;
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index 9239fbe..95e4bed 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -114,6 +114,7 @@ struct rsi_91x_sdiodev {
+ 	u8 prev_desc[16];
+ 	u16 tx_blk_size;
+ 	u8 write_fail;
++	bool buff_status_updated;
+ };
+ 
+ void rsi_interrupt_handler(struct rsi_hw *adapter);
+-- 
+2.7.4
