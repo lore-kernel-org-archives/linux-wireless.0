@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f177.google.com ([209.85.128.177]:33197 "EHLO
-        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752063AbdHVTid (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:59756 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751607AbdHAPxq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 15:38:33 -0400
-Received: by mail-wr0-f177.google.com with SMTP id a47so16336755wra.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2017 12:38:32 -0700 (PDT)
-Subject: Re: [PATCH 17/30] brcmfamc: remove unnecessary call to
- brcmf_sdiod_set_backplane_window()
-To: Julian Calaby <julian.calaby@gmail.com>,
-        Ian Molton <ian@mnementh.co.uk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-18-ian@mnementh.co.uk>
- <CAGRGNgWUFx=cXjMZdTAkYoXTa=V-6Uty6+ccoXwO7WJA9udQRQ@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <71fdb0e7-f31d-fa98-c3c6-92ebe2f1a047@broadcom.com> (sfid-20170822_213837_268563_6CF29C14)
-Date: Tue, 22 Aug 2017 21:38:28 +0200
+        Tue, 1 Aug 2017 11:53:46 -0400
+Reply-To: chi-hsien.lin@cypress.com
+Subject: Re: [PATCH 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+ <1501577287-28904-2-git-send-email-wright.feng@cypress.com>
+ <6a914bee-383e-a45c-a805-f49716fc9ccf@broadcom.com>
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Message-ID: <64c1343e-8797-9cbe-20c9-61b223122ecf@cypress.com> (sfid-20170801_175404_545088_C0B78113)
+Date: Tue, 1 Aug 2017 23:10:42 +0800
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWUFx=cXjMZdTAkYoXTa=V-6Uty6+ccoXwO7WJA9udQRQ@mail.gmail.com>
+In-Reply-To: <6a914bee-383e-a45c-a805-f49716fc9ccf@broadcom.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 14:50, Julian Calaby wrote:
-> Hi Ian,
-> 
-> On Tue, Aug 22, 2017 at 9:25 PM, Ian Molton <ian@mnementh.co.uk> wrote:
->> All functions that might require the window address changing call
->> brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
->> the window is not required.
-> 
-> Wouldn't it be more safe to write these sorts of functions so that
-> they set the window themselves instead of relying on the caller?
 
-The function brcmf_sdiod_set_backplane_window() is a helper function by 
-which these sorts of functions set the window themselves. It would be 
-duplicating too much code as setting the window involves three register 
-accesses (or so) on the device.
 
-Regards,
-Arend
+On 08/01/2017 8:43, Arend van Spriel wrote:
+> 
+> 
+> On 01-08-17 10:48, Wright Feng wrote:
+>> From: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+>>
+>> These changes add support for CYW4373 SDIO/USB chipset.
+> 
+> Could you summarize 4373 features, ie. is it 11n or 11ac? How much
+> streams does it support? That kind of stuff.
+Sure. 4373 is a 1x1 dual-band 11ac chip with 20/40/80Mhz channel 
+support. It's a WiFi/BT combo chip with SDIO/USB bus support.
+
+> 
+> Regards,
+> Arend
+> .
+> 
