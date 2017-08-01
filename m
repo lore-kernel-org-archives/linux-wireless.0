@@ -1,174 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:38882 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751530AbdHPNSd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41512 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751496AbdHAJkr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:18:33 -0400
-Received: by mail-pg0-f67.google.com with SMTP id 123so5231547pga.5
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:18:32 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Tue, 1 Aug 2017 05:40:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 10/11] rsi: aggregation parameters frame for AP mode
-Date: Wed, 16 Aug 2017 18:43:17 +0530
-Message-Id: <1502889198-4478-11-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151836_146858_62E42BCB)
-In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
-References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  1 Aug 2017 12:40:34 +0300
+Message-Id: <20170801094039.22349-4-luca@coelho.fi> (sfid-20170801_114106_367036_C8289DAB)
+In-Reply-To: <20170801094039.22349-1-luca@coelho.fi>
+References: <20170801094039.22349-1-luca@coelho.fi>
+Subject: [PATCH 3/8] iwlwifi: split the regulatory rules when the bandwidth flags require it
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-TX command frame ampdu aggregation parameters is updated to
-include sta_id for AP mode.
+When we create a regulatory domain out of an MCC
+notification, we need to make sure that all the channels
+in the rule have the exact same properties.
+The current code mixes channel 36 and 40 although 36 can be
+a control channel with HT40+ (36, 40) whereas 40 can't be
+a control channel with HT40+ since  (40, 44) is invalid.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Because of that, cfg80211 would allow to connect in 40MHz
+to APs that are configured to channel 40 HT40+ and that made
+our firmware assert.
+
+Fix this by checking the bandwidth flags before taking the
+decision if the rule should be split.
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=195299 partly.
+
+Fixes: af45a9003f1f ("iwlwifi: create regdomain from mcc_update_cmd response")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 43 +++++++++++++++++++++++------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  6 ++--
- drivers/net/wireless/rsi/rsi_mgmt.h         |  3 +-
- 3 files changed, 39 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index be10d50..f2cb61f 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -866,9 +866,11 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 	int status = -EOPNOTSUPP;
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
--	u16 seq_no = 0;
-+	struct rsi_sta *rsta = NULL;
-+	u16 seq_no = 0, seq_start = 0;
- 	u8 ii = 0;
- 	struct ieee80211_sta *sta = params->sta;
-+	u8 sta_id = 0;
- 	enum ieee80211_ampdu_mlme_action action = params->action;
- 	u16 tid = params->tid;
- 	u16 *ssn = &params->ssn;
-@@ -880,17 +882,31 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 5c08f4d40f6a..3ee6767392b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -785,7 +785,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		       int num_of_ch, __le32 *channels, u16 fw_mcc)
+ {
+ 	int ch_idx;
+-	u16 ch_flags, prev_ch_flags = 0;
++	u16 ch_flags;
++	u32 reg_rule_flags, prev_reg_rule_flags = 0;
+ 	const u8 *nvm_chan = cfg->ext_nvm ?
+ 			     iwl_ext_nvm_channels : iwl_nvm_channels;
+ 	struct ieee80211_regdomain *regd;
+@@ -834,8 +835,11 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 			continue;
+ 		}
+ 
++		reg_rule_flags = iwl_nvm_get_regdom_bw_flags(nvm_chan, ch_idx,
++							     ch_flags, cfg);
++
+ 		/* we can't continue the same rule */
+-		if (ch_idx == 0 || prev_ch_flags != ch_flags ||
++		if (ch_idx == 0 || prev_reg_rule_flags != reg_rule_flags ||
+ 		    center_freq - prev_center_freq > 20) {
+ 			valid_rules++;
+ 			new_rule = true;
+@@ -854,18 +858,17 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		rule->power_rule.max_eirp =
+ 			DBM_TO_MBM(IWL_DEFAULT_MAX_TX_POWER);
+ 
+-		rule->flags = iwl_nvm_get_regdom_bw_flags(nvm_chan, ch_idx,
+-							  ch_flags, cfg);
++		rule->flags = reg_rule_flags;
+ 
+ 		/* rely on auto-calculation to merge BW of contiguous chans */
+ 		rule->flags |= NL80211_RRF_AUTO_BW;
+ 		rule->freq_range.max_bandwidth_khz = 0;
+ 
+-		prev_ch_flags = ch_flags;
+ 		prev_center_freq = center_freq;
++		prev_reg_rule_flags = reg_rule_flags;
+ 
+ 		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+-			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s(0x%02x): Ad-Hoc %ssupported\n",
++			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n",
+ 			      center_freq,
+ 			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
+ 			      CHECK_AND_PRINT_I(VALID),
+@@ -877,10 +880,10 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 			      CHECK_AND_PRINT_I(160MHZ),
+ 			      CHECK_AND_PRINT_I(INDOOR_ONLY),
+ 			      CHECK_AND_PRINT_I(GO_CONCURRENT),
+-			      ch_flags,
++			      ch_flags, reg_rule_flags,
+ 			      ((ch_flags & NVM_CHANNEL_ACTIVE) &&
+ 			       !(ch_flags & NVM_CHANNEL_RADAR))
+-					 ? "" : "not ");
++					 ? "Ad-Hoc" : "");
  	}
  
- 	mutex_lock(&common->mutex);
--	rsi_dbg(INFO_ZONE, "%s: AMPDU action %d called\n", __func__, action);
-+
- 	if (ssn != NULL)
- 		seq_no = *ssn;
- 
-+	if (vif->type == NL80211_IFTYPE_AP) {
-+		rsta = rsi_find_sta(common, sta->addr);
-+		if (!rsta) {
-+			rsi_dbg(ERR_ZONE, "No station mapped\n");
-+			return 0;
-+		}
-+		sta_id = rsta->sta_id;
-+	}
-+
-+	rsi_dbg(INFO_ZONE,
-+		"%s: AMPDU action tid=%d ssn=0x%x, buf_size=%d sta_id=%d\n",
-+		__func__, tid, seq_no, buf_size, sta_id);
-+
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		status = rsi_send_aggregation_params_frame(common,
- 							   tid,
- 							   seq_no,
- 							   buf_size,
--							   STA_RX_ADDBA_DONE);
-+							   STA_RX_ADDBA_DONE,
-+							   sta_id);
- 		break;
- 
- 	case IEEE80211_AMPDU_RX_STOP:
-@@ -898,11 +914,15 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 							   tid,
- 							   0,
- 							   buf_size,
--							   STA_RX_DELBA);
-+							   STA_RX_DELBA,
-+							   sta_id);
- 		break;
- 
- 	case IEEE80211_AMPDU_TX_START:
--		common->vif_info[ii].seq_start = seq_no;
-+		if (vif->type == NL80211_IFTYPE_STATION)
-+			common->vif_info[ii].seq_start = seq_no;
-+		else if (vif->type == NL80211_IFTYPE_AP)
-+			rsta->seq_start[tid] = seq_no;
- 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		status = 0;
- 		break;
-@@ -914,18 +934,23 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 							   tid,
- 							   seq_no,
- 							   buf_size,
--							   STA_TX_DELBA);
-+							   STA_TX_DELBA,
-+							   sta_id);
- 		if (!status)
- 			ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		if (vif->type == NL80211_IFTYPE_STATION)
-+			seq_start = common->vif_info[ii].seq_start;
-+		else if (vif->type == NL80211_IFTYPE_AP)
-+			seq_start = rsta->seq_start[tid];
- 		status = rsi_send_aggregation_params_frame(common,
- 							   tid,
--							   common->vif_info[ii]
--								.seq_start,
-+							   seq_start,
- 							   buf_size,
--							   STA_TX_ADDBA_DONE);
-+							   STA_TX_ADDBA_DONE,
-+							   sta_id);
- 		break;
- 
- 	default:
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 8762d13..2d3cae5 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -537,11 +537,11 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
- 				      u16 tid,
- 				      u16 ssn,
- 				      u8 buf_size,
--				      u8 event)
-+				      u8 event,
-+				      u8 sta_id)
- {
- 	struct sk_buff *skb = NULL;
- 	struct rsi_aggr_params *aggr_params;
--	u8 peer_id = 0;
- 	u16 frame_len = sizeof(struct rsi_aggr_params);
- 
- 	skb = dev_alloc_skb(frame_len);
-@@ -561,7 +561,7 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
- 	aggr_params->desc_dword0.frame_type = AMPDU_IND;
- 
- 	aggr_params->aggr_params = tid & RSI_AGGR_PARAMS_TID_MASK;
--	aggr_params->peer_id = peer_id;
-+	aggr_params->peer_id = sta_id;
- 	if (event == STA_TX_ADDBA_DONE) {
- 		aggr_params->seq_start = cpu_to_le16(ssn);
- 		aggr_params->baw_size = cpu_to_le16(buf_size);
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index c50153d..2d82733 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -609,7 +609,8 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
- int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
- 			     u8 *mac_addr, u8 vap_id, u8 vap_status);
- int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
--				      u16 ssn, u8 buf_size, u8 event);
-+				      u16 ssn, u8 buf_size, u8 event,
-+				      u8 sta_id);
- int rsi_hal_load_key(struct rsi_common *common, u8 *data, u16 key_len,
- 		     u8 key_type, u8 key_id, u32 cipher);
- int rsi_set_channel(struct rsi_common *common,
+ 	regd->n_reg_rules = valid_rules;
 -- 
-2.7.4
+2.13.2
