@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdHBVBE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:01:04 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 4/9] wil6210: check no_fw_recovery in resume failure recovery
-Date: Thu,  3 Aug 2017 00:00:44 +0300
-Message-Id: <1501707649-9665-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230107_832545_C80CE2A4)
-In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:28264 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751038AbdHAEs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Aug 2017 00:48:57 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 19/24] iwlwifi: mvm: fix TCP CSUM offload with WEP and
+ A000 series
+Date: Tue, 1 Aug 2017 04:48:55 +0000
+Message-ID: <1501562934.2588.39.camel@intel.com> (sfid-20170801_064900_280572_F48BBC18)
+References: <20170728142337.19183-1-luca@coelho.fi>
+         <20170728142337.19183-20-luca@coelho.fi>
+In-Reply-To: <20170728142337.19183-20-luca@coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reset 11ad device on resume failure only if no_fw_recovery
-is not set.
-
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/pm.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index ce1f384..4548829 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -85,7 +85,9 @@ static int wil_resume_keep_radio_on(struct wil6210_priv *wil)
- 	/* Send WMI resume request to the device */
- 	rc = wmi_resume(wil);
- 	if (rc) {
--		wil_err(wil, "device failed to resume (%d), resetting\n", rc);
-+		wil_err(wil, "device failed to resume (%d)\n", rc);
-+		if (no_fw_recovery)
-+			goto out;
- 		rc = wil_down(wil);
- 		if (rc) {
- 			wil_err(wil, "wil_down failed (%d)\n", rc);
--- 
-1.9.1
+T24gRnJpLCAyMDE3LTA3LTI4IGF0IDE3OjIzICswMzAwLCBMdWNhIENvZWxobyB3cm90ZToNCj4g
+RnJvbTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4g
+DQo+IFdoZW4gd2UgZW5hYmxlZCBUQ1AgY2hlY2tzdW0gb2ZmbG9hZCwgd2UgbmVlZCB0byB0ZWxs
+IHRoZQ0KPiBmaXJtd2FyZSB3aGVyZSB0aGUgSVAgaGVhZGVyIHN0YXJ0cy4gSWYgd2UgaGF2ZSBh
+biBJViwgdGhlbg0KPiB3ZSBuZWVkIHRvIGFkYXB0IHRoYXQgdmFsdWUgc2luY2UgdGhlIElWIGlz
+IHBsYWNlZCBiZWZvcmUNCj4gdGhlIFNOQVAgaGVhZGVyLiBUaGlzIGlzIHRydWUgb25seSBmb3Ig
+Y2FzZXMgd2hlcmUgdGhlDQo+IGRyaXZlciBhZGRzIHRoZSBJViwgbm90IHRoZSBXRVAgY2FzZSBp
+biB3aGljaCB0aGUgSVYgaXMNCj4gYWRkZWQgYnkgdGhlIGZpcm13YXJlIGl0c2VsZi4NCj4gDQo+
+IE9uIEEwMDAgZGV2aWNlcyBzZXJpZXMsIHRoZSBJViBpcyBhbHdheXMgYWRkZWQgYnkgdGhlDQo+
+IGRldmljZS4NCj4gDQo+IEZpeCB0aGlzLg0KPiANCj4gRml4ZXM6IDVlNmE5OGRjNDg2MyAoIml3
+bHdpZmk6IG12bTogZW5hYmxlIFRDUC9VRFAgY2hlY2tzdW0gc3VwcG9ydCBmb3IgOTAwMCBmYW1p
+bHkiKQ0KPiBTaWduZWQtb2ZmLWJ5OiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJh
+Y2hAaW50ZWwuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBMdWNhIENvZWxobyA8bHVjaWFuby5jb2Vs
+aG9AaW50ZWwuY29tPg0KPiAtLS0NCg0KRW1tYW51ZWwgYXNrZWQgbWUgdG8gc2VuZCB0aGlzIGZv
+ciB0aGUgcmMtc2VyaWVzLCBzaW5jZSBpdCBmaXhlcyBvdXINCm5ld2x5IHN1cHBvcnRlZCA5MDAw
+IGZhbWlseS4NCg0KLS0NCkx1Y2Eu
