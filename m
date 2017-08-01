@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45746 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754948AbdHYI1k (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:32911 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751008AbdHAJjd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Aug 2017 04:27:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Tue, 1 Aug 2017 05:39:33 -0400
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 25 Aug 2017 11:27:30 +0300
-Message-Id: <20170825082730.31388-3-luca@coelho.fi> (sfid-20170825_102750_541930_D5A8F6EF)
-In-Reply-To: <20170825082730.31388-1-luca@coelho.fi>
-References: <20170825082730.31388-1-luca@coelho.fi>
-Subject: [PATCH 2/2] iwlwifi: mvm: Avoid deffering non bufferable frames
+        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com
+Subject: [PATCH 1/3] brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in AP/opensecurity mode
+Date: Tue,  1 Aug 2017 16:48:05 +0800
+Message-Id: <1501577287-28904-1-git-send-email-wright.feng@cypress.com> (sfid-20170801_113937_162950_72226E2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+When setting wpa_auth to WPA_AUTH_NONE(1) in AP mode with WEP secuirty,
+firmware will set privacy bit and add WPA OUI in VENDOR IE in beacon and
+probe response. It confuses the supplicant in sation client by the
+security type from softAP beacon and we will see [WPA-?] in scan result.
+So we set WPA_AUTH_DISABLED in softAP mode with opensecurity.
 
-Use bcast station for all non bufferable frames on AP and AD-HOC.
-
-The host is no longer aware of STAs PS status because of buffer
-station offload, so we can't rely on mac80211 to toggle on
-IEEE80211_TX_CTL_NO_PS_BUFFER bit.
-
-A possible issue with buffering such frames, beside the obvious spec
-violation, is when a station disconnects while in PS but the AP isn't
-aware of that. In such scenarios the AP won't be able to send probe
-responses or auth frames so the STA won't be able to reconnect and
-the AP will have a queue hang.
-
-Fixes: 3e56eadfb6a1 ("iwlwifi: mvm: implement AP/GO uAPSD support")
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d7feb1ab4dc9..15f2d826bb4b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -810,10 +810,11 @@ static void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
- 	    !test_bit(IWL_MVM_STATUS_ROC_AUX_RUNNING, &mvm->status))
- 		goto drop;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index a31ea10..54588d2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3854,6 +3854,7 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
+ static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+ {
+ 	s32 err;
++	s32 wpa_val;
  
--	/* treat non-bufferable MMPDUs as broadcast if sta is sleeping */
--	if (unlikely(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER &&
--		     ieee80211_is_mgmt(hdr->frame_control) &&
--		     !ieee80211_is_bufferable_mmpdu(hdr->frame_control)))
-+	/* treat non-bufferable MMPDUs on AP interfaces as broadcast */
-+	if ((info->control.vif->type == NL80211_IFTYPE_AP ||
-+	     info->control.vif->type == NL80211_IFTYPE_ADHOC) &&
-+	    ieee80211_is_mgmt(hdr->frame_control) &&
-+	    !ieee80211_is_bufferable_mmpdu(hdr->frame_control))
- 		sta = NULL;
- 
- 	if (sta) {
+ 	/* set auth */
+ 	err = brcmf_fil_bsscfg_int_set(ifp, "auth", 0);
+@@ -3868,7 +3869,11 @@ static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+ 		return err;
+ 	}
+ 	/* set upper-layer auth */
+-	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", WPA_AUTH_NONE);
++	if (brcmf_is_ibssmode(ifp->vif))
++		wpa_val = WPA_AUTH_NONE;
++	else
++		wpa_val = WPA_AUTH_DISABLED;
++	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", wpa_val);
+ 	if (err < 0) {
+ 		brcmf_err("wpa_auth error %d\n", err);
+ 		return err;
 -- 
-2.14.1
+1.9.1
