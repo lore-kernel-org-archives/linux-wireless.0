@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60946 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdH3Mlp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41554 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751610AbdHAJkv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 08:41:45 -0400
-Date: Wed, 30 Aug 2017 14:41:41 +0200
-From: Christoph Hellwig <hch@infradead.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
-        devel@driverdev.osuosl.org,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        linux-watchdog@vger.kernel.org,
-        linux-efi <linux-efi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID
- API
-Message-ID: <20170830124141.oa32gzbgnafarkrh@infradead.org> (sfid-20170830_144200_707493_925544E4)
-References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
- <2908341.aERReitNcd@aspire.rjw.lan>
- <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com>
- <6349641.0fe8FCM51k@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6349641.0fe8FCM51k@aspire.rjw.lan>
+        Tue, 1 Aug 2017 05:40:51 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Tzipi Peres <tzipi.peres@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  1 Aug 2017 12:40:39 +0300
+Message-Id: <20170801094039.22349-9-luca@coelho.fi> (sfid-20170801_114059_887901_E9FA9355)
+In-Reply-To: <20170801094039.22349-1-luca@coelho.fi>
+References: <20170801094039.22349-1-luca@coelho.fi>
+Subject: [PATCH 8/8] iwlwifi: add the new 9000 series PCI IDs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 26, 2017 at 02:27:44AM +0200, Rafael J. Wysocki wrote:
-> > >> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > >> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > >>
-> > >> Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > >
-> > > OK
-> > >
-> > > Andy, do you want me to apply this?
-> > 
-> > If you would like to.
-> > 
-> > The patch is now pretty independent since necessary stuff made v4.13-rc1.
-> 
-> OK
+From: Tzipi Peres <tzipi.peres@intel.com>
 
-This didn't seem to make it into linux-next so far, though.
+Add two PCI IDs for the 9160 series.
+Add five PCI IDs for the 9260 series.
+Add one PCI IDs for the 9270 series.
+Add seven PCI IDs for the 9460 series.
+Add five PCI IDs for the 9560 series.
+
+Signed-off-by: Tzipi Peres <tzipi.peres@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index f16c1bb9bf94..84f4ba01e14f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -510,9 +510,17 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0014, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0214, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
+@@ -527,10 +535,22 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0260, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0064, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x00A4, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x02A4, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x00A0, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x02A0, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0230, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0234, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0238, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x023C, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
+-- 
+2.13.2
