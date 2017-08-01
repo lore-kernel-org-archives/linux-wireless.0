@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50500 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751993AbdHHLv4 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41520 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751012AbdHAJks (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:51:56 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,
- 1/3] brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in AP/OPEN security
- mode
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
-References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com
-Message-Id: <20170808115155.17B4A60708@smtp.codeaurora.org> (sfid-20170808_135159_083900_DBD5D795)
-Date: Tue,  8 Aug 2017 11:51:53 +0000 (UTC)
+        Tue, 1 Aug 2017 05:40:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  1 Aug 2017 12:40:35 +0300
+Message-Id: <20170801094039.22349-5-luca@coelho.fi> (sfid-20170801_114107_130281_859CF95C)
+In-Reply-To: <20170801094039.22349-1-luca@coelho.fi>
+References: <20170801094039.22349-1-luca@coelho.fi>
+Subject: [PATCH 4/8] iwlwifi: mvm: set A-MPDU bit upon empty BA notification from FW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> wrote:
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-> When setting wpa_auth to WPA_AUTH_NONE(1) in AP mode with WEP security,
-> firmware will set privacy bit and add WPA OUI in VENDOR IE in beacon and
-> probe response. The security type in softAP beacons confuse the
-> supplicant in client side, and the user client will see [WPA-?] in
-> supplicant scan result. So we set WPA_AUTH_DISABLED in softAP mode with 
-> OPEN security.
-> 
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+The bit was set only if there was at least one reclaimed frame in an
+aggregation. It's important to set it also in the case that the whole
+A-MPDU was lost, otherwise rate scaling statistics will not be
+updated correctly. Thus, set it always in ba notification handler.
 
-3 patches applied to wireless-drivers-next.git, thanks.
+This fixes a throughput degradation of about 20% in certain scenarios
+with multiple streams on 11ac.
 
-fdfb0f94bfb7 brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in AP/OPEN security mode
-0ec9eb90feec brcmfmac: Add support for CYW4373 SDIO/USB chipset
-99976fc08412 brcmfmac: fix wrong num_different_channels when mchan feature enabled
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index e5d3eba2e82a..5fcc9dd6be56 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1821,6 +1821,8 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	struct iwl_mvm_tid_data *tid_data;
+ 	struct iwl_mvm_sta *mvmsta;
+ 
++	ba_info.flags = IEEE80211_TX_STAT_AMPDU;
++
+ 	if (iwl_mvm_has_new_tx_api(mvm)) {
+ 		struct iwl_mvm_compressed_ba_notif *ba_res =
+ 			(void *)pkt->data;
 -- 
-https://patchwork.kernel.org/patch/9878545/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.2
