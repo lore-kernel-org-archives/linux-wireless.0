@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:47559 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750715AbdHXB21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 21:28:27 -0400
-Date: Thu, 24 Aug 2017 11:28:25 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: linux-next: manual merge of the wireless-drivers-next tree with
- Linus' tree
-Message-ID: <20170824112825.29c2f8a0@canb.auug.org.au> (sfid-20170824_032840_902001_0A954C00)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:38838 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751106AbdHABib (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Jul 2017 21:38:31 -0400
+Received: by mail-pf0-f195.google.com with SMTP id e3so313919pfc.5
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 18:38:31 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [v2 PATCH 1/2] mwifiex: make addba request command clean
+Date: Tue,  1 Aug 2017 01:38:23 +0000
+Message-Id: <1501551504-8560-1-git-send-email-huxinming820@gmail.com> (sfid-20170801_033835_535406_7C1864C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Xinming Hu <huxm@marvell.com>
 
-Today's linux-next merge of the wireless-drivers-next tree got a
-conflict in:
+uninitilized variable, such as .add_req_result might be magic stack
+value. Initialize the structure to make it clean.
 
-  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+v2: Same as v1
+---
+ drivers/net/wireless/marvell/mwifiex/11n.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-between commit:
-
-  a600852a9d00 ("iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU")
-
-from Linus' tree and commit:
-
-  790e663433d8 ("iwlwifi: mvm: include more debug data when we get an unexpected baid")
-
-from the wireless-drivers-next tree.
-
-I fixed it up (I just used the former) and can carry the fix as
-necessary. This is now fixed as far as linux-next is concerned, but any
-non trivial conflicts should be mentioned to your upstream maintainer
-when your tree is submitted for merging.  You may also want to consider
-cooperating with the maintainer of the conflicting tree to minimise any
-particularly complex conflicts.
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index 16c77c2..7252069 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -572,6 +572,8 @@ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
+ 
+ 	mwifiex_dbg(priv->adapter, CMD, "cmd: %s: tid %d\n", __func__, tid);
+ 
++	memset(&add_ba_req, 0, sizeof(add_ba_req));
++
+ 	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
+ 	    ISSUPP_TDLS_ENABLED(priv->adapter->fw_cap_info) &&
+ 	    priv->adapter->is_hw_11ac_capable &&
 -- 
-Cheers,
-Stephen Rothwell
+1.9.1
