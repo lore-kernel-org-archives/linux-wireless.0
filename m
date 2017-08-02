@@ -1,66 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:45586 "EHLO
-        wens.csie.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751891AbdHHDiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 23:38:15 -0400
-From: Chen-Yu Tsai <wens@csie.org>
-To: seth.forshee@canonical.com
-Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] wireless-regdb: Update regulatory document references for Taiwan (TW)
-Date: Tue,  8 Aug 2017 11:38:03 +0800
-Message-Id: <20170808033804.6053-1-wens@csie.org> (sfid-20170808_054016_933604_C5B57E3B)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752616AbdHBVBG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:01:06 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 5/9] wil6210: add statistics for suspend time
+Date: Thu,  3 Aug 2017 00:00:45 +0300
+Message-Id: <1501707649-9665-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230109_845431_EE459E41)
+In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taiwan's Ministry of Transportation and Communications updated its
-frequency allocation rules again on 2017/02/22. The amended articles
-are not related to this database, but the link should be kept up to
-date, as the old one is no longer accessible.
+Add statistics for total, min and max suspend time, that
+calculates the time the 11ad device was in suspend.
+Those statistics will help to estimate the power impact
+of d3hot feature.
 
-Taiwan's regulatory body, NCC, published its updated technical
-regulatory standard for low-power radio frequency devices, LP0002.
-The URL has not changed. The new standard opens up more bandwidth
-for 5g U-NII WiFi and 60g WiGig devices. Transmission power for
-5.25 ~ 5.35 GHz is also increased, but this was already covered
-in commit 9a618d9b5fb2 ("wireless-regdb: Update 5 GHz rules for
-Taiwan (TW) to follow US").
-
-This patch updates the link and comments for the rules and standards,
-and also adds inline comments referencing the governing section of the
-LP0002 standard for each band.
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- db.txt | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
+ drivers/net/wireless/ath/wil6210/main.c    |  2 ++
+ drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
+ 4 files changed, 40 insertions(+), 4 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 0bc068e..d96f00e 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1174,15 +1174,16 @@ country TT: DFS-FCC
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 21b6611..d4e8865 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1617,6 +1617,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
  
- # Source:
--# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
--#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
--#      filedisplay=Table+of+radio+frequency+allocation.doc
--# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
-+# Table of Frequency Allocations of Republic of China (Taiwan) / Feb 2017:
-+#   https://www.motc.gov.tw/websitedowndoc?file=post/201702221012200.doc& \
-+#	filedisplay=Table%2Bof%2Bradio%2Bfrequency%2Ballocation.doc
-+# LP0002 Low-power Radio-frequency Devices Technical Regulations / 23 Aug 2016:
- #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
--#   (section 3.10.1, 4.7)
- country TW: DFS-FCC
-+	# 2.4g band, LP0002 section 3.10.1
- 	(2400 - 2483.5 @ 40), (30)
--	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
-+	# 5g U-NII band, LP0002 section 4.7
-+	# 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
- 	(5150 - 5250 @ 80), (23), AUTO-BW
- 	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
- 	(5470 - 5725 @ 160), (23), DFS
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
++	wil->suspend_stats.min_suspend_time = ULONG_MAX;
++	wil->suspend_stats.collection_start = ktime_get();
+ 
+ 	return len;
+ }
+@@ -1628,18 +1630,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	static char text[400];
+ 	int n;
++	unsigned long long stats_collection_time =
++		ktime_to_us(ktime_sub(ktime_get(),
++				      wil->suspend_stats.collection_start));
+ 
+ 	n = snprintf(text, sizeof(text),
+ 		     "Suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n",
++		     "rejected by host:%ld rejected by device:%ld\n"
++		     "total suspend time:%lld min suspend time:%lld\n"
++		     "max suspend time:%lld stats collection time: %lld\n",
+ 		     wil->suspend_stats.successful_suspends,
+ 		     wil->suspend_stats.failed_suspends,
+ 		     wil->suspend_stats.successful_resumes,
+ 		     wil->suspend_stats.failed_resumes,
+ 		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device);
++		     wil->suspend_stats.rejected_by_device,
++		     wil->suspend_stats.total_suspend_time,
++		     wil->suspend_stats.min_suspend_time,
++		     wil->suspend_stats.max_suspend_time,
++		     stats_collection_time);
+ 
+ 	n = min_t(int, n, sizeof(text));
+ 
+@@ -1795,6 +1806,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+ 
++	wil->suspend_stats.collection_start = ktime_get();
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index daf944a..8968c2c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 
+ 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
++	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
++	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 4548829..820ed17 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -300,6 +300,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
+ 	wil_dbg_pm(wil, "suspend: %s => %d\n",
+ 		   is_runtime ? "runtime" : "system", rc);
+ 
++	if (!rc)
++		wil->suspend_stats.suspend_start_time = ktime_get();
++
+ 	return rc;
+ }
+ 
+@@ -309,6 +312,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 	bool keep_radio_on = ndev->flags & IFF_UP &&
+ 			     wil->keep_radio_on_during_sleep;
++	unsigned long long suspend_time_usec = 0;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -326,8 +330,20 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
+ 	else
+ 		rc = wil_resume_radio_off(wil);
+ 
++	if (rc)
++		goto out;
++
++	suspend_time_usec =
++		ktime_to_us(ktime_sub(ktime_get(),
++				      wil->suspend_stats.suspend_start_time));
++	wil->suspend_stats.total_suspend_time += suspend_time_usec;
++	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
++		wil->suspend_stats.min_suspend_time = suspend_time_usec;
++	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
++		wil->suspend_stats.max_suspend_time = suspend_time_usec;
++
+ out:
+-	wil_dbg_pm(wil, "resume: %s => %d\n",
+-		   is_runtime ? "runtime" : "system", rc);
++	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
++		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
+ 	return rc;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ac32284..724ad59 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -90,6 +90,11 @@ struct wil_suspend_stats {
+ 	unsigned long failed_resumes;
+ 	unsigned long rejected_by_device;
+ 	unsigned long rejected_by_host;
++	unsigned long long total_suspend_time;
++	unsigned long long min_suspend_time;
++	unsigned long long max_suspend_time;
++	ktime_t collection_start;
++	ktime_t suspend_start_time;
+ };
+ 
+ /* Calculate MAC buffer size for the firmware. It includes all overhead,
 -- 
-2.13.3
+1.9.1
