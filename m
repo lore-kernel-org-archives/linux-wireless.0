@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51326 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751880AbdHHLwW (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:37193 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752442AbdHBR5c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:52:22 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: add setting carrier state ON for successful roaming
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1502093812-5011-1-git-send-email-wright.feng@cypress.com>
-References: <1502093812-5011-1-git-send-email-wright.feng@cypress.com>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Message-Id: <20170808115221.B668560310@smtp.codeaurora.org> (sfid-20170808_135225_071398_D7C9A60C)
-Date: Tue,  8 Aug 2017 11:52:21 +0000 (UTC)
+        Wed, 2 Aug 2017 13:57:32 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, harish.patil@cavium.com,
+        manish.chopra@cavium.com, Dept-GELinuxNICDev@cavium.com
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 1/2] wlcore: add const to bin_attribute structure
+Date: Wed,  2 Aug 2017 23:27:13 +0530
+Message-Id: <1501696634-15765-2-git-send-email-bhumirks@gmail.com> (sfid-20170802_195823_038608_38E600B1)
+In-Reply-To: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
+References: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> wrote:
+Add const to bin_attribute structure as it is only passed to the
+functions sysfs_{remove/create}_bin_file. The corresponding arguments
+are of type const, so declare the structure to be const.
 
-> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> 
-> After association, ping is not working when sweeping the channel at the
-> AP side. It is caused by having incorrect carrier state (OFF) for the STA
-> in successful roaming. This patch sets the carrier state ON for the case.
-> 
-> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+ drivers/net/wireless/ti/wlcore/sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-8b943e36e24a brcmfmac: add setting carrier state ON for successful roaming
-
+diff --git a/drivers/net/wireless/ti/wlcore/sysfs.c b/drivers/net/wireless/ti/wlcore/sysfs.c
+index a9218e5..b72e210 100644
+--- a/drivers/net/wireless/ti/wlcore/sysfs.c
++++ b/drivers/net/wireless/ti/wlcore/sysfs.c
+@@ -138,7 +138,7 @@ static ssize_t wl1271_sysfs_read_fwlog(struct file *filp, struct kobject *kobj,
+ 	return len;
+ }
+ 
+-static struct bin_attribute fwlog_attr = {
++static const struct bin_attribute fwlog_attr = {
+ 	.attr = {.name = "fwlog", .mode = S_IRUSR},
+ 	.read = wl1271_sysfs_read_fwlog,
+ };
 -- 
-https://patchwork.kernel.org/patch/9884669/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
