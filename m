@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35767 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753654AbdHIQYD (ORCPT
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:33523 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752722AbdHBKR7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:24:03 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, petkan@nucleusys.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 02/20] ath6kl: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:53:43 +0530
-Message-Id: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182608_949524_F3976028)
-In-Reply-To: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Wed, 2 Aug 2017 06:17:59 -0400
+Received: by mail-qt0-f182.google.com with SMTP id a18so24222316qta.0
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 03:17:59 -0700 (PDT)
+Message-ID: <5981A6D4.4030805@broadcom.com> (sfid-20170802_121803_608290_56987AAC)
+Date: Wed, 02 Aug 2017 12:17:56 +0200
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan
+ feature enabled
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com> <1501577287-28904-3-git-send-email-wright.feng@cypress.com> <87mv7i48nx.fsf@codeaurora.org>
+In-Reply-To: <87mv7i48nx.fsf@codeaurora.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+On 8/2/2017 11:32 AM, Kalle Valo wrote:
+> Wright Feng <wright.feng@cypress.com> writes:
+>
+>> The num_different_channels in wiphy info is not correct when firmware
+>> supports mchan. When mchan is on, num_different_channels is always
+>> overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
+>> num_different_channels setting forward.
+>>
+>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>
+> Does this fix a user visible bug? If yes, it would be nice to document
+> that.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
-changes in v2:
-              Re-submitting wireless separately.
+Hi Kalle,
 
- drivers/net/wireless/ath/ath6kl/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Depends on the users expectation ;-) When the device/firmware supports 
+multi-channel (better not use mchan abbreviation) it can have P2P 
+connection and regular connection with AP simultaneous. So the current 
+state is that this is not possible regardless whether mchan is 
+supported. So the device is not used to fullest extent.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index 9da3594..4defb7a 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -1201,7 +1201,7 @@ static int ath6kl_usb_pm_resume(struct usb_interface *interface)
- #endif
- 
- /* table of devices that work with this driver */
--static struct usb_device_id ath6kl_usb_ids[] = {
-+static const struct usb_device_id ath6kl_usb_ids[] = {
- 	{USB_DEVICE(0x0cf3, 0x9375)},
- 	{USB_DEVICE(0x0cf3, 0x9374)},
- 	{ /* Terminating entry */ },
--- 
-2.7.4
+Regards,
+Arend
