@@ -1,66 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from resqmta-po-07v.sys.comcast.net ([96.114.154.166]:60122 "EHLO
-        resqmta-po-07v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752377AbdHPUpj (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752706AbdHBVBD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 16:45:39 -0400
-Reply-To: james@nurealm.net
-Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working
- with wireless drivers
-To: Andreas Born <futur.andy@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Mahesh Bandewar <maheshb@google.com>,
-        Andy Gospodarek <andy@greyhouse.net>,
-        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>,
-        Dan Williams <dcbw@redhat.com>
-References: <87shh0gewn.fsf@kamboji.qca.qualcomm.com>
- <8845e49b-3165-e6df-5935-c86278d220d9@broadcom.com>
- <CADps9UA7S2betC-+5sOXjYWmDC8gnk6JJ9aEueEOoYAC3DU8hg@mail.gmail.com>
- <87tw1edz5j.fsf@kamboji.qca.qualcomm.com>
- <87tw1dck6o.fsf@kamboji.qca.qualcomm.com>
- <deb37db2-a55b-4010-475a-e756e67d3bc9@nurealm.net>
- <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com>
-From: James Feeney <james@nurealm.net>
-Message-ID: <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net> (sfid-20170816_224559_809669_A0E5711C)
-Date: Wed, 16 Aug 2017 14:44:27 -0600
-MIME-Version: 1.0
-In-Reply-To: <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Wed, 2 Aug 2017 17:01:03 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 3/9] wil6210: support FW RSSI reporting
+Date: Thu,  3 Aug 2017 00:00:43 +0300
+Message-Id: <1501707649-9665-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230120_416100_F23FB442)
+In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/13/2017 11:42 AM, Andreas Born wrote:
-> On a side note I would recommend some of my own reading to you about
-> patch submission in general [1] and on netdev specifically [2].
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Mmm - [2] and [3], I suspect.  Thanks Andreas.  I'll be studying those.  Yeah,
-I'm still learning what is needed and what works.  Sometimes, just a note to the
-author is more than enough to resolve a problem.  Sometimes, discussion is
-needed.  And other times... well, certain people are infamous... but no problem
-here, thankfully.
+New FW supports reporting RSSI signal in dBm.
+Report RSSI to kernel in case FW has this capability.
 
-> And, just wondering, who's going to eventually close that bugreport?
-> https://bugzilla.kernel.org/show_bug.cgi?id=196547
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 12 ++++++++----
+ drivers/net/wireless/ath/wil6210/debugfs.c  |  2 ++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  3 +++
+ drivers/net/wireless/ath/wil6210/wmi.c      |  9 ++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h      |  6 ++++--
+ 5 files changed, 23 insertions(+), 9 deletions(-)
 
-I can close it when the patches actually land in the kernel.  I'm glad to see
-that there was an "Ack" from Mahesh.
-
-On the topic of wireless support for kernel ethtool reporting, I'm wondering, is
-there is any consensus about that?
-
-And, for instance, is there any *other* way for the bonding module to make
-"better link" decisions for wireless links?  As "wireless" becomes more capable,
-possibly more diverse, and probably more essential for computing, this is likely
-to become a bigger issue.
-
-Ben Greear mentioned that he had added some support to the ath10k driver.  Dan
-Williams mentioned the possibility of updating the mac80211 stack for support.
-And Arend van Spriel suggested that the issue might best be left for the next
-Netconf.
-
-Immediate problem solved, but maybe a larger issue still needs to be addressed?
-
-James
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index d079533..c860c0c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -281,12 +281,12 @@ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
+ 
+ 	wil_dbg_wmi(wil, "Link status for CID %d: {\n"
+ 		    "  MCS %d TSF 0x%016llx\n"
+-		    "  BF status 0x%08x SNR 0x%08x SQI %d%%\n"
++		    "  BF status 0x%08x RSSI %d SQI %d%%\n"
+ 		    "  Tx Tpt %d goodput %d Rx goodput %d\n"
+ 		    "  Sectors(rx:tx) my %d:%d peer %d:%d\n""}\n",
+ 		    cid, le16_to_cpu(reply.evt.bf_mcs),
+ 		    le64_to_cpu(reply.evt.tsf), reply.evt.status,
+-		    le32_to_cpu(reply.evt.snr_val),
++		    reply.evt.rssi,
+ 		    reply.evt.sqi,
+ 		    le32_to_cpu(reply.evt.tx_tpt),
+ 		    le32_to_cpu(reply.evt.tx_goodput),
+@@ -319,7 +319,11 @@ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
+ 
+ 	if (test_bit(wil_status_fwconnected, wil->status)) {
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
+-		sinfo->signal = reply.evt.sqi;
++		if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING,
++			     wil->fw_capabilities))
++			sinfo->signal = reply.evt.rssi;
++		else
++			sinfo->signal = reply.evt.sqi;
+ 	}
+ 
+ 	return rc;
+@@ -1805,7 +1809,7 @@ static void wil_wiphy_init(struct wiphy *wiphy)
+ 
+ 	wiphy->bands[NL80211_BAND_60GHZ] = &wil_band_60ghz;
+ 
+-	/* TODO: figure this out */
++	/* may change after reading FW capabilities */
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
+ 
+ 	wiphy->cipher_suites = wil_cipher_suites;
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index a2b5d59..21b6611 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1016,6 +1016,7 @@ static int wil_bf_debugfs_show(struct seq_file *s, void *data)
+ 			   "  TSF = 0x%016llx\n"
+ 			   "  TxMCS = %2d TxTpt = %4d\n"
+ 			   "  SQI = %4d\n"
++			   "  RSSI = %4d\n"
+ 			   "  Status = 0x%08x %s\n"
+ 			   "  Sectors(rx:tx) my %2d:%2d peer %2d:%2d\n"
+ 			   "  Goodput(rx:tx) %4d:%4d\n"
+@@ -1025,6 +1026,7 @@ static int wil_bf_debugfs_show(struct seq_file *s, void *data)
+ 			   le16_to_cpu(reply.evt.bf_mcs),
+ 			   le32_to_cpu(reply.evt.tx_tpt),
+ 			   reply.evt.sqi,
++			   reply.evt.rssi,
+ 			   status, wil_bfstatus_str(status),
+ 			   le16_to_cpu(reply.evt.my_rx_sector),
+ 			   le16_to_cpu(reply.evt.my_tx_sector),
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index d571feb..6a3ab4b 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -84,6 +84,9 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 
+ 	/* extract FW capabilities from file without loading the FW */
+ 	wil_request_firmware(wil, wil->wil_fw_name, false);
++
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		wil_to_wiphy(wil)->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ }
+ 
+ void wil_disable_irq(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 65ef673..a9487f2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -381,12 +381,15 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 	ch_no = data->info.channel + 1;
+ 	freq = ieee80211_channel_to_frequency(ch_no, NL80211_BAND_60GHZ);
+ 	channel = ieee80211_get_channel(wiphy, freq);
+-	signal = data->info.sqi;
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		signal = 100 * data->info.rssi;
++	else
++		signal = data->info.sqi;
+ 	d_status = le16_to_cpu(data->info.status);
+ 	fc = rx_mgmt_frame->frame_control;
+ 
+-	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d SNR %d SQI %d%%\n",
+-		    data->info.channel, data->info.mcs, data->info.snr,
++	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d RSSI %d SQI %d%%\n",
++		    data->info.channel, data->info.mcs, data->info.rssi,
+ 		    data->info.sqi);
+ 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
+ 		    le16_to_cpu(fc));
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 256f63c..4e31c2f 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -60,6 +60,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_WMI_ONLY		= 5,
+ 	WMI_FW_CAPABILITY_THERMAL_THROTTLING	= 7,
+ 	WMI_FW_CAPABILITY_D3_SUSPEND		= 8,
++	WMI_FW_CAPABILITY_RSSI_REPORTING	= 12,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
+ 
+@@ -1306,7 +1307,8 @@ struct wmi_notify_req_done_event {
+ 	/* beamforming status, 0: fail; 1: OK; 2: retrying */
+ 	__le32 status;
+ 	__le64 tsf;
+-	__le32 snr_val;
++	s8 rssi;
++	u8 reserved0[3];
+ 	__le32 tx_tpt;
+ 	__le32 tx_goodput;
+ 	__le32 rx_goodput;
+@@ -1602,7 +1604,7 @@ struct wmi_get_ssid_event {
+ /* wmi_rx_mgmt_info */
+ struct wmi_rx_mgmt_info {
+ 	u8 mcs;
+-	s8 snr;
++	s8 rssi;
+ 	u8 range;
+ 	u8 sqi;
+ 	__le16 stype;
+-- 
+1.9.1
