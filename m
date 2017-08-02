@@ -1,98 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from resqmta-po-07v.sys.comcast.net ([96.114.154.166]:36900 "EHLO
-        resqmta-po-07v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751229AbdHIAhH (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752933AbdHBVBN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 20:37:07 -0400
-Reply-To: james@nurealm.net
-Subject: Re: wireless drivers fail to report link speed?
-To: Ben Greear <greearb@candelatech.com>,
-        Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
- <1502228547.24881.5.camel@redhat.com>
- <3a24351b-6875-fe65-58f1-f624c9f1832f@candelatech.com>
- <5f4422cc-2943-7863-bef3-c2c2653bde24@nurealm.net>
- <5a5cb91f-443c-8cc1-ea1f-50de4d07cb25@candelatech.com>
-From: James Feeney <james@nurealm.net>
-Message-ID: <3d16a276-0e15-c722-483c-c17d715ebb5e@nurealm.net> (sfid-20170809_023712_467713_38241710)
-Date: Tue, 8 Aug 2017 18:36:20 -0600
-MIME-Version: 1.0
-In-Reply-To: <5a5cb91f-443c-8cc1-ea1f-50de4d07cb25@candelatech.com>
-Content-Type: text/plain; charset=utf-8
+        Wed, 2 Aug 2017 17:01:13 -0400
+Cc: Gidon Studinski <QCA_gidons@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 9/9] wil6210: make debugfs compilation optional
+Date: Thu,  3 Aug 2017 00:00:49 +0300
+Message-Id: <1501707649-9665-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230115_900649_F84A357A)
+In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey
+From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
 
-On 08/08/2017 04:49 PM, Ben Greear wrote:
-> 
-> Some time back, I added some support to ath10k to report some ethtool info.
-> At least most of this is upstream.  I do report rx and rx link rate, and yes,
-> it changes, but it does contain some useful info, at least when modest amounts
-> of packets are being transmitted and received (so that rate-ctrl logic
-> is working).  I think the stuff not prepended with d_ will show up for any
-> mac80211 driver.  Someone could improve ethtool to report these through more
-> normal API than just getting the stats if they wanted...
+Since debugfs is a kernel configuration option, enable the driver to
+compile without debugfs.
 
-Hmm - would you then lean in the direction of saying that this failure to report
-a link speed is a fault in the kernel ethtool?
+Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 14 ++++++++++----
+ drivers/net/wireless/ath/wil6210/main.c    |  1 +
+ drivers/net/wireless/ath/wil6210/txrx.c    |  6 +++---
+ drivers/net/wireless/ath/wil6210/wil6210.h |  2 +-
+ 4 files changed, 15 insertions(+), 8 deletions(-)
 
-And, if so, would an update be required in just the kernel ethtool, or in both
-the kernel ethtool and in every wireless driver?
-
-Should the kernel ethtool get_settings() be made to report a proper link speed
-and duplex when used with the wireless drivers?
-
-On 08/08/2017 05:43 PM, Dan Williams wrote:
->
-> It's very relevant to the question.  Because if the speed is actually
-> not useful for the requested purpose, there is no real point in having
-> it reported it via ethtool.  Same for duplex.  Wifi is only "half
-> duplex", and so the property is actually meaningless for WiFi.
-
-That seems a little over-broad, at least certainly with respect to "half
-duplex".  If the link is known to be half duplex, then the kernel ethtool can
-simply report that the link is "half duplex".  I am not hearing a good
-justification, or a necessity, for the kernel ethtool to return an error, instead.
-
-> At
-> worst, your bonding link will flip-flop between slaves every second or
-> two.  At best, bonding won't do anything differently than if the speed
-> was just faked to some fake lowest common denominator number so that
-> your wired link was always faster.
-
-Well ok, flip-flopping every second would seem a pointless and bad effect.  But
-then, for instance, my rtl8192ce driver shows a stable, actual link speed:
-
-$ iwconfig wlp2s0
-...
-Bit Rate=72.2 Mb/s
-...
-
-$ ethtool -S wlp2s0
-...
-     txrate: 72200000
-     rxrate: 1000000
-...
-
-Then, I don't know if this effect is as bad as you suggest.  Is there an actual
-"stable" link speed here?  Or is this an "illusion", of bit of "fluff" being
-promoted by the user-space iwconfig and ethtool?
-
-> Sure, somebody could do a patch (like Ben has) that plumbs all this
-> stuff through.  But that's not solving the *actual* problem, which is
-> that this bonding change makes assumptions of slave devices that simply
-> don't match how those devices work.
-
-I take it that your position would be that the bonding module people, and Mahesh
-in particular, are being unreasonable in expecting the kernel ethtool to provide
-anything but an error in response to get_settings()?  What do you think of
-Florian's suggestion, to check for dev->ieee80211_ptr being set, and letting
-these interfaces proceed with being enslaved in a bond master network device if
-that's the case?
-
-Would you go so far as to say that modifying the kernel ethtool to report
-wireless link speed and duplex would be entirely pointless?
-
-Thanks
-James
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index d4e8865..5e803e2 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -14,6 +14,10 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include "wil6210.h"
++
++#ifdef CONFIG_DEBUG_FS
++
+ #include <linux/module.h>
+ #include <linux/debugfs.h>
+ #include <linux/seq_file.h>
+@@ -21,7 +25,6 @@
+ #include <linux/rtnetlink.h>
+ #include <linux/power_supply.h>
+ 
+-#include "wil6210.h"
+ #include "wmi.h"
+ #include "txrx.h"
+ #include "pmc.h"
+@@ -30,7 +33,6 @@
+ static u32 mem_addr;
+ static u32 dbg_txdesc_index;
+ static u32 dbg_vring_index; /* 24+ for Rx, 0..23 for Tx */
+-u32 vring_idle_trsh = 16; /* HW fetches up to 16 descriptors at once */
+ 
+ enum dbg_off_type {
+ 	doff_u32 = 0,
+@@ -1763,6 +1765,7 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
+ 	WIL_FIELD(chip_revision, 0444,	doff_u8),
+ 	WIL_FIELD(abft_len, 0644,		doff_u8),
+ 	WIL_FIELD(wakeup_trigger, 0644,		doff_u8),
++	WIL_FIELD(vring_idle_trsh, 0644,	doff_u32),
+ 	{},
+ };
+ 
+@@ -1778,8 +1781,6 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
+ 	{"desc_index",	0644, (ulong)&dbg_txdesc_index, doff_u32},
+ 	{"vring_index",	0644, (ulong)&dbg_vring_index, doff_u32},
+ 	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
+-	{"vring_idle_trsh", 0644, (ulong)&vring_idle_trsh,
+-	 doff_u32},
+ 	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
+ 	{},
+ };
+@@ -1821,3 +1822,8 @@ void wil6210_debugfs_remove(struct wil6210_priv *wil)
+ 	 */
+ 	wil_pmc_free(wil, false);
+ }
++
++#else /* !CONFIG_DEBUG_FS */
++int wil6210_debugfs_init(struct wil6210_priv *wil) { return 0; }
++void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
++#endif
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index b89d017..e2ea490 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -581,6 +581,7 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+ 	wil->suspend_stats.min_suspend_time = ULONG_MAX;
++	wil->vring_idle_trsh = 16;
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index ec57bcc..389c718 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1666,7 +1666,7 @@ static int __wil_tx_vring_tso(struct wil6210_priv *wil, struct vring *vring,
+ 
+ 	/* performance monitoring */
+ 	used = wil_vring_used_tx(vring);
+-	if (wil_val_in_range(vring_idle_trsh,
++	if (wil_val_in_range(wil->vring_idle_trsh,
+ 			     used, used + descs_used)) {
+ 		txdata->idle += get_cycles() - txdata->last_idle;
+ 		wil_dbg_txrx(wil,  "Ring[%2d] not idle %d -> %d\n",
+@@ -1813,7 +1813,7 @@ static int __wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 
+ 	/* performance monitoring */
+ 	used = wil_vring_used_tx(vring);
+-	if (wil_val_in_range(vring_idle_trsh,
++	if (wil_val_in_range(wil->vring_idle_trsh,
+ 			     used, used + nr_frags + 1)) {
+ 		txdata->idle += get_cycles() - txdata->last_idle;
+ 		wil_dbg_txrx(wil,  "Ring[%2d] not idle %d -> %d\n",
+@@ -2175,7 +2175,7 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 
+ 	/* performance monitoring */
+ 	used_new = wil_vring_used_tx(vring);
+-	if (wil_val_in_range(vring_idle_trsh,
++	if (wil_val_in_range(wil->vring_idle_trsh,
+ 			     used_new, used_before_complete)) {
+ 		wil_dbg_txrx(wil, "Ring[%2d] idle %d -> %d\n",
+ 			     ringid, used_before_complete, used_new);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index e3c0c2f..cf20a8c 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -30,7 +30,6 @@
+ extern unsigned int mtu_max;
+ extern unsigned short rx_ring_overflow_thrsh;
+ extern int agg_wsize;
+-extern u32 vring_idle_trsh;
+ extern bool rx_align_2;
+ extern bool rx_large_buf;
+ extern bool debug_fw;
+@@ -693,6 +692,7 @@ struct wil6210_priv {
+ 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
+ 	struct wil_sta_info sta[WIL6210_MAX_CID];
+ 	int bcast_vring;
++	u32 vring_idle_trsh; /* HW fetches up to 16 descriptors at once  */
+ 	bool use_extended_dma_addr; /* indicates whether we are using 48 bits */
+ 	/* scan */
+ 	struct cfg80211_scan_request *scan_request;
+-- 
+1.9.1
