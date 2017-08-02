@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42284 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751443AbdHEIpX (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:37177 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752121AbdHBL70 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 04:45:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 11:44:29 +0300
-Message-Id: <20170805084438.12550-2-luca@coelho.fi> (sfid-20170805_110252_133861_A783934F)
-In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
-References: <20170805084438.12550-1-luca@coelho.fi>
-Subject: [PATCH 01/10] mac80211: add MESH IE in the correct order
+        Wed, 2 Aug 2017 07:59:26 -0400
+Received: by mail-pg0-f67.google.com with SMTP id 83so6246277pgb.4
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 04:59:26 -0700 (PDT)
+Date: Wed, 2 Aug 2017 17:29:21 +0530
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v4] rtlwifi: Replace hardcode value with macro
+Message-ID: <20170802115921.GA4381@symbol-HP-ZBook-15> (sfid-20170802_135930_560162_8226507E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+and hw->max_rate_tries are replaced by macro and removed the comment.
 
-VHT MESH support was added, but the order of the IEs
-wasn't enforced. Fix that.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
 ---
- net/mac80211/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c | 5 ++---
+ drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 259698de569f..6aef6793d052 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1436,7 +1436,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 			WLAN_EID_SSID_LIST,
- 			WLAN_EID_CHANNEL_USAGE,
- 			WLAN_EID_INTERWORKING,
--			/* mesh ID can't happen here */
-+			WLAN_EID_MESH_ID,
- 			/* 60 GHz can't happen here right now */
- 		};
- 		noffset = ieee80211_ie_split(ie, ie_len,
--- 
-2.13.2
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 8b833e2..ea18aa7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -426,9 +426,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 	hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
+
+ 	/* TODO: Correct this value for our hw */
+-	/* TODO: define these hard code value */
+-	hw->max_listen_interval = 10;
+-	hw->max_rate_tries = 4;
++	hw->max_listen_interval = MAX_LISTEN_INTERVAL;
++	hw->max_rate_tries = MAX_RATE_TRIES;
+ 	/* hw->max_rates = 1; */
+ 	hw->sta_data_size = sizeof(struct rtl_sta_info);
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index ab7d819..c591d75 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -65,6 +65,8 @@ enum ap_peer {
+ #define FRAME_OFFSET_ADDRESS3		16
+ #define FRAME_OFFSET_SEQUENCE		22
+ #define FRAME_OFFSET_ADDRESS4		24
++#define MAX_LISTEN_INTERVAL             10
++#define MAX_RATE_TRIES                  4
+
+ #define SET_80211_HDR_FRAME_CONTROL(_hdr, _val)		\
+ 	WRITEEF2BYTE(_hdr, _val)
+--
+1.9.1
