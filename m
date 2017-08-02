@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35083 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754077AbdHUREZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43160 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751933AbdHBNkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2017 13:04:25 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
-        charles.gorand@effinnov.com, r.baldyga@samsung.com,
-        k.opasiak@samsung.com, davem@davemloft.net
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/8] nfc: nxp-nci: constify i2c_device_id
-Date: Mon, 21 Aug 2017 22:33:55 +0530
-Message-Id: <1503335040-27101-4-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190611_028735_97ECBB0C)
-In-Reply-To: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Wed, 2 Aug 2017 09:40:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan feature enabled
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+        <1501577287-28904-3-git-send-email-wright.feng@cypress.com>
+        <87mv7i48nx.fsf@codeaurora.org> <5981A6D4.4030805@broadcom.com>
+Date: Wed, 02 Aug 2017 16:40:06 +0300
+In-Reply-To: <5981A6D4.4030805@broadcom.com> (Arend van Spriel's message of
+        "Wed, 02 Aug 2017 12:17:56 +0200")
+Message-ID: <87lgn2rsuh.fsf@kamboji.qca.qualcomm.com> (sfid-20170802_154015_760447_148BD995)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i2c_device_id are not supposed to change at runtime. All functions
-working with i2c_device_id provided by <linux/i2c.h> work with
-const i2c_device_id. So mark the non-const structs as const.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/nfc/nxp-nci/i2c.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On 8/2/2017 11:32 AM, Kalle Valo wrote:
+>> Wright Feng <wright.feng@cypress.com> writes:
+>>
+>>> The num_different_channels in wiphy info is not correct when firmware
+>>> supports mchan. When mchan is on, num_different_channels is always
+>>> overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
+>>> num_different_channels setting forward.
+>>>
+>>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>>
+>> Does this fix a user visible bug? If yes, it would be nice to document
+>> that.
+>
+> Hi Kalle,
+>
+> Depends on the users expectation ;-) When the device/firmware supports
+> multi-channel (better not use mchan abbreviation) it can have P2P
+> connection and regular connection with AP simultaneous. So the current
+> state is that this is not possible regardless whether mchan is
+> supported. So the device is not used to fullest extent.
 
-diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 198585b..ba695e3 100644
---- a/drivers/nfc/nxp-nci/i2c.c
-+++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -393,7 +393,7 @@ static int nxp_nci_i2c_remove(struct i2c_client *client)
- 	return 0;
- }
- 
--static struct i2c_device_id nxp_nci_i2c_id_table[] = {
-+static const struct i2c_device_id nxp_nci_i2c_id_table[] = {
- 	{"nxp-nci_i2c", 0},
- 	{}
- };
+Thanks, I understand now and I think your description should be also in
+the commit log so that others will also :)
+
+My usual mantra: the commit log should ALWAYS answer the question "_why_
+the change is made?" and describe the reason what motivated to implement
+the patch. This is the most important part. It helps maintainers,
+backports, distros etc to make decisions if the patch is important for
+them or not.
+
 -- 
-2.7.4
+Kalle Valo
