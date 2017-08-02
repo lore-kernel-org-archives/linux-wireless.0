@@ -1,184 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43210 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752033AbdHIGq0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47112 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751895AbdHBNn5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 02:46:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  9 Aug 2017 09:46:19 +0300
-Message-Id: <20170809064619.14147-1-luca@coelho.fi> (sfid-20170809_084630_561251_F04902DF)
-In-Reply-To: <87valzjyw0.fsf@kamboji.qca.qualcomm.com>
-References: <87valzjyw0.fsf@kamboji.qca.qualcomm.com>
-Subject: [PATCH v2 12/19] iwlwifi: mvm: support new beacon template command
+        Wed, 2 Aug 2017 09:43:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, mike@hellotwist.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: Fix MMIC countermeasures.
+References: <CAKXXJEw72EYHJpdwoWhudmOmFF=w+u_JG3vrp=-TCfR3zhANZw@mail.gmail.com>
+        <20170802070117.GA2790@redhat.com>
+        <1501676470.11126.2.camel@sipsolutions.net>
+Date: Wed, 02 Aug 2017 16:43:53 +0300
+In-Reply-To: <1501676470.11126.2.camel@sipsolutions.net> (Johannes Berg's
+        message of "Wed, 02 Aug 2017 14:21:10 +0200")
+Message-ID: <87h8xqrso6.fsf@kamboji.qca.qualcomm.com> (sfid-20170802_154401_199586_DFC556A2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Support a new version of the beacon template command. This replaces v8
-of the command, which was missing the rate code.  Also, export rate
-decision logic to a separate function.
+> On Wed, 2017-08-02 at 09:01 +0200, Stanislaw Gruszka wrote:
+>
+>> The relevant mac80211 code look like this:
+>> 
+>> ieee80211_rx_result
+>> ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+>
+> I believe that ieee80211_rx_h_decrypt() will drop the frames you're
+> looking at, and I do think the original patch is correct. If MMIC
+> validation was (and could be) done, then the frame must have been
+> decrypted properly.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    | 17 +++++---
- drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 47 ++++++++++++++++-------
- 3 files changed, 47 insertions(+), 18 deletions(-)
+Just to avoid any confusion, with original patch you mean this one?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 2909d1ed89cf..4928310ddd31 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -786,13 +786,20 @@ struct iwl_mac_beacon_cmd_v7 {
- 	struct ieee80211_hdr frame[0];
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
- 
-+enum iwl_mac_beacon_flags {
-+	IWL_MAC_BEACON_CCK	= BIT(8),
-+	IWL_MAC_BEACON_ANT_A	= BIT(9),
-+	IWL_MAC_BEACON_ANT_B	= BIT(10),
-+	IWL_MAC_BEACON_ANT_C	= BIT(11),
-+};
-+
- /**
-  * struct iwl_mac_beacon_cmd - beacon template command with offloaded CSA
-- * @byte_cnt: byte count of the beacon frame
-- * @flags: for future use
-+ * @byte_cnt: byte count of the beacon frame.
-+ * @flags: least significant byte for rate code. The most significant byte
-+ *	is &enum iwl_mac_beacon_flags.
-  * @reserved: reserved
-- * @template_id: currently equal to the mac context id of the coresponding
-- *  mac.
-+ * @template_id: currently equal to the mac context id of the coresponding mac.
-  * @tim_idx: the offset of the tim IE in the beacon
-  * @tim_size: the length of the tim IE
-  * @ecsa_offset: offset to the ECSA IE if present
-@@ -809,7 +816,7 @@ struct iwl_mac_beacon_cmd {
- 	__le32 ecsa_offset;
- 	__le32 csa_offset;
- 	struct ieee80211_hdr frame[0];
--} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
-+} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_9 */
- 
- struct iwl_beacon_notif {
- 	struct iwl_mvm_tx_resp beacon_notify_hdr;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 0fa8c473f1e2..d933aa324ffe 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -260,6 +260,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_STA_TYPE		= (__force iwl_ucode_tlv_api_t)30,
- 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
- 	/* API Set 1 */
-+	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
- 
- 	NUM_IWL_UCODE_TLV_API
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 8fe955d58c6e..cb4e311b059f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -923,6 +923,19 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
- 	return ie - beacon;
- }
- 
-+static u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
-+					   struct ieee80211_vif *vif)
-+{
-+	u8 rate;
-+
-+	if (info->band == NL80211_BAND_5GHZ || vif->p2p)
-+		rate = IWL_FIRST_OFDM_RATE;
-+	else
-+		rate = IWL_FIRST_CCK_RATE;
-+
-+	return rate;
-+}
-+
- static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif,
- 				    struct sk_buff *beacon,
-@@ -930,7 +943,8 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct ieee80211_tx_info *info;
--	u32 rate, tx_flags;
-+	u8 rate;
-+	u32 tx_flags;
- 
- 	info = IEEE80211_SKB_CB(beacon);
- 
-@@ -955,14 +969,12 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
- 			    RATE_MCS_ANT_POS);
- 
--	if (info->band == NL80211_BAND_5GHZ || vif->p2p) {
--		rate = IWL_FIRST_OFDM_RATE;
--	} else {
--		rate = IWL_FIRST_CCK_RATE;
--		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
--	}
-+	rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
- 
- 	tx->rate_n_flags |= cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
-+	if (rate == IWL_FIRST_CCK_RATE)
-+		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
-+
- }
- 
- static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
-@@ -1033,19 +1045,27 @@ static int iwl_mvm_mac_ctxt_send_beacon_v7(struct iwl_mvm *mvm,
- 						sizeof(beacon_cmd));
- }
- 
--static int iwl_mvm_mac_ctxt_send_beacon_v8(struct iwl_mvm *mvm,
-+static int iwl_mvm_mac_ctxt_send_beacon_v9(struct iwl_mvm *mvm,
- 					   struct ieee80211_vif *vif,
- 					   struct sk_buff *beacon)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(beacon);
- 	struct iwl_mac_beacon_cmd beacon_cmd = {};
-+	u8 rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
-+	u16 flags;
-+
-+	flags = iwl_mvm_mac80211_idx_to_hwrate(rate);
- 
-+	if (flags == IWL_FIRST_CCK_RATE)
-+		flags |= IWL_MAC_BEACON_CCK;
-+
-+	beacon_cmd.flags = cpu_to_le16(flags);
- 	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
- 	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
- 
- 	if (vif->type == NL80211_IFTYPE_AP)
--		iwl_mvm_mac_ctxt_set_tim(mvm,
--					 &beacon_cmd.tim_idx,
-+		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
- 					 &beacon_cmd.tim_size,
- 					 beacon->data, beacon->len);
- 
-@@ -1073,10 +1093,11 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 			 IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD))
- 		return iwl_mvm_mac_ctxt_send_beacon_v6(mvm, vif, beacon);
- 
--	if (!iwl_mvm_has_new_tx_api(mvm))
--		return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
-+	if (fw_has_api(&mvm->fw->ucode_capa,
-+		       IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
-+		return iwl_mvm_mac_ctxt_send_beacon_v9(mvm, vif, beacon);
- 
--	return iwl_mvm_mac_ctxt_send_beacon_v8(mvm, vif, beacon);
-+	return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
- }
- 
- /* The beacon template for the AP/GO/IBSS has changed and needs update */
+rt2x00: Fix MMIC countermeasures.
+https://patchwork.kernel.org/patch/9875647/
+
 -- 
-2.13.2
+Kalle Valo
