@@ -1,44 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36844 "EHLO
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34932 "EHLO
         mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753677AbdHWKAG (ORCPT
+        with ESMTP id S1751699AbdHBR5Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 06:00:06 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        jon.maloy@ericsson.com, ying.xue@windriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 3/3] net: rsi: netlink: constify genl_ops
-Date: Wed, 23 Aug 2017 15:29:35 +0530
-Message-Id: <1503482375-19983-4-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_120031_630447_3415564E)
-In-Reply-To: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Wed, 2 Aug 2017 13:57:24 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, harish.patil@cavium.com,
+        manish.chopra@cavium.com, Dept-GELinuxNICDev@cavium.com
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 0/2] drivers/net: add const to bin_attribute structures
+Date: Wed,  2 Aug 2017 23:27:12 +0530
+Message-Id: <1501696634-15765-1-git-send-email-bhumirks@gmail.com> (sfid-20170802_195840_988581_A0BE8A39)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-genl_ops are not supposed to change at runtime. All functions
-working with genl_ops provided by <net/genetlink.h> work with
-const genl_ops. So mark the non-const structs as const.
+Declare bin_attribute structures as const.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- net/tipc/netlink_compat.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Bhumika Goyal (2):
+  wlcore: add const to bin_attribute structure
+  qlcnic: add const to bin_attribute structure
 
-diff --git a/net/tipc/netlink_compat.c b/net/tipc/netlink_compat.c
-index 750949d..e48f0b2 100644
---- a/net/tipc/netlink_compat.c
-+++ b/net/tipc/netlink_compat.c
-@@ -1217,7 +1217,7 @@ static int tipc_nl_compat_recv(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
--static struct genl_ops tipc_genl_compat_ops[] = {
-+static const struct genl_ops tipc_genl_compat_ops[] = {
- 	{
- 		.cmd		= TIPC_GENL_CMD,
- 		.doit		= tipc_nl_compat_recv,
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c | 2 +-
+ drivers/net/wireless/ti/wlcore/sysfs.c            | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
 -- 
 1.9.1
