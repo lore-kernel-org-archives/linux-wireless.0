@@ -1,106 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:32786 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752286AbdHPNSN (ORCPT
+Received: from mail-ua0-f172.google.com ([209.85.217.172]:35237 "EHLO
+        mail-ua0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752657AbdHBKrV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:18:13 -0400
-Received: by mail-pg0-f66.google.com with SMTP id u185so5283869pgb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:18:13 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Wed, 2 Aug 2017 06:47:21 -0400
+Received: by mail-ua0-f172.google.com with SMTP id d29so18787453uai.2
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 03:47:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87vam6496c.fsf@codeaurora.org>
+References: <20170731111445.GA4844@symbol-HP-ZBook-15> <8af42486-dd0b-bda6-6125-148dc0011115@lwfinger.net>
+ <87vam6496c.fsf@codeaurora.org>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Wed, 2 Aug 2017 16:17:19 +0530
+Message-ID: <CAFqt6zbiOEdOYzMa5a219=ROLv6BpJ9x0gdL3N61f+=_W8oK8w@mail.gmail.com> (sfid-20170802_124724_048600_E442CEC7)
+Subject: Re: [PATCH v4] rtlwifi: Replace hardcode value with macro
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 06/11] rsi: handle station disconnection in AP mode
-Date: Wed, 16 Aug 2017 18:43:13 +0530
-Message-Id: <1502889198-4478-7-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151816_608956_875DF3D2)
-In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
-References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Hi Kalle,
 
-When sta_remove of mac80211 is called, driver iterates through
-list of existing stations to get the station id. Then peer notify
-is prepared and send to firmare.
+On Wed, Aug 2, 2017 at 2:51 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> On 07/31/2017 06:14 AM, Souptick Joarder wrote:
+>>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+>>> and hw->max_rate_tries are replaced by macro.
+>>
+>> That is NOT what your patch does. It only removes a comment! Granted,
+>> that comment is useless and should come out, but your commit message
+>> must be a little more accurate.
+>
+> Actually the patch does not even apply, I suspect that Souptick
+> incorrectly used v3 of his patch as the baseline for v4. Instead this v4
+> should be folded with v3.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 56 +++++++++++++++++++++++------
- 1 file changed, 45 insertions(+), 11 deletions(-)
+Do you mean I should address your comment in v3 and send v3 again
+instead of v4 ?
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index b1c0849..be10d50 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1254,21 +1254,55 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	struct ieee80211_bss_conf *bss = &vif->bss_conf;
-+	struct rsi_sta *rsta;
-+
-+	rsi_dbg(INFO_ZONE, "Station Remove: %pM\n", sta->addr);
- 
- 	mutex_lock(&common->mutex);
- 
--	/* Resetting all the fields to default values */
--	common->bitrate_mask[NL80211_BAND_2GHZ] = 0;
--	common->bitrate_mask[NL80211_BAND_5GHZ] = 0;
--	common->min_rate = 0xffff;
--	common->vif_info[0].is_ht = false;
--	common->vif_info[0].sgi = false;
--	common->vif_info[0].seq_start = 0;
--	common->secinfo.ptk_cipher = 0;
--	common->secinfo.gtk_cipher = 0;
-+	if (vif->type == NL80211_IFTYPE_AP) {
-+		u8 sta_idx, cnt;
- 
--	rsi_send_rx_filter_frame(common, 0);
--	
-+		/* Send peer notify to device */
-+		rsi_dbg(INFO_ZONE, "Indicate bss status to device\n");
-+		for (sta_idx = 0; sta_idx < common->max_stations; sta_idx++) {
-+			rsta = &common->stations[sta_idx];
-+
-+			if (!rsta->sta)
-+				continue;
-+			if (!memcmp(rsta->sta->addr, sta->addr, ETH_ALEN)) {
-+				rsi_inform_bss_status(common, AP_OPMODE, 0,
-+						      sta->addr, sta->wme,
-+						      sta->aid, sta, sta_idx);
-+				rsta->sta = NULL;
-+				rsta->sta_id = -1;
-+				for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
-+					rsta->start_tx_aggr[cnt] = false;
-+				if (common->num_stations > 0)
-+					common->num_stations--;
-+				break;
-+			}
-+		}
-+		if (sta_idx >= common->max_stations)
-+			rsi_dbg(ERR_ZONE, "%s: No station found\n", __func__);
-+	}
-+
-+	if (vif->type == NL80211_IFTYPE_STATION) {
-+		/* Resetting all the fields to default values */
-+		memcpy((u8 *)bss->bssid, (u8 *)sta->addr, ETH_ALEN);
-+		bss->qos = sta->wme;
-+		common->bitrate_mask[NL80211_BAND_2GHZ] = 0;
-+		common->bitrate_mask[NL80211_BAND_5GHZ] = 0;
-+		common->min_rate = 0xffff;
-+		common->vif_info[0].is_ht = false;
-+		common->vif_info[0].sgi = false;
-+		common->vif_info[0].seq_start = 0;
-+		common->secinfo.ptk_cipher = 0;
-+		common->secinfo.gtk_cipher = 0;
-+		if (!common->iface_down)
-+			rsi_send_rx_filter_frame(common, 0);
-+	}
- 	mutex_unlock(&common->mutex);
- 	
- 	return 0;
--- 
-2.7.4
+>
+> --
+> Kalle Valo
+
+-Souptick
