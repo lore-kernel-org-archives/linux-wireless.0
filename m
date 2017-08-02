@@ -1,58 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53806 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752233AbdHBJFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:05:46 -0400
-Date: Wed, 2 Aug 2017 11:04:31 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Skeffington <mike@astro.ai>
-Subject: [PATCH] mac80211: remove mic_fail_no_key label
-Message-ID: <20170802090431.GB2790@redhat.com> (sfid-20170802_110549_692060_538C95CF)
+Received: from smtp.codeaurora.org ([198.145.29.96]:36898 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752708AbdHBJuj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Aug 2017 05:50:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: Re: [PATCH 3/8] rsi: add support for legacy power save
+References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+        <1501578352-10795-4-git-send-email-amitkarwar@gmail.com>
+Date: Wed, 02 Aug 2017 12:50:33 +0300
+In-Reply-To: <1501578352-10795-4-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Tue, 1 Aug 2017 14:35:47 +0530")
+Message-ID: <87efsu47ti.fsf@codeaurora.org> (sfid-20170802_115043_631443_07E73638)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For historic reasons we have separate cases for mic_fail and
-mic_fail_no_key. But with current code we can merge those cases,
-as we already have NULL key check since:
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-commit a66b98db570a638afd909459e1e6bfa272344bd3
-Author: Arik Nemtsov <arik@wizery.com>
-Date:   Thu Jun 23 00:00:24 2011 +0300
+> From: Karun Eagalapati <karun256@gmail.com>
+>
+> This patch adds support for legacy power save. Necessary
+> configuration frames are downloaded to firmware when power save
+> is enabled/disabled
+>
+> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-    mac80211: fix rx->key NULL dereference during mic failure
+[...]
 
-Patch makes the rx->key->u.tkip.mic_failures statistics
-increase on all cases when RX_FLAG_MMIC_ERROR is set.
+> +/* This function sends power save request to firmware */
+> +int rsi_send_ps_request(struct rsi_hw *adapter, bool enable)
 
-Reported-by: Michael Skeffington <mike@astro.ai>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/wpa.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+The comment is quite useless, IMHO the function name already tells the
+same as the comment.
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 0d722ea..98fd9a0 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -111,7 +111,7 @@
- 	 */
- 	if (status->flag & (RX_FLAG_MMIC_STRIPPED | RX_FLAG_IV_STRIPPED)) {
- 		if (status->flag & RX_FLAG_MMIC_ERROR)
--			goto mic_fail_no_key;
-+			goto mic_fail;
- 
- 		if (!(status->flag & RX_FLAG_IV_STRIPPED) && rx->key &&
- 		    rx->key->conf.cipher == WLAN_CIPHER_SUITE_TKIP)
-@@ -170,7 +170,6 @@
- mic_fail:
- 	rx->key->u.tkip.mic_failures++;
- 
--mic_fail_no_key:
- 	/*
- 	 * In some cases the key can be unset - e.g. a multicast packet, in
- 	 * a driver that supports HW encryption. Send up the key idx only if
+> --- /dev/null
+> +++ b/drivers/net/wireless/rsi/rsi_91x_ps.c
+> @@ -0,0 +1,149 @@
+> +/*
+> + * Copyright (c) 2017 Redpine Signals Inc. All rights reserved.
+> + *
+> + * Redistribution and use in source and binary forms, with or without
+> + * modification, are permitted provided that the following conditions are met:
+> + *
+> + *	1. Redistributions of source code must retain the above copyright
+> + *	   notice, this list of conditions and the following disclaimer.
+> + *
+> + *	2. Redistributions in binary form must reproduce the above copyright
+> + *	   notice, this list of conditions and the following disclaimer in the
+> + *	   documentation and/or other materials provided with the distribution.
+> + *
+> + *	3. Neither the name of the copyright holder nor the names of its
+> + *	   contributors may be used to endorse or promote products derived from
+> + *	   this software without specific prior written permission.
+> + *
+> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+> + * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+> + * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+> + * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+> + * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+> + * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+> + * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+> + * INTERRUPTION). HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+> + * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+> + * POSSIBILITY OF SUCH DAMAGE.
+> + */
+
+The license is now different than in rest of the driver files which is a
+bit weird. I would prefer to have the same license throughout the
+driver.
+
+> +/* This function returns the ps state in string format */
+> +char *str_psstate(enum ps_state state)
+
+[...]
+
+> +/* This function modifies PS state to a new state */
+> +static inline void rsi_modify_ps_state(struct rsi_hw *adapter,
+
+[...]
+
+> +/* This function Initalises ps_info structure with default parameters */
+> +void rsi_default_ps_params(struct rsi_hw *adapter)
+
+[...]
+
+> +/* This function is used to enable power save */
+> +void rsi_enable_ps(struct rsi_hw *adapter)
+
+[...]
+
+> +/* This function is used to disable power save */
+> +void rsi_disable_ps(struct rsi_hw *adapter)
+
+[...]
+
+> +/* This function Processes powersave confirmation */
+> +int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg)
+
+More useless comments. The code comments should provide more
+information, not replicate what is already in the code.
+
 -- 
-1.7.1
+Kalle Valo
