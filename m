@@ -1,471 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.cypress.com ([157.95.67.100]:58481 "EHLO
-        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932205AbdHVI5r (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 04:57:47 -0400
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Subject: [PATCH v3] brcmfmac: add CLM download support
-Date: Tue, 22 Aug 2017 17:02:03 +0800
-Message-Id: <1503392523-11841-1-git-send-email-wright.feng@cypress.com> (sfid-20170822_105753_763756_B864A760)
+Received: from mx2.suse.de ([195.135.220.15]:46279 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751067AbdHBVaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:30:14 -0400
+Date: Wed, 2 Aug 2017 23:30:10 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Daniel Wagner <wagi@monom.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>, yi1.li@linux.intel.com,
+        atull@kernel.org, Moritz Fischer <moritz.fischer@ettus.com>,
+        pmladek@suse.com, Johannes Berg <johannes.berg@intel.com>,
+        emmanuel.grumbach@intel.com, luciano.coelho@intel.com,
+        Kalle Valo <kvalo@codeaurora.org>, luto@kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Howells <dhowells@redhat.com>, pjones@redhat.com,
+        Hans de Goede <hdegoede@redhat.com>, alan@linux.intel.com,
+        tytso@mit.edu, lkml <linux-kernel@vger.kernel.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Subject: Re: [PATCH V5 1/2] firmware: add more flexible
+ request_firmware_async function
+Message-ID: <20170802213010.GM18884@wotan.suse.de> (sfid-20170802_233034_570791_A16111B1)
+References: <20170731150945.8925-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170731150945.8925-1-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+On Mon, Jul 31, 2017 at 05:09:44PM +0200, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> So far we got only one function for loading firmware asynchronously:
+> request_firmware_nowait. It didn't allow much customization of firmware
+> loading process - there is only one bool uevent argument. Moreover this
+> bool also controls user helper in an unclear way.
 
-The firmware for brcmfmac devices includes information regarding
-regulatory constraints. For certain devices this information is kept
-separately in a binary form that needs to be downloaded to the device.
-This patch adds support to download this so-called CLM blob file. It
-uses the same naming scheme as the other firmware files with extension
-of .clm_blob.
+> Some drivers need more flexible helper providing more options. This
+> includes control over uevent or warning for the missing firmware. Of
+> course this list may grow up in the future.
+> 
+> To handle this easily this patch adds a generic request_firmware_async
+> function. It takes struct with options as an argument which will allow
+> extending it in the future without massive changes.
+> 
+> This is a really cheap change (no new independent API) which works
+> nicely with the existing code. The old request_firmware_nowait is kept
+> as a simple helper calling new helper.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V3: Don't expose all FW_OPT_* flags.
+>     As Luis noted we want a struct so add struct firmware_opts for real
+>     flexibility.
+>     Thank you Luis for your review!
+> V5: Rebase, update commit message, resend after drvdata discussion
+> ---
+>  drivers/base/firmware_class.c | 43 ++++++++++++++++++++++++++++++++++---------
+>  include/linux/firmware.h      | 15 ++++++++++++++-
+>  2 files changed, 48 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> index b9f907eedbf7..cde85b05e4cb 100644
+> --- a/drivers/base/firmware_class.c
+> +++ b/drivers/base/firmware_class.c
+> @@ -1375,7 +1375,7 @@ static void request_firmware_work_func(struct work_struct *work)
+>  	_request_firmware(&fw, fw_work->name, fw_work->device, NULL, 0,
+>  			  fw_work->opt_flags);
+>  	fw_work->cont(fw, fw_work->context);
+> -	put_device(fw_work->device); /* taken in request_firmware_nowait() */
+> +	put_device(fw_work->device); /* taken in __request_firmware_nowait() */
+>  
+>  	module_put(fw_work->module);
+>  	kfree_const(fw_work->name);
+> @@ -1383,10 +1383,9 @@ static void request_firmware_work_func(struct work_struct *work)
+>  }
+>  
+>  /**
+> - * request_firmware_nowait - asynchronous version of request_firmware
+> + * __request_firmware_nowait - asynchronous version of request_firmware
+>   * @module: module requesting the firmware
+> - * @uevent: sends uevent to copy the firmware image if this flag
+> - *	is non-zero else the firmware copy must be done manually.
+> + * @opt_flags: flags that control firmware loading process, see FW_OPT_*
+>   * @name: name of firmware file
+>   * @device: device for which firmware is being loaded
+>   * @gfp: allocation flags
+> @@ -1405,9 +1404,9 @@ static void request_firmware_work_func(struct work_struct *work)
+>   *
+>   *		- can't sleep at all if @gfp is GFP_ATOMIC.
+>   **/
+> -int
+> -request_firmware_nowait(
+> -	struct module *module, bool uevent,
+> +static int
+> +__request_firmware_nowait(
+> +	struct module *module, unsigned int opt_flags,
+>  	const char *name, struct device *device, gfp_t gfp, void *context,
+>  	void (*cont)(const struct firmware *fw, void *context))
+>  {
+> @@ -1426,8 +1425,7 @@ request_firmware_nowait(
+>  	fw_work->device = device;
+>  	fw_work->context = context;
+>  	fw_work->cont = cont;
+> -	fw_work->opt_flags = FW_OPT_NOWAIT | FW_OPT_FALLBACK |
+> -		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+> +	fw_work->opt_flags = FW_OPT_NOWAIT | opt_flags;
+>  
+>  	if (!try_module_get(module)) {
+>  		kfree_const(fw_work->name);
+> @@ -1440,8 +1438,35 @@ request_firmware_nowait(
+>  	schedule_work(&fw_work->work);
+>  	return 0;
+>  }
+> +
+> +int request_firmware_nowait(struct module *module, bool uevent,
+> +			    const char *name, struct device *device, gfp_t gfp,
+> +			    void *context,
+> +			    void (*cont)(const struct firmware *fw, void *context))
+> +{
+> +	unsigned int opt_flags = FW_OPT_FALLBACK |
+> +		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+> +
+> +	return __request_firmware_nowait(module, opt_flags, name, device, gfp,
+> +					 context, cont);
+> +}
+>  EXPORT_SYMBOL(request_firmware_nowait);
+>  
+> +int __request_firmware_async(struct module *module, const char *name,
+> +			     struct firmware_opts *fw_opts, struct device *dev,
+> +			     void *context,
+> +			     void (*cont)(const struct firmware *fw, void *context))
+> +{
+> +	unsigned int opt_flags = FW_OPT_UEVENT;
 
-The CLM blob file is optional. If the file does not exist, the download
-process will be bypassed. It will not affect the driver loading.
+This exposes a long issue. Think -- why do we want this enabled by default? Its
+actually because even though the fallback stuff is optional and can be, the uevent
+internal flag *also* provides caching support as a side consequence only. We
+don't want to add a new API without first cleaning up that mess.
 
-Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
----
-v2: Revise commit message to describe in more detail
-v3: Add error handling in brcmf_c_get_clm_name function
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  10 ++
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 161 +++++++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   2 +
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  31 ++++
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  19 +++
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  19 +++
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  18 +++
- 8 files changed, 262 insertions(+)
+This is a slipery slope and best to clean that up before adding any new API.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index b55c329..df42e09 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -71,6 +71,7 @@ struct brcmf_bus_dcmd {
-  * @wowl_config: specify if dongle is configured for wowl when going to suspend
-  * @get_ramsize: obtain size of device memory.
-  * @get_memdump: obtain device memory dump in provided buffer.
-+ * @get_fwname: obtain firmware name.
-  *
-  * This structure provides an abstract interface towards the
-  * bus specific driver. For control messages to common driver
-@@ -87,6 +88,8 @@ struct brcmf_bus_ops {
- 	void (*wowl_config)(struct device *dev, bool enabled);
- 	size_t (*get_ramsize)(struct device *dev);
- 	int (*get_memdump)(struct device *dev, void *data, size_t len);
-+	int (*get_fwname)(struct device *dev, uint chip, uint chiprev,
-+			  unsigned char *fw_name);
- };
- 
- 
-@@ -214,6 +217,13 @@ int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
- 	return bus->ops->get_memdump(bus->dev, data, len);
- }
- 
-+static inline
-+int brcmf_bus_get_fwname(struct brcmf_bus *bus, uint chip, uint chiprev,
-+			 unsigned char *fw_name)
-+{
-+	return bus->ops->get_fwname(bus->dev, chip, chiprev, fw_name);
-+}
-+
- /*
-  * interface functions from common layer
-  */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 7a2b495..f5f00fa 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -18,6 +18,7 @@
- #include <linux/string.h>
- #include <linux/netdevice.h>
- #include <linux/module.h>
-+#include <linux/firmware.h>
- #include <brcmu_wifi.h>
- #include <brcmu_utils.h>
- #include "core.h"
-@@ -28,6 +29,7 @@
- #include "tracepoint.h"
- #include "common.h"
- #include "of.h"
-+#include "firmware.h"
- 
- MODULE_AUTHOR("Broadcom Corporation");
- MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
-@@ -104,12 +106,139 @@ void brcmf_c_set_joinpref_default(struct brcmf_if *ifp)
- 		brcmf_err("Set join_pref error (%d)\n", err);
- }
- 
-+static int brcmf_c_download(struct brcmf_if *ifp, u16 flag,
-+			    struct brcmf_dload_data_le *dload_buf,
-+			    u32 len)
-+{
-+	u16 flags;
-+	s32 err;
-+
-+	flags = flag | (DLOAD_HANDLER_VER << DLOAD_FLAG_VER_SHIFT);
-+	dload_buf->flag = cpu_to_le16(flags);
-+	dload_buf->dload_type = cpu_to_le16(DL_TYPE_CLM);
-+	dload_buf->len = cpu_to_le32(len);
-+	dload_buf->crc = cpu_to_le32(0);
-+	len = len + 8 - (len % 8);
-+
-+	err = brcmf_fil_iovar_data_set(ifp, "clmload", (void *)dload_buf, len);
-+
-+	return err;
-+}
-+
-+static int brcmf_c_get_clm_name(struct brcmf_if *ifp, u8 *clm_name)
-+{
-+	struct brcmf_bus *bus = ifp->drvr->bus_if;
-+	struct brcmf_rev_info *ri = &ifp->drvr->revinfo;
-+	u8 fw_name[BRCMF_FW_NAME_LEN];
-+	u8 *ptr;
-+	size_t len;
-+	s32 err;
-+
-+	memset(fw_name, 0, BRCMF_FW_NAME_LEN);
-+	err = brcmf_bus_get_fwname(bus, ri->chipnum, ri->chiprev, fw_name);
-+	if (err) {
-+		brcmf_err("get firmware name failed (%d)\n", err);
-+		goto done;
-+	}
-+
-+	/* generate CLM blob file name */
-+	ptr = strrchr(fw_name, '.');
-+	if (!ptr) {
-+		err = -ENOENT;
-+		goto done;
-+	}
-+
-+	len = ptr - fw_name + 1;
-+	if (len + strlen(".clm_blob") > BRCMF_FW_NAME_LEN) {
-+		err = -E2BIG;
-+	} else {
-+		strlcpy(clm_name, fw_name, len);
-+		strlcat(clm_name, ".clm_blob", BRCMF_FW_NAME_LEN);
-+	}
-+done:
-+	return err;
-+}
-+
-+static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
-+{
-+	struct device *dev = ifp->drvr->bus_if->dev;
-+	struct brcmf_dload_data_le *chunk_buf;
-+	const struct firmware *clm = NULL;
-+	u8 clm_name[BRCMF_FW_NAME_LEN];
-+	u32 chunk_len;
-+	u32 datalen;
-+	u32 cumulative_len = 0;
-+	u16 dl_flag = DL_BEGIN;
-+	u32 status;
-+	s32 err;
-+
-+	brcmf_dbg(INFO, "Enter\n");
-+
-+	memset(clm_name, 0, BRCMF_FW_NAME_LEN);
-+	err = brcmf_c_get_clm_name(ifp, clm_name);
-+	if (err) {
-+		brcmf_err("get CLM blob file name failed (%d)\n", err);
-+		return err;
-+	}
-+
-+	err = request_firmware(&clm, clm_name, dev);
-+	if (err) {
-+		if (err == -ENOENT)
-+			return 0;
-+		brcmf_err("request CLM blob file failed (%d)\n", err);
-+		return err;
-+	}
-+
-+	datalen = clm->size;
-+
-+	chunk_buf = kzalloc(sizeof(*chunk_buf) + MAX_CHUNK_LEN - 1, GFP_KERNEL);
-+	if (!chunk_buf) {
-+		err = -ENOMEM;
-+		goto done;
-+	}
-+
-+	do {
-+		if (datalen > MAX_CHUNK_LEN) {
-+			chunk_len = MAX_CHUNK_LEN;
-+		} else {
-+			chunk_len = datalen;
-+			dl_flag |= DL_END;
-+		}
-+		memcpy(chunk_buf->data, clm->data + cumulative_len, chunk_len);
-+
-+		err = brcmf_c_download(ifp, dl_flag, chunk_buf, chunk_len);
-+
-+		dl_flag &= ~DL_BEGIN;
-+
-+		cumulative_len += chunk_len;
-+		datalen -= chunk_len;
-+	} while ((datalen > 0) && (err == 0));
-+
-+	if (err) {
-+		brcmf_err("clmload (%d byte file) failed (%d); ",
-+			  (u32)clm->size, err);
-+		/* Retrieve clmload_status and print */
-+		err = brcmf_fil_iovar_int_get(ifp, "clmload_status", &status);
-+		if (err)
-+			brcmf_err("get clmload_status failed (%d)\n", err);
-+		else
-+			brcmf_dbg(INFO, "clmload_status=%d\n", status);
-+		err = -EIO;
-+	}
-+
-+	kfree(chunk_buf);
-+done:
-+	release_firmware(clm);
-+	return err;
-+}
-+
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- {
- 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
- 	u8 buf[BRCMF_DCMD_SMLEN];
- 	struct brcmf_rev_info_le revinfo;
- 	struct brcmf_rev_info *ri;
-+	char *clmver;
- 	char *ptr;
- 	s32 err;
- 
-@@ -148,6 +277,13 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	}
- 	ri->result = err;
- 
-+	/* Do any CLM downloading */
-+	err = brcmf_c_process_clm_blob(ifp);
-+	if (err < 0) {
-+		brcmf_err("download CLM blob file failed, %d\n", err);
-+		goto done;
-+	}
-+
- 	/* query for 'ver' to get version info from firmware */
- 	memset(buf, 0, sizeof(buf));
- 	strcpy(buf, "ver");
-@@ -167,6 +303,31 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	ptr = strrchr(buf, ' ') + 1;
- 	strlcpy(ifp->drvr->fwver, ptr, sizeof(ifp->drvr->fwver));
- 
-+	/* Query for 'clmver' to get CLM version info from firmware */
-+	memset(buf, 0, sizeof(buf));
-+	err = brcmf_fil_iovar_data_get(ifp, "clmver", buf, sizeof(buf));
-+	if (err) {
-+		if (err == -23) {
-+			brcmf_dbg(INFO, "clmver iovar unsupported, %d\n", err);
-+		} else {
-+			brcmf_err("retrieving clmver failed, %d\n", err);
-+			goto done;
-+		}
-+	} else {
-+		clmver = (char *)buf;
-+		/* store CLM version for adding it to revinfo debugfs file */
-+		memcpy(ifp->drvr->clmver, clmver, sizeof(ifp->drvr->clmver));
-+
-+		/* Replace all newline/linefeed characters with space
-+		 * character
-+		 */
-+		ptr = clmver;
-+		while ((ptr = strnchr(ptr, '\n', sizeof(buf))) != NULL)
-+			*ptr = ' ';
-+
-+		brcmf_dbg(INFO, "CLM version = %s\n", clmver);
-+	}
-+
- 	/* set mpc */
- 	err = brcmf_fil_iovar_int_set(ifp, "mpc", 1);
- 	if (err) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 511d190..7414dff 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -941,6 +941,8 @@ static int brcmf_revinfo_read(struct seq_file *s, void *data)
- 	seq_printf(s, "anarev: %u\n", ri->anarev);
- 	seq_printf(s, "nvramrev: %08x\n", ri->nvramrev);
- 
-+	seq_printf(s, "clmrev: %s\n", bus_if->drvr->clmver);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index a4dd313..ae39128 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -141,6 +141,8 @@ struct brcmf_pub {
- 	struct notifier_block inetaddr_notifier;
- 	struct notifier_block inet6addr_notifier;
- 	struct brcmf_mp_device *settings;
-+
-+	u8 clmver[BRCMF_DCMD_SMLEN];
- };
- 
- /* forward declarations */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 9a1eb5a..fffe347 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -147,6 +147,21 @@
- #define BRCMF_MFP_CAPABLE		1
- #define BRCMF_MFP_REQUIRED		2
- 
-+/* MAX_CHUNK_LEN is the maximum length for data passing to firmware in each
-+ * ioctl. It is relatively small because firmware has small maximum size input
-+ * playload restriction for ioctls.
-+ */
-+#define MAX_CHUNK_LEN			1400
-+
-+#define DLOAD_HANDLER_VER		1	/* Downloader version */
-+#define DLOAD_FLAG_VER_MASK		0xf000	/* Downloader version mask */
-+#define DLOAD_FLAG_VER_SHIFT		12	/* Downloader version shift */
-+
-+#define DL_BEGIN			0x0002
-+#define DL_END				0x0004
-+
-+#define DL_TYPE_CLM			2
-+
- /* join preference types for join_pref iovar */
- enum brcmf_join_pref_types {
- 	BRCMF_JOIN_PREF_RSSI = 1,
-@@ -835,4 +850,20 @@ struct brcmf_gtk_keyinfo_le {
- 	u8 replay_counter[BRCMF_RSN_REPLAY_LEN];
- };
- 
-+/**
-+ * struct brcmf_dload_data_le - data passing to firmware for downloading
-+ * @flag: flags related to download data.
-+ * @dload_type: type of download data.
-+ * @len: length in bytes of download data.
-+ * @crc: crc of download data.
-+ * @data: download data.
-+ */
-+struct brcmf_dload_data_le {
-+	__le16 flag;
-+	__le16 dload_type;
-+	__le32 len;
-+	__le32 crc;
-+	u8 data[1];
-+};
-+
- #endif /* FWIL_TYPES_H_ */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index f878706..b370ee7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1350,6 +1350,24 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
- 	return 0;
- }
- 
-+static int brcmf_pcie_get_fwname(struct device *dev, u32 chip, u32 chiprev,
-+				 u8 *fw_name)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
-+	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
-+	int ret = 0;
-+
-+	if (devinfo->fw_name[0] != '\0')
-+		strlcpy(fw_name, devinfo->fw_name, BRCMF_FW_NAME_LEN);
-+	else
-+		ret = brcmf_fw_map_chip_to_name(chip, chiprev,
-+						brcmf_pcie_fwnames,
-+						ARRAY_SIZE(brcmf_pcie_fwnames),
-+						fw_name, NULL);
-+
-+	return ret;
-+}
- 
- static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
- 	.txdata = brcmf_pcie_tx,
-@@ -1359,6 +1377,7 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
- 	.wowl_config = brcmf_pcie_wowl_config,
- 	.get_ramsize = brcmf_pcie_get_ramsize,
- 	.get_memdump = brcmf_pcie_get_memdump,
-+	.get_fwname = brcmf_pcie_get_fwname,
- };
- 
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index b1789b1..3a71ca0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3972,6 +3972,24 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
- 	}
- }
- 
-+static int brcmf_sdio_get_fwname(struct device *dev, u32 chip, u32 chiprev,
-+				 u8 *fw_name)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	int ret = 0;
-+
-+	if (sdiodev->fw_name[0] != '\0')
-+		strlcpy(fw_name, sdiodev->fw_name, BRCMF_FW_NAME_LEN);
-+	else
-+		ret = brcmf_fw_map_chip_to_name(chip, chiprev,
-+						brcmf_sdio_fwnames,
-+						ARRAY_SIZE(brcmf_sdio_fwnames),
-+						fw_name, NULL);
-+
-+	return ret;
-+}
-+
- static const struct brcmf_bus_ops brcmf_sdio_bus_ops = {
- 	.stop = brcmf_sdio_bus_stop,
- 	.preinit = brcmf_sdio_bus_preinit,
-@@ -3982,6 +4000,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
- 	.wowl_config = brcmf_sdio_wowl_config,
- 	.get_ramsize = brcmf_sdio_bus_get_ramsize,
- 	.get_memdump = brcmf_sdio_bus_get_memdump,
-+	.get_fwname = brcmf_sdio_get_fwname,
- };
- 
- static void brcmf_sdio_firmware_callback(struct device *dev, int err,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 8f20a4b..9622dd9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1128,12 +1128,30 @@ static void brcmf_usb_wowl_config(struct device *dev, bool enabled)
- 		device_set_wakeup_enable(devinfo->dev, false);
- }
- 
-+static int brcmf_usb_get_fwname(struct device *dev, u32 chip, u32 chiprev,
-+				u8 *fw_name)
-+{
-+	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(dev);
-+	int ret = 0;
-+
-+	if (devinfo->fw_name[0] != '\0')
-+		strlcpy(fw_name, devinfo->fw_name, BRCMF_FW_NAME_LEN);
-+	else
-+		ret = brcmf_fw_map_chip_to_name(chip, chiprev,
-+						brcmf_usb_fwnames,
-+						ARRAY_SIZE(brcmf_usb_fwnames),
-+						fw_name, NULL);
-+
-+	return ret;
-+}
-+
- static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
- 	.txdata = brcmf_usb_tx,
- 	.stop = brcmf_usb_down,
- 	.txctl = brcmf_usb_tx_ctlpkt,
- 	.rxctl = brcmf_usb_rx_ctlpkt,
- 	.wowl_config = brcmf_usb_wowl_config,
-+	.get_fwname = brcmf_usb_get_fwname,
- };
- 
- static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
--- 
-1.9.1
+That and also Greg recently stated he would like to see at least 3 users of
+a feature before adding it. Although I think that's pretty arbitrary, and
+considering that request_firmware_into_buf() only has *one* user -- its what
+he wishes.
+
+  Luis
