@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11147 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751993AbdHHKxb (ORCPT
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:35848 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751991AbdHBQYw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 06:53:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: qca_merez <qca_merez@qca.qualcomm.com>
-CC: QCA_hkadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        Wed, 2 Aug 2017 12:24:52 -0400
+Received: by mail-pg0-f53.google.com with SMTP id v77so17443082pgb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 09:24:52 -0700 (PDT)
+Date: Wed, 2 Aug 2017 09:24:48 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH v4 02/10] wil6210: allow configuring scan timers
-Date: Tue, 8 Aug 2017 10:53:25 +0000
-Message-ID: <87valyib4r.fsf@kamboji.qca.qualcomm.com> (sfid-20170808_125334_767409_2A06C01E)
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-        <1501787302-22885-3-git-send-email-qca_merez@qca.qualcomm.com>
-In-Reply-To: <1501787302-22885-3-git-send-email-qca_merez@qca.qualcomm.com>
-        (Maya Erez's message of "Thu, 3 Aug 2017 22:08:14 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [EXT] Re: pull-request mwifiex-firmware 2017-08-01
+Message-ID: <20170802162445.GA56427@google.com> (sfid-20170802_182455_979842_CA84A468)
+References: <202374ffb3a9487cbbd7f514972ed325@SC-EXCH02.marvell.com>
+ <20170801195100.GA98003@google.com>
+ <d39c8e0aeb6048078c94e39c188f4c16@SC-EXCH02.marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d39c8e0aeb6048078c94e39c188f4c16@SC-EXCH02.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+Hi Ganapathi,
 
-> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
->
-> Allow setting scan timeout and scan dwell time
-> through module parameters.
->
-> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/wil6210/cfg80211.c | 17 ++++++++++++++---
->  drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
->  2 files changed, 15 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wi=
-reless/ath/wil6210/cfg80211.c
-> index 77af749..d079533 100644
-> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-> +++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-> @@ -26,6 +26,14 @@
->  module_param(disable_ap_sme, bool, 0444);
->  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
-> =20
-> +static uint scan_dwell_time  =3D WMI_SCAN_DWELL_TIME_MS;
-> +module_param(scan_dwell_time, uint, 0644);
-> +MODULE_PARM_DESC(scan_dwell_time, " Scan dwell time (msec)");
-> +
-> +static uint scan_timeout =3D WIL6210_SCAN_TO_SEC;
-> +module_param(scan_timeout, uint, 0644);
-> +MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
+On Wed, Aug 02, 2017 at 09:44:51AM +0000, Ganapathi Bhat wrote:
+> Hi Brian,
+> 
+> > On Tue, Aug 01, 2017 at 06:35:40PM +0000, Ganapathi Bhat wrote:
+> > > The following changes since commit
+> > 11db1311bff6fed84d11b03fbfb142209c1239ab:
 
-Module parameters are not really meant for this kind of configuration
-802.11 protocol configuration. Can't you use nl80211?
+^^^ Note that even the above commit is not in linux-firmware.git. Your
+pull requests haven't been making it through.
 
---=20
-Kalle Valo=
+> > >   linux-firmware: update Marvell PCIe-USB8897-A2 firmware image
+> > (2017-06-05 02:19:40 -0700)
+> > >
+> > > are available in the git repository at:
+> > >
+> > >   git://git.marvell.com/mwifiex-firmware.git
+> > 
+> > Is your server down? I can't get a response.
+> No, it is running fine. I did a clone just now to confirm the same.
+
+Still not working today:
+
+   $ git pull
+   fatal: unable to connect to git.marvell.com:
+   git.marvell.com[0: 199.233.58.162]: errno=Connection timed out
+
+   $ git remote -v
+   origin	git://git.marvell.com/mwifiex-firmware.git (fetch)
+   origin	git://git.marvell.com/mwifiex-firmware.git (push)
+
+It also looks like this is not the first time:
+
+Re: pull-request mwifiex-firmware 2017-06-05
+http://marc.info/?l=linux-wireless&m=149754207831326&w=2
+
+Your team's last pull request was never picked up because your server isn't
+working. Maybe you only have a company-internal instance working now?
+
+Brian
