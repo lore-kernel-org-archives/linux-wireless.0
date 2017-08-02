@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19792 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751102AbdHXKK0 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752173AbdHBVA7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 06:10:26 -0400
-Date: Thu, 24 Aug 2017 13:08:32 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Souptick Joarder <jrdr.linux@gmail.com>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] staging: rtlwifi: check for array overflow
-Message-ID: <20170824100832.lcmbwcjhzwlgozeh@mwanda> (sfid-20170824_121030_207681_EC1BE8BB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 2 Aug 2017 17:00:59 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Lior David <qca_liord@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 1/9] wil6210: protect against invalid length of tx management frame
+Date: Thu,  3 Aug 2017 00:00:41 +0300
+Message-Id: <1501707649-9665-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230103_043493_7835402F)
+In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch is distrustful of the "capab" value and marks it as user
-controlled.  I think it actually comes from the firmware?  Anyway, I
-looked at other drivers and they added a bounds check and it seems like
-a harmless thing to have so I have added it here as well.
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Validate buffer length has the minimum needed size
+when sending management frame to protect against
+possible buffer overrun.
 
-diff --git a/drivers/staging/rtlwifi/base.c b/drivers/staging/rtlwifi/base.c
-index f7f207cbaee3..a30b928d5ee1 100644
---- a/drivers/staging/rtlwifi/base.c
-+++ b/drivers/staging/rtlwifi/base.c
-@@ -1414,6 +1414,10 @@ bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
- 				  le16_to_cpu(mgmt->u.action.u.addba_req.capab);
- 				tid = (capab &
- 				       IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-+				if (tid >= MAX_TID_COUNT) {
-+					rcu_read_unlock();
-+					return true;
-+				}
- 				tid_data = &sta_entry->tids[tid];
- 				if (tid_data->agg.rx_agg_state ==
- 				    RTL_RX_AGG_START)
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +++
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 0b5383a..77af749 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -884,6 +884,9 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
+ 			  len, true);
+ 
++	if (len < sizeof(struct ieee80211_hdr_3addr))
++		return -EINVAL;
++
+ 	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
+ 	if (!cmd) {
+ 		rc = -ENOMEM;
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index f82506d..a2b5d59 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -801,6 +801,9 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
+ 	int rc;
+ 	void *frame;
+ 
++	if (!len)
++		return -EINVAL;
++
+ 	frame = memdup_user(buf, len);
+ 	if (IS_ERR(frame))
+ 		return PTR_ERR(frame);
+-- 
+1.9.1
