@@ -1,115 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35391 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbdHABie (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752616AbdHBVBL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 21:38:34 -0400
-Received: by mail-pg0-f66.google.com with SMTP id l64so354834pge.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2017 18:38:34 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [v2 PATCH 2/2] mwifiex: pcie: compatible with wifi-only image while extract wifi-part fw
-Date: Tue,  1 Aug 2017 01:38:24 +0000
-Message-Id: <1501551504-8560-2-git-send-email-huxinming820@gmail.com> (sfid-20170801_033838_257993_F9438189)
-In-Reply-To: <1501551504-8560-1-git-send-email-huxinming820@gmail.com>
-References: <1501551504-8560-1-git-send-email-huxinming820@gmail.com>
+        Wed, 2 Aug 2017 17:01:11 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 8/9] wil6210: store FW RF calibration result
+Date: Thu,  3 Aug 2017 00:00:48 +0300
+Message-Id: <1501707649-9665-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230115_501431_D5680C24)
+In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Sometimes, we might using wifi-only firmware with a combo firmware name,
-in this case, do not need to filter bluetooth part from header.
+Store initial FW RF calibration result in driver. Set this calibration
+result back to FW after each FW reset in order to avoid future calibration
+procedures.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
-v2: fix comment format/grammar (Brain)
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 26 +++++++++++++++++++-------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c    | 6 ++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
+ drivers/net/wireless/ath/wil6210/wmi.c     | 5 +++++
+ drivers/net/wireless/ath/wil6210/wmi.h     | 2 ++
+ 4 files changed, 19 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3da1eeb..dc4e054 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1985,7 +1985,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
-  * (3) wifi image.
-  *
-  * This function bypass the header and bluetooth part, return
-- * the offset of tail wifi-only part.
-+ * the offset of tail wifi-only part. If the image is already wifi-only,
-+ * that is start with CMD1, return 0.
-  */
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index b1e2814..b89d017 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1034,6 +1034,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
  
- static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-@@ -1993,7 +1994,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 	const struct mwifiex_fw_data *fwdata;
- 	u32 offset = 0, data_len, dnld_cmd;
- 	int ret = 0;
--	bool cmd7_before = false;
-+	bool cmd7_before = false, first_cmd = false;
- 
- 	while (1) {
- 		/* Check for integer and buffer overflow */
-@@ -2014,20 +2015,29 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 
- 		switch (dnld_cmd) {
- 		case MWIFIEX_FW_DNLD_CMD_1:
--			if (!cmd7_before) {
--				mwifiex_dbg(adapter, ERROR,
--					    "no cmd7 before cmd1!\n");
-+			if (offset + data_len < data_len) {
-+				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
- 				ret = -1;
- 				goto done;
- 			}
--			if (offset + data_len < data_len) {
--				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
++		if (wil->fw_calib_result > 0) {
++			__le32 val = cpu_to_le32(wil->fw_calib_result |
++						 (CALIB_RESULT_SIGNATURE << 8));
++			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
++		}
 +
-+			/* Image start with cmd1, already wifi-only firmware */
-+			if (!first_cmd) {
-+				mwifiex_dbg(adapter, MSG,
-+					    "input wifi-only firmware\n");
-+				return 0;
-+			}
+ 		wil_release_cpu(wil);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 724ad59..e3c0c2f 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -171,6 +171,10 @@ struct RGF_ICR {
+ #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
+ #define RGF_USER_BL			(0x880A3C) /* Boot Loader */
+ #define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
++#define RGF_USER_FW_CALIB_RESULT	(0x880a90) /* b0-7:result
++						    * b8-15:signature
++						    */
++	#define CALIB_RESULT_SIGNATURE	(0x11)
+ #define RGF_USER_CLKS_CTL_0		(0x880abc)
+ 	#define BIT_USER_CLKS_CAR_AHB_SW_SEL	BIT(1) /* ref clk/PLL */
+ 	#define BIT_USER_CLKS_RST_PWGD	BIT(11) /* reset on "power good" */
+@@ -724,6 +728,8 @@ struct wil6210_priv {
+ 
+ 	enum wmi_ps_profile_type ps_profile;
+ 
++	int fw_calib_result;
 +
-+			if (!cmd7_before) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "no cmd7 before cmd1!\n");
- 				ret = -1;
- 				goto done;
- 			}
- 			offset += data_len;
- 			break;
- 		case MWIFIEX_FW_DNLD_CMD_5:
-+			first_cmd = true;
- 			/* Check for integer overflow */
- 			if (offset + data_len < data_len) {
- 				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-@@ -2037,6 +2047,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 			offset += data_len;
- 			break;
- 		case MWIFIEX_FW_DNLD_CMD_6:
-+			first_cmd = true;
- 			/* Check for integer overflow */
- 			if (offset + data_len < data_len) {
- 				mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-@@ -2053,6 +2064,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
- 			}
- 			goto done;
- 		case MWIFIEX_FW_DNLD_CMD_7:
-+			first_cmd = true;
- 			cmd7_before = true;
- 			break;
- 		default:
+ #ifdef CONFIG_PM
+ #ifdef CONFIG_PM_SLEEP
+ 	struct notifier_block pm_notify;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index a9487f2..ffdd2fa 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -344,6 +344,11 @@ static void wmi_evt_ready(struct wil6210_priv *wil, int id, void *d, int len)
+ 	strlcpy(wdev->wiphy->fw_version, wil->fw_version,
+ 		sizeof(wdev->wiphy->fw_version));
+ 
++	if (len > offsetof(struct wmi_ready_event, rfc_read_calib_result)) {
++		wil_dbg_wmi(wil, "rfc calibration result %d\n",
++			    evt->rfc_read_calib_result);
++		wil->fw_calib_result = evt->rfc_read_calib_result;
++	}
+ 	wil_set_recovery_state(wil, fw_recovery_idle);
+ 	set_bit(wil_status_fwready, wil->status);
+ 	/* let the reset sequence continue */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 4e31c2f..1b426d7 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -1300,6 +1300,8 @@ struct wmi_ready_event {
+ 	/* enum wmi_phy_capability */
+ 	u8 phy_capability;
+ 	u8 numof_additional_mids;
++	u8 rfc_read_calib_result;
++	u8 reserved[3];
+ } __packed;
+ 
+ /* WMI_NOTIFY_REQ_DONE_EVENTID */
 -- 
 1.9.1
