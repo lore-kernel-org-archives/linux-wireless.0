@@ -1,53 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:6509 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751147AbdHOLeD (ORCPT
+Received: from forward3p.cmail.yandex.net ([77.88.31.18]:45582 "EHLO
+        forward3p.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752299AbdHBUy0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 07:34:03 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 2 Aug 2017 16:54:26 -0400
+From: "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
+To: Hans de Goede <hdegoede@redhat.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>
+In-Reply-To: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
 MIME-Version: 1.0
-Subject: Re: [5/6] ath10k: add memory dump support for QCA6174/QCA9377
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
-References: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <e8f8ba72414c48dea427357170975b66@euamsexm01a.eu.qualcomm.com> (sfid-20170815_133406_980879_351908B4)
-Date: Tue, 15 Aug 2017 13:33:51 +0200
+Message-Id: <1570131501706612@web24o.yandex.ru> (sfid-20170802_225430_609762_776CD8FB)
+Date: Thu, 03 Aug 2017 04:43:32 +0800
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+Hello!
 
-> Add memory dump to the firmware crash data file which is provided to user space
-> via devcoredump interface. This makes it easier for firmware engineers to debug
-> firmware crashes.
-> 
-> Due to increased memory consumption the memory dump is disabled by default. To
-> enable it make sure that bit 3 is set in coredump_mask module parameter:
-> 
-> modprobe ath10k_core coredump_mask=0xffffffff
-> 
-> When RAMDUMP is enabled a buffer for the dump is allocated with vmalloc during
-> device probe. The actual memory layout is different in hardware versions and
-> the layouts are defined in coredump.c. The memory is split to regions and, to
-> get even finegrained control of what to copy, the region can split to smaller
-> sections as not all registers are readable (which could cause the whole system
-> to stall).
-> 
-> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
-> [kvalo@qca.qualcomm.com: refactoring and cleanup]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Sorry for late answer.
 
-kbuild bot reported:
+> russianneuromancer has reported seeing a similar problem with 4.13.
 
-coccinelle warnings: (new ones prefixed by >>)
+> russianneuromancer, can you check if the device you are seeing this with
+also has a brcm43430 sdio wifi and if so if switching to:
 
->> drivers/net/wireless/ath/ath10k/pci.c:1561:2-3: Unneeded semicolon
---
->> drivers/net/wireless/ath/ath10k/pci.c:1522:6-15: WARNING: Unsigned expression compared with zero: skip_size < 0
+> http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
 
--- 
-https://patchwork.kernel.org/patch/9901255/
+> Fixes this ?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Judging by this error message
+
+> [    7.744262] brcmfmac mmc0:0001:1: Direct firmware load for brcm/brcmfmac43241b4-sdio.txt failed with error -2
+
+Lenovo Miix2 8 have brcm43241b4 sdio wifi. 
+
+With brcmfmac43241b4-sdio.txt from NVRAM, as suggested here https://wireless.wiki.kernel.org/en/users/drivers/brcm80211 WiFi connection works for me with upstream Linux 4.12.4, but doesn't work with Linux 4.13rc1 and Linux 4.13rc3.
+
+Few connection attempts with Linux 4.13rc3 looks like this:
+
+> [    7.779370] usbcore: registered new interface driver brcmfmac
+> [    7.948487] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
+> [   32.282374] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+> [   32.282393] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlan0 type 10 failed: err=-16
+> [   43.560596] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   44.494422] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   45.492956] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   46.491317] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   54.922652] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   55.849565] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   56.849437] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   57.853150] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   66.542999] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   67.483115] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> [   68.483434] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+
+23.07.2017, 02:44, "Hans de Goede" <hdegoede@redhat.com>:
+> Hi,
+>
+> When upgrading my devel environment to 4.13-rc1+ I noticed that
+> the brcm43430 sdio wifi on a Chuwi Hi8 plus stopped working:
+>
+> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_probe: Loading firmware brcm/brcmfmac43430-sdio.bin for chip 0000a9a6 rev 00000001
+> jul 22 14:13:23 localhost.localdomain kernel: usbcore: registered new interface driver brcmfmac
+> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
+> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+> jul 22 14:13:26 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+> jul 22 14:13:28 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+> jul 22 14:13:31 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+> <repeats>
+>
+> The real culprit here seems to be:
+>
+> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+>
+> I've tried reverting allmost all changes under drivers/net/wireless/broadcom/brcm80211
+> as well as those under drivers/mmc, but that did not help.
+>
+> Googling for the "Unknown mailbox data content" error found some Raspberry Pi 3
+> related comments where users report success with a different firmware version
+> from: https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/bcm4343/
+>
+> So I tried that as well as a version extracted from the Android install
+> on the tablet and both work fine, only the "version 7.45.41.26" which
+> happens to be the one in linux-firmware causes this problem, I've put
+> all (Linux build, not NDIS) versions I could find here:
+>
+> http://jwrdegoede.danny.cz/brcm-firmware/
+>
+> I've the feeling that the 7.45.41.26 version is a bit buggy / suspect to
+> certain timing problems and 4.13 just happens to trigger those timing
+> conditions...
+>
+> russianneuromancer has reported seeing a similar problem with 4.13.
+>
+> russianneuromancer, can you check if the device you are seeing this with
+> also has a brcm43430 sdio wifi and if so if switching to:
+>
+> http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
+>
+> Fixes this ?
+>
+> Regards,
+>
+> Hans
