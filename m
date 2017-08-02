@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:38326 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751098AbdHNTW3 (ORCPT
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:37471 "EHLO
+        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753108AbdHBMWL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 15:22:29 -0400
-Received: by mail-wm0-f54.google.com with SMTP id f15so548265wmg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 12:22:28 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>
-References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a35aea64-b391-2719-c8cb-92ef9c9288c7@broadcom.com> (sfid-20170814_212232_879952_6490A186)
-Date: Mon, 14 Aug 2017 21:22:25 +0200
+        Wed, 2 Aug 2017 08:22:11 -0400
+Received: by mail-vk0-f65.google.com with SMTP id r199so2094531vke.4
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 05:22:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170802122005.GA4652@symbol-HP-ZBook-15>
+References: <20170802122005.GA4652@symbol-HP-ZBook-15>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Wed, 2 Aug 2017 17:52:10 +0530
+Message-ID: <CAFqt6zZmGV-fn157G6dfdQkxsbSSsEKKjnTcjX5H8_bRsocAzQ@mail.gmail.com> (sfid-20170802_142214_545255_BAE37AED)
+Subject: Re: [PATCH v5] rtlwifi: Replace hardcode value with macro
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-08-17 15:49, Emmanuel Grumbach wrote:
-> User space can now allow the kernel to associate to an AP
-> that requires MFP or that doesn't have MFP enabled in the
-> same NL80211_CMD_CONNECT command.
-> The driver / firmware will decide whether to use it or not.
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Please ignore this patch.
+
+On Wed, Aug 2, 2017 at 5:50 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+> and hw->max_rate_tries are replaced by macro and removed the comment.
+>
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
 > ---
-> A short tour of the drivers taught me that only Quantenna really look
-> at cfg80211_connect_params::sme which can now be 2. This is why
-> the maintainer of this driver is CCed.
-
-Indeed in brcmfmac the IE is processed to determine whether it is 
-required or optional. Probably will change our driver to use the 
-explicit mfp values from cfg80211_connect_params::sme.
-
-Thanks,
-Arend
+>  drivers/net/wireless/realtek/rtlwifi/base.c | 5 ++---
+>  drivers/net/wireless/realtek/rtlwifi/base.h | 2 ++
+>  2 files changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+> index 8b833e2..ea18aa7 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+> @@ -426,9 +426,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+>         hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
+>
+>         /* TODO: Correct this value for our hw */
+> -       /* TODO: define these hard code value */
+> -       hw->max_listen_interval = 10;
+> -       hw->max_rate_tries = 4;
+> +       hw->max_listen_interval = MAX_LISTEN_INTERVAL;
+> +       hw->max_rate_tries = MAX_RATE_TRIES;
+>         /* hw->max_rates = 1; */
+>         hw->sta_data_size = sizeof(struct rtl_sta_info);
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+> index ab7d819..b56d1b7 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+> @@ -65,6 +65,8 @@ enum ap_peer {
+>  #define FRAME_OFFSET_ADDRESS3          16
+>  #define FRAME_OFFSET_SEQUENCE          22
+>  #define FRAME_OFFSET_ADDRESS4          24
+> +#define MAX_LISTEN_INTERVAL            10
+> +#define MAX_RATE_TRIES                 4
+>
+>  #define SET_80211_HDR_FRAME_CONTROL(_hdr, _val)                \
+>         WRITEEF2BYTE(_hdr, _val)
+> --
+> 1.9.1
+>
