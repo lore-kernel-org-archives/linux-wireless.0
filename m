@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44402 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750846AbdHRMeE (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:50059 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751727AbdHBDze (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 08:34:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 15:33:57 +0300
-Message-Id: <20170818123357.19646-3-luca@coelho.fi> (sfid-20170818_143410_433232_5390C995)
-In-Reply-To: <20170818123357.19646-1-luca@coelho.fi>
-References: <20170818123357.19646-1-luca@coelho.fi>
-Subject: [PATCH 2/2] mac80211: flush hw_roc_start work before cancelling the ROC
+        Tue, 1 Aug 2017 23:55:34 -0400
+Subject: Re: [PATCH 1/3] brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in
+ AP/opensecurity mode
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+ <bbe8b942-fba4-8c26-eff5-203b192528f2@broadcom.com>
+From: Wright Feng <wright.feng@cypress.com>
+Message-ID: <781c75de-dc99-0ac7-bb93-b55ebc75a952@cypress.com> (sfid-20170802_055537_533693_7DD95A2D)
+Date: Wed, 2 Aug 2017 10:56:02 +0800
+MIME-Version: 1.0
+In-Reply-To: <bbe8b942-fba4-8c26-eff5-203b192528f2@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
 
-When HW ROC is supported it is possible that after the HW notified
-that the ROC has started, the ROC was cancelled and another ROC was
-added while the hw_roc_start worker is waiting on the mutex (since
-cancelling the ROC and adding another one also holds the same mutex).
-As a result, the hw_roc_start worker will continue to run after the
-new ROC is added but before it is actually started by the HW.
-This may result in notifying userspace that the ROC has started before
-it actually does, or in case of management tx ROC, in an attempt to
-tx while not on the right channel.
+On 2017/8/1 下午 08:41, Arend van Spriel wrote:
+> On 01-08-17 10:48, Wright Feng wrote:
+>> When setting wpa_auth to WPA_AUTH_NONE(1) in AP mode with WEP secuirty,
+>> firmware will set privacy bit and add WPA OUI in VENDOR IE in beacon and
+>> probe response. It confuses the supplicant in sation client by the
+>> security type from softAP beacon and we will see [WPA-?] in scan result.
+>> So we set WPA_AUTH_DISABLED in softAP mode with opensecurity.
+>>
+>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 ++++++-
+>>   1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> index a31ea10..54588d2 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> @@ -3854,6 +3854,7 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
+>>   static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+>>   {
+>>   	s32 err;
+>> +	s32 wpa_val;
+>>   
+>>   	/* set auth */
+>>   	err = brcmf_fil_bsscfg_int_set(ifp, "auth", 0);
+>> @@ -3868,7 +3869,11 @@ static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+>>   		return err;
+>>   	}
+>>   	/* set upper-layer auth */
+>> -	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", WPA_AUTH_NONE);
+>> +	if (brcmf_is_ibssmode(ifp->vif))
+>> +		wpa_val = WPA_AUTH_NONE;
+>> +	else
+>> +		wpa_val = WPA_AUTH_DISABLED;
+>> +	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", wpa_val);
+> 
+> Is WPA_AUTH_NONE ok for IBSS mode? Not sure why it is handled
+> differently. Is it because you do not want to change things for IBSS
+> mode as you did not try that?
 
-In addition, when the driver will notify mac80211 that the second ROC
-has started, mac80211 will warn that this ROC has already been
-notified.
-
-Fix this by flushing the hw_roc_start work before cancelling an ROC.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/offchannel.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index f8e7a8bbc618..faf4f6055000 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -707,6 +707,8 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
- 	if (!cookie)
- 		return -ENOENT;
- 
-+	flush_work(&local->hw_roc_start);
-+
- 	mutex_lock(&local->mtx);
- 	list_for_each_entry_safe(roc, tmp, &local->roc_list, list) {
- 		if (!mgmt_tx && roc->cookie != cookie)
--- 
-2.14.1
+I would like to keep WPA_AUTH_NODE for IBSS mode because the comment of 
+WPA_AUTH_NONE definition in brcmu_wifi.h is "none (IBSS)". It seems that 
+WPA_AUTH_NONE is for IBSS mode.
+> 
+> Regards,
+> Arend
+> 
