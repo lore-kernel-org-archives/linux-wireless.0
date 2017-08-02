@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:37332 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752465AbdHIQ2e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53542 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751142AbdHBJcW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:28:34 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, kubakici@wp.pl, matthias.bgg@gmail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 12/20] mt7601u: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:58:24 +0530
-Message-Id: <1502296104-21360-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182858_639428_3F91B7DB)
+        Wed, 2 Aug 2017 05:32:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wright Feng <wright.feng@cypress.com>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan feature enabled
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+        <1501577287-28904-3-git-send-email-wright.feng@cypress.com>
+Date: Wed, 02 Aug 2017 12:32:18 +0300
+In-Reply-To: <1501577287-28904-3-git-send-email-wright.feng@cypress.com>
+        (Wright Feng's message of "Tue, 1 Aug 2017 16:48:07 +0800")
+Message-ID: <87mv7i48nx.fsf@codeaurora.org> (sfid-20170802_113226_130119_7912949B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+Wright Feng <wright.feng@cypress.com> writes:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
-changes in v2:
-              Re-submitting wireless separately.
+> The num_different_channels in wiphy info is not correct when firmware
+> supports mchan. When mchan is on, num_different_channels is always
+> overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
+> num_different_channels setting forward.
+>
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
 
- drivers/net/wireless/mediatek/mt7601u/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Does this fix a user visible bug? If yes, it would be nice to document
+that.
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
-index 416c604..b9e4f67 100644
---- a/drivers/net/wireless/mediatek/mt7601u/usb.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
-@@ -19,7 +19,7 @@
- #include "usb.h"
- #include "trace.h"
- 
--static struct usb_device_id mt7601u_device_table[] = {
-+static const struct usb_device_id mt7601u_device_table[] = {
- 	{ USB_DEVICE(0x0b05, 0x17d3) },
- 	{ USB_DEVICE(0x0e8d, 0x760a) },
- 	{ USB_DEVICE(0x0e8d, 0x760b) },
 -- 
-2.7.4
+Kalle Valo
