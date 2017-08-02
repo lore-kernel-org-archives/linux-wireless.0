@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33424 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753700AbdHWJ76 (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33986 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752703AbdHBR5j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 05:59:58 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        jon.maloy@ericsson.com, ying.xue@windriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 1/3] net: rtlwifi: constify rate_control_ops
-Date: Wed, 23 Aug 2017 15:29:33 +0530
-Message-Id: <1503482375-19983-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_120119_377500_950777DB)
-In-Reply-To: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Wed, 2 Aug 2017 13:57:39 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, harish.patil@cavium.com,
+        manish.chopra@cavium.com, Dept-GELinuxNICDev@cavium.com
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 2/2] qlcnic: add const to bin_attribute structure
+Date: Wed,  2 Aug 2017 23:27:14 +0530
+Message-Id: <1501696634-15765-3-git-send-email-bhumirks@gmail.com> (sfid-20170802_195812_380402_A294850C)
+In-Reply-To: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
+References: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rate_control_ops are not supposed to change at runtime. All functions
-working with rate_control_ops provided by <net/mac80211.h> work with
-const rate_control_ops. So mark the non-const structs as const.
+Add const to bin_attribute structure as it is only passed to the
+functions sysfs_{remove/create}_bin_file. The corresponding
+arguments are of type const, so declare the structure to be const.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rc.c | 2 +-
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index 951d257..02811ed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -283,7 +283,7 @@ static void rtl_rate_free_sta(void *rtlpriv,
- 	kfree(rate_priv);
- }
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c
+index 73027a6..82fcb83 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c
+@@ -1248,7 +1248,7 @@ static ssize_t qlcnic_83xx_sysfs_flash_write_handler(struct file *filp,
+ 	.write = qlcnic_sysfs_write_pm_config,
+ };
  
--static struct rate_control_ops rtl_rate_ops = {
-+static const struct rate_control_ops rtl_rate_ops = {
- 	.name = "rtl_rc",
- 	.alloc = rtl_rate_alloc,
- 	.free = rtl_rate_free,
+-static struct bin_attribute bin_attr_flash = {
++static const struct bin_attribute bin_attr_flash = {
+ 	.attr = {.name = "flash", .mode = (S_IRUGO | S_IWUSR)},
+ 	.size = 0,
+ 	.read = qlcnic_83xx_sysfs_flash_read_handler,
 -- 
 1.9.1
