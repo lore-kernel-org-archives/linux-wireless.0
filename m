@@ -1,57 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52325 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751989AbdHLWC5 (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:38775 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752976AbdHBVGA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Aug 2017 18:02:57 -0400
-Subject: NACK: [PATCH] rtlwifi: btcoex: make function btc8723b2ant_dac_swing
- static
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20170812220017.6505-1-colin.king@canonical.com>
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Colin Ian King <colin.king@canonical.com>
-Message-ID: <2cd21542-1129-d93d-480b-752afbf11b8d@canonical.com> (sfid-20170813_000313_542283_FBF90E67)
-Date: Sat, 12 Aug 2017 23:02:54 +0100
+        Wed, 2 Aug 2017 17:06:00 -0400
+Received: by mail-wm0-f41.google.com with SMTP id m85so2643909wma.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 14:06:00 -0700 (PDT)
+Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
+To: "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>,
+        Hans de Goede <hdegoede@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>
+References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+ <1570131501706612@web24o.yandex.ru>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <b564db86-5990-8629-7931-fa65410ad983@broadcom.com> (sfid-20170802_230604_709988_7AB3E3D6)
+Date: Wed, 2 Aug 2017 23:05:56 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170812220017.6505-1-colin.king@canonical.com>
+In-Reply-To: <1570131501706612@web24o.yandex.ru>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/08/17 23:00, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+
+
+On 02-08-17 22:43, russianneuromancer@ya.ru wrote:
+> Hello!
 > 
-> The function btc8723b2ant_dac_swing  is local to the source and
-> does not need to be in global scope, so make it static.
+> Sorry for late answer.
 > 
-> Cleans up sparse warning:
-> symbol 'btc8723b2ant_dac_swing' was not declared. Should it be static?
+>> russianneuromancer has reported seeing a similar problem with 4.13.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>> russianneuromancer, can you check if the device you are seeing this with
+> also has a brcm43430 sdio wifi and if so if switching to:
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-> index 31965f0ef69d..9d2ecfbc7b33 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-> @@ -833,9 +833,9 @@ static void btc8723b2ant_set_sw_fulltime_dac_swing(struct btc_coexist *btcoex,
->  		btc8723b2ant_set_dac_swing_reg(btcoex, 0x18);
->  }
->  
-> -void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
-> -			    bool force_exec, bool dac_swing_on,
-> -			    u32 dac_swing_lvl)
-> +static void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
-> +				   bool force_exec, bool dac_swing_on,
-> +				   u32 dac_swing_lvl)
->  {
->  	struct rtl_priv *rtlpriv = btcoexist->adapter;
->  
+>> http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
 > 
-Sent out wrong patch. Please ignore.
+>> Fixes this ?
+> 
+> Judging by this error message
+> 
+>> [    7.744262] brcmfmac mmc0:0001:1: Direct firmware load for brcm/brcmfmac43241b4-sdio.txt failed with error -2
+> 
+> Lenovo Miix2 8 have brcm43241b4 sdio wifi. 
+> 
+> With brcmfmac43241b4-sdio.txt from NVRAM, as suggested here https://wireless.wiki.kernel.org/en/users/drivers/brcm80211 WiFi connection works for me with upstream Linux 4.12.4, but doesn't work with Linux 4.13rc1 and Linux 4.13rc3.
+
+Yeah. There are three patches currently in wireless tree, maybe also in
+netdev tree, which will probably be included in 4.13-rc4 fixing the
+issue below.
+
+Regards,
+Arend
+
+> Few connection attempts with Linux 4.13rc3 looks like this:
+> 
+>> [    7.779370] usbcore: registered new interface driver brcmfmac
+>> [    7.948487] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
+>> [   32.282374] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+>> [   32.282393] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlan0 type 10 failed: err=-16
+>> [   43.560596] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   44.494422] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   45.492956] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   46.491317] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   54.922652] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   55.849565] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   56.849437] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   57.853150] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   66.542999] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   67.483115] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+>> [   68.483434] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
+> 
+> 23.07.2017, 02:44, "Hans de Goede" <hdegoede@redhat.com>:
+>> Hi,
+>>
+>> When upgrading my devel environment to 4.13-rc1+ I noticed that
+>> the brcm43430 sdio wifi on a Chuwi Hi8 plus stopped working:
+>>
+>> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_probe: Loading firmware brcm/brcmfmac43430-sdio.bin for chip 0000a9a6 rev 00000001
+>> jul 22 14:13:23 localhost.localdomain kernel: usbcore: registered new interface driver brcmfmac
+>> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
+>> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+>> jul 22 14:13:26 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>> jul 22 14:13:28 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>> jul 22 14:13:31 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+>> <repeats>
+>>
+>> The real culprit here seems to be:
+>>
+>> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+>>
+>> I've tried reverting allmost all changes under drivers/net/wireless/broadcom/brcm80211
+>> as well as those under drivers/mmc, but that did not help.
+>>
+>> Googling for the "Unknown mailbox data content" error found some Raspberry Pi 3
+>> related comments where users report success with a different firmware version
+>> from: https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/bcm4343/
+>>
+>> So I tried that as well as a version extracted from the Android install
+>> on the tablet and both work fine, only the "version 7.45.41.26" which
+>> happens to be the one in linux-firmware causes this problem, I've put
+>> all (Linux build, not NDIS) versions I could find here:
+>>
+>> http://jwrdegoede.danny.cz/brcm-firmware/
+>>
+>> I've the feeling that the 7.45.41.26 version is a bit buggy / suspect to
+>> certain timing problems and 4.13 just happens to trigger those timing
+>> conditions...
+>>
+>> russianneuromancer has reported seeing a similar problem with 4.13.
+>>
+>> russianneuromancer, can you check if the device you are seeing this with
+>> also has a brcm43430 sdio wifi and if so if switching to:
+>>
+>> http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
+>>
+>> Fixes this ?
+>>
+>> Regards,
+>>
+>> Hans
