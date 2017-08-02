@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46602 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932090AbdHWPV4 (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:34210 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbdHBF5k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 11:21:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: pull-request: iwlwifi-next 2017-08-18
-References: <1503132116.15969.327.camel@coelho.fi>
-Date: Wed, 23 Aug 2017 18:21:51 +0300
-In-Reply-To: <1503132116.15969.327.camel@coelho.fi> (Luca Coelho's message of
-        "Sat, 19 Aug 2017 11:41:56 +0300")
-Message-ID: <87pobmwbqo.fsf@kamboji.qca.qualcomm.com> (sfid-20170823_172200_000721_544FBEDA)
+        Wed, 2 Aug 2017 01:57:40 -0400
+Received: by mail-qt0-f194.google.com with SMTP id i19so3714442qte.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 22:57:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170801110449.5pddqqml32qqlvrn@mwanda>
+References: <20170801110449.5pddqqml32qqlvrn@mwanda>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Date: Wed, 2 Aug 2017 11:27:39 +0530
+Message-ID: <CAC_mnDmNtiobgxuDENjh2kkc_TfMxg2Msc0jpJrSYKe5GrH0oQ@mail.gmail.com> (sfid-20170802_075744_133735_BD2E363A)
+Subject: Re: [bug report] rsi: immediate wakeup bit and priority for TX
+ command packets
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hi Dan,
 
-> Here's my third pull-request intended for v4.14.=C2=A0 We continued doing
-> generic development work, with improvements, bug fixes and=C2=A0cleanups =
-all
-> around.=C2=A0 More=C2=A0details in the tag description.
->
-> My patch "iwlwifi: update channel flags parser" is going to cause a
-> conflict with net because they both change the same string in debug
-> message.  Emmanuel's patch "iwlwifi: split the regulatory rules when the
-> bandwidth flags require it" added "reg_flags" to the string and changed
-> the Ad-hoc string.  My patch added a few %s's and also changed the Ad-
-> hoc string.  The result of the conflict resolution should look like
-> this:
->
-> "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n"
+Sorry for the mistake. I will send a new patch to fix this issue and
+make sure no such things happen again.
 
-Thanks, I'll Cc Stephen because he most probably sees that conflict
-tomorrow.
+Thanks,
+Prameela
 
-> I have sent this out before, and kbuildbot reported success.
+On Tue, Aug 1, 2017 at 4:34 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> Hello Prameela Rani Garnepudi,
 >
-> Please let me know if there are any issues.
+> The patch 9a629fafe7d8: "rsi: immediate wakeup bit and priority for
+> TX command packets" from Jul 10, 2017, leads to the following static
+> checker warning:
 >
-> Cheers,
-> Luca.
+>         drivers/net/wireless/rsi/rsi_91x_mgmt.c:277 rsi_send_internal_mgmt_frame()
+>         error: potentially dereferencing uninitialized 'desc'.
 >
+> drivers/net/wireless/rsi/rsi_91x_mgmt.c
+>    267  static int rsi_send_internal_mgmt_frame(struct rsi_common *common,
+>    268                                          struct sk_buff *skb)
+>    269  {
+>    270          struct skb_info *tx_params;
+>    271          struct rsi_cmd_desc *desc;
+>                                      ^^^^
+>    272
+>    273          if (skb == NULL) {
+>    274                  rsi_dbg(ERR_ZONE, "%s: Unable to allocate skb\n", __func__);
+>    275                  return -ENOMEM;
+>    276          }
+>    277          desc->desc_dword0.len_qno |= cpu_to_le16(DESC_IMMEDIATE_WAKEUP);
+>                 ^^^^^^
 >
-> The following changes since commit 38ef62353acbaa0eea062a9f047b33aebd7d52=
-ce:
+>    278          skb->priority = MGMT_SOFT_Q;
+>    279          tx_params = (struct skb_info *)&IEEE80211_SKB_CB(skb)->driver_data;
+>    280          tx_params->flags |= INTERNAL_MGMT_PKT;
+>    281          skb_queue_tail(&common->tx_queue[MGMT_SOFT_Q], skb);
+>    282          rsi_set_event(&common->tx_thread.event);
+>    283          return 0;
+>    284  }
 >
->   rsi: security enhancements for AP mode (2017-08-17 10:07:00 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
-tags/iwlwifi-next-for-kalle-2017-08-18
->
-> for you to fetch changes up to 8fe34b060a4b11be35ffd9383acdd0bc7bee72e2:
->
->   iwlwifi: use big-endian for the hw section of the nvm (2017-08-18 17:36=
-:42 +0300)
->
-> ----------------------------------------------------------------
-> Third set of iwlwifi patches for 4.14
->
-> * Work for the upcoming A000 device family continues;
-> * Improvements in debugging;
-> * A couple of improvements in block-ack sessions;
-> * Some fixes for channel switch;
-> * A workaround for a HW data bug;
-> * Some FW API updates;
-> * General fixes and cleanups here and there.
->
-> ----------------------------------------------------------------
+> regards,
+> dan carpenter
 
-Pulled, thanks.
 
---=20
-Kalle Valo
+
+-- 
+G. Prameela Rani (M.Tech,CSE)
