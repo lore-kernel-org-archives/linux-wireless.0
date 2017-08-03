@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751600AbdHCTI3 (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36994 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751010AbdHCOrd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:29 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v4 00/10] wil6210 patches
-Date: Thu,  3 Aug 2017 22:08:12 +0300
-Message-Id: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210832_776020_31BBBB12)
+        Thu, 3 Aug 2017 10:47:33 -0400
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux@endlessm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH v3] iwlwifi: Demote messages about fw flags size to info
+Date: Thu,  3 Aug 2017 07:47:28 -0700
+Message-Id: <20170803144728.32305-1-jprvita@endlessm.com> (sfid-20170803_164809_083467_0E57BF4F)
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD004A3CC@AcuExch.aculab.com>
+References: <063D6719AE5E284EB5DD2968C1650D6DD004A3CC@AcuExch.aculab.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v3:
-- Split of "wil6210: make debugfs compilation optional" patch to 2 logical patches
+These messages are not reporting a real error, just the fact that the
+firmware knows about more flags than the driver.
 
-Changes from v2:
-- Remove debugfs.c compilation if CONFIG_DEBUG_FS is not defined
+Currently these messages are presented to the user during boot if there
+is no bootsplash covering the console, even when booting the kernel with
+"quiet".
 
-Changes from v1:
-- Removal of runtime PM patch, pending a fix to system suspend flow
+Demoting it to the warn level helps having a clean boot process.
 
-Dedy Lansky (2):
-  wil6210: support FW RSSI reporting
-  wil6210: store FW RF calibration result
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
 
-Gidon Studinski (2):
-  wil6210: move vring_idle_trsh definition to wil6210_priv
-  wil6210: make debugfs compilation optional
+v2 changes:
+ - Set to warn level instead of info
 
-Hamad Kadmany (3):
-  wil6210: protect against invalid length of tx management frame
-  wil6210: allow configuring scan timers
-  wil6210: fix interface-up check
+v3 changes:
+ - Fix commit message typo
 
-Maya Erez (3):
-  wil6210: check no_fw_recovery in resume failure recovery
-  wil6210: add statistics for suspend time
-  wil6210: notify wiphy on wowlan support
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/ath/wil6210/Makefile   |  2 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c | 42 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/debugfs.c  | 27 ++++++++++++++-----
- drivers/net/wireless/ath/wil6210/main.c     | 12 ++++++++-
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  3 +++
- drivers/net/wireless/ath/wil6210/pm.c       | 27 ++++++++++++++++---
- drivers/net/wireless/ath/wil6210/txrx.c     |  6 ++---
- drivers/net/wireless/ath/wil6210/wil6210.h  | 21 +++++++++++++--
- drivers/net/wireless/ath/wil6210/wmi.c      | 14 +++++++---
- drivers/net/wireless/ath/wil6210/wmi.h      |  8 ++++--
- 10 files changed, 133 insertions(+), 29 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index be466a074c1d..c98a254bbd4d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -461,9 +461,9 @@ static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
+ 	int i;
+ 
+ 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_API, 32)) {
+-		IWL_ERR(drv,
+-			"api flags index %d larger than supported by driver\n",
+-			api_index);
++		IWL_WARN(drv,
++			 "api flags index %d larger than supported by driver\n",
++			 api_index);
+ 		/* don't return an error so we can load FW that has more bits */
+ 		return 0;
+ 	}
+@@ -485,9 +485,9 @@ static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
+ 	int i;
+ 
+ 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_CAPA, 32)) {
+-		IWL_ERR(drv,
+-			"capa flags index %d larger than supported by driver\n",
+-			api_index);
++		IWL_WARN(drv,
++			 "capa flags index %d larger than supported by driver\n",
++			 api_index);
+ 		/* don't return an error so we can load FW that has more bits */
+ 		return 0;
+ 	}
 -- 
-1.9.1
+2.13.2
