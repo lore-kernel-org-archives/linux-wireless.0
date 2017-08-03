@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751192AbdH1TTE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 15:19:04 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 5/7] wil6210: clear PAL_UNIT_ICR part of device reset
-Date: Mon, 28 Aug 2017 22:18:45 +0300
-Message-Id: <1503947927-18877-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211907_839412_7C01C8C7)
-In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mga06.intel.com ([134.134.136.31]:15643 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751079AbdHCFz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 01:55:26 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "mcgrof@kernel.org" <mcgrof@kernel.org>
+CC: "pieter-paul.giesberts@broadcom.com"
+        <pieter-paul.giesberts@broadcom.com>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "keescook@chromium.org" <keescook@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "alan@linux.intel.com" <alan@linux.intel.com>,
+        "moritz.fischer@ettus.com" <moritz.fischer@ettus.com>,
+        "pjones@redhat.com" <pjones@redhat.com>,
+        "wagi@monom.org" <wagi@monom.org>,
+        "pmladek@suse.com" <pmladek@suse.com>,
+        "atull@kernel.org" <atull@kernel.org>,
+        "yi1.li@linux.intel.com" <yi1.li@linux.intel.com>,
+        "wright.feng@cypress.com" <wright.feng@cypress.com>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "takahiro.akashi@linaro.org" <takahiro.akashi@linaro.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "hdegoede@redhat.com" <hdegoede@redhat.com>,
+        "rafal@milecki.pl" <rafal@milecki.pl>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "dhowells@redhat.com" <dhowells@redhat.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "chi-hsien.lin@cypress.com" <chi-hsien.lin@cypress.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "franky.lin@broadcom.com" <franky.lin@broadcom.com>
+Subject: Re: [PATCH V5 1/2] firmware: add more flexible
+ request_firmware_async function
+Date: Thu, 3 Aug 2017 05:55:18 +0000
+Message-ID: <1501739717.15969.26.camel@intel.com> (sfid-20170803_075547_034766_232DD40A)
+References: <20170731150945.8925-1-zajec5@gmail.com>
+         <20170802213010.GM18884@wotan.suse.de>
+         <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-
-When FW starts running it can get D0 to D3 interrupt that is a leftover
-from previous system suspend while FW was not running.
-As this interrupt is not relevant anymore, clear it part of device reset
-procedure.
-
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c    | 2 ++
- drivers/net/wireless/ath/wil6210/wil6210.h | 1 +
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 927e332..bac829a 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -943,6 +943,8 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
- 	/* it is W1C, clear by writing back same value */
- 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
-+	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
-+	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 
- 	if (wil->fw_calib_result > 0) {
- 		__le32 val = cpu_to_le32(wil->fw_calib_result |
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index a8c2680..315ec8b 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -268,6 +268,7 @@ struct RGF_ICR {
- 	#define BIT_DMA_PSEUDO_CAUSE_MISC	BIT(2)
- 
- #define RGF_HP_CTRL			(0x88265c)
-+#define RGF_PAL_UNIT_ICR		(0x88266c) /* struct RGF_ICR */
- #define RGF_PCIE_LOS_COUNTER_CTL	(0x882dc4)
- 
- /* MAC timer, usec, for packet lifetime */
--- 
-1.9.1
+T24gVGh1LCAyMDE3LTA4LTAzIGF0IDA4OjIzICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiAi
+THVpcyBSLiBSb2RyaWd1ZXoiIDxtY2dyb2ZAa2VybmVsLm9yZz4gd3JpdGVzOg0KPiANCj4gPiA+
+ICtpbnQgcmVxdWVzdF9maXJtd2FyZV9ub3dhaXQoc3RydWN0IG1vZHVsZSAqbW9kdWxlLCBib29s
+IHVldmVudCwNCj4gPiA+ICsJCQkgICAgY29uc3QgY2hhciAqbmFtZSwgc3RydWN0IGRldmljZSAq
+ZGV2aWNlLCBnZnBfdCBnZnAsDQo+ID4gPiArCQkJICAgIHZvaWQgKmNvbnRleHQsDQo+ID4gPiAr
+CQkJICAgIHZvaWQgKCpjb250KShjb25zdCBzdHJ1Y3QgZmlybXdhcmUgKmZ3LCB2b2lkICpjb250
+ZXh0KSkNCj4gPiA+ICt7DQo+ID4gPiArCXVuc2lnbmVkIGludCBvcHRfZmxhZ3MgPSBGV19PUFRf
+RkFMTEJBQ0sgfA0KPiA+ID4gKwkJKHVldmVudCA/IEZXX09QVF9VRVZFTlQgOiBGV19PUFRfVVNF
+UkhFTFBFUik7DQo+ID4gPiArDQo+ID4gPiArCXJldHVybiBfX3JlcXVlc3RfZmlybXdhcmVfbm93
+YWl0KG1vZHVsZSwgb3B0X2ZsYWdzLCBuYW1lLCBkZXZpY2UsIGdmcCwNCj4gPiA+ICsJCQkJCSBj
+b250ZXh0LCBjb250KTsNCj4gPiA+ICt9DQo+ID4gPiAgRVhQT1JUX1NZTUJPTChyZXF1ZXN0X2Zp
+cm13YXJlX25vd2FpdCk7DQo+ID4gPiAgDQo+ID4gPiAraW50IF9fcmVxdWVzdF9maXJtd2FyZV9h
+c3luYyhzdHJ1Y3QgbW9kdWxlICptb2R1bGUsIGNvbnN0IGNoYXIgKm5hbWUsDQo+ID4gPiArCQkJ
+ICAgICBzdHJ1Y3QgZmlybXdhcmVfb3B0cyAqZndfb3B0cywgc3RydWN0IGRldmljZSAqZGV2LA0K
+PiA+ID4gKwkJCSAgICAgdm9pZCAqY29udGV4dCwNCj4gPiA+ICsJCQkgICAgIHZvaWQgKCpjb250
+KShjb25zdCBzdHJ1Y3QgZmlybXdhcmUgKmZ3LCB2b2lkICpjb250ZXh0KSkNCj4gPiA+ICt7DQo+
+ID4gPiArCXVuc2lnbmVkIGludCBvcHRfZmxhZ3MgPSBGV19PUFRfVUVWRU5UOw0KPiA+IA0KPiA+
+IFRoaXMgZXhwb3NlcyBhIGxvbmcgaXNzdWUuIFRoaW5rIC0tIHdoeSBkbyB3ZSB3YW50IHRoaXMg
+ZW5hYmxlZCBieSBkZWZhdWx0PyBJdHMNCj4gPiBhY3R1YWxseSBiZWNhdXNlIGV2ZW4gdGhvdWdo
+IHRoZSBmYWxsYmFjayBzdHVmZiBpcyBvcHRpb25hbCBhbmQgY2FuIGJlLCB0aGUgdWV2ZW50DQo+
+ID4gaW50ZXJuYWwgZmxhZyAqYWxzbyogcHJvdmlkZXMgY2FjaGluZyBzdXBwb3J0IGFzIGEgc2lk
+ZSBjb25zZXF1ZW5jZSBvbmx5LiBXZQ0KPiA+IGRvbid0IHdhbnQgdG8gYWRkIGEgbmV3IEFQSSB3
+aXRob3V0IGZpcnN0IGNsZWFuaW5nIHVwIHRoYXQgbWVzcy4NCj4gPiANCj4gPiBUaGlzIGlzIGEg
+c2xpcGVyeSBzbG9wZSBhbmQgYmVzdCB0byBjbGVhbiB0aGF0IHVwIGJlZm9yZSBhZGRpbmcgYW55
+IG5ldyBBUEkuDQo+ID4gDQo+ID4gVGhhdCBhbmQgYWxzbyBHcmVnIHJlY2VudGx5IHN0YXRlZCBo
+ZSB3b3VsZCBsaWtlIHRvIHNlZSBhdCBsZWFzdCAzIHVzZXJzIG9mDQo+ID4gYSBmZWF0dXJlIGJl
+Zm9yZSBhZGRpbmcgaXQuIEFsdGhvdWdoIEkgdGhpbmsgdGhhdCdzIHByZXR0eSBhcmJpdHJhcnks
+IGFuZA0KPiA+IGNvbnNpZGVyaW5nIHRoYXQgcmVxdWVzdF9maXJtd2FyZV9pbnRvX2J1ZigpIG9u
+bHkgaGFzICpvbmUqIHVzZXIgLS0gaXRzIHdoYXQNCj4gPiBoZSB3aXNoZXMuDQo+IA0KPiBhdGgx
+MGsgYXQgbGVhc3QgbmVlZHMgYSB3YXkgdG8gc2lsZW5jZSB0aGUgd2FybmluZyBmb3IgbWlzc2lu
+ZyBmaXJtd2FyZQ0KPiBhbmQgSSB0aGluayBpd2x3aWZpIGFsc28uDQoNClllcywgaXdsd2lmaSBu
+ZWVkcyB0byBzaWxlbmNlIHRoZSB3YXJuaW5nLiAgSXQgdGhlIGZlYXR1cmUgKG9ubHkgb25lLA0K
+cmVhbGx5KSB0aGF0IEkndmUgYmVlbiB3YWl0aW5nIGZvci4NCg0KLS0NCkx1Y2Eu
