@@ -1,133 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45056 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754728AbdHVHhs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 03:37:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: jikos@kernel.org, linux-wireless@vger.kernel.org
-Cc: luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
-        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
-        linux-pm@vger.kernel.org, david.weinehall@intel.com,
-        johannes.berg@intel.com, kvalo@codeaurora.org,
-        sara.sharon@intel.com, emmanuel.grumbach@intel.com
-Date: Tue, 22 Aug 2017 10:37:29 +0300
-Message-Id: <20170822073729.4856-1-luca@coelho.fi> (sfid-20170822_093811_470480_4BE1D8D1)
-In-Reply-To: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
-References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
-Subject: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc()
+Received: from mx2.suse.de ([195.135.220.15]:55931 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751154AbdHCQbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 12:31:08 -0400
+Date: Thu, 3 Aug 2017 18:31:02 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "mcgrof@kernel.org" <mcgrof@kernel.org>,
+        "pieter-paul.giesberts@broadcom.com"
+        <pieter-paul.giesberts@broadcom.com>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "keescook@chromium.org" <keescook@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "alan@linux.intel.com" <alan@linux.intel.com>,
+        "moritz.fischer@ettus.com" <moritz.fischer@ettus.com>,
+        "pjones@redhat.com" <pjones@redhat.com>,
+        "wagi@monom.org" <wagi@monom.org>,
+        "pmladek@suse.com" <pmladek@suse.com>,
+        "atull@kernel.org" <atull@kernel.org>,
+        "yi1.li@linux.intel.com" <yi1.li@linux.intel.com>,
+        "wright.feng@cypress.com" <wright.feng@cypress.com>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "takahiro.akashi@linaro.org" <takahiro.akashi@linaro.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "hdegoede@redhat.com" <hdegoede@redhat.com>,
+        "rafal@milecki.pl" <rafal@milecki.pl>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "dhowells@redhat.com" <dhowells@redhat.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "chi-hsien.lin@cypress.com" <chi-hsien.lin@cypress.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "franky.lin@broadcom.com" <franky.lin@broadcom.com>
+Subject: Re: [PATCH V5 1/2] firmware: add more flexible
+ request_firmware_async function
+Message-ID: <20170803163102.GA27873@wotan.suse.de> (sfid-20170803_183140_934911_C0DBCF02)
+References: <20170731150945.8925-1-zajec5@gmail.com>
+ <20170802213010.GM18884@wotan.suse.de>
+ <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
+ <1501739717.15969.26.camel@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1501739717.15969.26.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Thu, Aug 03, 2017 at 05:55:18AM +0000, Coelho, Luciano wrote:
+> On Thu, 2017-08-03 at 08:23 +0300, Kalle Valo wrote:
+> > "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+> > 
+> > > > +int request_firmware_nowait(struct module *module, bool uevent,
+> > > > +			    const char *name, struct device *device, gfp_t gfp,
+> > > > +			    void *context,
+> > > > +			    void (*cont)(const struct firmware *fw, void *context))
+> > > > +{
+> > > > +	unsigned int opt_flags = FW_OPT_FALLBACK |
+> > > > +		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+> > > > +
+> > > > +	return __request_firmware_nowait(module, opt_flags, name, device, gfp,
+> > > > +					 context, cont);
+> > > > +}
+> > > >  EXPORT_SYMBOL(request_firmware_nowait);
+> > > >  
+> > > > +int __request_firmware_async(struct module *module, const char *name,
+> > > > +			     struct firmware_opts *fw_opts, struct device *dev,
+> > > > +			     void *context,
+> > > > +			     void (*cont)(const struct firmware *fw, void *context))
+> > > > +{
+> > > > +	unsigned int opt_flags = FW_OPT_UEVENT;
+> > > 
+> > > This exposes a long issue. Think -- why do we want this enabled by default? Its
+> > > actually because even though the fallback stuff is optional and can be, the uevent
+> > > internal flag *also* provides caching support as a side consequence only. We
+> > > don't want to add a new API without first cleaning up that mess.
+> > > 
+> > > This is a slipery slope and best to clean that up before adding any new API.
+> > > 
+> > > That and also Greg recently stated he would like to see at least 3 users of
+> > > a feature before adding it. Although I think that's pretty arbitrary, and
+> > > considering that request_firmware_into_buf() only has *one* user -- its what
+> > > he wishes.
+> > 
+> > ath10k at least needs a way to silence the warning for missing firmware
+> > and I think iwlwifi also.
+> 
+> Yes, iwlwifi needs to silence the warning.  It the feature (only one,
+> really) that I've been waiting for.
 
-Work queues cannot be allocated when a mutex is held because the mutex
-may be in use and that would make it sleep.  Doing so generates the
-following splat with 4.13+:
+Perfect, can you guys send patches on top of these changes? Even though I still
+think the flag stuff needs to be worked out I can try to iron that out myself
+and fold the rest of the delta, and then I can set a new set out which is much
+more suitable.
 
-[   19.513298] ======================================================
-[   19.513429] WARNING: possible circular locking dependency detected
-[   19.513557] 4.13.0-rc5+ #6 Not tainted
-[   19.513638] ------------------------------------------------------
-[   19.513767] cpuhp/0/12 is trying to acquire lock:
-[   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
-[   19.514047]
-[   19.514047] but task is already holding lock:
-[   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
-[   19.514338]
-[   19.514338] which lock already depends on the new lock.
-
-This lock dependency already existed with previous kernel versions,
-but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
-lock stacks for hotplug callbacks") was introduced.
-
-Reported-by: David Weinehall <david.weinehall@intel.com>
-Reported-by: Jiri Kosina <jikos@kernel.org>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
-In v2:
-   - updated the commit message to a new version, with a grammar fix
-     and the actual commit that exposed the problem;
-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +---------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  9 +++++++++
- 3 files changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index fa315d84e98e..a1ea9ef97ed9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -787,6 +787,8 @@ int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans);
- 
- void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable);
- 
-+void iwl_pcie_rx_allocator_work(struct work_struct *data);
-+
- /* common functions that are used by gen2 transport */
- void iwl_pcie_apm_config(struct iwl_trans *trans);
- int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 351c4423125a..942736d3fa75 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -597,7 +597,7 @@ static void iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
- 	rxq->free_count += RX_CLAIM_REQ_ALLOC;
- }
- 
--static void iwl_pcie_rx_allocator_work(struct work_struct *data)
-+void iwl_pcie_rx_allocator_work(struct work_struct *data)
- {
- 	struct iwl_rb_allocator *rba_p =
- 		container_of(data, struct iwl_rb_allocator, rx_alloc);
-@@ -900,10 +900,6 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
- 			return err;
- 	}
- 	def_rxq = trans_pcie->rxq;
--	if (!rba->alloc_wq)
--		rba->alloc_wq = alloc_workqueue("rb_allocator",
--						WQ_HIGHPRI | WQ_UNBOUND, 1);
--	INIT_WORK(&rba->rx_alloc, iwl_pcie_rx_allocator_work);
- 
- 	spin_lock(&rba->lock);
- 	atomic_set(&rba->req_pending, 0);
-@@ -1017,10 +1013,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- 	}
- 
- 	cancel_work_sync(&rba->rx_alloc);
--	if (rba->alloc_wq) {
--		destroy_workqueue(rba->alloc_wq);
--		rba->alloc_wq = NULL;
--	}
- 
- 	iwl_pcie_free_rbs_pool(trans);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index f95eec52508e..3927bbf04f72 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1786,6 +1786,11 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 		iwl_pcie_tx_free(trans);
- 	iwl_pcie_rx_free(trans);
- 
-+	if (trans_pcie->rba.alloc_wq) {
-+		destroy_workqueue(trans_pcie->rba.alloc_wq);
-+		trans_pcie->rba.alloc_wq = NULL;
-+	}
-+
- 	if (trans_pcie->msix_enabled) {
- 		for (i = 0; i < trans_pcie->alloc_vecs; i++) {
- 			irq_set_affinity_hint(
-@@ -3169,6 +3174,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		trans_pcie->inta_mask = CSR_INI_SET_MASK;
- 	 }
- 
-+	trans_pcie->rba.alloc_wq = alloc_workqueue("rb_allocator",
-+						   WQ_HIGHPRI | WQ_UNBOUND, 1);
-+	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
-+
- #ifdef CONFIG_IWLWIFI_PCIE_RTPM
- 	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_D0I3;
- #else
--- 
-2.14.1
+  Luis
