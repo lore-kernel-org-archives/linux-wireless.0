@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33436 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753679AbdHWKAC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42186 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751933AbdHCKSj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 06:00:02 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        jon.maloy@ericsson.com, ying.xue@windriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 2/3] net: rsi: mac80211: constify ieee80211_ops
-Date: Wed, 23 Aug 2017 15:29:34 +0530
-Message-Id: <1503482375-19983-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_120046_544045_83810EC6)
-In-Reply-To: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Thu, 3 Aug 2017 06:18:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Souptick Joarder <jrdr.linux@gmail.com>,
+        arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5] rtlwifi: Replace hardcode value with macro
+References: <20170802122915.GA4759@symbol-HP-ZBook-15>
+        <4d6b58d1-3e26-e6ea-0c0e-7e2b7aa3b75e@lwfinger.net>
+Date: Thu, 03 Aug 2017 13:18:34 +0300
+In-Reply-To: <4d6b58d1-3e26-e6ea-0c0e-7e2b7aa3b75e@lwfinger.net> (Larry
+        Finger's message of "Wed, 2 Aug 2017 09:35:37 -0500")
+Message-ID: <87fud9nedh.fsf@kamboji.qca.qualcomm.com> (sfid-20170803_121847_760788_C01837C7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_ops are not supposed to change at runtime. All functions
-working with ieee80211_ops provided by <net/mac80211.h> work with
-const ieee80211_ops. So mark the non-const structs as const.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On 08/02/2017 07:29 AM, Souptick Joarder wrote:
+>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+>> and hw->max_rate_tries are replaced by macro and removed the comment.
+>>
+>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+>
+> Finally!
+>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+> @Kalle: I'm sure you can work around this, but patchwork shows two
+> different "v5" versions and a "v4" entry for this same patch. That may
+> be due to no one formally rejecting the patch.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 021e5ac..67532fb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1177,7 +1177,7 @@ static void rsi_reg_notify(struct wiphy *wiphy,
- 	adapter->dfs_region = request->dfs_region;
- }
- 
--static struct ieee80211_ops mac80211_ops = {
-+static const struct ieee80211_ops mac80211_ops = {
- 	.tx = rsi_mac80211_tx,
- 	.start = rsi_mac80211_start,
- 	.stop = rsi_mac80211_stop,
+It's because Souptick submitted two v5 patches, but yeah I can that sort
+it out.
+
+Souptick, the idea with patch versions is that maintainers and reviewers
+can easily find the latest version and drop the rest so ALWAYS increase
+the version number. Submitting duplicate version numbers defeats the
+purpose and creates extra work for others.
+
 -- 
-1.9.1
+Kalle Valo
