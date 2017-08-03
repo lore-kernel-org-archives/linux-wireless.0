@@ -1,80 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41554 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751610AbdHAJkv (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751900AbdHCNZ4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:40:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Tzipi Peres <tzipi.peres@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  1 Aug 2017 12:40:39 +0300
-Message-Id: <20170801094039.22349-9-luca@coelho.fi> (sfid-20170801_114059_887901_E9FA9355)
-In-Reply-To: <20170801094039.22349-1-luca@coelho.fi>
-References: <20170801094039.22349-1-luca@coelho.fi>
-Subject: [PATCH 8/8] iwlwifi: add the new 9000 series PCI IDs
+        Thu, 3 Aug 2017 09:25:56 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 7/9] wil6210: fix interface-up check
+Date: Thu,  3 Aug 2017 16:25:37 +0300
+Message-Id: <1501766739-31996-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152614_410489_764AAB9E)
+In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tzipi Peres <tzipi.peres@intel.com>
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Add two PCI IDs for the 9160 series.
-Add five PCI IDs for the 9260 series.
-Add one PCI IDs for the 9270 series.
-Add seven PCI IDs for the 9460 series.
-Add five PCI IDs for the 9560 series.
+While wil_open is executed, any call to netif_running
+would return a success. In case there are failures
+within wil_open, should not treat the device as if it
+is already opened in relevant functions (like FW recovery
+and runtime suspend check).
 
-Signed-off-by: Tzipi Peres <tzipi.peres@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fix that by checking the device up flag instead.
+
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/net/wireless/ath/wil6210/main.c | 3 ++-
+ drivers/net/wireless/ath/wil6210/pm.c   | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index f16c1bb9bf94..84f4ba01e14f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -510,9 +510,17 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 8968c2c..b1e2814 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -394,10 +394,11 @@ static void wil_fw_error_worker(struct work_struct *work)
+ 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+ 						fw_error_worker);
+ 	struct wireless_dev *wdev = wil->wdev;
++	struct net_device *ndev = wil_to_ndev(wil);
  
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0014, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0210, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0214, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
-@@ -527,10 +535,22 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0060, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0260, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0064, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x00A4, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x02A4, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x00A0, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x02A0, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0230, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0234, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0238, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x023C, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
+ 	wil_dbg_misc(wil, "fw error worker\n");
+ 
+-	if (!netif_running(wil_to_ndev(wil))) {
++	if (!(ndev->flags & IFF_UP)) {
+ 		wil_info(wil, "No recovery - interface is down\n");
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 820ed17..8f5d1b44 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -21,10 +21,11 @@ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime)
+ {
+ 	int rc = 0;
+ 	struct wireless_dev *wdev = wil->wdev;
++	struct net_device *ndev = wil_to_ndev(wil);
+ 
+ 	wil_dbg_pm(wil, "can_suspend: %s\n", is_runtime ? "runtime" : "system");
+ 
+-	if (!netif_running(wil_to_ndev(wil))) {
++	if (!(ndev->flags & IFF_UP)) {
+ 		/* can always sleep when down */
+ 		wil_dbg_pm(wil, "Interface is down\n");
+ 		goto out;
 -- 
-2.13.2
+1.9.1
