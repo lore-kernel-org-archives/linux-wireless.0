@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.cypress.com ([157.95.67.100]:32911 "EHLO
-        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751166AbdHAJje (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:39:34 -0400
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com
-Subject: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan feature enabled
-Date: Tue,  1 Aug 2017 16:48:07 +0800
-Message-Id: <1501577287-28904-3-git-send-email-wright.feng@cypress.com> (sfid-20170801_113938_402105_5EF85E15)
-In-Reply-To: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
-References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35750 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751133AbdHCJME (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 05:12:04 -0400
+Date: Thu, 3 Aug 2017 11:10:49 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: mike@hellotwist.com
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: Fix MMIC countermeasures.
+Message-ID: <20170803091048.GA2769@redhat.com> (sfid-20170803_111207_583109_D1E225EA)
+References: <CAKXXJEw72EYHJpdwoWhudmOmFF=w+u_JG3vrp=-TCfR3zhANZw@mail.gmail.com>
+ <20170802070117.GA2790@redhat.com>
+ <1501676470.11126.2.camel@sipsolutions.net>
+ <87h8xqrso6.fsf@kamboji.qca.qualcomm.com>
+ <CAKXXJEwT0EK=dmswxP90WNJQcSM1sUAE3E46AzZ8Pd9a2XXtxg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKXXJEwT0EK=dmswxP90WNJQcSM1sUAE3E46AzZ8Pd9a2XXtxg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The num_different_channels in wiphy info is not correct when firmware
-supports mchan. When mchan is on, num_different_channels is always
-overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
-num_different_channels setting forward.
+On Wed, Aug 02, 2017 at 10:36:52AM -0400, Michael Skeffington wrote:
+> I traced through this code during MMIC failure and
+> ieee80211_rx_h_decrypt() drops the frame before getting to
+> ieee80211_rx_h_michael_mic_verify().  Johannes suggested this change
+> to me in response to a previous thread and I am offering this patch
+> after having conducted the proper testing on it.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Ok, please repost the patch without mangling it i.e. using
+git-send-email.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 54588d2..3dcb139 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6318,6 +6318,8 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	if (p2p) {
- 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
- 			combo[c].num_different_channels = 2;
-+		else
-+			combo[c].num_different_channels = 1;
- 		wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 					  BIT(NL80211_IFTYPE_P2P_GO) |
- 					  BIT(NL80211_IFTYPE_P2P_DEVICE);
-@@ -6327,10 +6329,10 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
- 		c0_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				       BIT(NL80211_IFTYPE_P2P_GO);
- 	} else {
-+		combo[c].num_different_channels = 1;
- 		c0_limits[i].max = 1;
- 		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
- 	}
--	combo[c].num_different_channels = 1;
- 	combo[c].max_interfaces = i;
- 	combo[c].n_limits = i;
- 	combo[c].limits = c0_limits;
--- 
-1.9.1
+Thanks
+Stanislaw
