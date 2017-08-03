@@ -1,116 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33448 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751637AbdHPNRn (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751600AbdHCNZs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:17:43 -0400
-Received: by mail-pf0-f196.google.com with SMTP id c65so1360666pfl.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:17:43 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Thu, 3 Aug 2017 09:25:48 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 01/11] rsi: advertise ap mode support
-Date: Wed, 16 Aug 2017 18:43:08 +0530
-Message-Id: <1502889198-4478-2-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151747_341210_9B1007E1)
-In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
-References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+Subject: [PATCH v3 2/9] wil6210: allow configuring scan timers
+Date: Thu,  3 Aug 2017 16:25:32 +0300
+Message-Id: <1501766739-31996-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152550_539050_1CE7B951)
+In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-AP mode support is advertised to cfg80211. Necessary wiphy
-parameters are initialized.
+Allow setting scan timeout and scan dwell time
+through module parameters.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 28 +++++++++++++++++++++++++++-
- drivers/net/wireless/rsi/rsi_main.h         | 10 ++++++++++
- 2 files changed, 37 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 17 ++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 210ad79..2da5493 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -122,6 +122,23 @@ const u16 rsi_mcsrates[8] = {
- 	RSI_RATE_MCS4, RSI_RATE_MCS5, RSI_RATE_MCS6, RSI_RATE_MCS7
- };
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 77af749..d079533 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -26,6 +26,14 @@
+ module_param(disable_ap_sme, bool, 0444);
+ MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
  
-+static const u32 rsi_max_ap_stas[16] = {
-+	32,	/* 1 - Wi-Fi alone */
-+	0,	/* 2 */
-+	0,	/* 3 */
-+	0,	/* 4 - BT EDR alone */
-+	4,	/* 5 - STA + BT EDR */
-+	32,	/* 6 - AP + BT EDR */
-+	0,	/* 7 */
-+	0,	/* 8 - BT LE alone */
-+	4,	/* 9 - STA + BE LE */
-+	0,	/* 10 */
-+	0,	/* 11 */
-+	0,	/* 12 */
-+	1,	/* 13 - STA + BT Dual */
-+	4,	/* 14 - AP + BT Dual */
-+};
++static uint scan_dwell_time  = WMI_SCAN_DWELL_TIME_MS;
++module_param(scan_dwell_time, uint, 0644);
++MODULE_PARM_DESC(scan_dwell_time, " Scan dwell time (msec)");
 +
- /**
-  * rsi_is_cipher_wep() -  This function determines if the cipher is WEP or not.
-  * @common: Pointer to the driver private structure.
-@@ -1348,7 +1365,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 	SET_IEEE80211_PERM_ADDR(hw, common->mac_addr);
- 	ether_addr_copy(hw->wiphy->addr_mask, addr_mask);
- 
--	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_AP);
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->retry_short = RETRY_SHORT;
- 	wiphy->retry_long  = RETRY_LONG;
-@@ -1363,6 +1381,14 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 	wiphy->bands[NL80211_BAND_5GHZ] =
- 		&adapter->sbands[NL80211_BAND_5GHZ];
- 
-+	/* AP Parameters */
-+	wiphy->max_ap_assoc_sta = rsi_max_ap_stas[common->oper_mode - 1];
-+	common->max_stations = wiphy->max_ap_assoc_sta;
-+	rsi_dbg(ERR_ZONE, "Max Stations Allowed = %d\n", common->max_stations);
-+	hw->sta_data_size = sizeof(struct rsi_sta);
-+	wiphy->flags = WIPHY_FLAG_REPORTS_OBSS;
-+	wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
-+	wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER;
- 	wiphy->reg_notifier = rsi_reg_notify;
- 
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index d05b5e0..0077888 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -21,6 +21,13 @@
- #include <linux/skbuff.h>
- #include <net/mac80211.h>
- 
-+struct rsi_sta {
-+	struct ieee80211_sta *sta;
-+	s16 sta_id;
-+	u16 seq_start[IEEE80211_NUM_TIDS];
-+	bool start_tx_aggr[IEEE80211_NUM_TIDS];
-+};
++static uint scan_timeout = WIL6210_SCAN_TO_SEC;
++module_param(scan_timeout, uint, 0644);
++MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
 +
- struct rsi_hw;
+ #define CHAN60G(_channel, _flags) {				\
+ 	.band			= NL80211_BAND_60GHZ,		\
+ 	.center_freq		= 56160 + (2160 * (_channel)),	\
+@@ -528,8 +536,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
  
- #include "rsi_ps.h"
-@@ -253,6 +260,9 @@ struct rsi_common {
+ 	(void)wil_p2p_stop_discovery(wil);
  
- 	u16 beacon_interval;
- 	u8 dtim_cnt;
-+
-+	/* AP mode parameters */
-+	int max_stations;
- };
+-	wil_dbg_misc(wil, "Start scan_request 0x%p\n", request);
+-	wil_dbg_misc(wil, "SSID count: %d", request->n_ssids);
++	wil_dbg_misc(wil,
++		     "Start scan_request 0x%p, dwell_time %dms, timeout %dsec, SSID count %d\n",
++		     request, scan_dwell_time, scan_timeout, request->n_ssids);
  
- enum host_intf {
+ 	for (i = 0; i < request->n_ssids; i++) {
+ 		wil_dbg_misc(wil, "SSID[%d]", i);
+@@ -550,10 +559,12 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	}
+ 
+ 	wil->scan_request = request;
+-	mod_timer(&wil->scan_timer, jiffies + WIL6210_SCAN_TO);
++	mod_timer(&wil->scan_timer,
++		  jiffies + msecs_to_jiffies(1000U * scan_timeout));
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+ 	cmd.cmd.scan_type = WMI_ACTIVE_SCAN;
++	cmd.cmd.dwell_time = cpu_to_le32(scan_dwell_time);
+ 	cmd.cmd.num_channels = 0;
+ 	n = min(request->n_channels, 4U);
+ 	for (i = 0; i < n; i++) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index d085ccf..ac32284 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -112,7 +112,7 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
+ #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
+ #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
+ #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
+-#define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
++#define WIL6210_SCAN_TO_SEC		10
+ #define WIL6210_DISCONNECT_TO_MS (2000)
+ #define WIL6210_RX_HIGH_TRSH_INIT		(0)
+ #define WIL6210_RX_HIGH_TRSH_DEFAULT \
 -- 
-2.7.4
+1.9.1
