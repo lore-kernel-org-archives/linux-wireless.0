@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37358 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752238AbdH1Izw (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:48049 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751188AbdHCB5d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 04:55:52 -0400
-Received: by mail-wm0-f48.google.com with SMTP id u26so7825136wma.0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2017 01:55:51 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: CVE-2017-9417 and brcmfmac
-To: Ben Hutchings <ben@decadent.org.uk>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <1503846841.3688.92.camel@decadent.org.uk>
-Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org
-Message-ID: <59A3DA95.4050005@broadcom.com> (sfid-20170828_105556_936954_3C55ABDA)
-Date: Mon, 28 Aug 2017 10:55:49 +0200
+        Wed, 2 Aug 2017 21:57:33 -0400
+Subject: Re: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan
+ feature enabled
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
+ <1501577287-28904-3-git-send-email-wright.feng@cypress.com>
+ <87mv7i48nx.fsf@codeaurora.org> <5981A6D4.4030805@broadcom.com>
+ <87lgn2rsuh.fsf@kamboji.qca.qualcomm.com>
+From: Wright Feng <wright.feng@cypress.com>
+Message-ID: <55749a5c-3c53-3ed6-a66d-f6eb8c17168d@cypress.com> (sfid-20170803_035737_052722_9ED2E9E2)
+Date: Thu, 3 Aug 2017 09:57:27 +0800
 MIME-Version: 1.0
-In-Reply-To: <1503846841.3688.92.camel@decadent.org.uk>
+In-Reply-To: <87lgn2rsuh.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-08-17 17:14, Ben Hutchings wrote:
-> The CVE-2017-9417 aka "Broadpwn" vulnerability is said to affect the
-> firmware for various Broadcom BCM43xx wifi chips, some of which are
-> supported by the in-tree brcmfmac driver and firmware in linux-
-> firmware.git.
->
-> The bcmdhd driver for Android was patched to improve validation of
-> events from the firmware:
-> https://android.googlesource.com/kernel/msm.git/+/android-6.0.1_r0.92%5E!/
-> But the event handling code in
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c still seems to
-> lack most of those checks.  Should it be patched?
 
-brcmfmac already has those checks is place [1]. Over a year ago a number 
-of extra checks were added with commit 0aedbcaf6f18 ("brcmfmac: Add 
-length checks on firmware events") [2].
 
-> I also haven't seen any related updates for BCM43xx firmware in linux-
-> firmware.git.  Is any of this firmware vulnerable?
+On 2017/8/2 下午 09:40, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+>> On 8/2/2017 11:32 AM, Kalle Valo wrote:
+>>> Wright Feng <wright.feng@cypress.com> writes:
+>>>
+>>>> The num_different_channels in wiphy info is not correct when firmware
+>>>> supports mchan. When mchan is on, num_different_channels is always
+>>>> overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
+>>>> num_different_channels setting forward.
+>>>>
+>>>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>>>
+>>> Does this fix a user visible bug? If yes, it would be nice to document
+>>> that.
+>>
+>> Hi Kalle,
+>>
+>> Depends on the users expectation ;-) When the device/firmware supports
+>> multi-channel (better not use mchan abbreviation) it can have P2P
+>> connection and regular connection with AP simultaneous. So the current
+>> state is that this is not possible regardless whether mchan is
+>> supported. So the device is not used to fullest extent.
+> 
+> Thanks, I understand now and I think your description should be also in
+> the commit log so that others will also :)
+> 
+> My usual mantra: the commit log should ALWAYS answer the question "_why_
+> the change is made?" and describe the reason what motivated to implement
+> the patch. This is the most important part. It helps maintainers,
+> backports, distros etc to make decisions if the patch is important for
+> them or not.
 
-As to firmware it has been brought up that we have quite a collection in 
-linux-firmware, but quite a few are EOL. So for now the decision made 
-has been to update firmware for bcm43430, bcm4354, bcm4356, and bcm4358. 
-For SDIO and USB devices business has moved to Cypress so I will contact 
-them to query about their plans. As Stephen indicated they released new 
-firmware for bcm43438, which is used in RPi3/ZeroW.
-
-Regards,
-Arend
-
-[1] 
-http://elixir.free-electrons.com/linux/latest/source/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h#L306
-[2] 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=0aedbcaf6f18
+Hi Kalle and Arend,
+Thanks for your comment and suggestion, I will put them into commit 
+message and resend v2 later.
+> 
