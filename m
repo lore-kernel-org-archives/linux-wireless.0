@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:36006 "EHLO
-        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750868AbdHJHwZ (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbdHCNZo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 03:52:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
-References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
- <20170809172651.GA3934@atomide.com> <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
- <20170809211620.GF3934@atomide.com> <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 10 Aug 2017 17:52:04 +1000
-Message-ID: <CAGRGNgW5Q3J1wL7Moc9vLJuRmOK3ZVr_gJfNqYPeU5BoeRuXtw@mail.gmail.com> (sfid-20170810_095238_898330_69212FBA)
-Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 3 Aug 2017 09:25:44 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v3 0/9] wil6210 patches
+Date: Thu,  3 Aug 2017 16:25:30 +0300
+Message-Id: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152547_971592_81057E94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eyal,
+Changes from v2:
+- Remove debugfs.c compilation if CONFIG_DEBUG_FS is not defined
 
-On Thu, Aug 10, 2017 at 4:35 PM, Reizer, Eyal <eyalr@ti.com> wrote:
->> >
->> > Sorry for top posting (mobile...)
->> > I have verified with system design and the data sheet that every wilink 6/7
->> chip has a mac address in fuse so probably the board you have (pretty old,
->> right?) has this mac address in fuse. Maybe it was from very early batches?
->> Anyway I see no reason to change it.
->> > Anyway the calibrator can be used to store a different one into the nvs file
->> that will overide it.
->>
->> Well clearly at least this one does not have any valid hardware
->> mac address, the hardware mac address is broken with all zeroes.
->>
->
-> Looks like it is not really all zeros but rather 00:00:00:00:00:01.
-> I wonder if it is just a one board issue or not...
+Changes from v1:
+- Removal of runtime PM patch, pending a fix to system suspend flow
 
-It's 00:00:00:00:00:01 because your code adds 1 to it.
+Dedy Lansky (2):
+  wil6210: support FW RSSI reporting
+  wil6210: store FW RF calibration result
 
-Thanks,
+Gidon Studinski (1):
+  wil6210: make debugfs compilation optional
+
+Hamad Kadmany (3):
+  wil6210: protect against invalid length of tx management frame
+  wil6210: allow configuring scan timers
+  wil6210: fix interface-up check
+
+Maya Erez (3):
+  wil6210: check no_fw_recovery in resume failure recovery
+  wil6210: add statistics for suspend time
+  wil6210: notify wiphy on wowlan support
+
+ drivers/net/wireless/ath/wil6210/Makefile   |  2 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 42 ++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 28 ++++++++++++++-----
+ drivers/net/wireless/ath/wil6210/main.c     | 12 ++++++++-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  3 +++
+ drivers/net/wireless/ath/wil6210/pm.c       | 27 ++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/txrx.c     |  6 ++---
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 21 +++++++++++++--
+ drivers/net/wireless/ath/wil6210/wmi.c      | 14 +++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h      |  8 ++++--
+ 10 files changed, 134 insertions(+), 29 deletions(-)
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+1.9.1
