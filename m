@@ -1,81 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:54454 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751285AbdHaT7f (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:37576 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751144AbdHCOab (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 15:59:35 -0400
-Date: Thu, 31 Aug 2017 21:59:33 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: David Miller <davem@davemloft.net>
-Cc: kvalo@codeaurora.org, torvalds@linux-foundation.org,
-        xiyou.wangcong@gmail.com, akpm@linux-foundation.org,
+        Thu, 3 Aug 2017 10:30:31 -0400
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux@endlessm.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: add a missing spin_lock_init()
-Message-ID: <20170831195933.GA2788@amd> (sfid-20170831_215953_194299_D2EDFDB5)
-References: <20170831144743.GA21261@amd>
- <20170831.103305.1809212990680774811.davem@davemloft.net>
- <20170831185718.GA31245@amd>
- <20170831.122645.872320547726000124.davem@davemloft.net>
+        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH v2] iwlwifi: Demote messages about fw flags size to info
+Date: Thu,  3 Aug 2017 07:30:05 -0700
+Message-Id: <20170803143005.31379-1-jprvita@endlessm.com> (sfid-20170803_163052_059516_550548D8)
+In-Reply-To: <1501649208.2588.55.camel@coelho.fi>
+References: <1501649208.2588.55.camel@coelho.fi>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
-In-Reply-To: <20170831.122645.872320547726000124.davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These messages are not reporting a real error, just the fact that the
+firmware knows about more flags then the driver.
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Currently these messages are presented to the user during boot if there
+is no bootsplash covering the console, even when booting the kernel with
+"quiet".
 
-Hi!
+Demoting it to the warn level helps having a clean boot process.
 
-On Thu 2017-08-31 12:26:45, David Miller wrote:
-> From: Pavel Machek <pavel@ucw.cz>
-> Date: Thu, 31 Aug 2017 20:57:19 +0200
->=20
-> > Hi!
-> >=20
-> >> From: Pavel Machek <pavel@ucw.cz>
-> >> Date: Thu, 31 Aug 2017 16:47:43 +0200
-> >>=20
-> >> > Dave, Linus -- can you still take the patch?
-> >>=20
-> >> Pavel, please do not bypass maintainers like this.
-> >>=20
-> >> It's really rude, and if you do things like that instead of
-> >> trying to work properly with us, your relationship with
-> >> these maintainers will suffer in the long term.
-> >=20
-> > Do you mean I'm being rude to Kalle, or rude to you?
->=20
-> He said "to David", not "David and Linus".
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
 
-Ok. If I knew you would be replying so quickly, I'd acted
-differently. I did not want to be rude.
+v2 changes:
+ - Set to warn level instead of info
 
-But I'd still like to get the patch in. Do you plan to send another
-pull request to Linus, and can you take the patch, please?
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Thanks,
-								Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---dDRMvlgZJXvWKvBx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlmoaqUACgkQMOfwapXb+vKDsQCfS+k/79ig5tuk9NcT1L2TXedC
-QKEAn2YfG+rXCyYpX7ZX54P+JwYUM9ND
-=9eTa
------END PGP SIGNATURE-----
-
---dDRMvlgZJXvWKvBx--
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index be466a074c1d..c98a254bbd4d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -461,9 +461,9 @@ static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
+ 	int i;
+ 
+ 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_API, 32)) {
+-		IWL_ERR(drv,
+-			"api flags index %d larger than supported by driver\n",
+-			api_index);
++		IWL_WARN(drv,
++			 "api flags index %d larger than supported by driver\n",
++			 api_index);
+ 		/* don't return an error so we can load FW that has more bits */
+ 		return 0;
+ 	}
+@@ -485,9 +485,9 @@ static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
+ 	int i;
+ 
+ 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_CAPA, 32)) {
+-		IWL_ERR(drv,
+-			"capa flags index %d larger than supported by driver\n",
+-			api_index);
++		IWL_WARN(drv,
++			 "capa flags index %d larger than supported by driver\n",
++			 api_index);
+ 		/* don't return an error so we can load FW that has more bits */
+ 		return 0;
+ 	}
+-- 
+2.13.2
