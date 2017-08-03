@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:60156 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932550AbdHVLpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:45:33 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 19/30] brcmfmac: Remove unused macro.
-Date: Tue, 22 Aug 2017 12:25:39 +0100
-Message-Id: <20170822112550.60311-20-ian@mnementh.co.uk> (sfid-20170822_134538_828291_6E2FE53E)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32826 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbdHCWAz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 18:00:55 -0400
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: aditya.shankar@microchip.com, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH] Staging: wilc1000: Fix line over 80 characters
+Date: Fri,  4 Aug 2017 03:30:22 +0530
+Message-Id: <1501797622-1711-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170804_000112_567135_D3F2F631)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This macro is used exactly nowhere in the code. Delete it.
+This patch fixes 80 characters limit coding style issue.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 8f3e99da871a..b095bb66fe96 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -159,8 +159,6 @@ struct rte_console {
- /* manfid tuple length, include tuple, link bytes */
- #define SBSDIO_CIS_MANFID_TUPLE_LEN	6
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index dbb3e24..5dab2cd 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1087,7 +1087,8 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
  
--#define CORE_BUS_REG(base, field) \
--		(base + offsetof(struct sdpcmd_regs, field))
- #define __sd_reg(field) \
- 		(offsetof(struct sdpcmd_regs, field))
+ 				snprintf(buff, size, "rssi %d", rssi);
  
+-				if (copy_to_user(wrq->u.data.pointer, buff, size)) {
++				if (copy_to_user(wrq->u.data.pointer, buff,
++							size)) {
+ 					netdev_err(ndev, "failed to copy\n");
+ 					ret = -EFAULT;
+ 					goto done;
 -- 
-2.11.0
+2.7.4
