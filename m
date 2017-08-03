@@ -1,72 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdHBVBJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:01:09 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 7/9] wil6210: fix interface-up check
-Date: Thu,  3 Aug 2017 00:00:47 +0300
-Message-Id: <1501707649-9665-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230113_956897_815FE5DC)
-In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mail-bl2nam02on0069.outbound.protection.outlook.com ([104.47.38.69]:2592
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751073AbdHCDYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Aug 2017 23:24:40 -0400
+From: "Patil, Harish" <Harish.Patil@cavium.com>
+To: Bhumika Goyal <bhumirks@gmail.com>,
+        "julia.lawall@lip6.fr" <julia.lawall@lip6.fr>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Chopra, Manish" <Manish.Chopra@cavium.com>,
+        Dept-GE Linux NIC Dev <Dept-GELinuxNICDev@cavium.com>
+Subject: Re: [PATCH 2/2] qlcnic: add const to bin_attribute structure
+Date: Thu, 3 Aug 2017 03:24:37 +0000
+Message-ID: <D5A894F4.157FD1%Harish.Patil@cavium.com> (sfid-20170803_052458_669457_94308091)
+References: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
+ <1501696634-15765-3-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1501696634-15765-3-git-send-email-bhumirks@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-
-While wil_open is executed, any call to netif_running
-would return a success. In case there are failures
-within wil_open, should not treat the device as if it
-is already opened in relevant functions (like FW recovery
-and runtime suspend check).
-
-Fix that by checking the device up flag instead.
-
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 3 ++-
- drivers/net/wireless/ath/wil6210/pm.c   | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 8968c2c..b1e2814 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -394,10 +394,11 @@ static void wil_fw_error_worker(struct work_struct *work)
- 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
- 						fw_error_worker);
- 	struct wireless_dev *wdev = wil->wdev;
-+	struct net_device *ndev = wil_to_ndev(wil);
- 
- 	wil_dbg_misc(wil, "fw error worker\n");
- 
--	if (!netif_running(wil_to_ndev(wil))) {
-+	if (!(ndev->flags & IFF_UP)) {
- 		wil_info(wil, "No recovery - interface is down\n");
- 		return;
- 	}
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 820ed17..8f5d1b44 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -21,10 +21,11 @@ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime)
- {
- 	int rc = 0;
- 	struct wireless_dev *wdev = wil->wdev;
-+	struct net_device *ndev = wil_to_ndev(wil);
- 
- 	wil_dbg_pm(wil, "can_suspend: %s\n", is_runtime ? "runtime" : "system");
- 
--	if (!netif_running(wil_to_ndev(wil))) {
-+	if (!(ndev->flags & IFF_UP)) {
- 		/* can always sleep when down */
- 		wil_dbg_pm(wil, "Interface is down\n");
- 		goto out;
--- 
-1.9.1
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJodW1pa2EgR295YWwgPGJodW1pcmtz
+QGdtYWlsLmNvbT4NCkRhdGU6IFdlZG5lc2RheSwgQXVndXN0IDIsIDIwMTcgYXQgMTE6MjcgUE0N
+ClRvOiAianVsaWEubGF3YWxsQGxpcDYuZnIiIDxqdWxpYS5sYXdhbGxAbGlwNi5mcj4sICJrdmFs
+b0Bjb2RlYXVyb3JhLm9yZyINCjxrdmFsb0Bjb2RlYXVyb3JhLm9yZz4sICJsaW51eC13aXJlbGVz
+c0B2Z2VyLmtlcm5lbC5vcmciDQo8bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPiwgIm5l
+dGRldkB2Z2VyLmtlcm5lbC5vcmciDQo8bmV0ZGV2QHZnZXIua2VybmVsLm9yZz4sICJsaW51eC1r
+ZXJuZWxAdmdlci5rZXJuZWwub3JnIg0KPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc+LCBI
+YXJpc2ggUGF0aWwgPEhhcmlzaC5QYXRpbEBjYXZpdW0uY29tPiwNCiJDaG9wcmEsIE1hbmlzaCIg
+PE1hbmlzaC5DaG9wcmFAY2F2aXVtLmNvbT4sIERlcHQtR0UgTGludXggTklDIERldg0KPERlcHQt
+R0VMaW51eE5JQ0RldkBjYXZpdW0uY29tPg0KQ2M6IEJodW1pa2EgR295YWwgPGJodW1pcmtzQGdt
+YWlsLmNvbT4NClN1YmplY3Q6IFtQQVRDSCAyLzJdIHFsY25pYzogYWRkIGNvbnN0IHRvIGJpbl9h
+dHRyaWJ1dGUgc3RydWN0dXJlDQoNCj5BZGQgY29uc3QgdG8gYmluX2F0dHJpYnV0ZSBzdHJ1Y3R1
+cmUgYXMgaXQgaXMgb25seSBwYXNzZWQgdG8gdGhlDQo+ZnVuY3Rpb25zIHN5c2ZzX3tyZW1vdmUv
+Y3JlYXRlfV9iaW5fZmlsZS4gVGhlIGNvcnJlc3BvbmRpbmcNCj5hcmd1bWVudHMgYXJlIG9mIHR5
+cGUgY29uc3QsIHNvIGRlY2xhcmUgdGhlIHN0cnVjdHVyZSB0byBiZSBjb25zdC4NCj4NCj5TaWdu
+ZWQtb2ZmLWJ5OiBCaHVtaWthIEdveWFsIDxiaHVtaXJrc0BnbWFpbC5jb20+DQo+LS0tDQo+IGRy
+aXZlcnMvbmV0L2V0aGVybmV0L3Fsb2dpYy9xbGNuaWMvcWxjbmljX3N5c2ZzLmMgfCAyICstDQo+
+IDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPg0KPmRpZmYg
+LS1naXQgYS9kcml2ZXJzL25ldC9ldGhlcm5ldC9xbG9naWMvcWxjbmljL3FsY25pY19zeXNmcy5j
+DQo+Yi9kcml2ZXJzL25ldC9ldGhlcm5ldC9xbG9naWMvcWxjbmljL3FsY25pY19zeXNmcy5jDQo+
+aW5kZXggNzMwMjdhNi4uODJmY2I4MyAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL25ldC9ldGhlcm5l
+dC9xbG9naWMvcWxjbmljL3FsY25pY19zeXNmcy5jDQo+KysrIGIvZHJpdmVycy9uZXQvZXRoZXJu
+ZXQvcWxvZ2ljL3FsY25pYy9xbGNuaWNfc3lzZnMuYw0KPkBAIC0xMjQ4LDcgKzEyNDgsNyBAQCBz
+dGF0aWMgc3NpemVfdA0KPnFsY25pY184M3h4X3N5c2ZzX2ZsYXNoX3dyaXRlX2hhbmRsZXIoc3Ry
+dWN0IGZpbGUgKmZpbHAsDQo+IAkud3JpdGUgPSBxbGNuaWNfc3lzZnNfd3JpdGVfcG1fY29uZmln
+LA0KPiB9Ow0KPiANCj4tc3RhdGljIHN0cnVjdCBiaW5fYXR0cmlidXRlIGJpbl9hdHRyX2ZsYXNo
+ID0gew0KPitzdGF0aWMgY29uc3Qgc3RydWN0IGJpbl9hdHRyaWJ1dGUgYmluX2F0dHJfZmxhc2gg
+PSB7DQo+IAkuYXR0ciA9IHsubmFtZSA9ICJmbGFzaCIsIC5tb2RlID0gKFNfSVJVR08gfCBTX0lX
+VVNSKX0sDQo+IAkuc2l6ZSA9IDAsDQo+IAkucmVhZCA9IHFsY25pY184M3h4X3N5c2ZzX2ZsYXNo
+X3JlYWRfaGFuZGxlciwNCj4tLSANCj4xLjkuMQ0KPg0KPkFja2VkLWJ5OiBIYXJpc2ggUGF0aWwg
+PGhhcmlzaC5wYXRpbEBjYXZpdW0uY29tPg0KDQo=
