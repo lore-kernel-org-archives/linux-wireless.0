@@ -1,289 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f174.google.com ([209.85.216.174]:36028 "EHLO
-        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750849AbdHHJpm (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:37369 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbdHCOdZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 05:45:42 -0400
-Received: by mail-qt0-f174.google.com with SMTP id v29so16699929qtv.3
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 02:45:41 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        ath10k@lists.infradead.org
-Subject: ath: Incorrect regDomainPairs/allCountries settings
-Date: Tue, 08 Aug 2017 11:45:38 +0200
-Message-ID: <1693831.JqVThioVz9@bentobox> (sfid-20170808_114546_349576_0BB4D63B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 3 Aug 2017 10:33:25 -0400
+Received: by mail-pg0-f67.google.com with SMTP id 83so1662701pgb.4
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 07:33:25 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [v2 4/8] rsi: add support for U-APSD power save
+Date: Thu,  3 Aug 2017 19:59:00 +0530
+Message-Id: <1501770544-6746-5-git-send-email-amitkarwar@gmail.com> (sfid-20170803_163328_186315_AD1173A0)
+In-Reply-To: <1501770544-6746-1-git-send-email-amitkarwar@gmail.com>
+References: <1501770544-6746-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Karun Eagalapati <karun256@gmail.com>
 
-I just had two inquiries from Vietnam and Singapore regarding the used CTL 
-limits by Atheros based chips. I've checked through the code and noticed that 
-regd_common.h assigns SG to APL6_WORLD and VN to NULL1_WORLD.
+This patch adds support for U-APSD power save. Configuration
+frame is downloaded to firmware with default settings and
+support is advertised to mac80211
 
- * SG: APL6_WORLD
-   - 2.4GHz: CTL_ETSI
-   -   5GHz: CTL_ETSI
- * VN: NULL1_WORLD
-   - 2.4GHz: CTL_ETSI
-   -   5GHz: NO_CTL
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 19 +++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  3 +++
+ drivers/net/wireless/rsi/rsi_91x_ps.c       | 17 +++++++++++++++++
+ drivers/net/wireless/rsi/rsi_main.h         |  1 +
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  6 ++++++
+ 5 files changed, 46 insertions(+)
 
-But I personally would have expected that both countries would be assigned to 
-FCC3_WORLD.
-
- * FCC3_WORLD
-   - 2.4GHz: CTL_ETSI
-   -   5GHz: CTL_FCC
-
-Maybe someone from QCA can check with their internal driver.
-
-I have compared the current ath/regd_common.h with what I would have expected 
-(which might not be correct after all). I still wanted to list the things 
-which I found:
-
-Missing Entries in CountryCode (regd.h):
-
- * CTRY_AFGHANISTAN = 4,
- * CTRY_AMERICAN_SAMOA = 16,
- * CTRY_ANGUILLA = 660,
- * CTRY_BAHAMAS = 44,
- * CTRY_BERMUDA = 60,
- * CTRY_BHUTAN = 64,
- * CTRY_BURKINA_FASO = 854,
- * CTRY_CAYMAN_ISLANDS = 136,
- * CTRY_CENTRAL_AFRICA_REPUBLIC = 140,
- * CTRY_CHAD = 148,
- * CTRY_CHRISTMAS_ISLAND = 162,
- * CTRY_DOMINICA = 212,
- * CTRY_ETHIOPIA = 231,
- * CTRY_FRENCH_GUIANA = 254,
- * CTRY_FRENCH_POLYNESIA = 258,
- * CTRY_GHANA = 288,
- * CTRY_GUADELOUPE = 312,
- * CTRY_GUYANA = 328,
- * CTRY_COTE_D_IVOIRE = 384,
- * CTRY_LESOTHO = 426,
- * CTRY_MALAWI = 454,
- * CTRY_MALDIVES = 462,
- * CTRY_MARSHALL_ISLANDS = 584,
- * CTRY_MARTINIQUE = 474,
- * CTRY_MAURITANIA = 478,
- * CTRY_MAURITIUS = 480,
- * CTRY_MAYOTTE = 175,
- * CTRY_MICRONESIA = 583,
- * CTRY_MOLDOVA = 498,
- * CTRY_MONGOLIA = 496,
- * CTRY_NAMIBIA = 516,
- * CTRY_NIGERIA = 566,
- * CTRY_NORTHERN_MARIANA_ISLANDS = 580,
- * CTRY_PALAU = 585,
- * CTRY_REUNION = 638,
- * CTRY_RWANDA = 646,
- * CTRY_ST_BARTHELEMY = 652,
- * CTRY_ST_KITTS_NEVIS = 659,
- * CTRY_ST_LUCIA = 662,
- * CTRY_ST_MARTIN = 663,
- * CTRY_ST_PIERRE_MIQUELON = 666,
- * CTRY_ST_VINCENT_GRENADIENS= 670,
- * CTRY_SAMOA = 882,
- * CTRY_SENEGAL = 686,
- * CTRY_SERBIA = 688,
- * CTRY_MONTENEGRO = 499,
- * CTRY_SURINAME = 740,
- * CTRY_TANZANIA = 834,
- * CTRY_TOGO = 768,
- * CTRY_TURKS_CAICOS = 796,
- * CTRY_UGANDA = 800,
- * CTRY_UNITED_STATES2 = 841,
- * CTRY_UNITED_STATES3 = 843,
- * CTRY_VANUATU = 548,
- * CTRY_VIRGIN_ISLANDS = 850,
- * CTRY_WALLIS_FUTUNA = 876,
- * CTRY_ARGENTINA2 = 5003
-
-Entries which most likely shouldn't exist in CountryCode:
-
- * CTRY_KOREA_ROC2
- * CTRY_SERBIA_MONTENEGRO
-
-Things which I missed in the EnumRd:
-
- * FCC11_WORLD = 0x19,
- * FCC3_ETSIC = 0x3F,
- * ETSI8_WORLD = 0x3D,
- * ETSI9_WORLD = 0x3E,
- * APL12_WORLD = 0x51,
- * APL14_WORLD = 0x57,
- * APL15_WORLD = 0x59,
- * APL13_WORLD = 0x5A,
- * APL10_WORLD = 0x5F,
-
-
-The new mappings in regDomainPairs for the used EnumRds would then be:
-
- * {FCC11_WORLD, CTL_FCC, CTL_ETSI},
- * {FCC3_ETSIC, CTL_FCC, CTL_ETSI},
- * {ETSI8_WORLD, CTL_ETSI, CTL_ETSI},
- * {ETSI9_WORLD, CTL_ETSI, CTL_ETSI},
- * {APL10_WORLD, CTL_ETSI, CTL_ETSI},
- * {APL12_WORLD, CTL_ETSI, CTL_ETSI},
- * {APL13_WORLD, CTL_ETSI, CTL_ETSI},
- * {APL14_WORLD, CTL_FCC, CTL_ETSI},
- * {APL15_WORLD, CTL_FCC, CTL_ETSI},
-
-
-Things which I missed in allCountries
-
- * {CTRY_AFGHANISTAN, ETSI1_WORLD, "AF"},
- * {CTRY_AMERICAN_SAMOA, FCC3_FCCA, "AS"},
- * {CTRY_ANGUILLA, ETSI1_WORLD, "AI"},
- * {CTRY_BAHAMAS, FCC3_WORLD, "BS"},
- * {CTRY_BERMUDA, FCC3_FCCA, "BM"},
- * {CTRY_BHUTAN, ETSI1_WORLD, "BT"},
- * {CTRY_BURKINA_FASO,FCC3_WORLD, "BF"},
- * {CTRY_CAYMAN_ISLANDS, FCC3_WORLD, "KY"},
- * {CTRY_CENTRAL_AFRICA_REPUBLIC, FCC3_WORLD, "CF"},
- * {CTRY_CHAD, ETSI1_WORLD, "TD"},
- * {CTRY_CHRISTMAS_ISLAND, FCC3_WORLD, "CX"},
- * {CTRY_DOMINICA, FCC1_FCCA, "DM"},
- * {CTRY_ETHIOPIA, ETSI1_WORLD, "ET"},
- * {CTRY_FRENCH_GUIANA, ETSI1_WORLD, "GF"},
- * {CTRY_FRENCH_POLYNESIA, ETSI1_WORLD, "PF"},
- * {CTRY_GHANA, FCC3_WORLD, "GH"},
- * {CTRY_GUADELOUPE, ETSI1_WORLD, "GP"},
- * {CTRY_GUYANA, APL1_ETSIC, "GY"},
- * {CTRY_COTE_D_IVOIRE, FCC3_WORLD, "CI"},
- * {CTRY_KENYA, APL12_WORLD, "KE"},
- * {CTRY_LESOTHO, ETSI1_WORLD, "LS"},
- * {CTRY_MALDIVES, APL6_WORLD, "MV"},
- * {CTRY_MARSHALL_ISLANDS, FCC3_FCCA, "MH"},
- * {CTRY_MARTINIQUE, ETSI1_WORLD, "MQ"},
- * {CTRY_MAURITANIA, ETSI1_WORLD, "MR"},
- * {CTRY_MAURITIUS, FCC3_WORLD, "MU"},
- * {CTRY_MAYOTTE, ETSI1_WORLD, "YT"},
- * {CTRY_MICRONESIA, FCC3_FCCA, "FM"},
- * {CTRY_MOLDOVA, ETSI1_WORLD, "MD"},
- * {CTRY_MONGOLIA, FCC3_WORLD, "MN"},
- * {CTRY_MONTENEGRO, ETSI1_WORLD, "ME"},
- * {CTRY_NAMIBIA, APL9_WORLD, "NA"},
- * {CTRY_NICARAGUA, FCC3_FCCA, "NI"},
- * {CTRY_NIGERIA, APL8_WORLD, "NG"},
- * {CTRY_NORTHERN_MARIANA_ISLANDS, FCC3_FCCA, "MP"},
- * {CTRY_PALAU, FCC3_FCCA, "PW"},
- * {CTRY_PARAGUAY, FCC3_WORLD, "PY"},
- * {CTRY_REUNION, ETSI1_WORLD, "RE"},
- * {CTRY_RWANDA, FCC3_WORLD, "RW"},
- * {CTRY_SENEGAL, FCC3_WORLD, "SN"},
- * {CTRY_SERBIA, ETSI1_WORLD, "RS"},
- * {CTRY_ST_BARTHELEMY, ETSI1_WORLD, "BL"},
- * {CTRY_ST_KITTS_NEVIS, APL10_WORLD, "KN"},
- * {CTRY_ST_LUCIA, APL10_WORLD, "LC"},
- * {CTRY_ST_MARTIN, ETSI1_WORLD, "MF"},
- * {CTRY_ST_PIERRE_MIQUELON, ETSI1_WORLD, "PM"},
- * {CTRY_ST_VINCENT_GRENADIENS, ETSI1_WORLD, "VC"},
- * {CTRY_SAMOA, ETSI1_WORLD, "WS"},
- * {CTRY_SURINAME, ETSI1_WORLD, "SR"},
- * {CTRY_TANZANIA, APL1_WORLD, "TZ"},
- * {CTRY_TOGO, ETSI1_WORLD, "TG"},
- * {CTRY_TURKS_CAICOS, FCC3_WORLD, "TC"},
- * {CTRY_UGANDA, FCC3_WORLD, "UG"},
- * {CTRY_VANUATU, FCC3_WORLD, "VU"},
- * {CTRY_VIRGIN_ISLANDS, FCC3_FCCA, "VI"},
- * {CTRY_WALLIS_FUTUNA, ETSI1_WORLD, "WF"},
-
-Things which seemed to be "wrong" in allCountries:
-
- * CTRY_ALBANIA: NULL1_WORLD -> ETSI1_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_ALGERIA: NULL1_WORLD -> APL13_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_AUSTRALIA: FCC2_WORLD -> FCC3_WORLD
- * CTRY_BAHRAIN: APL6_WORLD -> APL15_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_BANGLADESH: NULL1_WORLD -> APL1_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_BOLIVIA: APL1_ETSIC -> APL8_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_BRAZIL: FCC3_WORLD -> FCC3_ETSIC
- * CTRY_BRUNEI_DARUSSALAM: APL1_WORLD -> APL6_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_BULGARIA: ETSI6_WORLD -> ETSI1_WORLD
- * CTRY_CHINA: APL1_WORLD -> APL14_WORLD
- * CTRY_COLOMBIA: FCC1_FCCA -> FCC3_WORLD
-   - changes 2.4GHz to CTL_ETSI
- * CTRY_COSTA_RICA: FCC1_WORLD -> FCC3_WORLD
- * CTRY_CZECH: ETSI3_WORLD -> ETSI1_WORLD
- * CTRY_ECUADOR: FCC1_WORLD -> FCC3_WORLD
- * CTRY_GUAM: FCC1_FCCA -> FCC3_FCCA
- * CTRY_GUATEMALA: FCC1_FCCA -> ETSI1_WORLD
-   - changes 2.4GHz to CTL_ETSI
-   - changes 5GHz to CTL_ETSI
- * CTRY_HAITI: ETSI1_WORLD -> FCC3_FCCA
-   - changes 2.4GHz to CTL_FCC
-   - changes 5GHz to CTL_FCC
- * CTRY_HONDURAS: NULL1_WORLD -> FCC3_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_INDIA: APL6_WORLD -> APL15_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_INDONESIA: NULL1_WORLD -> APL2_ETSIC
-   - changes 5GHz to CTL_FCC
- * CTRY_ISRAEL: NULL1_WORLD -> ETSI3_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_JORDAN: ETSI2_WORLD -> APL4_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_LEBANON: NULL1_WORLD -> FCC3_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_MACAU: FCC2_WORLD -> FCC3_WORLD
- * CTRY_MACEDONIA: NULL1_WORLD -> ETSI1_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_MALAYSIA: APL8_WORLD -> FCC11_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_MEXICO: FCC1_FCCA -> FCC3_ETSIC
-   - changes 2.4GHz to CTL_FCC
- * CTRY_MONACO: ETSI4_WORLD -> ETSI1_WORLD
- * CTRY_MOROCCO: APL4_WORLD -> ETSI3_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_NEPAL: APL1_WORLD -> APL6_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_NEW_ZEALAND: FCC2_ETSIC -> FCC3_ETSIC
- * CTRY_OMAN: FCC3_WORLD -> ETSI1_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_PAKISTAN: NULL1_WORLD -> APL1_ETSIC
-   - changes 5GHz to CTL_FCC
- * CTRY_PAPUA_NEW_GUINEA: FCC1_WORLD -> FCC3_WORLD
- * CTRY_PERU: APL1_WORLD -> FCC3_WORLD
- * CTRY_PHILIPPINES: APL1_WORLD -> FCC3_WORLD
- * CTRY_PUERTO_RICO: FCC1_FCCA -> FCC3_FCCA
- * CTRY_ROMANIA: NULL1_WORLD -> ETSI1_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_RUSSIA: NULL1_WORLD -> ETSI8_WORLD
- * CTRY_SAUDI_ARABIA: NULL1_WORLD -> ETSI1_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_SINGAPORE: APL6_WORLD -> FCC3_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_TAIWAN: APL3_FCCA -> FCC3_FCCA
- * CTRY_TURKEY: ETSI3_WORLD -> ETSI1_WORLD
- * CTRY_UKRAINE: NULL1_WORLD -> ETSI9_WORLD
-   - changes 5GHz to CTL_ETSI
- * CTRY_UAE: NULL1_WORLD -> FCC3_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_URUGUAY: FCC3_WORLD -> FCC2_WORLD
- * CTRY_UZBEKISTAN: FCC3_FCCA -> ETSI3_WORLD
-   - changes 2.4GHz to CTL_ETSI
-   - changes 5GHz to CTL_ETSI
- * CTRY_VENEZUELA: APL2_ETSIC -> FCC2_ETSIC
- * CTRY_VIET_NAM: NULL1_WORLD -> FCC3_WORLD
-   - changes 5GHz to CTL_FCC
- * CTRY_ZIMBABWE: NULL1_WORLD -> ETSI1_WORLD
-   - changes 5GHz to CTL_ETSI
-
-Not existing countries in allCountries:
-
- * CTRY_SERBIA_MONTENEGRO
-
-Kind regards,
-	Sven
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 16a0fd0..6b833c4 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -327,6 +327,7 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
+ 	struct rsi_common *common = adapter->priv;
+ 	int ret = -EOPNOTSUPP;
+ 
++	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
+ 	mutex_lock(&common->mutex);
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -560,6 +561,16 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
+ 				      bss_conf->aid);
+ 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
+ 		adapter->ps_info.listen_interval = conf->listen_interval;
++
++	/* If U-APSD is updated, send ps parameters to firmware */
++	if (bss->assoc) {
++		if (common->uapsd_bitmap) {
++			rsi_dbg(INFO_ZONE, "Configuring UAPSD\n");
++			rsi_conf_uapsd(adapter);
++		}
++	} else {
++		common->uapsd_bitmap = 0;
++	}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_CQM) {
+@@ -641,6 +652,12 @@ static int rsi_mac80211_conf_tx(struct ieee80211_hw *hw,
+ 	memcpy(&common->edca_params[idx],
+ 	       params,
+ 	       sizeof(struct ieee80211_tx_queue_params));
++
++	if (params->uapsd)
++		common->uapsd_bitmap |= idx;
++	else
++		common->uapsd_bitmap &= (~idx);
++
+ 	mutex_unlock(&common->mutex);
+ 
+ 	return 0;
+@@ -1311,6 +1328,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 
+ 	hw->max_rates = 1;
+ 	hw->max_rate_tries = MAX_RETRIES;
++	hw->uapsd_queues = RSI_IEEE80211_UAPSD_QUEUES;
++	hw->uapsd_max_sp_len = IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL;
+ 
+ 	hw->max_tx_aggregation_subframes = 6;
+ 	rsi_register_rates_channels(adapter, NL80211_BAND_2GHZ);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index f76b346..e5fe443 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1425,6 +1425,9 @@ int rsi_send_ps_request(struct rsi_hw *adapter, bool enable)
+ 		ps->desc.desc_dword0.len_qno |= cpu_to_le16(RSI_PS_DISABLE_IND);
+ 		ps->desc.desc_dword3.token = cpu_to_le16(RSI_WAKEUP_REQUEST);
+ 	}
++
++	ps->ps_uapsd_acs = common->uapsd_bitmap;
++
+ 	ps->ps_sleep.sleep_type = ps_info->sleep_type;
+ 	ps->ps_sleep.num_bcns_per_lis_int =
+ 		cpu_to_le16(ps_info->num_bcns_per_lis_int);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_ps.c b/drivers/net/wireless/rsi/rsi_91x_ps.c
+index 25e8f85..48c79f0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_ps.c
++++ b/drivers/net/wireless/rsi/rsi_91x_ps.c
+@@ -105,6 +105,22 @@ void rsi_disable_ps(struct rsi_hw *adapter)
+ 	rsi_modify_ps_state(adapter, PS_DISABLE_REQ_SENT);
+ }
+ 
++void rsi_conf_uapsd(struct rsi_hw *adapter)
++{
++	int ret;
++
++	if (adapter->ps_state != PS_ENABLED)
++		return;
++
++	ret = rsi_send_ps_request(adapter, false);
++	if (!ret)
++		ret = rsi_send_ps_request(adapter, true);
++	if (ret)
++		rsi_dbg(ERR_ZONE,
++			"%s: Failed to send PS request to device\n",
++			__func__);
++}
++
+ int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg)
+ {
+ 	u16 cfm_type = get_unaligned_le16(msg + PS_CONFIRM_INDEX);
+@@ -127,3 +143,4 @@ int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg)
+ 
+ 	return 0;
+ }
++
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 9aada0b..d2cc47e 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -243,6 +243,7 @@ struct rsi_common {
+ 	u16 oper_mode;
+ 	u8 lp_ps_handshake_mode;
+ 	u8 ulp_ps_handshake_mode;
++	u8 uapsd_bitmap;
+ 	u8 rf_power_val;
+ 	u8 wlan_rf_power_mode;
+ 	u8 obm_ant_sel_val;
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index c5d114d..b22103f 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -181,6 +181,12 @@
+ #define RSI_SLEEP_REQUEST		1
+ #define RSI_WAKEUP_REQUEST		2
+ 
++#define RSI_IEEE80211_UAPSD_QUEUES \
++	(IEEE80211_WMM_IE_STA_QOSINFO_AC_VO | \
++	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI | \
++	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE | \
++	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
++
+ enum opmode {
+ 	STA_OPMODE = 1,
+ 	AP_OPMODE = 2
+-- 
+2.7.4
