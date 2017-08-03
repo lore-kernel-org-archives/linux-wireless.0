@@ -1,124 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38206 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751500AbdHOLaj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 07:30:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2017-08-15
-Date: Tue, 15 Aug 2017 14:30:34 +0300
-Message-ID: <87d17x9ig5.fsf@kamboji.qca.qualcomm.com> (sfid-20170815_133112_009608_A5027CA6)
+Received: from mx2.suse.de ([195.135.220.15]:51369 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751940AbdHCLe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 07:34:28 -0400
+Date: Thu, 3 Aug 2017 13:34:25 +0200 (CEST)
+From: Jiri Kosina <jikos@kernel.org>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "Zhang, Rui" <rui.zhang@intel.com>,
+        "edubezval@gmail.com" <edubezval@gmail.com>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "Weinehall, David" <david.weinehall@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Sharon, Sara" <sara.sharon@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [linuxwifi] x86/thermal: AB-BA dependency between mvm->mutex
+ and tz->lock
+In-Reply-To: <1501759724.15969.49.camel@intel.com>
+Message-ID: <alpine.LSU.2.20.1708031330570.30597@cbobk.fhfr.pm> (sfid-20170803_133441_875744_6CD89E95)
+References: <alpine.LSU.2.20.1707311300440.4705@cbobk.fhfr.pm>  <alpine.LSU.2.20.1708031107230.30597@cbobk.fhfr.pm>  <1501753405.15969.43.camel@intel.com>  <87vam5nf4w.fsf@kamboji.qca.qualcomm.com> <1501759724.15969.49.camel@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Thu, 3 Aug 2017, Coelho, Luciano wrote:
 
-more fixes to net tree for 4.13. More info in the signed tag below,
-please let me know if there are any problems.
+> Okay, so as I understand it the problem has been there for a long time,
+> but the splat is only coming up now because of Thomas' patch that adds
+> the lockdep map[1], right?
 
-Kalle
+Yeah, sorry, forgot to mention that pre-49dfe2a67797 kernels wouldn't 
+produce this, as there would not be aware of the fact that 
+cpus_read_lock() is actually semantically a lock.
 
-The following changes since commit 5f5d03143de5e0c593da4ab18fc6393c2815e108:
+> I see the workqueue allocation you mentioned.  I'll try to move this 
+> allocation out of the mutex and see how it goes.
 
-  brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice (2017-07-27 14:03:14 +0300)
+I have been briefly looking into this as well -- it'll basically have to 
+be moved out of the trans_pcie->mutex context, but
 
-are available in the git repository at:
+(a) I'm not sure whether that's actually safe
+(b) iwl_pcie_rx_reuse_rbd() (which is where corresponding work is being 
+    queued) is not a proper context either (it's atomic context)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-08-15
+Thanks,
 
-for you to fetch changes up to e9bf53ab1ee34bb05c104bbfd2b77c844773f8e6:
-
-  brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices (2017-08-14 11:09:30 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.13
-
-This time quite a few fixes for iwlwifi and one major regression fix
-for brcmfmac. For the iwlwifi aggregation bug a small change was
-needed for mac80211, but as Johannes is still away the mac80211 patch
-is taken via wireless-drivers tree.
-
-brcmfmac
-
-* fix firmware crash (a recent regression in bcm4343{0,1,8}
-
-iwlwifi
-
-* Some simple PCI HW ID fix-ups and additions for family 9000
-
-* Remove a bogus warning message with new FWs (bug #196915)
-
-* Don't allow illegal channel options to be used (bug #195299)
-
-* A fix for checksum offload in family 9000
-
-* A fix serious throughput degradation in 11ac with multiple streams
-
-* An old bug in SMPS where the firmware was not aware of SMPS changes
-
-* Fix a memory leak in the SAR code
-
-* Fix a stuck queue case in AP mode;
-
-* Convert a WARN to a simple debug in a legitimate race case (from
-  which we can recover)
-
-* Fix a severe throughput aggregation on 9000-family devices due to
-  aggregation issues, needed a small change in mac80211
-
-----------------------------------------------------------------
-Arend Van Spriel (1):
-      brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices
-
-Avraham Stern (1):
-      iwlwifi: mvm: start mac queues when deferred tx frames are purged
-
-Christophe Jaillet (1):
-      iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
-
-Emmanuel Grumbach (4):
-      iwlwifi: mvm: fix TCP CSUM offload with WEP and A000 series
-      iwlwifi: add TLV for MLME offload firmware capability
-      iwlwifi: split the regulatory rules when the bandwidth flags require it
-      iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU
-
-Gregory Greenman (2):
-      iwlwifi: mvm: set A-MPDU bit upon empty BA notification from FW
-      iwlwifi: mvm: rs: fix TLC statistics collection
-
-Haim Dreyfuss (1):
-      iwlwifi: fix fw_pre_next_step to apply also for C step
-
-Kalle Valo (2):
-      Merge tag 'iwlwifi-for-kalle-2017-08-02' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-      Merge tag 'iwlwifi-for-kalle-2018-08-09' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Naftali Goldstein (3):
-      iwlwifi: mvm: set the RTS_MIMO_PROT bit in flag mask when sending sta to fw
-      mac80211: add api to start ba session timer expired flow
-      iwlwifi: mvm: send delba upon rx ba session timeout
-
-Tzipi Peres (1):
-      iwlwifi: add the new 9000 series PCI IDs
-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      | 14 +++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |  2 ++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  5 +++--
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 19 +++++++++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 12 +++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 10 ++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  7 ++++---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 12 ++++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      | 20 ++++++++++++++++++++
- include/net/mac80211.h                             | 15 +++++++++++++++
- net/mac80211/agg-rx.c                              | 22 +++++++++++++++++++++-
- 15 files changed, 126 insertions(+), 40 deletions(-)
+-- 
+Jiri Kosina
+SUSE Labs
