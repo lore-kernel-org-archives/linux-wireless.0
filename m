@@ -1,29 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56280 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753130AbdHBMSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 08:18:31 -0400
-Message-ID: <1501676308.11126.0.camel@sipsolutions.net> (sfid-20170802_141834_347997_8317AFEA)
-Subject: Re: [PATCH v2] mac80211: remove mic_fail_no_key label
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc: Michael Skeffington <mike@astro.ai>
-Date: Wed, 02 Aug 2017 14:18:28 +0200
-In-Reply-To: <20170802105310.GB4777@redhat.com> (sfid-20170802_125429_754563_1668FB33)
-References: <20170802105310.GB4777@redhat.com>
-         (sfid-20170802_125429_754563_1668FB33)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:39086 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751079AbdHCLkr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 07:40:47 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: wcn36xx: check dma_mapping_error()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170703133845.13638-1-robdclark@gmail.com>
+References: <20170703133845.13638-1-robdclark@gmail.com>
+To: Rob Clark <robdclark@gmail.com>
+CC: <linux-arm-msm@vger.kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        <linux-wireless@vger.kernel.org>, Rob Clark <robdclark@gmail.com>
+Message-ID: <ef4b41b2e0c54b2f87aee586511a5d9f@euamsexm01a.eu.qualcomm.com> (sfid-20170803_134050_902391_3A21479E)
+Date: Thu, 3 Aug 2017 13:40:39 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-08-02 at 12:53 +0200, Stanislaw Gruszka wrote:
-> For historic reasons we have separate cases for mic_fail and
-> mic_fail_no_key. But with current code we can merge those cases,
-> as we already have NULL key check since commit a66b98db570a
-> ("mac80211: fix rx->key NULL dereference during mic failure").
-> 
-Uh, no. rx->key->u.tkip.mic_failures will still crash.
+Rob Clark <robdclark@gmail.com> wrote:
 
-johannes
+> Fixes splat:
+> 
+>   wcn36xx a204000.wcnss:smd-edge:wcnss:wifi: DMA-API: device driver failed to check map error[device address=0x00000000b45ba000] [size=3872 bytes] [mapped as single]
+>   ------------[ cut here ]------------
+>   WARNING: CPU: 0 PID: 0 at ../lib/dma-debug.c:1167 check_unmap+0x474/0x8d0
+>   Modules linked in: bnep(E) arc4(E) wcn36xx(E) mac80211(E) btqcomsmd(E) btqca(E) bluetooth(E) cfg80211(E) ecdh_generic(E) rfkill(E) vfat(E) fat(E) wcnss_ctrl qcom_wcnss_pil(E) mdt_loader(E) qcom_common(E) remoteproc(E) crc32_ce(E) virtio_ring(E) snd_soc_lpass_apq8016(E) snd_soc_lpass_cpu(E) virtio(E) snd_soc_lpass_platform(E) leds_gpio(E) snd_soc_hdmi_codec(E) snd_soc_apq8016_sbc(E) snd_soc_msm8916_digital(E) snd_soc_core(E) qcom_spmi_temp_alarm(E) ac97_bus(E) snd_pcm_dmaengine(E) snd_seq(E) snd_seq_device(E) snd_pcm(E) spi_qup(E) nvmem_qfprom(E) snd_timer(E) snd(E) soundcore(E) msm_rng(E) qcom_tsens(E) nvmem_core(E) uas(E) usb_storage(E) dm9601(E) cdc_ether(E) usbnet(E) mii(E) mmc_block(E) sdhci_msm(E) sdhci_pltfm(E) qcom_spmi_vadc(E) qcom_vadc_common(PE) clk_smd_rpm(E) industrialio(E)
+>    qcom_smd_regulator(E) pinctrl_spmi_mpp(E) pinctrl_spmi_gpio(E) rtc_pm8xxx(E) adv7511(E) smd_rpm(E) qcom_spmi_pmic(E) regmap_spmi(E) phy_msm_usb(E) usb3503(E) extcon_usb_gpio(E) ci_hdrc_msm(E) ci_hdrc(E) qcom_hwspinlock(E) udc_core(E) extcon_core(E) ehci_msm(E) i2c_qup(E) sdhci(E) msm(E) mmc_core(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) fb_sys_fops(E) spmi_pmic_arb(E) drm(E) spmi(E) qcom_smd(E) rpmsg_core smsm(E) gpio_keys(E) smp2p(E) smem(E) hwspinlock_core(E) sunrpc(E) scsi_transport_iscsi(E)
+>   CPU: 0 PID: 0 Comm: swapper/0 Tainted: P            E   4.12.0-rc7+ #1476
+>   Hardware name: qualcomm dragonboard410c/dragonboard410c, BIOS 2017.07-rc1-00234-g22fa70a-dirty 06/26/2017
+>   task: ffff000009049780 task.stack: ffff000009030000
+>   PC is at check_unmap+0x474/0x8d0
+>   LR is at check_unmap+0x474/0x8d0
+>   ...
+>   Mapped at:
+>    dma_entry_alloc+0x68/0xa8
+>    debug_dma_map_page+0x94/0x148
+>    wcn36xx_dxe_fill_skb.isra.1+0xbc/0xf8 [wcn36xx]
+>    wcn36xx_dxe_init+0x244/0x398 [wcn36xx]
+>    wcn36xx_start+0xf4/0x298 [wcn36xx]
+> 
+> Signed-off-by: Rob Clark <robdclark@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+4165cf7ba52a wcn36xx: check dma_mapping_error()
+
+-- 
+https://patchwork.kernel.org/patch/9823509/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
