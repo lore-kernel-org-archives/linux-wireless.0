@@ -1,149 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36272 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751768AbdHABlB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49462 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751779AbdHCJ7u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2017 21:41:01 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
+        Thu, 3 Aug 2017 05:59:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
         Zhiyuan Yang <yangzy@marvell.com>,
         Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: Re: [PATCH 2/2] mwifiex: pcie: compatible with wifi-only image
- while extract wifi-part fw
-Date: Tue, 1 Aug 2017 01:40:52 +0000
-Message-ID: <1501551652281.43666@marvell.com> (sfid-20170801_034105_187961_2CC57D58)
-References: <1501506447-31851-1-git-send-email-huxinming820@gmail.com>
- <1501506447-31851-2-git-send-email-huxinming820@gmail.com>,<20170731165857.GA136608@google.com>
-In-Reply-To: <20170731165857.GA136608@google.com>
-Content-Type: text/plain; charset="iso-8859-1"
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] mwifiex: add module parameter to disable 40MHZ support in 2.4G band
+References: <1501751215-12742-1-git-send-email-huxinming820@gmail.com>
+        <874ltpovcg.fsf@kamboji.qca.qualcomm.com>
+        <f8f01ad4-773d-a83d-7db2-3dbaa26502bc@broadcom.com>
+Date: Thu, 03 Aug 2017 12:59:44 +0300
+In-Reply-To: <f8f01ad4-773d-a83d-7db2-3dbaa26502bc@broadcom.com> (Arend van
+        Spriel's message of "Thu, 3 Aug 2017 11:49:44 +0200")
+Message-ID: <87zibhnf8v.fsf@kamboji.qca.qualcomm.com> (sfid-20170803_120000_972853_2D4A552B)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Thanks for the review, fix below comment format in V2.
-
-Regards,
-Simon
-________________________________________
-From: Brian Norris <briannorris@chromium.org>
-Sent: Tuesday, August 1, 2017 0:58
-To: Xinming Hu
-Cc: Linux Wireless; Kalle Valo; Dmitry Torokhov; rajatja@google.com; Zhiyuan Yang; Tim Song; Cathy Luo; Ganapathi Bhat; Xinming Hu
-Subject: [EXT] Re: [PATCH 2/2] mwifiex: pcie: compatible with wifi-only image while extract wifi-part fw
-
-External Email
-
-----------------------------------------------------------------------
-Hi,
-
-Two nitpicks below:
-
-On Mon, Jul 31, 2017 at 01:07:27PM +0000, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
+> On 03-08-17 11:26, Kalle Valo wrote:
+>> Xinming Hu <huxinming820@gmail.com> writes:
+>> 
+>>> From: Xinming Hu <huxm@marvell.com>
+>>>
+>>> This patch provide a new module parameter disable_2g4_40m, with
+>>> which driver will not report 40M capability for 2.4GHZ to cfg80211.
+>>>
+>>> Signed-off-by: Xinming Hu <huxm@marvell.com>
+>>> Signed-off-by: Cathy Luo <cluo@marvell.com>
+>>> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+>>> ---
+>>>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 22 ++++++++++++++--------
+>>>  1 file changed, 14 insertions(+), 8 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+>>> b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+>>> index 2be7817..820475a 100644
+>>> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+>>> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+>>> @@ -25,6 +25,10 @@
+>>>  static char *reg_alpha2;
+>>>  module_param(reg_alpha2, charp, 0);
+>>>  
+>>> +static bool disable_2g4_40m;
+>>> +module_param(disable_2g4_40m, bool, 0000);
+>> 
+>> This is bool, good.
+>> 
+>>> +MODULE_PARM_DESC(disable_2g4_40m, "2.4G 40M support disable:1, enable:0");
+>> 
+>> This is not really a readable description for someone not familiar with
+>> Wi-Fi, maybe this instead:
+>> 
+>> "disable 40 Mhz channels on 2.4 GHz band (disable:1, enable:0)"
+>> 
+>>> @@ -2755,7 +2759,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+>>>   */
+>>>  static void
+>>>  mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
+>>> -		      struct mwifiex_private *priv)
+>>> +		      struct mwifiex_private *priv, int disable_40m)
+>> 
+>> But here you use int, that's a bit strange. Why not bool?
 >
-> Sometimes, we might using wifi-only firmware with a combo firmware name,
-> in this case, do not need to filter bluetooth part from header.
+> Here is what is in net/wireless/core.c:
 >
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 26 +++++++++++++++++++-------
->  1 file changed, 19 insertions(+), 7 deletions(-)
+> static bool cfg80211_disable_40mhz_24ghz;
+> module_param(cfg80211_disable_40mhz_24ghz, bool, 0644);
+> MODULE_PARM_DESC(cfg80211_disable_40mhz_24ghz,
+>                  "Disable 40MHz support in the 2.4GHz band");
 >
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 3da1eeb..dc4e054 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -1985,7 +1985,8 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
->   * (3) wifi image.
->   *
->   * This function bypass the header and bluetooth part, return
-> - * the offset of tail wifi-only part.
-> + * the offset of tail wifi-only part. if the image is already wifi-only,
-
-Sentences start with capital letters (i.e., "If the image ...").
-
-> + * that is start with CMD1, return 0.
->   */
+> which seems exactly the same thing and ends up doing:
 >
->  static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
-> @@ -1993,7 +1994,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->       const struct mwifiex_fw_data *fwdata;
->       u32 offset = 0, data_len, dnld_cmd;
->       int ret = 0;
-> -     bool cmd7_before = false;
-> +     bool cmd7_before = false, first_cmd = false;
->
->       while (1) {
->               /* Check for integer and buffer overflow */
-> @@ -2014,20 +2015,29 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->
->               switch (dnld_cmd) {
->               case MWIFIEX_FW_DNLD_CMD_1:
-> -                     if (!cmd7_before) {
-> -                             mwifiex_dbg(adapter, ERROR,
-> -                                         "no cmd7 before cmd1!\n");
-> +                     if (offset + data_len < data_len) {
-> +                             mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
->                               ret = -1;
->                               goto done;
->                       }
-> -                     if (offset + data_len < data_len) {
-> -                             mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-> +
-> +                     /* Image start with cmd1, already wifi-only firmware*/
+>                 /*
+>                  * Since cfg80211_disable_40mhz_24ghz is global, we can
+>                  * modify the sband's ht data even if the driver uses a
+>                  * global structure for that.
+>                  */
+>                 if (cfg80211_disable_40mhz_24ghz &&
+>                     band == NL80211_BAND_2GHZ &&
+>                     sband->ht_cap.ht_supported) {
+>                         sband->ht_cap.cap &=
+> ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+>                         sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+>                 }
 
-You need a space before closing the comment. i.e.:
+Good catch! So the module parameter for the driver is not needed, right?
 
-                        /* Image starts with cmd1; already wifi-only firmware */
-
-Otherwise, I think both of these look fine:
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-> +                     if (!first_cmd) {
-> +                             mwifiex_dbg(adapter, MSG,
-> +                                         "input wifi-only firmware\n");
-> +                             return 0;
-> +                     }
-> +
-> +                     if (!cmd7_before) {
-> +                             mwifiex_dbg(adapter, ERROR,
-> +                                         "no cmd7 before cmd1!\n");
->                               ret = -1;
->                               goto done;
->                       }
->                       offset += data_len;
->                       break;
->               case MWIFIEX_FW_DNLD_CMD_5:
-> +                     first_cmd = true;
->                       /* Check for integer overflow */
->                       if (offset + data_len < data_len) {
->                               mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-> @@ -2037,6 +2047,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->                       offset += data_len;
->                       break;
->               case MWIFIEX_FW_DNLD_CMD_6:
-> +                     first_cmd = true;
->                       /* Check for integer overflow */
->                       if (offset + data_len < data_len) {
->                               mwifiex_dbg(adapter, ERROR, "bad FW parse\n");
-> @@ -2053,6 +2064,7 @@ static int mwifiex_extract_wifi_fw(struct mwifiex_adapter *adapter,
->                       }
->                       goto done;
->               case MWIFIEX_FW_DNLD_CMD_7:
-> +                     first_cmd = true;
->                       cmd7_before = true;
->                       break;
->               default:
-> --
-> 1.9.1
->
+-- 
+Kalle Valo
