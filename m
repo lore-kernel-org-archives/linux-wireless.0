@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:37870 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750737AbdHZGZ7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39992 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751133AbdHCJgX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Aug 2017 02:25:59 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: sameo@linux.intel.com, gregkh@linuxfoundation.org,
-        tomas.winkler@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] nfc: microread: mei: constify mei_cl_device_id
-Date: Sat, 26 Aug 2017 11:55:41 +0530
-Message-Id: <27f776943a6fd60e938b53673fba7562241ba1bd.1503728505.git.arvind.yadav.cs@gmail.com> (sfid-20170826_082630_439721_544A7658)
+        Thu, 3 Aug 2017 05:36:23 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] rtlwifi: Fix fallback firmware loading
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <87d18gmvsq.fsf_-_@turtle.gmx.de>
+References: <87d18gmvsq.fsf_-_@turtle.gmx.de>
+To: Sven Joachim <svenjoac@gmx.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20170803093623.101DC6037B@smtp.codeaurora.org> (sfid-20170803_113627_201880_A4C8319E)
+Date: Thu,  3 Aug 2017 09:36:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mei_cl_device_id are not supposed to change at runtime.
-mei driver is working with const 'id_table'. So mark
-the non-const mei_cl_device_id structs as const.
+Sven Joachim <svenjoac@gmx.de> wrote:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/nfc/microread/mei.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Commit f70e4df2b384 ("rtlwifi: Add code to read new versions of
+> firmware") added code to load an old firmware file if the new one is
+> not available.  Unfortunately that code is never reached because
+> request_firmware_nowait() does not wait for the firmware to show up
+> and returns 0 even if the file is not there.
+> 
+> Use the existing fallback mechanism introduced by commit 62009b7f1279
+> ("rtlwifi: rtl8192cu: Add new firmware") instead.
+> 
+> Fixes: f70e4df2b384 ("rtlwifi: Add code to read new versions of firmware")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Sven Joachim <svenjoac@gmx.de>
 
-diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-index eb5eddf..70bf7a1 100644
---- a/drivers/nfc/microread/mei.c
-+++ b/drivers/nfc/microread/mei.c
-@@ -66,7 +66,7 @@ static int microread_mei_remove(struct mei_cl_device *cldev)
- 	return 0;
- }
- 
--static struct mei_cl_device_id microread_mei_tbl[] = {
-+static const struct mei_cl_device_id microread_mei_tbl[] = {
- 	{ MICROREAD_DRIVER_NAME, MEI_NFC_UUID, MEI_CL_VERSION_ANY},
- 
- 	/* required last entry */
+Patch applied to wireless-drivers-next.git, thanks.
+
+1d9b168d8ea9 rtlwifi: Fix fallback firmware loading
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9872413/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
