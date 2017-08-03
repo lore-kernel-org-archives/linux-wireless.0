@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:43275 "EHLO mail.toke.dk"
+Received: from mail.kernel.org ([198.145.29.99]:54860 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753264AbdHUNlb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2017 09:41:31 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
-In-Reply-To: <20170622102030.9795-3-johannes@sipsolutions.net>
-References: <20170622102030.9795-1-johannes@sipsolutions.net> <20170622102030.9795-3-johannes@sipsolutions.net>
-Date: Mon, 21 Aug 2017 15:32:16 +0200
-Message-ID: <87378lvyfz.fsf@toke.dk> (sfid-20170821_154135_094658_E8FF41A0)
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1751901AbdHCX7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 19:59:42 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: kvalo@codeaurora.org, gregkh@linuxfoundation.org
+Cc: chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH 2/2] MAINTAINERS: update email address for mcgrof for few straggling drivers
+Date: Thu,  3 Aug 2017 16:59:37 -0700
+Message-Id: <20170803235937.8604-3-mcgrof@kernel.org> (sfid-20170804_020012_031185_4336AFCC)
+In-Reply-To: <20170803235937.8604-1-mcgrof@kernel.org>
+References: <20170803235937.8604-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+This will ensure I get emails on my work and personal email address.
 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index b2b5419467cc..263cb30d77c8 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -919,21 +919,10 @@ struct ieee80211_tx_info {
->  				unsigned long jiffies;
->  			};
->  			/* NB: vif can be NULL for injected frames */
-> -			union {
-> -				/* NB: vif can be NULL for injected frames */
-> -				struct ieee80211_vif *vif;
-> -
-> -				/* When packets are enqueued on txq it's easy
-> -				 * to re-construct the vif pointer. There's no
-> -				 * more space in tx_info so it can be used to
-> -				 * store the necessary enqueue time for packet
-> -				 * sojourn time computation.
-> -				 */
-> -				codel_time_t enqueue_time;
-> -			};
-> +			struct ieee80211_vif *vif;
->  			struct ieee80211_key_conf *hw_key;
->  			u32 flags;
-> -			/* 4 bytes free */
-> +			codel_time_t enqueue_time;
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ MAINTAINERS | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-A side effect of this is that enqueue_time will be valid in the driver;
-which is good as far as I'm concerned (I've been thinking about using it
-to make decisions about when to stop retrying a frame).
-
-If we want to save the four bytes, is there any reason we can't just
-change the codel code to use skb->tstamp instead?
-
--Toke
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 97cf436e6750..49ae596584e7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2212,7 +2212,7 @@ F:	drivers/gpio/gpio-ath79.c
+ F:	Documentation/devicetree/bindings/gpio/gpio-ath79.txt
+ 
+ ATHEROS ATH GENERIC UTILITIES
+-M:	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
++M:	"Luis R. Rodriguez" <mcgrof@kernel.org>
+ L:	linux-wireless@vger.kernel.org
+ S:	Supported
+ F:	drivers/net/wireless/ath/*
+@@ -2220,7 +2220,7 @@ F:	drivers/net/wireless/ath/*
+ ATHEROS ATH5K WIRELESS DRIVER
+ M:	Jiri Slaby <jirislaby@gmail.com>
+ M:	Nick Kossifidis <mickflemm@gmail.com>
+-M:	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
++M:	"Luis R. Rodriguez" <mcgrof@kernel.org>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/ath5k
+ S:	Maintained
+-- 
+2.11.0
