@@ -1,97 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33813 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751773AbdHAJKI (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751897AbdHCTIq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:10:08 -0400
-Received: by mail-pg0-f66.google.com with SMTP id y192so1741989pgd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:10:08 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Thu, 3 Aug 2017 15:08:46 -0400
+Cc: Gidon Studinski <QCA_gidons@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-Subject: [PATCH 2/8] rsi: update set_antenna command frame
-Date: Tue,  1 Aug 2017 14:35:46 +0530
-Message-Id: <1501578352-10795-3-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111011_674774_86ECDBE3)
-In-Reply-To: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
-References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+Subject: [PATCH v4 10/10] wil6210: make debugfs compilation optional
+Date: Thu,  3 Aug 2017 22:08:22 +0300
+Message-Id: <1501787302-22885-11-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210902_401725_929D15B3)
+In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
+From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
 
-TX command frame set_antenna is modified to use common
-descriptor structure. Also it's subframe type is set.
+Since debugfs is a kernel configuration option, enable the driver to
+compile without debugfs.
 
-Signed-off-by: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 13 +++++++------
- drivers/net/wireless/rsi/rsi_mgmt.h     | 11 +++++++++++
- 2 files changed, 18 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wil6210/Makefile  | 2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 1fba7bb..653e83d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1406,7 +1406,7 @@ int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word)
-  */
- int rsi_set_antenna(struct rsi_common *common, u8 antenna)
- {
--	struct rsi_mac_frame *cmd_frame;
-+	struct rsi_ant_sel_frame *ant_sel_frame;
- 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 4ae21da..63a751a 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -4,7 +4,7 @@ wil6210-y := main.o
+ wil6210-y += netdev.o
+ wil6210-y += cfg80211.o
+ wil6210-y += pcie_bus.o
+-wil6210-y += debugfs.o
++wil6210-$(CONFIG_DEBUG_FS) += debugfs.o
+ wil6210-y += wmi.o
+ wil6210-y += interrupt.o
+ wil6210-y += txrx.o
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index cf20a8c..d7b1e03 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -940,8 +940,14 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			 struct cfg80211_mgmt_tx_params *params,
+ 			 u64 *cookie);
  
- 	skb = dev_alloc_skb(FRAME_DESC_SZ);
-@@ -1417,12 +1417,13 @@ int rsi_set_antenna(struct rsi_common *common, u8 antenna)
- 	}
- 
- 	memset(skb->data, 0, FRAME_DESC_SZ);
--	cmd_frame = (struct rsi_mac_frame *)skb->data;
--
--	cmd_frame->desc_word[1] = cpu_to_le16(ANT_SEL_FRAME);
--	cmd_frame->desc_word[3] = cpu_to_le16(antenna & 0x00ff);
--	cmd_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
- 
-+	ant_sel_frame = (struct rsi_ant_sel_frame *)skb->data;
-+	ant_sel_frame->desc_dword0.frame_type = ANT_SEL_FRAME;
-+	ant_sel_frame->sub_frame_type = ANTENNA_SEL_TYPE;
-+	ant_sel_frame->ant_value = cpu_to_le16(antenna & ANTENNA_MASK_VALUE);
-+	rsi_set_len_qno(&ant_sel_frame->desc_dword0.len_qno,
-+			0, RSI_WIFI_MGMT_Q);
- 	skb_put(skb, FRAME_DESC_SZ);
- 
- 	return rsi_send_internal_mgmt_frame(common, skb);
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index cb0b17e..1060edc 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -155,6 +155,8 @@
- 
- #define ANTENNA_SEL_INT			0x02 /* RF_OUT_2 / Integerated */
- #define ANTENNA_SEL_UFL			0x03 /* RF_OUT_1 / U.FL */
-+#define ANTENNA_MASK_VALUE		0x00ff
-+#define ANTENNA_SEL_TYPE		1
- 
- /* Rx filter word definitions */
- #define PROMISCOUS_MODE			BIT(0)
-@@ -348,6 +350,15 @@ struct rsi_vap_caps {
- 	__le16 beacon_miss_threshold;
- } __packed;
- 
-+struct rsi_ant_sel_frame {
-+	struct rsi_cmd_desc_dword0 desc_dword0;
-+	u8 reserved;
-+	u8 sub_frame_type;
-+	__le16 ant_value;
-+	__le32 reserved1;
-+	__le32 reserved2;
-+} __packed;
++#if defined(CONFIG_DEBUG_FS)
+ int wil6210_debugfs_init(struct wil6210_priv *wil);
+ void wil6210_debugfs_remove(struct wil6210_priv *wil);
++#else
++static inline int wil6210_debugfs_init(struct wil6210_priv *wil) { return 0; }
++static inline void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
++#endif
 +
- /* Key descriptor flags */
- #define RSI_KEY_TYPE_BROADCAST	BIT(1)
- #define RSI_WEP_KEY		BIT(2)
+ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
+ 		       struct station_info *sinfo);
+ 
 -- 
-2.7.4
+1.9.1
