@@ -1,75 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35013 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753245AbdHKNqA (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751600AbdHCTIe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 09:46:00 -0400
-Received: by mail-pg0-f67.google.com with SMTP id l64so3184659pge.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:46:00 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Thu, 3 Aug 2017 15:08:34 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 03/11] rsi: remove interface changes for AP mode
-Date: Fri, 11 Aug 2017 19:11:21 +0530
-Message-Id: <1502458889-9690-4-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154605_860499_46558046)
-In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+Subject: [PATCH v4 03/10] wil6210: support FW RSSI reporting
+Date: Thu,  3 Aug 2017 22:08:15 +0300
+Message-Id: <1501787302-22885-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210912_194315_E2954F93)
+In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-remove_interface callback of mac80211 is handled for AP mode.
-Same is notified to firmware through vap_capabilities frame
-with VAP status VAP_DELETE.
+New FW supports reporting RSSI signal in dBm.
+Report RSSI to kernel in case FW has this capability.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 26 ++++++++++++++++++++++----
- 1 file changed, 22 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 12 ++++++++----
+ drivers/net/wireless/ath/wil6210/debugfs.c  |  2 ++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  3 +++
+ drivers/net/wireless/ath/wil6210/wmi.c      |  9 ++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h      |  6 ++++--
+ 5 files changed, 23 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index edcba56..99446bb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -405,13 +405,31 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	enum opmode opmode;
-+
-+	rsi_dbg(INFO_ZONE, "Remove Interface Called\n");
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index d079533..c860c0c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -281,12 +281,12 @@ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
  
- 	mutex_lock(&common->mutex);
--	if (vif->type == NL80211_IFTYPE_STATION) {
--		adapter->sc_nvifs--;
--		rsi_set_vap_capabilities(common, STA_OPMODE, vif->addr,
--					 0, VAP_DELETE);
-+
-+	if (adapter->sc_nvifs <= 0) {
-+		mutex_unlock(&common->mutex);
-+		return;
-+	}
-+
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_STATION:
-+		opmode = STA_OPMODE;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		opmode = AP_OPMODE;
-+		break;
-+	default:
-+		mutex_unlock(&common->mutex);
-+		return;
+ 	wil_dbg_wmi(wil, "Link status for CID %d: {\n"
+ 		    "  MCS %d TSF 0x%016llx\n"
+-		    "  BF status 0x%08x SNR 0x%08x SQI %d%%\n"
++		    "  BF status 0x%08x RSSI %d SQI %d%%\n"
+ 		    "  Tx Tpt %d goodput %d Rx goodput %d\n"
+ 		    "  Sectors(rx:tx) my %d:%d peer %d:%d\n""}\n",
+ 		    cid, le16_to_cpu(reply.evt.bf_mcs),
+ 		    le64_to_cpu(reply.evt.tsf), reply.evt.status,
+-		    le32_to_cpu(reply.evt.snr_val),
++		    reply.evt.rssi,
+ 		    reply.evt.sqi,
+ 		    le32_to_cpu(reply.evt.tx_tpt),
+ 		    le32_to_cpu(reply.evt.tx_goodput),
+@@ -319,7 +319,11 @@ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
+ 
+ 	if (test_bit(wil_status_fwconnected, wil->status)) {
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
+-		sinfo->signal = reply.evt.sqi;
++		if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING,
++			     wil->fw_capabilities))
++			sinfo->signal = reply.evt.rssi;
++		else
++			sinfo->signal = reply.evt.sqi;
  	}
-+	rsi_set_vap_capabilities(common, opmode, vif->addr,
-+				 0, VAP_DELETE);
-+	adapter->sc_nvifs--;
  
- 	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
- 		adapter->vifs[0] = NULL;
+ 	return rc;
+@@ -1805,7 +1809,7 @@ static void wil_wiphy_init(struct wiphy *wiphy)
+ 
+ 	wiphy->bands[NL80211_BAND_60GHZ] = &wil_band_60ghz;
+ 
+-	/* TODO: figure this out */
++	/* may change after reading FW capabilities */
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
+ 
+ 	wiphy->cipher_suites = wil_cipher_suites;
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index a2b5d59..21b6611 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1016,6 +1016,7 @@ static int wil_bf_debugfs_show(struct seq_file *s, void *data)
+ 			   "  TSF = 0x%016llx\n"
+ 			   "  TxMCS = %2d TxTpt = %4d\n"
+ 			   "  SQI = %4d\n"
++			   "  RSSI = %4d\n"
+ 			   "  Status = 0x%08x %s\n"
+ 			   "  Sectors(rx:tx) my %2d:%2d peer %2d:%2d\n"
+ 			   "  Goodput(rx:tx) %4d:%4d\n"
+@@ -1025,6 +1026,7 @@ static int wil_bf_debugfs_show(struct seq_file *s, void *data)
+ 			   le16_to_cpu(reply.evt.bf_mcs),
+ 			   le32_to_cpu(reply.evt.tx_tpt),
+ 			   reply.evt.sqi,
++			   reply.evt.rssi,
+ 			   status, wil_bfstatus_str(status),
+ 			   le16_to_cpu(reply.evt.my_rx_sector),
+ 			   le16_to_cpu(reply.evt.my_tx_sector),
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index d571feb..6a3ab4b 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -84,6 +84,9 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 
+ 	/* extract FW capabilities from file without loading the FW */
+ 	wil_request_firmware(wil, wil->wil_fw_name, false);
++
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		wil_to_wiphy(wil)->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ }
+ 
+ void wil_disable_irq(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 65ef673..a9487f2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -381,12 +381,15 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ 	ch_no = data->info.channel + 1;
+ 	freq = ieee80211_channel_to_frequency(ch_no, NL80211_BAND_60GHZ);
+ 	channel = ieee80211_get_channel(wiphy, freq);
+-	signal = data->info.sqi;
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		signal = 100 * data->info.rssi;
++	else
++		signal = data->info.sqi;
+ 	d_status = le16_to_cpu(data->info.status);
+ 	fc = rx_mgmt_frame->frame_control;
+ 
+-	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d SNR %d SQI %d%%\n",
+-		    data->info.channel, data->info.mcs, data->info.snr,
++	wil_dbg_wmi(wil, "MGMT Rx: channel %d MCS %d RSSI %d SQI %d%%\n",
++		    data->info.channel, data->info.mcs, data->info.rssi,
+ 		    data->info.sqi);
+ 	wil_dbg_wmi(wil, "status 0x%04x len %d fc 0x%04x\n", d_status, d_len,
+ 		    le16_to_cpu(fc));
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 256f63c..4e31c2f 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -60,6 +60,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_WMI_ONLY		= 5,
+ 	WMI_FW_CAPABILITY_THERMAL_THROTTLING	= 7,
+ 	WMI_FW_CAPABILITY_D3_SUSPEND		= 8,
++	WMI_FW_CAPABILITY_RSSI_REPORTING	= 12,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
+ 
+@@ -1306,7 +1307,8 @@ struct wmi_notify_req_done_event {
+ 	/* beamforming status, 0: fail; 1: OK; 2: retrying */
+ 	__le32 status;
+ 	__le64 tsf;
+-	__le32 snr_val;
++	s8 rssi;
++	u8 reserved0[3];
+ 	__le32 tx_tpt;
+ 	__le32 tx_goodput;
+ 	__le32 rx_goodput;
+@@ -1602,7 +1604,7 @@ struct wmi_get_ssid_event {
+ /* wmi_rx_mgmt_info */
+ struct wmi_rx_mgmt_info {
+ 	u8 mcs;
+-	s8 snr;
++	s8 rssi;
+ 	u8 range;
+ 	u8 sqi;
+ 	__le16 stype;
 -- 
-2.7.4
+1.9.1
