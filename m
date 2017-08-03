@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47612 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752827AbdHJTnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 15:43:05 -0400
-Date: Thu, 10 Aug 2017 21:43:01 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Lennart Poettering <lennart@poettering.net>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Li@suse.de,
-        Yi <yi1.li@linux.intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Takashi Iwai <tiwai@suse.de>,
-        AKASHI Takahiro <takahiro.akashi@linaro.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170810194301.GV27873@wotan.suse.de> (sfid-20170810_214341_608213_EE7634B4)
-References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
- <20170515231339.GF17314@wotan.suse.de>
- <0c43c825-df2a-b427-4b67-f17fd644667f@broadcom.com>
- <20170623215319.GU21846@wotan.suse.de>
- <a956b366-95d9-e876-4dba-149d2987633a@broadcom.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50966 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752203AbdHCKBL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 06:01:11 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a956b366-95d9-e876-4dba-149d2987633a@broadcom.com>
+Subject: Re: qtnfmac: Tidy up DMA mask setting
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <2c3f47792b2e38d5584d641d98e82f8318fefc72.1500917445.git.robin.murphy@arm.com>
+References: <2c3f47792b2e38d5584d641d98e82f8318fefc72.1500917445.git.robin.murphy@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: imitsyanko@quantenna.com, avinashp@quantenna.com,
+        smatyukevich@quantenna.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20170803100110.A8D2D6087E@smtp.codeaurora.org> (sfid-20170803_120125_620308_24D06388)
+Date: Thu,  3 Aug 2017 10:01:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 30, 2017 at 11:35:41PM +0200, Arend van Spriel wrote:
-> On 23-06-17 23:53, Luis R. Rodriguez wrote:
-> > On Tue, May 16, 2017 at 10:41:08AM +0200, Arend Van Spriel wrote:
-> >> On 16-5-2017 1:13, Luis R. Rodriguez wrote:
-> >>> Since no upstream delta is needed for firmwared I'd like to first encourage
-> >>> evaluating the above. While distributions don't carry it yet that may be seen as
-> >>> an issue but since what we are looking for are corner cases, only folks needing
-> >>> to deploy a specific solution would need it or a custom proprietary solution.
-> >>
-> >> Ok. I will go try and run firmwared in OpenWrt on a router platform.
-> >> Have to steal one from a colleague :-p Will study firmwared.
-> > 
-> > Arend, curious how this effort goes. Its important to me as we know then that
-> > if this works its a good approach to recommend moving forward which should also
-> > prove less complex than that soup we had with the custom fallback stuff.
+Robin Murphy <robin.murphy@arm.com> wrote:
+
+> As the only caller of dma_supported() outside of DMA API internals, the
+> qtfnmac driver stands out and invites scrutiny. Thankfully, it's not
+> being used for evil, but it is entirely redundant, since it open-codes a
+> check that the DMA mask setting functions are going to perform anyway.
+> In fact, the whole qtnf_pcie_init_dma_mask() function is nothing more
+> than a rather long-winded implementation of dma_set_mask_and_coherent(),
+> so let's just use that directly.
 > 
-> Hi Luis,
-> 
-> So I looked at firmwared and we basically need to extend it.
+> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+> Acked-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-And actually as me and Johannes spoke long ago at Plumbers, its rather
-expected folks would need this or just fork it off completely. firmwared
-would just be a reference codebase on how to do these custom loaders.
+Patch applied to wireless-drivers-next.git, thanks.
 
-*How regular* Linux distributions embrace this is still up in the air then,
-because as Lennart has pointed out there is no plan to merge firmwared
-to systemd.
+13cb8a5845ff qtnfmac: Tidy up DMA mask setting
 
-*If* this is a requirement only for non-upstream drivers or patches on
-which will not be merged upstream then this will work long term. If you
-need regular distros to do something custom then their respective upstream
-tools would need to be evaluated for how something similar would be done.
+-- 
+https://patchwork.kernel.org/patch/9859961/
 
-As far as I can tell perhaps the remote-proc thing would count as one
-possible use-case for upstream drivers -- but even then the systems
-that use it seem likely to use Android and then some custom userspace.
-
-> For our
-> router platform we need to obtain nvram calibration data from an MTD
-> partition which contains the raw data, ie. no file-system on it. So
-> firmwared would need some sort of configuration to map a particular
-> firmware file to some action obtaining the data like kicking off some
-> mtd-utils in my case.
-
-I see. So platform specific.
-
-Thanks for the update!
- 
- Luis
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
