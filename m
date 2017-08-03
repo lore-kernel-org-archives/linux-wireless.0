@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59234 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751866AbdHDAmS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49568 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752263AbdHCKAH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 20:42:18 -0400
-Date: Thu, 3 Aug 2017 17:42:15 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: kvalo@codeaurora.org, chunkeey@googlemail.com,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] wireless: move prism54 out to staging
-Message-ID: <20170804004215.GA26035@kroah.com> (sfid-20170804_024232_516888_BD3524CE)
-References: <20170803235937.8604-1-mcgrof@kernel.org>
- <20170803235937.8604-2-mcgrof@kernel.org>
+        Thu, 3 Aug 2017 06:00:07 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170803235937.8604-2-mcgrof@kernel.org>
+Subject: Re: [v2,01/12] qtnfmac: updates for regulatory support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170727230654.30850-2-sergey.matyukevich.os@quantenna.com>
+References: <20170727230654.30850-2-sergey.matyukevich.os@quantenna.com>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Message-Id: <20170803100007.7EE0E607C6@smtp.codeaurora.org> (sfid-20170803_120021_648013_634E09B0)
+Date: Thu,  3 Aug 2017 10:00:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 04:59:36PM -0700, Luis R. Rodriguez wrote:
-> prism54 is deprecated in favor of the p54pci device driver. Although
-> only *one soul* had reported issues with it long ago Linux most Linux
-> distributions these days just disable the device driver given the
-> conflicts with the PCI IDs of p54pci and the *very* unlikely situation
-> of folks really need this driver anymore.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+
+> On startup driver obtains regulatory rules from firmware and
+> enables them during wiphy registration. Later on regulatory
+> domain change can be requested by host. In this case firmware
+> is notified about the upcoming changes. If the change is valid,
+> then firmware updates hardware channel configuration and host
+> driver receives updated channel info for each band.
 > 
-> Before trying to due away with prism54 once more stuff it into staging,
-> which is our hospice for dying drivers.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  MAINTAINERS                                          |  4 ++--
->  drivers/net/wireless/intersil/Kconfig                | 20 --------------------
->  drivers/net/wireless/intersil/Makefile               |  1 -
->  drivers/staging/Kconfig                              |  2 ++
->  drivers/staging/Makefile                             |  1 +
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
 
-Can I get a TODO file that says it will be deleted in a kernel release
-or two so don't worry about touching anything in these files?
+12 patches applied to wireless-drivers-next.git, thanks.
 
-thanks,
+4dd07d2b58d5 qtnfmac: updates for regulatory support
+ea19479f6849 qtnfmac: regulatory configuration for self-managed setup
+9ef7509505c8 qtnfmac: add missing bus lock
+7c04b43984a5 qtnfmac: implement cfg80211 dump_survey handler
+278944482b29 qtnfmac: implement reporting current channel
+fd19ecebe03e qtnfmac: fix station leave reason endianness
+34f1145b2c5e qtnfmac: move current channel info from vif to mac
+97883695d596 qtnfmac: implement cfg80211 channel_switch handler
+c7ead2abd26a qtnfmac: implement scan timeout
+41c8fa0c6274 qtnfmac: fix handling of iftype mask reported by firmware
+03ddf59d786d qtnfmac: remove function qtnf_cmd_skb_put_action
+805b28c05c8e qtnfmac: prepare for AP_VLAN interface type support
 
-greg k-h
+-- 
+https://patchwork.kernel.org/patch/9867659/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
