@@ -1,43 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39992 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751133AbdHCJgX (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51369 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751116AbdHCK02 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 05:36:23 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 3 Aug 2017 06:26:28 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+CC: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: RE: [PATCH] mwifiex: add module parameter to disable 40MHZ support in
+ 2.4G band
+Date: Thu, 3 Aug 2017 10:26:23 +0000
+Message-ID: <8aabfc55159343ac8415c71075ea7c7b@SC-EXCH02.marvell.com> (sfid-20170803_122631_607314_CAF25E27)
+References: <1501751215-12742-1-git-send-email-huxinming820@gmail.com>
+        <874ltpovcg.fsf@kamboji.qca.qualcomm.com>
+        <f8f01ad4-773d-a83d-7db2-3dbaa26502bc@broadcom.com>
+ <87zibhnf8v.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87zibhnf8v.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Subject: Re: [v2] rtlwifi: Fix fallback firmware loading
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <87d18gmvsq.fsf_-_@turtle.gmx.de>
-References: <87d18gmvsq.fsf_-_@turtle.gmx.de>
-To: Sven Joachim <svenjoac@gmx.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20170803093623.101DC6037B@smtp.codeaurora.org> (sfid-20170803_113627_201880_A4C8319E)
-Date: Thu,  3 Aug 2017 09:36:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Joachim <svenjoac@gmx.de> wrote:
-
-> Commit f70e4df2b384 ("rtlwifi: Add code to read new versions of
-> firmware") added code to load an old firmware file if the new one is
-> not available.  Unfortunately that code is never reached because
-> request_firmware_nowait() does not wait for the firmware to show up
-> and returns 0 even if the file is not there.
-> 
-> Use the existing fallback mechanism introduced by commit 62009b7f1279
-> ("rtlwifi: rtl8192cu: Add new firmware") instead.
-> 
-> Fixes: f70e4df2b384 ("rtlwifi: Add code to read new versions of firmware")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Sven Joachim <svenjoac@gmx.de>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-1d9b168d8ea9 rtlwifi: Fix fallback firmware loading
-
--- 
-https://patchwork.kernel.org/patch/9872413/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+SGkgQXJlbmQvS2FsbGUsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
+S2FsbGUgVmFsbyBbbWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiAyMDE3xOo4
+1MIzyNUgMTg6MDANCj4gVG86IEFyZW5kIHZhbiBTcHJpZWwNCj4gQ2M6IFhpbm1pbmcgSHU7IExp
+bnV4IFdpcmVsZXNzOyBCcmlhbiBOb3JyaXM7IERtaXRyeSBUb3Jva2hvdjsNCj4gcmFqYXRqYUBn
+b29nbGUuY29tOyBaaGl5dWFuIFlhbmc7IFRpbSBTb25nOyBDYXRoeSBMdW87IEdhbmFwYXRoaSBC
+aGF0Ow0KPiBYaW5taW5nIEh1DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG13aWZpZXg6IGFkZCBt
+b2R1bGUgcGFyYW1ldGVyIHRvIGRpc2FibGUgNDBNSFoNCj4gc3VwcG9ydCBpbiAyLjRHIGJhbmQN
+Cj4gDQo+IEFyZW5kIHZhbiBTcHJpZWwgPGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20+IHdy
+aXRlczoNCj4gDQo+ID4gT24gMDMtMDgtMTcgMTE6MjYsIEthbGxlIFZhbG8gd3JvdGU6DQo+ID4+
+IFhpbm1pbmcgSHUgPGh1eGlubWluZzgyMEBnbWFpbC5jb20+IHdyaXRlczoNCj4gPj4NCj4gPj4+
+IEZyb206IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4+Pg0KPiA+Pj4gVGhpcyBw
+YXRjaCBwcm92aWRlIGEgbmV3IG1vZHVsZSBwYXJhbWV0ZXIgZGlzYWJsZV8yZzRfNDBtLCB3aXRo
+DQo+ID4+PiB3aGljaCBkcml2ZXIgd2lsbCBub3QgcmVwb3J0IDQwTSBjYXBhYmlsaXR5IGZvciAy
+LjRHSFogdG8gY2ZnODAyMTEuDQo+ID4+Pg0KPiA+Pj4gU2lnbmVkLW9mZi1ieTogWGlubWluZyBI
+dSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1
+b0BtYXJ2ZWxsLmNvbT4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IEdhbmFwYXRoaSBCaGF0IDxnYmhh
+dEBtYXJ2ZWxsLmNvbT4NCj4gPj4+IC0tLQ0KPiA+Pj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21h
+cnZlbGwvbXdpZmlleC9jZmc4MDIxMS5jIHwgMjINCj4gPj4+ICsrKysrKysrKysrKysrLS0tLS0t
+LS0NCj4gPj4+ICAxIGZpbGUgY2hhbmdlZCwgMTQgaW5zZXJ0aW9ucygrKSwgOCBkZWxldGlvbnMo
+LSkNCj4gPj4+DQo+ID4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVs
+bC9td2lmaWV4L2NmZzgwMjExLmMNCj4gPj4+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVs
+bC9td2lmaWV4L2NmZzgwMjExLmMNCj4gPj4+IGluZGV4IDJiZTc4MTcuLjgyMDQ3NWEgMTAwNjQ0
+DQo+ID4+PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvY2ZnODAy
+MTEuYw0KPiA+Pj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2Nm
+ZzgwMjExLmMNCj4gPj4+IEBAIC0yNSw2ICsyNSwxMCBAQA0KPiA+Pj4gIHN0YXRpYyBjaGFyICpy
+ZWdfYWxwaGEyOw0KPiA+Pj4gIG1vZHVsZV9wYXJhbShyZWdfYWxwaGEyLCBjaGFycCwgMCk7DQo+
+ID4+Pg0KPiA+Pj4gK3N0YXRpYyBib29sIGRpc2FibGVfMmc0XzQwbTsNCj4gPj4+ICttb2R1bGVf
+cGFyYW0oZGlzYWJsZV8yZzRfNDBtLCBib29sLCAwMDAwKTsNCj4gPj4NCj4gPj4gVGhpcyBpcyBi
+b29sLCBnb29kLg0KPiA+Pg0KPiA+Pj4gK01PRFVMRV9QQVJNX0RFU0MoZGlzYWJsZV8yZzRfNDBt
+LCAiMi40RyA0ME0gc3VwcG9ydCBkaXNhYmxlOjEsDQo+ID4+PiArZW5hYmxlOjAiKTsNCj4gPj4N
+Cj4gPj4gVGhpcyBpcyBub3QgcmVhbGx5IGEgcmVhZGFibGUgZGVzY3JpcHRpb24gZm9yIHNvbWVv
+bmUgbm90IGZhbWlsaWFyDQo+ID4+IHdpdGggV2ktRmksIG1heWJlIHRoaXMgaW5zdGVhZDoNCj4g
+Pj4NCj4gPj4gImRpc2FibGUgNDAgTWh6IGNoYW5uZWxzIG9uIDIuNCBHSHogYmFuZCAoZGlzYWJs
+ZToxLCBlbmFibGU6MCkiDQo+ID4+DQo+ID4+PiBAQCAtMjc1NSw3ICsyNzU5LDcgQEAgc3RhdGlj
+IHZvaWQgbXdpZmlleF9zZXR1cF92aHRfY2FwcyhzdHJ1Y3QNCj4gaWVlZTgwMjExX3N0YV92aHRf
+Y2FwICp2aHRfaW5mbywNCj4gPj4+ICAgKi8NCj4gPj4+ICBzdGF0aWMgdm9pZA0KPiA+Pj4gIG13
+aWZpZXhfc2V0dXBfaHRfY2FwcyhzdHJ1Y3QgaWVlZTgwMjExX3N0YV9odF9jYXAgKmh0X2luZm8s
+DQo+ID4+PiAtCQkgICAgICBzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2KQ0KPiA+Pj4gKwkJ
+ICAgICAgc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgaW50IGRpc2FibGVfNDBtKQ0KPiA+
+Pg0KPiA+PiBCdXQgaGVyZSB5b3UgdXNlIGludCwgdGhhdCdzIGEgYml0IHN0cmFuZ2UuIFdoeSBu
+b3QgYm9vbD8NCj4gPg0KPiA+IEhlcmUgaXMgd2hhdCBpcyBpbiBuZXQvd2lyZWxlc3MvY29yZS5j
+Og0KPiA+DQo+ID4gc3RhdGljIGJvb2wgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCj4g
+PiBtb2R1bGVfcGFyYW0oY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiwgYm9vbCwgMDY0NCk7
+DQo+ID4gTU9EVUxFX1BBUk1fREVTQyhjZmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6LA0KPiA+
+ICAgICAgICAgICAgICAgICAgIkRpc2FibGUgNDBNSHogc3VwcG9ydCBpbiB0aGUgMi40R0h6IGJh
+bmQiKTsNCj4gPg0KPiA+IHdoaWNoIHNlZW1zIGV4YWN0bHkgdGhlIHNhbWUgdGhpbmcgYW5kIGVu
+ZHMgdXAgZG9pbmc6DQo+ID4NCj4gPiAgICAgICAgICAgICAgICAgLyoNCj4gPiAgICAgICAgICAg
+ICAgICAgICogU2luY2UgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiBpcyBnbG9iYWwsIHdl
+DQo+IGNhbg0KPiA+ICAgICAgICAgICAgICAgICAgKiBtb2RpZnkgdGhlIHNiYW5kJ3MgaHQgZGF0
+YSBldmVuIGlmIHRoZSBkcml2ZXIgdXNlcyBhDQo+ID4gICAgICAgICAgICAgICAgICAqIGdsb2Jh
+bCBzdHJ1Y3R1cmUgZm9yIHRoYXQuDQo+ID4gICAgICAgICAgICAgICAgICAqLw0KPiA+ICAgICAg
+ICAgICAgICAgICBpZiAoY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KPiA+ICAgICAg
+ICAgICAgICAgICAgICAgYmFuZCA9PSBOTDgwMjExX0JBTkRfMkdIWiAmJg0KPiA+ICAgICAgICAg
+ICAgICAgICAgICAgc2JhbmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQpIHsNCj4gPiAgICAgICAgICAg
+ICAgICAgICAgICAgICBzYmFuZC0+aHRfY2FwLmNhcCAmPQ0KPiA+IH5JRUVFODAyMTFfSFRfQ0FQ
+X1NVUF9XSURUSF8yMF80MDsNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBzYmFuZC0+aHRf
+Y2FwLmNhcCAmPQ0KPiB+SUVFRTgwMjExX0hUX0NBUF9TR0lfNDA7DQo+ID4gICAgICAgICAgICAg
+ICAgIH0NCj4gDQo+IEdvb2QgY2F0Y2ghIFNvIHRoZSBtb2R1bGUgcGFyYW1ldGVyIGZvciB0aGUg
+ZHJpdmVyIGlzIG5vdCBuZWVkZWQsIHJpZ2h0Pw0KDQpHcmVhdCwgdGhhdCBpcyB3aGF0IHdlIHdh
+bnQhIFRoYW5rcyBmb3IgdGhlIHBvaW50Lg0KDQo+IA0KPiAtLQ0KPiBLYWxsZSBWYWxvDQo=
