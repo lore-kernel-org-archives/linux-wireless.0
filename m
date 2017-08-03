@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0073.outbound.protection.outlook.com ([104.47.42.73]:15232
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751071AbdHONGz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 09:06:55 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH] qtnfmac: pcie datapath optimizations and cleanups
-Date: Tue, 15 Aug 2017 16:06:30 +0300
-Message-Id: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com> (sfid-20170815_150659_202810_74975DC6)
+Received: from smtp.codeaurora.org ([198.145.29.96]:45348 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751238AbdHCKVJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 06:21:09 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v5] rtlwifi: Replace hardcode value with macro
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170802122915.GA4759@symbol-HP-ZBook-15>
+References: <20170802122915.GA4759@symbol-HP-ZBook-15>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: arend.vanspriel@broadcom.com, Larry.Finger@lwfinger.net,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170803102108.C5EC060763@smtp.codeaurora.org> (sfid-20170803_122112_806264_137FCC9C)
+Date: Thu,  3 Aug 2017 10:21:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle and all,
+Souptick Joarder <jrdr.linux@gmail.com> wrote:
 
-This patchset implements several optimizations and cleanups for
-pcie datapath in qtnfmac driver. Major changes include:
-- switch to kernel circ_buf implementation
-- modify tx reclaim locking
-- introduce counter for rx underflow events
+> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
+> and hw->max_rate_tries are replaced by macro and removed the comment.
+> 
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Patch applied to wireless-drivers-next.git, thanks.
 
- bus.h                   |    1 
- pearl/pcie.c            |  285 +++++++++++++++++++++++++++++-------------------
- pearl/pcie_bus_priv.h   |   15 +-
- pearl/pcie_ipc.h        |    1 
- pearl/pcie_regs_pearl.h |    1 
- 5 files changed, 183 insertions(+), 120 deletions(-)
+9d546198705a rtlwifi: Replace hardcode value with macro
+
+-- 
+https://patchwork.kernel.org/patch/9876703/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
