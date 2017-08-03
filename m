@@ -1,36 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:59142 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751533AbdHSU55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Aug 2017 16:57:57 -0400
-Subject: Re: [PATCH 06/34] brcmfmac: Remove bandaid for SleepCSR
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-7-ian@mnementh.co.uk> <59884E41.2050100@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <d21b5fb1-218d-23bb-ba3b-476a036b5325@mnementh.co.uk> (sfid-20170819_225800_913495_56294031)
-Date: Sat, 19 Aug 2017 21:57:55 +0100
-MIME-Version: 1.0
-In-Reply-To: <59884E41.2050100@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751923AbdHCNZ6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 09:25:58 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 8/9] wil6210: store FW RF calibration result
+Date: Thu,  3 Aug 2017 16:25:38 +0300
+Message-Id: <1501766739-31996-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152619_860150_02AC2F6E)
+In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/17 12:25, Arend van Spriel wrote:
-> On 26-07-17 22:25, Ian Molton wrote:
->> Register access code is not the place for band-aid fixes like this.
->> If this is a genuine problem, it should be fixed further up in the driver
->> stack.
-> 
-> So lets make it a SDIO debug message for all register accesses getting
-> rid of the error message.
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Not quite sure I follow here - but as the code is completely gone in
-later patches in the series, does it matter?
+Store initial FW RF calibration result in driver. Set this calibration
+result back to FW after each FW reset in order to avoid future calibration
+procedures.
 
-Perhaps address this if it in future, if it crops up as a problem, since
-it wont be fatal even if it does...
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c    | 6 ++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
+ drivers/net/wireless/ath/wil6210/wmi.c     | 5 +++++
+ drivers/net/wireless/ath/wil6210/wmi.h     | 2 ++
+ 4 files changed, 19 insertions(+)
 
--Ian
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index b1e2814..b89d017 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1034,6 +1034,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+ 
++		if (wil->fw_calib_result > 0) {
++			__le32 val = cpu_to_le32(wil->fw_calib_result |
++						 (CALIB_RESULT_SIGNATURE << 8));
++			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
++		}
++
+ 		wil_release_cpu(wil);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 724ad59..e3c0c2f 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -171,6 +171,10 @@ struct RGF_ICR {
+ #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
+ #define RGF_USER_BL			(0x880A3C) /* Boot Loader */
+ #define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
++#define RGF_USER_FW_CALIB_RESULT	(0x880a90) /* b0-7:result
++						    * b8-15:signature
++						    */
++	#define CALIB_RESULT_SIGNATURE	(0x11)
+ #define RGF_USER_CLKS_CTL_0		(0x880abc)
+ 	#define BIT_USER_CLKS_CAR_AHB_SW_SEL	BIT(1) /* ref clk/PLL */
+ 	#define BIT_USER_CLKS_RST_PWGD	BIT(11) /* reset on "power good" */
+@@ -724,6 +728,8 @@ struct wil6210_priv {
+ 
+ 	enum wmi_ps_profile_type ps_profile;
+ 
++	int fw_calib_result;
++
+ #ifdef CONFIG_PM
+ #ifdef CONFIG_PM_SLEEP
+ 	struct notifier_block pm_notify;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index a9487f2..ffdd2fa 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -344,6 +344,11 @@ static void wmi_evt_ready(struct wil6210_priv *wil, int id, void *d, int len)
+ 	strlcpy(wdev->wiphy->fw_version, wil->fw_version,
+ 		sizeof(wdev->wiphy->fw_version));
+ 
++	if (len > offsetof(struct wmi_ready_event, rfc_read_calib_result)) {
++		wil_dbg_wmi(wil, "rfc calibration result %d\n",
++			    evt->rfc_read_calib_result);
++		wil->fw_calib_result = evt->rfc_read_calib_result;
++	}
+ 	wil_set_recovery_state(wil, fw_recovery_idle);
+ 	set_bit(wil_status_fwready, wil->status);
+ 	/* let the reset sequence continue */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 4e31c2f..1b426d7 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -1300,6 +1300,8 @@ struct wmi_ready_event {
+ 	/* enum wmi_phy_capability */
+ 	u8 phy_capability;
+ 	u8 numof_additional_mids;
++	u8 rfc_read_calib_result;
++	u8 reserved[3];
+ } __packed;
+ 
+ /* WMI_NOTIFY_REQ_DONE_EVENTID */
+-- 
+1.9.1
