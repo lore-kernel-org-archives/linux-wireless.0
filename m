@@ -1,44 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:32787 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752630AbdHIQ3Y (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751739AbdHCNZx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:29:24 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, sgruszka@redhat.com,
-        helmut.schaa@googlemail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 13/20] rt2500usb: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:59:14 +0530
-Message-Id: <1502296155-21470-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183242_393471_CCD29E63)
+        Thu, 3 Aug 2017 09:25:53 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v3 5/9] wil6210: add statistics for suspend time
+Date: Thu,  3 Aug 2017 16:25:35 +0300
+Message-Id: <1501766739-31996-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152556_636942_CE7020E9)
+In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+Add statistics for total, min and max suspend time, that
+calculates the time the 11ad device was in suspend.
+Those statistics will help to estimate the power impact
+of d3hot feature.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
-changes in v2:
-              Re-submitting wireless separately.
+ drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
+ drivers/net/wireless/ath/wil6210/main.c    |  2 ++
+ drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
+ 4 files changed, 40 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/ralink/rt2x00/rt2500usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-index 529e059..f4b48b7 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-@@ -1911,7 +1911,7 @@ static const struct rt2x00_ops rt2500usb_ops = {
- /*
-  * rt2500usb module information.
-  */
--static struct usb_device_id rt2500usb_device_table[] = {
-+static const struct usb_device_id rt2500usb_device_table[] = {
- 	/* ASUS */
- 	{ USB_DEVICE(0x0b05, 0x1706) },
- 	{ USB_DEVICE(0x0b05, 0x1707) },
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 21b6611..d4e8865 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1617,6 +1617,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
++	wil->suspend_stats.min_suspend_time = ULONG_MAX;
++	wil->suspend_stats.collection_start = ktime_get();
+ 
+ 	return len;
+ }
+@@ -1628,18 +1630,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	static char text[400];
+ 	int n;
++	unsigned long long stats_collection_time =
++		ktime_to_us(ktime_sub(ktime_get(),
++				      wil->suspend_stats.collection_start));
+ 
+ 	n = snprintf(text, sizeof(text),
+ 		     "Suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n",
++		     "rejected by host:%ld rejected by device:%ld\n"
++		     "total suspend time:%lld min suspend time:%lld\n"
++		     "max suspend time:%lld stats collection time: %lld\n",
+ 		     wil->suspend_stats.successful_suspends,
+ 		     wil->suspend_stats.failed_suspends,
+ 		     wil->suspend_stats.successful_resumes,
+ 		     wil->suspend_stats.failed_resumes,
+ 		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device);
++		     wil->suspend_stats.rejected_by_device,
++		     wil->suspend_stats.total_suspend_time,
++		     wil->suspend_stats.min_suspend_time,
++		     wil->suspend_stats.max_suspend_time,
++		     stats_collection_time);
+ 
+ 	n = min_t(int, n, sizeof(text));
+ 
+@@ -1795,6 +1806,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+ 
++	wil->suspend_stats.collection_start = ktime_get();
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index daf944a..8968c2c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 
+ 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
++	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
++	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 4548829..820ed17 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -300,6 +300,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
+ 	wil_dbg_pm(wil, "suspend: %s => %d\n",
+ 		   is_runtime ? "runtime" : "system", rc);
+ 
++	if (!rc)
++		wil->suspend_stats.suspend_start_time = ktime_get();
++
+ 	return rc;
+ }
+ 
+@@ -309,6 +312,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 	bool keep_radio_on = ndev->flags & IFF_UP &&
+ 			     wil->keep_radio_on_during_sleep;
++	unsigned long long suspend_time_usec = 0;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -326,8 +330,20 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
+ 	else
+ 		rc = wil_resume_radio_off(wil);
+ 
++	if (rc)
++		goto out;
++
++	suspend_time_usec =
++		ktime_to_us(ktime_sub(ktime_get(),
++				      wil->suspend_stats.suspend_start_time));
++	wil->suspend_stats.total_suspend_time += suspend_time_usec;
++	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
++		wil->suspend_stats.min_suspend_time = suspend_time_usec;
++	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
++		wil->suspend_stats.max_suspend_time = suspend_time_usec;
++
+ out:
+-	wil_dbg_pm(wil, "resume: %s => %d\n",
+-		   is_runtime ? "runtime" : "system", rc);
++	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
++		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
+ 	return rc;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ac32284..724ad59 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -90,6 +90,11 @@ struct wil_suspend_stats {
+ 	unsigned long failed_resumes;
+ 	unsigned long rejected_by_device;
+ 	unsigned long rejected_by_host;
++	unsigned long long total_suspend_time;
++	unsigned long long min_suspend_time;
++	unsigned long long max_suspend_time;
++	ktime_t collection_start;
++	ktime_t suspend_start_time;
+ };
+ 
+ /* Calculate MAC buffer size for the firmware. It includes all overhead,
 -- 
-2.7.4
+1.9.1
