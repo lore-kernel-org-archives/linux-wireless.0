@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40162 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932288AbdHWQwZ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33896 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752022AbdHCLa0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 12:52:25 -0400
-Date: Wed, 23 Aug 2017 09:52:24 -0700
-From: Kyle McMartin <kyle@infradead.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Kyle McMartin <kyle@infradead.org>, linux-wireless@vger.kernel.org,
-        linuxwifi <linuxwifi@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linux-firmware@kernel.org
-Subject: Re: pull-request: iwlwifi firmwares update 2017-06-27
-Message-ID: <20170823165224.GQ13400@bombadil.infradead.org> (sfid-20170823_185229_156189_043C3CA8)
-References: <1498578162.22048.77.camel@coelho.fi>
+        Thu, 3 Aug 2017 07:30:26 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1498578162.22048.77.camel@coelho.fi>
+Subject: Re: ath10k: set a-mpdu reference number in ath10k (receiver)
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <B8D63297-0A88-42A3-B789-3849895CF201@frei.media>
+References: <B8D63297-0A88-42A3-B789-3849895CF201@frei.media>
+To: Matthias Frei <mf@frei.media>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <be71938f7b3742c685e91c54cce1a7de@euamsexm01a.eu.qualcomm.com> (sfid-20170803_133031_625522_B89D55B2)
+Date: Thu, 3 Aug 2017 13:30:19 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 27, 2017 at 06:42:42PM +0300, Luca Coelho wrote:
-> Hi Kyle,
-> 
-> We have some updates for our -27 firmware version (on supported devices)
-> and versions -29 and -31 that will be supported by the iwlwifi driver on
-> v4.13.
-> 
-> Please pull or let me know if there are any issues.
-> 
-> Cheers,
-> Luca.
-> 
+Matthias Frei <mf@frei.media> wrote:
 
-pulled, sorry for the delay, i've been on vacation.
+> Set the a-mpdu reference number in ath10k to make it accessible in the
+> receivers radiotap header. Implemented as in ath9k.  The reference number is
+> needed for troubleshooting and research at the receivers site (e.g. to identify
+> mpdu's that were aggregated in an a-mpdu)
+> 
+> Signed-off-by: Matthias Frei <mf@frei.media>
+> [kvalo@qca.qualcomm.com: fix checkpatch warning, commit log cleanup]
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
---kyle
+Patch applied to ath-next branch of ath.git, thanks.
+
+47cc0ca91c9e ath10k: set a-mpdu receiver reference number
+
+-- 
+https://patchwork.kernel.org/patch/9826931/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
