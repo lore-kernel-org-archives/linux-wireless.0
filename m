@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44576 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751106AbdHRPwS (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751600AbdHCTIc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:18 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date: Fri, 18 Aug 2017 18:49:15 +0300
-Message-Id: <20170818154922.2904-18-luca@coelho.fi> (sfid-20170818_175221_550231_68FC4EBA)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 17/24] iwlwifi: pci: add new PCI ID for 7265D
+        Thu, 3 Aug 2017 15:08:32 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v4 02/10] wil6210: allow configuring scan timers
+Date: Thu,  3 Aug 2017 22:08:14 +0300
+Message-Id: <1501787302-22885-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210835_483296_23C18922)
+In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-We have a new PCI subsystem ID for 7265D.  Add it to the list.
+Allow setting scan timeout and scan dwell time
+through module parameters.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 17 ++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 27d1eec1c899..5398a0917f06 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -430,6 +430,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x095B, 0x520A, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9000, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9400, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x9E10, iwl7265_2ac_cfg)},
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 77af749..d079533 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -26,6 +26,14 @@
+ module_param(disable_ap_sme, bool, 0444);
+ MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
  
- /* 8000 Series */
- 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
++static uint scan_dwell_time  = WMI_SCAN_DWELL_TIME_MS;
++module_param(scan_dwell_time, uint, 0644);
++MODULE_PARM_DESC(scan_dwell_time, " Scan dwell time (msec)");
++
++static uint scan_timeout = WIL6210_SCAN_TO_SEC;
++module_param(scan_timeout, uint, 0644);
++MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
++
+ #define CHAN60G(_channel, _flags) {				\
+ 	.band			= NL80211_BAND_60GHZ,		\
+ 	.center_freq		= 56160 + (2160 * (_channel)),	\
+@@ -528,8 +536,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 
+ 	(void)wil_p2p_stop_discovery(wil);
+ 
+-	wil_dbg_misc(wil, "Start scan_request 0x%p\n", request);
+-	wil_dbg_misc(wil, "SSID count: %d", request->n_ssids);
++	wil_dbg_misc(wil,
++		     "Start scan_request 0x%p, dwell_time %dms, timeout %dsec, SSID count %d\n",
++		     request, scan_dwell_time, scan_timeout, request->n_ssids);
+ 
+ 	for (i = 0; i < request->n_ssids; i++) {
+ 		wil_dbg_misc(wil, "SSID[%d]", i);
+@@ -550,10 +559,12 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	}
+ 
+ 	wil->scan_request = request;
+-	mod_timer(&wil->scan_timer, jiffies + WIL6210_SCAN_TO);
++	mod_timer(&wil->scan_timer,
++		  jiffies + msecs_to_jiffies(1000U * scan_timeout));
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+ 	cmd.cmd.scan_type = WMI_ACTIVE_SCAN;
++	cmd.cmd.dwell_time = cpu_to_le32(scan_dwell_time);
+ 	cmd.cmd.num_channels = 0;
+ 	n = min(request->n_channels, 4U);
+ 	for (i = 0; i < n; i++) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index d085ccf..ac32284 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -112,7 +112,7 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
+ #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
+ #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
+ #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
+-#define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
++#define WIL6210_SCAN_TO_SEC		10
+ #define WIL6210_DISCONNECT_TO_MS (2000)
+ #define WIL6210_RX_HIGH_TRSH_INIT		(0)
+ #define WIL6210_RX_HIGH_TRSH_DEFAULT \
 -- 
-2.14.1
+1.9.1
