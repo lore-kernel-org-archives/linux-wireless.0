@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33380 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752465AbdHIQ2K (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:36205 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751010AbdHCPbu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:28:10 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, amitkarwar@gmail.com, nishants@marvell.com,
-        gbhat@marvell.com, huxm@marvell.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        Thu, 3 Aug 2017 11:31:50 -0400
+Received: by mail-qk0-f178.google.com with SMTP id d136so9663390qkg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 08:31:50 -0700 (PDT)
+From: Michael Skeffingfon <mike@astro.ai>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH v2 11/20] mwifiex: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:57:59 +0530
-Message-Id: <1502296079-21307-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182833_156814_DBA04E81)
+Cc: Michael Skeffington <mike@astro.ai>
+Subject: [PATCH v2] rt2x00: Fix MMIC Countermeasures.
+Date: Thu,  3 Aug 2017 11:31:21 -0400
+Message-Id: <20170803153121.9046-1-mike@astro.ai> (sfid-20170803_173154_440311_91261C2F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Michael Skeffington <mike@astro.ai>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Set RX_FLAG_DECRYPTED in case of MMIC failure so that ieee80211_rx_h_decrypt() doesnt drop the frame before getting to ieee80211_rx_h_michael_mic_verify().
+
+Signed-off-by: Michael Skeffington <mike@astro.ai>
+
 ---
-changes in v2:
-              Re-submitting wireless separately.
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c | 13 +++++++++++--
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c  | 15 ++++++++++++---
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/marvell/mwifiex/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index cb1753e..821a77b 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -24,7 +24,7 @@
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+index ee5276e233fa..ace91a2db756 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+@@ -136,10 +136,19 @@ void rt2800mmio_fill_rxdone(struct queue_entry *entry,
+ 		 */
+ 		rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
  
- static struct mwifiex_if_ops usb_ops;
+-		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
++		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS) {
+ 			rxdesc->flags |= RX_FLAG_DECRYPTED;
+-		else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
++        } else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC) {
++			/*
++			 * In order to check the Michael Mic, the packet must have
++			 * been decrypted.  Mac80211 doesnt check the MMIC failure 
++			 * flag to initiate MMIC countermeasures if the decoded flag
++			 * has not been set.
++			 */
++			rxdesc->flags |= RX_FLAG_DECRYPTED;
++
+ 			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
++        }
+ 	}
  
--static struct usb_device_id mwifiex_usb_table[] = {
-+static const struct usb_device_id mwifiex_usb_table[] = {
- 	/* 8766 */
- 	{USB_DEVICE(USB8XXX_VID, USB8766_PID_1)},
- 	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8766_PID_2,
+ 	if (rt2x00_get_field32(word, RXD_W3_MY_BSS))
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 685b8e0cd67d..7e5f397c37f9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -697,11 +697,20 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 		 * stripped it from the frame. Signal this to mac80211.
+ 		 */
+ 		rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
+-
+-		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
++        
++		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS) {
++			rxdesc->flags |= RX_FLAG_DECRYPTED;
++        } else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC) {
++			/*
++			 * In order to check the Michael Mic, the packet must have
++			 * been decrypted.  Mac80211 doesnt check the MMIC failure 
++			 * flag to initiate MMIC countermeasures if the decoded flag
++			 * has not been set.
++			 */
+ 			rxdesc->flags |= RX_FLAG_DECRYPTED;
+-		else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
++
+ 			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
++        }
+ 	}
+ 
+ 	if (rt2x00_get_field32(word, RXD_W0_MY_BSS))
 -- 
-2.7.4
+2.11.0
