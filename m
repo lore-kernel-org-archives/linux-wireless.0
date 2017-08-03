@@ -1,102 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0077.outbound.protection.outlook.com ([104.47.38.77]:48736
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751302AbdH3MHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 08:07:32 -0400
-Date: Wed, 30 Aug 2017 15:07:19 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 21/27] qtnfmac: extend "IE set" TLV to include frame type
- info
-Message-ID: <20170830120635.62m2eupefizpgcto@bars> (sfid-20170830_140736_526721_E05C8DB3)
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-22-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825023024.10565-22-igor.mitsyanko.os@quantenna.com>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751872AbdHCTIj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 15:08:39 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v4 06/10] wil6210: notify wiphy on wowlan support
+Date: Thu,  3 Aug 2017 22:08:18 +0300
+Message-Id: <1501787302-22885-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210843_667686_EE5ED29F)
+In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -		if (tlv_full_len > payload_len) {
-> -			pr_warn("VIF%u.%u: malformed TLV 0x%.2X; LEN: %u\n",
-> -				mac->macid, vif->vifid, tlv_type,
-> -				tlv_value_len);
-> +		if (tlv_full_len > payload_len)
->  			return -EINVAL;
-> -		}
+Set wowlan to indicate that 11ad device can wake-up
+on any trigger and disconnect.
 
-Why drop this sanity check ?
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
->  		if (tlv_type == QTN_TLV_ID_IE_SET) {
-> -			sinfo.assoc_req_ies = tlv->val;
-> -			sinfo.assoc_req_ies_len = tlv_value_len;
-> +			const struct qlink_tlv_ie_set *ie_set;
-> +			unsigned int ie_len;
-> +
-> +			if (payload_len < sizeof(*ie_set))
-> +				return -EINVAL;
-> +
-> +			ie_set = (const struct qlink_tlv_ie_set *)tlv;
-> +			ie_len = tlv_value_len -
-> +				(sizeof(*ie_set) - sizeof(ie_set->hdr));
-> +
-> +			if (ie_set->type == QLINK_IE_SET_ASSOC_REQ && ie_len) {
-> +				sinfo.assoc_req_ies = ie_set->ie_data;
-> +				sinfo.assoc_req_ies_len = ie_len;
-> +			}
->  		}
-
-Does it make sense to keep QTN_TLV_ID_IE_SET here at all ?
-Maybe replace it completely by qlink_tlv_ie_set with
-QLINK_IE_SET_ASSOC_REQ type ? Also see the comment below
-for the similar snippet in qtnf_event_handle_scan_results.
-
-...
-
-> -		if (tlv_full_len > payload_len) {
-> -			pr_warn("VIF%u.%u: malformed TLV 0x%.2X; LEN: %u\n",
-> -				vif->mac->macid, vif->vifid, tlv_type,
-> -				tlv_value_len);
-> +		if (tlv_full_len > payload_len)
->  			return -EINVAL;
-> -		}
-
-ditto
-
-...
-
->  		if (tlv_type == QTN_TLV_ID_IE_SET) {
-> -			ies = tlv->val;
-> -			ies_len = tlv_value_len;
-> +			const struct qlink_tlv_ie_set *ie_set;
-> +			unsigned int ie_len;
-> +
-> +			if (payload_len < sizeof(*ie_set))
-> +				return -EINVAL;
-> +
-> +			ie_set = (const struct qlink_tlv_ie_set *)tlv;
-> +			ie_len = tlv_value_len -
-> +				(sizeof(*ie_set) - sizeof(ie_set->hdr));
-> +
-> +			if (ie_len) {
-> +				ies = ie_set->ie_data;
-> +				ies_len = ie_len;
-> +			}
->  		}
->  	}
-
-Two points here. First, it looks like there is a problem here inherited
-from the existing implementation. We go through payload, but in fact we
-pass to cfg80211_inform_bss only the last QTN_TLV_ID_IE_SET element.
-Second, it looks like QTN_TLV_ID_IE_SET here should be treated in
-the same way as in qtnf_event_handle_sta_assoc, to avoid confusion.
-In other words, either we use only QTN_TLV_ID_IE_SET in both cases,
-or switch to specific qlink_tlv_ie_set elements.
-
-Thoughts ? Comments ?
-
-Regards,
-Sergey
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index c860c0c..61e872c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -34,6 +34,12 @@
+ module_param(scan_timeout, uint, 0644);
+ MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
+ 
++#ifdef CONFIG_PM
++static struct wiphy_wowlan_support wil_wowlan_support = {
++	.flags = WIPHY_WOWLAN_ANY | WIPHY_WOWLAN_DISCONNECT,
++};
++#endif
++
+ #define CHAN60G(_channel, _flags) {				\
+ 	.band			= NL80211_BAND_60GHZ,		\
+ 	.center_freq		= 56160 + (2160 * (_channel)),	\
+@@ -1819,6 +1825,10 @@ static void wil_wiphy_init(struct wiphy *wiphy)
+ 
+ 	wiphy->n_vendor_commands = ARRAY_SIZE(wil_nl80211_vendor_commands);
+ 	wiphy->vendor_commands = wil_nl80211_vendor_commands;
++
++#ifdef CONFIG_PM
++	wiphy->wowlan = &wil_wowlan_support;
++#endif
+ }
+ 
+ struct wireless_dev *wil_cfg80211_init(struct device *dev)
+-- 
+1.9.1
