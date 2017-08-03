@@ -1,106 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751923AbdHCNZ6 (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:35424 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751162AbdHCJHG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 09:25:58 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 8/9] wil6210: store FW RF calibration result
-Date: Thu,  3 Aug 2017 16:25:38 +0300
-Message-Id: <1501766739-31996-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152619_860150_02AC2F6E)
-In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 3 Aug 2017 05:07:06 -0400
+Received: by mail-pg0-f68.google.com with SMTP id l64so947654pge.2
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 02:07:06 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH] mwifiex: add module parameter to disable 40MHZ support in 2.4G band
+Date: Thu,  3 Aug 2017 09:06:55 +0000
+Message-Id: <1501751215-12742-1-git-send-email-huxinming820@gmail.com> (sfid-20170803_110710_912989_6295A8A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+From: Xinming Hu <huxm@marvell.com>
 
-Store initial FW RF calibration result in driver. Set this calibration
-result back to FW after each FW reset in order to avoid future calibration
-procedures.
+This patch provide a new module parameter disable_2g4_40m, with
+which driver will not report 40M capability for 2.4GHZ to cfg80211.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 6 ++++++
- drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
- drivers/net/wireless/ath/wil6210/wmi.c     | 5 +++++
- drivers/net/wireless/ath/wil6210/wmi.h     | 2 ++
- 4 files changed, 19 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b1e2814..b89d017 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1034,6 +1034,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 2be7817..820475a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -25,6 +25,10 @@
+ static char *reg_alpha2;
+ module_param(reg_alpha2, charp, 0);
  
-+		if (wil->fw_calib_result > 0) {
-+			__le32 val = cpu_to_le32(wil->fw_calib_result |
-+						 (CALIB_RESULT_SIGNATURE << 8));
-+			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
-+		}
++static bool disable_2g4_40m;
++module_param(disable_2g4_40m, bool, 0000);
++MODULE_PARM_DESC(disable_2g4_40m, "2.4G 40M support disable:1, enable:0");
 +
- 		wil_release_cpu(wil);
- 	}
+ static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
+ 	{
+ 		.max = 3, .types = BIT(NL80211_IFTYPE_STATION) |
+@@ -2755,7 +2759,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+  */
+ static void
+ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
+-		      struct mwifiex_private *priv)
++		      struct mwifiex_private *priv, int disable_40m)
+ {
+ 	int rx_mcs_supp;
+ 	struct ieee80211_mcs_info mcs_set;
+@@ -2769,7 +2773,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
  
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 724ad59..e3c0c2f 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -171,6 +171,10 @@ struct RGF_ICR {
- #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
- #define RGF_USER_BL			(0x880A3C) /* Boot Loader */
- #define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
-+#define RGF_USER_FW_CALIB_RESULT	(0x880a90) /* b0-7:result
-+						    * b8-15:signature
-+						    */
-+	#define CALIB_RESULT_SIGNATURE	(0x11)
- #define RGF_USER_CLKS_CTL_0		(0x880abc)
- 	#define BIT_USER_CLKS_CAR_AHB_SW_SEL	BIT(1) /* ref clk/PLL */
- 	#define BIT_USER_CLKS_RST_PWGD	BIT(11) /* reset on "power good" */
-@@ -724,6 +728,8 @@ struct wil6210_priv {
+ 	/* Fill HT capability information */
+-	if (ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap))
++	if (ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap) && !disable_40m)
+ 		ht_info->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 	else
+ 		ht_info->cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+@@ -2779,7 +2783,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+ 	else
+ 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_20;
  
- 	enum wmi_ps_profile_type ps_profile;
+-	if (ISSUPP_SHORTGI40(adapter->hw_dot_11n_dev_cap))
++	if (ISSUPP_SHORTGI40(adapter->hw_dot_11n_dev_cap) && !disable_40m)
+ 		ht_info->cap |= IEEE80211_HT_CAP_SGI_40;
+ 	else
+ 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_40;
+@@ -2799,7 +2803,8 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+ 	else
+ 		ht_info->cap &= ~IEEE80211_HT_CAP_GRN_FLD;
  
-+	int fw_calib_result;
-+
- #ifdef CONFIG_PM
- #ifdef CONFIG_PM_SLEEP
- 	struct notifier_block pm_notify;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a9487f2..ffdd2fa 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -344,6 +344,11 @@ static void wmi_evt_ready(struct wil6210_priv *wil, int id, void *d, int len)
- 	strlcpy(wdev->wiphy->fw_version, wil->fw_version,
- 		sizeof(wdev->wiphy->fw_version));
+-	if (ISENABLED_40MHZ_INTOLERANT(adapter->hw_dot_11n_dev_cap))
++	if (ISENABLED_40MHZ_INTOLERANT(adapter->hw_dot_11n_dev_cap) &&
++	    !disable_40m)
+ 		ht_info->cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
+ 	else
+ 		ht_info->cap &= ~IEEE80211_HT_CAP_40MHZ_INTOLERANT;
+@@ -2819,7 +2824,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+ 	memset(&mcs[rx_mcs_supp], 0,
+ 	       sizeof(struct ieee80211_mcs_info) - rx_mcs_supp);
+ 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
+-	    ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap))
++	    (ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap) && !disable_40m))
+ 		/* Set MCS32 for infra mode or ad-hoc mode with 40MHz support */
+ 		SETHT_MCS32(mcs_set.rx_mask);
  
-+	if (len > offsetof(struct wmi_ready_event, rfc_read_calib_result)) {
-+		wil_dbg_wmi(wil, "rfc calibration result %d\n",
-+			    evt->rfc_read_calib_result);
-+		wil->fw_calib_result = evt->rfc_read_calib_result;
-+	}
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 	set_bit(wil_status_fwready, wil->status);
- 	/* let the reset sequence continue */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 4e31c2f..1b426d7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -1300,6 +1300,8 @@ struct wmi_ready_event {
- 	/* enum wmi_phy_capability */
- 	u8 phy_capability;
- 	u8 numof_additional_mids;
-+	u8 rfc_read_calib_result;
-+	u8 reserved[3];
- } __packed;
+@@ -2974,14 +2979,15 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	if (ret)
+ 		goto err_sta_init;
  
- /* WMI_NOTIFY_REQ_DONE_EVENTID */
+-	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
+-	if (adapter->is_hw_11ac_capable)
++	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv,
++			      disable_2g4_40m);
++	if (adapter->is_hw_11ac_capable && !disable_2g4_40m)
+ 		mwifiex_setup_vht_caps(
+ 			&wiphy->bands[NL80211_BAND_2GHZ]->vht_cap, priv);
+ 
+ 	if (adapter->config_bands & BAND_A)
+ 		mwifiex_setup_ht_caps(
+-			&wiphy->bands[NL80211_BAND_5GHZ]->ht_cap, priv);
++			&wiphy->bands[NL80211_BAND_5GHZ]->ht_cap, priv, 0);
+ 
+ 	if ((adapter->config_bands & BAND_A) && adapter->is_hw_11ac_capable)
+ 		mwifiex_setup_vht_caps(
 -- 
 1.9.1
