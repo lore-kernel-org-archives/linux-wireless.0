@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:37254 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753159AbdHGLZt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49566 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbdHDGcO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 07:25:49 -0400
-Received: by mail-wr0-f173.google.com with SMTP id 33so585628wrz.4
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:25:48 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 05/34] brcmfmac: Remove dead IO code
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-6-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-Message-ID: <59884E3B.3010203@broadcom.com> (sfid-20170807_132551_999547_3996AE57)
-Date: Mon, 7 Aug 2017 13:25:47 +0200
+        Fri, 4 Aug 2017 02:32:14 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: gregkh@linuxfoundation.org, chunkeey@googlemail.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] wireless: move prism54 out to staging
+References: <20170803235937.8604-1-mcgrof@kernel.org>
+        <20170803235937.8604-2-mcgrof@kernel.org>
+Date: Fri, 04 Aug 2017 09:32:03 +0300
+In-Reply-To: <20170803235937.8604-2-mcgrof@kernel.org> (Luis R. Rodriguez's
+        message of "Thu, 3 Aug 2017 16:59:36 -0700")
+Message-ID: <87lgmzn8rg.fsf@kamboji.qca.qualcomm.com> (sfid-20170804_083230_207035_4EB7D816)
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-6-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-07-17 22:25, Ian Molton wrote:
-> 	The value passed to brcmf_sdiod_addrprep() is *always* 4
-> remove this parameter and the unused code to handle it.
+"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 18 ++++++++----------
->  1 file changed, 8 insertions(+), 10 deletions(-)
+> prism54 is deprecated in favor of the p54pci device driver. Although
+> only *one soul* had reported issues with it long ago Linux most Linux
+> distributions these days just disable the device driver given the
+> conflicts with the PCI IDs of p54pci and the *very* unlikely situation
+> of folks really need this driver anymore.
+>
+> Before trying to due away with prism54 once more stuff it into staging,
+> which is our hospice for dying drivers.
+>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+
+-- 
+Kalle Valo
