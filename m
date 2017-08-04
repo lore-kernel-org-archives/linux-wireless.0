@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:35819 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753066AbdHGL0h (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46444 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbdHDGXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 07:26:37 -0400
-Received: by mail-wr0-f173.google.com with SMTP id k71so645755wrc.2
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:26:37 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 11/34] brcmfmac: Split brcmf_sdiod_buffrw function up.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-12-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-Message-ID: <59884E6B.5050801@broadcom.com> (sfid-20170807_132640_300563_788ED980)
-Date: Mon, 7 Aug 2017 13:26:35 +0200
+        Fri, 4 Aug 2017 02:23:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Michael Skeffingfon <mike@astro.ai>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] rt2x00: Fix MMIC Countermeasures.
+References: <20170803153121.9046-1-mike@astro.ai>
+Date: Fri, 04 Aug 2017 09:23:18 +0300
+In-Reply-To: <20170803153121.9046-1-mike@astro.ai> (Michael Skeffingfon's
+        message of "Thu, 3 Aug 2017 11:31:21 -0400")
+Message-ID: <87tw1nn961.fsf@kamboji.qca.qualcomm.com> (sfid-20170804_082334_001235_72E34309)
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-12-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/26/2017 10:25 PM, Ian Molton wrote:
-> This function needs to be split up into separate read / write variants
-> for clarity.
+Michael Skeffingfon <mike@astro.ai> writes:
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-
-more comments below...
-
-> # Conflicts:
-> #	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> ---
->   .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 69 +++++++++++++++-------
->   1 file changed, 47 insertions(+), 22 deletions(-)
+> From: Michael Skeffington <mike@astro.ai>
 >
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index 9d5716d0ad73..858ad2d8706b 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-
-[...]
-
-> @@ -706,10 +725,10 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
->   	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+> Set RX_FLAG_DECRYPTED in case of MMIC failure so that ieee80211_rx_h_decrypt() doesnt drop the frame before getting to ieee80211_rx_h_michael_mic_verify().
 >
->   	if (!err)
-> -		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
-> -					 mypkt);
-> +		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
->
->   	brcmu_pkt_buf_free_skb(mypkt);
-> +
+> Signed-off-by: Michael Skeffington <mike@astro.ai>
 
-You are keen on sprinkling whitespace here and there. Could you please 
-use separate patches for that as much as possible. Not sure why you 
-added this one...
+The commit log is not wrapped to 72 characters per line and the period
+is not preferred in the title. But I can fix those.
 
->   	return err;
->
 
-...and kept this one.
-
->   }
+-- 
+Kalle Valo
