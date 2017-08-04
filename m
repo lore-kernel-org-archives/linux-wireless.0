@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46210 "EHLO mx1.redhat.com"
+Received: from ozlabs.org ([103.22.144.67]:35297 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751363AbdH3Nyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 09:54:52 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v2] brcmfmac: Log chip id and revision
-Date: Wed, 30 Aug 2017 15:54:49 +0200
-Message-Id: <20170830135449.1075-1-hdegoede@redhat.com> (sfid-20170830_155617_011083_CE13489E)
+        id S1751811AbdHDCEK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2017 22:04:10 -0400
+Date: Fri, 4 Aug 2017 12:04:08 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: linux-next: manual merge of the wireless-drivers-next tree with
+ Linus' tree
+Message-ID: <20170804120408.0d147e86@canb.auug.org.au> (sfid-20170804_040431_126531_1CB429C9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For debugging some problems, it is useful to know the chip revision
-add a brcmf_info message logging this.
+Hi all,
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
-Changes in v2:
--Put the brcmf_info in brcmf_fw_map_chip_to_name() so that it works for
- e.g. pcie devices too
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 3 +++
- 1 file changed, 3 insertions(+)
+Today's linux-next merge of the wireless-drivers-next tree got a
+conflict in:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index d231042f19d6..091b52979e03 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -601,6 +601,9 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 	if ((nvram_name) && (mapping_table[i].nvram))
- 		strlcat(nvram_name, mapping_table[i].nvram, BRCMF_FW_NAME_LEN);
- 
-+	brcmf_info("using %s for chip %#08x(%d) rev %#08x\n",
-+		   fw_name, chip, chip, chiprev);
-+
- 	return 0;
- }
- 
+  drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+
+between commit:
+
+  bf8b286f86fc ("iwlwifi: mvm: defer setting IWL_MVM_STATUS_IN_HW_RESTART")
+
+from Linus' tree and commit:
+
+  7174beb60c53 ("iwlwifi: refactor firmware debug code")
+
+from the wireless-drivers-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
 -- 
-2.13.4
+Cheers,
+Stephen Rothwell
+
+diff --cc drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 9c175d5e9d67,c387d5095bfe..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@@ -1234,9 -1190,10 +1190,9 @@@ void iwl_mvm_nic_restart(struct iwl_mv
+  	 * can't recover this since we're already half suspended.
+  	 */
+  	if (!mvm->fw_restart && fw_error) {
+- 		iwl_mvm_fw_dbg_collect_desc(mvm, &iwl_mvm_dump_desc_assert,
++ 		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
+  					NULL);
+ -	} else if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART,
+ -				    &mvm->status)) {
+ +	} else if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
+  		struct iwl_mvm_reprobe *reprobe;
+  
+  		IWL_ERR(mvm,
