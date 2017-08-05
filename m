@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:33580 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752916AbdHBKu2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42418 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752592AbdHESrw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 06:50:28 -0400
-Received: by mail-qt0-f180.google.com with SMTP id a18so24575804qta.0
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 03:50:28 -0700 (PDT)
-Message-ID: <5981AE72.5050002@broadcom.com> (sfid-20170802_125031_895849_B8FA098B)
-Date: Wed, 02 Aug 2017 12:50:26 +0200
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-MIME-Version: 1.0
-To: Souptick Joarder <jrdr.linux@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4] rtlwifi: Replace hardcode value with macro
-References: <20170731111445.GA4844@symbol-HP-ZBook-15> <8af42486-dd0b-bda6-6125-148dc0011115@lwfinger.net> <87vam6496c.fsf@codeaurora.org> <CAFqt6zbiOEdOYzMa5a219=ROLv6BpJ9x0gdL3N61f+=_W8oK8w@mail.gmail.com>
-In-Reply-To: <CAFqt6zbiOEdOYzMa5a219=ROLv6BpJ9x0gdL3N61f+=_W8oK8w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        Sat, 5 Aug 2017 14:47:52 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 21:47:42 +0300
+Message-Id: <20170805184743.23650-3-luca@coelho.fi> (sfid-20170805_205041_015611_4E44DCD1)
+In-Reply-To: <20170805184743.23650-1-luca@coelho.fi>
+References: <20170805184743.23650-1-luca@coelho.fi>
+Subject: [PATCH 2/3] iwlwifi: mvm: start mac queues when deferred tx frames are purged
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/2/2017 12:47 PM, Souptick Joarder wrote:
-> Hi Kalle,
->
-> On Wed, Aug 2, 2017 at 2:51 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>
->>> On 07/31/2017 06:14 AM, Souptick Joarder wrote:
->>>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->>>> and hw->max_rate_tries are replaced by macro.
->>>
->>> That is NOT what your patch does. It only removes a comment! Granted,
->>> that comment is useless and should come out, but your commit message
->>> must be a little more accurate.
->>
->> Actually the patch does not even apply, I suspect that Souptick
->> incorrectly used v3 of his patch as the baseline for v4. Instead this v4
->> should be folded with v3.
->
-> Do you mean I should address your comment in v3 and send v3 again
-> instead of v4 ?
+From: Avraham Stern <avraham.stern@intel.com>
 
-Your v4 patch should apply on top of wireless-drivers-next/master as is.
+Under DQA, when tx is deferred because a queue needs to be allocated,
+the mac queue for that TID is stopped until the new stream is added.
+If at this point the station that this stream belongs to is removed,
+all the deferred tx frames are purged, but the mac queue is not
+restarted. As a result, all following tx on this queue will not be
+transmitted.
 
-Regards,
-Arend
+Fix this by starting the relevant mac queues when the deferred tx
+frames are purged.
+
+Fixes: 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index c7b1e58e3384..ce901be5fba8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2597,8 +2597,18 @@ static void iwl_mvm_purge_deferred_tx_frames(struct iwl_mvm *mvm,
+ 	spin_lock_bh(&mvm_sta->lock);
+ 	for (i = 0; i <= IWL_MAX_TID_COUNT; i++) {
+ 		tid_data = &mvm_sta->tid_data[i];
+-		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames)))
++
++		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames))) {
++			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++			/*
++			 * The first deferred frame should've stopped the MAC
++			 * queues, so we should never get a second deferred
++			 * frame for the RA/TID.
++			 */
++			iwl_mvm_start_mac_queues(mvm, info->hw_queue);
+ 			ieee80211_free_txskb(mvm->hw, skb);
++		}
+ 	}
+ 	spin_unlock_bh(&mvm_sta->lock);
+ }
+-- 
+2.13.2
