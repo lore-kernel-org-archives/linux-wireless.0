@@ -1,44 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:37631 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752684AbdHIQ37 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42488 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752104AbdHETnl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:29:59 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, sgruszka@redhat.com,
-        helmut.schaa@googlemail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 15/20] rt73usb: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:59:48 +0530
-Message-Id: <1502296188-21563-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183238_366390_6B6E9077)
+        Sat, 5 Aug 2017 15:43:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sharon Dvir <sharon.dvir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:17 +0300
+Message-Id: <20170805194331.17426-6-luca@coelho.fi> (sfid-20170805_214348_166800_54E7E1AB)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 05/19] iwlwifi: change functions that can only return 0 to void
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Sharon Dvir <sharon.dvir@intel.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Change iwl_set_ucode_api_flags(), iwl_set_ucode_capabilities() to be void.
+No need to check returned values.
+Found by Klocwork.
+
+Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-changes in v2:
-              Re-submitting wireless separately.
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
 
- drivers/net/wireless/ralink/rt2x00/rt73usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-index fd91322..9a21282 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-@@ -2408,7 +2408,7 @@ static const struct rt2x00_ops rt73usb_ops = {
- /*
-  * rt73usb module information.
-  */
--static struct usb_device_id rt73usb_device_table[] = {
-+static const struct usb_device_id rt73usb_device_table[] = {
- 	/* AboCom */
- 	{ USB_DEVICE(0x07b8, 0xb21b) },
- 	{ USB_DEVICE(0x07b8, 0xb21c) },
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 6fdb5921e17f..cdb765656115 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -478,8 +478,8 @@ static int iwl_set_default_calib(struct iwl_drv *drv, const u8 *data)
+ 	return 0;
+ }
+ 
+-static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
+-				   struct iwl_ucode_capabilities *capa)
++static void iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
++				    struct iwl_ucode_capabilities *capa)
+ {
+ 	const struct iwl_ucode_api *ucode_api = (void *)data;
+ 	u32 api_index = le32_to_cpu(ucode_api->api_index);
+@@ -490,20 +490,17 @@ static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
+ 		IWL_ERR(drv,
+ 			"api flags index %d larger than supported by driver\n",
+ 			api_index);
+-		/* don't return an error so we can load FW that has more bits */
+-		return 0;
++		return;
+ 	}
+ 
+ 	for (i = 0; i < 32; i++) {
+ 		if (api_flags & BIT(i))
+ 			__set_bit(i + 32 * api_index, capa->_api);
+ 	}
+-
+-	return 0;
+ }
+ 
+-static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
+-				      struct iwl_ucode_capabilities *capa)
++static void iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
++				       struct iwl_ucode_capabilities *capa)
+ {
+ 	const struct iwl_ucode_capa *ucode_capa = (void *)data;
+ 	u32 api_index = le32_to_cpu(ucode_capa->api_index);
+@@ -514,16 +511,13 @@ static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
+ 		IWL_ERR(drv,
+ 			"capa flags index %d larger than supported by driver\n",
+ 			api_index);
+-		/* don't return an error so we can load FW that has more bits */
+-		return 0;
++		return;
+ 	}
+ 
+ 	for (i = 0; i < 32; i++) {
+ 		if (api_flags & BIT(i))
+ 			__set_bit(i + 32 * api_index, capa->_capa);
+ 	}
+-
+-	return 0;
+ }
+ 
+ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+@@ -765,14 +759,12 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		case IWL_UCODE_TLV_API_CHANGES_SET:
+ 			if (tlv_len != sizeof(struct iwl_ucode_api))
+ 				goto invalid_tlv_len;
+-			if (iwl_set_ucode_api_flags(drv, tlv_data, capa))
+-				goto tlv_error;
++			iwl_set_ucode_api_flags(drv, tlv_data, capa);
+ 			break;
+ 		case IWL_UCODE_TLV_ENABLED_CAPABILITIES:
+ 			if (tlv_len != sizeof(struct iwl_ucode_capa))
+ 				goto invalid_tlv_len;
+-			if (iwl_set_ucode_capabilities(drv, tlv_data, capa))
+-				goto tlv_error;
++			iwl_set_ucode_capabilities(drv, tlv_data, capa);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_EVTLOG_PTR:
+ 			if (tlv_len != sizeof(u32))
 -- 
-2.7.4
+2.13.2
