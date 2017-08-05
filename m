@@ -1,98 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from resqmta-po-12v.sys.comcast.net ([96.114.154.171]:58856 "EHLO
-        resqmta-po-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751100AbdHLTba (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42424 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752610AbdHESrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Aug 2017 15:31:30 -0400
-Reply-To: james@nurealm.net
-Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working
- with wireless drivers
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Andreas Born <futur.andy@googlemail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Mahesh Bandewar <maheshb@google.com>,
-        Andy Gospodarek <andy@greyhouse.net>,
-        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-References: <87shh0gewn.fsf@kamboji.qca.qualcomm.com>
- <8845e49b-3165-e6df-5935-c86278d220d9@broadcom.com>
- <CADps9UA7S2betC-+5sOXjYWmDC8gnk6JJ9aEueEOoYAC3DU8hg@mail.gmail.com>
- <87tw1edz5j.fsf@kamboji.qca.qualcomm.com>
- <87tw1dck6o.fsf@kamboji.qca.qualcomm.com>
-From: James Feeney <james@nurealm.net>
-Message-ID: <deb37db2-a55b-4010-475a-e756e67d3bc9@nurealm.net> (sfid-20170812_213133_777959_C4A62EEA)
-Date: Sat, 12 Aug 2017 13:30:53 -0600
-MIME-Version: 1.0
-In-Reply-To: <87tw1dck6o.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+        Sat, 5 Aug 2017 14:47:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 21:47:43 +0300
+Message-Id: <20170805184743.23650-4-luca@coelho.fi> (sfid-20170805_205040_636501_CD35B875)
+In-Reply-To: <20170805184743.23650-1-luca@coelho.fi>
+References: <20170805184743.23650-1-luca@coelho.fi>
+Subject: [PATCH 3/3] iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Kalle
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Still, a problem:
+When we start an Rx A-MPDU session, we first get the AddBA
+request, then we send an ADD_STA command to the firmware
+that will reply with a BAID which is a hardware resource
+that tracks the BA session.
+This BAID will appear on each and every frame that we get
+from the firwmare until the A-MPDU session is torn down.
+In the Rx path, we look at this BAID to manage the
+reordering buffer.
 
-On 08/12/2017 01:35 AM, Kalle Valo wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
->> Andreas Born <futur.andy@googlemail.com> writes:
->>
->>> Earlier today I submitted the patch (bonding: require speed/duplex
->>> only for 802.3ad, alb and tlb) [2] that only partially reverts what is
->>> a regression following my aforementioned logic. This seems to me like
->>> the best solution in the short term since it should satisfy both
->>> usergroups represented by Mahesh and James and restores consistence
->>> with the bonding documentation. James already commented approvingly on
->>> that patch in the bug report. [3]
->>>
->>> Regards
->>> Andreas
->>>
->>> [1]
->>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/networking/bonding.txt
->>
->> Great, thanks.
->>
->> I'll take it the patch is meant for net tree (and not net-next) so that
->> it will be fixed for v4.13? Also it should backported to v4.12 stable
->> tree. I don't see any mention of that in the patch submission and that's
->> why I'm asking.
-> 
-> I see that Dave applied this to the net tree and queued also for stable,
-> excellent. Thanks everyone!
-> 
-> https://patchwork.ozlabs.org/patch/800080/
-> 
+This flow is inherently racy since the hardware will start
+to put the BAID in the frames it receives even if the
+firmware hasn't sent the response to the ADD_STA command.
+This basically means that the driver can get frames with
+a valid BAID that it doesn't know yet.
+When that happens, the driver used to WARN.
+Fix this by simply not WARN in this case. When the driver
+will know abou the BAID, it will initialise the relevant
+states and the next frame with a valid BAID will refresh
+them.
 
-Andreas patch failed to address the continuous, *10-times per second* warning
-which will "spam" the log file, sometimes the console, whenever the test fails:
- if (bond_update_speed_duplex(slave) && bond_needs_speed_duplex(bond)) {...}
-which then has:
- netdev_warn(bond->dev, "failed to get link speed/duplex for%s\n",
-			slave->dev->name);
+Fixes: b915c10174fb ("iwlwifi: mvm: add reorder buffer per queue")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-That is the sort of irresponsible code that "works fine" as long as there are no
-errors, and it never actually runs!
-
-I'm guessing that the simple fix is to use "net_warn_ratelimited()" instead of
-"netdev_warn()", where net/core/utils.c says:
-
-/*
- * All net warning printk()s should be guarded by this function.
- */
-int net_ratelimit(void)
-{
-        return __ratelimit(&net_ratelimit_state);
-}
-
-though Andreas has also suggested "pr_warn_ratelimited()", which instead uses
-"__ratelimit(&_rs)".
-
-Here's a link to the rate-limiting patch, after Andreas' patch is already
-applied, since you say that David has already applied the first patch:
-
-https://bugzilla.kernel.org/attachment.cgi?id=257903
-
-
-Thanks
-James
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index f3e608196369..71c8b800ffa9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -636,9 +636,9 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 
+ 	baid_data = rcu_dereference(mvm->baid_map[baid]);
+ 	if (!baid_data) {
+-		WARN(!(reorder & IWL_RX_MPDU_REORDER_BA_OLD_SN),
+-		     "Received baid %d, but no data exists for this BAID\n",
+-		     baid);
++		IWL_DEBUG_RX(mvm,
++			     "Got valid BAID but no baid allocated, bypass the re-ordering buffer. Baid %d reorder 0x%x\n",
++			      baid, reorder);
+ 		return false;
+ 	}
+ 
+@@ -759,7 +759,9 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
+ 
+ 	data = rcu_dereference(mvm->baid_map[baid]);
+ 	if (!data) {
+-		WARN_ON(!(reorder_data & IWL_RX_MPDU_REORDER_BA_OLD_SN));
++		IWL_DEBUG_RX(mvm,
++			     "Got valid BAID but no baid allocated, bypass the re-ordering buffer. Baid %d reorder 0x%x\n",
++			      baid, reorder_data);
+ 		goto out;
+ 	}
+ 
+-- 
+2.13.2
