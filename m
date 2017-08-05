@@ -1,59 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:57168 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752107AbdHIR1A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 13:27:00 -0400
-Date: Wed, 9 Aug 2017 10:26:52 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
-Message-ID: <20170809172651.GA3934@atomide.com> (sfid-20170809_192713_818256_E7F0A195)
-References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:42318 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751425AbdHEIp0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 5 Aug 2017 04:45:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 11:44:36 +0300
+Message-Id: <20170805084438.12550-9-luca@coelho.fi> (sfid-20170805_104548_938921_74F3FC29)
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+Subject: [PATCH 08/10] mac80211: recalculate some sta parameters after insertion
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [170809 00:55]:
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -6040,6 +6040,21 @@ static int wl1271_register_hw(struct wl1271 *wl)
->  		nic_addr = wl->fuse_nic_addr + 1;
->  	}
->  
-> +	if (oui_addr == 0xdeadbe && nic_addr == 0xef0000) {
-> +		wl1271_warning("Detected unconfigured mac address in nvs.\n"
-> +				"derive from fuse instead.\n"
-> +				"in case of using a wl12xx device, your "
-> +				"device performance may not be optimized.\n"
-> +				"Please use the calibrator tool to configure "
-> +				"your device.\n"
-> +				"When using a wl18xx device this default nvs "
-> +				"file can be removed from the file system\n");
-> +
-> +		oui_addr = wl->fuse_oui_addr;
-> +		/* fuse has the BD_ADDR, the WLAN addresses are the next two */
-> +		nic_addr = wl->fuse_nic_addr + 1;
-> +	}
-> +
->  	wl12xx_derive_mac_addresses(wl, oui_addr, nic_addr);
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-I just gave this a quick try on omap3-evm with wl1271, now I get
-mac address of 00:00:00:00:00:01 :) So looks like at least wl1271 needs
-to use the random mac address here.
+Sometimes a station is added already in ASSOC state. For example,
+in AP mode, when a client station didn't get assoc resp and sends
+an assoc req again. If a station is inserted when its state is ASSOC
+or higher, the min chandef and allow_p2p_go_ps should be recalculated
+again after the insertion.
 
-Note that we should now have struct wilink_family_data available
-so maybe that can be used to check if the hardware mac address
-exists?
+Before this patch the recalculation happened only in sta_info_move_state
+which occurs before the insertion of the sta and thus even though
+it calls ieee80211_recalc_min_chandef/_p2p_go_ps_allowed functions,
+since sdata->local->sta_list is still empty at this point, it doesn't do
+anything.
 
-Regards,
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/sta_info.c | 57 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 32 insertions(+), 25 deletions(-)
 
-Tony
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 69615016d5bf..ffcd25c4908c 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -515,6 +515,31 @@ static int sta_info_insert_drv_state(struct ieee80211_local *local,
+ 	return err;
+ }
+ 
++static void
++ieee80211_recalc_p2p_go_ps_allowed(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	bool allow_p2p_go_ps = sdata->vif.p2p;
++	struct sta_info *sta;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata ||
++		    !test_sta_flag(sta, WLAN_STA_ASSOC))
++			continue;
++		if (!sta->sta.support_p2p_ps) {
++			allow_p2p_go_ps = false;
++			break;
++		}
++	}
++	rcu_read_unlock();
++
++	if (allow_p2p_go_ps != sdata->vif.bss_conf.allow_p2p_go_ps) {
++		sdata->vif.bss_conf.allow_p2p_go_ps = allow_p2p_go_ps;
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_P2P_PS);
++	}
++}
++
+ /*
+  * should be called with sta_mtx locked
+  * this function replaces the mutex lock
+@@ -561,6 +586,13 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+ 		goto out_remove;
+ 
+ 	set_sta_flag(sta, WLAN_STA_INSERTED);
++
++	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
++		ieee80211_recalc_min_chandef(sta->sdata);
++		if (!sta->sta.support_p2p_ps)
++			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
++	}
++
+ 	/* accept BA sessions now */
+ 	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 
+@@ -1788,31 +1820,6 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
+ }
+ EXPORT_SYMBOL(ieee80211_sta_set_buffered);
+ 
+-static void
+-ieee80211_recalc_p2p_go_ps_allowed(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	bool allow_p2p_go_ps = sdata->vif.p2p;
+-	struct sta_info *sta;
+-
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+-		if (sdata != sta->sdata ||
+-		    !test_sta_flag(sta, WLAN_STA_ASSOC))
+-			continue;
+-		if (!sta->sta.support_p2p_ps) {
+-			allow_p2p_go_ps = false;
+-			break;
+-		}
+-	}
+-	rcu_read_unlock();
+-
+-	if (allow_p2p_go_ps != sdata->vif.bss_conf.allow_p2p_go_ps) {
+-		sdata->vif.bss_conf.allow_p2p_go_ps = allow_p2p_go_ps;
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_P2P_PS);
+-	}
+-}
+-
+ int sta_info_move_state(struct sta_info *sta,
+ 			enum ieee80211_sta_state new_state)
+ {
+-- 
+2.13.2
