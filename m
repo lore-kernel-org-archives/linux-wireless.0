@@ -1,123 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44640 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42506 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752148AbdHRPws (ORCPT
+        with ESMTP id S1752280AbdHETnm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:48 -0400
+        Sat, 5 Aug 2017 15:43:42 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
+        Tzipi Peres <tzipi.peres@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:09 +0300
-Message-Id: <20170818154922.2904-12-luca@coelho.fi> (sfid-20170818_175252_294094_3309CB94)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 11/24] iwlwifi: mvm: remove session protection to allow channel switch
+Date: Sat,  5 Aug 2017 22:43:19 +0300
+Message-Id: <20170805194331.17426-8-luca@coelho.fi> (sfid-20170805_214401_007423_B89432D0)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 07/19] iwlwifi: add support of FPGA fw
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Tzipi Peres <tzipi.peres@intel.com>
 
-If a time event is already scheduled when trying to schedule one for
-channel switch, the code assumes the channel switch is already
-scheduled and no further action is required.
-However, it is possible that the scheduled time event is actually
-for session protection (e.g. when the first beacon after association
-contains the CSA IE). In this case the channel switch will not be
-scheduled which will finally lead to disconnection.
+Load FW according to NIC type,
+taking into account simulation, if exists.
+This is determined by a prph register.
 
-Fix this by removing the old time event and schduling a new one for
-the channel switch.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Tzipi Peres <tzipi.peres@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  3 +-
- .../net/wireless/intel/iwlwifi/mvm/time-event.c    | 34 ++++++++++++++++++++--
- 2 files changed, 33 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c   | 14 ++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h   |  6 ++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 11 +++++++++++
+ 4 files changed, 32 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 2d1404c9fbf4..01143c491e53 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2023,8 +2023,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		 * We received a beacon from the associated AP so
- 		 * remove the session protection.
- 		 */
--		iwl_mvm_remove_time_event(mvm, mvmvif,
--					  &mvmvif->time_event_data);
-+		iwl_mvm_stop_session_protection(mvm, vif);
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+index 98f24cd1b44f..40d67a5a2635 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+@@ -75,11 +75,14 @@
+ #define IWL_A000_JF_FW_PRE	"iwlwifi-Qu-a0-jf-b0-"
+ #define IWL_A000_HR_FW_PRE	"iwlwifi-Qu-a0-hr-a0-"
+ #define IWL_A000_HR_CDB_FW_PRE	"iwlwifi-QuIcp-z0-hrcdb-a0-"
++#define IWL_A000_HR_F0_FW_PRE	"iwlwifi-QuQnj-f0-hr-a0-"
  
- 		iwl_mvm_sf_update(mvm, vif, false);
- 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 65d8299108d5..4d0314912e94 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -726,8 +728,21 @@ void iwl_mvm_stop_session_protection(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm_time_event_data *te_data = &mvmvif->time_event_data;
-+	u32 id;
+ #define IWL_A000_HR_MODULE_FIRMWARE(api) \
+ 	IWL_A000_HR_FW_PRE "-" __stringify(api) ".ucode"
+ #define IWL_A000_JF_MODULE_FIRMWARE(api) \
+ 	IWL_A000_JF_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_A000_HR_QNJ_MODULE_FIRMWARE(api) \
++	IWL_A000_HR_F0_FW_PRE "-" __stringify(api) ".ucode"
  
- 	lockdep_assert_held(&mvm->mutex);
+ #define NVM_HW_SECTION_NUM_FAMILY_A000		10
+ 
+@@ -168,5 +171,16 @@ const struct iwl_cfg iwla000_2ax_cfg_hr = {
+ 		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ };
+ 
++const struct iwl_cfg iwla000_2ax_cfg_qnj_hr = {
++		.name = "Intel(R) Dual Band Wireless AX a000",
++		.fw_name_pre = IWL_A000_HR_F0_FW_PRE,
++		IWL_DEVICE_A000,
++		.ht_params = &iwl_a000_ht_params,
++		.nvm_ver = IWL_A000_NVM_VERSION,
++		.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
 +
-+	spin_lock_bh(&mvm->time_event_lock);
-+	id = te_data->id;
-+	spin_unlock_bh(&mvm->time_event_lock);
+ MODULE_FIRMWARE(IWL_A000_HR_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_A000_JF_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_A000_HR_QNJ_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index c52623cb7c2a..573dbeed3fbf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -463,6 +463,7 @@ extern const struct iwl_cfg iwla000_2ac_cfg_hr;
+ extern const struct iwl_cfg iwla000_2ac_cfg_hr_cdb;
+ extern const struct iwl_cfg iwla000_2ac_cfg_jf;
+ extern const struct iwl_cfg iwla000_2ax_cfg_hr;
++extern const struct iwl_cfg iwla000_2ax_cfg_qnj_hr;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 6772c59b7764..fbce97ed4ecd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -404,6 +404,12 @@ enum aux_misc_master1_en {
+ #define SB_CPU_2_STATUS			0xA01E34
+ #define UMAG_SB_CPU_1_STATUS		0xA038C0
+ #define UMAG_SB_CPU_2_STATUS		0xA038C4
++#define UMAG_GEN_HW_STATUS		0xA038C8
 +
-+	if (id != TE_BSS_STA_AGGRESSIVE_ASSOC) {
-+		IWL_DEBUG_TE(mvm,
-+			     "don't remove TE with id=%u (not session protection)\n",
-+			     id);
-+		return;
++/* For UMAG_GEN_HW_STATUS reg check */
++enum {
++	UMAG_GEN_HW_IS_FPGA = BIT(1),
++};
+ 
+ /* FW chicken bits */
+ #define LMPM_CHICK			0xA01FF8
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 3fac3f29a139..4a8fff9a5528 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3137,7 +3137,18 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		iwl_set_bit(trans, CSR_HOST_CHICKEN,
+ 			    CSR_HOST_CHICKEN_PM_IDLE_SRC_DIS_SB_PME);
+ 
++#if IS_ENABLED(CONFIG_IWLMVM)
+ 	trans->hw_rf_id = iwl_read32(trans, CSR_HW_RF_ID);
++	if (trans->hw_rf_id == CSR_HW_RF_ID_TYPE_HR) {
++		u32 hw_status;
++
++		hw_status = iwl_read_prph(trans, UMAG_GEN_HW_STATUS);
++		if (hw_status & UMAG_GEN_HW_IS_FPGA)
++			trans->cfg = &iwla000_2ax_cfg_qnj_hr;
++		else
++			trans->cfg = &iwla000_2ac_cfg_hr;
 +	}
-+
- 	iwl_mvm_remove_time_event(mvm, mvmvif, te_data);
- }
++#endif
  
-@@ -859,8 +874,23 @@ int iwl_mvm_schedule_csa_period(struct iwl_mvm *mvm,
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	if (te_data->running) {
--		IWL_DEBUG_TE(mvm, "CS period is already scheduled\n");
--		return -EBUSY;
-+		u32 id;
-+
-+		spin_lock_bh(&mvm->time_event_lock);
-+		id = te_data->id;
-+		spin_unlock_bh(&mvm->time_event_lock);
-+
-+		if (id == TE_CHANNEL_SWITCH_PERIOD) {
-+			IWL_DEBUG_TE(mvm, "CS period is already scheduled\n");
-+			return -EBUSY;
-+		}
-+
-+		/*
-+		 * Remove the session protection time event to allow the
-+		 * channel switch. If we got here, we just heard a beacon so
-+		 * the session protection is not needed anymore anyway.
-+		 */
-+		iwl_mvm_remove_time_event(mvm, mvmvif, te_data);
- 	}
- 
- 	time_cmd.action = cpu_to_le32(FW_CTXT_ACTION_ADD);
+ 	iwl_pcie_set_interrupt_capa(pdev, trans);
+ 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
 -- 
-2.14.1
+2.13.2
