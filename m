@@ -1,43 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35122 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754253AbdHUREc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42604 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHEToq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2017 13:04:32 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
-        charles.gorand@effinnov.com, r.baldyga@samsung.com,
-        k.opasiak@samsung.com, davem@davemloft.net
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 5/8] nfc: pn544: constify i2c_device_id
-Date: Mon, 21 Aug 2017 22:33:57 +0530
-Message-Id: <1503335040-27101-6-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190541_713153_66787BF9)
-In-Reply-To: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Sat, 5 Aug 2017 15:44:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben-Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:28 +0300
+Message-Id: <20170805194331.17426-17-luca@coelho.fi> (sfid-20170805_214449_310694_C067478D)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 16/19] iwlwifi: fix nmi triggering from host
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i2c_device_id are not supposed to change at runtime. All functions
-working with i2c_device_id provided by <linux/i2c.h> work with
-const i2c_device_id. So mark the non-const structs as const.
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Although nmi was triggered fine till now, it appears
+that the driver didn't write the exact correct values
+to the correct addresses for each HW.
+Fix the nmi triggering by setting the correct addresses
+and values.
+
+Fixes: 4c9706dc2f29 ("iwlwifi: update nmi register")
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/nfc/pn544/i2c.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 14 +++-----------
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  7 +++----
+ 2 files changed, 6 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 4b14740..d0207f8 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -54,7 +54,7 @@
- #define PN544_HCI_I2C_LLC_MAX_SIZE	(PN544_HCI_I2C_LLC_LEN_CRC + 1 + \
- 					 PN544_HCI_I2C_LLC_MAX_PAYLOAD)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
+index c527b8c10370..efb1998dcabd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
+@@ -241,20 +241,12 @@ IWL_EXPORT_SYMBOL(iwl_clear_bits_prph);
  
--static struct i2c_device_id pn544_hci_i2c_id_table[] = {
-+static const struct i2c_device_id pn544_hci_i2c_id_table[] = {
- 	{"pn544", 0},
- 	{}
- };
+ void iwl_force_nmi(struct iwl_trans *trans)
+ {
+-	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_8000) {
++	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_9000)
+ 		iwl_write_prph(trans, DEVICE_SET_NMI_REG,
+ 			       DEVICE_SET_NMI_VAL_DRV);
+-		iwl_write_prph(trans, DEVICE_SET_NMI_REG,
+-			       DEVICE_SET_NMI_VAL_HW);
+-	} else if (trans->cfg->device_family == IWL_DEVICE_FAMILY_A000) {
++	else
+ 		iwl_write_prph(trans, UREG_NIC_SET_NMI_DRIVER,
+-			       DEVICE_SET_NMI_8000_VAL);
+-	} else {
+-		iwl_write_prph(trans, DEVICE_SET_NMI_8000_REG,
+-			       DEVICE_SET_NMI_8000_VAL);
+-		iwl_write_prph(trans, DEVICE_SET_NMI_REG,
+-			       DEVICE_SET_NMI_VAL_DRV);
+-	}
++			       UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK);
+ }
+ IWL_EXPORT_SYMBOL(iwl_force_nmi);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index fbce97ed4ecd..421a869633a3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -109,13 +109,12 @@
+ /* Device system time */
+ #define DEVICE_SYSTEM_TIME_REG 0xA0206C
+ 
+-/* Device NMI register */
++/* Device NMI register and value for 8000 family and lower hw's */
+ #define DEVICE_SET_NMI_REG 0x00a01c30
+-#define DEVICE_SET_NMI_VAL_HW BIT(0)
+ #define DEVICE_SET_NMI_VAL_DRV BIT(7)
+-#define DEVICE_SET_NMI_8000_REG 0x00a01c24
+-#define DEVICE_SET_NMI_8000_VAL 0x1000000
++/* Device NMI register and value for 9000 family and above hw's */
+ #define UREG_NIC_SET_NMI_DRIVER 0x00a05c10
++#define UREG_NIC_SET_NMI_DRIVER_NMI_FROM_DRIVER_MSK 0xff000000
+ 
+ /* Shared registers (0x0..0x3ff, via target indirect or periphery */
+ #define SHR_BASE	0x00a10000
 -- 
-2.7.4
+2.13.2
