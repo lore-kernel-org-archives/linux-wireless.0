@@ -1,106 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdHBVBL (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42284 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751443AbdHEIpX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:01:11 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 8/9] wil6210: store FW RF calibration result
-Date: Thu,  3 Aug 2017 00:00:48 +0300
-Message-Id: <1501707649-9665-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230115_501431_D5680C24)
-In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Sat, 5 Aug 2017 04:45:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 11:44:29 +0300
+Message-Id: <20170805084438.12550-2-luca@coelho.fi> (sfid-20170805_110252_133861_A783934F)
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+Subject: [PATCH 01/10] mac80211: add MESH IE in the correct order
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Store initial FW RF calibration result in driver. Set this calibration
-result back to FW after each FW reset in order to avoid future calibration
-procedures.
+VHT MESH support was added, but the order of the IEs
+wasn't enforced. Fix that.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 6 ++++++
- drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
- drivers/net/wireless/ath/wil6210/wmi.c     | 5 +++++
- drivers/net/wireless/ath/wil6210/wmi.h     | 2 ++
- 4 files changed, 19 insertions(+)
+ net/mac80211/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b1e2814..b89d017 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1034,6 +1034,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
- 
-+		if (wil->fw_calib_result > 0) {
-+			__le32 val = cpu_to_le32(wil->fw_calib_result |
-+						 (CALIB_RESULT_SIGNATURE << 8));
-+			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
-+		}
-+
- 		wil_release_cpu(wil);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 724ad59..e3c0c2f 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -171,6 +171,10 @@ struct RGF_ICR {
- #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
- #define RGF_USER_BL			(0x880A3C) /* Boot Loader */
- #define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
-+#define RGF_USER_FW_CALIB_RESULT	(0x880a90) /* b0-7:result
-+						    * b8-15:signature
-+						    */
-+	#define CALIB_RESULT_SIGNATURE	(0x11)
- #define RGF_USER_CLKS_CTL_0		(0x880abc)
- 	#define BIT_USER_CLKS_CAR_AHB_SW_SEL	BIT(1) /* ref clk/PLL */
- 	#define BIT_USER_CLKS_RST_PWGD	BIT(11) /* reset on "power good" */
-@@ -724,6 +728,8 @@ struct wil6210_priv {
- 
- 	enum wmi_ps_profile_type ps_profile;
- 
-+	int fw_calib_result;
-+
- #ifdef CONFIG_PM
- #ifdef CONFIG_PM_SLEEP
- 	struct notifier_block pm_notify;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a9487f2..ffdd2fa 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -344,6 +344,11 @@ static void wmi_evt_ready(struct wil6210_priv *wil, int id, void *d, int len)
- 	strlcpy(wdev->wiphy->fw_version, wil->fw_version,
- 		sizeof(wdev->wiphy->fw_version));
- 
-+	if (len > offsetof(struct wmi_ready_event, rfc_read_calib_result)) {
-+		wil_dbg_wmi(wil, "rfc calibration result %d\n",
-+			    evt->rfc_read_calib_result);
-+		wil->fw_calib_result = evt->rfc_read_calib_result;
-+	}
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 	set_bit(wil_status_fwready, wil->status);
- 	/* let the reset sequence continue */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 4e31c2f..1b426d7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -1300,6 +1300,8 @@ struct wmi_ready_event {
- 	/* enum wmi_phy_capability */
- 	u8 phy_capability;
- 	u8 numof_additional_mids;
-+	u8 rfc_read_calib_result;
-+	u8 reserved[3];
- } __packed;
- 
- /* WMI_NOTIFY_REQ_DONE_EVENTID */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 259698de569f..6aef6793d052 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1436,7 +1436,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 			WLAN_EID_SSID_LIST,
+ 			WLAN_EID_CHANNEL_USAGE,
+ 			WLAN_EID_INTERWORKING,
+-			/* mesh ID can't happen here */
++			WLAN_EID_MESH_ID,
+ 			/* 60 GHz can't happen here right now */
+ 		};
+ 		noffset = ieee80211_ie_split(ie, ie_len,
 -- 
-1.9.1
+2.13.2
