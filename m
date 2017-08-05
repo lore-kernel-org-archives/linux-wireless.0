@@ -1,273 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44650 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42274 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751537AbdHRPwx (ORCPT
+        with ESMTP id S1751422AbdHEIpW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:53 -0400
+        Sat, 5 Aug 2017 04:45:22 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:17 +0300
-Message-Id: <20170818154922.2904-20-luca@coelho.fi> (sfid-20170818_175257_130336_5EEA8204)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 19/24] iwlwifi: mvm: change open and close criteria of a BA session
+Date: Sat,  5 Aug 2017 11:44:31 +0300
+Message-Id: <20170805084438.12550-4-luca@coelho.fi> (sfid-20170805_104531_733279_62624B85)
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+Subject: [PATCH 03/10] mac80211: extend ieee80211_ie_split to support EXTENSION
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Tx BA session should be started according to the current throughput
-without any dependence on the internal rate scaling state. The criteria
-for opening a BA session will be 10 frames per second.
+Current ieee80211_ie_split() implementation doesn't
+account for elements that are sub-elements of the
+EXTENSION IE. To extend support to these IEs as well,
+treat the WLAN_EID_EXTENSION ids in the %ids array
+as indicating that the next id in the array is a
+sub-element of the EXTENSION IE.
 
-Sending frequent del BAs can cause inter-op issues with some APs. We'll
-not close a BA session until we receive an explicit del BA from the
-peer.
-
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/constants.h |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 117 ++++++++++++---------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 ++
- 3 files changed, 73 insertions(+), 52 deletions(-)
+ include/net/cfg80211.h |  6 ++++--
+ net/wireless/util.c    | 54 ++++++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 50 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index 753d4138e30f..976640fed334 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -136,6 +136,7 @@
- #define IWL_MVM_RS_SR_NO_DECREASE		85	/* percent */
- #define IWL_MVM_RS_AGG_TIME_LIMIT	        4000    /* 4 msecs. valid 100-8000 */
- #define IWL_MVM_RS_AGG_DISABLE_START	        3
-+#define IWL_MVM_RS_AGG_START_THRESHOLD	        10	/* num frames per second */
- #define IWL_MVM_RS_TPC_SR_FORCE_INCREASE	75	/* percent */
- #define IWL_MVM_RS_TPC_SR_NO_INCREASE		85	/* percent */
- #define IWL_MVM_RS_TPC_TX_POWER_STEP		3
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index cdf10ce9dbea..44c873082a31 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -622,7 +622,9 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_mvm *mvm,
- 
- 	IWL_DEBUG_HT(mvm, "Starting Tx agg: STA: %pM tid: %d\n",
- 		     sta->addr, tid);
--	ret = ieee80211_start_tx_ba_session(sta, tid, 5000);
-+
-+	/* start BA session until the peer sends del BA */
-+	ret = ieee80211_start_tx_ba_session(sta, tid, 0);
- 	if (ret == -EAGAIN) {
- 		/*
- 		 * driver and mac80211 is out of sync
-@@ -636,15 +638,31 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_mvm *mvm,
- 	return ret;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f12fa5245a45..aa9d993e519a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5934,7 +5934,8 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
+  * @ies: the IE buffer
+  * @ielen: the length of the IE buffer
+  * @ids: an array with element IDs that are allowed before
+- *	the split
++ *	the split. A WLAN_EID_EXTENSION value means that the next
++ *	EID in the list is a sub-element of the EXTENSION IE.
+  * @n_ids: the size of the element ID array
+  * @after_ric: array IE types that come after the RIC element
+  * @n_after_ric: size of the @after_ric array
+@@ -5965,7 +5966,8 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
+  * @ies: the IE buffer
+  * @ielen: the length of the IE buffer
+  * @ids: an array with element IDs that are allowed before
+- *	the split
++ *	the split. A WLAN_EID_EXTENSION value means that the next
++ *	EID in the list is a sub-element of the EXTENSION IE.
+  * @n_ids: the size of the element ID array
+  * @offset: offset where to start splitting in the buffer
+  *
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index bcb1284c3415..4aab793c2f00 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1367,13 +1367,29 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
  }
+ EXPORT_SYMBOL(cfg80211_get_p2p_attr);
  
--static void rs_tl_turn_on_agg(struct iwl_mvm *mvm, u8 tid,
--			      struct iwl_lq_sta *lq_data,
-+static void rs_tl_turn_on_agg(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
-+			      u8 tid, struct iwl_lq_sta *lq_sta,
- 			      struct ieee80211_sta *sta)
+-static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
++static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id, bool id_ext)
  {
--	if (tid < IWL_MAX_TID_COUNT)
--		rs_tl_turn_on_agg_for_tid(mvm, lq_data, tid, sta);
--	else
-+	struct iwl_mvm_tid_data *tid_data;
+ 	int i;
+ 
+-	for (i = 0; i < n_ids; i++)
+-		if (ids[i] == id)
++	/* Make sure array values are legal */
++	if (WARN_ON(ids[n_ids - 1] == WLAN_EID_EXTENSION))
++		return false;
 +
-+	/*
-+	 * In AP mode, tid can be equal to IWL_MAX_TID_COUNT
-+	 * when the frame is not QoS
-+	 */
-+	if (WARN_ON_ONCE(tid > IWL_MAX_TID_COUNT)) {
- 		IWL_ERR(mvm, "tid exceeds max TID count: %d/%d\n",
- 			tid, IWL_MAX_TID_COUNT);
-+		return;
-+	} else if (tid == IWL_MAX_TID_COUNT) {
-+		return;
-+	}
++	i = 0;
++	while (i < n_ids) {
++		if (ids[i] == WLAN_EID_EXTENSION) {
++			if (id_ext && (ids[i + 1] == id))
++				return true;
 +
-+	tid_data = &mvmsta->tid_data[tid];
-+	if ((tid_data->state == IWL_AGG_OFF) &&
-+	    (lq_sta->tx_agg_tid_en & BIT(tid)) &&
-+	    (tid_data->tx_count_last >= IWL_MVM_RS_AGG_START_THRESHOLD)) {
-+		IWL_DEBUG_RATE(mvm, "try to aggregate tid %d\n", tid);
-+		rs_tl_turn_on_agg_for_tid(mvm, lq_sta, tid, sta);
++			i += 2;
++			continue;
++		}
++
++		if (ids[i] == id && !id_ext)
+ 			return true;
++
++		i++;
 +	}
+ 	return false;
  }
  
- static inline int get_num_of_ant_from_rate(u32 rate_n_flags)
-@@ -753,8 +771,38 @@ static int rs_collect_tpc_data(struct iwl_mvm *mvm,
- 				    window);
- }
- 
-+static void rs_update_tid_tpt_stats(struct iwl_mvm *mvm,
-+				    struct iwl_mvm_sta *mvmsta,
-+				    u8 tid, int successes)
-+{
-+	struct iwl_mvm_tid_data *tid_data;
-+
-+	if (tid >= IWL_MAX_TID_COUNT)
-+		return;
-+
-+	tid_data = &mvmsta->tid_data[tid];
-+
-+	/*
-+	 * Measure if there're enough successful transmits per second.
-+	 * These statistics are used only to decide if we can start a
-+	 * BA session, so it should be updated only when A-MPDU is
-+	 * off.
-+	 */
-+	if (tid_data->state != IWL_AGG_OFF)
-+		return;
-+
-+	if (time_is_before_jiffies(tid_data->tpt_meas_start + HZ) ||
-+	    (tid_data->tx_count >= IWL_MVM_RS_AGG_START_THRESHOLD)) {
-+		tid_data->tx_count_last = tid_data->tx_count;
-+		tid_data->tx_count = 0;
-+		tid_data->tpt_meas_start = jiffies;
-+	} else {
-+		tid_data->tx_count += successes;
-+	}
-+}
-+
- static int rs_collect_tlc_data(struct iwl_mvm *mvm,
--			       struct iwl_lq_sta *lq_sta,
-+			       struct iwl_mvm_sta *mvmsta, u8 tid,
- 			       struct iwl_scale_tbl_info *tbl,
- 			       int scale_index, int attempts, int successes)
+@@ -1403,14 +1419,36 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
  {
-@@ -764,12 +812,14 @@ static int rs_collect_tlc_data(struct iwl_mvm *mvm,
- 		return -EINVAL;
+ 	size_t pos = offset;
  
- 	if (tbl->column != RS_COLUMN_INVALID) {
--		struct lq_sta_pers *pers = &lq_sta->pers;
-+		struct lq_sta_pers *pers = &mvmsta->lq_sta.pers;
- 
- 		pers->tx_stats[tbl->column][scale_index].total += attempts;
- 		pers->tx_stats[tbl->column][scale_index].success += successes;
- 	}
- 
-+	rs_update_tid_tpt_stats(mvm, mvmsta, tid, successes);
+-	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
++	while (pos < ielen) {
++		u8 ext = 0;
 +
- 	/* Select window for current tx bit rate */
- 	window = &(tbl->win[scale_index]);
- 	return _rs_collect_tx_data(mvm, tbl, scale_index, attempts, successes,
-@@ -1211,12 +1261,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	if (time_after(jiffies,
- 		       (unsigned long)(lq_sta->last_tx +
- 				       (IWL_MVM_RS_IDLE_TIMEOUT * HZ)))) {
--		int t;
--
- 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
--		for (t = 0; t < IWL_MAX_TID_COUNT; t++)
--			ieee80211_stop_tx_ba_session(sta, t);
--
- 		iwl_mvm_rs_rate_init(mvm, sta, info->band, false);
- 		return;
- 	}
-@@ -1312,7 +1357,8 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		if (info->status.ampdu_ack_len == 0)
- 			info->status.ampdu_len = 1;
- 
--		rs_collect_tlc_data(mvm, lq_sta, curr_tbl, lq_rate.index,
-+		rs_collect_tlc_data(mvm, mvmsta, tid, curr_tbl,
-+				    lq_rate.index,
- 				    info->status.ampdu_len,
- 				    info->status.ampdu_ack_len);
- 
-@@ -1351,7 +1397,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 					    lq_rate.index, 1,
- 					    i < retries ? 0 : legacy_success,
- 					    reduced_txp);
--			rs_collect_tlc_data(mvm, lq_sta, tmp_tbl,
-+			rs_collect_tlc_data(mvm, mvmsta, tid, tmp_tbl,
- 					    lq_rate.index, 1,
- 					    i < retries ? 0 : legacy_success);
- 		}
-@@ -2229,7 +2275,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	s32 sr;
- 	u8 prev_agg = lq_sta->is_agg;
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct iwl_mvm_tid_data *tid_data;
- 	struct rs_rate *rate;
- 
- 	lq_sta->is_agg = !!mvmsta->agg_tids;
-@@ -2480,44 +2525,12 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 		}
- 	}
- 
-+	if (!ndp)
-+		rs_tl_turn_on_agg(mvm, mvmsta, tid, lq_sta, sta);
++		if (ies[pos] == WLAN_EID_EXTENSION)
++			ext = 2;
++		if ((pos + ext) >= ielen)
++			break;
 +
- 	if (done_search && lq_sta->rs_state == RS_STATE_SEARCH_CYCLE_ENDED) {
--		/* If the "active" (non-search) mode was legacy,
--		 * and we've tried switching antennas,
--		 * but we haven't been able to try HT modes (not available),
--		 * stay with best antenna legacy modulation for a while
--		 * before next round of mode comparisons. */
- 		tbl1 = &(lq_sta->lq_info[lq_sta->active_tbl]);
--		if (is_legacy(&tbl1->rate)) {
--			IWL_DEBUG_RATE(mvm, "LQ: STAY in legacy table\n");
--
--			if (tid != IWL_MAX_TID_COUNT) {
--				tid_data = &mvmsta->tid_data[tid];
--				if (tid_data->state != IWL_AGG_OFF) {
--					IWL_DEBUG_RATE(mvm,
--						       "Stop aggregation on tid %d\n",
--						       tid);
--					ieee80211_stop_tx_ba_session(sta, tid);
--				}
--			}
--			rs_set_stay_in_table(mvm, 1, lq_sta);
--		} else {
--		/* If we're in an HT mode, and all 3 mode switch actions
--		 * have been tried and compared, stay in this best modulation
--		 * mode for a while before next round of mode comparisons. */
--			if ((lq_sta->last_tpt > IWL_AGG_TPT_THREHOLD) &&
--			    (lq_sta->tx_agg_tid_en & (1 << tid)) &&
--			    (tid != IWL_MAX_TID_COUNT)) {
--				tid_data = &mvmsta->tid_data[tid];
--				if (tid_data->state == IWL_AGG_OFF && !ndp) {
--					IWL_DEBUG_RATE(mvm,
--						       "try to aggregate tid %d\n",
--						       tid);
--					rs_tl_turn_on_agg(mvm, tid,
--							  lq_sta, sta);
--				}
--			}
--			rs_set_stay_in_table(mvm, 0, lq_sta);
--		}
-+		rs_set_stay_in_table(mvm, is_legacy(&tbl1->rate), lq_sta);
- 	}
- }
++		if (!ieee80211_id_in_list(ids, n_ids, ies[pos + ext],
++					  ies[pos] == WLAN_EID_EXTENSION))
++			break;
++
+ 		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
+ 			pos = skip_ie(ies, ielen, pos);
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 005037aa3122..d13893806513 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -316,6 +316,10 @@ enum iwl_mvm_agg_state {
-  * @is_tid_active: has this TID sent traffic in the last
-  *	%IWL_MVM_DQA_QUEUE_TIMEOUT time period. If %txq_id is invalid, this
-  *	field should be ignored.
-+ * @tpt_meas_start: time of the throughput measurements start, is reset every HZ
-+ * @tx_count_last: number of frames transmitted during the last second
-+ * @tx_count: counts the number of frames transmitted since the last reset of
-+ *	 tpt_meas_start
-  */
- struct iwl_mvm_tid_data {
- 	struct sk_buff_head deferred_tx_frames;
-@@ -330,6 +334,9 @@ struct iwl_mvm_tid_data {
- 	u16 ssn;
- 	u16 tx_time;
- 	bool is_tid_active;
-+	unsigned long tpt_meas_start;
-+	u32 tx_count_last;
-+	u32 tx_count;
- };
- 
- struct iwl_mvm_key_pn {
+-			while (pos < ielen &&
+-			       !ieee80211_id_in_list(after_ric, n_after_ric,
+-						     ies[pos]))
+-				pos = skip_ie(ies, ielen, pos);
++			while (pos < ielen) {
++				if (ies[pos] == WLAN_EID_EXTENSION)
++					ext = 2;
++				else
++					ext = 0;
++
++				if ((pos + ext) >= ielen)
++					break;
++
++				if (!ieee80211_id_in_list(after_ric,
++							  n_after_ric,
++							  ies[pos + ext],
++							  ext == 2))
++					pos = skip_ie(ies, ielen, pos);
++			}
+ 		} else {
+ 			pos = skip_ie(ies, ielen, pos);
+ 		}
 -- 
-2.14.1
+2.13.2
