@@ -1,147 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56573 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751318AbdH3O5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 10:57:17 -0400
-Date: Wed, 30 Aug 2017 17:57:26 +0300
-From: David Weinehall <david.weinehall@linux.intel.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: jikos@kernel.org, linux-wireless@vger.kernel.org,
-        luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
-        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
-        linux-pm@vger.kernel.org, david.weinehall@intel.com,
-        johannes.berg@intel.com, kvalo@codeaurora.org,
-        sara.sharon@intel.com, emmanuel.grumbach@intel.com
-Subject: Re: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to
- iwl_trans_pcie_alloc()
-Message-ID: <20170830145726.eq7qs4jtdsqa74lu@boom> (sfid-20170830_165732_527318_9BDF78F7)
-References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
- <20170822073729.4856-1-luca@coelho.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170822073729.4856-1-luca@coelho.fi>
+Received: from paleale.coelho.fi ([176.9.41.70]:42612 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHETou (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 5 Aug 2017 15:44:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:24 +0300
+Message-Id: <20170805194331.17426-13-luca@coelho.fi> (sfid-20170805_214453_560623_D6CBC1BA)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 12/19] iwlwifi: mvm: support new beacon template command
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 22, 2017 at 10:37:29AM +0300, Luca Coelho wrote:
-> From: Luca Coelho <luciano.coelho@intel.com>
-> 
-> Work queues cannot be allocated when a mutex is held because the mutex
-> may be in use and that would make it sleep.  Doing so generates the
-> following splat with 4.13+:
-> 
-> [   19.513298] ======================================================
-> [   19.513429] WARNING: possible circular locking dependency detected
-> [   19.513557] 4.13.0-rc5+ #6 Not tainted
-> [   19.513638] ------------------------------------------------------
-> [   19.513767] cpuhp/0/12 is trying to acquire lock:
-> [   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
-> [   19.514047]
-> [   19.514047] but task is already holding lock:
-> [   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
-> [   19.514338]
-> [   19.514338] which lock already depends on the new lock.
-> 
-> This lock dependency already existed with previous kernel versions,
-> but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
-> lock stacks for hotplug callbacks") was introduced.
-> 
-> Reported-by: David Weinehall <david.weinehall@intel.com>
-> Reported-by: Jiri Kosina <jikos@kernel.org>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-With this patch I no longer get the lockdep warning,
-and the driver seems to work just as well as before.
+Support new version of beacon template command. This rplaces v8 command
+which was missing the rate code.
+Also, export rate decision logic to separate function.
 
-Thanks!
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    | 17 +++++---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 47 ++++++++++++++++-------
+ 3 files changed, 47 insertions(+), 18 deletions(-)
 
-Tested-by: David Weinehall <david.weinehall@linux.intel.com>
-
-> ---
-> In v2:
->    - updated the commit message to a new version, with a grammar fix
->      and the actual commit that exposed the problem;
-> 
->  drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
->  drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +---------
->  drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  9 +++++++++
->  3 files changed, 12 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-> index fa315d84e98e..a1ea9ef97ed9 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-> @@ -787,6 +787,8 @@ int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans);
->  
->  void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable);
->  
-> +void iwl_pcie_rx_allocator_work(struct work_struct *data);
-> +
->  /* common functions that are used by gen2 transport */
->  void iwl_pcie_apm_config(struct iwl_trans *trans);
->  int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> index 351c4423125a..942736d3fa75 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> @@ -597,7 +597,7 @@ static void iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
->  	rxq->free_count += RX_CLAIM_REQ_ALLOC;
->  }
->  
-> -static void iwl_pcie_rx_allocator_work(struct work_struct *data)
-> +void iwl_pcie_rx_allocator_work(struct work_struct *data)
->  {
->  	struct iwl_rb_allocator *rba_p =
->  		container_of(data, struct iwl_rb_allocator, rx_alloc);
-> @@ -900,10 +900,6 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
->  			return err;
->  	}
->  	def_rxq = trans_pcie->rxq;
-> -	if (!rba->alloc_wq)
-> -		rba->alloc_wq = alloc_workqueue("rb_allocator",
-> -						WQ_HIGHPRI | WQ_UNBOUND, 1);
-> -	INIT_WORK(&rba->rx_alloc, iwl_pcie_rx_allocator_work);
->  
->  	spin_lock(&rba->lock);
->  	atomic_set(&rba->req_pending, 0);
-> @@ -1017,10 +1013,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
->  	}
->  
->  	cancel_work_sync(&rba->rx_alloc);
-> -	if (rba->alloc_wq) {
-> -		destroy_workqueue(rba->alloc_wq);
-> -		rba->alloc_wq = NULL;
-> -	}
->  
->  	iwl_pcie_free_rbs_pool(trans);
->  
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> index f95eec52508e..3927bbf04f72 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> @@ -1786,6 +1786,11 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
->  		iwl_pcie_tx_free(trans);
->  	iwl_pcie_rx_free(trans);
->  
-> +	if (trans_pcie->rba.alloc_wq) {
-> +		destroy_workqueue(trans_pcie->rba.alloc_wq);
-> +		trans_pcie->rba.alloc_wq = NULL;
-> +	}
-> +
->  	if (trans_pcie->msix_enabled) {
->  		for (i = 0; i < trans_pcie->alloc_vecs; i++) {
->  			irq_set_affinity_hint(
-> @@ -3169,6 +3174,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
->  		trans_pcie->inta_mask = CSR_INI_SET_MASK;
->  	 }
->  
-> +	trans_pcie->rba.alloc_wq = alloc_workqueue("rb_allocator",
-> +						   WQ_HIGHPRI | WQ_UNBOUND, 1);
-> +	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
-> +
->  #ifdef CONFIG_IWLWIFI_PCIE_RTPM
->  	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_D0I3;
->  #else
-> -- 
-> 2.14.1
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 2909d1ed89cf..4928310ddd31 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -786,13 +786,20 @@ struct iwl_mac_beacon_cmd_v7 {
+ 	struct ieee80211_hdr frame[0];
+ } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
+ 
++enum iwl_mac_beacon_flags {
++	IWL_MAC_BEACON_CCK	= BIT(8),
++	IWL_MAC_BEACON_ANT_A	= BIT(9),
++	IWL_MAC_BEACON_ANT_B	= BIT(10),
++	IWL_MAC_BEACON_ANT_C	= BIT(11),
++};
++
+ /**
+  * struct iwl_mac_beacon_cmd - beacon template command with offloaded CSA
+- * @byte_cnt: byte count of the beacon frame
+- * @flags: for future use
++ * @byte_cnt: byte count of the beacon frame.
++ * @flags: least significant byte for rate code. The most significant byte
++ *	is &enum iwl_mac_beacon_flags.
+  * @reserved: reserved
+- * @template_id: currently equal to the mac context id of the coresponding
+- *  mac.
++ * @template_id: currently equal to the mac context id of the coresponding mac.
+  * @tim_idx: the offset of the tim IE in the beacon
+  * @tim_size: the length of the tim IE
+  * @ecsa_offset: offset to the ECSA IE if present
+@@ -809,7 +816,7 @@ struct iwl_mac_beacon_cmd {
+ 	__le32 ecsa_offset;
+ 	__le32 csa_offset;
+ 	struct ieee80211_hdr frame[0];
+-} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
++} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_9 */
+ 
+ struct iwl_beacon_notif {
+ 	struct iwl_mvm_tx_resp beacon_notify_hdr;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 0fa8c473f1e2..d933aa324ffe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -260,6 +260,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_STA_TYPE		= (__force iwl_ucode_tlv_api_t)30,
+ 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
+ 	/* API Set 1 */
++	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
+ 
+ 	NUM_IWL_UCODE_TLV_API
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 8fe955d58c6e..cb4e311b059f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -923,6 +923,19 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
+ 	return ie - beacon;
+ }
+ 
++static u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
++					   struct ieee80211_vif *vif)
++{
++	u8 rate;
++
++	if (info->band == NL80211_BAND_5GHZ || vif->p2p)
++		rate = IWL_FIRST_OFDM_RATE;
++	else
++		rate = IWL_FIRST_CCK_RATE;
++
++	return rate;
++}
++
+ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif,
+ 				    struct sk_buff *beacon,
+@@ -930,7 +943,8 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct ieee80211_tx_info *info;
+-	u32 rate, tx_flags;
++	u8 rate;
++	u32 tx_flags;
+ 
+ 	info = IEEE80211_SKB_CB(beacon);
+ 
+@@ -955,14 +969,12 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
+ 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
+ 			    RATE_MCS_ANT_POS);
+ 
+-	if (info->band == NL80211_BAND_5GHZ || vif->p2p) {
+-		rate = IWL_FIRST_OFDM_RATE;
+-	} else {
+-		rate = IWL_FIRST_CCK_RATE;
+-		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
+-	}
++	rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
+ 
+ 	tx->rate_n_flags |= cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
++	if (rate == IWL_FIRST_CCK_RATE)
++		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
++
+ }
+ 
+ static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
+@@ -1033,19 +1045,27 @@ static int iwl_mvm_mac_ctxt_send_beacon_v7(struct iwl_mvm *mvm,
+ 						sizeof(beacon_cmd));
+ }
+ 
+-static int iwl_mvm_mac_ctxt_send_beacon_v8(struct iwl_mvm *mvm,
++static int iwl_mvm_mac_ctxt_send_beacon_v9(struct iwl_mvm *mvm,
+ 					   struct ieee80211_vif *vif,
+ 					   struct sk_buff *beacon)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(beacon);
+ 	struct iwl_mac_beacon_cmd beacon_cmd = {};
++	u8 rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
++	u16 flags;
++
++	flags = iwl_mvm_mac80211_idx_to_hwrate(rate);
+ 
++	if (flags == IWL_FIRST_CCK_RATE)
++		flags |= IWL_MAC_BEACON_CCK;
++
++	beacon_cmd.flags = cpu_to_le16(flags);
+ 	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
+ 	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
+ 
+ 	if (vif->type == NL80211_IFTYPE_AP)
+-		iwl_mvm_mac_ctxt_set_tim(mvm,
+-					 &beacon_cmd.tim_idx,
++		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
+ 					 &beacon_cmd.tim_size,
+ 					 beacon->data, beacon->len);
+ 
+@@ -1073,10 +1093,11 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
+ 			 IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD))
+ 		return iwl_mvm_mac_ctxt_send_beacon_v6(mvm, vif, beacon);
+ 
+-	if (!iwl_mvm_has_new_tx_api(mvm))
+-		return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
++	if (fw_has_api(&mvm->fw->ucode_capa,
++		       IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
++		return iwl_mvm_mac_ctxt_send_beacon_v9(mvm, vif, beacon);
+ 
+-	return iwl_mvm_mac_ctxt_send_beacon_v8(mvm, vif, beacon);
++	return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
+ }
+ 
+ /* The beacon template for the AP/GO/IBSS has changed and needs update */
+-- 
+2.13.2
