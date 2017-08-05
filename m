@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:36842 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751010AbdHCKnV (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42580 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHEToe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 06:43:21 -0400
-Received: by mail-vk0-f66.google.com with SMTP id z187so413023vkd.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 03:43:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87fud9nedh.fsf@kamboji.qca.qualcomm.com>
-References: <20170802122915.GA4759@symbol-HP-ZBook-15> <4d6b58d1-3e26-e6ea-0c0e-7e2b7aa3b75e@lwfinger.net>
- <87fud9nedh.fsf@kamboji.qca.qualcomm.com>
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Date: Thu, 3 Aug 2017 16:13:19 +0530
-Message-ID: <CAFqt6zYasPxANN5mYsX-opg0vjV2mu_ZYCxG=idiGJwq5AE08w@mail.gmail.com> (sfid-20170803_124325_648257_6A861C45)
-Subject: Re: [PATCH v5] rtlwifi: Replace hardcode value with macro
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 5 Aug 2017 15:44:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:27 +0300
+Message-Id: <20170805194331.17426-16-luca@coelho.fi> (sfid-20170805_214437_172389_2DD3B0E3)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 15/19] iwlwifi: pcie: don't init a Tx queue with an SSN > size of the queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 3, 2017 at 3:48 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> On 08/02/2017 07:29 AM, Souptick Joarder wrote:
->>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->>> and hw->max_rate_tries are replaced by macro and removed the comment.
->>>
->>> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->>
->> Finally!
->>
->> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->>
->> @Kalle: I'm sure you can work around this, but patchwork shows two
->> different "v5" versions and a "v4" entry for this same patch. That may
->> be due to no one formally rejecting the patch.
->
-> It's because Souptick submitted two v5 patches, but yeah I can that sort
-> it out.
->
-> Souptick, the idea with patch versions is that maintainers and reviewers
-> can easily find the latest version and drop the rest so ALWAYS increase
-> the version number. Submitting duplicate version numbers defeats the
-> purpose and creates extra work for others.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Noted. Thanks for the feedback.
+The TVQM tells us the initial write pointer for a queue,
+but that write pointer is in WiFi sequence number unit
+and not in TFD index unit. Which means that the write
+pointer in the TVQM's response can be bigger than the
+Tx queue ring size.
 
->
-> --
-> Kalle Valo
+Fix that by modulo'ing the write pointer from the TVQM
+with the Tx queue size.
+
+Fixes: 66128fa08806 ("iwlwifi: move to TVQM mode")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 5dc785d4c167..83a28892dc4f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -1033,6 +1033,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 		.flags = CMD_WANT_SKB,
+ 	};
+ 	int ret, qid;
++	u32 wr_ptr;
+ 
+ 	txq = kzalloc(sizeof(*txq), GFP_KERNEL);
+ 	if (!txq)
+@@ -1073,6 +1074,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 
+ 	rsp = (void *)hcmd.resp_pkt->data;
+ 	qid = le16_to_cpu(rsp->queue_number);
++	wr_ptr = le16_to_cpu(rsp->write_pointer);
+ 
+ 	if (qid >= ARRAY_SIZE(trans_pcie->txq)) {
+ 		WARN_ONCE(1, "queue index %d unsupported", qid);
+@@ -1088,10 +1090,11 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 
+ 	txq->id = qid;
+ 	trans_pcie->txq[qid] = txq;
++	wr_ptr &= (TFD_QUEUE_SIZE_MAX - 1);
+ 
+ 	/* Place first TFD at index corresponding to start sequence number */
+-	txq->read_ptr = le16_to_cpu(rsp->write_pointer);
+-	txq->write_ptr = le16_to_cpu(rsp->write_pointer);
++	txq->read_ptr = wr_ptr;
++	txq->write_ptr = wr_ptr;
+ 	iwl_write_direct32(trans, HBUS_TARG_WRPTR,
+ 			   (txq->write_ptr) | (qid << 16));
+ 	IWL_DEBUG_TX_QUEUES(trans, "Activate queue %d\n", qid);
+-- 
+2.13.2
