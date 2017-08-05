@@ -1,110 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754480AbdHYCa7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 22:30:59 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [PATCH 14/27] qtnfmac: do not cache CSA chandef info
-Date: Thu, 24 Aug 2017 19:30:11 -0700
-Message-Id: <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043107_012331_11318708)
-In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:42620 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHEToy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 5 Aug 2017 15:44:54 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:30 +0300
+Message-Id: <20170805194331.17426-19-luca@coelho.fi> (sfid-20170805_220252_333764_7D725158)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 18/19] iwlwifi: pcie: free the TSO page when a Tx queue is unmapped on A000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-It is never used for anything useful, and all logic is handled by
-either WiFi card or higher layers.
+When we unmap a non-empty Tx queue, we need to free the
+pages that we allocated for the headers in TSO flows.
+This code existed for the 9000 device family, but somehow
+it got left out when the new Tx path for the A000 devices
+was written.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Fixes: 2b0c5946d9ed ("iwlwifi: pcie: introduce a000 TX queues management")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 12 ------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  2 --
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  1 -
- drivers/net/wireless/quantenna/qtnfmac/event.c    |  8 +-------
- 4 files changed, 1 insertion(+), 22 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 4 ++--
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index b33c4fc..8542c16 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -736,7 +736,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 			       struct cfg80211_csa_settings *params)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index a8ffd4ca8cd8..f46871840fd2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -806,6 +806,8 @@ int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
+ 			   struct iwl_dma_ptr *ptr, size_t size);
+ void iwl_pcie_free_dma_ptr(struct iwl_trans *trans, struct iwl_dma_ptr *ptr);
+ void iwl_pcie_apply_destination(struct iwl_trans *trans);
++void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
++			    struct sk_buff *skb);
+ #ifdef CONFIG_INET
+ struct iwl_tso_hdr_page *get_page_hdr(struct iwl_trans *trans, size_t len);
+ #endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 83a28892dc4f..4db45e56b6ba 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -937,6 +937,15 @@ void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id)
+ 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
+ 				   txq_id, txq->read_ptr);
+ 
++		if (txq_id != trans_pcie->cmd_queue) {
++			int idx = get_cmd_index(txq, txq->read_ptr);
++			struct sk_buff *skb = txq->entries[idx].skb;
++
++			if (WARN_ON_ONCE(!skb))
++				continue;
++
++			iwl_pcie_free_tso_page(trans_pcie, skb);
++		}
+ 		iwl_pcie_gen2_free_tfd(trans, txq);
+ 		txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 073793a53d8e..1602ea1175c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -574,8 +574,8 @@ int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
+ 	return 0;
+ }
+ 
+-static void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
+-				   struct sk_buff *skb)
++void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
++			    struct sk_buff *skb)
  {
--	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 	int ret;
- 
-@@ -744,17 +743,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		 params->chandef.chan->hw_value, params->count,
- 		 params->radar_required, params->block_tx);
- 
--	if (vif->vifid != 0) {
--		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
--			return -EOPNOTSUPP;
--
--		if (!cfg80211_chandef_identical(&params->chandef,
--						&mac->csa_chandef))
--			return -EINVAL;
--
--		return 0;
--	}
--
- 	if (!cfg80211_chandef_valid(&params->chandef)) {
- 		pr_err("%s: invalid channel\n", dev->name);
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index cfbb636..7a616f9 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2347,8 +2347,6 @@ int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
- 
- 	switch (res_code) {
- 	case QLINK_CMD_RESULT_OK:
--		memcpy(&mac->csa_chandef, &params->chandef,
--		       sizeof(mac->csa_chandef));
- 		mac->status |= QTNF_MAC_CSA_ACTIVE;
- 		ret = 0;
- 		break;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index aa1a92f..5997915 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -132,7 +132,6 @@ struct qtnf_wmac {
- 	struct qtnf_vif iflist[QTNF_MAX_INTF];
- 	struct cfg80211_scan_request *scan_req;
- 	struct cfg80211_chan_def chandef;
--	struct cfg80211_chan_def csa_chandef;
- 	struct mutex mac_lock;	/* lock during wmac speicific ops */
- 	struct timer_list scan_timeout;
- };
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 7435986..b9ceeed 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -368,13 +368,7 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 		 mac->macid, chdef.chan->hw_value, chdef.center_freq1,
- 		 chdef.center_freq2, chdef.width);
- 
--	if (mac->status & QTNF_MAC_CSA_ACTIVE) {
--		mac->status &= ~QTNF_MAC_CSA_ACTIVE;
--		if (chdef.chan->hw_value != mac->csa_chandef.chan->hw_value)
--			pr_warn("unexpected switch to %u during CSA to %u\n",
--				chdef.chan->hw_value,
--				mac->csa_chandef.chan->hw_value);
--	}
-+	mac->status &= ~QTNF_MAC_CSA_ACTIVE;
- 
- 	memcpy(&mac->chandef, &chdef, sizeof(mac->chandef));
+ 	struct page **page_ptr;
  
 -- 
-2.9.5
+2.13.2
