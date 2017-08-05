@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33521 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752768AbdHHQCD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42292 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751462AbdHEIpX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:02:03 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, elena.reshetova@intel.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 22/35] wireless: intersil: orinoco: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:31:53 +0530
-Message-Id: <1502208113-11966-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180901_512405_879F8573)
+        Sat, 5 Aug 2017 04:45:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 11:44:33 +0300
+Message-Id: <20170805084438.12550-6-luca@coelho.fi> (sfid-20170805_104536_482118_07D267C0)
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+Subject: [PATCH 05/10] ieee80211: Add WFA TPC report element OUI type
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Avraham Stern <avraham.stern@intel.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/ieee80211.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-index c84fd84..56f6e3b 100644
---- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -210,7 +210,7 @@ struct ezusb_packet {
- } __packed;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 34e1bcd2d7ff..6572c2ca1261 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2412,6 +2412,7 @@ enum ieee80211_sa_query_action {
+ #define WLAN_OUI_TYPE_MICROSOFT_WPA	1
+ #define WLAN_OUI_TYPE_MICROSOFT_WMM	2
+ #define WLAN_OUI_TYPE_MICROSOFT_WPS	4
++#define WLAN_OUI_TYPE_MICROSOFT_TPC	8
  
- /* Table of devices that work or may work with this driver */
--static struct usb_device_id ezusb_table[] = {
-+static const struct usb_device_id ezusb_table[] = {
- 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_COMPAQ_WL215_ID)},
- 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_HP_WL215_ID)},
- 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_COMPAQ_W200_ID)},
+ /*
+  * WMM/802.11e Tspec Element
 -- 
-2.7.4
+2.13.2
