@@ -1,38 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59238 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752323AbdHBJVU (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42636 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHETpC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:21:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Souptick Joarder <jrdr.linux@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] rtlwifi: Replace hardcode value with macro
-References: <20170731111445.GA4844@symbol-HP-ZBook-15>
-        <8af42486-dd0b-bda6-6125-148dc0011115@lwfinger.net>
-Date: Wed, 02 Aug 2017 12:21:15 +0300
-In-Reply-To: <8af42486-dd0b-bda6-6125-148dc0011115@lwfinger.net> (Larry
-        Finger's message of "Mon, 31 Jul 2017 09:18:51 -0500")
-Message-ID: <87vam6496c.fsf@codeaurora.org> (sfid-20170802_112123_254137_94FD178E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 5 Aug 2017 15:45:02 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:29 +0300
+Message-Id: <20170805194331.17426-18-luca@coelho.fi> (sfid-20170805_220252_150869_41457810)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 17/19] iwlwifi: remove references to unsupported HW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> On 07/31/2017 06:14 AM, Souptick Joarder wrote:
->> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->> and hw->max_rate_tries are replaced by macro.
->
-> That is NOT what your patch does. It only removes a comment! Granted,
-> that comment is useless and should come out, but your commit message
-> must be a little more accurate.
+There are still some references to 3945 and 4965 HW, which were never
+supported in iwlwifi.  These references were inherited from a previous
+project and are irrelevant here.  Additionally, remove some irrelevant
+references to 5100 HW.  Remove all these.
 
-Actually the patch does not even apply, I suspect that Souptick
-incorrectly used v3 of his patch as the baseline for v4. Instead this v4
-should be folded with v3.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/commands.h | 8 +-------
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h      | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c   | 9 +++++----
+ 3 files changed, 7 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
+index ede47e3c5971..f89736d60a3d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
+@@ -311,11 +311,6 @@ enum {
+ 
+ /**
+  * rate_n_flags Tx antenna masks
+- * 4965 has 2 transmitters
+- * 5100 has 1 transmitter B
+- * 5150 has 1 transmitter A
+- * 5300 has 3 transmitters
+- * 5350 has 3 transmitters
+  * bit14:16
+  */
+ #define RATE_MCS_ANT_POS	14
+@@ -1230,7 +1225,6 @@ struct iwl_rx_mpdu_res_start {
+  */
+ 
+ /*
+- * 4965 uCode updates these Tx attempt count values in host DRAM.
+  * Used for managing Tx retries when expecting block-acks.
+  * Driver should set these fields to 0.
+  */
+@@ -1540,7 +1534,7 @@ struct iwl_link_qual_general_params {
+ 	/* Best single antenna to use for single stream (legacy, SISO). */
+ 	u8 single_stream_ant_msk;	/* LINK_QUAL_ANT_* */
+ 
+-	/* Best antennas to use for MIMO (unused for 4965, assumes both). */
++	/* Best antennas to use for MIMO */
+ 	u8 dual_stream_ant_msk;		/* LINK_QUAL_ANT_* */
+ 
+ 	/*
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index 560de9de5232..7d468ad7cb6a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -169,7 +169,7 @@
+ 
+ /*
+  * CSR Hardware Revision Workaround Register.  Indicates hardware rev;
+- * "step" determines CCK backoff for txpower calculation.  Used for 4965 only.
++ * "step" determines CCK backoff for txpower calculation.
+  * See also CSR_HW_REV register.
+  * Bit fields:
+  *  3-2:  0 = A, 1 = B, 2 = C, 3 = D step
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 4a8fff9a5528..6757c4799375 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1842,8 +1842,8 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 	 * These bits say the device is running, and should keep running for
+ 	 * at least a short while (at least as long as MAC_ACCESS_REQ stays 1),
+ 	 * but they do not indicate that embedded SRAM is restored yet;
+-	 * 3945 and 4965 have volatile SRAM, and must save/restore contents
+-	 * to/from host DRAM when sleeping/waking for power-saving.
++	 * HW with volatile SRAM must save/restore contents to/from
++	 * host DRAM when sleeping/waking for power-saving.
+ 	 * Each direction takes approximately 1/4 millisecond; with this
+ 	 * overhead, it's a good idea to grab and hold MAC_ACCESS_REQUEST if a
+ 	 * series of register accesses are expected (e.g. reading Event Log),
+@@ -1851,8 +1851,9 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 	 *
+ 	 * CSR_UCODE_DRV_GP1 register bit MAC_SLEEP == 0 indicates that
+ 	 * SRAM is okay/restored.  We don't check that here because this call
+-	 * is just for hardware register access; but GP1 MAC_SLEEP check is a
+-	 * good idea before accessing 3945/4965 SRAM (e.g. reading Event Log).
++	 * is just for hardware register access; but GP1 MAC_SLEEP
++	 * check is a good idea before accessing the SRAM of HW with
++	 * volatile SRAM (e.g. reading Event Log).
+ 	 *
+ 	 * 5000 series and later (including 1000 series) have non-volatile SRAM,
+ 	 * and do not save/restore SRAM when power cycling.
 -- 
-Kalle Valo
+2.13.2
