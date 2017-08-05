@@ -1,72 +1,369 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:37933 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbdHNTKw (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42644 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHETpH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 15:10:52 -0400
-Received: by mail-wm0-f50.google.com with SMTP id f15so336807wmg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 12:10:52 -0700 (PDT)
-Subject: Re: [PATCH 05/11] rsi: handle station connection in AP mode
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
- <1502458889-9690-6-git-send-email-amitkarwar@gmail.com>
- <87k226da0d.fsf@kamboji.qca.qualcomm.com>
- <CAC_mnDkiUkMK6utKnZjDXR6=B-=n9G10xHvWfodb9XEZrY9xKw@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <416d9508-0cd2-24d5-420d-7002c1882202@broadcom.com> (sfid-20170814_211057_419085_28590D53)
-Date: Mon, 14 Aug 2017 21:10:50 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAC_mnDkiUkMK6utKnZjDXR6=B-=n9G10xHvWfodb9XEZrY9xKw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sat, 5 Aug 2017 15:45:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:22 +0300
+Message-Id: <20170805194331.17426-11-luca@coelho.fi> (sfid-20170805_220252_484135_99CB4ED9)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 10/19] iwlwifi: mvm: move a000 device NVM retrieval to a common place
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-08-17 08:53, Prameela Rani Garnepudi wrote:
-> Hi Kalle,
-> 
-> I will change the debug level and send the updated patches again.
-> 
-> Thanks,
-> Prameela
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Please do not top-post.
+Getting the NVM data in a000 devices should be shared
+across operation mode.
 
-> On Mon, Aug 14, 2017 at 10:24 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->>
->>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>>
->>> Station structures are maintained in driver with required
->>> fields. When mac80211 callback sta_add is called, driver
->>> iterates through list of connected stations to check available
->>> index and assigns station id which is important for further
->>> communication to that station. Then peer notify frame is send
->>> to firmware to inform the firmware about new station connection.
->>>
->>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->>
->> [...]
->>
->>> @@ -1157,18 +1159,81 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
->>>   {
->>>        struct rsi_hw *adapter = hw->priv;
->>>        struct rsi_common *common = adapter->priv;
->>> +     bool sta_exist = false;
->>> +     struct rsi_sta *rsta;
->>> +
->>> +     print_hex_dump(KERN_INFO, "Station add: ", DUMP_PREFIX_OFFSET,
->>> +                    16, 1, sta->addr, ETH_ALEN, 0);
->>
->> The driver should not spam the logs every time a client connects, so
->> this should be a debug message.
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Makefile     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c     | 162 ++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |   1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c    |  91 -------------
+ 6 files changed, 169 insertions(+), 95 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/nvm.c
 
-I am wondering why print_hex_dump() is used for printing the station mac 
-address. Just use: pr_debug("Station add: %pM\n", sta->addr);
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index 5dcb4a848dba..35a32a3ec882 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -12,7 +12,7 @@ iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
+ iwlwifi-objs		+= iwl-trans.o
+ iwlwifi-objs		+= fw/notif-wait.o
+ iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
+-iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o
++iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o fw/nvm.o
+ 
+ iwlwifi-objs += $(iwlwifi-m)
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+new file mode 100644
+index 000000000000..ae03d0f5564f
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+@@ -0,0 +1,162 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <linuxwifi@intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#include "iwl-drv.h"
++#include "runtime.h"
++#include "fw/api/nvm-reg.h"
++#include "fw/api/commands.h"
++#include "iwl-nvm-parse.h"
++
++struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
++{
++	struct iwl_nvm_get_info cmd = {};
++	struct iwl_nvm_get_info_rsp *rsp;
++	struct iwl_trans *trans = fwrt->trans;
++	struct iwl_nvm_data *nvm;
++	struct iwl_host_cmd hcmd = {
++		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
++		.data = { &cmd, },
++		.len = { sizeof(cmd) },
++		.id = WIDE_ID(REGULATORY_AND_NVM_GROUP, NVM_GET_INFO)
++	};
++	int  ret;
++	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
++				fw_has_capa(&fwrt->fw->ucode_capa,
++					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
++
++	ret = iwl_trans_send_cmd(trans, &hcmd);
++	if (ret)
++		return ERR_PTR(ret);
++
++	if (WARN(iwl_rx_packet_payload_len(hcmd.resp_pkt) != sizeof(*rsp),
++		 "Invalid payload len in NVM response from FW %d",
++		 iwl_rx_packet_payload_len(hcmd.resp_pkt))) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	rsp = (void *)hcmd.resp_pkt->data;
++	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
++		IWL_INFO(fwrt, "OTP is empty\n");
++
++	nvm = kzalloc(sizeof(*nvm) +
++		      sizeof(struct ieee80211_channel) * IWL_NUM_CHANNELS,
++		      GFP_KERNEL);
++	if (!nvm) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	iwl_set_hw_address_from_csr(trans, nvm);
++	/* TODO: if platform NVM has MAC address - override it here */
++
++	if (!is_valid_ether_addr(nvm->hw_addr)) {
++		IWL_ERR(fwrt, "no valid mac address was found\n");
++		ret = -EINVAL;
++		goto err_free;
++	}
++
++	IWL_INFO(trans, "base HW address: %pM\n", nvm->hw_addr);
++
++	/* Initialize general data */
++	nvm->nvm_version = le16_to_cpu(rsp->general.nvm_version);
++
++	/* Initialize MAC sku data */
++	nvm->sku_cap_11ac_enable =
++		le32_to_cpu(rsp->mac_sku.enable_11ac);
++	nvm->sku_cap_11n_enable =
++		le32_to_cpu(rsp->mac_sku.enable_11n);
++	nvm->sku_cap_band_24GHz_enable =
++		le32_to_cpu(rsp->mac_sku.enable_24g);
++	nvm->sku_cap_band_52GHz_enable =
++		le32_to_cpu(rsp->mac_sku.enable_5g);
++	nvm->sku_cap_mimo_disabled =
++		le32_to_cpu(rsp->mac_sku.mimo_disable);
++
++	/* Initialize PHY sku data */
++	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
++	nvm->valid_rx_ant = (u8)le32_to_cpu(rsp->phy_sku.rx_chains);
++
++	/* Initialize regulatory data */
++	nvm->lar_enabled =
++		le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported;
++
++	iwl_init_sbands(trans->dev, trans->cfg, nvm,
++			rsp->regulatory.channel_profile,
++			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
++			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
++			rsp->regulatory.lar_enabled && lar_fw_supported);
++
++	iwl_free_resp(&hcmd);
++	return nvm;
++
++err_free:
++	kfree(nvm);
++out:
++	iwl_free_resp(&hcmd);
++	return ERR_PTR(ret);
++}
++IWL_EXPORT_SYMBOL(iwl_fw_get_nvm);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 66bea6545690..50cfb6d795a5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -63,6 +63,7 @@
+ #include "img.h"
+ #include "fw/api/debug.h"
+ #include "fw/api/paging.h"
++#include "iwl-eeprom-parse.h"
+ 
+ struct iwl_fw_runtime_ops {
+ 	int (*dump_start)(void *ctx);
+@@ -152,5 +153,6 @@ void iwl_get_shared_mem_conf(struct iwl_fw_runtime *fwrt);
+ 
+ void iwl_fwrt_handle_notification(struct iwl_fw_runtime *fwrt,
+ 				  struct iwl_rx_cmd_buffer *rxb);
++struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt);
+ 
+ #endif /* __iwl_fw_runtime_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 304e8434328a..c5a9259145ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -412,8 +412,10 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 
+ 	/* Read the NVM only at driver load time, no need to do this twice */
+ 	if (!IWL_MVM_PARSE_NVM && read_nvm) {
+-		ret = iwl_mvm_nvm_get_from_fw(mvm);
+-		if (ret) {
++		mvm->nvm_data = iwl_fw_get_nvm(&mvm->fwrt);
++		if (IS_ERR(mvm->nvm_data)) {
++			ret = PTR_ERR(mvm->nvm_data);
++			mvm->nvm_data = NULL;
+ 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
+ 			return ret;
+ 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 7423b5632bfa..1aa057a65e88 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1375,7 +1375,6 @@ void iwl_mvm_accu_radio_stats(struct iwl_mvm *mvm);
+ 
+ /* NVM */
+ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic);
+-int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm);
+ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm);
+ int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 5cc749261ce3..08020386c3d4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -546,97 +546,6 @@ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
+ 	return ret;
+ }
+ 
+-int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
+-{
+-	struct iwl_nvm_get_info cmd = {};
+-	struct iwl_nvm_get_info_rsp *rsp;
+-	struct iwl_trans *trans = mvm->trans;
+-	struct iwl_host_cmd hcmd = {
+-		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
+-		.data = { &cmd, },
+-		.len = { sizeof(cmd) },
+-		.id = WIDE_ID(REGULATORY_AND_NVM_GROUP, NVM_GET_INFO)
+-	};
+-	int  ret;
+-	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
+-				fw_has_capa(&mvm->fw->ucode_capa,
+-					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	ret = iwl_mvm_send_cmd(mvm, &hcmd);
+-	if (ret)
+-		return ret;
+-
+-	if (WARN(iwl_rx_packet_payload_len(hcmd.resp_pkt) != sizeof(*rsp),
+-		 "Invalid payload len in NVM response from FW %d",
+-		 iwl_rx_packet_payload_len(hcmd.resp_pkt))) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	rsp = (void *)hcmd.resp_pkt->data;
+-	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
+-		IWL_INFO(mvm, "OTP is empty\n");
+-
+-	mvm->nvm_data = kzalloc(sizeof(*mvm->nvm_data) +
+-				sizeof(struct ieee80211_channel) *
+-				IWL_NUM_CHANNELS, GFP_KERNEL);
+-	if (!mvm->nvm_data) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	iwl_set_hw_address_from_csr(trans, mvm->nvm_data);
+-	/* TODO: if platform NVM has MAC address - override it here */
+-
+-	if (!is_valid_ether_addr(mvm->nvm_data->hw_addr)) {
+-		IWL_ERR(trans, "no valid mac address was found\n");
+-		ret = -EINVAL;
+-		goto err_free;
+-	}
+-
+-	IWL_INFO(trans, "base HW address: %pM\n", mvm->nvm_data->hw_addr);
+-
+-	/* Initialize general data */
+-	mvm->nvm_data->nvm_version = le16_to_cpu(rsp->general.nvm_version);
+-
+-	/* Initialize MAC sku data */
+-	mvm->nvm_data->sku_cap_11ac_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_11ac);
+-	mvm->nvm_data->sku_cap_11n_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_11n);
+-	mvm->nvm_data->sku_cap_band_24GHz_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_24g);
+-	mvm->nvm_data->sku_cap_band_52GHz_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_5g);
+-	mvm->nvm_data->sku_cap_mimo_disabled =
+-		le32_to_cpu(rsp->mac_sku.mimo_disable);
+-
+-	/* Initialize PHY sku data */
+-	mvm->nvm_data->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
+-	mvm->nvm_data->valid_rx_ant = (u8)le32_to_cpu(rsp->phy_sku.rx_chains);
+-
+-	/* Initialize regulatory data */
+-	mvm->nvm_data->lar_enabled =
+-		le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported;
+-
+-	iwl_init_sbands(trans->dev, trans->cfg, mvm->nvm_data,
+-			rsp->regulatory.channel_profile,
+-			mvm->nvm_data->valid_tx_ant & mvm->fw->valid_tx_ant,
+-			mvm->nvm_data->valid_rx_ant & mvm->fw->valid_rx_ant,
+-			rsp->regulatory.lar_enabled && lar_fw_supported);
+-
+-	iwl_free_resp(&hcmd);
+-	return 0;
+-
+-err_free:
+-	kfree(mvm->nvm_data);
+-out:
+-	iwl_free_resp(&hcmd);
+-	return ret;
+-}
+-
+ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ {
+ 	int ret, section;
+-- 
+2.13.2
