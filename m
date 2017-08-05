@@ -1,243 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:63780
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754480AbdHYCbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 22:31:10 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [PATCH 24/27] qtnfmac: configure and start AP interface with a single command
-Date: Thu, 24 Aug 2017 19:30:21 -0700
-Message-Id: <20170825023024.10565-25-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043114_079097_4BFCCD77)
-In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:42628 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752665AbdHETo6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 5 Aug 2017 15:44:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:31 +0300
+Message-Id: <20170805194331.17426-20-luca@coelho.fi> (sfid-20170805_220252_657933_AAF63CB1)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 19/19] iwlwifi: mvm: fix the coex firmware API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Current logic artificially divides "start AP" procedure into three
-stages:
-- generic interface configuration (security, channel etc)
-- IE's processing
-- enable AP mode on interface
+The firmware API defined in the header files didn't match
+the structure that are actually passed by the firmware.
+The impact could be a decision for MIMO in Tx or Rx in
+coex scenarios.
 
-This separation would not allow to do a proper device configuration as
-first stage needs to use information from IEs that are processed on
-a second stage. Which means first and second stages have to be meged.
-In that case there is no point anymore to keep third stage either, so
-merge all three into a single command.
-
-This new command carries all the same info as contained in
-"struct cfg80211_ap_settings".
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Fixes: 430a3bbafdc7 ("iwlwifi: mvm: BT Coex - new API")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 17 +-----
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 72 +++++++++++++----------
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  5 +-
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  5 +-
- 4 files changed, 47 insertions(+), 52 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h | 14 +++++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c    |  7 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c |  4 ++--
+ 3 files changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 2497493..d6ddb4d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -266,26 +266,11 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
+index 583f4189f55e..df4ecec59b40 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
+@@ -220,12 +220,6 @@ enum iwl_bt_ci_compliance {
+ 	BT_CI_COMPLIANCE_BOTH		= 3,
+ }; /* BT_COEX_CI_COMPLIENCE_E_VER_1 */
  
--	ret = qtnf_cmd_send_config_ap(vif, settings);
--	if (ret) {
--		pr_err("VIF%u.%u: failed to push config to FW\n",
--		       vif->mac->macid, vif->vifid);
--		goto out;
--	}
+-#define IWL_COEX_IS_TTC_ON(_ttc_rrc_status, _phy_id)	\
+-		(_ttc_rrc_status & BIT(_phy_id))
 -
--	ret = qtnf_mgmt_set_appie(vif, &settings->beacon);
--	if (ret) {
--		pr_err("VIF%u.%u: failed to add IEs to beacon\n",
--		       vif->mac->macid, vif->vifid);
--		goto out;
--	}
+-#define IWL_COEX_IS_RRC_ON(_ttc_rrc_status, _phy_id)	\
+-		((_ttc_rrc_status >> 4) & BIT(_phy_id))
 -
--	ret = qtnf_cmd_send_start_ap(vif);
-+	ret = qtnf_cmd_send_start_ap(vif, settings);
- 	if (ret)
- 		pr_err("VIF%u.%u: failed to start AP\n", vif->mac->macid,
- 		       vif->vifid);
- 
--out:
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 2e30c26..1965061 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -162,56 +162,51 @@ static void qtnf_cmd_tlv_ie_set_add(struct sk_buff *cmd_skb, u8 frame_type,
- 		memcpy(tlv->ie_data, buf, len);
- }
- 
--int qtnf_cmd_send_start_ap(struct qtnf_vif *vif)
-+static bool qtnf_cmd_start_ap_can_fit(const struct qtnf_vif *vif,
-+				      const struct cfg80211_ap_settings *s)
- {
--	struct sk_buff *cmd_skb;
--	u16 res_code = QLINK_CMD_RESULT_OK;
--	int ret;
-+	unsigned int len = sizeof(struct qlink_cmd_start_ap);
- 
--	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
--					    QLINK_CMD_START_AP,
--					    sizeof(struct qlink_cmd));
--	if (unlikely(!cmd_skb))
--		return -ENOMEM;
-+	len += s->ssid_len;
-+	len += s->beacon.head_len;
-+	len += s->beacon.tail_len;
-+	len += s->beacon.beacon_ies_len;
-+	len += s->beacon.proberesp_ies_len;
-+	len += s->beacon.assocresp_ies_len;
-+	len += s->beacon.probe_resp_len;
- 
--	qtnf_bus_lock(vif->mac->bus);
--
--	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
-+	if (cfg80211_chandef_valid(&s->chandef))
-+		len += sizeof(struct qlink_tlv_chandef);
- 
--	if (unlikely(ret))
--		goto out;
--
--	if (unlikely(res_code != QLINK_CMD_RESULT_OK)) {
--		pr_err("VIF%u.%u: CMD failed: %u\n", vif->mac->macid,
--		       vif->vifid, res_code);
--		ret = -EFAULT;
--		goto out;
-+	if (len > (sizeof(struct qlink_cmd) + QTNF_MAX_CMD_BUF_SIZE)) {
-+		pr_err("VIF%u.%u: can not fit AP settings: %u\n",
-+		       vif->mac->macid, vif->vifid, len);
-+		return false;
- 	}
- 
--	netif_carrier_on(vif->netdev);
--
--out:
--	qtnf_bus_unlock(vif->mac->bus);
--	return ret;
-+	return true;
- }
- 
--int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
--			    const struct cfg80211_ap_settings *s)
-+int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
-+			   const struct cfg80211_ap_settings *s)
- {
- 	struct sk_buff *cmd_skb;
--	struct qlink_cmd_config_ap *cmd;
-+	struct qlink_cmd_start_ap *cmd;
- 	struct qlink_auth_encr *aen;
- 	u16 res_code = QLINK_CMD_RESULT_OK;
- 	int ret;
- 	int i;
- 
-+	if (!qtnf_cmd_start_ap_can_fit(vif, s))
-+		return -E2BIG;
-+
- 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
--					    QLINK_CMD_CONFIG_AP,
-+					    QLINK_CMD_START_AP,
- 					    sizeof(*cmd));
- 	if (unlikely(!cmd_skb))
- 		return -ENOMEM;
- 
--	cmd = (struct qlink_cmd_config_ap *)cmd_skb->data;
-+	cmd = (struct qlink_cmd_start_ap *)cmd_skb->data;
- 	cmd->dtim_period = s->dtim_period;
- 	cmd->beacon_interval = cpu_to_le16(s->beacon_interval);
- 	cmd->hidden_ssid = qlink_hidden_ssid_nl2q(s->hidden_ssid);
-@@ -255,6 +250,21 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
- 		qlink_chandef_cfg2q(&s->chandef, &chtlv->chan);
- 	}
- 
-+	qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_BEACON_HEAD,
-+				s->beacon.head, s->beacon.head_len);
-+	qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_BEACON_TAIL,
-+				s->beacon.tail, s->beacon.tail_len);
-+	qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_BEACON_IES,
-+				s->beacon.beacon_ies, s->beacon.beacon_ies_len);
-+	qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_PROBE_RESP,
-+				s->beacon.probe_resp, s->beacon.probe_resp_len);
-+	qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_PROBE_RESP_IES,
-+				s->beacon.proberesp_ies,
-+				s->beacon.proberesp_ies_len);
-+	qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_ASSOC_RESP,
-+				s->beacon.assocresp_ies,
-+				s->beacon.assocresp_ies_len);
-+
- 	qtnf_bus_lock(vif->mac->bus);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
-@@ -269,6 +279,8 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
- 		goto out;
- 	}
- 
-+	netif_carrier_on(vif->netdev);
-+
- out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 	return ret;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index d6fe3cc..d981a76 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -33,9 +33,8 @@ int qtnf_cmd_send_del_intf(struct qtnf_vif *vif);
- int qtnf_cmd_band_info_get(struct qtnf_wmac *mac,
- 			   struct ieee80211_supported_band *band);
- int qtnf_cmd_send_regulatory_config(struct qtnf_wmac *mac, const char *alpha2);
--int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
--			    const struct cfg80211_ap_settings *s);
--int qtnf_cmd_send_start_ap(struct qtnf_vif *vif);
-+int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
-+			   const struct cfg80211_ap_settings *s);
- int qtnf_cmd_send_stop_ap(struct qtnf_vif *vif);
- int qtnf_cmd_send_register_mgmt(struct qtnf_vif *vif, u16 frame_type, bool reg);
- int qtnf_cmd_send_mgmt_frame(struct qtnf_vif *vif, u32 cookie, u16 flags,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index eba73fd..9a913b6 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -183,7 +183,6 @@ enum qlink_cmd_type {
- 	QLINK_CMD_BAND_INFO_GET		= 0x001A,
- 	QLINK_CMD_CHAN_SWITCH		= 0x001B,
- 	QLINK_CMD_CHAN_GET		= 0x001C,
--	QLINK_CMD_CONFIG_AP		= 0x0020,
- 	QLINK_CMD_START_AP		= 0x0021,
- 	QLINK_CMD_STOP_AP		= 0x0022,
- 	QLINK_CMD_GET_STA_INFO		= 0x0030,
-@@ -533,7 +532,7 @@ enum qlink_hidden_ssid {
- };
- 
  /**
-- * struct qlink_cmd_config_ap - data for QLINK_CMD_CONFIG_AP command
-+ * struct qlink_cmd_start_ap - data for QLINK_CMD_START_AP command
-  *
-  * @beacon_interval: beacon interval
-  * @inactivity_timeout: station's inactivity period in seconds
-@@ -545,7 +544,7 @@ enum qlink_hidden_ssid {
-  * @aen: encryption info
-  * @info: variable configurations
+  * struct iwl_bt_coex_profile_notif - notification about BT coex
+  * @mbox_msg: message from BT to WiFi
+@@ -234,7 +228,8 @@ enum iwl_bt_ci_compliance {
+  * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
+  * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
+  * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
+- * @ttc_rrc_status: is TTC or RRC enabled - one bit per PHY
++ * @ttc_status: is TTC enabled - one bit per PHY
++ * @rrc_status: is RRC enabled - one bit per PHY
+  * @reserved: reserved
   */
--struct qlink_cmd_config_ap {
-+struct qlink_cmd_start_ap {
- 	struct qlink_cmd chdr;
- 	__le16 beacon_interval;
- 	__le16 inactivity_timeout;
+ struct iwl_bt_coex_profile_notif {
+@@ -245,8 +240,9 @@ struct iwl_bt_coex_profile_notif {
+ 	__le32 primary_ch_lut;
+ 	__le32 secondary_ch_lut;
+ 	__le32 bt_activity_grading;
+-	u8 ttc_rrc_status;
+-	u8 reserved[3];
++	u8 ttc_status;
++	u8 rrc_status;
++	__le16 reserved;
+ } __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_4 */
+ 
+ #endif /* __iwl_fw_api_coex_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index 6c5c6510428a..0b4486114ddc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -560,8 +560,7 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 
+ 	if (mvmvif->phy_ctxt &&
+-	    IWL_COEX_IS_RRC_ON(mvm->last_bt_notif.ttc_rrc_status,
+-			       mvmvif->phy_ctxt->id))
++	    (mvm->last_bt_notif.rrc_status & BIT(mvmvif->phy_ctxt->id)))
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 
+ 	IWL_DEBUG_COEX(data->mvm,
+@@ -792,7 +791,7 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_phy_ctxt *phy_ctxt = mvmvif->phy_ctxt;
+ 	enum iwl_bt_coex_lut_type lut_type;
+ 
+-	if (IWL_COEX_IS_TTC_ON(mvm->last_bt_notif.ttc_rrc_status, phy_ctxt->id))
++	if (mvm->last_bt_notif.ttc_status & BIT(phy_ctxt->id))
+ 		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
+ 
+ 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
+@@ -816,7 +815,7 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
+ 	struct iwl_mvm_phy_ctxt *phy_ctxt = mvmvif->phy_ctxt;
+ 	enum iwl_bt_coex_lut_type lut_type;
+ 
+-	if (IWL_COEX_IS_TTC_ON(mvm->last_bt_notif.ttc_rrc_status, phy_ctxt->id))
++	if (mvm->last_bt_notif.ttc_status & BIT(phy_ctxt->id))
+ 		return true;
+ 
+ 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index ceb486610a56..ba2745a3b537 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -569,9 +569,9 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
+ 			 "antenna isolation = %d CORUN LUT index = %d\n",
+ 			 mvm->last_ant_isol, mvm->last_corun_lut);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "bt_rrc = %d\n",
+-			 (notif->ttc_rrc_status >> 4) & 0xF);
++			 notif->rrc_status & 0xF);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ttc = %d\n",
+-			 notif->ttc_rrc_status & 0xF);
++			 notif->ttc_status & 0xF);
+ 
+ 	pos += scnprintf(buf + pos, bufsz - pos, "sync_sco = %d\n",
+ 			 IWL_MVM_BT_COEX_SYNC2SCO);
 -- 
-2.9.5
+2.13.2
