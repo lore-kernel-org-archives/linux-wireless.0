@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28909 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756886AbdHYOxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Aug 2017 10:53:12 -0400
-Subject: Re: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of the
- brcm43430 chip
-To: =?UTF-8?Q?J=c3=b6rg_Krause?= <joerg.krause@embedded.rocks>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Jelle van der Waa <jelle@vdwaa.nl>, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <20170616131449.12108-1-hdegoede@redhat.com>
- <20170616131449.12108-2-hdegoede@redhat.com>
- <1503669327.8480.3.camel@embedded.rocks>
- <c851671c-1147-94cc-cf98-d0b20b051b3b@redhat.com>
- <1503672591.22413.3.camel@embedded.rocks>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <63fa22df-4268-12b9-9b4d-c60235130dde@redhat.com> (sfid-20170825_165338_641546_991053E9)
-Date: Fri, 25 Aug 2017 16:53:08 +0200
-MIME-Version: 1.0
-In-Reply-To: <1503672591.22413.3.camel@embedded.rocks>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from paleale.coelho.fi ([176.9.41.70]:42412 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752585AbdHESrw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 5 Aug 2017 14:47:52 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Christophe Jaillet <christophe.jaillet@wanadoo.fr>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 21:47:41 +0300
+Message-Id: <20170805184743.23650-2-luca@coelho.fi> (sfid-20170805_205039_440725_9536D435)
+In-Reply-To: <20170805184743.23650-1-luca@coelho.fi>
+References: <20170805184743.23650-1-luca@coelho.fi>
+Subject: [PATCH 1/3] iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
 
-On 25-08-17 16:49, Jörg Krause wrote:
+We should free 'wgds.pointer' here as done a few lines above in another
+error handling path.
+It was allocated within 'acpi_evaluate_object()'.
 
-<snip>
+Fixes: c52030a01ccc ("iwlwifi: mvm: add GEO_TX_POWER_LIMIT cmd for geographic tx power table")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-> Thanks for the files!
-> 
-> I've tested with brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020 and
-> brcmfmac is happy:
-> 
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul  1 2016
-> 18:02:40 version 7.10.1 (A0 Station/P2P feature) FWID 01-bae8afee
-> 
-> Where did you got the firmware files from?
-
- From various Android x86 images and from:
-https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/
-
-Regards,
-
-Hans
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 79e7a7a285dc..82863e9273eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1275,8 +1275,10 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
+ 
+ 			entry = &wifi_pkg->package.elements[idx++];
+ 			if ((entry->type != ACPI_TYPE_INTEGER) ||
+-			    (entry->integer.value > U8_MAX))
+-				return -EINVAL;
++			    (entry->integer.value > U8_MAX)) {
++				ret = -EINVAL;
++				goto out_free;
++			}
+ 
+ 			mvm->geo_profiles[i].values[j] = entry->integer.value;
+ 		}
+-- 
+2.13.2
