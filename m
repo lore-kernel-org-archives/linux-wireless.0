@@ -1,207 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44636 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42276 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752066AbdHRPwr (ORCPT
+        with ESMTP id S1751425AbdHEIpX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:47 -0400
+        Sat, 5 Aug 2017 04:45:23 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date: Fri, 18 Aug 2017 18:49:18 +0300
-Message-Id: <20170818154922.2904-21-luca@coelho.fi> (sfid-20170818_175250_397097_A37DAF65)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 20/24] iwlwifi: add workaround to disable wide channels in 5GHz
+        Johannes Berg <johannes.berg@intel.com>
+Date: Sat,  5 Aug 2017 11:44:32 +0300
+Message-Id: <20170805084438.12550-5-luca@coelho.fi> (sfid-20170805_104529_070222_4774147F)
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+Subject: [PATCH 04/10] mac80211: simplify and clarify IE splitting
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The OTP in some SKUs have erroneously allowed 40MHz and 80MHz channels
-in the 5.2GHz band.  The firmware has been modified to not allow this
-in those SKUs, so the driver needs to do the same otherwise the
-firmware will assert when we try to use it.
+There's no need to split off IEs from the ones obtained
+from userspace, if they were already split off, so for
+example IEs that went before HT don't have to be listed
+again to go before VHT. Simplify the code here so it's
+clearer.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+While at it, also clarify the comments regarding the DMG
+(60 GHz) elements.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/nvm.c        |  3 +-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 62 ++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  3 +-
- 3 files changed, 56 insertions(+), 12 deletions(-)
+ net/mac80211/mlme.c | 19 +++++++------------
+ net/mac80211/util.c | 21 +++++++++------------
+ 2 files changed, 16 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-index ae03d0f5564f..e81f6dd3744e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-@@ -148,7 +148,8 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 			rsp->regulatory.channel_profile,
- 			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
- 			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
--			rsp->regulatory.lar_enabled && lar_fw_supported);
-+			rsp->regulatory.lar_enabled && lar_fw_supported,
-+			false);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7be7917e1541..5bb570643494 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -780,11 +780,12 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
+ 			WLAN_EID_HT_CAPABILITY,
+ 			WLAN_EID_BSS_COEX_2040,
++			/* luckily this is almost always there */
+ 			WLAN_EID_EXT_CAPABILITY,
+ 			WLAN_EID_QOS_TRAFFIC_CAPA,
+ 			WLAN_EID_TIM_BCAST_REQ,
+ 			WLAN_EID_INTERWORKING,
+-			/* 60GHz doesn't happen right now */
++			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
+ 			WLAN_EID_VHT_CAPABILITY,
+ 			WLAN_EID_OPMODE_NOTIF,
+ 		};
+@@ -812,22 +813,16 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 	/* if present, add any custom IEs that go before VHT */
+ 	if (assoc_data->ie_len) {
+ 		static const u8 before_vht[] = {
+-			WLAN_EID_SSID,
+-			WLAN_EID_SUPP_RATES,
+-			WLAN_EID_EXT_SUPP_RATES,
+-			WLAN_EID_PWR_CAPABILITY,
+-			WLAN_EID_SUPPORTED_CHANNELS,
+-			WLAN_EID_RSN,
+-			WLAN_EID_QOS_CAPA,
+-			WLAN_EID_RRM_ENABLED_CAPABILITIES,
+-			WLAN_EID_MOBILITY_DOMAIN,
+-			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
+-			WLAN_EID_HT_CAPABILITY,
++			/*
++			 * no need to list the ones split off before HT
++			 * or generated here
++			 */
+ 			WLAN_EID_BSS_COEX_2040,
+ 			WLAN_EID_EXT_CAPABILITY,
+ 			WLAN_EID_QOS_TRAFFIC_CAPA,
+ 			WLAN_EID_TIM_BCAST_REQ,
+ 			WLAN_EID_INTERWORKING,
++			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
+ 		};
  
- 	iwl_free_resp(&hcmd);
- 	return nvm;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 1172e4572a82..ea165b3e6dd3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -79,6 +79,7 @@
- /* NVM offsets (in words) definitions */
- enum wkp_nvm_offsets {
- 	/* NVM HW-Section offset (in words) definitions */
-+	SUBSYSTEM_ID = 0x0A,
- 	HW_ADDR = 0x15,
- 
- 	/* NVM SW-Section offset (in words) definitions */
-@@ -258,13 +259,12 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
- static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 				struct iwl_nvm_data *data,
- 				const __le16 * const nvm_ch_flags,
--				bool lar_supported)
-+				bool lar_supported, bool no_wide_in_5ghz)
- {
- 	int ch_idx;
- 	int n_channels = 0;
- 	struct ieee80211_channel *channel;
- 	u16 ch_flags;
--	bool is_5ghz;
- 	int num_of_ch, num_2ghz_channels;
- 	const u8 *nvm_chan;
- 
-@@ -279,12 +279,20 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 	}
- 
- 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
-+		bool is_5ghz = (ch_idx >= num_2ghz_channels);
-+
- 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
- 
--		if (ch_idx >= num_2ghz_channels &&
--		    !data->sku_cap_band_52GHz_enable)
-+		if (is_5ghz && !data->sku_cap_band_52GHz_enable)
- 			continue;
- 
-+		/* workaround to disable wide channels in 5GHz */
-+		if (no_wide_in_5ghz && is_5ghz) {
-+			ch_flags &= ~(NVM_CHANNEL_40MHZ |
-+				     NVM_CHANNEL_80MHZ |
-+				     NVM_CHANNEL_160MHZ);
-+		}
-+
- 		if (ch_flags & NVM_CHANNEL_160MHZ)
- 			data->vht160_supported = true;
- 
-@@ -307,8 +315,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		n_channels++;
- 
- 		channel->hw_value = nvm_chan[ch_idx];
--		channel->band = (ch_idx < num_2ghz_channels) ?
--				NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
-+		channel->band = is_5ghz ?
-+				NL80211_BAND_5GHZ : NL80211_BAND_2GHZ;
- 		channel->center_freq =
- 			ieee80211_channel_to_frequency(
- 				channel->hw_value, channel->band);
-@@ -320,7 +328,6 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		 * is not used in mvm, and is used for backwards compatibility
- 		 */
- 		channel->max_power = IWL_DEFAULT_MAX_TX_POWER;
--		is_5ghz = channel->band == NL80211_BAND_5GHZ;
- 
- 		/* don't put limitations in case we're using LAR */
- 		if (!lar_supported)
-@@ -438,14 +445,15 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 
- void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
--		     u8 tx_chains, u8 rx_chains, bool lar_supported)
-+		     u8 tx_chains, u8 rx_chains, bool lar_supported,
-+		     bool no_wide_in_5ghz)
- {
- 	int n_channels;
- 	int n_used = 0;
- 	struct ieee80211_supported_band *sband;
- 
- 	n_channels = iwl_init_channel_map(dev, cfg, data, nvm_ch_flags,
--					  lar_supported);
-+					  lar_supported, no_wide_in_5ghz);
- 	sband = &data->bands[NL80211_BAND_2GHZ];
- 	sband->band = NL80211_BAND_2GHZ;
- 	sband->bitrates = &iwl_cfg80211_rates[RATES_24_OFFS];
-@@ -651,6 +659,39 @@ static int iwl_set_hw_address(struct iwl_trans *trans,
- 	return 0;
- }
- 
-+static bool
-+iwl_nvm_no_wide_in_5ghz(struct device *dev, const struct iwl_cfg *cfg,
-+			const __le16 *nvm_hw)
-+{
-+	/*
-+	 * Workaround a bug in Indonesia SKUs where the regulatory in
-+	 * some 7000-family OTPs erroneously allow wide channels in
-+	 * 5GHz.  To check for Indonesia, we take the SKU value from
-+	 * bits 1-4 in the subsystem ID and check if it is either 5 or
-+	 * 9.  In those cases, we need to force-disable wide channels
-+	 * in 5GHz otherwise the FW will throw a sysassert when we try
-+	 * to use them.
-+	 */
-+	if (cfg->device_family == IWL_DEVICE_FAMILY_7000) {
-+		/*
-+		 * Unlike the other sections in the NVM, the hw
-+		 * section uses big-endian.
-+		 */
-+		u16 subsystem_id = be16_to_cpup((const __be16 *)nvm_hw
-+						+ SUBSYSTEM_ID);
-+		u8 sku = (subsystem_id & 0x1e) >> 1;
-+
-+		if (sku == 5 || sku == 9) {
-+			IWL_DEBUG_EEPROM(dev,
-+					 "disabling wide channels in 5GHz (0x%0x %d)\n",
-+					 subsystem_id, sku);
-+			return true;
-+		}
-+	}
-+
-+	return false;
-+}
-+
- struct iwl_nvm_data *
- iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
-@@ -661,6 +702,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	struct device *dev = trans->dev;
- 	struct iwl_nvm_data *data;
- 	bool lar_enabled;
-+	bool no_wide_in_5ghz = iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw);
- 	u32 sku, radio_cfg;
- 	u16 lar_config;
- 	const __le16 *ch_section;
-@@ -731,7 +773,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	}
- 
- 	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
--			lar_fw_supported && lar_enabled);
-+			lar_fw_supported && lar_enabled, no_wide_in_5ghz);
- 	data->calib_version = 255;
- 
- 	return data;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 3fd6506a02ab..50d9b3eaa4f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -93,7 +93,8 @@ void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
-  */
- void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
--		     u8 tx_chains, u8 rx_chains, bool lar_supported);
-+		     u8 tx_chains, u8 rx_chains, bool lar_supported,
-+		     bool no_wide_in_5ghz);
- 
- /**
-  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
+ 		/* RIC already taken above, so no need to handle here anymore */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 6aef6793d052..bfecc3e86318 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1392,10 +1392,10 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 	/* insert custom IEs that go before HT */
+ 	if (ie && ie_len) {
+ 		static const u8 before_ht[] = {
+-			WLAN_EID_SSID,
+-			WLAN_EID_SUPP_RATES,
+-			WLAN_EID_REQUEST,
+-			WLAN_EID_EXT_SUPP_RATES,
++			/*
++			 * no need to list the ones split off already
++			 * (or generated here)
++			 */
+ 			WLAN_EID_DS_PARAMS,
+ 			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
+ 		};
+@@ -1424,20 +1424,17 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 	/* insert custom IEs that go before VHT */
+ 	if (ie && ie_len) {
+ 		static const u8 before_vht[] = {
+-			WLAN_EID_SSID,
+-			WLAN_EID_SUPP_RATES,
+-			WLAN_EID_REQUEST,
+-			WLAN_EID_EXT_SUPP_RATES,
+-			WLAN_EID_DS_PARAMS,
+-			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
+-			WLAN_EID_HT_CAPABILITY,
++			/*
++			 * no need to list the ones split off already
++			 * (or generated here)
++			 */
+ 			WLAN_EID_BSS_COEX_2040,
+ 			WLAN_EID_EXT_CAPABILITY,
+ 			WLAN_EID_SSID_LIST,
+ 			WLAN_EID_CHANNEL_USAGE,
+ 			WLAN_EID_INTERWORKING,
+ 			WLAN_EID_MESH_ID,
+-			/* 60 GHz can't happen here right now */
++			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
+ 		};
+ 		noffset = ieee80211_ie_split(ie, ie_len,
+ 					     before_vht, ARRAY_SIZE(before_vht),
 -- 
-2.14.1
+2.13.2
