@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38594 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751142AbdHBJi7 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42474 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751401AbdHETnj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:38:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
-Subject: Re: [PATCH 1/8] rsi: add support for rf-kill functionality
-References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
-        <1501578352-10795-2-git-send-email-amitkarwar@gmail.com>
-Date: Wed, 02 Aug 2017 12:38:55 +0300
-In-Reply-To: <1501578352-10795-2-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Tue, 1 Aug 2017 14:35:45 +0530")
-Message-ID: <87ini648cw.fsf@codeaurora.org> (sfid-20170802_113906_872507_3731C64B)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 5 Aug 2017 15:43:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 22:43:15 +0300
+Message-Id: <20170805194331.17426-4-luca@coelho.fi> (sfid-20170805_214355_354135_CF7B2BE0)
+In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
+References: <20170805194331.17426-1-luca@coelho.fi>
+Subject: [PATCH 03/19] iwlwifi: mvm: add const to thermal_cooling_device_ops structure
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+From: Bhumika Goyal <bhumirks@gmail.com>
 
-> From: "pavani.muthyala" <pavani.muthyala@redpinesignals.com>
->
-> This patch implements rfkill_poll handler. Also, necessary changes
-> are done in interface up and down handler to support rfkill
-> functionality.
->
-> Signed-off-by: pavani.muthyala <pavani.muthyala@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Declare thermal_cooling_device_ops structure as const as it is only passed
+as an argument to the function thermal_cooling_device_register and this
+argument is of type const. So, declare the structure as const.
 
-Pavani's name in From and S-o-b fields are in incorrect format.
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index a638bd69a1f9..3f143402cf7f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -813,7 +813,7 @@ static int iwl_mvm_tcool_set_cur_state(struct thermal_cooling_device *cdev,
+ 	return ret;
+ }
+ 
+-static struct thermal_cooling_device_ops tcooling_ops = {
++static const struct thermal_cooling_device_ops tcooling_ops = {
+ 	.get_max_state = iwl_mvm_tcool_get_max_state,
+ 	.get_cur_state = iwl_mvm_tcool_get_cur_state,
+ 	.set_cur_state = iwl_mvm_tcool_set_cur_state,
 -- 
-Kalle Valo
+2.13.2
