@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:35022 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752330AbdHJGgu (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42288 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751436AbdHEIpX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 02:36:50 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: RE: [v6] wlcore: add missing nvs file name info for wilink8
-Date: Thu, 10 Aug 2017 06:35:46 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com> (sfid-20170810_083717_303573_653EC5FE)
-References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
- <20170809172651.GA3934@atomide.com>
- <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
- <20170809211620.GF3934@atomide.com>
-In-Reply-To: <20170809211620.GF3934@atomide.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Sat, 5 Aug 2017 04:45:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Sharon Dvir <sharon.dvir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  5 Aug 2017 11:44:30 +0300
+Message-Id: <20170805084438.12550-3-luca@coelho.fi> (sfid-20170805_104553_468869_73884A64)
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+Subject: [PATCH 02/10] mac80211: shorten debug prints using ht_dbg() to avoid warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >
-> > Sorry for top posting (mobile...)
-> > I have verified with system design and the data sheet that every wilink=
- 6/7
-> chip has a mac address in fuse so probably the board you have (pretty old=
-,
-> right?) has this mac address in fuse. Maybe it was from very early batche=
-s?
-> Anyway I see no reason to change it.
-> > Anyway the calibrator can be used to store a different one into the nvs=
- file
-> that will overide it.
->=20
-> Well clearly at least this one does not have any valid hardware
-> mac address, the hardware mac address is broken with all zeroes.
->=20
+From: Sharon Dvir <sharon.dvir@intel.com>
 
-Looks like it is not really all zeros but rather 00:00:00:00:00:01.=20
-I wonder if it is just a one board issue or not...
+Invoking ht_dbg() with too long of a string will print a warning.
+Shorten the messages while retaining the printed patameters.
 
-> It seems that you can easily add a check for empty mac address, no?
-> And you already showed a version that falls back to a random mac
-> address.
->=20
+Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/agg-tx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Of course I can add a check for this but need to make sure it=20
-is not just one private case.
-Do you happen to have another omap3-evm and can check if this is a typical =
-case
-For the wilink modules that were assembled on this EVM?
-I have not seen another module here that showed this issue and want to make=
-=20
-Sure it is really a common issue before adding additional checks to the ker=
-nel.
-
-> The fact that is old does not change a thing, we still need to
-> support it no matter what the data sheet and your system design
-> says. A fix that breaks other things is not really a fix :)
->=20
-
-Sure, just want to make sure we are not trying to add work around just for
-A couple of faulty devices.
-
-> > I have verified using a couple of com6 modules with an am335x-evm and
-> they had mac addresses read ok.
->=20
-> Sounds like there are multiple variants of the wl12xx
-> available then.
->=20
-I am trying to find out internally if there is a possibility that there wer=
-e devices
-Produced in the past where the internal fuses were not programmed with a va=
-lid=20
-Address before being assembled into the modules.
-
-Best Regards,
-Eyal
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index cbd48762256c..420486b5a1d9 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -436,7 +436,7 @@ static void sta_addba_resp_timer_expired(unsigned long data)
+ 	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
+ 		rcu_read_unlock();
+ 		ht_dbg(sta->sdata,
+-		       "timer expired on %pM tid %d but we are not (or no longer) expecting addBA response there\n",
++		       "timer expired on %pM tid %d not expecting addBA response\n",
+ 		       sta->sta.addr, tid);
+ 		return;
+ 	}
+@@ -639,7 +639,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
+ 			HT_AGG_RETRIES_PERIOD)) {
+ 		ht_dbg(sdata,
+-		       "BA request denied - waiting a grace period after %d failed requests on %pM tid %u\n",
++		       "BA request denied - %d failed requests on %pM tid %u\n",
+ 		       sta->ampdu_mlme.addba_req_num[tid], sta->sta.addr, tid);
+ 		ret = -EBUSY;
+ 		goto err_unlock_sta;
+-- 
+2.13.2
