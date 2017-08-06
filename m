@@ -1,38 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pv35p12im-ztdg05031101.me.com ([17.133.186.213]:38068 "EHLO
-        pv35p12im-ztdg05031101.me.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753375AbdHRAcu (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42672 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751271AbdHFHPe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2017 20:32:50 -0400
-Received: from process-dkim-sign-daemon.pv35p12im-ztdg05031101.me.com by
- pv35p12im-ztdg05031101.me.com
- (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
- 2017)) id <0OUU00600S1HDC00@pv35p12im-ztdg05031101.me.com> for
- linux-wireless@vger.kernel.org; Thu, 17 Aug 2017 23:32:49 +0000 (GMT)
-Received: from icloud.com ([127.0.0.1]) by pv35p12im-ztdg05031101.me.com
- (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
- 2017)) with ESMTPSA id <0OUU003B2S2MGQ00@pv35p12im-ztdg05031101.me.com> for
- linux-wireless@vger.kernel.org; Thu, 17 Aug 2017 23:32:49 +0000 (GMT)
-From: =?utf-8?Q?H=C3=A5vard_Rabbe?= <hrabbe@me.com>
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: ath9k driver - is it possible to disable tx/rx radio chains?
-Message-id: <0DB9FDCC-490C-438E-AA50-1C751565A9AE@me.com> (sfid-20170818_023253_784859_0F677FF9)
-Date: Fri, 18 Aug 2017 01:32:44 +0200
-To: linux-wireless@vger.kernel.org
+        Sun, 6 Aug 2017 03:15:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  6 Aug 2017 10:15:23 +0300
+Message-Id: <20170806071523.7850-1-luca@coelho.fi> (sfid-20170806_091618_210754_128010F3)
+In-Reply-To: <20170805084438.12550-8-luca@coelho.fi>
+References: <20170805084438.12550-8-luca@coelho.fi>
+Subject: [PATCH v2] mac80211: add api to start ba session timer expired flow
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
-I=E2=80=99m using wifi card with AR9280 chipset that uses the ath9k =
-driver.
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-The card has 2 available radio chains and I=E2=80=99m only going to =
-connect 1 antenna.
+Some drivers handle rx buffer reordering internally (and by extension
+handle also the rx ba session timer internally), but do not ofload the
+addba/delba negotiation.
+Add an api for these drivers to properly tear-down the ba session,
+including sending a delba.
 
-Is it possible to disable the radio chain im not using?
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
 
+In v2:
 
-Best Regards,
+* fix htmldocs warning, reported by 0-day
 
-H=C3=A5vard Rabbe=
+include/net/mac80211.h | 15 +++++++++++++++
+ net/mac80211/agg-rx.c  | 22 +++++++++++++++++++++-
+ 2 files changed, 36 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b2b5419467cc..f8149ca192b4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5499,6 +5499,21 @@ static inline void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
+ 	ieee80211_manage_rx_ba_offl(vif, addr, tid + IEEE80211_NUM_TIDS);
+ }
+ 
++/**
++ * ieee80211_rx_ba_timer_expired - stop a Rx BA session due to timeout
++ *
++ * Some device drivers do not offload AddBa/DelBa negotiation, but handle rx
++ * buffer reording internally, and therefore also handle the session timer.
++ *
++ * Trigger the timeout flow, which sends a DelBa.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback
++ * @addr: station mac address
++ * @tid: the rx tid
++ */
++void ieee80211_rx_ba_timer_expired(struct ieee80211_vif *vif,
++				   const u8 *addr, unsigned int tid);
++
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 8708cbe8af5b..2b36eff5d97e 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -7,7 +7,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015-2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -466,3 +466,23 @@ void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif,
+ 	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL(ieee80211_manage_rx_ba_offl);
++
++void ieee80211_rx_ba_timer_expired(struct ieee80211_vif *vif,
++				   const u8 *addr, unsigned int tid)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	rcu_read_lock();
++	sta = sta_info_get_bss(sdata, addr);
++	if (!sta)
++		goto unlock;
++
++	set_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
++
++ unlock:
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL(ieee80211_rx_ba_timer_expired);
+-- 
+2.13.2
