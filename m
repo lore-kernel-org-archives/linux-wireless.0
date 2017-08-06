@@ -1,36 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43192 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751531AbdHPQ2T (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42688 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751179AbdHFIia (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 12:28:19 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH] qtnfmac: pcie datapath optimizations and cleanups
-References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
-        <8760dntv1y.fsf@purkki.adurom.net>
-        <20170816155313.xtl4vfq7m7zfu5dj@bars>
-Date: Wed, 16 Aug 2017 19:28:14 +0300
-In-Reply-To: <20170816155313.xtl4vfq7m7zfu5dj@bars> (Sergey Matyukevich's
-        message of "Wed, 16 Aug 2017 18:53:14 +0300")
-Message-ID: <87r2wb5vfl.fsf@kamboji.qca.qualcomm.com> (sfid-20170816_182822_591375_7FDE494E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 6 Aug 2017 04:38:30 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Roee Zamir <roee.zamir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  6 Aug 2017 11:38:22 +0300
+Message-Id: <20170806083823.21825-1-luca@coelho.fi> (sfid-20170806_103847_705190_C6F35511)
+Subject: [PATCH 1/2] nl80211: add OCE scan and capability flags
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+From: Roee Zamir <roee.zamir@intel.com>
 
->> I don't see patch 9 in the mailing list. Did it get lost somewhere?
->
-> No, this is my fault. The last patch was sort of experimental shuffling
-> dma memory barriers. I kept it for testing, but forgot to remove it
-> before sending. Let me know if it matters, then I will resend
-> a properly numbered patchset.
+Add Optimized Connectivity Experience (OCE) scan and capability flags.
+Some of them unique to OCE and some are stand alone.
+And add scan flags to enable/disable them.
 
-Not a problem, I just always check if I see a patch missing.
+Signed-off-by: Roee Zamir <roee.zamir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/uapi/linux/nl80211.h |  37 ++++++++++--
+ net/wireless/nl80211.c       | 137 ++++++++++++++++++++++++-------------------
+ 2 files changed, 111 insertions(+), 63 deletions(-)
 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 51626b4175c0..76404d8a8863 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4914,6 +4914,15 @@ enum nl80211_feature_flags {
+  *	handshake with 802.1X in station mode (will pass EAP frames to the host
+  *	and accept the set_pmk/del_pmk commands), doing it in the host might not
+  *	be supported.
++ * @NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME: Driver is capable of overriding
++ *	the max channel attribute in the FILS request params IE with the
++ *	actual dwell time.
++ * @NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP: Driver accepts broadcast probe
++ *	response
++ * @NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE: Driver supports sending
++ *	the first probe request in each channel at rate of at least 5.5Mbps.
++ * @NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION: Driver supports
++ *	probe request tx deferral and suppression
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4936,6 +4945,10 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
+ 	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
+ 	NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X,
++	NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME,
++	NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP,
++	NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE,
++	NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+@@ -5012,12 +5025,28 @@ enum nl80211_timeout_reason {
+  *	locally administered 1, multicast 0) is assumed.
+  *	This flag must not be requested when the feature isn't supported, check
+  *	the nl80211 feature flags for the device.
++ * @NL80211_SCAN_FLAG_FILS_MAX_CHANNEL_TIME: fill the dwell time in the FILS
++ *	request parameters IE in the probe request
++ * @NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP: accept broadcast probe responses
++ * @NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE: send probe request frames at
++ *	rate of at least 5.5M. In case non OCE AP is dicovered in the channel,
++ *	only the first probe req in the channel will be sent in high rate.
++ * @NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION: allow probe request
++ *	tx deferral (dot11FILSProbeDelay shall be set to 15ms)
++ *	and suppression (if it has received a broadcast Probe Response frame,
++ *	Beacon frame or FILS Discovery frame from an AP that the STA considers
++ *	a suitable candidate for (re-)association - suitable in terms of
++ *	SSID and/or RSSI
+  */
+ enum nl80211_scan_flags {
+-	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
+-	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
+-	NL80211_SCAN_FLAG_AP				= 1<<2,
+-	NL80211_SCAN_FLAG_RANDOM_ADDR			= 1<<3,
++	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
++	NL80211_SCAN_FLAG_FLUSH					= 1<<1,
++	NL80211_SCAN_FLAG_AP					= 1<<2,
++	NL80211_SCAN_FLAG_RANDOM_ADDR				= 1<<3,
++	NL80211_SCAN_FLAG_FILS_MAX_CHANNEL_TIME			= 1<<4,
++	NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP		= 1<<5,
++	NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE		= 1<<6,
++	NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION	= 1<<7,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index edf484fe1f80..d57abdfa60da 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6615,6 +6615,77 @@ static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev)
+ 	return regulatory_pre_cac_allowed(wdev->wiphy);
+ }
+ 
++static int
++nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
++			 void *request, struct nlattr **attrs,
++			 bool is_sched_scan)
++{
++	u8 *mac_addr, *mac_addr_mask;
++	u32 *flags;
++	enum nl80211_feature_flags randomness_flag;
++
++	if (!attrs[NL80211_ATTR_SCAN_FLAGS])
++		return 0;
++
++	if (is_sched_scan) {
++		struct cfg80211_sched_scan_request *req = request;
++
++		randomness_flag = wdev ?
++				  NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR :
++				  NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
++		flags = &req->flags;
++		mac_addr = req->mac_addr;
++		mac_addr_mask = req->mac_addr_mask;
++	} else {
++		struct cfg80211_scan_request *req = request;
++
++		randomness_flag = NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++		flags = &req->flags;
++		mac_addr = req->mac_addr;
++		mac_addr_mask = req->mac_addr_mask;
++	}
++
++	*flags = nla_get_u32(attrs[NL80211_ATTR_SCAN_FLAGS]);
++
++	if ((*flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++	    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN))
++		return -EOPNOTSUPP;
++
++	if (*flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
++		int err;
++
++		if (!(wiphy->features & randomness_flag) ||
++		    (wdev && wdev->current_bss))
++			return -EOPNOTSUPP;
++
++		err = nl80211_parse_random_mac(attrs, mac_addr, mac_addr_mask);
++		if (err)
++			return err;
++	}
++
++	if ((*flags & NL80211_SCAN_FLAG_FILS_MAX_CHANNEL_TIME) &&
++	    !wiphy_ext_feature_isset(wiphy,
++		NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME))
++		return -EOPNOTSUPP;
++
++	if((*flags & NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP) &&
++	   !wiphy_ext_feature_isset(wiphy,
++		NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP))
++		return -EOPNOTSUPP;
++
++	if ((*flags & NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION) &&
++	    !wiphy_ext_feature_isset(wiphy,
++		NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION))
++		return -EOPNOTSUPP;
++
++	if ((*flags & NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE) &&
++	    !wiphy_ext_feature_isset(wiphy,
++		NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE))
++		return -EOPNOTSUPP;
++
++	return 0;
++}
++
+ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -6820,34 +6891,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 			nla_get_flag(info->attrs[NL80211_ATTR_MEASUREMENT_DURATION_MANDATORY]);
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_SCAN_FLAGS]) {
+-		request->flags = nla_get_u32(
+-			info->attrs[NL80211_ATTR_SCAN_FLAGS]);
+-		if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+-		    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) {
+-			err = -EOPNOTSUPP;
+-			goto out_free;
+-		}
+-
+-		if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-			if (!(wiphy->features &
+-					NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR)) {
+-				err = -EOPNOTSUPP;
+-				goto out_free;
+-			}
+-
+-			if (wdev->current_bss) {
+-				err = -EOPNOTSUPP;
+-				goto out_free;
+-			}
+-
+-			err = nl80211_parse_random_mac(info->attrs,
+-						       request->mac_addr,
+-						       request->mac_addr_mask);
+-			if (err)
+-				goto out_free;
+-		}
+-	}
++	err = nl80211_check_scan_flags(wiphy, wdev, request, info->attrs,
++				       false);
++	if (err)
++		goto out_free;
+ 
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+@@ -7295,37 +7342,9 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		       request->ie_len);
+ 	}
+ 
+-	if (attrs[NL80211_ATTR_SCAN_FLAGS]) {
+-		request->flags = nla_get_u32(
+-			attrs[NL80211_ATTR_SCAN_FLAGS]);
+-		if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+-		    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) {
+-			err = -EOPNOTSUPP;
+-			goto out_free;
+-		}
+-
+-		if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-			u32 flg = NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR;
+-
+-			if (!wdev) /* must be net-detect */
+-				flg = NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
+-
+-			if (!(wiphy->features & flg)) {
+-				err = -EOPNOTSUPP;
+-				goto out_free;
+-			}
+-
+-			if (wdev && wdev->current_bss) {
+-				err = -EOPNOTSUPP;
+-				goto out_free;
+-			}
+-
+-			err = nl80211_parse_random_mac(attrs, request->mac_addr,
+-						       request->mac_addr_mask);
+-			if (err)
+-				goto out_free;
+-		}
+-	}
++	err = nl80211_check_scan_flags(wiphy, wdev, request, attrs, true);
++	if (err)
++		goto out_free;
+ 
+ 	if (attrs[NL80211_ATTR_SCHED_SCAN_DELAY])
+ 		request->delay =
 -- 
-Kalle Valo
+2.13.2
