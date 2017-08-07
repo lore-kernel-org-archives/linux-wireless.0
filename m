@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33234 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753318AbdHIQ1j (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:27:39 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 09/20] libertas: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:57:28 +0530
-Message-Id: <1502296049-21253-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182804_038429_79DD7470)
+Received: from mail.kernel.org ([198.145.29.99]:55312 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752001AbdHGWaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 18:30:14 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: kvalo@codeaurora.org, chunkeey@googlemail.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v2 2/2] MAINTAINERS: update email address for mcgrof for few straggling drivers
+Date: Mon,  7 Aug 2017 15:30:11 -0700
+Message-Id: <20170807223011.21926-3-mcgrof@kernel.org> (sfid-20170808_003037_585059_37D1203C)
+In-Reply-To: <20170807223011.21926-1-mcgrof@kernel.org>
+References: <20170807223011.21926-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+This will ensure I get emails on my work and personal email address.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
-changes in v2:
-              Re-submitting wireless separately.
+ MAINTAINERS | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/marvell/libertas/if_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
-index e53025e..16e54c7 100644
---- a/drivers/net/wireless/marvell/libertas/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas/if_usb.c
-@@ -52,7 +52,7 @@ static const struct lbs_fw_table fw_table[] = {
- 	{ MODEL_8682, "libertas/usb8682.bin", NULL }
- };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3deaddc8c578..997b8062397a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2212,7 +2212,7 @@ F:	drivers/gpio/gpio-ath79.c
+ F:	Documentation/devicetree/bindings/gpio/gpio-ath79.txt
  
--static struct usb_device_id if_usb_table[] = {
-+static const struct usb_device_id if_usb_table[] = {
- 	/* Enter the device signature inside */
- 	{ USB_DEVICE(0x1286, 0x2001), .driver_info = MODEL_8388 },
- 	{ USB_DEVICE(0x05a3, 0x8388), .driver_info = MODEL_8388 },
+ ATHEROS ATH GENERIC UTILITIES
+-M:	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
++M:	"Luis R. Rodriguez" <mcgrof@kernel.org>
+ L:	linux-wireless@vger.kernel.org
+ S:	Supported
+ F:	drivers/net/wireless/ath/*
+@@ -2220,7 +2220,7 @@ F:	drivers/net/wireless/ath/*
+ ATHEROS ATH5K WIRELESS DRIVER
+ M:	Jiri Slaby <jirislaby@gmail.com>
+ M:	Nick Kossifidis <mickflemm@gmail.com>
+-M:	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
++M:	"Luis R. Rodriguez" <mcgrof@kernel.org>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/ath5k
+ S:	Maintained
 -- 
-2.7.4
+2.11.0
