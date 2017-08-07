@@ -1,94 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:52585 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751914AbdHJJkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 05:40:40 -0400
-Subject: Re: Problem with the wifi
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <00515b4a-5949-3746-db71-6b2b8a82dd1a@gmx.com>
- <f801b919-d4a8-6840-23ff-9773861bce6d@broadcom.com>
- <d14706d5-cc89-223f-3b4f-933af5004168@gmx.com>
- <a0a2f322-8797-ba6c-c820-a3bd2371ed96@broadcom.com>
- <dacdc512-87a3-3007-0877-ac1f90c1fd5d@lwfinger.net>
- <593b1d88-25fa-5d99-b74e-8e0c535243e1@broadcom.com>
-From: Paolo Bettini <paolobettini@gmx.com>
-Message-ID: <79795850-0746-ecff-39b9-5568db3eb3f8@gmx.com> (sfid-20170810_114044_317936_9C0E5A3E)
-Date: Thu, 10 Aug 2017 11:40:28 +0200
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:34287 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751662AbdHGTab (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 15:30:31 -0400
+Received: by mail-wm0-f53.google.com with SMTP id t138so1327682wmt.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 12:30:30 -0700 (PDT)
+Subject: Re: [PATCH 13/34] brcmfmac: Tidy register definitions a little
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-14-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <bbbcb6d0-8556-d201-0036-6192b72d6fe7@broadcom.com> (sfid-20170807_213034_997085_FA05329A)
+Date: Mon, 7 Aug 2017 21:30:28 +0200
 MIME-Version: 1.0
-In-Reply-To: <593b1d88-25fa-5d99-b74e-8e0c535243e1@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20170726202557.15632-14-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel ha scritto:
-> On 09-08-17 18:40, Larry Finger wrote:
->> On 08/08/2017 04:10 AM, Arend van Spriel wrote:
->>> + linux-wireless
->>> + Larry
->>>
->>> please keep linux-wireless in this thread.
->>>
->>> On 08-08-17 08:21, Paolo Bettini wrote:
->>>> Arend van Spriel ha scritto:
->>>>> + linux-wireless On 07-08-17 21:38, Paolo Bettini wrote:
->>>>>> Hi , i am Paolo and i installed Debian stretch on my ezbook2 . One
->>>>>> problem is the wifi , the card a SDIO device , seems to be 02d0:a9a6
->>>>>> linux id or Broadcom AP6212 for windows....i installed deb package
->>>>>> firmware-brcm80211 and nvram sdio txt in /lib/firmware/brcm, 
->>>>>> reloaded
->>>>>> bcrmfmac module but nothing the card seems invisible or dead i don't
->>>>>> know if is a problem of firmware or my system cannot detect the sdio
->>>>>> card ...do you know something about this problematic ?
->>>>> As always a kernel log could help or output from dmesg command. Also
->>>>> can you run following commands: $ ls /sys/bus/sdio/devices $ cat
->>>>> /sys/bus/sdio/devices/*/modalias Regards, Arend
->>>> paolo@paolo:~$ ls /sys/bus/sdio/devices
->>>> mmc1:0001:1
->>>> paolo@paolo:~$
->>>>
->>>>
->>>> paolo@paolo:~$ cat /sys/bus/sdio/devices/*/modalias sdio:c07v024CdB723
->>>> paolo@paolo:~$ sorry for previous mail ....ls was from another 
->>>> pc....:-[
->>>> it seems the system see only the card where the system is installed
->>>
->>> Hi Paolo,
->>>
->>> Interesting. Now if Google search is correct the vendor id for this
->>> device indicates this is a Realtek (v024C) WLAN (c07) device. So what
->>> makes you say its linux id is 02d0:a9a6?
->>>
->>> In upstream linux I do not see any SDIO device drivers in realtek
->>> folder. Maybe Larry can provide clue/hint if a driver for this 
->>> device is
->>> publicly available somewhere.
->>
->> Paolo,
->>
->> The only Realtek SDIO device in common distribution is the RTL8723BS, 
->> which has been packaged with some Intel processors, and may now be 
->> part of other SBC's. This driver has been in staging since V4.12. It 
->> handles SDIO Vendor code 0x024c with device codes 0x0523, 0x0623, 
->> 0x0626, and 0xb723. If your device is one of these, then you only 
->> need to build a kernel with this driver enabled.
->
-> He has device id 0xb723:
->
-> paolo@paolo:~$ cat /sys/bus/sdio/devices/*/modalias sdio:c07v024CdB723
->
-> So that driver should at least try to probe his device.
->
-> Regards,
-> Arend
-Hi Arend on debian is avaible only an experimental trunk of mainline 
-4.12 and the RTL8723BS module is not activated i suppose , i tried this 
-guide 
-https://github.com/hadess/rtl8723bs/wiki/RTL8723BS-module-building-instruction-for-Debian-GNU-Linux 
-but doens't NOTHING the make command ( obviously i installed all the 
-necessary ) in the zip there are the firmware  *.bin maybe i must wait 
-the 4,12 backports ....i could compile my own kernel but in this moment 
-ain't much time.....
+On 26-07-17 22:25, Ian Molton wrote:
+> Trivial tidy of register definitions.
 
-Paolo
+Initially skipped this one, but it is indeed trivial.
+
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+
+comment below...
+
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+> index 4c81ea24d19c..fb4f24dfc99d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+> @@ -51,17 +51,18 @@
+>  
+>  /* function 0 vendor specific CCCR registers */
+>  
+> -#define SDIO_CCCR_BRCM_CARDCAP			0xf0
+> +#define SDIO_CCCR_BRCM_CARDCAP		0xf0
+>  #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
+>  #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
+>  #define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	0x08
+> +
+>  #define SDIO_CCCR_BRCM_CARDCTRL		0xf1
+>  #define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	0x02
+> -#define SDIO_CCCR_BRCM_SEPINT			0xf2
+>  
+> -#define  SDIO_SEPINT_MASK		0x01
+> -#define  SDIO_SEPINT_OE			0x02
+> -#define  SDIO_SEPINT_ACT_HI		0x04
+> +#define SDIO_CCCR_BRCM_SEPINT		0xf2
+> +#define SDIO_SEPINT_MASK			0x01
+> +#define SDIO_SEPINT_OE				0x02
+> +#define SDIO_SEPINT_ACT_HI			0x04
+
+So the SEPINT definitions are not consistent with the other ones. Maybe
+drop the SDIO_CCCR from the other value definitions and for the SEPINT
+replace 'SDIO_' with 'SEPINT_'.
