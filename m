@@ -1,95 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:49426 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbdHIHZ6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44338 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750751AbdHGNhm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 03:25:58 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: RE: [v5] wlcore: add missing nvs file name info for wilink8
-Date: Wed, 9 Aug 2017 07:24:52 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36420D9E@DFRE01.ent.ti.com> (sfid-20170809_092624_541570_FE05DB97)
-References: <1502090869-8833-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
- <20170807073808.GD5487@atomide.com>
- <8665E2433BC68541A24DFFCA87B70F5B3641E339@DFRE01.ent.ti.com>
- <20170808042054.GI5190@atomide.com>
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 7 Aug 2017 09:37:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH 1/3] iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
+References: <20170805184743.23650-1-luca@coelho.fi>
+        <20170805184743.23650-2-luca@coelho.fi>
+        <87d187len2.fsf@kamboji.qca.qualcomm.com>
+        <1502111497.15969.120.camel@coelho.fi>
+Date: Mon, 07 Aug 2017 16:37:35 +0300
+In-Reply-To: <1502111497.15969.120.camel@coelho.fi> (Luca Coelho's message of
+        "Mon, 07 Aug 2017 16:11:37 +0300")
+Message-ID: <87mv7bjy74.fsf@kamboji.qca.qualcomm.com> (sfid-20170807_153745_438740_89890E53)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->=20
-> > Subject: Re: [v5] wlcore: add missing nvs file name info for wilink8
-> >
-> > * Reizer, Eyal <eyalr@ti.com> [170807 00:47]:
-> > > Hi Tony,
-> > > >
-> > > > * Reizer, Eyal <eyalr@ti.com> [170807 00:32]:
-> > > > > The following commits:
-> > > > > c815fde wlcore: spi: Populate config firmware data
-> > > > > d776fc8 wlcore: sdio: Populate config firmware data
-> > > > >
-> > > > > Populated the nvs entry for wilink6 and wilink7 only while it is
-> > > > > still needed for wilink8 as well.
-> > > > > This broke user space backward compatibility when upgrading from
-> > older
-> > > > > kernels, as the alternate mac address would not be read from the =
-nvs
-> > that
-> > > > is
-> > > > > present in the file system (lib/firmware/ti-connectivity/wl1271-
-> nvs.bin)
-> > > > > causing mac address change of the wlan interface.
-> > > > >
-> > > > > This patch fix this and update the structure field with the same
-> default
-> > > > > nvs file name that has been used before.
-> > > > >
-> > > > > In addition, some distros hold a default wl1271-nvs.bin in the fi=
-le
-> > > > > system with a bogus mac address (deadbeef...) that for a wl18xx
-> device
-> > > > > also overrides the mac address that is stored inside the device.
-> > > > > Warn users about this bogus mac address and use a random mac
-> > instead
-> > > >
-> > > > Hmm looks pretty good to me except for one more thing I just notice=
-d.
-> > > >
-> > > > Why don't you just use the hardware mac address instead of a random
-> > > > mac address on wl18xx device when you see a bogus nvs file?
-> > > >
-> > >
-> > > I agree that this would have been better but the problem is that
-> hardware
-> > > mac address is available for wilink8 onlyWilink6/7 don't have one sto=
-red.
-> > > The wlcore code responsible for handling mac address is common code
-> > > and there is method for detecting between them in this module.
-> >
-> > Care to clarify a bit.. Are you saying wilink8 will use the hardware
-> > mac address in case of bogus nvs file?
-> >
-> With present implementation it will not. It will use the random one for b=
-oth
-> wilink6/7 as well as wilink8.
-> I need to get a hold of a wilink6/7 module and see if reverting to an int=
-ernal
-> mac address is working. Will try to look around as it has been a while si=
-nce
-> I used one.
->=20
-Managed to test with a wilink6 module and in fact reading hardware mac
-Address from fuse is working ok for wilink6/7 as well.
-submitting v6 using this mac address instead of a random one when the=20
-bogus (deadbeef...) mac address is read from default nvs file.
+Luca Coelho <luca@coelho.fi> writes:
 
-Best Regards,
-Eyal
+> On Mon, 2017-08-07 at 15:57 +0300, Kalle Valo wrote:
+>> Luca Coelho <luca@coelho.fi> writes:
+>> 
+>> > From: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+>> > 
+>> > We should free 'wgds.pointer' here as done a few lines above in another
+>> > error handling path.
+>> > It was allocated within 'acpi_evaluate_object()'.
+>> > 
+>> > Fixes: c52030a01ccc ("iwlwifi: mvm: add GEO_TX_POWER_LIMIT cmd for geographic tx power table")
+>> > Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>> > ---
+>> >  drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++--
+>> >  1 file changed, 4 insertions(+), 2 deletions(-)
+>> > 
+>> > diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+>> > index 79e7a7a285dc..82863e9273eb 100644
+>> > --- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+>> > +++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+>> > @@ -1275,8 +1275,10 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
+>> >  
+>> >  			entry = &wifi_pkg->package.elements[idx++];
+>> >  			if ((entry->type != ACPI_TYPE_INTEGER) ||
+>> > -			    (entry->integer.value > U8_MAX))
+>> > -				return -EINVAL;
+>> > +			    (entry->integer.value > U8_MAX)) {
+>> > +				ret = -EINVAL;
+>> > +				goto out_free;
+>> > +			}
+>> 
+>> How likely is this leak to happen in real world? To me it looks like
+>> more like a theoretical issue and could have easily waited for 4.14. But
+>> it's fine this time, just something to keep in mind in the future.
+>
+> This is a one-liner fix and I consider memory leaks serious enough to
+> deserve a fix for rc5.  This bug can happen with broken ACPI tables and,
+> trust me, broken ACPI tables are not that hard to find.
+
+Sure, anything's possible. But what I'm reading here this is still a
+theoretical issue, not a leak which we _know_ will happen to thousands
+of people.
+
+> But you rule here, feel free to NACK my patches whenever you see fit! :)
+
+I'm trying to minimise the numbers of patches going to wireless-drivers
+and striving for only fixes which really matter and keep the theoretical
+stuff for -next. The is mostly selfish reasons as wireless-drivers are a
+lot more work, especially if there are conflicts.
+
+But like I said in my previous mail, no need to drop this.
+
+-- 
+Kalle Valo
