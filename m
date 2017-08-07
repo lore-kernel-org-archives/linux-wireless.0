@@ -1,39 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57110 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750828AbdHaNAV (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:35299 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751541AbdHGQtG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 09:00:21 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8723be: fix duplicated code for different branches
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170830170424.GA19424@embeddedgus>
-References: <20170830170424.GA19424@embeddedgus>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-Id: <20170831130020.259C56182F@smtp.codeaurora.org> (sfid-20170831_150044_939503_9D66720F)
-Date: Thu, 31 Aug 2017 13:00:20 +0000 (UTC)
+        Mon, 7 Aug 2017 12:49:06 -0400
+Received: by mail-qk0-f182.google.com with SMTP id d145so5842961qkc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 09:49:06 -0700 (PDT)
+From: Michael Skeffingfon <mike@astro.ai>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Michael Skeffingfon <mike@astro.ai>
+Subject: [PATCH v3] rt2x00: Fix MMIC Countermeasures
+Date: Mon,  7 Aug 2017 12:47:36 -0400
+Message-Id: <20170807164736.20564-1-mike@astro.ai> (sfid-20170807_184909_938184_CC5549A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
+Set RX_FLAG_DECRYPTED in case of MMIC failure so that
+ieee80211_rx_h_decrypt() doesnt drop the frame before getting to
+ieee80211_rx_h_michael_mic_verify().
 
-> Refactor code in order to avoid identical code for different branches.
-> 
-> Addresses-Coverity-ID: 1248728
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Michael Skeffington <mike@astro.ai>
 
-Patch applied to wireless-drivers-next.git, thanks.
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c | 13 +++++++++++--
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c  | 15 ++++++++++++---
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
-a9a65a6b2b69 rtlwifi: rtl8723be: fix duplicated code for different branches
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+index ee5276e233fa..1123e2bed803 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+@@ -136,10 +136,19 @@ void rt2800mmio_fill_rxdone(struct queue_entry *entry,
+ 		 */
+ 		rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
+ 
+-		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
++		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS) {
+ 			rxdesc->flags |= RX_FLAG_DECRYPTED;
+-		else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
++		} else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC) {
++			/*
++			 * In order to check the Michael Mic, the packet must have
++			 * been decrypted.  Mac80211 doesnt check the MMIC failure 
++			 * flag to initiate MMIC countermeasures if the decoded flag
++			 * has not been set.
++			 */
++			rxdesc->flags |= RX_FLAG_DECRYPTED;
++
+ 			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
++		}
+ 	}
+ 
+ 	if (rt2x00_get_field32(word, RXD_W3_MY_BSS))
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 685b8e0cd67d..3e5d3a40d986 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -697,11 +697,20 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 		 * stripped it from the frame. Signal this to mac80211.
+ 		 */
+ 		rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
+-
+-		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
++        
++		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS) {
++			rxdesc->flags |= RX_FLAG_DECRYPTED;
++		} else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC) {
++			/*
++			 * In order to check the Michael Mic, the packet must have
++			 * been decrypted.  Mac80211 doesnt check the MMIC failure 
++			 * flag to initiate MMIC countermeasures if the decoded flag
++			 * has not been set.
++			 */
+ 			rxdesc->flags |= RX_FLAG_DECRYPTED;
+-		else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
++
+ 			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
++		}
+ 	}
+ 
+ 	if (rt2x00_get_field32(word, RXD_W0_MY_BSS))
 -- 
-https://patchwork.kernel.org/patch/9930325/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
