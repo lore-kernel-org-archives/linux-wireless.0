@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35964 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdHNVRv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 17:17:51 -0400
-Received: by mail-oi0-f68.google.com with SMTP id b130so10449766oii.3
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 14:17:51 -0700 (PDT)
-Subject: Re: [PATCH v2 09/10] rtlwifi: use debugfs to debug.
-To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
- <20170625154344.19213-10-Larry.Finger@lwfinger.net>
- <1502736968.8295.22.camel@perches.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <9007f821-764b-9bd5-da13-bcbd032e57e1@lwfinger.net> (sfid-20170814_231754_337862_277AB00F)
-Date: Mon, 14 Aug 2017 16:17:49 -0500
+Received: from muru.com ([72.249.23.125]:56942 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752092AbdHGHiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 03:38:12 -0400
+Date: Mon, 7 Aug 2017 00:38:09 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v5] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170807073808.GD5487@atomide.com> (sfid-20170807_093919_461212_6D895D79)
+References: <1502090869-8833-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1502736968.8295.22.camel@perches.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/14/2017 01:56 PM, Joe Perches wrote:
-> On Sun, 2017-06-25 at 10:43 -0500, Larry Finger wrote:
->> From: Ping-Ke Shih <pkshih@realtek.com>
->>
->> Use debugfs to dump register and btcoex status.
-> []
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
-> []
->> +void rtl_debug_add_one(struct ieee80211_hw *hw)
->> +{
->> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
->> +	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
->> +	struct dentry *parent;
->> +
->> +	snprintf(rtlpriv->dbg.debugfs_name, 18, "%02x-%02x-%02x-%02x-%02x-%02x",
->> +		 rtlefuse->dev_addr[0], rtlefuse->dev_addr[1],
->> +		 rtlefuse->dev_addr[2], rtlefuse->dev_addr[3],
->> +		 rtlefuse->dev_addr[4], rtlefuse->dev_addr[5]);
+* Reizer, Eyal <eyalr@ti.com> [170807 00:32]:
+> The following commits:
+> c815fde wlcore: spi: Populate config firmware data
+> d776fc8 wlcore: sdio: Populate config firmware data
 > 
-> Why uses dashes and why not just use %pM
+> Populated the nvs entry for wilink6 and wilink7 only while it is
+> still needed for wilink8 as well.
+> This broke user space backward compatibility when upgrading from older
+> kernels, as the alternate mac address would not be read from the nvs that is
+> present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
+> causing mac address change of the wlan interface.
+> 
+> This patch fix this and update the structure field with the same default
+> nvs file name that has been used before.
+> 
+> In addition, some distros hold a default wl1271-nvs.bin in the file
+> system with a bogus mac address (deadbeef...) that for a wl18xx device
+> also overrides the mac address that is stored inside the device.
+> Warn users about this bogus mac address and use a random mac instead
 
-This snprintf() supplies the MAC address in a file name of the type
-/sys/kernel/debug/rtlwifi/00-11-22-33-44-55-66/mac_0
-Using %pM would put colons there, and I have had trouble with colons in a file 
-name. We could use %#pM and drop the separators.
+Hmm looks pretty good to me except for one more thing I just noticed.
 
-Larry
+Why don't you just use the hardware mac address instead of a random
+mac address on wl18xx device when you see a bogus nvs file?
+
+Regards,
+
+Tony
