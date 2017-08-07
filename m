@@ -1,80 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44492 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751674AbdHRPth (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:36870 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752569AbdHGM1g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:49:37 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Mon, 7 Aug 2017 08:27:36 -0400
+Received: by mail-wm0-f48.google.com with SMTP id t201so5827400wmt.0
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 05:27:35 -0700 (PDT)
+Subject: Re: [PATCH v2 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
+To: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
+ <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:06 +0300
-Message-Id: <20170818154922.2904-9-luca@coelho.fi> (sfid-20170818_174941_100562_E6339FDE)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 08/24] iwlwifi: mvm: group all dummy SAR function declarations together
+        brcm80211-dev-list.pdl@broadcom.com,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <59885CB5.2040007@broadcom.com> (sfid-20170807_142739_855011_40307725)
+Date: Mon, 7 Aug 2017 14:27:33 +0200
+MIME-Version: 1.0
+In-Reply-To: <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 8/3/2017 11:37 AM, Wright Feng wrote:
+> From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+>
+> Add support for CYW4373 SDIO/USB chipset.
+> CYW4373 is a 1x1 dual-band 11ac chipset with 20/40/80Mhz channel support.
+> It's a WiFi/BT combo device.
 
-We have some of the SAR dummy functions when ACPI is not set declared
-in mvm.h and some declared in fw.c.  Group them all together in fw.c
-for consistency and to avoid static/non-static issues.
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+> ---
+> v2: add new chip(4737) info in commit message
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 11 +++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 14 --------------
- 2 files changed, 11 insertions(+), 14 deletions(-)
+comment below...
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index ed18479a7b8c..90ae50f7768a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -996,6 +996,17 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
- {
- 	return 0;
- }
-+
-+int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a,
-+			       int prof_b)
-+{
-+	return -ENOENT;
-+}
-+
-+int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
-+{
-+	return -ENOENT;
-+}
- #endif /* CONFIG_ACPI */
- 
- static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index d58de9b80886..74fdd33fd9fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1825,21 +1825,7 @@ int iwl_mvm_send_lqm_cmd(struct ieee80211_vif *vif,
- 			 u32 duration, u32 timeout);
- bool iwl_mvm_lqm_active(struct iwl_mvm *mvm);
- 
--#ifdef CONFIG_ACPI
- int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b);
- int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm);
--#else
--static inline
--int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
--{
--	return -ENOENT;
--}
--
--static inline
--int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
--{
--	return -ENOENT;
--}
--#endif /* CONFIG_ACPI */
- 
- #endif /* __IWL_MVM_H__ */
--- 
-2.14.1
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c       | 4 +++-
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 9 ++++++++-
+>   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
+>   include/linux/mmc/sdio_ids.h                                  | 1 +
+>   6 files changed, 18 insertions(+), 2 deletions(-)
+>
+
+[...]
+
+> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+> index b733eb4..abacd54 100644
+> --- a/include/linux/mmc/sdio_ids.h
+> +++ b/include/linux/mmc/sdio_ids.h
+> @@ -39,6 +39,7 @@
+>   #define SDIO_DEVICE_ID_BROADCOM_43455		0xa9bf
+>   #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
+>   #define SDIO_DEVICE_ID_BROADCOM_4356		0x4356
+> +#define SDIO_DEVICE_ID_CYPRESS_4373		0x4373
+
+So is there no specific Cypress SDIO vendor ID?
+
+>   #define SDIO_VENDOR_ID_INTEL			0x0089
+>   #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
+>
