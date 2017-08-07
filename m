@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0046.outbound.protection.outlook.com ([104.47.41.46]:52803
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751463AbdH3SWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 14:22:24 -0400
-Subject: Re: [PATCH 00/27] qtnfmac: allow to configure channel, BW, HT/VHT
- caps
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <87ziahni8p.fsf@purkki.adurom.net> <87val5nhyq.fsf@purkki.adurom.net>
- <87r2vtnho6.fsf@purkki.adurom.net>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <874f62ce-f9e9-3248-56bf-fc67ddf74497@quantenna.com> (sfid-20170830_202228_640646_CE648DE8)
-Date: Wed, 30 Aug 2017 11:22:17 -0700
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:38701 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753027AbdHGL0N (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 07:26:13 -0400
+Received: by mail-wr0-f180.google.com with SMTP id f21so569126wrf.5
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:26:13 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH 08/34] brcmfmac: Fix uninitialised variable
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-9-ian@mnementh.co.uk>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+Message-ID: <59884E53.2050209@broadcom.com> (sfid-20170807_132615_964970_42D0E017)
+Date: Mon, 7 Aug 2017 13:26:11 +0200
 MIME-Version: 1.0
-In-Reply-To: <87r2vtnho6.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170726202557.15632-9-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/30/2017 09:28 AM, Kalle Valo wrote:
-> 
-> External Email
-> 
-> 
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>> igor.mitsyanko.os@quantenna.com writes:
->>>
->>>> This patchset has a goal to make operational parameters (channel, BW,
->>>> HT/VHT capabilities) configuration possible for qtnfmac driver.
->>>> Basically the idea is to make driver level as thin as possible, and let
->>>> everything to be handled by userspace/nl80211 and wireless device itself.
->>>
->>> This patchset is just too big and pain to review. Preferably no more
->>> than 10-12 patches per set, please. If the patches bigger then the limit
->>> should be even lower.
->>
->> And I noticed that patch 25 didn't make it to patchwork:
->>
->> https://patchwork.kernel.org/project/linux-wireless/list/?state=*&q=qtnfmac
-> 
-> Actually it did but it was an nl80211 patch:
-> 
-> https://patchwork.kernel.org/patch/9921179/
-> 
-> Never ever hide mac80211 or cfg80211 patches within driver patches like
-> this. They need to be submitted separately so that everyone sees them.
-> 
-> In some cases it makes sense to submit the driver patches using the new
-> cfg80211/mac80211 feature at the same, but then do it so that you have
-> the cfg80211/mac80211 patches and the corresponding driver patches as
-> last. In that case I assign the whole patchset first to Johannes and
-> once he has applied the cfg80211/mac80211 patches he assigns the driver
-> patches to me.
+On 7/26/2017 10:25 PM, Ian Molton wrote:
+> 	Unlikely to be a problem, but brcmf_sdiod_regrb() is
+> not symmetric with brcmf_sdiod_regrl() in this regard.
 
-Ok, understood.
+You are pretty keen on symmetry, but you could also remove the 
+initialization in brcmf_sdiod_regrl(). As long as no -Wunitialized pops 
+up that would have my preference.
 
-> 
-> --
-> Kalle Valo
-> 
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
