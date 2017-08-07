@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61445 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750911AbdHaSSQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 14:18:16 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:51172 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751247AbdHGGco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 02:32:44 -0400
+Date: Mon, 7 Aug 2017 08:31:27 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michael Skeffingfon <mike@astro.ai>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] rt2x00: Fix MMIC Countermeasures.
+Message-ID: <20170807063127.GA2823@redhat.com> (sfid-20170807_083247_425525_7BB264A5)
+References: <20170803153121.9046-1-mike@astro.ai>
 MIME-Version: 1.0
-Subject: Re: [v3,1/2] ath10k: add the PCI PM core suspend/resume ops
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
-References: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
-To: <ryanhsu@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <ryanhsu@qti.qualcomm.com>
-Message-ID: <ebaaabc57ae441ee8707a9f7f5b0199e@euamsexm01a.eu.qualcomm.com> (sfid-20170831_201819_877935_EBC52CB7)
-Date: Thu, 31 Aug 2017 20:18:09 +0200
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170803153121.9046-1-mike@astro.ai>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ryanhsu@qti.qualcomm.com wrote:
+On Thu, Aug 03, 2017 at 11:31:21AM -0400, Michael Skeffingfon wrote:
+> @@ -136,10 +136,19 @@ void rt2800mmio_fill_rxdone(struct queue_entry *entry,
+>  		 */
+>  		rxdesc->flags |= RX_FLAG_MMIC_STRIPPED;
+>  
+> -		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS)
+> +		if (rxdesc->cipher_status == RX_CRYPTO_SUCCESS) {
+>  			rxdesc->flags |= RX_FLAG_DECRYPTED;
+> -		else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC)
+> +        } else if (rxdesc->cipher_status == RX_CRYPTO_FAIL_MIC) {
 
-> The actual PCI suspend/resume in ath10k has been handled in wow.c,
-> but in the case of the device doesn't support remote wakeup,
-> the .hif_suspend() and .hif_resume() will never be handled.
-> 
->   ath10k_wow_op_suspend()
->   {
-> 	if (WARN_ON(!test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
-> 		    ar->running_fw->fw_file.fw_features))) {
-> 		ret = 1;
-> 		goto exit;
-> 	}
-> 
-> 	....
-> 
-> 	ret = ath10k_hif_suspend(ar);
->   }
-> 
-> So register the PCI PM core to support the suspend/resume if the device
-> doesn't support remote wakeup.
-> 
-> Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Not sure why this happened, but here and on some other places below,
+tab was replaced by spaces resulting in wrong indent.
 
-2 patches applied to ath-next branch of ath.git, thanks.
-
-32faa3f0ee50 ath10k: add the PCI PM core suspend/resume ops
-393b706cf20c ath10k: configure and enable the wakeup capability
-
--- 
-https://patchwork.kernel.org/patch/9916215/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Stanislaw
