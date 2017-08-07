@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37027 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752843AbdHGLZz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37198 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752487AbdHGJGs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 07:25:55 -0400
-Received: by mail-wm0-f49.google.com with SMTP id t201so4621679wmt.0
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:25:55 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 06/34] brcmfmac: Remove bandaid for SleepCSR
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-7-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-Message-ID: <59884E41.2050100@broadcom.com> (sfid-20170807_132558_061654_00664337)
-Date: Mon, 7 Aug 2017 13:25:53 +0200
+        Mon, 7 Aug 2017 05:06:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 00/10]  mac80211 patches from our internal tree 2017-08-05
+References: <20170805084438.12550-1-luca@coelho.fi>
+Date: Mon, 07 Aug 2017 12:06:43 +0300
+In-Reply-To: <20170805084438.12550-1-luca@coelho.fi> (Luca Coelho's message of
+        "Sat, 5 Aug 2017 11:44:28 +0300")
+Message-ID: <87d187vja4.fsf@purkki.adurom.net> (sfid-20170807_110651_555614_9038A5F6)
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-7-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-07-17 22:25, Ian Molton wrote:
-> Register access code is not the place for band-aid fixes like this.
-> If this is a genuine problem, it should be fixed further up in the driver
-> stack.
+Luca Coelho <luca@coelho.fi> writes:
 
-So lets make it a SDIO debug message for all register accesses getting
-rid of the error message.
-
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> Here are some pending mac80211 patches from our internal tree.
 >
-> # Conflicts:
-> #	drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> ---
->  .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 28 +---------------------
->  1 file changed, 1 insertion(+), 27 deletions(-)
+> The "mac80211: add api to start ba session timer expired flow" patch
+> is needed by an iwlwifi patch that I want to send for -fixes, so it
+> would have to be applied to -fixes as well.
+
+We are getting to the later stages of the release cycle and I'm raising
+the bar for wireless-drivers even higher. How serious iwlwifi bug is
+that fixing?
+
+> Should I send a separate patchset with these two so they can be both
+> applied at the same time (either in the mac80211 or in
+> wireless-drivers tree)?
+
+Now that Johannes is away and I'm taking any urgent mac80211 patches, I
+think the best approach is that you include mac80211 patch in the same
+patchset as the iwlwifi patches destined for wireless-drivers.
+
+-- 
+Kalle Valo
