@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:38314 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752252AbdHHP76 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36837 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751516AbdHGFBP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 11:59:58 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, petkan@nucleusys.com,
-        ath9k-devel@qca.qualcomm.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 18/35] wireless: ath: ath9k: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:29:32 +0530
-Message-Id: <1502207972-11744-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180020_836310_9E596293)
+        Mon, 7 Aug 2017 01:01:15 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, Larry.Finger@lwfinger.net,
+        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2] rtlwifi: constify rate_control_ops structure
+Date: Mon,  7 Aug 2017 10:30:51 +0530
+Message-Id: <1502082051-4904-1-git-send-email-bhumirks@gmail.com> (sfid-20170807_070135_133029_946DAF0C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+rate_control_ops structure is only passed as an argument to the
+function ieee80211_rate_control_{register/unregister}. This argument
+is of type const, so declare the structure as const.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c | 2 +-
+Changes in v2:
+* Change subject line.
+
+ drivers/net/wireless/realtek/rtlwifi/rc.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 0d9687a..c5f4dd8 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -20,7 +20,7 @@
- MODULE_FIRMWARE(HTC_7010_MODULE_FW);
- MODULE_FIRMWARE(HTC_9271_MODULE_FW);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
+index 951d257..02811ed 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
+@@ -283,7 +283,7 @@ static void rtl_rate_free_sta(void *rtlpriv,
+ 	kfree(rate_priv);
+ }
  
--static struct usb_device_id ath9k_hif_usb_ids[] = {
-+static const struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
- 	{ USB_DEVICE(0x0cf3, 0x1006) }, /* Atheros */
- 	{ USB_DEVICE(0x0846, 0x9030) }, /* Netgear N150 */
+-static struct rate_control_ops rtl_rate_ops = {
++static const struct rate_control_ops rtl_rate_ops = {
+ 	.name = "rtl_rc",
+ 	.alloc = rtl_rate_alloc,
+ 	.free = rtl_rate_free,
 -- 
-2.7.4
+1.9.1
