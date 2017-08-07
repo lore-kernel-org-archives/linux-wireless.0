@@ -1,128 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45042 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754616AbdHVHcj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 03:32:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: jikos@kernel.org, linux-wireless@vger.kernel.org
-Cc: luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
-        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
-        linux-pm@vger.kernel.org, david.weinehall@intel.com,
-        johannes.berg@intel.com, kvalo@codeaurora.org,
-        sara.sharon@intel.com, emmanuel.grumbach@intel.com
-Date: Tue, 22 Aug 2017 10:32:26 +0300
-Message-Id: <20170822073226.4660-1-luca@coelho.fi> (sfid-20170822_093304_552591_E34D8533)
-In-Reply-To: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
-References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
-Subject: [PATCH] iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc()
+Received: from [217.148.43.144] ([217.148.43.144]:37930 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751506AbdHGRz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 13:55:27 -0400
+Subject: Re: [PATCH 12/34] brcmfmac: Replace old IO functions with simpler
+ ones.
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-13-ian@mnementh.co.uk> <59884E7F.3080607@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <4cbe4de3-a342-2cb7-d3d0-c40413381045@mnementh.co.uk> (sfid-20170807_195530_686050_A1811F78)
+Date: Mon, 7 Aug 2017 18:55:23 +0100
+MIME-Version: 1.0
+In-Reply-To: <59884E7F.3080607@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 07/08/17 12:26, Arend van Spriel wrote:
+> On 7/26/2017 10:25 PM, Ian Molton wrote:
+>> Primarily this patch removes:
+>>
+>> brcmf_sdiod_f0_writeb()
+>> brcmf_sdiod_reg_write()
+>> brcmf_sdiod_reg_read()
+> 
+> Having [patch 30/34] "brcmfmac: Correctly handle accesses to SDIO func0"
+> before this patch could make this look cleaner.
 
-Work queues cannot be allocated in when a mutex is held because the
-mutex may be in use and that would make it sleep.  Doing so generates
-the following splat with 4.13+:
+This is an artifact of how I came to the realisation the code was using
+the obsoleted functions - it could be reordered, but it'd probably get
+messy...
 
-[   19.513298] ======================================================
-[   19.513429] WARNING: possible circular locking dependency detected
-[   19.513557] 4.13.0-rc5+ #6 Not tainted
-[   19.513638] ------------------------------------------------------
-[   19.513767] cpuhp/0/12 is trying to acquire lock:
-[   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
-[   19.514047]
-[   19.514047] but task is already holding lock:
-[   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
-[   19.514338]
-[   19.514338] which lock already depends on the new lock.
+>> Since we no longer use the quirky method of deciding which function to
+>> address via the address being accessed, take the opportunity to rename
+>> some IO functions more in line with common kernel code.
+> 
+> As mentioned here this is more a rename than a replace so please use
+> that in the subject as well.
 
-This lock dependency already existed with previous kernel versions,
-but it was not detected until commit ... was introduced.
+Noted.
 
-Reported-by: David Weinehall <david.weinehall@intel.com>
-Reported-by: Jiri Kosina <jikos@kernel.org>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +---------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  9 +++++++++
- 3 files changed, 12 insertions(+), 9 deletions(-)
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+>> ---
+>>   .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 166
+>> +++----------------
+>>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 182
+>> ++++++++++-----------
+>>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  28 +++-
+>>   3 files changed, 132 insertions(+), 244 deletions(-)
+> 
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index fa315d84e98e..a1ea9ef97ed9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -787,6 +787,8 @@ int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans);
- 
- void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable);
- 
-+void iwl_pcie_rx_allocator_work(struct work_struct *data);
-+
- /* common functions that are used by gen2 transport */
- void iwl_pcie_apm_config(struct iwl_trans *trans);
- int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 351c4423125a..942736d3fa75 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -597,7 +597,7 @@ static void iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
- 	rxq->free_count += RX_CLAIM_REQ_ALLOC;
- }
- 
--static void iwl_pcie_rx_allocator_work(struct work_struct *data)
-+void iwl_pcie_rx_allocator_work(struct work_struct *data)
- {
- 	struct iwl_rb_allocator *rba_p =
- 		container_of(data, struct iwl_rb_allocator, rx_alloc);
-@@ -900,10 +900,6 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
- 			return err;
- 	}
- 	def_rxq = trans_pcie->rxq;
--	if (!rba->alloc_wq)
--		rba->alloc_wq = alloc_workqueue("rb_allocator",
--						WQ_HIGHPRI | WQ_UNBOUND, 1);
--	INIT_WORK(&rba->rx_alloc, iwl_pcie_rx_allocator_work);
- 
- 	spin_lock(&rba->lock);
- 	atomic_set(&rba->req_pending, 0);
-@@ -1017,10 +1013,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- 	}
- 
- 	cancel_work_sync(&rba->rx_alloc);
--	if (rba->alloc_wq) {
--		destroy_workqueue(rba->alloc_wq);
--		rba->alloc_wq = NULL;
--	}
- 
- 	iwl_pcie_free_rbs_pool(trans);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index f95eec52508e..3927bbf04f72 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1786,6 +1786,11 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 		iwl_pcie_tx_free(trans);
- 	iwl_pcie_rx_free(trans);
- 
-+	if (trans_pcie->rba.alloc_wq) {
-+		destroy_workqueue(trans_pcie->rba.alloc_wq);
-+		trans_pcie->rba.alloc_wq = NULL;
-+	}
-+
- 	if (trans_pcie->msix_enabled) {
- 		for (i = 0; i < trans_pcie->alloc_vecs; i++) {
- 			irq_set_affinity_hint(
-@@ -3169,6 +3174,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		trans_pcie->inta_mask = CSR_INI_SET_MASK;
- 	 }
- 
-+	trans_pcie->rba.alloc_wq = alloc_workqueue("rb_allocator",
-+						   WQ_HIGHPRI | WQ_UNBOUND, 1);
-+	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
-+
- #ifdef CONFIG_IWLWIFI_PCIE_RTPM
- 	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_D0I3;
- #else
--- 
-2.14.1
+-Ian
