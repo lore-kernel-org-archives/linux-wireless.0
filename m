@@ -1,152 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:36271 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752796AbdHTM22 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38342 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751399AbdHGN2O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Aug 2017 08:28:28 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        ",Tony Lindgren" <tony@atomide.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: [v9] wlcore: add missing nvs file name info for wilink8
-Date: Sun, 20 Aug 2017 12:28:18 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B3642BE11@DFRE01.ent.ti.com> (sfid-20170820_142856_947238_06E01E70)
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 7 Aug 2017 09:28:14 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Subject: Re: [PATCH 04/19] iwlwifi: mvm: add debugfs to force CT-kill
+References: <20170805194331.17426-1-luca@coelho.fi>
+        <20170805194331.17426-5-luca@coelho.fi>
+        <87zibbjzel.fsf@kamboji.qca.qualcomm.com>
+        <1502112333.15969.122.camel@coelho.fi>
+Date: Mon, 07 Aug 2017 16:28:09 +0300
+In-Reply-To: <1502112333.15969.122.camel@coelho.fi> (Luca Coelho's message of
+        "Mon, 07 Aug 2017 16:25:33 +0300")
+Message-ID: <87r2wnjymu.fsf@kamboji.qca.qualcomm.com> (sfid-20170807_152817_622604_C2BEED51)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commits:
-commit c815fdebef44 ("wlcore: spi: Populate config firmware data")
-commit d776fc86b82f ("wlcore: sdio: Populate config firmware data")
+Luca Coelho <luca@coelho.fi> writes:
 
-Populated the nvs entry for wilink6 and wilink7 only while it is
-still needed for wilink8 as well.
-This broke user space backward compatibility when upgrading from older
-kernels, as the alternate mac address would not be read from the nvs that
-is present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
-causing mac address change of the wlan interface.
+> On Mon, 2017-08-07 at 16:11 +0300, Kalle Valo wrote:
+>> Luca Coelho <luca@coelho.fi> writes:
+>> 
+>> > From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+>> > 
+>> > In order to test the enter/exit CT-kill flow.
+>> > 
+>> > Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+>> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>> 
+>> The commit log doesn't explain what's CT-kill and how/where it could be
+>> used. For example, I have no clue what this could be about.
+>
+> You're right, sorry for that.  I'll update the commit log and submit v2.
+>
+> Basically CT-kill is a thermal "RF-kill".  Whenever the NIC gets too
+> hot, we shut it down to prevent further damage.  This is nothing new. 
+> What this patch is adding is a fake way to simulate the NIC getting too
+> hot by kicking off a debugfs entry, in the same way the FW would kick it
+> off by sending a notification to the driver.
+>
+> This is mostly for R&D, but it's very useful for us and I we need it for
+> our internal tests.  Not that useful for non-developers but I didn't
+> want to carry this in internal driver to avoid unnecessary conflicts
+> when syncing it with upstream.
 
-This patch fix this and update the structure field with the same default
-nvs file name that has been used before.
+Thanks, makes sense now.
 
-In addition, some distros hold a default wl1271-nvs.bin in the file
-system with a bogus mac address (deadbeef...) that overrides the mac
-address that is stored inside the device.
-Warn users about this bogus mac address and use the internal mac address
-
-Fixes: c815fdebef44 ("wlcore: spi: Populate config firmware data")
-Fixes: d776fc86b82f ("wlcore: sdio: Populate config firmware data")
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
-Reviewed-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Tested-by: Tony Lindgren <tony@atomide.com>
----
-v2->v3: add a check for default deadbeef... mac address and warn about it
-v3->v4: use a random TI mac address instead of the bogus one
-v4->v5: add constant definition for TI oui address
-v5->v6: after also verifying on wilink6/7 Use internal mac address
-instead of a random one
-v6->v7: use random mac in case internal mac is zero
-v7->v8: adjust warning message based on wilink family (wl12xx/wl18xx)
-v8->v9: change to detecting wl18xx family for correct warning string
-when bogus nvs is used
----
- drivers/net/wireless/ti/wlcore/main.c   | 23 +++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/sdio.c   |  1 +
- drivers/net/wireless/ti/wlcore/spi.c    |  1 +
- drivers/net/wireless/ti/wlcore/wlcore.h |  3 +++
- 4 files changed, 28 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/t=
-i/wlcore/main.c
-index 60aaa85..c346c02 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -6016,6 +6016,8 @@ static int wl1271_register_hw(struct wl1271 *wl)
- {
- 	int ret;
- 	u32 oui_addr =3D 0, nic_addr =3D 0;
-+	struct platform_device *pdev =3D wl->pdev;
-+	struct wlcore_platdev_data *pdev_data =3D dev_get_platdata(&pdev->dev);
-=20
- 	if (wl->mac80211_registered)
- 		return 0;
-@@ -6040,6 +6042,27 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 		nic_addr =3D wl->fuse_nic_addr + 1;
- 	}
-=20
-+	if (oui_addr =3D=3D 0xdeadbe && nic_addr =3D=3D 0xef0000) {
-+		wl1271_warning("Detected unconfigured mac address in nvs, derive from fu=
-se instead.\n");
-+		if (!strcmp(pdev_data->family->name, "wl18xx")) {
-+			wl1271_warning("This default nvs file can be removed from the file syst=
-em\n");
-+		} else {
-+			wl1271_warning("Your device performance is not optimized.\n");
-+			wl1271_warning("Please use the calibrator tool to configure your device=
-.\n");
-+		}
-+
-+		if (wl->fuse_oui_addr =3D=3D 0 && wl->fuse_nic_addr =3D=3D 0) {
-+			wl1271_warning("Fuse mac address is zero. using random mac\n");
-+			/* Use TI oui and a random nic */
-+			oui_addr =3D WLCORE_TI_OUI_ADDRESS;
-+			nic_addr =3D get_random_int();
-+		} else {
-+			oui_addr =3D wl->fuse_oui_addr;
-+			/* fuse has the BD_ADDR, the WLAN addresses are the next two */
-+			nic_addr =3D wl->fuse_nic_addr + 1;
-+		}
-+	}
-+
- 	wl12xx_derive_mac_addresses(wl, oui_addr, nic_addr);
-=20
- 	ret =3D ieee80211_register_hw(wl->hw);
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/t=
-i/wlcore/sdio.c
-index 2fb3871..f8a1fea 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -230,6 +230,7 @@ static const struct wilink_family_data wl128x_data =3D =
-{
- static const struct wilink_family_data wl18xx_data =3D {
- 	.name =3D "wl18xx",
- 	.cfg_name =3D "ti-connectivity/wl18xx-conf.bin",
-+	.nvs_name =3D "ti-connectivity/wl1271-nvs.bin",
- };
-=20
- static const struct of_device_id wlcore_sdio_of_match_table[] =3D {
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti=
-/wlcore/spi.c
-index fdabb92..62ce54a 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -92,6 +92,7 @@ static const struct wilink_family_data wl128x_data =3D {
- static const struct wilink_family_data wl18xx_data =3D {
- 	.name =3D "wl18xx",
- 	.cfg_name =3D "ti-connectivity/wl18xx-conf.bin",
-+	.nvs_name =3D "ti-connectivity/wl1271-nvs.bin",
- };
-=20
- struct wl12xx_spi_glue {
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless=
-/ti/wlcore/wlcore.h
-index 1827546..95fbedc 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -40,6 +40,9 @@
- /* wl12xx/wl18xx maximum transmission power (in dBm) */
- #define WLCORE_MAX_TXPWR        25
-=20
-+/* Texas Instruments pre assigned OUI */
-+#define WLCORE_TI_OUI_ADDRESS 0x080028
-+
- /* forward declaration */
- struct wl1271_tx_hw_descr;
- enum wl_rx_buf_align;
---=20
-2.7.4
+-- 
+Kalle Valo
