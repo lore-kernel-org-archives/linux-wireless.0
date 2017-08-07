@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34653 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752569AbdHHQDz (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:38846 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752913AbdHGL05 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:03:55 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, kubakici@wp.pl, matthias.bgg@gmail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 27/35] wireless: mediatek: mt7601u: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:33:40 +0530
-Message-Id: <1502208220-12224-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180432_550880_B85BD5B6)
+        Mon, 7 Aug 2017 07:26:57 -0400
+Received: by mail-wr0-f181.google.com with SMTP id f21so575594wrf.5
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:26:57 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH 12/34] brcmfmac: Replace old IO functions with simpler
+ ones.
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-13-ian@mnementh.co.uk>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+Message-ID: <59884E7F.3080607@broadcom.com> (sfid-20170807_133252_221685_A31C459F)
+Date: Mon, 7 Aug 2017 13:26:55 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170726202557.15632-13-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+On 7/26/2017 10:25 PM, Ian Molton wrote:
+> Primarily this patch removes:
+>
+> brcmf_sdiod_f0_writeb()
+> brcmf_sdiod_reg_write()
+> brcmf_sdiod_reg_read()
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/mediatek/mt7601u/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Having [patch 30/34] "brcmfmac: Correctly handle accesses to SDIO func0" 
+before this patch could make this look cleaner.
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
-index 416c604..b9e4f67 100644
---- a/drivers/net/wireless/mediatek/mt7601u/usb.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
-@@ -19,7 +19,7 @@
- #include "usb.h"
- #include "trace.h"
- 
--static struct usb_device_id mt7601u_device_table[] = {
-+static const struct usb_device_id mt7601u_device_table[] = {
- 	{ USB_DEVICE(0x0b05, 0x17d3) },
- 	{ USB_DEVICE(0x0e8d, 0x760a) },
- 	{ USB_DEVICE(0x0e8d, 0x760b) },
--- 
-2.7.4
+> Since we no longer use the quirky method of deciding which function to
+> address via the address being accessed, take the opportunity to rename
+> some IO functions more in line with common kernel code.
+
+As mentioned here this is more a rename than a replace so please use 
+that in the subject as well.
+
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 166 +++----------------
+>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 182 ++++++++++-----------
+>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  28 +++-
+>   3 files changed, 132 insertions(+), 244 deletions(-)
