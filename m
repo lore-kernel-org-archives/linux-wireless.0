@@ -1,37 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:36588 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751223AbdH2SFX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42862 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751247AbdHGNLj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 14:05:23 -0400
-Date: Tue, 29 Aug 2017 11:05:22 -0700 (PDT)
-Message-Id: <20170829.110522.1436661088715199000.davem@davemloft.net> (sfid-20170829_200540_545751_31E234D2)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-08-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87val8ujvp.fsf@kamboji.qca.qualcomm.com>
-References: <87val8ujvp.fsf@kamboji.qca.qualcomm.com>
+        Mon, 7 Aug 2017 09:11:39 -0400
+Message-ID: <1502111497.15969.120.camel@coelho.fi> (sfid-20170807_151142_637959_9BA59C64)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+Date: Mon, 07 Aug 2017 16:11:37 +0300
+In-Reply-To: <87d187len2.fsf@kamboji.qca.qualcomm.com>
+References: <20170805184743.23650-1-luca@coelho.fi>
+         <20170805184743.23650-2-luca@coelho.fi>
+         <87d187len2.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: Re: [PATCH 1/3] iwlwifi: mvm: Fix a memory leak in an error
+ handling path in 'iwl_mvm_sar_get_wgds_table()'
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 28 Aug 2017 12:22:34 +0300
-
-> here's a pull request to net-next for 4.14. Because I pulled
-> wireless-drivers (at least that's my suspicion) the diffstat was wrong
-> again and I created it manually. I recall Linus somewhere saying that in
-> certain cases this is normal and it's ok to create the diffstat
-> manually, so I don't worry about this anymore.
-
-Yeah, that's fine.
-
-> In this pull request we also add SDIO_DEVICE_ID_CYPRESS_4373 to
-> include/linux/mmc/sdio_ids.h which stands out in the diffstat.
+On Mon, 2017-08-07 at 15:57 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
 > 
-> Please let me know if there are any problems.
+> > From: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+> > 
+> > We should free 'wgds.pointer' here as done a few lines above in another
+> > error handling path.
+> > It was allocated within 'acpi_evaluate_object()'.
+> > 
+> > Fixes: c52030a01ccc ("iwlwifi: mvm: add GEO_TX_POWER_LIMIT cmd for geographic tx power table")
+> > Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > ---
+> >  drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+> > index 79e7a7a285dc..82863e9273eb 100644
+> > --- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+> > @@ -1275,8 +1275,10 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
+> >  
+> >  			entry = &wifi_pkg->package.elements[idx++];
+> >  			if ((entry->type != ACPI_TYPE_INTEGER) ||
+> > -			    (entry->integer.value > U8_MAX))
+> > -				return -EINVAL;
+> > +			    (entry->integer.value > U8_MAX)) {
+> > +				ret = -EINVAL;
+> > +				goto out_free;
+> > +			}
+> 
+> How likely is this leak to happen in real world? To me it looks like
+> more like a theoretical issue and could have easily waited for 4.14. But
+> it's fine this time, just something to keep in mind in the future.
 
-Pulled, thanks!
+This is a one-liner fix and I consider memory leaks serious enough to
+deserve a fix for rc5.  This bug can happen with broken ACPI tables and,
+trust me, broken ACPI tables are not that hard to find.
+
+But you rule here, feel free to NACK my patches whenever you see fit! :)
+
+--
+Cheers,
+Luca.
