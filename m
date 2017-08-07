@@ -1,128 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42276 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751425AbdHEIpX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 04:45:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Sat,  5 Aug 2017 11:44:32 +0300
-Message-Id: <20170805084438.12550-5-luca@coelho.fi> (sfid-20170805_104529_070222_4774147F)
-In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
-References: <20170805084438.12550-1-luca@coelho.fi>
-Subject: [PATCH 04/10] mac80211: simplify and clarify IE splitting
+Received: from mail.kernel.org ([198.145.29.99]:55286 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751743AbdHGWaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 18:30:14 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: kvalo@codeaurora.org, chunkeey@googlemail.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v2 0/2] prism54: move to staging
+Date: Mon,  7 Aug 2017 15:30:09 -0700
+Message-Id: <20170807223011.21926-1-mcgrof@kernel.org> (sfid-20170808_003058_681633_450FFFBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Greg,
 
-There's no need to split off IEs from the ones obtained
-from userspace, if they were already split off, so for
-example IEs that went before HT don't have to be listed
-again to go before VHT. Simplify the code here so it's
-clearer.
+This v2 adds the TODO you requested to clarify prism54 will be removed in
+two kernel releases from now, and so no further cleanup is needed other
+than to ensure the driver compiles.
 
-While at it, also clarify the comments regarding the DMG
-(60 GHz) elements.
+This is based on linux-next tag next-20170807.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 19 +++++++------------
- net/mac80211/util.c | 21 +++++++++------------
- 2 files changed, 16 insertions(+), 24 deletions(-)
+  Luis
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7be7917e1541..5bb570643494 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -780,11 +780,12 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
- 			WLAN_EID_HT_CAPABILITY,
- 			WLAN_EID_BSS_COEX_2040,
-+			/* luckily this is almost always there */
- 			WLAN_EID_EXT_CAPABILITY,
- 			WLAN_EID_QOS_TRAFFIC_CAPA,
- 			WLAN_EID_TIM_BCAST_REQ,
- 			WLAN_EID_INTERWORKING,
--			/* 60GHz doesn't happen right now */
-+			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
- 			WLAN_EID_VHT_CAPABILITY,
- 			WLAN_EID_OPMODE_NOTIF,
- 		};
-@@ -812,22 +813,16 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 	/* if present, add any custom IEs that go before VHT */
- 	if (assoc_data->ie_len) {
- 		static const u8 before_vht[] = {
--			WLAN_EID_SSID,
--			WLAN_EID_SUPP_RATES,
--			WLAN_EID_EXT_SUPP_RATES,
--			WLAN_EID_PWR_CAPABILITY,
--			WLAN_EID_SUPPORTED_CHANNELS,
--			WLAN_EID_RSN,
--			WLAN_EID_QOS_CAPA,
--			WLAN_EID_RRM_ENABLED_CAPABILITIES,
--			WLAN_EID_MOBILITY_DOMAIN,
--			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
--			WLAN_EID_HT_CAPABILITY,
-+			/*
-+			 * no need to list the ones split off before HT
-+			 * or generated here
-+			 */
- 			WLAN_EID_BSS_COEX_2040,
- 			WLAN_EID_EXT_CAPABILITY,
- 			WLAN_EID_QOS_TRAFFIC_CAPA,
- 			WLAN_EID_TIM_BCAST_REQ,
- 			WLAN_EID_INTERWORKING,
-+			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
- 		};
- 
- 		/* RIC already taken above, so no need to handle here anymore */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 6aef6793d052..bfecc3e86318 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1392,10 +1392,10 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 	/* insert custom IEs that go before HT */
- 	if (ie && ie_len) {
- 		static const u8 before_ht[] = {
--			WLAN_EID_SSID,
--			WLAN_EID_SUPP_RATES,
--			WLAN_EID_REQUEST,
--			WLAN_EID_EXT_SUPP_RATES,
-+			/*
-+			 * no need to list the ones split off already
-+			 * (or generated here)
-+			 */
- 			WLAN_EID_DS_PARAMS,
- 			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
- 		};
-@@ -1424,20 +1424,17 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 	/* insert custom IEs that go before VHT */
- 	if (ie && ie_len) {
- 		static const u8 before_vht[] = {
--			WLAN_EID_SSID,
--			WLAN_EID_SUPP_RATES,
--			WLAN_EID_REQUEST,
--			WLAN_EID_EXT_SUPP_RATES,
--			WLAN_EID_DS_PARAMS,
--			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
--			WLAN_EID_HT_CAPABILITY,
-+			/*
-+			 * no need to list the ones split off already
-+			 * (or generated here)
-+			 */
- 			WLAN_EID_BSS_COEX_2040,
- 			WLAN_EID_EXT_CAPABILITY,
- 			WLAN_EID_SSID_LIST,
- 			WLAN_EID_CHANNEL_USAGE,
- 			WLAN_EID_INTERWORKING,
- 			WLAN_EID_MESH_ID,
--			/* 60 GHz can't happen here right now */
-+			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
- 		};
- 		noffset = ieee80211_ie_split(ie, ie_len,
- 					     before_vht, ARRAY_SIZE(before_vht),
+Luis R. Rodriguez (2):
+  wireless: move prism54 out to staging
+  MAINTAINERS: update email address for mcgrof for few straggling
+    drivers
+
+  Luis
+
+ MAINTAINERS                                          |  8 ++++----
+ drivers/net/wireless/intersil/Kconfig                | 20 --------------------
+ drivers/net/wireless/intersil/Makefile               |  1 -
+ drivers/staging/Kconfig                              |  2 ++
+ drivers/staging/Makefile                             |  1 +
+ .../wireless/intersil => staging}/prism54/Makefile   |  0
+ drivers/staging/prism54/TODO                         |  5 +++++
+ .../wireless/intersil => staging}/prism54/isl_38xx.c |  0
+ .../wireless/intersil => staging}/prism54/isl_38xx.h |  0
+ .../intersil => staging}/prism54/isl_ioctl.c         |  0
+ .../intersil => staging}/prism54/isl_ioctl.h         |  0
+ .../wireless/intersil => staging}/prism54/isl_oid.h  |  0
+ .../intersil => staging}/prism54/islpci_dev.c        |  0
+ .../intersil => staging}/prism54/islpci_dev.h        |  0
+ .../intersil => staging}/prism54/islpci_eth.c        |  0
+ .../intersil => staging}/prism54/islpci_eth.h        |  0
+ .../intersil => staging}/prism54/islpci_hotplug.c    |  0
+ .../intersil => staging}/prism54/islpci_mgt.c        |  0
+ .../intersil => staging}/prism54/islpci_mgt.h        |  0
+ .../wireless/intersil => staging}/prism54/oid_mgt.c  |  0
+ .../wireless/intersil => staging}/prism54/oid_mgt.h  |  0
+ .../intersil => staging}/prism54/prismcompat.h       |  0
+ 22 files changed, 12 insertions(+), 25 deletions(-)
+ rename drivers/{net/wireless/intersil => staging}/prism54/Makefile (100%)
+ create mode 100644 drivers/staging/prism54/TODO
+ rename drivers/{net/wireless/intersil => staging}/prism54/isl_38xx.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/isl_38xx.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/isl_ioctl.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/isl_ioctl.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/isl_oid.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_dev.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_dev.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_eth.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_eth.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_hotplug.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_mgt.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/islpci_mgt.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/oid_mgt.c (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/oid_mgt.h (100%)
+ rename drivers/{net/wireless/intersil => staging}/prism54/prismcompat.h (100%)
+
 -- 
-2.13.2
+2.11.0
