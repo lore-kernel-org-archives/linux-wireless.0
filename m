@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0053.outbound.protection.outlook.com ([104.47.40.53]:54272
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751241AbdH2Prd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 11:47:33 -0400
-Date: Tue, 29 Aug 2017 18:47:21 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 15/27] qtnfmac: remove unused mac::status field
-Message-ID: <20170829154720.7rdiufkq6ktu6ey3@bars> (sfid-20170829_174738_224027_5D01C496)
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-16-igor.mitsyanko.os@quantenna.com>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:35548 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753387AbdHGMYR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 08:24:17 -0400
+Received: by mail-qt0-f176.google.com with SMTP id p3so1470725qtg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 05:24:17 -0700 (PDT)
+Subject: Re: [PATCH v2 1/3] brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in
+ AP/OPEN security mode
+To: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <59885BEE.7090102@broadcom.com> (sfid-20170807_142426_985661_2DF4F7FA)
+Date: Mon, 7 Aug 2017 14:24:14 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825023024.10565-16-igor.mitsyanko.os@quantenna.com>
+In-Reply-To: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 07:30:12PM -0700, igor.mitsyanko.os@quantenna.com wrote:
-> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> 
-> It is no longer used.
+On 8/3/2017 11:37 AM, Wright Feng wrote:
+> brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in AP/OPEN security mode
+>
+> When setting wpa_auth to WPA_AUTH_NONE(1) in AP mode with WEP security,
+> firmware will set privacy bit and add WPA OUI in VENDOR IE in beacon and
+> probe response. The security type in softAP beacons confuse the
+> supplicant in client side, and the user client will see [WPA-?] in
+> supplicant scan result. So we set WPA_AUTH_DISABLED in softAP mode with
+> OPEN security.
 
-If we come to the agreement on the previous patch,
-then this field should be kept.
-
-Regards,
-Sergey
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> ---
+> v2: fix typo in commit message
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
