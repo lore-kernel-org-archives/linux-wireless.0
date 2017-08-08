@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38853 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751186AbdH2Sm6 (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:38314 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752252AbdHHP76 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 14:42:58 -0400
-Date: Tue, 29 Aug 2017 11:42:57 -0700
-From: Kyle McMartin <kyle@infradead.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-firmware@kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8822be: Add firmware for new driver/device
-Message-ID: <20170829184257.GD5405@bombadil.infradead.org> (sfid-20170829_204303_811287_E09E412B)
-References: <20170825142340.11646-1-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825142340.11646-1-Larry.Finger@lwfinger.net>
+        Tue, 8 Aug 2017 11:59:58 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com,
+        ath9k-devel@qca.qualcomm.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 18/35] wireless: ath: ath9k: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:29:32 +0530
+Message-Id: <1502207972-11744-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180020_836310_9E596293)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 25, 2017 at 09:23:40AM -0500, Larry Finger wrote:
-> A driver for the RTL8822BE has been added to staging. This commit supplies
-> the firmware for it.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-applied. thanks Larry.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---kyle
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 0d9687a..c5f4dd8 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -20,7 +20,7 @@
+ MODULE_FIRMWARE(HTC_7010_MODULE_FW);
+ MODULE_FIRMWARE(HTC_9271_MODULE_FW);
+ 
+-static struct usb_device_id ath9k_hif_usb_ids[] = {
++static const struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	{ USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
+ 	{ USB_DEVICE(0x0cf3, 0x1006) }, /* Atheros */
+ 	{ USB_DEVICE(0x0846, 0x9030) }, /* Netgear N150 */
+-- 
+2.7.4
