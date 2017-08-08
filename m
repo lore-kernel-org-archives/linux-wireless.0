@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34362 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750895AbdH3WvG (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34653 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752569AbdHHQDz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 18:51:06 -0400
-Received: by mail-pf0-f193.google.com with SMTP id v22so349934pfk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 15:51:05 -0700 (PDT)
-To: arend.vanspriel@broadcom.com, kvalo@codeaurora.org,
-        ian@mnementh.co.uk, linux-wireless@vger.kernel.org
-From: Ian W MORRISON <ianwmorrison@gmail.com>
-Subject: [PATCH v2] brcmfmac: feature check for multi-scheduled scan fails on
- bcm4345 devices
-Message-ID: <3cfcb175-8031-f5a8-da51-d81fa2d331c8@gmail.com> (sfid-20170831_005113_477238_B5820B3D)
-Date: Thu, 31 Aug 2017 08:51:03 +1000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Tue, 8 Aug 2017 12:03:55 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, kubakici@wp.pl, matthias.bgg@gmail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 27/35] wireless: mediatek: mt7601u: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:33:40 +0530
+Message-Id: <1502208220-12224-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180432_550880_B85BD5B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware feature check introduced for multi-scheduled scan is also
-failing for bcm4345 devices resulting in a firmware crash.
-The reason for this crash has not yet been root cause so this patch avoids
-the feature check for those device as a short-term fix.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan feature")
-Signed-off-by: Ian W MORRISON <ianwmorrison@gmail.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
-v2: Fixed tabs being replaced by spaces in patch submission
-Tested on MINIX NEO Z83-4 and MINIX NEO Z83-4 Pro devices.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt7601u/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index f1b60740e..53ae302 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -159,7 +159,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
+index 416c604..b9e4f67 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/usb.c
++++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
+@@ -19,7 +19,7 @@
+ #include "usb.h"
+ #include "trace.h"
  
- 	brcmf_feat_firmware_capabilities(ifp);
- 	memset(&gscan_cfg, 0, sizeof(gscan_cfg));
--	if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID)
-+	if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID &&
-+	    drvr->bus_if->chip != BRCM_CC_4345_CHIP_ID)
- 		brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
- 					  "pfn_gscan_cfg",
- 					  &gscan_cfg, sizeof(gscan_cfg));
+-static struct usb_device_id mt7601u_device_table[] = {
++static const struct usb_device_id mt7601u_device_table[] = {
+ 	{ USB_DEVICE(0x0b05, 0x17d3) },
+ 	{ USB_DEVICE(0x0e8d, 0x760a) },
+ 	{ USB_DEVICE(0x0e8d, 0x760b) },
 -- 
-1.9.1
+2.7.4
