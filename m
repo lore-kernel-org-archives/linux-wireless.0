@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59602 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbdHXJvx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 05:51:53 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v9] wlcore: add missing nvs file name info for wilink8
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3642BE11@DFRE01.ent.ti.com>
-References: <8665E2433BC68541A24DFFCA87B70F5B3642BE11@DFRE01.ent.ti.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: ", Tony Lindgren" <tony@atomide.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Message-Id: <20170824095152.EC917606DD@smtp.codeaurora.org> (sfid-20170824_115215_924381_E9CCD705)
-Date: Thu, 24 Aug 2017 09:51:52 +0000 (UTC)
+Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:45586 "EHLO
+        wens.csie.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751891AbdHHDiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 23:38:15 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] wireless-regdb: Update regulatory document references for Taiwan (TW)
+Date: Tue,  8 Aug 2017 11:38:03 +0800
+Message-Id: <20170808033804.6053-1-wens@csie.org> (sfid-20170808_054016_933604_C5B57E3B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Reizer, Eyal" <eyalr@ti.com> wrote:
+Taiwan's Ministry of Transportation and Communications updated its
+frequency allocation rules again on 2017/02/22. The amended articles
+are not related to this database, but the link should be kept up to
+date, as the old one is no longer accessible.
 
-> The following commits:
-> commit c815fdebef44 ("wlcore: spi: Populate config firmware data")
-> commit d776fc86b82f ("wlcore: sdio: Populate config firmware data")
-> 
-> Populated the nvs entry for wilink6 and wilink7 only while it is
-> still needed for wilink8 as well.
-> This broke user space backward compatibility when upgrading from older
-> kernels, as the alternate mac address would not be read from the nvs that
-> is present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
-> causing mac address change of the wlan interface.
-> 
-> This patch fix this and update the structure field with the same default
-> nvs file name that has been used before.
-> 
-> In addition, some distros hold a default wl1271-nvs.bin in the file
-> system with a bogus mac address (deadbeef...) that overrides the mac
-> address that is stored inside the device.
-> Warn users about this bogus mac address and use the internal mac address
-> 
-> Fixes: c815fdebef44 ("wlcore: spi: Populate config firmware data")
-> Fixes: d776fc86b82f ("wlcore: sdio: Populate config firmware data")
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> Reviewed-by: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-> Tested-by: Tony Lindgren <tony@atomide.com>
+Taiwan's regulatory body, NCC, published its updated technical
+regulatory standard for low-power radio frequency devices, LP0002.
+The URL has not changed. The new standard opens up more bandwidth
+for 5g U-NII WiFi and 60g WiGig devices. Transmission power for
+5.25 ~ 5.35 GHz is also increased, but this was already covered
+in commit 9a618d9b5fb2 ("wireless-regdb: Update 5 GHz rules for
+Taiwan (TW) to follow US").
 
-Patch applied to wireless-drivers-next.git, thanks.
+This patch updates the link and comments for the rules and standards,
+and also adds inline comments referencing the governing section of the
+LP0002 standard for each band.
 
-d382b9c00782 wlcore: add missing nvs file name info for wilink8
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+ db.txt | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
+diff --git a/db.txt b/db.txt
+index 0bc068e..d96f00e 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1174,15 +1174,16 @@ country TT: DFS-FCC
+ 	(5735 - 5835 @ 80), (30)
+ 
+ # Source:
+-# Table of Frequency Allocations of Republic of China (Taiwan) / Nov 2014:
+-#   http://www.motc.gov.tw/websitedowndoc?file=post/201411171137330.doc& \
+-#      filedisplay=Table+of+radio+frequency+allocation.doc
+-# LP0002 Low-power Radio-frequency Devices Technical Regulations / 28 Jun 2011:
++# Table of Frequency Allocations of Republic of China (Taiwan) / Feb 2017:
++#   https://www.motc.gov.tw/websitedowndoc?file=post/201702221012200.doc& \
++#	filedisplay=Table%2Bof%2Bradio%2Bfrequency%2Ballocation.doc
++# LP0002 Low-power Radio-frequency Devices Technical Regulations / 23 Aug 2016:
+ #   http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
+-#   (section 3.10.1, 4.7)
+ country TW: DFS-FCC
++	# 2.4g band, LP0002 section 3.10.1
+ 	(2400 - 2483.5 @ 40), (30)
+-	# Follow US 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
++	# 5g U-NII band, LP0002 section 4.7
++	# 5.15 ~ 5.25 GHz: 30 dBm for master mode, 23 dBm for clients
+ 	(5150 - 5250 @ 80), (23), AUTO-BW
+ 	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (23), DFS
 -- 
-https://patchwork.kernel.org/patch/9911123/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.3
