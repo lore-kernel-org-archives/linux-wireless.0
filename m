@@ -1,123 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42318 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751425AbdHEIp0 (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:34232 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751868AbdHHJKJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 04:45:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 11:44:36 +0300
-Message-Id: <20170805084438.12550-9-luca@coelho.fi> (sfid-20170805_104548_938921_74F3FC29)
-In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
-References: <20170805084438.12550-1-luca@coelho.fi>
-Subject: [PATCH 08/10] mac80211: recalculate some sta parameters after insertion
+        Tue, 8 Aug 2017 05:10:09 -0400
+Received: by mail-wm0-f47.google.com with SMTP id t138so4892253wmt.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 02:10:09 -0700 (PDT)
+Subject: Re: Problem with the wifi
+To: Paolo Bettini <paolobettini@gmx.com>
+References: <00515b4a-5949-3746-db71-6b2b8a82dd1a@gmx.com>
+ <f801b919-d4a8-6840-23ff-9773861bce6d@broadcom.com>
+ <d14706d5-cc89-223f-3b4f-933af5004168@gmx.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a0a2f322-8797-ba6c-c820-a3bd2371ed96@broadcom.com> (sfid-20170808_111018_803086_D5EE01E8)
+Date: Tue, 8 Aug 2017 11:10:07 +0200
+MIME-Version: 1.0
+In-Reply-To: <d14706d5-cc89-223f-3b4f-933af5004168@gmx.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
++ linux-wireless
++ Larry
 
-Sometimes a station is added already in ASSOC state. For example,
-in AP mode, when a client station didn't get assoc resp and sends
-an assoc req again. If a station is inserted when its state is ASSOC
-or higher, the min chandef and allow_p2p_go_ps should be recalculated
-again after the insertion.
+please keep linux-wireless in this thread.
 
-Before this patch the recalculation happened only in sta_info_move_state
-which occurs before the insertion of the sta and thus even though
-it calls ieee80211_recalc_min_chandef/_p2p_go_ps_allowed functions,
-since sdata->local->sta_list is still empty at this point, it doesn't do
-anything.
+On 08-08-17 08:21, Paolo Bettini wrote:
+> Arend van Spriel ha scritto:
+>> + linux-wireless On 07-08-17 21:38, Paolo Bettini wrote:
+>>> Hi , i am Paolo and i installed Debian stretch on my ezbook2 . One
+>>> problem is the wifi , the card a SDIO device , seems to be 02d0:a9a6
+>>> linux id or Broadcom AP6212 for windows....i installed deb package
+>>> firmware-brcm80211 and nvram sdio txt in /lib/firmware/brcm, reloaded
+>>> bcrmfmac module but nothing the card seems invisible or dead i don't
+>>> know if is a problem of firmware or my system cannot detect the sdio
+>>> card ...do you know something about this problematic ?
+>> As always a kernel log could help or output from dmesg command. Also
+>> can you run following commands: $ ls /sys/bus/sdio/devices $ cat
+>> /sys/bus/sdio/devices/*/modalias Regards, Arend
+> paolo@paolo:~$ ls /sys/bus/sdio/devices
+> mmc1:0001:1
+> paolo@paolo:~$
+> 
+> 
+> paolo@paolo:~$ cat /sys/bus/sdio/devices/*/modalias sdio:c07v024CdB723
+> paolo@paolo:~$ sorry for previous mail ....ls was from another pc....:-[
+> it seems the system see only the card where the system is installed
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/sta_info.c | 57 +++++++++++++++++++++++++++----------------------
- 1 file changed, 32 insertions(+), 25 deletions(-)
+Hi Paolo,
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 69615016d5bf..ffcd25c4908c 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -515,6 +515,31 @@ static int sta_info_insert_drv_state(struct ieee80211_local *local,
- 	return err;
- }
- 
-+static void
-+ieee80211_recalc_p2p_go_ps_allowed(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	bool allow_p2p_go_ps = sdata->vif.p2p;
-+	struct sta_info *sta;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		if (sdata != sta->sdata ||
-+		    !test_sta_flag(sta, WLAN_STA_ASSOC))
-+			continue;
-+		if (!sta->sta.support_p2p_ps) {
-+			allow_p2p_go_ps = false;
-+			break;
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	if (allow_p2p_go_ps != sdata->vif.bss_conf.allow_p2p_go_ps) {
-+		sdata->vif.bss_conf.allow_p2p_go_ps = allow_p2p_go_ps;
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_P2P_PS);
-+	}
-+}
-+
- /*
-  * should be called with sta_mtx locked
-  * this function replaces the mutex lock
-@@ -561,6 +586,13 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 		goto out_remove;
- 
- 	set_sta_flag(sta, WLAN_STA_INSERTED);
-+
-+	if (sta->sta_state >= IEEE80211_STA_ASSOC) {
-+		ieee80211_recalc_min_chandef(sta->sdata);
-+		if (!sta->sta.support_p2p_ps)
-+			ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
-+	}
-+
- 	/* accept BA sessions now */
- 	clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
- 
-@@ -1788,31 +1820,6 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
- }
- EXPORT_SYMBOL(ieee80211_sta_set_buffered);
- 
--static void
--ieee80211_recalc_p2p_go_ps_allowed(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_local *local = sdata->local;
--	bool allow_p2p_go_ps = sdata->vif.p2p;
--	struct sta_info *sta;
--
--	rcu_read_lock();
--	list_for_each_entry_rcu(sta, &local->sta_list, list) {
--		if (sdata != sta->sdata ||
--		    !test_sta_flag(sta, WLAN_STA_ASSOC))
--			continue;
--		if (!sta->sta.support_p2p_ps) {
--			allow_p2p_go_ps = false;
--			break;
--		}
--	}
--	rcu_read_unlock();
--
--	if (allow_p2p_go_ps != sdata->vif.bss_conf.allow_p2p_go_ps) {
--		sdata->vif.bss_conf.allow_p2p_go_ps = allow_p2p_go_ps;
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_P2P_PS);
--	}
--}
--
- int sta_info_move_state(struct sta_info *sta,
- 			enum ieee80211_sta_state new_state)
- {
--- 
-2.13.2
+Interesting. Now if Google search is correct the vendor id for this
+device indicates this is a Realtek (v024C) WLAN (c07) device. So what
+makes you say its linux id is 02d0:a9a6?
+
+In upstream linux I do not see any SDIO device drivers in realtek
+folder. Maybe Larry can provide clue/hint if a driver for this device is
+publicly available somewhere.
+
+Regards,
+Arend
