@@ -1,79 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:48142 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751560AbdHGHbi (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34591 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752098AbdHHQDN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 03:31:38 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        ",Tony Lindgren" <tony@atomide.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>
-Subject: RE: [v4] wlcore: add missing nvs file name info for wilink8
-Date: Mon, 7 Aug 2017 07:31:28 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B3641E254@DFRE01.ent.ti.com> (sfid-20170807_093154_541644_46993895)
-References: <1501490529-3360-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B364144B7@DFRE01.ent.ti.com>
- <CAGRGNgVk=W7C8NYUYxrazkYBphQhFeZc96ZxORCLqE1fpW6Z=w@mail.gmail.com>
-In-Reply-To: <CAGRGNgVk=W7C8NYUYxrazkYBphQhFeZc96ZxORCLqE1fpW6Z=w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Tue, 8 Aug 2017 12:03:13 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 24/35] wireless: marvell: libertas: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:32:50 +0530
+Message-Id: <1502208171-12118-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180827_881352_7AD08848)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSnVsaWFuIENhbGFieSBb
-bWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwuY29tXQ0KPiBTZW50OiBTYXR1cmRheSwgQXVndXN0
-IDUsIDIwMTcgODo1MSBBTQ0KPiBUbzogUmVpemVyLCBFeWFsDQo+IENjOiBLYWxsZSBWYWxvOyAs
-VG9ueSBMaW5kZ3JlbjsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4g
-a2VybmVsQHZnZXIua2VybmVsLm9yZzsgc2ViYXN0aWFuLnJlaWNoZWxAY29sbGFib3JhLmNvLnVr
-DQo+IFN1YmplY3Q6IFJlOiBbdjRdIHdsY29yZTogYWRkIG1pc3NpbmcgbnZzIGZpbGUgbmFtZSBp
-bmZvIGZvciB3aWxpbms4DQo+IA0KPiBIaSBFeWFsLA0KPiANCj4gT24gTW9uLCBKdWwgMzEsIDIw
-MTcgYXQgNjo0NSBQTSwgUmVpemVyLCBFeWFsIDxleWFsckB0aS5jb20+IHdyb3RlOg0KPiA+IFRo
-ZSBmb2xsb3dpbmcgY29tbWl0czoNCj4gPiBjODE1ZmRlIHdsY29yZTogc3BpOiBQb3B1bGF0ZSBj
-b25maWcgZmlybXdhcmUgZGF0YQ0KPiA+IGQ3NzZmYzggd2xjb3JlOiBzZGlvOiBQb3B1bGF0ZSBj
-b25maWcgZmlybXdhcmUgZGF0YQ0KPiA+DQo+ID4gUG9wdWxhdGVkIHRoZSBudnMgZW50cnkgZm9y
-IHdpbGluazYgYW5kIHdpbGluazcgb25seSB3aGlsZSBpdCBpcw0KPiA+IHN0aWxsIG5lZWRlZCBm
-b3Igd2lsaW5rOCBhcyB3ZWxsLg0KPiA+IFRoaXMgYnJva2UgdXNlciBzcGFjZSBiYWNrd2FyZCBj
-b21wYXRpYmlsaXR5IHdoZW4gdXBncmFkaW5nIGZyb20gb2xkZXINCj4gPiBrZXJuZWxzLCBhcyB0
-aGUgYWx0ZXJuYXRlIG1hYyBhZGRyZXNzIHdvdWxkIG5vdCBiZSByZWFkIGZyb20gdGhlIG52cyB0
-aGF0DQo+ID4gaXMgcHJlc2VudCBpbiB0aGUgZmlsZSBzeXN0ZW0gKGxpYi9maXJtd2FyZS90aS1j
-b25uZWN0aXZpdHkvd2wxMjcxLW52cy5iaW4pDQo+ID4gY2F1c2luZyBtYWMgYWRkcmVzcyBjaGFu
-Z2Ugb2YgdGhlIHdsYW4gaW50ZXJmYWNlLg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBmaXggdGhpcyBh
-bmQgdXBkYXRlIHRoZSBzdHJ1Y3R1cmUgZmllbGQgd2l0aCB0aGUgc2FtZSBkZWZhdWx0DQo+ID4g
-bnZzIGZpbGUgbmFtZSB0aGF0IGhhcyBiZWVuIHVzZWQgYmVmb3JlLg0KPiA+DQo+ID4gSW4gYWRk
-aXRpb24sIHNvbWUgZGlzdHJvcyBob2xkIGEgZGVmYXVsdCB3bDEyNzEtbnZzLmJpbiBpbiB0aGUg
-ZmlsZQ0KPiA+IHN5c3RlbSB3aXRoIGEgYm9ndXMgbWFjIGFkZHJlc3MgKGRlYWRiZWVmLi4uKSB0
-aGF0IGZvciBhIHdsMTh4eCBkZXZpY2UNCj4gPiBhbHNvIG92ZXJyaWRlcyB0aGUgbWFjIGFkZHJl
-c3MgdGhhdCBpcyBzdG9yZWQgaW5zaWRlIHRoZSBkZXZpY2UuDQo+ID4gV2FybiB1c2VycyBhYm91
-dCB0aGlzIGJvZ3VzIG1hYyBhZGRyZXNzIGFuZCB1c2UgYSByYW5kb20gbWFjIGluc3RlYWQNCj4g
-Pg0KPiA+IENjOiBzdGFibGUgPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+DQo+ID4gU2lnbmVkLW9m
-Zi1ieTogRXlhbCBSZWl6ZXIgPGV5YWxyQHRpLmNvbT4NCj4gPiAtLS0NCj4gPg0KPiA+IGRpZmYg
-LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bGNvcmUvbWFpbi5jDQo+IGIvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL21haW4uYw0KPiA+IGluZGV4IDYwYWFhODUuLjdjZTQy
-MjEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL21haW4u
-Yw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsY29yZS9tYWluLmMNCj4gPiBA
-QCAtNTk2MSw2ICs1OTYxLDIyIEBAIHN0YXRpYyB2b2lkIHdsMTJ4eF9kZXJpdmVfbWFjX2FkZHJl
-c3NlcyhzdHJ1Y3QNCj4gd2wxMjcxICp3bCwgdTMyIG91aSwgdTMyIG5pYykNCj4gPiAgICAgICAg
-IGlmIChuaWMgKyBXTENPUkVfTlVNX01BQ19BRERSRVNTRVMgLSB3bC0+bnVtX21hY19hZGRyID4N
-Cj4gMHhmZmZmZmYpDQo+ID4gICAgICAgICAgICAgICAgIHdsMTI3MV93YXJuaW5nKCJOSUMgcGFy
-dCBvZiB0aGUgTUFDIGFkZHJlc3Mgd3JhcHMgYXJvdW5kISIpOw0KPiA+DQo+ID4gKyAgICAgICBp
-ZiAob3VpID09IDB4ZGVhZGJlICYmIG5pYyA9PSAweGVmMDAwMCkgew0KPiA+ICsgICAgICAgICAg
-ICAgICB3bDEyNzFfd2FybmluZygiRGV0ZWN0ZWQgdW5jb25maWd1cmVkIG1hYyBhZGRyZXNzIGlu
-IG52cy5cbiINCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJVc2luZyBhIHJh
-bmRvbSBUSSBtYWMgYWRkcmVzcyBpbnN0ZWFkLlxuIg0KPiA+ICsgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgImluIGNhc2Ugb2YgdXNpbmcgYSB3bDEyeHggZGV2aWNlLCB5b3VyICINCj4g
-PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJkZXZpY2UgcGVyZm9ybWFuY2UgbWF5
-IG5vdCBiZSBvcHRpbWl6ZWQuXG4iDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAiUGxlYXNlIHVzZSB0aGUgY2FsaWJyYXRvciB0b29sIHRvIGNvbmZpZ3VyZSAiDQo+ID4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAieW91ciBkZXZpY2UuXG4iDQo+ID4gKyAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAiV2hlbiB1c2luZyBhIHdsMTh4eCBkZXZpY2UgdGhl
-IG52cyBmaWxlIGNhbiAiDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiYmUg
-cmVtb3ZlZCBhcyBhIGRlZmF1bHQgbWFjIGFkZHJlc3MgaXMgIg0KPiA+ICsgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgInN0b3JlZCBpbnRlcm5hbGx5LlxuIik7DQo+ID4gKw0KPiA+ICsg
-ICAgICAgICAgICAgICAvKiBVc2UgVEkgb3VpIGFuZCBhIHJhbmRvbSBuaWMgKi8NCj4gPiArICAg
-ICAgICAgICAgICAgb3VpID0gMHgwODAwMjg7DQo+IA0KPiBJcyB0aGVyZSAob3Igc2hvdWxkIHRo
-ZXJlIGJlKSBhIGNvbnN0YW50IGZvciB0aGlzPw0KDQpUaGFua3MgZm9yIHRoZSBjb21tZW50LiBT
-dWJtaXR0aW5nIHY1IGZpeGluZyB0aGlzLg0KDQpCZXN0IFJlZ2FyZHMsDQpFeWFsDQo=
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
+
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/marvell/libertas/if_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index e53025e..16e54c7 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -52,7 +52,7 @@ static const struct lbs_fw_table fw_table[] = {
+ 	{ MODEL_8682, "libertas/usb8682.bin", NULL }
+ };
+ 
+-static struct usb_device_id if_usb_table[] = {
++static const struct usb_device_id if_usb_table[] = {
+ 	/* Enter the device signature inside */
+ 	{ USB_DEVICE(0x1286, 0x2001), .driver_info = MODEL_8388 },
+ 	{ USB_DEVICE(0x05a3, 0x8388), .driver_info = MODEL_8388 },
+-- 
+2.7.4
