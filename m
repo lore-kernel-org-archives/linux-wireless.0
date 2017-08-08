@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35826 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753712AbdHWKwj (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35112 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752221AbdHHP7U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 06:52:39 -0400
+        Tue, 8 Aug 2017 11:59:20 -0400
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        jon.maloy@ericsson.com, ying.xue@windriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 3/3 v3] net: tipc: constify genl_ops
-Date: Wed, 23 Aug 2017 16:22:20 +0530
-Message-Id: <1503485540-22113-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_125257_281775_25031D08)
+To: kvalo@codeaurora.org, petkan@nucleusys.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 16/35] wireless: ath: ar5523: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:29:10 +0530
+Message-Id: <1502207951-11692-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_175941_460866_827D6357)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-genl_ops are not supposed to change at runtime. All functions
-working with genl_ops provided by <net/genetlink.h> work with
-const genl_ops. So mark the non-const structs as const.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
-Changes in v2:
-             Patch Subject was wrong.
-changes in v3 :
-             Updated patch subject as per comment.
-
- net/tipc/netlink_compat.c | 2 +-
+ drivers/net/wireless/ath/ar5523/ar5523.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/tipc/netlink_compat.c b/net/tipc/netlink_compat.c
-index 750949d..e48f0b2 100644
---- a/net/tipc/netlink_compat.c
-+++ b/net/tipc/netlink_compat.c
-@@ -1217,7 +1217,7 @@ static int tipc_nl_compat_recv(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 106d6f8..68f0463 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -1749,7 +1749,7 @@ static void ar5523_disconnect(struct usb_interface *intf)
+ 	{ USB_DEVICE((vendor), (device) + 1), \
+ 		.driver_info = AR5523_FLAG_ABG|AR5523_FLAG_PRE_FIRMWARE }
  
--static struct genl_ops tipc_genl_compat_ops[] = {
-+static const struct genl_ops tipc_genl_compat_ops[] = {
- 	{
- 		.cmd		= TIPC_GENL_CMD,
- 		.doit		= tipc_nl_compat_recv,
+-static struct usb_device_id ar5523_id_table[] = {
++static const struct usb_device_id ar5523_id_table[] = {
+ 	AR5523_DEVICE_UG(0x168c, 0x0001),	/* Atheros / AR5523 */
+ 	AR5523_DEVICE_UG(0x0cf3, 0x0001),	/* Atheros2 / AR5523_1 */
+ 	AR5523_DEVICE_UG(0x0cf3, 0x0003),	/* Atheros2 / AR5523_2 */
 -- 
-1.9.1
+2.7.4
