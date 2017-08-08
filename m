@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59488 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751781AbdHPOAJ (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36539 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752734AbdHHQCZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 10:00:09 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Subject: Re: [PATCH] brcmfmac: add CLM download support
-References: <1502783044-23715-1-git-send-email-wright.feng@cypress.com>
-Date: Wed, 16 Aug 2017 17:00:02 +0300
-In-Reply-To: <1502783044-23715-1-git-send-email-wright.feng@cypress.com>
-        (Wright Feng's message of "Tue, 15 Aug 2017 15:44:04 +0800")
-Message-ID: <87tw177gv1.fsf@kamboji.qca.qualcomm.com> (sfid-20170816_160015_240480_B3263AF9)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 8 Aug 2017 12:02:25 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, chunkeey@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 23/35] wireless: intersil: p54: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:32:16 +0530
+Message-Id: <1502208136-12015-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180835_234354_D14E1B6B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> writes:
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
->
-> The firmware for brcmfmac devices includes information regarding
-> regulatory constraints. For certain devices this information is kept
-> separately in a binary form that needs to be downloaded to the device.
-> This patch adds support to download this so-called CLM blob file. It
-> uses the same naming scheme as the other firmware files with extension
-> of .clm_blob.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/intersil/p54/p54usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-What if the file does not exist, what happens then? I assume that the
-file is optional but the commit log should document that.
-
+diff --git a/drivers/net/wireless/intersil/p54/p54usb.c b/drivers/net/wireless/intersil/p54/p54usb.c
+index 043bd1c..b0b86f7 100644
+--- a/drivers/net/wireless/intersil/p54/p54usb.c
++++ b/drivers/net/wireless/intersil/p54/p54usb.c
+@@ -41,7 +41,7 @@ MODULE_FIRMWARE("isl3887usb");
+  * whenever you add a new device.
+  */
+ 
+-static struct usb_device_id p54u_table[] = {
++static const struct usb_device_id p54u_table[] = {
+ 	/* Version 1 devices (pci chip + net2280) */
+ 	{USB_DEVICE(0x0411, 0x0050)},	/* Buffalo WLI2-USB2-G54 */
+ 	{USB_DEVICE(0x045e, 0x00c2)},	/* Microsoft MN-710 */
 -- 
-Kalle Valo
+2.7.4
