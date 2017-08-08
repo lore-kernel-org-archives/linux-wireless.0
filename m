@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:36308 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752986AbdHGL03 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752047AbdHHLpk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 07:26:29 -0400
-Received: by mail-wr0-f171.google.com with SMTP id y43so600870wrd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:26:29 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 10/34] brcmfmac: Rename bcmerror to err
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-11-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-Message-ID: <59884E63.7070100@broadcom.com> (sfid-20170807_132632_183641_D369D52A)
-Date: Mon, 7 Aug 2017 13:26:27 +0200
+        Tue, 8 Aug 2017 07:45:40 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-11-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: rsi: fix uninitialized descriptor pointer issue
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1501770400-6659-1-git-send-email-amitkarwar@gmail.com>
+References: <1501770400-6659-1-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20170808114539.B98E560241@smtp.codeaurora.org> (sfid-20170808_134543_187851_B01F3E83)
+Date: Tue,  8 Aug 2017 11:45:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/26/2017 10:25 PM, Ian Molton wrote:
-> Trivial cleanup of nasty variable name
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
 
-Did not look, but here is...
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> 
+> This patch fixes the uninitialized descriptor pointer
+> issue in function rsi_send_internal_mgmt_frame().
+> Descriptor should point to start of the skb data.
+> 
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Fixes: 9a629fafe7d8 ("rsi: immediate wakeup bit and priority for TX command packets")
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 14 +++++++-------
->   1 file changed, 7 insertions(+), 7 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
+
+6345016d4bea rsi: fix uninitialized descriptor pointer issue
+
+-- 
+https://patchwork.kernel.org/patch/9879245/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
