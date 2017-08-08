@@ -1,66 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36870 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752569AbdHGM1g (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48907 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751925AbdHHLIr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 08:27:36 -0400
-Received: by mail-wm0-f48.google.com with SMTP id t201so5827400wmt.0
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 05:27:35 -0700 (PDT)
-Subject: Re: [PATCH v2 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
-To: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org
-References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
- <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59885CB5.2040007@broadcom.com> (sfid-20170807_142739_855011_40307725)
-Date: Mon, 7 Aug 2017 14:27:33 +0200
+        Tue, 8 Aug 2017 07:08:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: wcn36xx: Introduce mutual exclusion of fw configuration
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170803012800.15974-1-bjorn.andersson@linaro.org>
+References: <20170803012800.15974-1-bjorn.andersson@linaro.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+CC: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <wcn36xx@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <stable@vger.kernel.org>
+Message-ID: <2acffbef7a124b44b380b4d31d6836db@euamsexm01a.eu.qualcomm.com> (sfid-20170808_130905_342903_17BEE99F)
+Date: Tue, 8 Aug 2017 13:08:38 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/3/2017 11:37 AM, Wright Feng wrote:
-> From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->
-> Add support for CYW4373 SDIO/USB chipset.
-> CYW4373 is a 1x1 dual-band 11ac chipset with 20/40/80Mhz channel support.
-> It's a WiFi/BT combo device.
+Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-> ---
-> v2: add new chip(4737) info in commit message
+> As the association status changes the driver needs to configure the
+> hardware. This is done based on information in the "sta" acquired by
+> ieee80211_find_sta(), which requires the caller to ensure that the "sta"
+> is valid while its being used; generally by entering an rcu read
+> section.
+> 
+> But the operations acting on the "sta" has to communicate with the
+> firmware and may therefor sleep, resulting in the following report:
+> 
+> [   31.418190] BUG: sleeping function called from invalid context at
+> kernel/locking/mutex.c:238
+> [   31.425919] in_atomic(): 0, irqs_disabled(): 0, pid: 34, name:
+> kworker/u8:1
+> [   31.434609] CPU: 0 PID: 34 Comm: kworker/u8:1 Tainted: G        W
+> 4.12.0-rc4-next-20170607+ #993
+> [   31.441002] Hardware name: Qualcomm Technologies, Inc. APQ 8016 SBC
+> (DT)
+> [   31.450380] Workqueue: phy0 ieee80211_iface_work
+> [   31.457226] Call trace:
+> [   31.461830] [<ffffff8008088c58>] dump_backtrace+0x0/0x260
+> [   31.464004] [<ffffff8008088f7c>] show_stack+0x14/0x20
+> [   31.469557] [<ffffff8008392e70>] dump_stack+0x98/0xb8
+> [   31.474592] [<ffffff80080e4330>] ___might_sleep+0xf0/0x118
+> [   31.479626] [<ffffff80080e43a8>] __might_sleep+0x50/0x88
+> [   31.485010] [<ffffff80088ff9a4>] mutex_lock+0x24/0x60
+> [   31.490479] [<ffffff8008595c38>] wcn36xx_smd_set_link_st+0x30/0x130
+> [   31.495428] [<ffffff8008591ed8>] wcn36xx_bss_info_changed+0x148/0x448
+> [   31.501504] [<ffffff80088ab3c4>]
+> ieee80211_bss_info_change_notify+0xbc/0x118
+> [   31.508102] [<ffffff80088f841c>] ieee80211_assoc_success+0x664/0x7f8
+> [   31.515220] [<ffffff80088e13d4>]
+> ieee80211_rx_mgmt_assoc_resp+0x144/0x2d8
+> [   31.521555] [<ffffff80088e1e20>]
+> ieee80211_sta_rx_queued_mgmt+0x190/0x698
+> [   31.528239] [<ffffff80088bc44c>] ieee80211_iface_work+0x234/0x368
+> [   31.535011] [<ffffff80080d81ac>] process_one_work+0x1cc/0x340
+> [   31.541086] [<ffffff80080d8368>] worker_thread+0x48/0x430
+> [   31.546814] [<ffffff80080de448>] kthread+0x108/0x138
+> [   31.552195] [<ffffff8008082ec0>] ret_from_fork+0x10/0x50
+> 
+> In order to ensure that the "sta" remains alive (and consistent) for the
+> duration of bss_info_changed() mutual exclusion has to be ensured with
+> sta_remove().
+> 
+> This is done by introducing a mutex to cover firmware configuration
+> changes, which is made to also ensure mutual exclusion between other
+> operations changing the state or configuration of the firmware. With
+> this we can drop the rcu read lock.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-comment below...
+Patch applied to ath-next branch of ath.git, thanks.
 
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c       | 4 +++-
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 9 ++++++++-
->   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
->   include/linux/mmc/sdio_ids.h                                  | 1 +
->   6 files changed, 18 insertions(+), 2 deletions(-)
->
+39efc7cc7ccf wcn36xx: Introduce mutual exclusion of fw configuration
 
-[...]
+-- 
+https://patchwork.kernel.org/patch/9877987/
 
-> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-> index b733eb4..abacd54 100644
-> --- a/include/linux/mmc/sdio_ids.h
-> +++ b/include/linux/mmc/sdio_ids.h
-> @@ -39,6 +39,7 @@
->   #define SDIO_DEVICE_ID_BROADCOM_43455		0xa9bf
->   #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
->   #define SDIO_DEVICE_ID_BROADCOM_4356		0x4356
-> +#define SDIO_DEVICE_ID_CYPRESS_4373		0x4373
-
-So is there no specific Cypress SDIO vendor ID?
-
->   #define SDIO_VENDOR_ID_INTEL			0x0089
->   #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
->
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
