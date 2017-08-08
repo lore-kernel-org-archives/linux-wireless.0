@@ -1,119 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44626 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752066AbdHRPwl (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36868 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752873AbdHHQEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:22 +0300
-Message-Id: <20170818154922.2904-25-luca@coelho.fi> (sfid-20170818_175243_992296_8C850EB6)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 24/24] iwlwifi: use big-endian for the hw section of the nvm
+        Tue, 8 Aug 2017 12:04:33 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, sgruszka@redhat.com,
+        helmut.schaa@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 30/35] wireless: ralink: rt73usb: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:34:19 +0530
+Message-Id: <1502208259-12287-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180456_734032_DC5E8C20)
+In-Reply-To: <1502208259-12287-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502208259-12287-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-Unlike the other sections of the NVM, the hw section is in big-endian.
-To read a value from it, we had to cast it to __be16.  Fix that by
-using __be16 * for the entire section.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 11 +++++------
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |  5 +++--
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index ea165b3e6dd3..aa382f719988 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -582,7 +582,7 @@ static void iwl_set_hw_address_family_8000(struct iwl_trans *trans,
- 					   const struct iwl_cfg *cfg,
- 					   struct iwl_nvm_data *data,
- 					   const __le16 *mac_override,
--					   const __le16 *nvm_hw)
-+					   const __be16 *nvm_hw)
- {
- 	const u8 *hw_addr;
- 
-@@ -629,7 +629,7 @@ static void iwl_set_hw_address_family_8000(struct iwl_trans *trans,
- 
- static int iwl_set_hw_address(struct iwl_trans *trans,
- 			      const struct iwl_cfg *cfg,
--			      struct iwl_nvm_data *data, const __le16 *nvm_hw,
-+			      struct iwl_nvm_data *data, const __be16 *nvm_hw,
- 			      const __le16 *mac_override)
- {
- 	if (cfg->mac_addr_from_csr) {
-@@ -661,7 +661,7 @@ static int iwl_set_hw_address(struct iwl_trans *trans,
- 
- static bool
- iwl_nvm_no_wide_in_5ghz(struct device *dev, const struct iwl_cfg *cfg,
--			const __le16 *nvm_hw)
-+			const __be16 *nvm_hw)
- {
- 	/*
- 	 * Workaround a bug in Indonesia SKUs where the regulatory in
-@@ -677,8 +677,7 @@ iwl_nvm_no_wide_in_5ghz(struct device *dev, const struct iwl_cfg *cfg,
- 		 * Unlike the other sections in the NVM, the hw
- 		 * section uses big-endian.
- 		 */
--		u16 subsystem_id = be16_to_cpup((const __be16 *)nvm_hw
--						+ SUBSYSTEM_ID);
-+		u16 subsystem_id = be16_to_cpup(nvm_hw + SUBSYSTEM_ID);
- 		u8 sku = (subsystem_id & 0x1e) >> 1;
- 
- 		if (sku == 5 || sku == 9) {
-@@ -694,7 +693,7 @@ iwl_nvm_no_wide_in_5ghz(struct device *dev, const struct iwl_cfg *cfg,
- 
- struct iwl_nvm_data *
- iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
--		   const __le16 *nvm_hw, const __le16 *nvm_sw,
-+		   const __be16 *nvm_hw, const __le16 *nvm_sw,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
- 		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported)
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 50d9b3eaa4f8..2d1a24dd8410 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -77,7 +77,7 @@
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+index fd91322..9a21282 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+@@ -2408,7 +2408,7 @@ static const struct rt2x00_ops rt73usb_ops = {
+ /*
+  * rt73usb module information.
   */
- struct iwl_nvm_data *
- iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
--		   const __le16 *nvm_hw, const __le16 *nvm_sw,
-+		   const __be16 *nvm_hw, const __le16 *nvm_sw,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
- 		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index b05673e4a193..422aa6be9932 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -292,7 +292,8 @@ static struct iwl_nvm_data *
- iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- {
- 	struct iwl_nvm_section *sections = mvm->nvm_sections;
--	const __le16 *hw, *sw, *calib, *regulatory, *mac_override, *phy_sku;
-+	const __be16 *hw;
-+	const __le16 *sw, *calib, *regulatory, *mac_override, *phy_sku;
- 	bool lar_enabled;
- 
- 	/* Checking for required sections */
-@@ -326,7 +327,7 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 		}
- 	}
- 
--	hw = (const __le16 *)sections[mvm->cfg->nvm_hw_section_num].data;
-+	hw = (const __be16 *)sections[mvm->cfg->nvm_hw_section_num].data;
- 	sw = (const __le16 *)sections[NVM_SECTION_TYPE_SW].data;
- 	calib = (const __le16 *)sections[NVM_SECTION_TYPE_CALIBRATION].data;
- 	regulatory = (const __le16 *)sections[NVM_SECTION_TYPE_REGULATORY].data;
+-static struct usb_device_id rt73usb_device_table[] = {
++static const struct usb_device_id rt73usb_device_table[] = {
+ 	/* AboCom */
+ 	{ USB_DEVICE(0x07b8, 0xb21b) },
+ 	{ USB_DEVICE(0x07b8, 0xb21c) },
 -- 
-2.14.1
+2.7.4
