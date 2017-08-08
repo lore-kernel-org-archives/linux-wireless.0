@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from resqmta-ch2-05v.sys.comcast.net ([69.252.207.37]:41890 "EHLO
-        resqmta-ch2-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752066AbdHHTQN (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41052 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751927AbdHHLIC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 15:16:13 -0400
-From: James Feeney <james@nurealm.net>
-Subject: wireless drivers fail to report link speed?
-Reply-To: james@nurealm.net
-To: linux-wireless@vger.kernel.org
-Message-ID: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net> (sfid-20170808_211628_289451_F0894C89)
-Date: Tue, 8 Aug 2017 13:07:17 -0600
+        Tue, 8 Aug 2017 07:08:02 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [v1] ath10k: Switch to use new generic UUID API
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170802135725.9317-1-andriy.shevchenko@linux.intel.com>
+References: <20170802135725.9317-1-andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>
+Message-ID: <8f7406eceeba4163a5ced29cb35f4244@euamsexm01a.eu.qualcomm.com> (sfid-20170808_130806_058848_DE555BC4)
+Date: Tue, 8 Aug 2017 13:07:55 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-Would you please look at kernel bug report "Since 4.12 - bonding module not
-working with wireless drivers", and tell me if you know why the kernel ethtool
-does not receive a speed report from the wireless drivers?
+> There are new types and helpers that are supposed to be used in new code.
+> 
+> As a preparation to get rid of legacy types and API functions do
+> the conversion here.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
- https://bugzilla.kernel.org/show_bug.cgi?id=196547
+Patch applied to ath-next branch of ath.git, thanks.
 
-It seems that Mahesh Bandewar became annoyed that some network drivers do not
-report speed and duplex to the bonding module properly, so that it becomes
-impossible to make "best connection" decisions.  A patch was applied to the
-bonding module in linux 4.12 which now disables any network interface that does
-not successfully report its speed and duplex.  In practice, this seems to
-include every wireless network driver I've tried, the ath5k, ath9k, the
-rtl8192ce and RTL8188CUS.  Of course, this new behavior breaks wireless bonding!
+ab3f9c886865 ath10k: switch to use new generic UUID API
 
-Do you know if there is some general reason why the wireless drivers do not work
-with the kernel ethtool?  Is this something that can be fixed?  Can you tell if
-this reporting failure would be the fault of the kernel ethtool?  Or the
-wireless driver?  Or the bonding module?
+-- 
+https://patchwork.kernel.org/patch/9876823/
 
-Thanks
-James
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
