@@ -1,138 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49600 "EHLO
+Received: from mail2.candelatech.com ([208.74.158.173]:57090 "EHLO
         mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753846AbdHKW4i (ORCPT
+        with ESMTP id S1751931AbdHHV6i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 18:56:38 -0400
-Subject: Re: Using ath5k/ath9k radio for constant-tx noise source.
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <55D4D406.5000603@candelatech.com> <55D5EE0E.3020408@neratec.com>
- <6d50965d-af35-dad9-23fe-162678a0f02f@candelatech.com>
- <27058308-3d36-b415-900f-3e3b65b11dab@neratec.com>
- <c7ead258-5a88-5c76-b65e-3286d5b5b4ff@dd-wrt.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>
+        Tue, 8 Aug 2017 17:58:38 -0400
+Subject: Re: wireless drivers fail to report link speed?
+To: Dan Williams <dcbw@redhat.com>, james@nurealm.net,
+        linux-wireless@vger.kernel.org
+References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
+ <1502228547.24881.5.camel@redhat.com>
 From: Ben Greear <greearb@candelatech.com>
-Message-ID: <ecbebbde-bc34-d51e-99be-6c629dc8629c@candelatech.com> (sfid-20170812_005643_306845_7F7974EB)
-Date: Fri, 11 Aug 2017 15:56:37 -0700
+Message-ID: <3a24351b-6875-fe65-58f1-f624c9f1832f@candelatech.com> (sfid-20170808_235842_265559_B8655100)
+Date: Tue, 8 Aug 2017 14:58:37 -0700
 MIME-Version: 1.0
-In-Reply-To: <c7ead258-5a88-5c76-b65e-3286d5b5b4ff@dd-wrt.com>
+In-Reply-To: <1502228547.24881.5.camel@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 08/08/2017 02:42 PM, Dan Williams wrote:
+> On Tue, 2017-08-08 at 13:07 -0600, James Feeney wrote:
+>> Hello All
+>>
+>> Would you please look at kernel bug report "Since 4.12 - bonding
+>> module not
+>> working with wireless drivers", and tell me if you know why the
+>> kernel ethtool
+>> does not receive a speed report from the wireless drivers?
+>>
+>>  https://bugzilla.kernel.org/show_bug.cgi?id=196547
+>>
+>> It seems that Mahesh Bandewar became annoyed that some network
+>> drivers do not
+>> report speed and duplex to the bonding module properly, so that it
+>> becomes
+>> impossible to make "best connection" decisions.  A patch was applied
+>> to the
+>> bonding module in linux 4.12 which now disables any network interface
+>> that does
+>> not successfully report its speed and duplex.  In practice, this
+>> seems to
+>> include every wireless network driver I've tried, the ath5k, ath9k,
+>> the
+>> rtl8192ce and RTL8188CUS.  Of course, this new behavior breaks
+>> wireless bonding!
+>>
+>> Do you know if there is some general reason why the wireless drivers
+>> do not work
+>> with the kernel ethtool?  Is this something that can be fixed?  Can
+>> you tell if
+>> this reporting failure would be the fault of the kernel ethtool?  Or
+>> the
+>> wireless driver?  Or the bonding module?
+>
+> Because the "speed" (whatever that means) can and sometimes does change
+> with every packet.  The driver dynamically adjusts the link rate based
+> on all kinds of things.  But mainly the current radio environment; how
+> many other APs are around, how much interference there is, how many
+> other clients are trying to talk, that kind of thing.
+>
+> So one second the wifi might be the "best" link and then when somebody
+> turns on a microwave oven or a baby monitor, it may be the "worst"
+> until the microwave's duty cycle completes a few seconds later then
+> it'll become the "best" again for a couple seconds then "worst" again,
+> repeat until your Easy Mac is nice and warm and creamy.
+>
+> Furthermore, for some drivers IIRC when there isn't any traffic, they
+> might drop the link rate very low because there's no reason keep
+> powering blocks when you're not transmitting/receiving any data.  IIRC
+> the Intel drivers used to do that a couple years ago.
+>
+> Also, "duplex" doesn't mean anything in wireless land.  So no clue what
+> bonding is expecting them to say here.  I would say the modifications
+> to the bonding core made assumptions that simply aren't applicable to
+> mediums other than wired ones.
 
-On 10/22/2016 07:49 AM, Sebastian Gottschall wrote:
-> atheros has a continues transmission mode which is used for power calibration in factory using the ART utility. its available on ath9k cards as well.
-> once enabled no wifi connection is possible on the same frequency since it will break up all CSMA handling also with neighbor networks. its a nice
-> feature for disconnecting all wifi networks in your area
-> look for the called atheros / qca TESTMODE. its a simple register setting (enable, disable)
+Well, wifi acts half-duplex in that only one side can transmit
+at once.
 
-Hello,
-
-I noticed recently that the carl9170 based system I was using can do a minimum
-burst width of about 17us, which is not good enough for most RADAR emulation
-settings (which often need 1us, 11us, etc).
-
-So, I am back to thinking about trying this for ath9k, in hopes it can cycle
-TX on/off faster.
-
-So far, I have not found any useful info searching for TESTMODE in ath9k and madwifi code.
-
-Do you have any more specific details about where I can find documents or source
-code that uses the TX100 mode for ath9k?
+But, no argument with the rest!
 
 Thanks,
 Ben
 
 >
-> Am 15.09.2016 um 17:28 schrieb Zefir Kurtisi:
->> Hi Ben,
->>
->> On 09/15/2016 02:22 AM, Ben Greear wrote:
->>> On 08/20/2015 08:11 AM, Zefir Kurtisi wrote:
->>>> On 08/19/2015 09:07 PM, Ben Greear wrote:
->>>>> I have a commercial AP that is using a CM9 ath5k radio (evidently, I could be
->>>>> wrong)
->>>>> and it has the ability to do a constant transmit of raw noise (RF probe shows
->>>>> noise, but a monitor-port sniffer does not see any frames from the CM9).
->>>>>
->>>>> I don't know the low-level details of how it is doing this, but I suspect
->>>>> it is using something like madwifi for a driver.
->>>>>
->>>>> Does anyone know how this can be done with modern software and
->>>>> ath5k or ath9k NICs?
->>>>>
->>>>> Thanks,
->>>>> Ben
->>>>>
->>>> Maybe slightly related: some years ago when DFS became a topic and it was hard to
->>>> get hands on radar pattern generators, Christian Lamparter wrote a variant of the
->>>> carl9170 fw [1] which can generate radar pulses to test ath9k and other DFS radar
->>>> detectors. Pulses are generated by enabling txout at defined sampling intervals.
->>>>
->>>> It should be doable to mimic what you are looking for by generating a _very_ long
->>>> pulse.
->>> Sorry to revive such an old thread..but I'm back poking at this.
->>>
->> Whew, that year went by so incredibly fast ;)
->>
->>> I've used the modified carl9170 firmware to generate pulses, with
->>> the control being 'pulse-width' and 'pulse-interval'.
->>>
->>> This sort of works, and sometimes our ath10k in an isolation chamber reports
->>> a radar event.
->>>
->>> But, after some reading, I am thinking I need more control to better mimic
->>> a radar.
->>>
->>> If I understand things properly, I need something like this:
->>>
->>> A pulse event being:  pulse width, pulse period:  For instance 1us, 200us
->>> Then, I need to configure an amount of pulse events, maybe 10-30 consecutive pulse
->>> events.
->>> Then, I need a quiet period to mimic the radar sweeping full circle (15 seconds
->>> perhaps)
->>>
->>>  From what I can tell, the carl9170 modified firmware is missing the features
->>> to do this, though it should not be too difficult to add.
->>>
->> Yes, that's essentially it - the last step is even not needed if your goal is to
->> estimate DFS detection probabilities, since in the certification lab they usually
->> just repeatedly fire the radar pattern and count detection events.
->>
->> When I played with the modified carl9170 FW, I estimated that developing an solid
->> and reliable radar pattern pulse scheduler would take me 2-4 weeks, so being in a
->> hurry I ended up using an SDR (Ettus USRP N200, see [1]). I developed a pulse
->> scheduler to feed arbitrary patterns (covering those for DFS testing), which is
->> available in [2]. It has not been maintained ever since, but might help you as
->> starting point if you decide to go that route.
->>
->>> If someone has an idea whether the control above is appropriate, I'd
->>> appreciate feedback before I start hacking...
->>>
->>> This document seemed useful, for instance:
->>>
->>> https://dl.cdn-anritsu.com/en-en/test-measurement/files/Product-Introductions/Product-Introduction/mx370073a-el1200.pdf
->>>
->> We use the R&S SMBV100A [3], which we know is also used in some certification
->> labs. Unfortunately it is not exactly cheap - if you are not going to prepare your
->> product for certification, the SDR approach is affordable and good enough.
->>
->>> Thanks,
->>> Ben
->>>
->> Good luck,
->> Zefir
->>
->> [1] https://www.ettus.com/product/details/UN200-KIT
->> [2] https://github.com/zefir-kurtisi/USRP-Radar-Relay
->> [3]
->> https://www.rohde-schwarz.com/us/product/smbv100a-productstartpage_63493-10220.html
->>
->>
->
+> Dan
 >
 
 
