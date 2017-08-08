@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:38421 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750773AbdHRHId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 03:08:33 -0400
-Subject: Re: ath9k driver - is it possible to disable tx/rx radio chains?
-To: =?UTF-8?Q?H=c3=a5vard_Rabbe?= <hrabbe@me.com>,
-        linux-wireless@vger.kernel.org
-References: <0DB9FDCC-490C-438E-AA50-1C751565A9AE@me.com>
-From: Matthias May <matthias.may@neratec.com>
-Message-ID: <8cf52994-eda4-d88f-a236-2b74c085bf3f@neratec.com> (sfid-20170818_090836_524735_BF37653B)
-Date: Fri, 18 Aug 2017 09:00:27 +0200
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:36069 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752176AbdHHLJ7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Aug 2017 07:09:59 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <0DB9FDCC-490C-438E-AA50-1C751565A9AE@me.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath9k: make ath_ps_ops structures as const
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1501772131-13038-1-git-send-email-bhumirks@gmail.com>
+References: <1501772131-13038-1-git-send-email-bhumirks@gmail.com>
+To: Bhumika Goyal <bhumirks@gmail.com>
+CC: <julia.lawall@lip6.fr>, <ath9k-devel@qca.qualcomm.com>,
+        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Bhumika Goyal <bhumirks@gmail.com>
+Message-ID: <0d0e2329fed544cf9595c34de5b1f641@euamsexm01a.eu.qualcomm.com> (sfid-20170808_131021_277631_50AD90B6)
+Date: Tue, 8 Aug 2017 13:09:44 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/08/17 01:32, Håvard Rabbe wrote:
-> Hi
-> I’m using wifi card with AR9280 chipset that uses the ath9k driver.
-> 
-> The card has 2 available radio chains and I’m only going to connect 1 antenna.
-> 
-> Is it possible to disable the radio chain im not using?
-> 
-> 
-> Best Regards,
-> 
-> Håvard Rabbe
-> 
+Bhumika Goyal <bhumirks@gmail.com> wrote:
 
-Help text from iw:
-phy <phyname> set antenna <bitmap> | all | <tx bitmap> <rx bitmap>
+> ath_ps_ops structures are only stored as a reference in the ps_ops
+> field of a ath_common structure. This field is of type const, so make
+> the structures as const.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-You can set the rx/tx mask with
-iw phy phy0 set antenna 1
-to not use the second chain
+Patch applied to ath-next branch of ath.git, thanks.
 
-or
-iw phy phy0 set antenna 1 3
-to not use the second chain for tx, but still use it for rx.
+3588e1110e49 ath9k: make ath_ps_ops structures as const
 
-You can see the currently active mask with:
-iw list | grep Antenna
+-- 
+https://patchwork.kernel.org/patch/9879297/
 
-Be aware that the value set here is a bitmask only allows the values 1/3/7 (for 1, 2 and 3 chains).
-Chain 0 is always active.
---> You can not disable chain 0 and only use chain 1.
-
-BR
-Matthias
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
