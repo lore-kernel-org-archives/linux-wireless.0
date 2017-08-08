@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34875 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751092AbdHSOgb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Aug 2017 10:36:31 -0400
-Received: by mail-lf0-f68.google.com with SMTP id h89so1118384lfi.2
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Aug 2017 07:36:30 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH] ath10k: sdio: remove unused struct member
-Date: Sat, 19 Aug 2017 16:36:22 +0200
-Message-Id: <1503153382-11100-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20170819_164618_642781_9715318D)
+Received: from mirror2.csie.ntu.edu.tw ([140.112.30.76]:45594 "EHLO
+        wens.csie.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751913AbdHHDiQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Aug 2017 23:38:16 -0400
+From: Chen-Yu Tsai <wens@csie.org>
+To: seth.forshee@canonical.com
+Cc: Chen-Yu Tsai <wens@csie.org>, wireless-regdb@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] wireless-regdb: Add 60 GHz rule for Taiwan (TW)
+Date: Tue,  8 Aug 2017 11:38:04 +0800
+Message-Id: <20170808033804.6053-2-wens@csie.org> (sfid-20170808_054017_171681_306E90DC)
+In-Reply-To: <20170808033804.6053-1-wens@csie.org>
+References: <20170808033804.6053-1-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-irq_wq in struct ath10k_sdio is a remnant from an earlier
-version of the sdio patchset.
+The latest low power radio frequency devices technical regulations [1]
+released by Taiwan's regulatory body, NCC, opens up 57 GHz ~ 66 GHz to
+most devices, including WiGig.
 
-It's use was removed as a result of Kalle's review, but somehow
-the struct member survived.
+[1] LP0002 Low-power Radio-frequency Devices Technical Regulations 2016/8/23
+    http://www.ncc.gov.tw/english/show_file.aspx?table_name=news&file_sn=681
 
-It is not used and can therefore safely be removed.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 4 ----
- drivers/net/wireless/ath/ath10k/sdio.h | 2 --
- 2 files changed, 6 deletions(-)
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 48268f0..03a69e5 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -1344,8 +1344,6 @@ static void ath10k_sdio_irq_handler(struct sdio_func *func)
- 
- 	sdio_claim_host(ar_sdio->func);
- 
--	wake_up(&ar_sdio->irq_wq);
--
- 	if (ret && ret != -ECANCELED)
- 		ath10k_warn(ar, "failed to process pending SDIO interrupts: %d\n",
- 			    ret);
-@@ -2000,8 +1998,6 @@ static int ath10k_sdio_probe(struct sdio_func *func,
- 		goto err_free_bmi_buf;
- 	}
- 
--	init_waitqueue_head(&ar_sdio->irq_wq);
--
- 	for (i = 0; i < ATH10K_SDIO_BUS_REQUEST_MAX_NUM; i++)
- 		ath10k_sdio_free_bus_req(ar, &ar_sdio->bus_req[i]);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
-index 3f61c67..4ff7b54 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.h
-+++ b/drivers/net/wireless/ath/ath10k/sdio.h
-@@ -210,8 +210,6 @@ struct ath10k_sdio {
- 	/* temporary buffer for BMI requests */
- 	u8 *bmi_buf;
- 
--	wait_queue_head_t irq_wq;
--
- 	bool is_disabled;
- 
- 	struct workqueue_struct *workqueue;
+diff --git a/db.txt b/db.txt
+index d96f00e..e48f9a6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1188,6 +1188,8 @@ country TW: DFS-FCC
+ 	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (23), DFS
+ 	(5725 - 5850 @ 80), (30)
++	# 60g band, LP0002 section 3.13.1.1 (3)(C), EIRP=40dBm(43dBm peak)
++	(57000 - 66000 @ 2160), (40)
+  
+ country TZ:
+ 	(2402 - 2482 @ 40), (20)
 -- 
-2.7.4
+2.13.3
