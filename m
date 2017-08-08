@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33235 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbdHIEJi (ORCPT
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:33568 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752059AbdHHSVC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 00:09:38 -0400
-Subject: Re: [PATCH 33/35] wireless: realtek: rtl8192cu: constify
- usb_device_id
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>, kvalo@codeaurora.org,
-        chaoming_li@realsil.com.cn
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-References: <1502208353-12447-1-git-send-email-arvind.yadav.cs@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5dca329f-d98c-82f2-1289-0d9d64c39347@lwfinger.net> (sfid-20170809_060958_186671_427E97EF)
-Date: Tue, 8 Aug 2017 23:09:36 -0500
+        Tue, 8 Aug 2017 14:21:02 -0400
+Received: by mail-qt0-f171.google.com with SMTP id a18so24441808qta.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 11:21:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1502208353-12447-1-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Jacobo Pantoja <jacobopantoja@gmail.com>
+Date: Tue, 8 Aug 2017 20:20:40 +0200
+Message-ID: <CAO18KQjGKEf5wn2B5MLptyZN12+XpKxfHfL9Q1Jz-3pMpTgU+Q@mail.gmail.com> (sfid-20170808_202106_773323_84FA72FC)
+Subject: RTS threshold not being obeyed
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2017 11:05 AM, Arvind Yadav wrote:
-> usb_device_id are not supposed to change at runtime. All functions
-> working with usb_device_id provided by <linux/usb.h> work with
-> const usb_device_id. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
+Hi,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+I'm having a hard time to figure out why RTS/CTS are happening in my network.
+In a nutshell, I'm using two identical OpenWRT routers to stablish a
+WDS link (4address mode) in 5GHz, with no other client nor AP in 5GHz.
+The problem is, a great amount of bandwidth is being consumed by
+RTS/CTSs.
 
-Thanks,
+The point is, I'm pretty sure RTS threshold is disabled (set to -1);
+I've checked in hostapd configuration, as well as in the debugfs of
+the phy itself, being reported as -1.
 
-Larry
+The device in question is TPLINK WDR4300, radio device AR9582
+(168c:0033, subsystem 168c:a120), using driver ath9k. I'm using
+current LEDE 17.01.2, r3435-65eec8bd5f, kernel 4.4.71.
 
->   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-> index 96c923b..e673bc2 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-> @@ -275,7 +275,7 @@ static struct rtl_hal_cfg rtl92cu_hal_cfg = {
->   #define USB_VENDER_ID_REALTEK		0x0bda
->   
->   /* 2010-10-19 DID_USB_V3.4 */
-> -static struct usb_device_id rtl8192c_usb_ids[] = {
-> +static const struct usb_device_id rtl8192c_usb_ids[] = {
->   
->   	/*=== Realtek demoboard ===*/
->   	/* Default ID */
-> 
+I'm able to see RTS/CTS over the air (using Wireshark in a third
+device), but i can as well see an increasing number in
+/sys/kernel/debug/ieee80211/phy1/statistics/dot11RTSSuccessCount
+If I set RTS threshold (using iw, checking its value in debugfs) to a
+very low number (e.g. 50) I can see the counter increasing quite
+faster.
+
+I'm not sure if this is the expected behaviour (e.g. the underlying
+hardware is deciding by its own to do some RTS/CTS) or it is a bug.
+
+Can I make some further testing to clarify this?
+
+Thanks!
+JPantoja
