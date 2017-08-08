@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34097 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752185AbdHHQFS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:05:18 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, Jes.Sorensen@gmail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 32/35] wireless: realtek: rtl8xxxu: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:35:10 +0530
-Message-Id: <1502208310-12392-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180541_105932_0F418242)
+Received: from muru.com ([72.249.23.125]:57004 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750727AbdHHEU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Aug 2017 00:20:58 -0400
+Date: Mon, 7 Aug 2017 21:20:55 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v5] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170808042054.GI5190@atomide.com> (sfid-20170808_062112_268106_353D1C1A)
+References: <1502090869-8833-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
+ <20170807073808.GD5487@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3641E339@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3641E339@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+* Reizer, Eyal <eyalr@ti.com> [170807 00:47]:
+> Hi Tony,
+> > 
+> > * Reizer, Eyal <eyalr@ti.com> [170807 00:32]:
+> > > The following commits:
+> > > c815fde wlcore: spi: Populate config firmware data
+> > > d776fc8 wlcore: sdio: Populate config firmware data
+> > >
+> > > Populated the nvs entry for wilink6 and wilink7 only while it is
+> > > still needed for wilink8 as well.
+> > > This broke user space backward compatibility when upgrading from older
+> > > kernels, as the alternate mac address would not be read from the nvs that
+> > is
+> > > present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
+> > > causing mac address change of the wlan interface.
+> > >
+> > > This patch fix this and update the structure field with the same default
+> > > nvs file name that has been used before.
+> > >
+> > > In addition, some distros hold a default wl1271-nvs.bin in the file
+> > > system with a bogus mac address (deadbeef...) that for a wl18xx device
+> > > also overrides the mac address that is stored inside the device.
+> > > Warn users about this bogus mac address and use a random mac instead
+> > 
+> > Hmm looks pretty good to me except for one more thing I just noticed.
+> > 
+> > Why don't you just use the hardware mac address instead of a random
+> > mac address on wl18xx device when you see a bogus nvs file?
+> > 
+> 
+> I agree that this would have been better but the problem is that hardware 
+> mac address is available for wilink8 onlyWilink6/7 don't have one stored.
+> The wlcore code responsible for handling mac address is common code 
+> and there is method for detecting between them in this module.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Care to clarify a bit.. Are you saying wilink8 will use the hardware
+mac address in case of bogus nvs file?
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 21e5ef0..7806a4d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6190,7 +6190,7 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
- 	ieee80211_free_hw(hw);
- }
- 
--static struct usb_device_id dev_table[] = {
-+static const struct usb_device_id dev_table[] = {
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8724, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8723au_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x1724, 0xff, 0xff, 0xff),
--- 
-2.7.4
+Regards,
+
+Tony
