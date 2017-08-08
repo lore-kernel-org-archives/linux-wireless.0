@@ -1,118 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:34960 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932350AbdHVL0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:26:09 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 02/30] brcmfmac: Register sizes on hardware are not dependent on compiler types
-Date: Tue, 22 Aug 2017 12:25:22 +0100
-Message-Id: <20170822112550.60311-3-ian@mnementh.co.uk> (sfid-20170822_132613_458400_B7567C31)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36040 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752030AbdHHMdo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Aug 2017 08:33:44 -0400
+Received: by mail-wm0-f51.google.com with SMTP id t201so5991351wmt.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 05:33:43 -0700 (PDT)
+Subject: Re: [PATCH 31/34] brcmfmac: Remove func0 from function array
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-32-ian@mnementh.co.uk>
+ <21ea2a49-c797-b427-1ee7-ff8164c8f95c@broadcom.com>
+ <388c6040-1359-ef7d-7a0f-a4b0ac9a9825@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c9b7db07-7222-e7bf-0cb3-96e8ac0812d6@broadcom.com> (sfid-20170808_143347_833115_1CABFF07)
+Date: Tue, 8 Aug 2017 14:33:41 +0200
+MIME-Version: 1.0
+In-Reply-To: <388c6040-1359-ef7d-7a0f-a4b0ac9a9825@mnementh.co.uk>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 4 IO functions in this patch are incorrect as they use compiler types
-to determine how many bytes to send to the hardware.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index f585dfd89453..2b441ce91d5f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -264,7 +264,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	func = sdiodev->func[fn];
- 
- 	switch (regsz) {
--	case sizeof(u8):
-+	case 1:
- 		if (write) {
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
-@@ -278,13 +278,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
- 		}
- 		break;
--	case sizeof(u16):
-+	case 2:
- 		if (write)
- 			sdio_writew(func, *(u16 *)data, addr, &ret);
- 		else
- 			*(u16 *)data = sdio_readw(func, addr, &ret);
- 		break;
--	case sizeof(u32):
-+	case 4:
- 		if (write)
- 			sdio_writel(func, *(u32 *)data, addr, &ret);
- 		else
-@@ -368,7 +368,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- 	for (i = 0; i < 3; i++) {
- 		err = brcmf_sdiod_regrw_helper(sdiodev,
- 					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       sizeof(u8), &addr[i], true);
-+					       1, &addr[i], true);
- 		if (err) {
- 			brcmf_err("failed at addr: 0x%0x\n",
- 				  SBSDIO_FUNC1_SBADDRLOW + i);
-@@ -407,7 +407,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
-@@ -423,10 +423,10 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
-@@ -443,7 +443,7 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  true);
- 	if (ret)
- 		*ret = retval;
-@@ -455,10 +455,10 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  true);
- 
- done:
-@@ -876,7 +876,7 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
- 
- 	/* issue abort cmd52 command through F0 */
- 	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
--				 sizeof(t_func), &t_func, true);
-+				 1, &t_func, true);
- 
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
--- 
-2.11.0
+On 08-08-17 13:27, Ian Molton wrote:
+> On 08/08/17 12:19, Arend van Spriel wrote:
+> 
+>>>  #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
+>>> -	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
+>>> +	sdio_f0_readb((sdiodev)->func[1], (addr), (r))
+>>
+>> There is no reason to keep these any longer as these do not provide any
+>> functionality over the core sdio function unless you consider the
+>> sdiodev dereference.
+>>
+> 
+> I tend to agree, although they're fairly readable anyway. I was trying
+> to keep the changes small and incremental.
+> 
+> I'll knock up a patch and see how it looks with them converted to the
+> actual functions when I get back from hoiliday.
+
+Enjoy the holiday. Glad to see I am not the only one checking email when
+he is not supposed to work ;-)
+
+Regards,
+Arend
