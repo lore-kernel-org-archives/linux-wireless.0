@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51486 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751880AbdHHLww (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34711 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752156AbdHHQHP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:52:52 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] wlcore: add const to bin_attribute structure
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1501696634-15765-2-git-send-email-bhumirks@gmail.com>
-References: <1501696634-15765-2-git-send-email-bhumirks@gmail.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        harish.patil@cavium.com, manish.chopra@cavium.com,
-        Dept-GELinuxNICDev@cavium.com, Bhumika Goyal <bhumirks@gmail.com>
-Message-Id: <20170808115252.6DD2260209@smtp.codeaurora.org> (sfid-20170808_135312_147884_7EFC9E60)
-Date: Tue,  8 Aug 2017 11:52:52 +0000 (UTC)
+        Tue, 8 Aug 2017 12:07:15 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, dsd@gentoo.org, kune@deine-taler.de
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 35/35] wireless: zydas: zd1211rw: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:36:46 +0530
+Message-Id: <1502208406-12549-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180806_785133_E47D6F90)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhumika Goyal <bhumirks@gmail.com> wrote:
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-> Add const to bin_attribute structure as it is only passed to the
-> functions sysfs_{remove/create}_bin_file. The corresponding arguments
-> are of type const, so declare the structure to be const.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-4f2949febc22 wlcore: add const to bin_attribute structure
-
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+index 01ca1d5..c30bf11 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+@@ -35,7 +35,7 @@
+ #include "zd_mac.h"
+ #include "zd_usb.h"
+ 
+-static struct usb_device_id usb_ids[] = {
++static const struct usb_device_id usb_ids[] = {
+ 	/* ZD1211 */
+ 	{ USB_DEVICE(0x0105, 0x145f), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x0586, 0x3401), .driver_info = DEVICE_ZD1211 },
 -- 
-https://patchwork.kernel.org/patch/9877341/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
