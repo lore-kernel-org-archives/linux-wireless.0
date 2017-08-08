@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42518 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751392AbdHETnn (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36164 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752427AbdHHQEb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:43:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:20 +0300
-Message-Id: <20170805194331.17426-9-luca@coelho.fi> (sfid-20170805_214356_240356_DF0C9A50)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 08/19] iwlwifi: fix a000 RF_ID define
+        Tue, 8 Aug 2017 12:04:31 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, sgruszka@redhat.com,
+        helmut.schaa@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 29/35] wireless: ralink: rt2800usb: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:34:18 +0530
+Message-Id: <1502208259-12287-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180602_170304_153B51FA)
+In-Reply-To: <1502208259-12287-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502208259-12287-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-One of the defines has a wrong value.
-
-Fixes: 1afb0ae42174 ("iwlwifi: allow combining different phy images with mac images")
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h | 2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index c6c1876c1ad4..560de9de5232 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -356,7 +356,7 @@ enum {
- #define CSR_HW_REV_TYPE_NONE		(0x00001F0)
- 
- /* RF_ID value */
--#define CSR_HW_RF_ID_TYPE_JF		(0x00105000)
-+#define CSR_HW_RF_ID_TYPE_JF		(0x00105100)
- #define CSR_HW_RF_ID_TYPE_HR		(0x0010A000)
- #define CSR_HW_RF_ID_TYPE_HRCDB		(0x00109000)
- 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 685b8e0..cd9547e 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -915,7 +915,7 @@ static const struct rt2x00_ops rt2800usb_ops = {
+ /*
+  * rt2800usb module information.
+  */
+-static struct usb_device_id rt2800usb_device_table[] = {
++static const struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Abocom */
+ 	{ USB_DEVICE(0x07b8, 0x2870) },
+ 	{ USB_DEVICE(0x07b8, 0x2770) },
 -- 
-2.13.2
+2.7.4
