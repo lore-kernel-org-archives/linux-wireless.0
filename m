@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:33525 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750854AbdHAW6s (ORCPT
+Received: from resqmta-ch2-05v.sys.comcast.net ([69.252.207.37]:41890 "EHLO
+        resqmta-ch2-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752066AbdHHTQN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 18:58:48 -0400
-Received: by mail-pf0-f174.google.com with SMTP id d67so13477636pfc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 15:58:48 -0700 (PDT)
+        Tue, 8 Aug 2017 15:16:13 -0400
+From: James Feeney <james@nurealm.net>
+Subject: wireless drivers fail to report link speed?
+Reply-To: james@nurealm.net
+To: linux-wireless@vger.kernel.org
+Message-ID: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net> (sfid-20170808_211628_289451_F0894C89)
+Date: Tue, 8 Aug 2017 13:07:17 -0600
 MIME-Version: 1.0
-In-Reply-To: <1500894086.20057.12.camel@intel.com>
-References: <20170721145147.7572-1-jprvita@endlessm.com> <1500894086.20057.12.camel@intel.com>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Date: Tue, 1 Aug 2017 15:58:47 -0700
-Message-ID: <CAOcMMifW4mVPj1TVkzQPdvT0YO6p1DUObNinzWv2_ZtCbfk9Mg@mail.gmail.com> (sfid-20170802_005910_976832_1E118010)
-Subject: Re: [PATCH] iwlwifi: Demote messages about fw flags size to info
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: linuxwifi <linuxwifi@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "jprvita@gmail.com" <jprvita@gmail.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux@endlessm.com" <linux@endlessm.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Luca,
+Hello All
 
-On Mon, Jul 24, 2017 at 4:01 AM, Coelho, Luciano
-<luciano.coelho@intel.com> wrote:
-> On Fri, 2017-07-21 at 07:51 -0700, Jo=C3=A3o Paulo Rechi Vita wrote:
+Would you please look at kernel bug report "Since 4.12 - bonding module not
+working with wireless drivers", and tell me if you know why the kernel ethtool
+does not receive a speed report from the wireless drivers?
 
-(...)
+ https://bugzilla.kernel.org/show_bug.cgi?id=196547
 
->> Currently these messages are presented to the user during boot if there
->> is no bootsplash covering the console, sometimes even if the boot splash
->> is enabled but has not started yet by the time this message is shown.
->>
+It seems that Mahesh Bandewar became annoyed that some network drivers do not
+report speed and duplex to the bonding module properly, so that it becomes
+impossible to make "best connection" decisions.  A patch was applied to the
+bonding module in linux 4.12 which now disables any network interface that does
+not successfully report its speed and duplex.  In practice, this seems to
+include every wireless network driver I've tried, the ath5k, ath9k, the
+rtl8192ce and RTL8188CUS.  Of course, this new behavior breaks wireless bonding!
 
-I should have provided another piece of information here: all of this
-happens even when booting with the 'quiet' kernel parameter.
+Do you know if there is some general reason why the wireless drivers do not work
+with the kernel ethtool?  Is this something that can be fixed?  Can you tell if
+this reporting failure would be the fault of the kernel ethtool?  Or the
+wireless driver?  Or the bonding module?
 
-> This specific case is harmless, but I'd rather keep this message as an
-> error, because in other situations it could lead to unexpected
-> behavioir, so I prefer to keep it very visible.
->
->
-
-I see your point, and I understand the purpose of these messages. I'm
-wondering if perhaps having them at the warning level would give them
-enough visibility, while still keeping a clean boot process to the end
-user. If so, I can send an updated patch.
-
-Thanks for your reply and for pointing to the fix for the root cause
-of that message.
-
-Cheers,
-
-...........................................................................=
-...........
-Jo=C3=A3o Paulo Rechi Vita  |  +1.415.851.5778  |  Endless
+Thanks
+James
