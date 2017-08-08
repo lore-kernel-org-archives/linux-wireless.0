@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.cypress.com ([157.95.67.100]:40755 "EHLO
-        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752119AbdHGINQ (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:36114 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752122AbdHHQBi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 04:13:16 -0400
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, wright.feng@cypress.com,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Subject: [PATCH] brcmfmac: add setting carrier state ON for successful roaming
-Date: Mon,  7 Aug 2017 16:16:52 +0800
-Message-Id: <1502093812-5011-1-git-send-email-wright.feng@cypress.com> (sfid-20170807_101319_978133_0FFD519A)
+        Tue, 8 Aug 2017 12:01:38 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        wright.feng@cypress.com, hante.meuleman@broadcom.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH 21/35] wireless: broadcom: brcm80211: constify usb_device_id
+Date: Tue,  8 Aug 2017 21:31:26 +0530
+Message-Id: <1502208086-11916-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180206_826214_9E8DF5A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-After association, ping is not working when sweeping the channel at the
-AP side. It is caused by having incorrect carrier state (OFF) for the STA
-in successful roaming. This patch sets the carrier state ON for the case.
-
-Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 617199c..71f18b9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5552,10 +5552,13 @@ static s32 brcmf_get_assoc_ies(struct brcmf_cfg80211_info *cfg,
- 	u32 status = e->status;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 0eea48e..51562b0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1463,7 +1463,7 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ #define LINKSYS_USB_DEVICE(dev_id)	\
+ 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LINKSYS, dev_id) }
  
- 	if (event == BRCMF_E_ROAM && status == BRCMF_E_STATUS_SUCCESS) {
--		if (test_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state))
-+		if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
-+			     &ifp->vif->sme_state)) {
- 			brcmf_bss_roaming_done(cfg, ifp->ndev, e);
--		else
-+		} else {
- 			brcmf_bss_connect_done(cfg, ifp->ndev, e, true);
-+			brcmf_net_setcarrier(ifp, true);
-+		}
- 	}
- 
- 	return 0;
+-static struct usb_device_id brcmf_usb_devid_table[] = {
++static const struct usb_device_id brcmf_usb_devid_table[] = {
+ 	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
 -- 
-1.9.1
+2.7.4
