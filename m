@@ -1,83 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754471AbdHYCa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 22:30:56 -0400
-From: igor.mitsyanko.os@quantenna.com
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:36028 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750849AbdHHJpm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Aug 2017 05:45:42 -0400
+Received: by mail-qt0-f174.google.com with SMTP id v29so16699929qtv.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 02:45:41 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [PATCH 10/27] qtnfmac: do not cache channel info from "connect" command
-Date: Thu, 24 Aug 2017 19:30:07 -0700
-Message-Id: <20170825023024.10565-11-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043107_693058_ACF16A97)
-In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        ath10k@lists.infradead.org
+Subject: ath: Incorrect regDomainPairs/allCountries settings
+Date: Tue, 08 Aug 2017 11:45:38 +0200
+Message-ID: <1693831.JqVThioVz9@bentobox> (sfid-20170808_114546_349576_0BB4D63B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Hi,
 
-This makes no sense because real operational channel is choosen based
-on AP operation, not on what STA is configured to.
+I just had two inquiries from Vietnam and Singapore regarding the used CTL 
+limits by Atheros based chips. I've checked through the code and noticed that 
+regd_common.h assigns SG to APL6_WORLD and VN to NULL1_WORLD.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 14 --------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++++--
- 2 files changed, 4 insertions(+), 16 deletions(-)
+ * SG: APL6_WORLD
+   - 2.4GHz: CTL_ETSI
+   -   5GHz: CTL_ETSI
+ * VN: NULL1_WORLD
+   - 2.4GHz: CTL_ETSI
+   -   5GHz: NO_CTL
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 9eb0c08..501ece3 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -570,8 +570,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	     struct cfg80211_connect_params *sme)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
--	struct qtnf_wmac *mac = wiphy_priv(wiphy);
--	struct cfg80211_chan_def chandef;
- 	int ret;
- 
- 	if (vif->wdev.iftype != NL80211_IFTYPE_STATION)
-@@ -580,18 +578,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	if (vif->sta_state != QTNF_STA_DISCONNECTED)
- 		return -EBUSY;
- 
--	if (sme->channel) {
--		/* FIXME: need to set proper nl80211_channel_type value */
--		cfg80211_chandef_create(&chandef, sme->channel,
--					NL80211_CHAN_HT20);
--		/* fall-back to minimal safe chandef description */
--		if (!cfg80211_chandef_valid(&chandef))
--			cfg80211_chandef_create(&chandef, sme->channel,
--						NL80211_CHAN_HT20);
--
--		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
--	}
--
- 	if (sme->bssid)
- 		ether_addr_copy(vif->bssid, sme->bssid);
- 	else
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 7dbee42..65eee2b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2054,8 +2054,10 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 
- 	ether_addr_copy(cmd->bssid, vif->bssid);
- 
--	if (vif->mac->chandef.chan)
--		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
-+	if (sme->channel)
-+		cmd->channel = cpu_to_le16(sme->channel->hw_value);
-+	else
-+		cmd->channel = 0;
- 
- 	if ((sme->bg_scan_period > 0) &&
- 	    (sme->bg_scan_period <= QTNF_MAX_BG_SCAN_PERIOD))
--- 
-2.9.5
+But I personally would have expected that both countries would be assigned to 
+FCC3_WORLD.
+
+ * FCC3_WORLD
+   - 2.4GHz: CTL_ETSI
+   -   5GHz: CTL_FCC
+
+Maybe someone from QCA can check with their internal driver.
+
+I have compared the current ath/regd_common.h with what I would have expected 
+(which might not be correct after all). I still wanted to list the things 
+which I found:
+
+Missing Entries in CountryCode (regd.h):
+
+ * CTRY_AFGHANISTAN = 4,
+ * CTRY_AMERICAN_SAMOA = 16,
+ * CTRY_ANGUILLA = 660,
+ * CTRY_BAHAMAS = 44,
+ * CTRY_BERMUDA = 60,
+ * CTRY_BHUTAN = 64,
+ * CTRY_BURKINA_FASO = 854,
+ * CTRY_CAYMAN_ISLANDS = 136,
+ * CTRY_CENTRAL_AFRICA_REPUBLIC = 140,
+ * CTRY_CHAD = 148,
+ * CTRY_CHRISTMAS_ISLAND = 162,
+ * CTRY_DOMINICA = 212,
+ * CTRY_ETHIOPIA = 231,
+ * CTRY_FRENCH_GUIANA = 254,
+ * CTRY_FRENCH_POLYNESIA = 258,
+ * CTRY_GHANA = 288,
+ * CTRY_GUADELOUPE = 312,
+ * CTRY_GUYANA = 328,
+ * CTRY_COTE_D_IVOIRE = 384,
+ * CTRY_LESOTHO = 426,
+ * CTRY_MALAWI = 454,
+ * CTRY_MALDIVES = 462,
+ * CTRY_MARSHALL_ISLANDS = 584,
+ * CTRY_MARTINIQUE = 474,
+ * CTRY_MAURITANIA = 478,
+ * CTRY_MAURITIUS = 480,
+ * CTRY_MAYOTTE = 175,
+ * CTRY_MICRONESIA = 583,
+ * CTRY_MOLDOVA = 498,
+ * CTRY_MONGOLIA = 496,
+ * CTRY_NAMIBIA = 516,
+ * CTRY_NIGERIA = 566,
+ * CTRY_NORTHERN_MARIANA_ISLANDS = 580,
+ * CTRY_PALAU = 585,
+ * CTRY_REUNION = 638,
+ * CTRY_RWANDA = 646,
+ * CTRY_ST_BARTHELEMY = 652,
+ * CTRY_ST_KITTS_NEVIS = 659,
+ * CTRY_ST_LUCIA = 662,
+ * CTRY_ST_MARTIN = 663,
+ * CTRY_ST_PIERRE_MIQUELON = 666,
+ * CTRY_ST_VINCENT_GRENADIENS= 670,
+ * CTRY_SAMOA = 882,
+ * CTRY_SENEGAL = 686,
+ * CTRY_SERBIA = 688,
+ * CTRY_MONTENEGRO = 499,
+ * CTRY_SURINAME = 740,
+ * CTRY_TANZANIA = 834,
+ * CTRY_TOGO = 768,
+ * CTRY_TURKS_CAICOS = 796,
+ * CTRY_UGANDA = 800,
+ * CTRY_UNITED_STATES2 = 841,
+ * CTRY_UNITED_STATES3 = 843,
+ * CTRY_VANUATU = 548,
+ * CTRY_VIRGIN_ISLANDS = 850,
+ * CTRY_WALLIS_FUTUNA = 876,
+ * CTRY_ARGENTINA2 = 5003
+
+Entries which most likely shouldn't exist in CountryCode:
+
+ * CTRY_KOREA_ROC2
+ * CTRY_SERBIA_MONTENEGRO
+
+Things which I missed in the EnumRd:
+
+ * FCC11_WORLD = 0x19,
+ * FCC3_ETSIC = 0x3F,
+ * ETSI8_WORLD = 0x3D,
+ * ETSI9_WORLD = 0x3E,
+ * APL12_WORLD = 0x51,
+ * APL14_WORLD = 0x57,
+ * APL15_WORLD = 0x59,
+ * APL13_WORLD = 0x5A,
+ * APL10_WORLD = 0x5F,
+
+
+The new mappings in regDomainPairs for the used EnumRds would then be:
+
+ * {FCC11_WORLD, CTL_FCC, CTL_ETSI},
+ * {FCC3_ETSIC, CTL_FCC, CTL_ETSI},
+ * {ETSI8_WORLD, CTL_ETSI, CTL_ETSI},
+ * {ETSI9_WORLD, CTL_ETSI, CTL_ETSI},
+ * {APL10_WORLD, CTL_ETSI, CTL_ETSI},
+ * {APL12_WORLD, CTL_ETSI, CTL_ETSI},
+ * {APL13_WORLD, CTL_ETSI, CTL_ETSI},
+ * {APL14_WORLD, CTL_FCC, CTL_ETSI},
+ * {APL15_WORLD, CTL_FCC, CTL_ETSI},
+
+
+Things which I missed in allCountries
+
+ * {CTRY_AFGHANISTAN, ETSI1_WORLD, "AF"},
+ * {CTRY_AMERICAN_SAMOA, FCC3_FCCA, "AS"},
+ * {CTRY_ANGUILLA, ETSI1_WORLD, "AI"},
+ * {CTRY_BAHAMAS, FCC3_WORLD, "BS"},
+ * {CTRY_BERMUDA, FCC3_FCCA, "BM"},
+ * {CTRY_BHUTAN, ETSI1_WORLD, "BT"},
+ * {CTRY_BURKINA_FASO,FCC3_WORLD, "BF"},
+ * {CTRY_CAYMAN_ISLANDS, FCC3_WORLD, "KY"},
+ * {CTRY_CENTRAL_AFRICA_REPUBLIC, FCC3_WORLD, "CF"},
+ * {CTRY_CHAD, ETSI1_WORLD, "TD"},
+ * {CTRY_CHRISTMAS_ISLAND, FCC3_WORLD, "CX"},
+ * {CTRY_DOMINICA, FCC1_FCCA, "DM"},
+ * {CTRY_ETHIOPIA, ETSI1_WORLD, "ET"},
+ * {CTRY_FRENCH_GUIANA, ETSI1_WORLD, "GF"},
+ * {CTRY_FRENCH_POLYNESIA, ETSI1_WORLD, "PF"},
+ * {CTRY_GHANA, FCC3_WORLD, "GH"},
+ * {CTRY_GUADELOUPE, ETSI1_WORLD, "GP"},
+ * {CTRY_GUYANA, APL1_ETSIC, "GY"},
+ * {CTRY_COTE_D_IVOIRE, FCC3_WORLD, "CI"},
+ * {CTRY_KENYA, APL12_WORLD, "KE"},
+ * {CTRY_LESOTHO, ETSI1_WORLD, "LS"},
+ * {CTRY_MALDIVES, APL6_WORLD, "MV"},
+ * {CTRY_MARSHALL_ISLANDS, FCC3_FCCA, "MH"},
+ * {CTRY_MARTINIQUE, ETSI1_WORLD, "MQ"},
+ * {CTRY_MAURITANIA, ETSI1_WORLD, "MR"},
+ * {CTRY_MAURITIUS, FCC3_WORLD, "MU"},
+ * {CTRY_MAYOTTE, ETSI1_WORLD, "YT"},
+ * {CTRY_MICRONESIA, FCC3_FCCA, "FM"},
+ * {CTRY_MOLDOVA, ETSI1_WORLD, "MD"},
+ * {CTRY_MONGOLIA, FCC3_WORLD, "MN"},
+ * {CTRY_MONTENEGRO, ETSI1_WORLD, "ME"},
+ * {CTRY_NAMIBIA, APL9_WORLD, "NA"},
+ * {CTRY_NICARAGUA, FCC3_FCCA, "NI"},
+ * {CTRY_NIGERIA, APL8_WORLD, "NG"},
+ * {CTRY_NORTHERN_MARIANA_ISLANDS, FCC3_FCCA, "MP"},
+ * {CTRY_PALAU, FCC3_FCCA, "PW"},
+ * {CTRY_PARAGUAY, FCC3_WORLD, "PY"},
+ * {CTRY_REUNION, ETSI1_WORLD, "RE"},
+ * {CTRY_RWANDA, FCC3_WORLD, "RW"},
+ * {CTRY_SENEGAL, FCC3_WORLD, "SN"},
+ * {CTRY_SERBIA, ETSI1_WORLD, "RS"},
+ * {CTRY_ST_BARTHELEMY, ETSI1_WORLD, "BL"},
+ * {CTRY_ST_KITTS_NEVIS, APL10_WORLD, "KN"},
+ * {CTRY_ST_LUCIA, APL10_WORLD, "LC"},
+ * {CTRY_ST_MARTIN, ETSI1_WORLD, "MF"},
+ * {CTRY_ST_PIERRE_MIQUELON, ETSI1_WORLD, "PM"},
+ * {CTRY_ST_VINCENT_GRENADIENS, ETSI1_WORLD, "VC"},
+ * {CTRY_SAMOA, ETSI1_WORLD, "WS"},
+ * {CTRY_SURINAME, ETSI1_WORLD, "SR"},
+ * {CTRY_TANZANIA, APL1_WORLD, "TZ"},
+ * {CTRY_TOGO, ETSI1_WORLD, "TG"},
+ * {CTRY_TURKS_CAICOS, FCC3_WORLD, "TC"},
+ * {CTRY_UGANDA, FCC3_WORLD, "UG"},
+ * {CTRY_VANUATU, FCC3_WORLD, "VU"},
+ * {CTRY_VIRGIN_ISLANDS, FCC3_FCCA, "VI"},
+ * {CTRY_WALLIS_FUTUNA, ETSI1_WORLD, "WF"},
+
+Things which seemed to be "wrong" in allCountries:
+
+ * CTRY_ALBANIA: NULL1_WORLD -> ETSI1_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_ALGERIA: NULL1_WORLD -> APL13_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_AUSTRALIA: FCC2_WORLD -> FCC3_WORLD
+ * CTRY_BAHRAIN: APL6_WORLD -> APL15_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_BANGLADESH: NULL1_WORLD -> APL1_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_BOLIVIA: APL1_ETSIC -> APL8_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_BRAZIL: FCC3_WORLD -> FCC3_ETSIC
+ * CTRY_BRUNEI_DARUSSALAM: APL1_WORLD -> APL6_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_BULGARIA: ETSI6_WORLD -> ETSI1_WORLD
+ * CTRY_CHINA: APL1_WORLD -> APL14_WORLD
+ * CTRY_COLOMBIA: FCC1_FCCA -> FCC3_WORLD
+   - changes 2.4GHz to CTL_ETSI
+ * CTRY_COSTA_RICA: FCC1_WORLD -> FCC3_WORLD
+ * CTRY_CZECH: ETSI3_WORLD -> ETSI1_WORLD
+ * CTRY_ECUADOR: FCC1_WORLD -> FCC3_WORLD
+ * CTRY_GUAM: FCC1_FCCA -> FCC3_FCCA
+ * CTRY_GUATEMALA: FCC1_FCCA -> ETSI1_WORLD
+   - changes 2.4GHz to CTL_ETSI
+   - changes 5GHz to CTL_ETSI
+ * CTRY_HAITI: ETSI1_WORLD -> FCC3_FCCA
+   - changes 2.4GHz to CTL_FCC
+   - changes 5GHz to CTL_FCC
+ * CTRY_HONDURAS: NULL1_WORLD -> FCC3_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_INDIA: APL6_WORLD -> APL15_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_INDONESIA: NULL1_WORLD -> APL2_ETSIC
+   - changes 5GHz to CTL_FCC
+ * CTRY_ISRAEL: NULL1_WORLD -> ETSI3_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_JORDAN: ETSI2_WORLD -> APL4_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_LEBANON: NULL1_WORLD -> FCC3_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_MACAU: FCC2_WORLD -> FCC3_WORLD
+ * CTRY_MACEDONIA: NULL1_WORLD -> ETSI1_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_MALAYSIA: APL8_WORLD -> FCC11_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_MEXICO: FCC1_FCCA -> FCC3_ETSIC
+   - changes 2.4GHz to CTL_FCC
+ * CTRY_MONACO: ETSI4_WORLD -> ETSI1_WORLD
+ * CTRY_MOROCCO: APL4_WORLD -> ETSI3_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_NEPAL: APL1_WORLD -> APL6_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_NEW_ZEALAND: FCC2_ETSIC -> FCC3_ETSIC
+ * CTRY_OMAN: FCC3_WORLD -> ETSI1_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_PAKISTAN: NULL1_WORLD -> APL1_ETSIC
+   - changes 5GHz to CTL_FCC
+ * CTRY_PAPUA_NEW_GUINEA: FCC1_WORLD -> FCC3_WORLD
+ * CTRY_PERU: APL1_WORLD -> FCC3_WORLD
+ * CTRY_PHILIPPINES: APL1_WORLD -> FCC3_WORLD
+ * CTRY_PUERTO_RICO: FCC1_FCCA -> FCC3_FCCA
+ * CTRY_ROMANIA: NULL1_WORLD -> ETSI1_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_RUSSIA: NULL1_WORLD -> ETSI8_WORLD
+ * CTRY_SAUDI_ARABIA: NULL1_WORLD -> ETSI1_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_SINGAPORE: APL6_WORLD -> FCC3_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_TAIWAN: APL3_FCCA -> FCC3_FCCA
+ * CTRY_TURKEY: ETSI3_WORLD -> ETSI1_WORLD
+ * CTRY_UKRAINE: NULL1_WORLD -> ETSI9_WORLD
+   - changes 5GHz to CTL_ETSI
+ * CTRY_UAE: NULL1_WORLD -> FCC3_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_URUGUAY: FCC3_WORLD -> FCC2_WORLD
+ * CTRY_UZBEKISTAN: FCC3_FCCA -> ETSI3_WORLD
+   - changes 2.4GHz to CTL_ETSI
+   - changes 5GHz to CTL_ETSI
+ * CTRY_VENEZUELA: APL2_ETSIC -> FCC2_ETSIC
+ * CTRY_VIET_NAM: NULL1_WORLD -> FCC3_WORLD
+   - changes 5GHz to CTL_FCC
+ * CTRY_ZIMBABWE: NULL1_WORLD -> ETSI1_WORLD
+   - changes 5GHz to CTL_ETSI
+
+Not existing countries in allCountries:
+
+ * CTRY_SERBIA_MONTENEGRO
+
+Kind regards,
+	Sven
