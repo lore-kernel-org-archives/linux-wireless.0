@@ -1,76 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55905 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752739AbdHBKdz (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:36842 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751921AbdHHJgi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 06:33:55 -0400
-From: Rakesh Pillai <pillair@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: fix memory leak in rx ring buffer allocation
-Date: Wed,  2 Aug 2017 16:03:37 +0530
-Message-Id: <1501670017-12862-1-git-send-email-pillair@codeaurora.org> (sfid-20170802_123359_435092_A97D86F7)
+        Tue, 8 Aug 2017 05:36:38 -0400
+Received: by mail-wm0-f53.google.com with SMTP id t201so2403452wmt.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 02:36:38 -0700 (PDT)
+Subject: Re: [PATCH v2 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
+To: chi-hsien.lin@cypress.com, Wright Feng <wright.feng@cypress.com>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
+ <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
+ <59885CB5.2040007@broadcom.com>
+ <b13203ce-e111-09ac-0339-c79d6767c752@cypress.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <23cc6e03-c859-8ff6-f0aa-3dfcd3f3fbe4@broadcom.com> (sfid-20170808_113642_891841_0DD8A774)
+Date: Tue, 8 Aug 2017 11:36:36 +0200
+MIME-Version: 1.0
+In-Reply-To: <b13203ce-e111-09ac-0339-c79d6767c752@cypress.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
+On 08-08-17 08:53, Chi-Hsien Lin wrote:
+> 
+> 
+> On 08/07/2017 8:27, Arend van Spriel wrote:
+>> On 8/3/2017 11:37 AM, Wright Feng wrote:
+>>> From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+>>>
+>>> Add support for CYW4373 SDIO/USB chipset.
+>>> CYW4373 is a 1x1 dual-band 11ac chipset with 20/40/80Mhz channel
+>>> support.
+>>> It's a WiFi/BT combo device.
+>>
+>> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+>>> ---
+>>> v2: add new chip(4737) info in commit message
+>>
+>> comment below...
+>>
+>>> ---
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c       | 4 +++-
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 9
+>>> ++++++++-
+>>>   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
+>>>   include/linux/mmc/sdio_ids.h                                  | 1 +
+>>>   6 files changed, 18 insertions(+), 2 deletions(-)
+>>>
+>>
+>> [...]
+>>
+>>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+>>> index b733eb4..abacd54 100644
+>>> --- a/include/linux/mmc/sdio_ids.h
+>>> +++ b/include/linux/mmc/sdio_ids.h
+>>> @@ -39,6 +39,7 @@
+>>>   #define SDIO_DEVICE_ID_BROADCOM_43455        0xa9bf
+>>>   #define SDIO_DEVICE_ID_BROADCOM_4354        0x4354
+>>>   #define SDIO_DEVICE_ID_BROADCOM_4356        0x4356
+>>> +#define SDIO_DEVICE_ID_CYPRESS_4373        0x4373
+>>
+>> So is there no specific Cypress SDIO vendor ID?
+> There is no Cypress SDIO vid. I believe the legacy chips 4343w ...etc.
+> shipped are still using BRCM SDIO vid. Also, 4373 project was initiated
+> in Broadcom so the default id was set to the Broadcom id. Will it a
+> requirement to add Cypress vid here?
 
-ath10k: fix memory leak in rx ring buffer allocation
+I was just wondering about it. It seems appropriate to do so although I
+understand the 4373 history of things. Also for USB (in this same patch)
+you seem to have used a Cypress USB vendor id so things just did not
+look consistent. Hence I raised my comment.
 
-The rx ring buffers are added to a hash table if
-firmware support full rx reorder. If the full rx
-reorder support flag is not set before allocating
-the rx ring buffers, none of the buffers are added
-to the hash table.
+Regards,
+Arend
 
-There is a race condition between rx ring refill and
-rx buffer replenish from napi poll. The interrupts are
-enabled in hif start, before the rx ring is refilled during init.
-We replenish buffers from napi poll due to the interrupts which
-get enabled after hif start. Hence before the entire rx ring is
-refilled during the init, the napi poll replenishes a few buffers
-in steps of 100 buffers per attempt. During this rx ring replenish
-from napi poll, the rx reorder flag has not been set due to which
-the replenished buffers are not added to the hash table
-
-Set the rx full reorder support flag before we allocate
-the rx ring buffer to avoid the memory leak.
-
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 6906bdd..10b3384 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1886,6 +1886,12 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		goto err_wmi_detach;
- 	}
- 
-+	/* If firmware indicates Full Rx Reorder support it must be used in a
-+	 * slightly different manner. Let HTT code know.
-+	 */
-+	ar->htt.rx_ring.in_ord_rx = !!(test_bit(WMI_SERVICE_RX_FULL_REORDER,
-+						ar->wmi.svc_map));
-+
- 	status = ath10k_htt_rx_alloc(&ar->htt);
- 	if (status) {
- 		ath10k_err(ar, "failed to alloc htt rx: %d\n", status);
-@@ -1997,12 +2003,6 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		}
- 	}
- 
--	/* If firmware indicates Full Rx Reorder support it must be used in a
--	 * slightly different manner. Let HTT code know.
--	 */
--	ar->htt.rx_ring.in_ord_rx = !!(test_bit(WMI_SERVICE_RX_FULL_REORDER,
--						ar->wmi.svc_map));
--
- 	status = ath10k_htt_rx_ring_refill(ar);
- 	if (status) {
- 		ath10k_err(ar, "failed to refill htt rx ring: %d\n", status);
--- 
-1.9.1
+>>
+>>>   #define SDIO_VENDOR_ID_INTEL            0x0089
+>>>   #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX    0x1402
+>>>
+>>
+>> .
+>>
