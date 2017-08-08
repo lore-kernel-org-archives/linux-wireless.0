@@ -1,104 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:60255 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752019AbdHVVne (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:45030 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751918AbdHHGxo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 17:43:34 -0400
-From: <ryanhsu@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <ryanhsu@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix napi_poll budget overflow
-Date: Tue, 22 Aug 2017 14:44:02 -0700
-Message-ID: <1503438242-5657-1-git-send-email-ryanhsu@qti.qualcomm.com> (sfid-20170822_234337_987456_CE502E1D)
+        Tue, 8 Aug 2017 02:53:44 -0400
+Reply-To: chi-hsien.lin@cypress.com
+Subject: Re: [PATCH v2 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
+ <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
+ <59885CB5.2040007@broadcom.com>
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Message-ID: <b13203ce-e111-09ac-0339-c79d6767c752@cypress.com> (sfid-20170808_085347_569729_E29088EE)
+Date: Tue, 8 Aug 2017 14:53:25 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <59885CB5.2040007@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 
-In napi_poll, the budget number is used to control the amount of packets
-we should handle per poll to balance the resource in the system.
 
-In the list of the amsdu packets reception, we check if there is budget
-count left and handle the complete list of the packets, that it will have
-chances the very last list will over the budget leftover.
+On 08/07/2017 8:27, Arend van Spriel wrote:
+> On 8/3/2017 11:37 AM, Wright Feng wrote:
+>> From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+>>
+>> Add support for CYW4373 SDIO/USB chipset.
+>> CYW4373 is a 1x1 dual-band 11ac chipset with 20/40/80Mhz channel support.
+>> It's a WiFi/BT combo device.
+> 
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+>> ---
+>> v2: add new chip(4737) info in commit message
+> 
+> comment below...
+> 
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c       | 4 +++-
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 9 
+>> ++++++++-
+>>   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
+>>   include/linux/mmc/sdio_ids.h                                  | 1 +
+>>   6 files changed, 18 insertions(+), 2 deletions(-)
+>>
+> 
+> [...]
+> 
+>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+>> index b733eb4..abacd54 100644
+>> --- a/include/linux/mmc/sdio_ids.h
+>> +++ b/include/linux/mmc/sdio_ids.h
+>> @@ -39,6 +39,7 @@
+>>   #define SDIO_DEVICE_ID_BROADCOM_43455        0xa9bf
+>>   #define SDIO_DEVICE_ID_BROADCOM_4354        0x4354
+>>   #define SDIO_DEVICE_ID_BROADCOM_4356        0x4356
+>> +#define SDIO_DEVICE_ID_CYPRESS_4373        0x4373
+> 
+> So is there no specific Cypress SDIO vendor ID?
+There is no Cypress SDIO vid. I believe the legacy chips 4343w ...etc. 
+shipped are still using BRCM SDIO vid. Also, 4373 project was initiated 
+in Broadcom so the default id was set to the Broadcom id. Will it a 
+requirement to add Cypress vid here?
 
-So adding one more parameter - budget_left, this would help while
-traversing the list to avoid handling more than the budget given.
 
-Reported-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Fix-suggested-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-
-Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 0b4c156..95a5a18 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1718,7 +1718,8 @@ static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
- }
- 
- static int ath10k_htt_rx_extract_amsdu(struct sk_buff_head *list,
--				       struct sk_buff_head *amsdu)
-+				       struct sk_buff_head *amsdu,
-+				       int budget_left)
- {
- 	struct sk_buff *msdu;
- 	struct htt_rx_desc *rxd;
-@@ -1729,8 +1730,9 @@ static int ath10k_htt_rx_extract_amsdu(struct sk_buff_head *list,
- 	if (WARN_ON(!skb_queue_empty(amsdu)))
- 		return -EINVAL;
- 
--	while ((msdu = __skb_dequeue(list))) {
-+	while ((msdu = __skb_dequeue(list)) && budget_left) {
- 		__skb_queue_tail(amsdu, msdu);
-+		budget_left--;
- 
- 		rxd = (void *)msdu->data - sizeof(*rxd);
- 		if (rxd->msdu_end.common.info0 &
-@@ -1821,7 +1823,8 @@ static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
- 	return num_msdu;
- }
- 
--static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
-+static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb,
-+				    int budget_left)
- {
- 	struct ath10k_htt *htt = &ar->htt;
- 	struct htt_resp *resp = (void *)skb->data;
-@@ -1878,9 +1881,9 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 	if (offload)
- 		num_msdus = ath10k_htt_rx_h_rx_offload(ar, &list);
- 
--	while (!skb_queue_empty(&list)) {
-+	while (!skb_queue_empty(&list) && budget_left) {
- 		__skb_queue_head_init(&amsdu);
--		ret = ath10k_htt_rx_extract_amsdu(&list, &amsdu);
-+		ret = ath10k_htt_rx_extract_amsdu(&list, &amsdu, budget_left);
- 		switch (ret) {
- 		case 0:
- 			/* Note: The in-order indication may report interleaved
-@@ -1890,6 +1893,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 * should still give an idea about rx rate to the user.
- 			 */
- 			num_msdus += skb_queue_len(&amsdu);
-+			budget_left -= skb_queue_len(&amsdu);
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
- 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
-@@ -2400,7 +2404,8 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
- 		}
- 
- 		spin_lock_bh(&htt->rx_ring.lock);
--		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb);
-+		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb,
-+							(budget - quota));
- 		spin_unlock_bh(&htt->rx_ring.lock);
- 		if (num_rx_msdus < 0) {
- 			resched_napi = true;
--- 
-1.9.1
+> 
+>>   #define SDIO_VENDOR_ID_INTEL            0x0089
+>>   #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX    0x1402
+>>
+> 
+> .
+> 
