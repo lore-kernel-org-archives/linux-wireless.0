@@ -1,49 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51816 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752033AbdHIH13 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28142 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751921AbdHHLD6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 03:27:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH v2 2/3] iwlwifi: mvm: start mac queues when deferred tx frames are purged
-References: <78tivleks.fsf@kamboji.qca.qualcomm.com>
-        <20170809055853.8560-1-luca@coelho.fi>
-Date: Wed, 09 Aug 2017 10:27:24 +0300
-In-Reply-To: <20170809055853.8560-1-luca@coelho.fi> (Luca Coelho's message of
-        "Wed, 9 Aug 2017 08:58:53 +0300")
-Message-ID: <87efsli4kj.fsf@kamboji.qca.qualcomm.com> (sfid-20170809_092732_929464_8B24EB68)
+        Tue, 8 Aug 2017 07:03:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: qca_merez <qca_merez@qca.qualcomm.com>
+CC: QCA_gidons <QCA_gidons@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        wil6210 <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH v4 10/10] wil6210: make debugfs compilation optional
+Date: Tue, 8 Aug 2017 11:03:52 +0000
+Message-ID: <87r2wmianc.fsf@kamboji.qca.qualcomm.com> (sfid-20170808_130402_296807_65659D64)
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+        <1501787302-22885-11-git-send-email-qca_merez@qca.qualcomm.com>
+In-Reply-To: <1501787302-22885-11-git-send-email-qca_merez@qca.qualcomm.com>
+        (Maya Erez's message of "Thu, 3 Aug 2017 22:08:22 +0300")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
 
-> From: Avraham Stern <avraham.stern@intel.com>
+> From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
 >
-> In AP mode, if a station is removed just as it is adding a new stream,
-> the queue in question will remain stopped and no more TX will happen
-> in this queue, leading to connection failures and other problems.
+> Since debugfs is a kernel configuration option, enable the driver to
+> compile without debugfs.
 >
-> This is because under DQA, when tx is deferred because a queue needs
-> to be allocated, the mac queue for that TID is stopped until the new
-> stream is added.  If at this point the station that this stream
-> belongs to is removed, all the deferred tx frames are purged, but the
-> mac queue is not restarted. As a result, all following tx on this
-> queue will not be transmitted.
+> Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/Makefile  | 2 +-
+>  drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
 >
-> Fix this by starting the relevant mac queues when the deferred tx
-> frames are purged.
->
-> Fixes: 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
-> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wire=
+less/ath/wil6210/Makefile
+> index 4ae21da..63a751a 100644
+> --- a/drivers/net/wireless/ath/wil6210/Makefile
+> +++ b/drivers/net/wireless/ath/wil6210/Makefile
+> @@ -4,7 +4,7 @@ wil6210-y :=3D main.o
+>  wil6210-y +=3D netdev.o
+>  wil6210-y +=3D cfg80211.o
+>  wil6210-y +=3D pcie_bus.o
+> -wil6210-y +=3D debugfs.o
+> +wil6210-$(CONFIG_DEBUG_FS) +=3D debugfs.o
+>  wil6210-y +=3D wmi.o
+>  wil6210-y +=3D interrupt.o
+>  wil6210-y +=3D txrx.o
+> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wir=
+eless/ath/wil6210/wil6210.h
+> index cf20a8c..d7b1e03 100644
+> --- a/drivers/net/wireless/ath/wil6210/wil6210.h
+> +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+> @@ -940,8 +940,14 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct=
+ wireless_dev *wdev,
+>  			 struct cfg80211_mgmt_tx_params *params,
+>  			 u64 *cookie);
+> =20
+> +#if defined(CONFIG_DEBUG_FS)
+>  int wil6210_debugfs_init(struct wil6210_priv *wil);
+>  void wil6210_debugfs_remove(struct wil6210_priv *wil);
+> +#else
+> +static inline int wil6210_debugfs_init(struct wil6210_priv *wil) { retur=
+n 0; }
+> +static inline void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
+> +#endif
 
-Looks good, thanks.
+I was thinking more that should we have CONFIG_WIL6210_DEBUGFS, just
+like we have CONFIG_ATH10K_DEBUGFS and CONFIG_ATH9K_DEBUGFS? This way it
+can be controlled per driver if debugfs interface is available or not.
 
--- 
-Kalle Valo
+--=20
+Kalle Valo=
