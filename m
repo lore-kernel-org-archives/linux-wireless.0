@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway23.websitewelcome.com ([192.185.48.84]:46242 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751351AbdH3RIh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 13:08:37 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 2DB501668B
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 11:46:08 -0500 (CDT)
-Date: Wed, 30 Aug 2017 11:46:02 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] rtlwifi: refactor code in halbtcoutsrc module
-Message-ID: <20170830164602.GA16413@embeddedgus> (sfid-20170830_190844_146628_83378B29)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:50500 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752070AbdHHVnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Aug 2017 17:43:53 -0400
+Message-ID: <1502228547.24881.5.camel@redhat.com> (sfid-20170808_234358_078631_15127FE7)
+Subject: Re: wireless drivers fail to report link speed?
+From: Dan Williams <dcbw@redhat.com>
+To: james@nurealm.net, linux-wireless@vger.kernel.org
+Date: Tue, 08 Aug 2017 16:42:27 -0500
+In-Reply-To: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
+References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function halbtc_get_wifi_rssi always returns rtlpriv->dm.undec_sm_pwdb.
-So this function can be removed and the value of
-rtlpriv->dm.undec_sm_pwdb assigned to *s32_tmp directly.
+On Tue, 2017-08-08 at 13:07 -0600, James Feeney wrote:
+> Hello All
+> 
+> Would you please look at kernel bug report "Since 4.12 - bonding
+> module not
+> working with wireless drivers", and tell me if you know why the
+> kernel ethtool
+> does not receive a speed report from the wireless drivers?
+> 
+>  https://bugzilla.kernel.org/show_bug.cgi?id=196547
+> 
+> It seems that Mahesh Bandewar became annoyed that some network
+> drivers do not
+> report speed and duplex to the bonding module properly, so that it
+> becomes
+> impossible to make "best connection" decisions.  A patch was applied
+> to the
+> bonding module in linux 4.12 which now disables any network interface
+> that does
+> not successfully report its speed and duplex.  In practice, this
+> seems to
+> include every wireless network driver I've tried, the ath5k, ath9k,
+> the
+> rtl8192ce and RTL8188CUS.  Of course, this new behavior breaks
+> wireless bonding!
+> 
+> Do you know if there is some general reason why the wireless drivers
+> do not work
+> with the kernel ethtool?  Is this something that can be fixed?  Can
+> you tell if
+> this reporting failure would be the fault of the kernel ethtool?  Or
+> the
+> wireless driver?  Or the bonding module?
 
-This issue was first reported by Coverity as "identical code for different
-branches" in function halbtc_get_wifi_rssi.
+Because the "speed" (whatever that means) can and sometimes does change
+with every packet.  The driver dynamically adjusts the link rate based
+on all kinds of things.  But mainly the current radio environment; how
+many other APs are around, how much interference there is, how many
+other clients are trying to talk, that kind of thing.
 
-Addresses-Coverity-ID: 1226793
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
-This code was reported by Coverity and it was tested by compilation only.
-Chances are this may be a copy/paste error in function
-halbtc_get_wifi_rssi. Please, verify.
-Also, notice this code has been there since 2014.
+So one second the wifi might be the "best" link and then when somebody
+turns on a microwave oven or a baby monitor, it may be the "worst"
+until the microwave's duty cycle completes a few seconds later then
+it'll become the "best" again for a couple seconds then "worst" again,
+repeat until your Easy Mac is nice and warm and creamy.
 
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+Furthermore, for some drivers IIRC when there isn't any traffic, they
+might drop the link rate very low because there's no reason keep
+powering blocks when you're not transmitting/receiving any data.  IIRC
+the Intel drivers used to do that a couple years ago.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index c1eacd8..2a47b97 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -373,17 +373,6 @@ u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
- 	return ret_val;
- }
- 
--static s32 halbtc_get_wifi_rssi(struct rtl_priv *rtlpriv)
--{
--	int undec_sm_pwdb = 0;
--
--	if (rtlpriv->mac80211.link_state >= MAC80211_LINKED)
--		undec_sm_pwdb = rtlpriv->dm.undec_sm_pwdb;
--	else /* associated entry pwdb */
--		undec_sm_pwdb = rtlpriv->dm.undec_sm_pwdb;
--	return undec_sm_pwdb;
--}
--
- static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- {
- 	struct btc_coexist *btcoexist = (struct btc_coexist *)void_btcoexist;
-@@ -479,7 +468,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 		*bool_tmp = false;
- 		break;
- 	case BTC_GET_S4_WIFI_RSSI:
--		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
-+		*s32_tmp = rtlpriv->dm.undec_sm_pwdb;
- 		break;
- 	case BTC_GET_S4_HS_RSSI:
- 		*s32_tmp = 0;
--- 
-2.5.0
+Also, "duplex" doesn't mean anything in wireless land.  So no clue what
+bonding is expecting them to say here.  I would say the modifications
+to the bonding core made assumptions that simply aren't applicable to
+mediums other than wired ones.
+
+Dan
