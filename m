@@ -1,38 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0066.outbound.protection.outlook.com ([104.47.40.66]:51680
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751300AbdH3IpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 04:45:13 -0400
-Date: Wed, 30 Aug 2017 11:45:02 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 3/5] qtnfmac: modify qtnf_map_bar not to return NULL
-Message-ID: <20170830084501.vowpiepvdd3rqgcp@bars> (sfid-20170830_104517_736476_48CD63CF)
-References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
- <20170829121623.24761-4-sergey.matyukevich.os@quantenna.com>
- <fc30ee02-2aaa-23c6-46e3-fbeb5b5230ef@quantenna.com>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37984 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752125AbdHHLTs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Aug 2017 07:19:48 -0400
+Received: by mail-wm0-f49.google.com with SMTP id m85so4393468wma.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 04:19:47 -0700 (PDT)
+Subject: Re: [PATCH 31/34] brcmfmac: Remove func0 from function array
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-32-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <21ea2a49-c797-b427-1ee7-ff8164c8f95c@broadcom.com> (sfid-20170808_131952_654917_FD43AAC6)
+Date: Tue, 8 Aug 2017 13:19:45 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fc30ee02-2aaa-23c6-46e3-fbeb5b5230ef@quantenna.com>
+In-Reply-To: <20170726202557.15632-32-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 29, 2017 at 07:13:35PM -0700, Igor Mitsyanko wrote:
-> On 08/29/2017 05:16 AM, Sergey Matyukevich wrote:
-> > NULL is not a special type of success here but a error pointer.
-> > So it makes sense to check against NULL in qtnf_map_bar
-> > and return error code.
-> > 
-> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> > ---
+On 26-07-17 22:25, Ian Molton wrote:
+> Linux doesnt pass you func0 as a function when probing - instead
+> providing specific access functions to read/write it.
 > 
-> On a first glance not immediately obvious what is logically changed here, is
-> it so that pr_debug() would not print NULL pointer?
+> This prepares for a patch to remove the actual array entry itself.
 
-There is no actual bug here: all the mappings and error checks are in place.
-This is more about coding style problem: when function return both NULL and
-error pointeres, then the NULL is supposed to be a special type of success
-return. In this particular case NULL is just yet another failure.
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  5 +----
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   |  6 +++---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 13 ++++++-------
+>  3 files changed, 10 insertions(+), 14 deletions(-)
+
+[...]
+
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+> index 8a976c89cf63..227c90198a8e 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+> @@ -21,7 +21,9 @@
+>  #include <linux/firmware.h>
+>  #include "firmware.h"
+>  
+> -#define SDIO_FUNC_0		0
+> +/* Maximum number of I/O funcs */
+> +#define NUM_SDIO_FUNCS	3
+> +
+>  #define SDIO_FUNC_1		1
+>  #define SDIO_FUNC_2		2
+>  
+> @@ -39,9 +41,6 @@
+>  #define INTR_STATUS_FUNC1	0x2
+>  #define INTR_STATUS_FUNC2	0x4
+>  
+> -/* Maximum number of I/O funcs */
+> -#define SDIOD_MAX_IOFUNCS	7
+> -
+
+Good riddance, because ...
+
+>  /* mask of register map */
+>  #define REG_F0_REG_MASK		0x7FF
+>  #define REG_F1_MISC_MASK	0x1FFFF
+> @@ -175,7 +174,7 @@ struct brcmf_sdio;
+>  struct brcmf_sdiod_freezer;
+>  
+>  struct brcmf_sdio_dev {
+> -	struct sdio_func *func[SDIO_MAX_FUNCS];
+
+... it was not used anyway as this definition is in <linux/mmc/card.h>.
+
+> +	struct sdio_func *func[NUM_SDIO_FUNCS];
+>  	u8 num_funcs;			/* Supported funcs on client */
+>  	u32 sbwad;			/* Save backplane window address */
+>  	struct brcmf_core *cc_core;	/* chipcommon core info struct */
+> @@ -297,10 +296,10 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
+>  /* SDIO device register access interface */
+>  /* Functions for accessing SDIO Function 0 */
+>  #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
+> -	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
+> +	sdio_f0_readb((sdiodev)->func[1], (addr), (r))
+
+There is no reason to keep these any longer as these do not provide any
+functionality over the core sdio function unless you consider the
+sdiodev dereference.
