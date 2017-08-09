@@ -1,83 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44558 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751593AbdHRPwJ (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:4702 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752227AbdHIXlv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:08 +0300
-Message-Id: <20170818154922.2904-11-luca@coelho.fi> (sfid-20170818_175212_494116_A4DBF37D)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 10/24] iwlwifi: mvm: update the firmware API in TX
+        Wed, 9 Aug 2017 19:41:51 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] cfg80211: enable setting cqm config for AP mode
+Date: Wed,  9 Aug 2017 16:41:36 -0700
+Message-Id: <1502322097-29746-1-git-send-email-pradeepc@codeaurora.org> (sfid-20170810_014156_279827_01D9B6D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Enable connection monitoring for AP mode which makes it possible to track
+signal strength of connected stations.
 
-The firmware team is now re-using a bit that hasn't been
-used for a few generations. Re-use for TX_ON_AIR drop.
-This bit will be set by the firmware to indicate that
-a frame in an A-MPDU was dropped but not because of the
-already mapped reasons.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 9 +++------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c    | 2 +-
- 2 files changed, 4 insertions(+), 7 deletions(-)
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 4928310ddd31..14ad9fb895f9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -409,7 +409,8 @@ enum iwl_tx_status {
-  * @AGG_TX_STATE_BT_PRIO:
-  * @AGG_TX_STATE_FEW_BYTES:
-  * @AGG_TX_STATE_ABORT:
-- * @AGG_TX_STATE_LAST_SENT_TTL:
-+ * @AGG_TX_STATE_TX_ON_AIR_DROP: TX_ON_AIR signal drop without underrun or
-+ *	BT detection
-  * @AGG_TX_STATE_LAST_SENT_TRY_CNT:
-  * @AGG_TX_STATE_LAST_SENT_BT_KILL:
-  * @AGG_TX_STATE_SCD_QUERY:
-@@ -433,7 +434,7 @@ enum iwl_tx_agg_status {
- 	AGG_TX_STATE_BT_PRIO = 0x002,
- 	AGG_TX_STATE_FEW_BYTES = 0x004,
- 	AGG_TX_STATE_ABORT = 0x008,
--	AGG_TX_STATE_LAST_SENT_TTL = 0x010,
-+	AGG_TX_STATE_TX_ON_AIR_DROP = 0x010,
- 	AGG_TX_STATE_LAST_SENT_TRY_CNT = 0x020,
- 	AGG_TX_STATE_LAST_SENT_BT_KILL = 0x040,
- 	AGG_TX_STATE_SCD_QUERY = 0x080,
-@@ -445,10 +446,6 @@ enum iwl_tx_agg_status {
- 	AGG_TX_STATE_TRY_CNT_MSK = 0xf << AGG_TX_STATE_TRY_CNT_POS,
- };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index bafab07530d6..beda9c62f74a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9784,7 +9784,8 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 	}
  
--#define AGG_TX_STATE_LAST_SENT_MSK  (AGG_TX_STATE_LAST_SENT_TTL| \
--				     AGG_TX_STATE_LAST_SENT_TRY_CNT| \
--				     AGG_TX_STATE_LAST_SENT_BT_KILL)
--
- /*
-  * The mask below describes a status where we are absolutely sure that the MPDU
-  * wasn't sent. For BA/Underrun we cannot be that sure. All we know that we've
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 6d7d1a66af81..48f028366d51 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1515,7 +1515,7 @@ static const char *iwl_get_agg_tx_status(u16 status)
- 	AGG_TX_STATE_(BT_PRIO);
- 	AGG_TX_STATE_(FEW_BYTES);
- 	AGG_TX_STATE_(ABORT);
--	AGG_TX_STATE_(LAST_SENT_TTL);
-+	AGG_TX_STATE_(TX_ON_AIR_DROP);
- 	AGG_TX_STATE_(LAST_SENT_TRY_CNT);
- 	AGG_TX_STATE_(LAST_SENT_BT_KILL);
- 	AGG_TX_STATE_(SCD_QUERY);
+ 	if (wdev->iftype != NL80211_IFTYPE_STATION &&
+-	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
++	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT &&
++	    wdev->iftype != NL80211_IFTYPE_AP)
+ 		return -EOPNOTSUPP;
+ 
+ 	wdev_lock(wdev);
 -- 
-2.14.1
+1.9.1
