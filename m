@@ -1,112 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:33839 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752037AbdHJMnL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:32946 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752409AbdHIMBm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 08:43:11 -0400
-Received: by mail-wm0-f41.google.com with SMTP id t138so20716000wmt.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Aug 2017 05:43:10 -0700 (PDT)
-Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working
- with wireless drivers
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Mahesh Bandewar <maheshb@google.com>,
-        Andy Gospodarek <andy@greyhouse.net>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, James Feeney <james@nurealm.net>
-References: <87shh0gewn.fsf@kamboji.qca.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <8845e49b-3165-e6df-5935-c86278d220d9@broadcom.com> (sfid-20170810_144320_753081_8B0EC7B9)
-Date: Thu, 10 Aug 2017 14:43:06 +0200
+        Wed, 9 Aug 2017 08:01:42 -0400
+Subject: Re: [PATCH v4 01/10] wil6210: protect against invalid length of tx
+ management frame
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Lior David <qca_liord@qca.qualcomm.com>
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1501787302-22885-2-git-send-email-qca_merez@qca.qualcomm.com>
+ <598AC195.3000205@broadcom.com>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <9b8ee53e-bc56-0545-34dc-6ac91e4a1ba6@codeaurora.org> (sfid-20170809_140145_881862_A7B45883)
+Date: Wed, 9 Aug 2017 15:01:37 +0300
 MIME-Version: 1.0
-In-Reply-To: <87shh0gewn.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <598AC195.3000205@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 10-08-17 07:39, Kalle Valo wrote:
-> Hi Mahesh and Andy,
+On 8/9/2017 11:02 AM, Arend van Spriel wrote:
+> On 8/3/2017 9:08 PM, Maya Erez wrote:
+>> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+>>
+>> Validate buffer length has the minimum needed size
+>> when sending management frame to protect against
+>> possible buffer overrun.
 > 
-> James Feeney reported that there's a serious regression in bonding
-> module since v4.12, it doesn't work with wireless drivers anymore as
-> wireless drivers don't report the link speed via ethtool:
+> I noticed this is already applied, but I saw this subject text which has similar
+> sound to a recent patch in our driver so I it made me curious...
 > 
-> https://bugzilla.kernel.org/show_bug.cgi?id=196547
+>> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+>> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +++
+>>   drivers/net/wireless/ath/wil6210/debugfs.c  | 3 +++
+>>   2 files changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c
+>> b/drivers/net/wireless/ath/wil6210/cfg80211.c
+>> index 0b5383a..77af749 100644
+>> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
+>> +++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+>> @@ -884,6 +884,9 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct
+>> wireless_dev *wdev,
+>>       wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
+>>                 len, true);
+>>
+>> +    if (len < sizeof(struct ieee80211_hdr_3addr))
+>> +        return -EINVAL;
 > 
-> In the bug report it's said that this commit is the culprit:
+> A similar check is already in net/wireless/cfg80211_mlme_mgmt_tx() which calls
+> this function:
 > 
-> 3f3c278c94dd bonding: fix active-backup transition
+>     if (params->len < 24 + 1)
+>         return -EINVAL;
+> 
+> So it only makes sense if this is called from some other call site....
+> 
+>>       cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
+>>       if (!cmd) {
+>>           rc = -ENOMEM;
+>> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c
+>> b/drivers/net/wireless/ath/wil6210/debugfs.c
+>> index f82506d..a2b5d59 100644
+>> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
+>> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+>> @@ -801,6 +801,9 @@ static ssize_t wil_write_file_txmgmt(struct file *file,
+>> const char __user *buf,
+>>       int rc;
+>>       void *frame;
+>>
+>> +    if (!len)
+>> +        return -EINVAL;
+>> +
+> 
+> ... which is in this function. Now I wonder why you would need this method in
+> the first place. Why not stick with using the nl80211 NL80211_CMD_FRAME api?
+> 
+Using NL80211_CMD_FRAME reaches cfg80211_mlme_mgmt_tx which performs validity
+checks such as:
+- Fail to send frame types not supported by the driver
+- Some strict checks for non-public action frames.
+The debugfs file provides a convenient and simple way to send any type of
+management frames for debugging and testing. For example, we use it with some
+testing scripts, basically turning a station into a "packet injector" and
+sending frames into the air for simulating various scenarios.
 
-This commit references another one. ie. commit c4adfc822bf5 ("bonding: 
-make speed, duplex setting consistent with link state"). Before this 
-commit the result of __ethtool_get_link_ksettings() was simply ignored.
-
---- a/drivers/net/bonding/bond_main.c
-+++ b/drivers/net/bonding/bond_main.c
-@@ -365,9 +365,10 @@ int bond_set_carrier(struct bonding *bond)
-  /* Get link speed and duplex from the slave's base driver
-   * using ethtool. If for some reason the call fails or the
-   * values are invalid, set speed and duplex to -1,
-- * and return.
-+ * and return. Return 1 if speed or duplex settings are
-+ * UNKNOWN; 0 otherwise.
-   */
--static void bond_update_speed_duplex(struct slave *slave)
-+static int bond_update_speed_duplex(struct slave *slave)
-  {
-         struct net_device *slave_dev = slave->dev;
-         struct ethtool_link_ksettings ecmd;
-@@ -377,24 +378,27 @@ static void bond_update_speed_duplex(struct slave 
-*slave)
-         slave->duplex = DUPLEX_UNKNOWN;
-
-         res = __ethtool_get_link_ksettings(slave_dev, &ecmd);
--       if (res < 0)
--               return;
--
--       if (ecmd.base.speed == 0 || ecmd.base.speed == ((__u32)-1))
--               return;
--
-+       if (res < 0) {
-+               slave->link = BOND_LINK_DOWN;
-+               return 1;
-+       }
-+       if (ecmd.base.speed == 0 || ecmd.base.speed == ((__u32)-1)) {
-+               slave->link = BOND_LINK_DOWN;
-+               return 1;
-+       }
-
-Commit 3f3c278c94dd ("bonding: fix active-backup transition") moves 
-setting the link state to the call sites of bond_update_speed_duplex(), 
-just not all call sites.
-
-> Is there a fix for this or should that commit be reverted? This seems to
-> be a serious regression as there are multiple reports already and we
-> should get it fixed for v4.13, and the fix backported to v4.12 stable
-> release.
-
-The ethtool callbacks really seem optional. At least in brcmfmac, the 
-wireless driver I maintain, I only provide get_drvinfo callback and 
-there is no warning triggered upon registering the netdev. The changes 
-above now require each netdev to implement the get_link_ksettings 
-callback (get_settings is deprecated) or the link is marked as DOWN 
-ruling it out to be used as active bond slave. To the end-users who were 
-using bonding this is simply a regression. So to fix that both changes 
-should be reverted in my opinion.
-
-Now specifically for wireless interfaces we could implement 
-get_link_ksettings callback although most of the fields requested are 
-meaningless in wireless context. Regarding the speed and half-duplex 
-values we raised some concerns in an earlier discussion with James. 
-Wireless is always half-duplex as there can be only one (unintended ref 
-to [1]). If the reported speed in wifi is difficult. In wifi we have 
-txrate and rxrate which are inherently asynchronous and it is a 
-per-packet value so it is going to change a lot. Seeing only 4 call 
-sites in the bonding code tells me that is not taken into account. All 
-in all this shenanigan seems netconf material to me.
-
-Regards,
-Arend
-
-[1] https://en.wikipedia.org/wiki/Highlander_(film)
+Thanks,
+Lior
