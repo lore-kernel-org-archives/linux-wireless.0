@@ -1,97 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42480 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752081AbdHETnk (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36522 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753195AbdHIQZh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:43:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:16 +0300
-Message-Id: <20170805194331.17426-5-luca@coelho.fi> (sfid-20170805_214351_248499_E3D069B6)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 04/19] iwlwifi: mvm: add debugfs to force CT-kill
+        Wed, 9 Aug 2017 12:25:37 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        wright.feng@cypress.com, hante.meuleman@broadcom.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH v2 06/20] brcm80211: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:55:26 +0530
+Message-Id: <1502295926-21042-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182559_360668_0DCB798F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-In order to test the enter/exit CT-kill flow.
-
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 14 ++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c      |  2 +-
- 3 files changed, 16 insertions(+), 1 deletion(-)
+changes in v2:
+              Re-submitting wireless separately.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 29f1d1807415..0b5cae54b86b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -114,6 +114,18 @@ static ssize_t iwl_dbgfs_stop_ctdp_write(struct iwl_mvm *mvm, char *buf,
- 	return ret ?: count;
- }
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 0eea48e..51562b0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1463,7 +1463,7 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ #define LINKSYS_USB_DEVICE(dev_id)	\
+ 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LINKSYS, dev_id) }
  
-+static ssize_t iwl_dbgfs_force_ctkill_write(struct iwl_mvm *mvm, char *buf,
-+					    size_t count, loff_t *ppos)
-+{
-+	if (!iwl_mvm_firmware_running(mvm) ||
-+	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR)
-+		return -EIO;
-+
-+	iwl_mvm_enter_ctkill(mvm);
-+
-+	return count;
-+}
-+
- static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
- 					size_t count, loff_t *ppos)
- {
-@@ -1641,6 +1653,7 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(prph_reg, 64);
- /* Device wide debugfs entries */
- MVM_DEBUGFS_READ_FILE_OPS(ctdp_budget);
- MVM_DEBUGFS_WRITE_FILE_OPS(stop_ctdp, 8);
-+MVM_DEBUGFS_WRITE_FILE_OPS(force_ctkill, 8);
- MVM_DEBUGFS_WRITE_FILE_OPS(tx_flush, 16);
- MVM_DEBUGFS_WRITE_FILE_OPS(sta_drain, 8);
- MVM_DEBUGFS_WRITE_FILE_OPS(send_echo_cmd, 8);
-@@ -1828,6 +1841,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 	MVM_DEBUGFS_ADD_FILE(nic_temp, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(ctdp_budget, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(stop_ctdp, dbgfs_dir, S_IWUSR);
-+	MVM_DEBUGFS_ADD_FILE(force_ctkill, dbgfs_dir, S_IWUSR);
- 	MVM_DEBUGFS_ADD_FILE(stations, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(bt_notif, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(bt_cmd, dbgfs_dir, S_IRUSR);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ae53d8564342..7423b5632bfa 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1753,6 +1753,7 @@ void iwl_mvm_thermal_exit(struct iwl_mvm *mvm);
- void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
- int iwl_mvm_get_temp(struct iwl_mvm *mvm, s32 *temp);
- void iwl_mvm_ct_kill_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
-+void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm);
- int iwl_mvm_send_temp_report_ths_cmd(struct iwl_mvm *mvm);
- int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index 3f143402cf7f..8876c2abc440 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -71,7 +71,7 @@
- 
- #define IWL_MVM_TEMP_NOTIF_WAIT_TIMEOUT	HZ
- 
--static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
-+void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
- {
- 	struct iwl_mvm_tt_mgmt *tt = &mvm->thermal_throttle;
- 	u32 duration = tt->params.ct_kill_duration;
+-static struct usb_device_id brcmf_usb_devid_table[] = {
++static const struct usb_device_id brcmf_usb_devid_table[] = {
+ 	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
 -- 
-2.13.2
+2.7.4
