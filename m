@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42596 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752665AbdHETom (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:37869 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752855AbdHIQYu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:44:42 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:23 +0300
-Message-Id: <20170805194331.17426-12-luca@coelho.fi> (sfid-20170805_214445_288650_730C5431)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 11/19] iwlwifi: mvm: set the default cTDP budget
+        Wed, 9 Aug 2017 12:24:50 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com, chunkeey@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 04/20] carl9170: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:54:41 +0530
+Message-Id: <1502295881-20936-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182507_927548_021F081D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-In case there is no value received from BIOS
-for cTDP budget, the default should be 2000 mWatt.
-
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+changes in v2:
+              Re-submitting wireless separately.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index c5a9259145ea..7eee6d5f7922 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1173,7 +1173,12 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	}
- 
- 	/* TODO: read the budget from BIOS / Platform NVM */
--	if (iwl_mvm_is_ctdp_supported(mvm) && mvm->cooling_dev.cur_state > 0) {
-+
-+	/*
-+	 * In case there is no budget from BIOS / Platform NVM the default
-+	 * budget should be 2000mW (cooling state 0).
-+	 */
-+	if (iwl_mvm_is_ctdp_supported(mvm)) {
- 		ret = iwl_mvm_ctdp_command(mvm, CTDP_CMD_OPERATION_START,
- 					   mvm->cooling_dev.cur_state);
- 		if (ret)
+ drivers/net/wireless/ath/carl9170/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 99ab203..e7c3f3b 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -64,7 +64,7 @@ MODULE_ALIAS("arusb_lnx");
+  * http://wireless.kernel.org/en/users/Drivers/ar9170/devices ),
+  * whenever you add a new device.
+  */
+-static struct usb_device_id carl9170_usb_ids[] = {
++static const struct usb_device_id carl9170_usb_ids[] = {
+ 	/* Atheros 9170 */
+ 	{ USB_DEVICE(0x0cf3, 0x9170) },
+ 	/* Atheros TG121N */
 -- 
-2.13.2
+2.7.4
