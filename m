@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33985 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753546AbdHURES (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:37526 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752726AbdHIQbd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2017 13:04:18 -0400
+        Wed, 9 Aug 2017 12:31:33 -0400
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
-        charles.gorand@effinnov.com, r.baldyga@samsung.com,
-        k.opasiak@samsung.com, davem@davemloft.net
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/8] nfc: microread: constify i2c_device_id
-Date: Mon, 21 Aug 2017 22:33:53 +0530
-Message-Id: <1503335040-27101-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190637_199942_424D243E)
-In-Reply-To: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 19/20] zd1201: constify usb_device_id
+Date: Wed,  9 Aug 2017 22:01:24 +0530
+Message-Id: <1502296284-21779-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183222_136440_CE05F466)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i2c_device_id are not supposed to change at runtime. All functions
-working with i2c_device_id provided by <linux/i2c.h> work with
-const i2c_device_id. So mark the non-const structs as const.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/nfc/microread/i2c.c | 2 +-
+changes in v2:
+              Re-submitting wireless separately.
+
+ drivers/net/wireless/zydas/zd1201.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/microread/i2c.c b/drivers/nfc/microread/i2c.c
-index b668b7b..1806d20 100644
---- a/drivers/nfc/microread/i2c.c
-+++ b/drivers/nfc/microread/i2c.c
-@@ -294,7 +294,7 @@ static int microread_i2c_remove(struct i2c_client *client)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/zydas/zd1201.c b/drivers/net/wireless/zydas/zd1201.c
+index 7f586d7..581e857 100644
+--- a/drivers/net/wireless/zydas/zd1201.c
++++ b/drivers/net/wireless/zydas/zd1201.c
+@@ -25,7 +25,7 @@
+ #include <linux/firmware.h>
+ #include "zd1201.h"
  
--static struct i2c_device_id microread_i2c_id[] = {
-+static const struct i2c_device_id microread_i2c_id[] = {
- 	{ MICROREAD_I2C_DRIVER_NAME, 0},
- 	{ }
- };
+-static struct usb_device_id zd1201_table[] = {
++static const struct usb_device_id zd1201_table[] = {
+ 	{USB_DEVICE(0x0586, 0x3400)}, /* Peabird Wireless USB Adapter */
+ 	{USB_DEVICE(0x0ace, 0x1201)}, /* ZyDAS ZD1201 Wireless USB Adapter */
+ 	{USB_DEVICE(0x050d, 0x6051)}, /* Belkin F5D6051 usb  adapter */
 -- 
 2.7.4
