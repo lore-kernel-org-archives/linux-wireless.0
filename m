@@ -1,135 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36601 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751949AbdHPNS2 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36401 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752723AbdHIQYB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:18:28 -0400
-Received: by mail-pf0-f193.google.com with SMTP id t83so1363786pfj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:18:27 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 09/11] rsi: update tx auto rate command frame for AP mode
-Date: Wed, 16 Aug 2017 18:43:16 +0530
-Message-Id: <1502889198-4478-10-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151830_844547_9B0B1E63)
-In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
-References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+        Wed, 9 Aug 2017 12:24:01 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 01/20] ar5523: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:53:42 +0530
+Message-Id: <1502295823-20824-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182620_671568_8159D748)
+In-Reply-To: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-Auto rate frame is sent to firmware when a new station is
-connected. Station id and station's ht capabilities are updated
-in auto rate command frame.
-
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 44 +++++++++++++++++++++++++--------
- 1 file changed, 34 insertions(+), 10 deletions(-)
+changes in v2:
+              Re-submitting wireless separately.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index c5d48cd..8762d13 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1152,8 +1152,11 @@ static bool rsi_map_rates(u16 rate, int *offset)
-  *
-  * Return: 0 on success, corresponding error code on failure.
-  */
--static int rsi_send_auto_rate_request(struct rsi_common *common)
-+static int rsi_send_auto_rate_request(struct rsi_common *common,
-+				      struct ieee80211_sta *sta,
-+				      u16 sta_id)
- {
-+	struct ieee80211_vif *vif = common->priv->vifs[0];
- 	struct sk_buff *skb;
- 	struct rsi_auto_rate *auto_rate;
- 	int ii = 0, jj = 0, kk = 0;
-@@ -1161,11 +1164,14 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	u8 band = hw->conf.chandef.chan->band;
- 	u8 num_supported_rates = 0;
- 	u8 rate_table_offset, rate_offset = 0;
--	u32 rate_bitmap = common->bitrate_mask[band];
--
-+	u32 rate_bitmap;
- 	u16 *selected_rates, min_rate;
-+	bool is_ht = false, is_sgi = false;
- 	u16 frame_len = sizeof(struct rsi_auto_rate);
+ drivers/net/wireless/ath/ar5523/ar5523.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 106d6f8..68f0463 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -1749,7 +1749,7 @@ static void ar5523_disconnect(struct usb_interface *intf)
+ 	{ USB_DEVICE((vendor), (device) + 1), \
+ 		.driver_info = AR5523_FLAG_ABG|AR5523_FLAG_PRE_FIRMWARE }
  
-+	rsi_dbg(MGMT_TX_ZONE,
-+		"%s: Sending auto rate request frame\n", __func__);
-+
- 	skb = dev_alloc_skb(frame_len);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
-@@ -1193,12 +1199,31 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 
- 	if (common->channel_width == BW_40MHZ)
- 		auto_rate->desc.desc_dword3.qid_tid = BW_40MHZ;
-+	auto_rate->desc.desc_dword3.sta_id = sta_id;
-+
-+	if (vif->type == NL80211_IFTYPE_STATION) {
-+		rate_bitmap = common->bitrate_mask[band];
-+		is_ht = common->vif_info[0].is_ht;
-+		is_sgi = common->vif_info[0].sgi;
-+	} else {
-+		rate_bitmap = sta->supp_rates[band];
-+		is_ht = sta->ht_cap.ht_supported;
-+		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ||
-+		    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
-+			is_sgi = true;
-+	}
- 
- 	if (band == NL80211_BAND_2GHZ) {
--		min_rate = RSI_RATE_1;
-+		if ((rate_bitmap == 0) && (is_ht))
-+			min_rate = RSI_RATE_MCS0;
-+		else
-+			min_rate = RSI_RATE_1;
- 		rate_table_offset = 0;
- 	} else {
--		min_rate = RSI_RATE_6;
-+		if ((rate_bitmap == 0) && (is_ht))
-+			min_rate = RSI_RATE_MCS0;
-+		else
-+			min_rate = RSI_RATE_6;
- 		rate_table_offset = 4;
- 	}
- 
-@@ -1212,7 +1237,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	}
- 	num_supported_rates = jj;
- 
--	if (common->vif_info[0].is_ht) {
-+	if (is_ht) {
- 		for (ii = 0; ii < ARRAY_SIZE(mcs); ii++)
- 			selected_rates[jj++] = mcs[ii];
- 		num_supported_rates += ARRAY_SIZE(mcs);
-@@ -1233,11 +1258,10 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	}
- 
- 	/* loading HT rates in the bottom half of the auto rate table */
--	if (common->vif_info[0].is_ht) {
-+	if (is_ht) {
- 		for (ii = rate_offset, kk = ARRAY_SIZE(rsi_mcsrates) - 1;
- 		     ii < rate_offset + 2 * ARRAY_SIZE(rsi_mcsrates); ii++) {
--			if (common->vif_info[0].sgi ||
--			    conf_is_ht40(&common->priv->hw->conf))
-+			if (is_sgi || conf_is_ht40(&common->priv->hw->conf))
- 				auto_rate->supported_rates[ii++] =
- 					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
- 			else
-@@ -1300,7 +1324,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 					      qos_enable,
- 					      aid, sta_id);
- 		if (common->min_rate == 0xffff)
--			rsi_send_auto_rate_request(common);
-+			rsi_send_auto_rate_request(common, sta, sta_id);
- 		if (opmode == STA_OPMODE) {
- 			if (!rsi_send_block_unblock_frame(common, false))
- 				common->hw_data_qs_blocked = false;
+-static struct usb_device_id ar5523_id_table[] = {
++static const struct usb_device_id ar5523_id_table[] = {
+ 	AR5523_DEVICE_UG(0x168c, 0x0001),	/* Atheros / AR5523 */
+ 	AR5523_DEVICE_UG(0x0cf3, 0x0001),	/* Atheros2 / AR5523_1 */
+ 	AR5523_DEVICE_UG(0x0cf3, 0x0003),	/* Atheros2 / AR5523_2 */
 -- 
 2.7.4
