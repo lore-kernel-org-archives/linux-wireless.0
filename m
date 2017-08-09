@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35267 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751055AbdHRNJq (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:37631 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752684AbdHIQ37 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 09:09:46 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtlwifi: make a couple arrays larger
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Maxim Samoylov <max7255@gmail.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <20170818080519.mvjls5pgnxeknzpk@mwanda>
-Message-ID: <a3aeacec-750a-aca3-2943-e13d57e7539a@lwfinger.net> (sfid-20170818_150949_813766_1355050E)
-Date: Fri, 18 Aug 2017 08:09:43 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170818080519.mvjls5pgnxeknzpk@mwanda>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 9 Aug 2017 12:29:59 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, sgruszka@redhat.com,
+        helmut.schaa@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 15/20] rt73usb: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:59:48 +0530
+Message-Id: <1502296188-21563-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183238_366390_6B6E9077)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/18/2017 03:05 AM, Dan Carpenter wrote:
-> This is a static checker fix.  "cal_num" is 10.  We're declaring the
-> tx_dt[] and rx_td[] arrays as 3 element arrays.  The static checker
-> complains that we do:
-> 
-> 	tx_dt[cal] = (vdf_y[1]>>20)-(vdf_y[0]>>20);
-> 
-> "cal" is the iterator and it is in the 0-9 range so it looks like
-> we could corrupt memory.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> I'm pretty sure this patch is correct and absolutely harmless.  But the
-> code is pretty involved and I didn't test it.  So you may want to review
-> this one carefully.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-I believe the patch is correct. In testing, I also confirmed that this branch is 
-executed, thus the memory corruption does happen.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-Larry
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+index fd91322..9a21282 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+@@ -2408,7 +2408,7 @@ static const struct rt2x00_ops rt73usb_ops = {
+ /*
+  * rt73usb module information.
+  */
+-static struct usb_device_id rt73usb_device_table[] = {
++static const struct usb_device_id rt73usb_device_table[] = {
+ 	/* AboCom */
+ 	{ USB_DEVICE(0x07b8, 0xb21b) },
+ 	{ USB_DEVICE(0x07b8, 0xb21c) },
+-- 
+2.7.4
