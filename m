@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0050.outbound.protection.outlook.com ([104.47.42.50]:7760
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751318AbdH3Bsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 21:48:30 -0400
-Subject: Re: [PATCH 14/27] qtnfmac: do not cache CSA chandef info
-To: "sergey.matyukevich.os@quantenna.com"
-        <sergey.matyukevich.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com>
- <20170829154455.j2qrxcu35mwkwzcl@bars>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Message-ID: <0627667f-87d7-644b-a582-27b9ce638ff9@quantenna.com> (sfid-20170830_034834_865890_A7EE7C60)
-Date: Tue, 29 Aug 2017 18:48:23 -0700
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33235 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbdHIEJi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 00:09:38 -0400
+Subject: Re: [PATCH 33/35] wireless: realtek: rtl8192cu: constify
+ usb_device_id
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>, kvalo@codeaurora.org,
+        chaoming_li@realsil.com.cn
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+References: <1502208353-12447-1-git-send-email-arvind.yadav.cs@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5dca329f-d98c-82f2-1289-0d9d64c39347@lwfinger.net> (sfid-20170809_060958_186671_427E97EF)
+Date: Tue, 8 Aug 2017 23:09:36 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170829154455.j2qrxcu35mwkwzcl@bars>
+In-Reply-To: <1502208353-12447-1-git-send-email-arvind.yadav.cs@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2017 08:44 AM, Sergey Matyukevich wrote:
-> I am ok with removal of CSA chandef info. It was kept mainly to warn
-> about channel switch to the frequency that differs from original
-> CSA request.
+On 08/08/2017 11:05 AM, Arvind Yadav wrote:
+> usb_device_id are not supposed to change at runtime. All functions
+> working with usb_device_id provided by <linux/usb.h> work with
+> const usb_device_id. So mark the non-const structs as const.
 > 
->> -	if (vif->vifid != 0) {
->> -		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
->> -			return -EOPNOTSUPP;
->> -
->> -		if (!cfg80211_chandef_identical(&params->chandef,
->> -						&mac->csa_chandef))
->> -			return -EINVAL;
->> -
->> -		return 0;
->> -	}
-> 
-> 
-> This particular CSA_ACTIVE status check was introduced for compatibility with
-> hostapd behaviour. Currently hostapd goes through all the virtual interfaces
-> and sends CSA for each of them. So the idea was to send CSA for primary
-> interface and confirm success for the others. If this snipped is dropped
-> then we end up in multiple identical CSA requests queued in firmware.
-> 
-> I suggest to remove chandef_identical check, but to keep the logic for
-> secondary virtual interface handling.
-> 
-> Regards,
-> Sergey
-> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> ---
 
-The idea was that driver doesn't have to keep track of this, but instead 
-it will just forward directly to card, and card will return success for 
-CSA request to the same channel, because card knows that already.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-As a bonus, in case it will ever support virtual concurrent (virtual 
-interfaces on different physical channels), no changes to driver will be 
-required.
+Thanks,
+
+Larry
+
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+> index 96c923b..e673bc2 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+> @@ -275,7 +275,7 @@ static struct rtl_hal_cfg rtl92cu_hal_cfg = {
+>   #define USB_VENDER_ID_REALTEK		0x0bda
+>   
+>   /* 2010-10-19 DID_USB_V3.4 */
+> -static struct usb_device_id rtl8192c_usb_ids[] = {
+> +static const struct usb_device_id rtl8192c_usb_ids[] = {
+>   
+>   	/*=== Realtek demoboard ===*/
+>   	/* Default ID */
+> 
