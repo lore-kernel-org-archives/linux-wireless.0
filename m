@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35910 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752319AbdHIQ1U (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43220 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752159AbdHIHHP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:27:20 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, chunkeey@googlemail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 08/20] p54: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:56:43 +0530
-Message-Id: <1502296003-21197-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182745_749646_69BA0B27)
+        Wed, 9 Aug 2017 03:07:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  9 Aug 2017 10:07:04 +0300
+Message-Id: <20170809070706.14862-1-luca@coelho.fi> (sfid-20170809_090719_226745_A8711E27)
+Subject: [PATCH 0/2] iwlwifi: one more fix intended for 4.13 2017-08-09
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
-changes in v2:
-              Re-submitting wireless separately.
+Hi,
 
- drivers/net/wireless/intersil/p54/p54usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is the mac80211+iwlwifi fix we talked about earlier.  As I
+mentioned, the iwlwifi patch fixes a severe degradation of throughput
+in the 9000 device series, due to a BA-session getting stuck and the
+lack of future aggregation.  The mac80211 patch adds a new callback
+that allows us to solve this problem.
 
-diff --git a/drivers/net/wireless/intersil/p54/p54usb.c b/drivers/net/wireless/intersil/p54/p54usb.c
-index 043bd1c..b0b86f7 100644
---- a/drivers/net/wireless/intersil/p54/p54usb.c
-+++ b/drivers/net/wireless/intersil/p54/p54usb.c
-@@ -41,7 +41,7 @@ MODULE_FIRMWARE("isl3887usb");
-  * whenever you add a new device.
-  */
- 
--static struct usb_device_id p54u_table[] = {
-+static const struct usb_device_id p54u_table[] = {
- 	/* Version 1 devices (pci chip + net2280) */
- 	{USB_DEVICE(0x0411, 0x0050)},	/* Buffalo WLI2-USB2-G54 */
- 	{USB_DEVICE(0x045e, 0x00c2)},	/* Microsoft MN-710 */
+As agreed, I'm planning to apply this to my tree and send a
+pull-request containing both patches.
+
+Please review and let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+Naftali Goldstein (2):
+  mac80211: add api to start ba session timer expired flow
+  iwlwifi: mvm: send delba upon rx ba session timeout
+
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c |  4 ++--
+ include/net/mac80211.h                       | 15 +++++++++++++++
+ net/mac80211/agg-rx.c                        | 22 +++++++++++++++++++++-
+ 3 files changed, 38 insertions(+), 3 deletions(-)
+
 -- 
-2.7.4
+2.13.2
