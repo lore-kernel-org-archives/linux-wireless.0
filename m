@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:38796 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750835AbdH3JnS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 05:43:18 -0400
-Received: by mail-pf0-f196.google.com with SMTP id r187so3998601pfr.5
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 02:43:18 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 0/8] rsi: p2p mode support
-Date: Wed, 30 Aug 2017 15:08:20 +0530
-Message-Id: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com> (sfid-20170830_114330_340458_7A900976)
+Received: from muru.com ([72.249.23.125]:57152 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753027AbdHIQ7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 12:59:33 -0400
+Date: Wed, 9 Aug 2017 09:59:25 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v5] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170809165924.GA3930@atomide.com> (sfid-20170809_185949_277585_448BBCE8)
+References: <1502090869-8833-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
+ <20170807073808.GD5487@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3641E339@DFRE01.ent.ti.com>
+ <20170808042054.GI5190@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B36420D9E@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36420D9E@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+* Reizer, Eyal <eyalr@ti.com> [170809 00:26]:
+> Managed to test with a wilink6 module and in fact reading hardware mac
+> Address from fuse is working ok for wilink6/7 as well.
+> submitting v6 using this mac address instead of a random one when the 
+> bogus (deadbeef...) mac address is read from default nvs file.
 
-p2p mode support is added in this patch series. Major changes
-include allowing multiple interface addition and updating
-interface type checks wherever needed.
+Hey great, that should help clear quite a bit of the wl12xx confusion
+with distros! Thanks for doing that.
 
-Prameela Rani Garnepudi (8):
-  rsi: add p2p support parameters to mac80211
-  rsi: add/remove interface enhancements for p2p
-  rsi: add support for p2p listen
-  rsi: handle peer connection and disconnection in p2p mode
-  rsi: tx and rx path enhancements for p2p mode
-  rsi: disallow power save config when AP vap running
-  rsi: aggregation changes for p2p mode
-  rsi: miscellaneous changes for p2p mode
+Regards,
 
- drivers/net/wireless/rsi/rsi_91x_core.c     |  33 +-
- drivers/net/wireless/rsi/rsi_91x_hal.c      |  73 +++--
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 446 ++++++++++++++++++++++------
- drivers/net/wireless/rsi/rsi_91x_main.c     |   9 +-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  46 +--
- drivers/net/wireless/rsi/rsi_91x_ps.c       |  15 +-
- drivers/net/wireless/rsi/rsi_common.h       |   4 +-
- drivers/net/wireless/rsi/rsi_hal.h          |   3 +-
- drivers/net/wireless/rsi/rsi_main.h         |  10 +-
- drivers/net/wireless/rsi/rsi_mgmt.h         |  21 +-
- drivers/net/wireless/rsi/rsi_ps.h           |   7 +-
- 11 files changed, 495 insertions(+), 172 deletions(-)
-
--- 
-2.7.4
+Tony
