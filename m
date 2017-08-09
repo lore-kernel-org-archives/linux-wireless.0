@@ -1,104 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:34622 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752313AbdHOIW3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43374 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752802AbdHISVB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 04:22:29 -0400
-Date: Tue, 15 Aug 2017 09:22:19 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: rosenp@gmail.com
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: AP mode with Broadcom 4330
-Message-ID: <20170815082219.GL20805@n2100.armlinux.org.uk> (sfid-20170815_102234_644803_45C39617)
-References: <20170728141503.GU31807@n2100.armlinux.org.uk>
- <20170728174930.GA3313@n2100.armlinux.org.uk>
- <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
- <20170814233028.GK20805@n2100.armlinux.org.uk>
- <1502778303.2319.2.camel@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1502778303.2319.2.camel@gmail.com>
+        Wed, 9 Aug 2017 14:21:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  9 Aug 2017 21:20:56 +0300
+Message-Id: <20170809182056.14473-1-luca@coelho.fi> (sfid-20170809_202107_493201_C168A8E6)
+In-Reply-To: <20170809064619.14147-1-luca@coelho.fi>
+References: <20170809064619.14147-1-luca@coelho.fi>
+Subject: [PATCH v3 12/19] iwlwifi: mvm: support new beacon template command
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 14, 2017 at 11:25:03PM -0700, rosenp@gmail.com wrote:
-> If using rtlwifi, you could try using rtl8xxxu and see if you get
-> similar results. ¯\_(ツ)_/¯
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-I'm using rtl8xxxu.  I don't think rtlwifi supports the 8192eu - it
-certainly does not list the device id:
-Bus 001 Device 002: ID 0bda:818b Realtek Semiconductor Corp.
+Support a new version of the beacon template command. This replaces v8
+of the command, which was missing the rate code.  Also, export rate
+decision logic to a separate function.
 
-As an extra data point, trying to associate to the 4330 with an Intel
-client gives:
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
 
-[8821752.691490] wlan0: authenticate with 6c:ad:f8:1d:4c:d9
-[8821752.693448] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
-[8821752.696230] wlan0: authenticated
-[8821752.697493] wlan0: associate with 6c:ad:f8:1d:4c:d9 (try 1/3)
-[8821752.700816] wlan0: RX AssocResp from 6c:ad:f8:1d:4c:d9 (capab=0x411 status=0 aid=1)
-[8821752.704407] wlan0: associated
-[8821755.814844] wlan0: deauthenticated from 6c:ad:f8:1d:4c:d9 (Reason: 2=PREV_AUTH_NOT_VALID)
+In v3:
+   * fix a bug in the CCK flag check
 
-which gets slightly further but ultimately still fails.
+drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    | 17 +++++---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 47 ++++++++++++++++-------
+ 3 files changed, 47 insertions(+), 18 deletions(-)
 
-> On Tue, 2017-08-15 at 00:30 +0100, Russell King - ARM Linux wrote:
-> > On Fri, Jul 28, 2017 at 09:50:21PM +0200, Arend van Spriel wrote:
-> > > On 28-07-17 19:49, Russell King - ARM Linux wrote:
-> > > > Replacing that "(!mbss)" with "mbss" results in AP mode working
-> > > > on the
-> > > > 4330.  However, I suspect:
-> > > > 
-> > > > 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS))
-> > > > 			brcmf_fil_iovar_int_set(ifp, "mbss", mbss);
-> > > > 
-> > > > actually makes much more sense.
-> > > > 
-> > > > Given that this is direct firmware interaction, I can't say which
-> > > > is
-> > > > correct - all I can say is that mainline kernels are currently
-> > > > broken.
-> > > 
-> > > Indeed. I have to come up with a proper fix for both scenarios.
-> > > Thanks
-> > > for the report.
-> > 
-> > I'm now on 4.13-rc4, and running with my patch.  I've configured AP
-> > mode:
-> > 
-> > Interface wlan0
-> > 	ifindex 3
-> > 	wdev 0x1
-> > 	addr 6c:ad:f8:1d:4c:d9
-> > 	ssid Time
-> > 	type AP
-> > 	wiphy 0
-> > 	channel 5 (2432 MHz), width: 20 MHz, center1: 2432 MHz
-> > 
-> > using NetworkManager with a WPA2 key.  However, a Realtek RTL8192EU
-> > client is trying to connect to it, but is unable:
-> > 
-> > [ 1750.497436] wlan0: authenticate with 6c:ad:f8:1d:4c:d9
-> > [ 1750.530929] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
-> > [ 1750.738795] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 2/3)
-> > [ 1750.946780] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 3/3)
-> > [ 1751.154764] wlan0: authentication with 6c:ad:f8:1d:4c:d9 timed out
-> > 
-> > The antennas are definitely within range (finger to thumb distance)
-> > and the Realtek can definitely see the BCM4330 in AP mode.  I don't
-> > see the interrupts for the SDIO interface increment while the client
-> > tries to connect.
-> > 
-> > The WPA2 password is definitely the same on both ends.
-> > 
-> > Any ideas how to debug this?
-> > 
-> > Thanks.
-> > 
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 2909d1ed89cf..4928310ddd31 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -786,13 +786,20 @@ struct iwl_mac_beacon_cmd_v7 {
+ 	struct ieee80211_hdr frame[0];
+ } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
+ 
++enum iwl_mac_beacon_flags {
++	IWL_MAC_BEACON_CCK	= BIT(8),
++	IWL_MAC_BEACON_ANT_A	= BIT(9),
++	IWL_MAC_BEACON_ANT_B	= BIT(10),
++	IWL_MAC_BEACON_ANT_C	= BIT(11),
++};
++
+ /**
+  * struct iwl_mac_beacon_cmd - beacon template command with offloaded CSA
+- * @byte_cnt: byte count of the beacon frame
+- * @flags: for future use
++ * @byte_cnt: byte count of the beacon frame.
++ * @flags: least significant byte for rate code. The most significant byte
++ *	is &enum iwl_mac_beacon_flags.
+  * @reserved: reserved
+- * @template_id: currently equal to the mac context id of the coresponding
+- *  mac.
++ * @template_id: currently equal to the mac context id of the coresponding mac.
+  * @tim_idx: the offset of the tim IE in the beacon
+  * @tim_size: the length of the tim IE
+  * @ecsa_offset: offset to the ECSA IE if present
+@@ -809,7 +816,7 @@ struct iwl_mac_beacon_cmd {
+ 	__le32 ecsa_offset;
+ 	__le32 csa_offset;
+ 	struct ieee80211_hdr frame[0];
+-} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
++} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_9 */
+ 
+ struct iwl_beacon_notif {
+ 	struct iwl_mvm_tx_resp beacon_notify_hdr;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 0fa8c473f1e2..d933aa324ffe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -260,6 +260,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_STA_TYPE		= (__force iwl_ucode_tlv_api_t)30,
+ 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
+ 	/* API Set 1 */
++	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
+ 
+ 	NUM_IWL_UCODE_TLV_API
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 8fe955d58c6e..a2bf530eeae4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -923,6 +923,19 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
+ 	return ie - beacon;
+ }
+ 
++static u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
++					   struct ieee80211_vif *vif)
++{
++	u8 rate;
++
++	if (info->band == NL80211_BAND_5GHZ || vif->p2p)
++		rate = IWL_FIRST_OFDM_RATE;
++	else
++		rate = IWL_FIRST_CCK_RATE;
++
++	return rate;
++}
++
+ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif,
+ 				    struct sk_buff *beacon,
+@@ -930,7 +943,8 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct ieee80211_tx_info *info;
+-	u32 rate, tx_flags;
++	u8 rate;
++	u32 tx_flags;
+ 
+ 	info = IEEE80211_SKB_CB(beacon);
+ 
+@@ -955,14 +969,12 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
+ 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
+ 			    RATE_MCS_ANT_POS);
+ 
+-	if (info->band == NL80211_BAND_5GHZ || vif->p2p) {
+-		rate = IWL_FIRST_OFDM_RATE;
+-	} else {
+-		rate = IWL_FIRST_CCK_RATE;
+-		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
+-	}
++	rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
+ 
+ 	tx->rate_n_flags |= cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
++	if (rate == IWL_FIRST_CCK_RATE)
++		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
++
+ }
+ 
+ static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
+@@ -1033,19 +1045,27 @@ static int iwl_mvm_mac_ctxt_send_beacon_v7(struct iwl_mvm *mvm,
+ 						sizeof(beacon_cmd));
+ }
+ 
+-static int iwl_mvm_mac_ctxt_send_beacon_v8(struct iwl_mvm *mvm,
++static int iwl_mvm_mac_ctxt_send_beacon_v9(struct iwl_mvm *mvm,
+ 					   struct ieee80211_vif *vif,
+ 					   struct sk_buff *beacon)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(beacon);
+ 	struct iwl_mac_beacon_cmd beacon_cmd = {};
++	u8 rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
++	u16 flags;
++
++	flags = iwl_mvm_mac80211_idx_to_hwrate(rate);
+ 
++	if (rate == IWL_FIRST_CCK_RATE)
++		flags |= IWL_MAC_BEACON_CCK;
++
++	beacon_cmd.flags = cpu_to_le16(flags);
+ 	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
+ 	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
+ 
+ 	if (vif->type == NL80211_IFTYPE_AP)
+-		iwl_mvm_mac_ctxt_set_tim(mvm,
+-					 &beacon_cmd.tim_idx,
++		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
+ 					 &beacon_cmd.tim_size,
+ 					 beacon->data, beacon->len);
+ 
+@@ -1073,10 +1093,11 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
+ 			 IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD))
+ 		return iwl_mvm_mac_ctxt_send_beacon_v6(mvm, vif, beacon);
+ 
+-	if (!iwl_mvm_has_new_tx_api(mvm))
+-		return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
++	if (fw_has_api(&mvm->fw->ucode_capa,
++		       IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
++		return iwl_mvm_mac_ctxt_send_beacon_v9(mvm, vif, beacon);
+ 
+-	return iwl_mvm_mac_ctxt_send_beacon_v8(mvm, vif, beacon);
++	return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
+ }
+ 
+ /* The beacon template for the AP/GO/IBSS has changed and needs update */
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
-According to speedtest.net: 8.21Mbps down 510kbps up
+2.13.2
