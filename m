@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:33630 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751426AbdHGSfJ (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35910 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752319AbdHIQ1U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 14:35:09 -0400
-Date: Mon, 07 Aug 2017 11:35:08 -0700 (PDT)
-Message-Id: <20170807.113508.2198285652425153276.davem@davemloft.net> (sfid-20170807_203527_710655_29778A5C)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-08-07
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87h8xjjukz.fsf@kamboji.qca.qualcomm.com>
-References: <87h8xjjukz.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 9 Aug 2017 12:27:20 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, chunkeey@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 08/20] p54: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:56:43 +0530
+Message-Id: <1502296003-21197-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182745_749646_69BA0B27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 07 Aug 2017 17:55:40 +0300
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-> here's the first pull request to net-next for 4.14, more info in the
-> signed tag below. This time there's a simple conflict in iwlwifi but
-> you can fix it just like Stephen did:
-> 
-> https://lkml.kernel.org/r/20170804120408.0d147e86@canb.auug.org.au
-> 
-> Please let me know if you have any problems.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
 
-Pulled, thanks Kalle.
+ drivers/net/wireless/intersil/p54/p54usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intersil/p54/p54usb.c b/drivers/net/wireless/intersil/p54/p54usb.c
+index 043bd1c..b0b86f7 100644
+--- a/drivers/net/wireless/intersil/p54/p54usb.c
++++ b/drivers/net/wireless/intersil/p54/p54usb.c
+@@ -41,7 +41,7 @@ MODULE_FIRMWARE("isl3887usb");
+  * whenever you add a new device.
+  */
+ 
+-static struct usb_device_id p54u_table[] = {
++static const struct usb_device_id p54u_table[] = {
+ 	/* Version 1 devices (pci chip + net2280) */
+ 	{USB_DEVICE(0x0411, 0x0050)},	/* Buffalo WLI2-USB2-G54 */
+ 	{USB_DEVICE(0x045e, 0x00c2)},	/* Microsoft MN-710 */
+-- 
+2.7.4
