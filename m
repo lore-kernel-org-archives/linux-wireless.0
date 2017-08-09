@@ -1,30 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0055.outbound.protection.outlook.com ([104.47.37.55]:27114
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751318AbdH3MfT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 08:35:19 -0400
-Date: Wed, 30 Aug 2017 15:35:06 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 23/27] qtnfmac: convert "Append IEs" command to
- QTN_TLV_ID_IE_SET usage
-Message-ID: <20170830123506.ijw5kiku6bhvpuvf@bars> (sfid-20170830_143524_350197_C0D15790)
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-24-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825023024.10565-24-igor.mitsyanko.os@quantenna.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34140 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752723AbdHIQX5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 12:23:57 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 00/20] constify wireless usb_device_id
+Date: Wed,  9 Aug 2017 21:53:41 +0530
+Message-Id: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182637_242676_ADF16678)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -	if (sizeof(*cmd) + len > QTNF_MAX_CMD_BUF_SIZE) {
-> +	if (len > QTNF_MAX_CMD_BUF_SIZE) {
->  		pr_warn("VIF%u.%u: %u frame is too big: %zu\n", vif->mac->macid,
->  			vif->vifid, frame_type, len);
->  		return -E2BIG;
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-It looks like we need the following check here:
-	sizeof(struct qlink_tlv_ie_set) + len > QTNF_MAX_CMD_BUF_SIZE
+Arvind Yadav (20):
+  [PATCH v2 01/20] ar5523: constify usb_device_id
+  [PATCH v2 02/20] ath6kl: constify usb_device_id
+  [PATCH v2 03/20] ath9k: constify usb_device_id
+  [PATCH v2 04/20] carl9170: constify usb_device_id
+  [PATCH v2 05/20] at76c50x: constify usb_device_id
+  [PATCH v2 06/20] brcm80211: constify usb_device_id
+  [PATCH v2 07/20] orinoco: constify usb_device_id
+  [PATCH v2 08/20] p54: constify usb_device_id
+  [PATCH v2 09/20] libertas: constify usb_device_id
+  [PATCH v2 10/20] libertas_tf: constify usb_device_id
+  [PATCH v2 11/20] marvell: mwifiex: constify usb_device_id
+  [PATCH v2 12/20] mt7601u: constify usb_device_id
+  [PATCH v2 13/20] rt2500usb: constify usb_device_id
+  [PATCH v2 14/20] rt2800usb: constify usb_device_id
+  [PATCH v2 15/20] rt73usb: constify usb_device_id
+  [PATCH v2 16/20] rtl8187: constify usb_device_id
+  [PATCH v2 17/20] realtek: rtl8xxxu: constify usb_device_id
+  [PATCH v2 18/20] realtek: rtl8192cu: constify usb_device_id
+  [PATCH v2 19/20] zd1201: constify usb_device_id
+  [PATCH v2 20/20] zd1211rw: constify usb_device_id
+
+ drivers/net/wireless/ath/ar5523/ar5523.c               | 2 +-
+ drivers/net/wireless/ath/ath6kl/usb.c                  | 2 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c               | 2 +-
+ drivers/net/wireless/ath/carl9170/usb.c                | 2 +-
+ drivers/net/wireless/atmel/at76c50x-usb.c              | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 2 +-
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c    | 2 +-
+ drivers/net/wireless/intersil/p54/p54usb.c             | 2 +-
+ drivers/net/wireless/marvell/libertas/if_usb.c         | 2 +-
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c      | 2 +-
+ drivers/net/wireless/marvell/mwifiex/usb.c             | 2 +-
+ drivers/net/wireless/mediatek/mt7601u/usb.c            | 2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c         | 2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c         | 2 +-
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c           | 2 +-
+ drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c     | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    | 2 +-
+ drivers/net/wireless/zydas/zd1201.c                    | 2 +-
+ drivers/net/wireless/zydas/zd1211rw/zd_usb.c           | 2 +-
+ 20 files changed, 20 insertions(+), 20 deletions(-)
+
+-- 
+2.7.4
