@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53542 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751142AbdHBJcW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:32:22 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH 3/3] brcmfmac: fix wrong num_different_channels when mchan feature enabled
-References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
-        <1501577287-28904-3-git-send-email-wright.feng@cypress.com>
-Date: Wed, 02 Aug 2017 12:32:18 +0300
-In-Reply-To: <1501577287-28904-3-git-send-email-wright.feng@cypress.com>
-        (Wright Feng's message of "Tue, 1 Aug 2017 16:48:07 +0800")
-Message-ID: <87mv7i48nx.fsf@codeaurora.org> (sfid-20170802_113226_130119_7912949B)
+Received: from muru.com ([72.249.23.125]:57180 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751977AbdHIR2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 13:28:30 -0400
+Date: Wed, 9 Aug 2017 10:28:26 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170809172826.GB3934@atomide.com> (sfid-20170809_192844_966971_6F6E98CC)
+References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
+ <20170809172651.GA3934@atomide.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170809172651.GA3934@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> writes:
+* Tony Lindgren <tony@atomide.com> [170809 10:26]:
+> * Reizer, Eyal <eyalr@ti.com> [170809 00:55]:
+> > --- a/drivers/net/wireless/ti/wlcore/main.c
+> > +++ b/drivers/net/wireless/ti/wlcore/main.c
+> > @@ -6040,6 +6040,21 @@ static int wl1271_register_hw(struct wl1271 *wl)
+> >  		nic_addr = wl->fuse_nic_addr + 1;
+> >  	}
+> >  
+> > +	if (oui_addr == 0xdeadbe && nic_addr == 0xef0000) {
+> > +		wl1271_warning("Detected unconfigured mac address in nvs.\n"
+> > +				"derive from fuse instead.\n"
+> > +				"in case of using a wl12xx device, your "
+> > +				"device performance may not be optimized.\n"
+> > +				"Please use the calibrator tool to configure "
+> > +				"your device.\n"
+> > +				"When using a wl18xx device this default nvs "
+> > +				"file can be removed from the file system\n");
+> > +
+> > +		oui_addr = wl->fuse_oui_addr;
+> > +		/* fuse has the BD_ADDR, the WLAN addresses are the next two */
+> > +		nic_addr = wl->fuse_nic_addr + 1;
+> > +	}
+> > +
+> >  	wl12xx_derive_mac_addresses(wl, oui_addr, nic_addr);
+> 
+> I just gave this a quick try on omap3-evm with wl1271, now I get
+> mac address of 00:00:00:00:00:01 :) So looks like at least wl1271 needs
+> to use the random mac address here.
+> 
+> Note that we should now have struct wilink_family_data available
+> so maybe that can be used to check if the hardware mac address
+> exists?
 
-> The num_different_channels in wiphy info is not correct when firmware
-> supports mchan. When mchan is on, num_different_channels is always
-> overridden to 1 in brcmf_setup_ifmodes. Correct the logic by moving
-> num_different_channels setting forward.
->
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+Or actually, in the case where no hardawre mac address exists,
+the mac is all zeroes at this point it seems. So maybe that
+can be used to determine if a random mac address should be used
+here.
 
-Does this fix a user visible bug? If yes, it would be nice to document
-that.
+Regards,
 
--- 
-Kalle Valo
+Tony
