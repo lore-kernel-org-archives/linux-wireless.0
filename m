@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44482 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751646AbdHRPtg (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:37332 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752465AbdHIQ2e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:49:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:05 +0300
-Message-Id: <20170818154922.2904-8-luca@coelho.fi> (sfid-20170818_180252_695477_5549EE7B)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 07/24] iwlwifi: mvm: include more debug data when we get an unexpected baid
+        Wed, 9 Aug 2017 12:28:34 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, kubakici@wp.pl, matthias.bgg@gmail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v2 12/20] mt7601u: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:58:24 +0530
+Message-Id: <1502296104-21360-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182858_639428_3F91B7DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-When we get a valid baid in a received frame, we need to
-check that we are aware of this baid. If not, we check
-that the OLD_SN bit set. If that's not the case, we issue
-a WARNING. Print more data when that happens.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+changes in v2:
+              Re-submitting wireless separately.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 6b8e57b7234a..4fbf102b3a98 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -636,8 +636,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	baid_data = rcu_dereference(mvm->baid_map[baid]);
- 	if (!baid_data) {
- 		WARN(!(reorder & IWL_RX_MPDU_REORDER_BA_OLD_SN),
--		     "Received baid %d, but no data exists for this BAID\n",
--		     baid);
-+		     "Received baid %d, but no data exists for this BAID - reorder data 0x%x\n",
-+		     baid, reorder);
- 		return false;
- 	}
+ drivers/net/wireless/mediatek/mt7601u/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
+index 416c604..b9e4f67 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/usb.c
++++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
+@@ -19,7 +19,7 @@
+ #include "usb.h"
+ #include "trace.h"
  
-@@ -758,7 +758,9 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
- 
- 	data = rcu_dereference(mvm->baid_map[baid]);
- 	if (!data) {
--		WARN_ON(!(reorder_data & IWL_RX_MPDU_REORDER_BA_OLD_SN));
-+		WARN(!(reorder_data & IWL_RX_MPDU_REORDER_BA_OLD_SN),
-+		     "OLD_SN isn't set, but no data exists for baid %d - reorder data 0x%x\n",
-+		     baid, reorder_data);
- 		goto out;
- 	}
- 
+-static struct usb_device_id mt7601u_device_table[] = {
++static const struct usb_device_id mt7601u_device_table[] = {
+ 	{ USB_DEVICE(0x0b05, 0x17d3) },
+ 	{ USB_DEVICE(0x0e8d, 0x760a) },
+ 	{ USB_DEVICE(0x0e8d, 0x760b) },
 -- 
-2.14.1
+2.7.4
