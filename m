@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:35176 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932587AbdHVL0V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:26:21 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 09/30] brcmfmac: Remove noisy debugging.
-Date: Tue, 22 Aug 2017 12:25:29 +0100
-Message-Id: <20170822112550.60311-10-ian@mnementh.co.uk> (sfid-20170822_133252_846799_D425FF29)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:38832 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752684AbdHIQaY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 12:30:24 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, herton@canonical.com,
+        htl10@users.sourceforge.net, Larry.Finger@lwfinger.net
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 16/20] rtl8187: constify usb_device_id
+Date: Wed,  9 Aug 2017 22:00:13 +0530
+Message-Id: <1502296213-21618-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183055_265176_734CB1AD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you need debugging this low level, you're doing something wrong.
-Remove these noisy debug statements so the code is more readable.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ------
- 1 file changed, 6 deletions(-)
+changes in v2:
+              Re-submitting wireless separately.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 074dc10b5ac5..6669e28279d9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -370,9 +370,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u8 data;
- 	int retval;
+ drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+index 55198ac2..121b94f 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+@@ -43,7 +43,7 @@ MODULE_AUTHOR("Larry Finger <Larry.Finger@lwfinger.net>");
+ MODULE_DESCRIPTION("RTL8187/RTL8187B USB wireless driver");
+ MODULE_LICENSE("GPL");
  
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
--	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
- 	if (ret)
- 		*ret = retval;
-@@ -385,9 +383,7 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u32 data;
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
--	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
- 	if (ret)
- 		*ret = retval;
-@@ -400,7 +396,6 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
- 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
- 
- 	if (ret)
-@@ -412,7 +407,6 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
- 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
- 
- 	if (ret)
+-static struct usb_device_id rtl8187_table[] = {
++static const struct usb_device_id rtl8187_table[] = {
+ 	/* Asus */
+ 	{USB_DEVICE(0x0b05, 0x171d), .driver_info = DEVICE_RTL8187},
+ 	/* Belkin */
 -- 
-2.11.0
+2.7.4
