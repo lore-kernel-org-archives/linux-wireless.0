@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57556 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751160AbdHNRZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 13:25:38 -0400
-Subject: Re: [4.13 REGRESSION] Re: brcm43430 sdio wifi regression with
- 4.13-rc1
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        russianneuromancer <russianneuromancer@ya.ru>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
- <03779c4f-b48b-444f-59c5-e10324dc77bd@mnementh.co.uk>
- <04f1050f-966e-b0c8-7714-ee5065ba69cf@mnementh.co.uk>
- <9e616361-da87-6f46-8ee3-4a4f673c3c80@broadcom.com>
- <d6c43415-186d-ea1d-c1da-f68020267508@redhat.com>
- <2323972d-280f-048f-31fb-1c31b0228b22@redhat.com>
- <87d17yb195.fsf@kamboji.qca.qualcomm.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <3abe4265-fd1c-4f1b-a416-429b8062856f@redhat.com> (sfid-20170814_192543_850372_0561FA1C)
-Date: Mon, 14 Aug 2017 19:25:35 +0200
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:37522 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751974AbdHIVFq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 17:05:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <87d17yb195.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com> <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Wed, 9 Aug 2017 14:05:45 -0700
+Message-ID: <CALupW3BHT80nAYucMN+eNBF4d4b=FR+qXgqy8s+KapKcW5sqoQ@mail.gmail.com> (sfid-20170809_230603_938106_88938854)
+Subject: Re: [PATCH v2 02/20] ath6kl: constify usb_device_id
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: kvalo@codeaurora.org, petkan@nucleusys.com,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Aug 9, 2017 at 9:23 AM, Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+> usb_device_id are not supposed to change at runtime. All functions
+> working with usb_device_id provided by <linux/usb.h> work with
+> const usb_device_id. So mark the non-const structs as const.
+>
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> ---
+> changes in v2:
+>               Re-submitting wireless separately.
+>
+>  drivers/net/wireless/ath/ath6kl/usb.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+> index 9da3594..4defb7a 100644
+> --- a/drivers/net/wireless/ath/ath6kl/usb.c
+> +++ b/drivers/net/wireless/ath/ath6kl/usb.c
+> @@ -1201,7 +1201,7 @@ static int ath6kl_usb_pm_resume(struct usb_interface *interface)
+>  #endif
+>
+>  /* table of devices that work with this driver */
+> -static struct usb_device_id ath6kl_usb_ids[] = {
+> +static const struct usb_device_id ath6kl_usb_ids[] = {
+>         {USB_DEVICE(0x0cf3, 0x9375)},
+>         {USB_DEVICE(0x0cf3, 0x9374)},
+>         { /* Terminating entry */ },
+> --
+> 2.7.4
+>
 
-On 14-08-17 17:46, Kalle Valo wrote:
-> Hans de Goede <hdegoede@redhat.com> writes:
-> 
->>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> index d21258d..def120c 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> @@ -159,8 +159,9 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
->>>>
->>>>           brcmf_feat_firmware_capabilities(ifp);
->>>>           memset(&gscan_cfg, 0, sizeof(gscan_cfg));
->>>> -       brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
->>>> -                                 &gscan_cfg, sizeof(gscan_cfg));
->>>> +       if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID)
->>>> +               brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
->>>> "pfn_gscan_cfg",
->>>> +                                         &gscan_cfg, sizeof(gscan_cfg));
->>>>           brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
->>>>           if (drvr->bus_if->wowl_supported)
->>>>                   brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
->>>>
->>
->> AFAICT this is still a problem with 4.13-rc5, can we at least get
->> the above workaround merged for 4.13 ?
-> 
-> Just applied it few hours ago:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=e9bf53ab1ee34bb05c104bbfd2b77c844773f8e6
-> 
-> I'll try to get it to -rc6 but of course it depends on pull schedules if
-> it makes it or not.
+Looks good. Also builds and works properly.
 
-Ok, thank you.
+Reviewed-by: Steve deRosier <derosier@gmail.com>
+Tested-by: Steve deRosier <derosier@gmail.com>
 
-Regards,
-
-Hans
+- Steve
