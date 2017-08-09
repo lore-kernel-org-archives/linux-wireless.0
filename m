@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0087.outbound.protection.outlook.com ([104.47.34.87]:57632
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751425AbdH3CNk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 22:13:40 -0400
-Subject: Re: [PATCH 3/5] qtnfmac: modify qtnf_map_bar not to return NULL
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>
-References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
- <20170829121623.24761-4-sergey.matyukevich.os@quantenna.com>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <fc30ee02-2aaa-23c6-46e3-fbeb5b5230ef@quantenna.com> (sfid-20170830_041344_685201_CC4BA538)
-Date: Tue, 29 Aug 2017 19:13:35 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170829121623.24761-4-sergey.matyukevich.os@quantenna.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:35909 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752858AbdHIQ0i (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 12:26:38 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, elena.reshetova@intel.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 07/20] orinoco: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:56:28 +0530
+Message-Id: <1502295988-21144-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182719_263964_767EE79D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2017 05:16 AM, Sergey Matyukevich wrote:
-> NULL is not a special type of success here but a error pointer.
-> So it makes sense to check against NULL in qtnf_map_bar
-> and return error code.
-> 
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> ---
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-On a first glance not immediately obvious what is logically changed 
-here, is it so that pr_debug() would not print NULL pointer?
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
+
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index c84fd84..56f6e3b 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -210,7 +210,7 @@ struct ezusb_packet {
+ } __packed;
+ 
+ /* Table of devices that work or may work with this driver */
+-static struct usb_device_id ezusb_table[] = {
++static const struct usb_device_id ezusb_table[] = {
+ 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_COMPAQ_WL215_ID)},
+ 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_HP_WL215_ID)},
+ 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_COMPAQ_W200_ID)},
+-- 
+2.7.4
