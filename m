@@ -1,92 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24860 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751711AbdHVV35 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 17:29:57 -0400
-From: <ryanhsu@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <ryanhsu@qti.qualcomm.com>
-Subject: [PATCH v2 2/2] ath10k: Configure and enable the wakeup capability
-Date: Tue, 22 Aug 2017 14:30:20 -0700
-Message-ID: <1503437420-5470-2-git-send-email-ryanhsu@qti.qualcomm.com> (sfid-20170822_233000_270569_71CA2444)
-In-Reply-To: <1503437420-5470-1-git-send-email-ryanhsu@qti.qualcomm.com>
-References: <1503437420-5470-1-git-send-email-ryanhsu@qti.qualcomm.com>
+Received: from muru.com ([72.249.23.125]:57168 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752107AbdHIR1A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 13:27:00 -0400
+Date: Wed, 9 Aug 2017 10:26:52 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170809172651.GA3934@atomide.com> (sfid-20170809_192713_818256_E7F0A195)
+References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+* Reizer, Eyal <eyalr@ti.com> [170809 00:55]:
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -6040,6 +6040,21 @@ static int wl1271_register_hw(struct wl1271 *wl)
+>  		nic_addr = wl->fuse_nic_addr + 1;
+>  	}
+>  
+> +	if (oui_addr == 0xdeadbe && nic_addr == 0xef0000) {
+> +		wl1271_warning("Detected unconfigured mac address in nvs.\n"
+> +				"derive from fuse instead.\n"
+> +				"in case of using a wl12xx device, your "
+> +				"device performance may not be optimized.\n"
+> +				"Please use the calibrator tool to configure "
+> +				"your device.\n"
+> +				"When using a wl18xx device this default nvs "
+> +				"file can be removed from the file system\n");
+> +
+> +		oui_addr = wl->fuse_oui_addr;
+> +		/* fuse has the BD_ADDR, the WLAN addresses are the next two */
+> +		nic_addr = wl->fuse_nic_addr + 1;
+> +	}
+> +
+>  	wl12xx_derive_mac_addresses(wl, oui_addr, nic_addr);
 
-ACPI will rely on device driver to tell it if the device could support
-wakeup function when system in D3 state.
+I just gave this a quick try on omap3-evm with wl1271, now I get
+mac address of 00:00:00:00:00:01 :) So looks like at least wl1271 needs
+to use the random mac address here.
 
-This has caused some platform can't support remote wakeup correctly,
-because the ACPI wakeup GPE is not enabled, hence registers the .set_wakeup
-callback to handle it if device supports wakeup.
+Note that we should now have struct wilink_family_data available
+so maybe that can be used to check if the hardware mac address
+exists?
 
-Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |  1 +
- drivers/net/wireless/ath/ath10k/wow.c | 14 ++++++++++++++
- drivers/net/wireless/ath/ath10k/wow.h |  1 +
- 3 files changed, 16 insertions(+)
+Regards,
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2e5d2ca..bbf7da1 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7488,6 +7488,7 @@ static const struct ieee80211_ops ath10k_ops = {
- #ifdef CONFIG_PM
- 	.suspend			= ath10k_wow_op_suspend,
- 	.resume				= ath10k_wow_op_resume,
-+	.set_wakeup			= ath10k_wow_op_set_wakeup,
- #endif
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
-diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-index 77100d4..0d46d6d 100644
---- a/drivers/net/wireless/ath/ath10k/wow.c
-+++ b/drivers/net/wireless/ath/ath10k/wow.c
-@@ -277,6 +277,18 @@ exit:
- 	return ret ? 1 : 0;
- }
- 
-+void ath10k_wow_op_set_wakeup(struct ieee80211_hw *hw, bool enabled)
-+{
-+	struct ath10k *ar = hw->priv;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if (test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
-+		     ar->running_fw->fw_file.fw_features)) {
-+		device_set_wakeup_enable(ar->dev, enabled);
-+	}
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
- int ath10k_wow_op_resume(struct ieee80211_hw *hw)
- {
- 	struct ath10k *ar = hw->priv;
-@@ -336,5 +348,7 @@ int ath10k_wow_init(struct ath10k *ar)
- 	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
- 	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
- 
-+	device_set_wakeup_capable(ar->dev, true);
-+
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wow.h b/drivers/net/wireless/ath/ath10k/wow.h
-index abbb04b..9745b9d 100644
---- a/drivers/net/wireless/ath/ath10k/wow.h
-+++ b/drivers/net/wireless/ath/ath10k/wow.h
-@@ -28,6 +28,7 @@ int ath10k_wow_init(struct ath10k *ar);
- int ath10k_wow_op_suspend(struct ieee80211_hw *hw,
- 			  struct cfg80211_wowlan *wowlan);
- int ath10k_wow_op_resume(struct ieee80211_hw *hw);
-+void ath10k_wow_op_set_wakeup(struct ieee80211_hw *hw, bool enabled);
- 
- #else
- 
--- 
-1.9.1
+Tony
