@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:38896 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751559AbdH3Jnx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51816 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752033AbdHIH13 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 05:43:53 -0400
-Received: by mail-pf0-f194.google.com with SMTP id r187so3999245pfr.5
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 02:43:52 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Wed, 9 Aug 2017 03:27:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 7/8] rsi: aggregation changes for p2p mode
-Date: Wed, 30 Aug 2017 15:08:27 +0530
-Message-Id: <1504085908-2163-8-git-send-email-amitkarwar@gmail.com> (sfid-20170830_114413_178550_77C0DA11)
-In-Reply-To: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
-References: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH v2 2/3] iwlwifi: mvm: start mac queues when deferred tx frames are purged
+References: <78tivleks.fsf@kamboji.qca.qualcomm.com>
+        <20170809055853.8560-1-luca@coelho.fi>
+Date: Wed, 09 Aug 2017 10:27:24 +0300
+In-Reply-To: <20170809055853.8560-1-luca@coelho.fi> (Luca Coelho's message of
+        "Wed, 9 Aug 2017 08:58:53 +0300")
+Message-ID: <87efsli4kj.fsf@kamboji.qca.qualcomm.com> (sfid-20170809_092732_929464_8B24EB68)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-P2P Go condition is added wherever AP mode is there
-in aggregation path.
+> From: Avraham Stern <avraham.stern@intel.com>
+>
+> In AP mode, if a station is removed just as it is adding a new stream,
+> the queue in question will remain stopped and no more TX will happen
+> in this queue, leading to connection failures and other problems.
+>
+> This is because under DQA, when tx is deferred because a queue needs
+> to be allocated, the mac queue for that TID is stopped until the new
+> stream is added.  If at this point the station that this stream
+> belongs to is removed, all the deferred tx frames are purged, but the
+> mac queue is not restarted. As a result, all following tx on this
+> queue will not be transmitted.
+>
+> Fix this by starting the relevant mac queues when the deferred tx
+> frames are purged.
+>
+> Fixes: 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
+> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Looks good, thanks.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 09ad909..79426a2 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1005,7 +1005,8 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 	if (ssn != NULL)
- 		seq_no = *ssn;
- 
--	if (vif->type == NL80211_IFTYPE_AP) {
-+	if ((vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_P2P_GO)) {
- 		rsta = rsi_find_sta(common, sta->addr);
- 		if (!rsta) {
- 			rsi_dbg(ERR_ZONE, "No station mapped\n");
-@@ -1039,9 +1040,11 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 
- 	case IEEE80211_AMPDU_TX_START:
--		if (vif->type == NL80211_IFTYPE_STATION)
-+		if ((vif->type == NL80211_IFTYPE_STATION) ||
-+		    (vif->type == NL80211_IFTYPE_P2P_CLIENT))
- 			common->vif_info[ii].seq_start = seq_no;
--		else if (vif->type == NL80211_IFTYPE_AP)
-+		else if ((vif->type == NL80211_IFTYPE_AP) ||
-+			 (vif->type == NL80211_IFTYPE_P2P_GO))
- 			rsta->seq_start[tid] = seq_no;
- 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		status = 0;
-@@ -1061,9 +1064,11 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
--		if (vif->type == NL80211_IFTYPE_STATION)
-+		if ((vif->type == NL80211_IFTYPE_STATION) ||
-+		    (vif->type == NL80211_IFTYPE_P2P_CLIENT))
- 			seq_start = common->vif_info[ii].seq_start;
--		else if (vif->type == NL80211_IFTYPE_AP)
-+		else if ((vif->type == NL80211_IFTYPE_AP) ||
-+			 (vif->type == NL80211_IFTYPE_P2P_GO))
- 			seq_start = rsta->seq_start[tid];
- 		status = rsi_send_aggregation_params_frame(common,
- 							   tid,
 -- 
-2.7.4
+Kalle Valo
