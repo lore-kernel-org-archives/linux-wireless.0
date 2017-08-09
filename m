@@ -1,64 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:54564 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754632AbdHYMli (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43200 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752491AbdHIGnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Aug 2017 08:41:38 -0400
-Date: Fri, 25 Aug 2017 14:15:08 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2800: fix TX_PIN_CFG setting for non MT7620 chips
-Message-ID: <20170825121508.GA1159@makrotopia.org> (sfid-20170825_144141_224778_13FB4812)
-References: <20170825113828.GA3959@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825113828.GA3959@redhat.com>
+        Wed, 9 Aug 2017 02:43:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  9 Aug 2017 09:43:41 +0300
+Message-Id: <20170809064341.13523-1-luca@coelho.fi> (sfid-20170809_084350_968245_B46BBF27)
+In-Reply-To: <87r2wnjymu.fsf@kamboji.qca.qualcomm.com>
+References: <87r2wnjymu.fsf@kamboji.qca.qualcomm.com>
+Subject: [PATCH v2 4/19] iwlwifi: mvm: add debugfs to force CT-kill
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 
-On Fri, Aug 25, 2017 at 01:38:29PM +0200, Stanislaw Gruszka wrote:
-> Since commit 41977e86c984 ("rt2x00: add support for MT7620") we do not
-> initialize TX_PIN_CFG setting. This cause breakage at least on some
-> RT3573 devices. To fix the problem patch restores previous behaviour
-> for non MT7620 chips.
-> 
-> Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1480829
-> Reported-and-tested-by: Jussi Eloranta <jussi.eloranta@csun.edu>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> index d11c7b2..5672aec 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> @@ -3699,7 +3699,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->  	if (rt2x00_rt(rt2x00dev, RT3572))
->  		rt2800_rfcsr_write(rt2x00dev, 8, 0);
->  
-> -	rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
-> +	if (rt2x00_rt(rt2x00dev, RT6352))
-> +		rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
+CT-kill is a thermal-based "RF-kill", which disables the NIC
+completely if the temperature gets too high, in order to avoid damage.
 
-should be
+Add a debugfs entry to simulate high temperatures, in order to test
+CT-kill flows in the driver without having to physically heat the
+device up.
 
-	tx_pin = rt2800_register_read(rt2x00dev, TX_PIN_CFG);
+Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 14 ++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c      |  2 +-
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
-since the calling convention of rt2800_register_read was changed in
-commit eebd68e782 rt2x00: convert rt2800_register_read return type.
-Probably you based the patch on an outdated tree...?
-
-
-> +	else
-> +		tx_pin = 0;
->  
->  	switch (rt2x00dev->default_ant.tx_chain_num) {
->  	case 3:
-> -- 
-> 2.7.5
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 29f1d1807415..0b5cae54b86b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -114,6 +114,18 @@ static ssize_t iwl_dbgfs_stop_ctdp_write(struct iwl_mvm *mvm, char *buf,
+ 	return ret ?: count;
+ }
+ 
++static ssize_t iwl_dbgfs_force_ctkill_write(struct iwl_mvm *mvm, char *buf,
++					    size_t count, loff_t *ppos)
++{
++	if (!iwl_mvm_firmware_running(mvm) ||
++	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR)
++		return -EIO;
++
++	iwl_mvm_enter_ctkill(mvm);
++
++	return count;
++}
++
+ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
+ 					size_t count, loff_t *ppos)
+ {
+@@ -1641,6 +1653,7 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(prph_reg, 64);
+ /* Device wide debugfs entries */
+ MVM_DEBUGFS_READ_FILE_OPS(ctdp_budget);
+ MVM_DEBUGFS_WRITE_FILE_OPS(stop_ctdp, 8);
++MVM_DEBUGFS_WRITE_FILE_OPS(force_ctkill, 8);
+ MVM_DEBUGFS_WRITE_FILE_OPS(tx_flush, 16);
+ MVM_DEBUGFS_WRITE_FILE_OPS(sta_drain, 8);
+ MVM_DEBUGFS_WRITE_FILE_OPS(send_echo_cmd, 8);
+@@ -1828,6 +1841,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	MVM_DEBUGFS_ADD_FILE(nic_temp, dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(ctdp_budget, dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(stop_ctdp, dbgfs_dir, S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE(force_ctkill, dbgfs_dir, S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE(stations, dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(bt_notif, dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(bt_cmd, dbgfs_dir, S_IRUSR);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 8b6238e1c7ea..a6983042d3b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1755,6 +1755,7 @@ void iwl_mvm_thermal_exit(struct iwl_mvm *mvm);
+ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
+ int iwl_mvm_get_temp(struct iwl_mvm *mvm, s32 *temp);
+ void iwl_mvm_ct_kill_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
++void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm);
+ int iwl_mvm_send_temp_report_ths_cmd(struct iwl_mvm *mvm);
+ int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 3f143402cf7f..8876c2abc440 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -71,7 +71,7 @@
+ 
+ #define IWL_MVM_TEMP_NOTIF_WAIT_TIMEOUT	HZ
+ 
+-static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
++void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_mvm_tt_mgmt *tt = &mvm->thermal_throttle;
+ 	u32 duration = tt->params.ct_kill_duration;
+-- 
+2.13.2
