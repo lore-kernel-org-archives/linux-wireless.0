@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2646 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750722AbdHQEUI (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36507 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752630AbdHIQ31 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2017 00:20:08 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [2/6] ath10k: refactor firmware crashdump code to coredump.c
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <150278538298.22482.10986802411848917689.stgit@potku.adurom.net>
-References: <150278538298.22482.10986802411848917689.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <ec54c0ff3af546d2a52d75428c38d06b@euamsexm01a.eu.qualcomm.com> (sfid-20170817_062143_245431_51AAF485)
-Date: Thu, 17 Aug 2017 06:20:02 +0200
+        Wed, 9 Aug 2017 12:29:27 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, sgruszka@redhat.com,
+        helmut.schaa@googlemail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 14/20] rt2800usb: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:59:15 +0530
+Message-Id: <1502296155-21470-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182955_344370_0FA26242)
+In-Reply-To: <1502296155-21470-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502296155-21470-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-> In preparation to add RAM dump support. No functional changes, only moving code
-> and renaming function names.
-> 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
 
-With only this patch applied, and CONFIG_DEV_COREDUMP disabled, there's a build error:
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-drivers/net/wireless/ath/ath10k/coredump.c:24:30: error: redefinition of 'ath10k_coredump_new'
-drivers/net/wireless/ath/ath10k/coredump.c:130:5: error: redefinition of 'ath10k_coredump_submit'
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 685b8e0..cd9547e 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -915,7 +915,7 @@ static const struct rt2x00_ops rt2800usb_ops = {
+ /*
+  * rt2800usb module information.
+  */
+-static struct usb_device_id rt2800usb_device_table[] = {
++static const struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Abocom */
+ 	{ USB_DEVICE(0x07b8, 0x2870) },
+ 	{ USB_DEVICE(0x07b8, 0x2770) },
 -- 
-https://patchwork.kernel.org/patch/9901243/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
