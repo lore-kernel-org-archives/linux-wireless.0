@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:32895 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750758AbdH3TLc (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35107 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753846AbdHIQav (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:11:32 -0400
-Received: by mail-wm0-f52.google.com with SMTP id r202so3670059wmd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:11:31 -0700 (PDT)
-Subject: Re: [PATCH 13/30] brcmfmac: Clarify if using braces.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-14-ian@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <78917893-6b3d-9cfc-1f32-e27226ae6189@broadcom.com> (sfid-20170830_211135_911653_32653151)
-Date: Wed, 30 Aug 2017 21:11:29 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-14-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 9 Aug 2017 12:30:51 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, Jes.Sorensen@gmail.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 17/20] rtl8xxxu: constify usb_device_id
+Date: Wed,  9 Aug 2017 22:00:39 +0530
+Message-Id: <1502296239-21673-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183122_741283_AB4B07D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
-> Whilst this if () statement is technically correct, it lacks clarity.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-I don't see the unclarity here. In my opinion people reading the code 
-should have a good level in C language and a decent level of curiosity 
-when they come across a function/macro like skb_queue_walk().
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
 
-Regards,
-Arend
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 21e5ef0..7806a4d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6190,7 +6190,7 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
+ 	ieee80211_free_hw(hw);
+ }
+ 
+-static struct usb_device_id dev_table[] = {
++static const struct usb_device_id dev_table[] = {
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8724, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8723au_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x1724, 0xff, 0xff, 0xff),
+-- 
+2.7.4
