@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:45430 "EHLO
-        smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751297AbdH3C2t (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43182 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750820AbdHIF7C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 22:28:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170829214309.34466-1-antony@phenome.org>
-References: <20170829214309.34466-1-antony@phenome.org>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Wed, 30 Aug 2017 10:28:20 +0800
-Message-ID: <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com> (sfid-20170830_042853_046342_BA6207B7)
-Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add bcm43430-fmac
-To: Antony Antony <antony@phenome.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Icenowy Zheng <icenowy@aosc.io>,
-        devicetree <devicetree@vger.kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Maxime Ripard <maxime.ripard@free-electrons.com>,
-        Chen-Yu Tsai <wens@csie.org>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 9 Aug 2017 01:59:02 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  9 Aug 2017 08:58:53 +0300
+Message-Id: <20170809055853.8560-1-luca@coelho.fi> (sfid-20170809_075905_952802_7A1B62A0)
+In-Reply-To: <78tivleks.fsf@kamboji.qca.qualcomm.com>
+References: <78tivleks.fsf@kamboji.qca.qualcomm.com>
+Subject: [PATCH v2 2/3] iwlwifi: mvm: start mac queues when deferred tx frames are purged
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Avraham Stern <avraham.stern@intel.com>
 
-On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
-> Add device tree binding documentation for Broadcom BCM43430
-> AMPAK AP6212A has this chip.
->
-> e.g
-> compatible = "brcm,bcm43430-fmac";
->
-> NanoPi NEO Plus2 has an AMPAK AP6212A WiFi module
-> with BCM43430 rev=1 inside.
-> brcmf_chip_recognition found AXI chip: BCM43430, rev=1
-> brcmf_ops_sdio_probe sdio vendor ID: 0x02d0
-> brcmf_ops_sdio_probe sdio device ID: 0xa9a6
->
-> Signed-off-by: Antony Antony <antony@phenome.org>
-> ---
->  Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->  NanoPi Neo Plus2 Kernel DT propsed patch
->  https://patchwork.kernel.org/patch/9925387/
->
-> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> index 590f622..9107e1a 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> @@ -6,7 +6,9 @@ connects the device to the system.
->
->  Required properties:
->
-> - - compatible : Should be "brcm,bcm4329-fmac".
-> + - compatible : should be one of the following:
-> +       * "brcm,bcm4329-fmac"
-> +       * "brcm,bcm43430-fmac"
+In AP mode, if a station is removed just as it is adding a new stream,
+the queue in question will remain stopped and no more TX will happen
+in this queue, leading to connection failures and other problems.
 
-You updated the bindings, but not the driver. So it's not actually
-going to work. More specifically, OOB interrupts won't work.
+This is because under DQA, when tx is deferred because a queue needs
+to be allocated, the mac queue for that TID is stopped until the new
+stream is added.  If at this point the station that this stream
+belongs to is removed, all the deferred tx frames are purged, but the
+mac queue is not restarted. As a result, all following tx on this
+queue will not be transmitted.
 
-IIRC, The compatible string for this particular case, as it was
-originally proposed, only serves as a placeholder for the driver
-to check against. None of the instances in sunxi device trees
-match the actual chip model. Actual model matching is done
-through SDIO, as you've already seen.
+Fix this by starting the relevant mac queues when the deferred tx
+frames are purged.
 
-ChenYu
+Fixes: 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-
->
->  Optional properties:
->   - brcm,drive-strength : drive strength used for SDIO pins on device in mA
-> --
-> 2.9.3
->
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index c7b1e58e3384..ce901be5fba8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2597,8 +2597,18 @@ static void iwl_mvm_purge_deferred_tx_frames(struct iwl_mvm *mvm,
+ 	spin_lock_bh(&mvm_sta->lock);
+ 	for (i = 0; i <= IWL_MAX_TID_COUNT; i++) {
+ 		tid_data = &mvm_sta->tid_data[i];
+-		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames)))
++
++		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames))) {
++			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++			/*
++			 * The first deferred frame should've stopped the MAC
++			 * queues, so we should never get a second deferred
++			 * frame for the RA/TID.
++			 */
++			iwl_mvm_start_mac_queues(mvm, info->hw_queue);
+ 			ieee80211_free_txskb(mvm->hw, skb);
++		}
+ 	}
+ 	spin_unlock_bh(&mvm_sta->lock);
+ }
+-- 
+2.13.2
