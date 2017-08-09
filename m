@@ -1,52 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:56942 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752092AbdHGHiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 03:38:12 -0400
-Date: Mon, 7 Aug 2017 00:38:09 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [v5] wlcore: add missing nvs file name info for wilink8
-Message-ID: <20170807073808.GD5487@atomide.com> (sfid-20170807_093919_461212_6D895D79)
-References: <1502090869-8833-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:38117 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752508AbdHIICc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 04:02:32 -0400
+Received: by mail-wr0-f171.google.com with SMTP id f21so20995996wrf.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Aug 2017 01:02:31 -0700 (PDT)
+Subject: Re: [PATCH v4 01/10] wil6210: protect against invalid length of tx
+ management frame
+To: Maya Erez <qca_merez@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1501787302-22885-2-git-send-email-qca_merez@qca.qualcomm.com>
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Lior David <qca_liord@qca.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <598AC195.3000205@broadcom.com> (sfid-20170809_100236_716822_84DD6457)
+Date: Wed, 9 Aug 2017 10:02:29 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
+In-Reply-To: <1501787302-22885-2-git-send-email-qca_merez@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [170807 00:32]:
-> The following commits:
-> c815fde wlcore: spi: Populate config firmware data
-> d776fc8 wlcore: sdio: Populate config firmware data
-> 
-> Populated the nvs entry for wilink6 and wilink7 only while it is
-> still needed for wilink8 as well.
-> This broke user space backward compatibility when upgrading from older
-> kernels, as the alternate mac address would not be read from the nvs that is
-> present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
-> causing mac address change of the wlan interface.
-> 
-> This patch fix this and update the structure field with the same default
-> nvs file name that has been used before.
-> 
-> In addition, some distros hold a default wl1271-nvs.bin in the file
-> system with a bogus mac address (deadbeef...) that for a wl18xx device
-> also overrides the mac address that is stored inside the device.
-> Warn users about this bogus mac address and use a random mac instead
+On 8/3/2017 9:08 PM, Maya Erez wrote:
+> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+>
+> Validate buffer length has the minimum needed size
+> when sending management frame to protect against
+> possible buffer overrun.
 
-Hmm looks pretty good to me except for one more thing I just noticed.
+I noticed this is already applied, but I saw this subject text which has 
+similar sound to a recent patch in our driver so I it made me curious...
 
-Why don't you just use the hardware mac address instead of a random
-mac address on wl18xx device when you see a bogus nvs file?
+> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +++
+>   drivers/net/wireless/ath/wil6210/debugfs.c  | 3 +++
+>   2 files changed, 6 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+> index 0b5383a..77af749 100644
+> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
+> +++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+> @@ -884,6 +884,9 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+>   	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
+>   			  len, true);
+>
+> +	if (len < sizeof(struct ieee80211_hdr_3addr))
+> +		return -EINVAL;
+
+A similar check is already in net/wireless/cfg80211_mlme_mgmt_tx() which 
+calls this function:
+
+	if (params->len < 24 + 1)
+		return -EINVAL;
+
+So it only makes sense if this is called from some other call site....
+
+>   	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
+>   	if (!cmd) {
+>   		rc = -ENOMEM;
+> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+> index f82506d..a2b5d59 100644
+> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
+> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+> @@ -801,6 +801,9 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
+>   	int rc;
+>   	void *frame;
+>
+> +	if (!len)
+> +		return -EINVAL;
+> +
+
+... which is in this function. Now I wonder why you would need this 
+method in the first place. Why not stick with using the nl80211 
+NL80211_CMD_FRAME api?
 
 Regards,
+Arend
 
-Tony
+>   	frame = memdup_user(buf, len);
+>   	if (IS_ERR(frame))
+>   		return PTR_ERR(frame);
+>
