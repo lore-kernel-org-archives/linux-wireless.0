@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35013 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753093AbdHJQrt (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:35767 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753654AbdHIQYD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 12:47:49 -0400
-Received: by mail-oi0-f67.google.com with SMTP id q70so1117867oic.2
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Aug 2017 09:47:49 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH v2 0/2] rtlwifi: btcoex: Improve debugging system
-Date: Thu, 10 Aug 2017 11:47:42 -0500
-Message-Id: <20170810164744.9336-1-Larry.Finger@lwfinger.net> (sfid-20170810_184753_868805_4BCB26D0)
+        Wed, 9 Aug 2017 12:24:03 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kvalo@codeaurora.org, petkan@nucleusys.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 02/20] ath6kl: constify usb_device_id
+Date: Wed,  9 Aug 2017 21:53:43 +0530
+Message-Id: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182608_949524_F3976028)
+In-Reply-To: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resubmit the two patches to the debugging system that were rejected
-earlier. V2 includes fixes for the reviewers comments.
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
 
-Ping-Ke Shih (2):
-  rtlwifi: use debugfs to debug.
-  rtlwifi: btcoex: Use seq_file to dump btcoex status
+ drivers/net/wireless/ath/ath6kl/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/net/wireless/realtek/rtlwifi/base.c        |   6 +
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 203 +++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 269 ++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 206 +++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 285 ++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 177 ++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   3 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 133 ++++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  14 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |   6 +
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   1 +
- drivers/net/wireless/realtek/rtlwifi/debug.c       | 439 +++++++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/debug.h       |  12 +
- drivers/net/wireless/realtek/rtlwifi/pci.c         |   6 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |   9 +
- 19 files changed, 1147 insertions(+), 634 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 9da3594..4defb7a 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1201,7 +1201,7 @@ static int ath6kl_usb_pm_resume(struct usb_interface *interface)
+ #endif
+ 
+ /* table of devices that work with this driver */
+-static struct usb_device_id ath6kl_usb_ids[] = {
++static const struct usb_device_id ath6kl_usb_ids[] = {
+ 	{USB_DEVICE(0x0cf3, 0x9375)},
+ 	{USB_DEVICE(0x0cf3, 0x9374)},
+ 	{ /* Terminating entry */ },
 -- 
-2.12.3
+2.7.4
