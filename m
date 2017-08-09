@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44594 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751861AbdHRPwZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:19 +0300
-Message-Id: <20170818154922.2904-22-luca@coelho.fi> (sfid-20170818_175227_757123_BEF2AA36)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 21/24] iwlwifi: fw: fix lar_enabled endian problem in iwl_fw_get_nvm
+Received: from muru.com ([72.249.23.125]:57264 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750866AbdHIVQY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 17:16:24 -0400
+Date: Wed, 9 Aug 2017 14:16:20 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
+Message-ID: <20170809211620.GF3934@atomide.com> (sfid-20170809_231638_357760_ABB226EA)
+References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
+ <20170809172651.GA3934@atomide.com>
+ <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+* Reizer, Eyal <eyalr@ti.com> [170809 10:40]:
+> Hi Tony,
+> 
+> Sorry for top posting (mobile...)
+> I have verified with system design and the data sheet that every wilink 6/7 chip has a mac address in fuse so probably the board you have (pretty old, right?) has this mac address in fuse. Maybe it was from very early batches? Anyway I see no reason to change it.
+> Anyway the calibrator can be used to store a different one into the nvs file that will overide it.
 
-We read the regulatory.lar_enabled field in iwl_fw_get_nvm() and store
-it in nvm->lar_enabled, taking care of endianness.  But then later we
-read it again to pass the value to iwl_init_sbands() without handling
-endianness.  To solve this, simply reuse nvm->lar_enabled when calling
-that function.
+Well clearly at least this one does not have any valid hardware
+mac address, the hardware mac address is broken with all zeroes.
 
-Fixes: e9e1ba3dbf00 ("iwlwifi: mvm: support getting nvm data from firmware")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/nvm.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+It seems that you can easily add a check for empty mac address, no?
+And you already showed a version that falls back to a random mac
+address.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-index e81f6dd3744e..bd2e1fb43f5a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-@@ -148,8 +148,7 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 			rsp->regulatory.channel_profile,
- 			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
- 			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
--			rsp->regulatory.lar_enabled && lar_fw_supported,
--			false);
-+			nvm->lar_enabled, false);
- 
- 	iwl_free_resp(&hcmd);
- 	return nvm;
--- 
-2.14.1
+The fact that is old does not change a thing, we still need to
+support it no matter what the data sheet and your system design
+says. A fix that breaks other things is not really a fix :)
+
+> I have verified using a couple of com6 modules with an am335x-evm and they had mac addresses read ok.
+
+Sounds like there are multiple variants of the wl12xx
+available then.
+
+Regards,
+
+Tony
