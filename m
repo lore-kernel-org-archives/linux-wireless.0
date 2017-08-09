@@ -1,146 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:57966 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932499AbdHVLnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:43:09 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 18/30] brcmfmac: Cleanup offsetof()
-Date: Tue, 22 Aug 2017 12:25:38 +0100
-Message-Id: <20170822112550.60311-19-ian@mnementh.co.uk> (sfid-20170822_134314_283559_550674C5)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Received: from paleale.coelho.fi ([176.9.41.70]:43262 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752498AbdHIHjl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 03:39:41 -0400
+Message-ID: <1502264372.15969.167.camel@coelho.fi> (sfid-20170809_093944_126125_213EF244)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Wed, 09 Aug 2017 10:39:32 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-hUl5+axkPYHkfOFU+8Tr"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2017-08-09
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a macro to make the code a bit more readable, whilst we're stuck
-with using struct element offsets as register offsets.
+
+--=-hUl5+axkPYHkfOFU+8Tr
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Kalle,
+
+Here is the third set of fixes for 4.13.  More details in the tag
+description.
+
+This includes both series I sent out, the first one, with v2 of the
+second patch, with an improved commit message, and the second one, which
+contains the mac80211 patch as well.
+
+I have sent this out before and kbuildbot didn't find any issues.=20
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
 
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 35 +++++++++-------------
- 1 file changed, 14 insertions(+), 21 deletions(-)
+The following changes since commit 368bd88ebb64cabe4a1ec727659214bb8d693707=
+:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index ce19ccf5d1d6..8f3e99da871a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -161,6 +161,8 @@ struct rte_console {
- 
- #define CORE_BUS_REG(base, field) \
- 		(base + offsetof(struct sdpcmd_regs, field))
-+#define __sd_reg(field) \
-+		(offsetof(struct sdpcmd_regs, field))
- 
- /* SDIO function 1 register CHIPCLKCSR */
- /* Force ALP request to backplane */
-@@ -1084,12 +1086,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* Read mailbox data and ack that we did so */
--	ret = r_sdreg32(bus, &hmb_data,
--			offsetof(struct sdpcmd_regs, tohostmailboxdata));
-+	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
- 
- 	if (ret == 0)
--		w_sdreg32(bus, SMB_INT_ACK,
--			  offsetof(struct sdpcmd_regs, tosbmailbox));
-+		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
- 
- 	/* Dongle recomposed rx frames, accept them again */
-@@ -1197,8 +1197,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 
- 	if (rtx) {
- 		bus->sdcnt.rxrtx++;
--		err = w_sdreg32(bus, SMB_NAK,
--				offsetof(struct sdpcmd_regs, tosbmailbox));
-+		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
- 
- 		bus->sdcnt.f1regdata++;
- 		if (err == 0)
-@@ -2323,9 +2322,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (!bus->intr) {
- 			/* Check device status, signal pending interrupt */
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = r_sdreg32(bus, &intstatus,
--					offsetof(struct sdpcmd_regs,
--						 intstatus));
-+			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
-@@ -2431,7 +2428,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		brcmf_sdio_bus_sleep(bus, false, false);
- 
- 		/* Disable and clear interrupts at the chip level also */
--		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, 0, __sd_reg(hostintmask));
- 		local_hostintmask = bus->hostintmask;
- 		bus->hostintmask = 0;
- 
-@@ -2450,8 +2447,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 		/* Clear any pending interrupts now that F2 is disabled */
--		w_sdreg32(bus, local_hostintmask,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
- 
- 		sdio_release_host(sdiodev->func[1]);
- 	}
-@@ -2497,7 +2493,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	int ret;
- 
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
--	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-+	addr = buscore->base + __sd_reg(intstatus);
- 
- 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
-@@ -2574,11 +2570,9 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
- 
--		err = r_sdreg32(bus, &newstatus,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
- 		bus->sdcnt.f1regdata += 2;
- 		atomic_set(&bus->fcstate,
- 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-@@ -3760,7 +3754,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
- 
- 	/* clear all interrupts */
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
--	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
-+	reg_addr = core->base + __sd_reg(intstatus);
- 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
- 
- 	if (rstvec)
-@@ -4037,7 +4031,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 
- 	/* Enable function 2 (frame transfers) */
- 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
--		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
-+		  __sd_reg(tosbmailboxdata));
- 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 
-@@ -4047,8 +4041,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		w_sdreg32(bus, bus->hostintmask,
--			  offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
- 
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
--- 
-2.11.0
+  Merge tag 'iwlwifi-for-kalle-2017-08-02' of git://git.kernel.org/pub/scm/=
+linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-08-03 11:01:11 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
+ags/iwlwifi-for-kalle-2018-08-09
+
+for you to fetch changes up to 20fc690f38d17b8f961101a477a9aa0841fb6e20:
+
+  iwlwifi: mvm: send delba upon rx ba session timeout (2017-08-09 10:05:01 =
++0300)
+
+----------------------------------------------------------------
+Some more fixes for 4.13
+
+* Fix a memory leak in the SAR code;
+* Fix a stuck queue case in AP mode;
+* Convert a WARN to a simple debug in a legitimate race case (from
+  which we can recover);
+* Fix a severe throughput aggregation on 9000-family devices due to
+  aggregation issues.
+
+----------------------------------------------------------------
+Avraham Stern (1):
+      iwlwifi: mvm: start mac queues when deferred tx frames are purged
+
+Christophe Jaillet (1):
+      iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm=
+_sar_get_wgds_table()'
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU
+
+Naftali Goldstein (2):
+      mac80211: add api to start ba session timer expired flow
+      iwlwifi: mvm: send delba upon rx ba session timeout
+
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  6 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 10 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  4 ++--
+ include/net/mac80211.h                            | 15 +++++++++++++++
+ net/mac80211/agg-rx.c                             | 22 +++++++++++++++++++=
+++-
+ 6 files changed, 59 insertions(+), 10 deletions(-)
+--=-hUl5+axkPYHkfOFU+8Tr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlmKvDQACgkQoUecoho8
+xfovxxAAhmSkBkah2k1c9vOLuwxDYXs7u4TyLmelw7fkRzRkFOX0KXUXCS+OnoB+
+PhxB+sIsqb9iysrY6hr5kARcX2o+5mO3CcYrUce7yDzcEgy4aoOSLpEr7qLfcaHM
+vHVWl22scYs7MR3NfhHOeBvNNXqcCW/Dg4+9yiah2v1z1GE/QBVlLi+xXDg/7aIs
+mtNWdAmzwWm7ieG8EaQ31guzv0D601HyqDukJS+ywA723kF+8kUYgoCAHlAgcETz
+LGPhLnyK1KaFWjLrFLMA1FWqYWE4080YpTTWW1KFR1H7w/KVZQx0teKwc74BhEjI
+8MdIgp5Ndc10a5hqu0WB9SXWT3QAt4BKG1AYZEmdbcT5z5lwJp8pTZWAkhtWYLXf
+edYo/qYZtSn43jkpogYUgC211SJchY8ZzB6bOqyHV+hL9rKOXT3TfuxNbae0/rnS
+P9Je3M9IxsdQ4AT9fBLN6bRwlNt+7DOI4SVrdtZ4+wiQ7JmjxXzkjZXSVh81lMTq
+PnglECq7HLnM86RI/yWkvrgjM0ONNf5O6MKFqIxTrIFZzS6rBcISkKavEWQJfy0Z
+5MUABeRYUCvTZvwH+O9kSbNokzOSz1+S0gMESkhUIDwl7YZvJ1lJ5ePT8s/a4TbS
+CYqBqI4eJWZG64s7VfMdutYHxIW3WZeKs9ob3D5BwWTs+ddS0S4=
+=XFn9
+-----END PGP SIGNATURE-----
+
+--=-hUl5+axkPYHkfOFU+8Tr--
