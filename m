@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:56815 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751003AbdHXB3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 21:29:35 -0400
-Date: Thu, 24 Aug 2017 11:29:34 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        linuxwifi@intel.com
-Subject: Re: pull-request: iwlwifi-next 2017-08-18
-Message-ID: <20170824112934.169e1094@canb.auug.org.au> (sfid-20170824_032938_325761_C8E63A8D)
-In-Reply-To: <87pobmwbqo.fsf@kamboji.qca.qualcomm.com>
-References: <1503132116.15969.327.camel@coelho.fi>
-        <87pobmwbqo.fsf@kamboji.qca.qualcomm.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53512 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752464AbdHIHgt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 03:36:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH v2 4/19] iwlwifi: mvm: add debugfs to force CT-kill
+References: <87r2wnjymu.fsf@kamboji.qca.qualcomm.com>
+        <20170809064341.13523-1-luca@coelho.fi>
+Date: Wed, 09 Aug 2017 10:36:44 +0300
+In-Reply-To: <20170809064341.13523-1-luca@coelho.fi> (Luca Coelho's message of
+        "Wed, 9 Aug 2017 09:43:41 +0300")
+Message-ID: <87a839i44z.fsf@kamboji.qca.qualcomm.com> (sfid-20170809_093652_521984_3F69E045)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Luca Coelho <luca@coelho.fi> writes:
 
-On Wed, 23 Aug 2017 18:21:51 +0300 Kalle Valo <kvalo@codeaurora.org> wrote:
+> From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 >
-> Luca Coelho <luca@coelho.fi> writes:
->=20
-> > Here's my third pull-request intended for v4.14.=C2=A0 We continued doi=
-ng
-> > generic development work, with improvements, bug fixes and=C2=A0cleanup=
-s all
-> > around.=C2=A0 More=C2=A0details in the tag description.
-> >
-> > My patch "iwlwifi: update channel flags parser" is going to cause a
-> > conflict with net because they both change the same string in debug
-> > message.  Emmanuel's patch "iwlwifi: split the regulatory rules when the
-> > bandwidth flags require it" added "reg_flags" to the string and changed
-> > the Ad-hoc string.  My patch added a few %s's and also changed the Ad-
-> > hoc string.  The result of the conflict resolution should look like
-> > this:
-> >
-> > "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n" =
-=20
->=20
-> Thanks, I'll Cc Stephen because he most probably sees that conflict
-> tomorrow.
+> CT-kill is a thermal-based "RF-kill", which disables the NIC
+> completely if the temperature gets too high, in order to avoid damage.
+>
+> Add a debugfs entry to simulate high temperatures, in order to test
+> CT-kill flows in the driver without having to physically heat the
+> device up.
+>
+> Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-Thanks for the heads up ...
+This is perfect, kiitti!
 
---=20
-Cheers,
-Stephen Rothwell
+-- 
+Kalle Valo
