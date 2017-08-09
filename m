@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42778 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752489AbdHGJbr (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:38216 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751944AbdHISDU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 05:31:47 -0400
-Message-ID: <1502098298.15969.109.camel@coelho.fi> (sfid-20170807_113150_303056_0F5D508C)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Mon, 07 Aug 2017 12:31:38 +0300
-In-Reply-To: <87d187vja4.fsf@purkki.adurom.net>
-References: <20170805084438.12550-1-luca@coelho.fi>
-         <87d187vja4.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 00/10]  mac80211 patches from our internal tree
- 2017-08-05
+        Wed, 9 Aug 2017 14:03:20 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sameo@linux.intel.com, stephen@networkplumber.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: nfcmrvl: constify usb_device_id
+Date: Wed,  9 Aug 2017 23:33:11 +0530
+Message-Id: <339b58be7bd3cd1b3ca3310e4a8500d6c8bc1fdf.1502301580.git.arvind.yadav.cs@gmail.com> (sfid-20170809_200333_603526_1F692303)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-08-07 at 12:06 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > Here are some pending mac80211 patches from our internal tree.
-> > 
-> > The "mac80211: add api to start ba session timer expired flow" patch
-> > is needed by an iwlwifi patch that I want to send for -fixes, so it
-> > would have to be applied to -fixes as well.
-> 
-> We are getting to the later stages of the release cycle and I'm raising
-> the bar for wireless-drivers even higher. How serious iwlwifi bug is
-> that fixing?
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-The problem is a bad degradation in throughput with our new 9000 family
-of devices because when aggregation times out we stop the aggregation
-internally in the firmware but don't send a delba.  Then on the AP side,
- also with our driver, we don't handle the timeout as we should, so
-aggregations the devices get out of sync and BA sessions are not
-possible anymore, limiting our throughput to ~30Mbps, in some specific
-internal tests.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/nfc/nfcmrvl/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-> > Should I send a separate patchset with these two so they can be both
-> > applied at the same time (either in the mac80211 or in
-> > wireless-drivers tree)?
-> 
-> Now that Johannes is away and I'm taking any urgent mac80211 patches, I
-> think the best approach is that you include mac80211 patch in the same
-> patchset as the iwlwifi patches destined for wireless-drivers.
-
-Okay, if you think the (one-liner) iwlwifi driver fix is -rc'able, I'll
-resend this in a patchset including both changes.
-
-
---
-Cheers,
-Luca.
+diff --git a/drivers/nfc/nfcmrvl/usb.c b/drivers/nfc/nfcmrvl/usb.c
+index bd35eab..46e11fc 100644
+--- a/drivers/nfc/nfcmrvl/usb.c
++++ b/drivers/nfc/nfcmrvl/usb.c
+@@ -23,7 +23,7 @@
+ #include <net/nfc/nci_core.h>
+ #include "nfcmrvl.h"
+ 
+-static struct usb_device_id nfcmrvl_table[] = {
++static const struct usb_device_id nfcmrvl_table[] = {
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x1286, 0x2046,
+ 					USB_CLASS_VENDOR_SPEC, 4, 1) },
+ 	{ }	/* Terminating entry */
+-- 
+2.7.4
