@@ -1,46 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:34074 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751799AbdHGRtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 13:49:08 -0400
-Subject: Re: [PATCH 03/34] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-4-ian@mnementh.co.uk> <59884E31.8090205@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <ce1fbd40-23a3-fdf7-ec94-cd2a63e7a64d@mnementh.co.uk> (sfid-20170807_194912_568943_BA6186D8)
-Date: Mon, 7 Aug 2017 18:49:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <59884E31.8090205@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from paleale.coelho.fi ([176.9.41.70]:43226 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752415AbdHIHHQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Aug 2017 03:07:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  9 Aug 2017 10:07:05 +0300
+Message-Id: <20170809070706.14862-2-luca@coelho.fi> (sfid-20170809_090722_043128_EE46E451)
+In-Reply-To: <20170809070706.14862-1-luca@coelho.fi>
+References: <20170809070706.14862-1-luca@coelho.fi>
+Subject: [PATCH 1/2] mac80211: add api to start ba session timer expired flow
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/17 12:25, Arend van Spriel wrote:
-> On 26-07-17 22:25, Ian Molton wrote:
->>     This large function is concealing a LOT of obscure logic about
->> how the hardware functions. Time to split it up.
->>
->> This first patch splits the function into two pieces - read and write,
->> doing away with the rw flag in the process.
-> 
-> I really don't this it is all that obscure, but alas. Everything is in
-> the eye of the beholder. The reason for having the helper was to not
-> duplicate code for read and write and different access sizes. So now you
-> are duplicating it. In subsequent patches you throw away pieces of this
-> helper so duplication is not as bad in the net result. It would have
-> been easier if those patches were done before this one.
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-I agree, this is a big and unwieldy patchset - I've attempted to break
-the thing down in such a way that all the steps leading to the end
-result are at least sane. I initially did it all in one hit and it was
-utterly illegible :-(
+Some drivers handle rx buffer reordering internally (and by extension
+handle also the rx ba session timer internally), but do not ofload the
+addba/delba negotiation.
+Add an api for these drivers to properly tear-down the ba session,
+including sending a delba.
 
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h | 15 +++++++++++++++
+ net/mac80211/agg-rx.c  | 22 +++++++++++++++++++++-
+ 2 files changed, 36 insertions(+), 1 deletion(-)
 
-> Fix the indent and column align to opening bracket.
-
-I guess a few of these got through. I blame git rebase :)
-
--Ian
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b2b5419467cc..f8149ca192b4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5499,6 +5499,21 @@ static inline void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
+ 	ieee80211_manage_rx_ba_offl(vif, addr, tid + IEEE80211_NUM_TIDS);
+ }
+ 
++/**
++ * ieee80211_rx_ba_timer_expired - stop a Rx BA session due to timeout
++ *
++ * Some device drivers do not offload AddBa/DelBa negotiation, but handle rx
++ * buffer reording internally, and therefore also handle the session timer.
++ *
++ * Trigger the timeout flow, which sends a DelBa.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback
++ * @addr: station mac address
++ * @tid: the rx tid
++ */
++void ieee80211_rx_ba_timer_expired(struct ieee80211_vif *vif,
++				   const u8 *addr, unsigned int tid);
++
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 8708cbe8af5b..2b36eff5d97e 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -7,7 +7,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015-2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -466,3 +466,23 @@ void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif,
+ 	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL(ieee80211_manage_rx_ba_offl);
++
++void ieee80211_rx_ba_timer_expired(struct ieee80211_vif *vif,
++				   const u8 *addr, unsigned int tid)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	rcu_read_lock();
++	sta = sta_info_get_bss(sdata, addr);
++	if (!sta)
++		goto unlock;
++
++	set_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
++
++ unlock:
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL(ieee80211_rx_ba_timer_expired);
+-- 
+2.13.2
