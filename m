@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45468 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751283AbdHXGAl (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32977 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751456AbdHJMra (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 02:00:41 -0400
-Message-ID: <1503554432.15969.415.camel@coelho.fi> (sfid-20170824_080056_072524_4926F1A1)
-From: Luca Coelho <luca@coelho.fi>
-To: jikos@kernel.org, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linuxwifi@intel.com,
-        rui.zhang@intel.com, edubezval@gmail.com, linux-pm@vger.kernel.org,
-        david.weinehall@intel.com, johannes.berg@intel.com,
-        kvalo@codeaurora.org, sara.sharon@intel.com,
-        emmanuel.grumbach@intel.com
-Date: Thu, 24 Aug 2017 09:00:32 +0300
-In-Reply-To: <20170822073729.4856-1-luca@coelho.fi>
-References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
-         <20170822073729.4856-1-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to
- iwl_trans_pcie_alloc()
+        Thu, 10 Aug 2017 08:47:30 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 2/2] mwifiex: check for NL80211_SCAN_FLAG_RANDOM_ADDR during hidden SSID scan
+Date: Thu, 10 Aug 2017 18:11:26 +0530
+Message-ID: <1502368886-16539-3-git-send-email-gbhat@marvell.com> (sfid-20170810_144732_724713_8AD7D792)
+In-Reply-To: <1502368886-16539-1-git-send-email-gbhat@marvell.com>
+References: <1502368886-16539-1-git-send-email-gbhat@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-08-22 at 10:37 +0300, Luca Coelho wrote:
-> From: Luca Coelho <luciano.coelho@intel.com>
-> 
-> Work queues cannot be allocated when a mutex is held because the mutex
-> may be in use and that would make it sleep.  Doing so generates the
-> following splat with 4.13+:
-> 
-> [   19.513298] ======================================================
-> [   19.513429] WARNING: possible circular locking dependency detected
-> [   19.513557] 4.13.0-rc5+ #6 Not tainted
-> [   19.513638] ------------------------------------------------------
-> [   19.513767] cpuhp/0/12 is trying to acquire lock:
-> [   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
-> [   19.514047]
-> [   19.514047] but task is already holding lock:
-> [   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
-> [   19.514338]
-> [   19.514338] which lock already depends on the new lock.
-> 
-> This lock dependency already existed with previous kernel versions,
-> but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
-> lock stacks for hotplug callbacks") was introduced.
-> 
-> Reported-by: David Weinehall <david.weinehall@intel.com>
-> Reported-by: Jiri Kosina <jikos@kernel.org>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+At the end of user scan request, driver will perform an active
+scan for hidden SSIDs in passive channels. While doing this,
+driver unconditionally adding random_mac in scan command, which
+is no expected. It should add random_mac only if scan_request
+has NL80211_SCAN_FLAG_RANDOM_ADDR flag set.
 
-Jiri, did you have a chance to try this out? I'm about to ask Kalle to
-merge this so it gets in in time for 4.13-rc7.
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 79b4aff..c9d41ed 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1947,7 +1947,8 @@ static void mwifiex_complete_scan(struct mwifiex_private *priv)
+ 	}
+ 
+ 	adapter->active_scan_triggered = true;
+-	ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
++	if (priv->scan_request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR)
++		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
+ 	user_scan_cfg->num_ssids = priv->scan_request->n_ssids;
+ 	user_scan_cfg->ssid_list = priv->scan_request->ssids;
+ 
+-- 
+1.9.1
