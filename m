@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f172.google.com ([209.85.217.172]:35237 "EHLO
-        mail-ua0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752657AbdHBKrV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32953 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751456AbdHJMqY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 06:47:21 -0400
-Received: by mail-ua0-f172.google.com with SMTP id d29so18787453uai.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 03:47:21 -0700 (PDT)
+        Thu, 10 Aug 2017 08:46:24 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 1/2] mwifiex: do not use random MAC for pre-association scanning
+Date: Thu, 10 Aug 2017 18:11:25 +0530
+Message-ID: <1502368886-16539-2-git-send-email-gbhat@marvell.com> (sfid-20170810_144628_013326_0B918513)
+In-Reply-To: <1502368886-16539-1-git-send-email-gbhat@marvell.com>
+References: <1502368886-16539-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87vam6496c.fsf@codeaurora.org>
-References: <20170731111445.GA4844@symbol-HP-ZBook-15> <8af42486-dd0b-bda6-6125-148dc0011115@lwfinger.net>
- <87vam6496c.fsf@codeaurora.org>
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Date: Wed, 2 Aug 2017 16:17:19 +0530
-Message-ID: <CAFqt6zbiOEdOYzMa5a219=ROLv6BpJ9x0gdL3N61f+=_W8oK8w@mail.gmail.com> (sfid-20170802_124724_048600_E442CEC7)
-Subject: Re: [PATCH v4] rtlwifi: Replace hardcode value with macro
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Driver should use random MAC address only if the scan is
+requested by user(provided NL80211_SCAN_FLAG_RANDOM_ADDR
+is set in scan request). It should not be used for a scan
+performed before association.
 
-On Wed, Aug 2, 2017 at 2:51 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> On 07/31/2017 06:14 AM, Souptick Joarder wrote:
->>> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->>> and hw->max_rate_tries are replaced by macro.
->>
->> That is NOT what your patch does. It only removes a comment! Granted,
->> that comment is useless and should come out, but your commit message
->> must be a little more accurate.
->
-> Actually the patch does not even apply, I suspect that Souptick
-> incorrectly used v3 of his patch as the baseline for v4. Instead this v4
-> should be folded with v3.
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Do you mean I should address your comment in v3 and send v3 again
-instead of v4 ?
-
->
-> --
-> Kalle Valo
-
--Souptick
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index d8e8b85..79b4aff 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2790,7 +2790,6 @@ static int mwifiex_scan_specific_ssid(struct mwifiex_private *priv,
+ 	if (!scan_cfg)
+ 		return -ENOMEM;
+ 
+-	ether_addr_copy(scan_cfg->random_mac, priv->random_mac);
+ 	scan_cfg->ssid_list = req_ssid;
+ 	scan_cfg->num_ssids = 1;
+ 
+-- 
+1.9.1
