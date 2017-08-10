@@ -1,54 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51369 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47612 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751940AbdHCLe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 07:34:28 -0400
-Date: Thu, 3 Aug 2017 13:34:25 +0200 (CEST)
-From: Jiri Kosina <jikos@kernel.org>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "Zhang, Rui" <rui.zhang@intel.com>,
-        "edubezval@gmail.com" <edubezval@gmail.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "Weinehall, David" <david.weinehall@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Sharon, Sara" <sara.sharon@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [linuxwifi] x86/thermal: AB-BA dependency between mvm->mutex
- and tz->lock
-In-Reply-To: <1501759724.15969.49.camel@intel.com>
-Message-ID: <alpine.LSU.2.20.1708031330570.30597@cbobk.fhfr.pm> (sfid-20170803_133441_875744_6CD89E95)
-References: <alpine.LSU.2.20.1707311300440.4705@cbobk.fhfr.pm>  <alpine.LSU.2.20.1708031107230.30597@cbobk.fhfr.pm>  <1501753405.15969.43.camel@intel.com>  <87vam5nf4w.fsf@kamboji.qca.qualcomm.com> <1501759724.15969.49.camel@intel.com>
+        id S1752827AbdHJTnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Aug 2017 15:43:05 -0400
+Date: Thu, 10 Aug 2017 21:43:01 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Lennart Poettering <lennart@poettering.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Li@suse.de,
+        Yi <yi1.li@linux.intel.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        AKASHI Takahiro <takahiro.akashi@linaro.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170810194301.GV27873@wotan.suse.de> (sfid-20170810_214341_608213_EE7634B4)
+References: <0fd90416-f33c-a6be-14fd-5e964583e9cb@broadcom.com>
+ <20170515231339.GF17314@wotan.suse.de>
+ <0c43c825-df2a-b427-4b67-f17fd644667f@broadcom.com>
+ <20170623215319.GU21846@wotan.suse.de>
+ <a956b366-95d9-e876-4dba-149d2987633a@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a956b366-95d9-e876-4dba-149d2987633a@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 3 Aug 2017, Coelho, Luciano wrote:
+On Fri, Jun 30, 2017 at 11:35:41PM +0200, Arend van Spriel wrote:
+> On 23-06-17 23:53, Luis R. Rodriguez wrote:
+> > On Tue, May 16, 2017 at 10:41:08AM +0200, Arend Van Spriel wrote:
+> >> On 16-5-2017 1:13, Luis R. Rodriguez wrote:
+> >>> Since no upstream delta is needed for firmwared I'd like to first encourage
+> >>> evaluating the above. While distributions don't carry it yet that may be seen as
+> >>> an issue but since what we are looking for are corner cases, only folks needing
+> >>> to deploy a specific solution would need it or a custom proprietary solution.
+> >>
+> >> Ok. I will go try and run firmwared in OpenWrt on a router platform.
+> >> Have to steal one from a colleague :-p Will study firmwared.
+> > 
+> > Arend, curious how this effort goes. Its important to me as we know then that
+> > if this works its a good approach to recommend moving forward which should also
+> > prove less complex than that soup we had with the custom fallback stuff.
+> 
+> Hi Luis,
+> 
+> So I looked at firmwared and we basically need to extend it.
 
-> Okay, so as I understand it the problem has been there for a long time,
-> but the splat is only coming up now because of Thomas' patch that adds
-> the lockdep map[1], right?
+And actually as me and Johannes spoke long ago at Plumbers, its rather
+expected folks would need this or just fork it off completely. firmwared
+would just be a reference codebase on how to do these custom loaders.
 
-Yeah, sorry, forgot to mention that pre-49dfe2a67797 kernels wouldn't 
-produce this, as there would not be aware of the fact that 
-cpus_read_lock() is actually semantically a lock.
+*How regular* Linux distributions embrace this is still up in the air then,
+because as Lennart has pointed out there is no plan to merge firmwared
+to systemd.
 
-> I see the workqueue allocation you mentioned.  I'll try to move this 
-> allocation out of the mutex and see how it goes.
+*If* this is a requirement only for non-upstream drivers or patches on
+which will not be merged upstream then this will work long term. If you
+need regular distros to do something custom then their respective upstream
+tools would need to be evaluated for how something similar would be done.
 
-I have been briefly looking into this as well -- it'll basically have to 
-be moved out of the trans_pcie->mutex context, but
+As far as I can tell perhaps the remote-proc thing would count as one
+possible use-case for upstream drivers -- but even then the systems
+that use it seem likely to use Android and then some custom userspace.
 
-(a) I'm not sure whether that's actually safe
-(b) iwl_pcie_rx_reuse_rbd() (which is where corresponding work is being 
-    queued) is not a proper context either (it's atomic context)
+> For our
+> router platform we need to obtain nvram calibration data from an MTD
+> partition which contains the raw data, ie. no file-system on it. So
+> firmwared would need some sort of configuration to map a particular
+> firmware file to some action obtaining the data like kicking off some
+> mtd-utils in my case.
 
-Thanks,
+I see. So platform specific.
 
--- 
-Jiri Kosina
-SUSE Labs
+Thanks for the update!
+ 
+ Luis
