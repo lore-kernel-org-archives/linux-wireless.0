@@ -1,127 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35294 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932205AbdHVJ3i (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35924 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbdHJHqZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 05:29:38 -0400
-Date: Tue, 22 Aug 2017 14:59:31 +0530
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: Matteo Croce <mcroce@redhat.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvalo@codeaurora.org
-Subject: Re: [PATCH] drivers: net: wireless: atmel: check memory allocation
- failure
-Message-ID: <20170822092931.GA8490@himanshu-Vostro-3559> (sfid-20170822_112958_507361_FDE15130)
-References: <1503389481-4988-1-git-send-email-himanshujha199640@gmail.com>
- <1503391305.2409.12.camel@redhat.com>
+        Thu, 10 Aug 2017 03:46:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Reizer\, Eyal" <eyalr@ti.com>
+Cc: Tony Lindgren <tony@atomide.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel\@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
+References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
+        <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
+        <20170809172651.GA3934@atomide.com>
+        <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
+        <20170809211620.GF3934@atomide.com>
+        <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
+Date: Thu, 10 Aug 2017 10:46:19 +0300
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
+        (Eyal Reizer's message of "Thu, 10 Aug 2017 06:35:46 +0000")
+Message-ID: <87r2wjeugk.fsf@codeaurora.org> (sfid-20170810_094638_832801_8AF3AAC4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503391305.2409.12.camel@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 22, 2017 at 10:41:45AM +0200, Matteo Croce wrote:
-> Il giorno mar, 22/08/2017 alle 13.41 +0530, Himanshu Jha ha scritto:
-> > Check memory allocation failure and return -ENOMEM if failure
-> > occurs.
-> > 
-> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> > ---
-> >  drivers/net/wireless/atmel/at76c50x-usb.c | 14 +++++++-------
-> >  1 file changed, 7 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c
-> > b/drivers/net/wireless/atmel/at76c50x-usb.c
-> > index 09defbc..73f0924 100644
-> > --- a/drivers/net/wireless/atmel/at76c50x-usb.c
-> > +++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-> > @@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct
-> > at76_priv *priv)
-> >  					 GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
-> >  			   sizeof(struct mib_mac_addr));
-> > @@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct
-> > at76_priv *priv)
-> >  	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep),
-> > GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
-> >  			   sizeof(struct mib_mac_wep));
-> > @@ -1006,7 +1006,7 @@ static void at76_dump_mib_mac_mgmt(struct
-> > at76_priv *priv)
-> >  					 GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
-> >  			   sizeof(struct mib_mac_mgmt));
-> > @@ -1043,7 +1043,7 @@ static void at76_dump_mib_mac(struct at76_priv
-> > *priv)
-> >  	struct mib_mac *m = kmalloc(sizeof(struct mib_mac),
-> > GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct
-> > mib_mac));
-> >  	if (ret < 0) {
-> > @@ -1080,7 +1080,7 @@ static void at76_dump_mib_phy(struct at76_priv
-> > *priv)
-> >  	struct mib_phy *m = kmalloc(sizeof(struct mib_phy),
-> > GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct
-> > mib_phy));
-> >  	if (ret < 0) {
-> > @@ -1113,7 +1113,7 @@ static void at76_dump_mib_local(struct
-> > at76_priv *priv)
-> >  	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
-> >  	if (ret < 0) {
-> > @@ -1138,7 +1138,7 @@ static void at76_dump_mib_mdomain(struct
-> > at76_priv *priv)
-> >  	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain),
-> > GFP_KERNEL);
-> >  
-> >  	if (!m)
-> > -		return;
-> > +		return -ENOMEM;
-> >  
-> >  	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
-> >  			   sizeof(struct mib_mdomain));
-> 
-> Perhaps these functions should return something instead of being void.
-> 
-> Regards,
-> 
-> -- 
-> Matteo Croce
-> per aspera ad upstream
+"Reizer, Eyal" <eyalr@ti.com> writes:
 
-Yes, it should return int to signal memory allocation failures and
-therefore function prototype should be static int rather than static
-void.
+>> The fact that is old does not change a thing, we still need to
+>> support it no matter what the data sheet and your system design
+>> says. A fix that breaks other things is not really a fix :)
+>> 
+>
+> Sure, just want to make sure we are not trying to add work around just for
+> A couple of faulty devices.
+>
+>> > I have verified using a couple of com6 modules with an am335x-evm and
+>> they had mac addresses read ok.
+>> 
+>> Sounds like there are multiple variants of the wl12xx
+>> available then.
+>> 
+> I am trying to find out internally if there is a possibility that there were devices
+> Produced in the past where the internal fuses were not programmed with a valid 
+> Address before being assembled into the modules.
 
-Thanks!
+Just a general remark, based on my past experience, you can't really
+know what hardware is out there, no matter how someone in the company
+claims otherwise. Uncalibrated devices, prototypes and calibration data
+broken are all possible and better be preparared for that in the driver.
+
+It's a good idea at least to detect and print a proper error message if
+the calibration data is broken. But if the data on the device only
+consists of MAC address and nothing else, then I guess using a random
+address is fine.
+
+-- 
+Kalle Valo
