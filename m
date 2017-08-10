@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35249 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753163AbdHGLZj (ORCPT
+Received: from mail-it0-f53.google.com ([209.85.214.53]:38308 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751914AbdHJPTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 07:25:39 -0400
-Received: by mail-wm0-f52.google.com with SMTP id m85so4685556wma.0
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:25:38 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 03/34] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-4-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-Message-ID: <59884E31.8090205@broadcom.com> (sfid-20170807_132542_103183_BE875CFF)
-Date: Mon, 7 Aug 2017 13:25:37 +0200
+        Thu, 10 Aug 2017 11:19:21 -0400
+Received: by mail-it0-f53.google.com with SMTP id m34so14521747iti.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Aug 2017 08:19:21 -0700 (PDT)
+Date: Thu, 10 Aug 2017 10:19:19 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Vasiliy Safronov <vvsprog@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: Update regulatory rules for Kazakhstan (KZ) on 5GHz
+Message-ID: <20170810151919.lnsserhjcw2xrgy2@ubuntu-hedt> (sfid-20170810_171945_415955_CE50439A)
+References: <CALfe80gmDFDnvT=MvN8891wudBEAmeQpH1X1_wNzQpkhbLSOVQ@mail.gmail.com>
+ <20170703175055.tnnweqg2uyyw2rnc@ubuntu-xps13>
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-4-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170703175055.tnnweqg2uyyw2rnc@ubuntu-xps13>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-07-17 22:25, Ian Molton wrote:
-> 	This large function is concealing a LOT of obscure logic about
-> how the hardware functions. Time to split it up.
->
-> This first patch splits the function into two pieces - read and write,
-> doing away with the rw flag in the process.
+On Mon, Jul 03, 2017 at 12:50:55PM -0500, Seth Forshee wrote:
+> On Mon, Jun 26, 2017 at 10:00:13AM +0600, Vasiliy Safronov wrote:
+> > Please add support 5ghz for Kazakhstan.
+> > In Kazakhstan there are no restrictions up to 100mW
+> > country KZ: DFS-ETSI
+> >  (2402 - 2482 @ 40), (20)
+> >  (5170 - 5250 @ 80), (20), AUTO-BW
+> >  (5250 - 5330 @ 80), (20), DFS, AUTO-BW
+> >  (5650 - 5730 @ 80), (30), DFS
+> >  (5735 - 5835 @ 80), (30)
+> > 
+> > http://adilet.zan.kz/rus/docs/P000001379_
+> > S 5.282 etc
+> 
+> Thanks for the submission, and apologies for the slow response. I've
+> been trying to find some time to validate the changes against the
+> document you linked to but haven't managed to get it done yet. I hope to
+> be able to take a look at this soon.
 
-I really don't this it is all that obscure, but alas. Everything is in
-the eye of the beholder. The reason for having the helper was to not
-duplicate code for read and write and different access sizes. So now you
-are duplicating it. In subsequent patches you throw away pieces of this
-helper so duplication is not as bad in the net result. It would have
-been easier if those patches were done before this one.
+Once again sorry for the delay.
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+I've spent some time trying to look over the document (rather a Google
+translation of the document to English). I'm not confident I understand
+it completely, and I'm also not entirely confident of the values you
+provided. If you could explain how you arrived at those values and
+answer some questions it might help.
 
-some minor comment below
+The document has two tables for each band. The first table seems to be
+the ITU regulations for the band in all three regions, and the second is
+specific to Kazakhstan. If I rely on the latter then I must conclude
+that the 5 GHz band shouldn't be included. Am I misinterpreting
+something?
 
-> ---
->  .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
->  1 file changed, 73 insertions(+), 21 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index 2b441ce91d5f..1ee0f91b6c50 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
->  	return ret;
->  }
->
-> -static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
-> -				   u8 regsz, void *data, bool write)
-> +static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
-> +				 u8 regsz, void *data)
+I also haven't been able to determine the basis for your power limits,
+can you plese specify where these came from?
 
-Fix the indent and column align to opening bracket.
-
-Regards,
-Arend
+Thanks,
+Seth
