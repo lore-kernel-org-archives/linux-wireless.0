@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:37722 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752105AbdHHQAd (ORCPT
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:36006 "EHLO
+        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbdHJHwZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:00:33 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, petkan@nucleusys.com, chunkeey@googlemail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 19/35] wireless: ath: carl9170: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:30:05 +0530
-Message-Id: <1502208005-11795-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180115_122199_7F2105A3)
+        Thu, 10 Aug 2017 03:52:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
+References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
+ <20170809172651.GA3934@atomide.com> <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
+ <20170809211620.GF3934@atomide.com> <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 10 Aug 2017 17:52:04 +1000
+Message-ID: <CAGRGNgW5Q3J1wL7Moc9vLJuRmOK3ZVr_gJfNqYPeU5BoeRuXtw@mail.gmail.com> (sfid-20170810_095238_898330_69212FBA)
+Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Tony Lindgren <tony@atomide.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+Hi Eyal,
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/ath/carl9170/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thu, Aug 10, 2017 at 4:35 PM, Reizer, Eyal <eyalr@ti.com> wrote:
+>> >
+>> > Sorry for top posting (mobile...)
+>> > I have verified with system design and the data sheet that every wilink 6/7
+>> chip has a mac address in fuse so probably the board you have (pretty old,
+>> right?) has this mac address in fuse. Maybe it was from very early batches?
+>> Anyway I see no reason to change it.
+>> > Anyway the calibrator can be used to store a different one into the nvs file
+>> that will overide it.
+>>
+>> Well clearly at least this one does not have any valid hardware
+>> mac address, the hardware mac address is broken with all zeroes.
+>>
+>
+> Looks like it is not really all zeros but rather 00:00:00:00:00:01.
+> I wonder if it is just a one board issue or not...
 
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index 99ab203..e7c3f3b 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -64,7 +64,7 @@ MODULE_ALIAS("arusb_lnx");
-  * http://wireless.kernel.org/en/users/Drivers/ar9170/devices ),
-  * whenever you add a new device.
-  */
--static struct usb_device_id carl9170_usb_ids[] = {
-+static const struct usb_device_id carl9170_usb_ids[] = {
- 	/* Atheros 9170 */
- 	{ USB_DEVICE(0x0cf3, 0x9170) },
- 	/* Atheros TG121N */
+It's 00:00:00:00:00:01 because your code adds 1 to it.
+
+Thanks,
+
 -- 
-2.7.4
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
