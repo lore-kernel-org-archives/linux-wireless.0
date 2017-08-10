@@ -1,76 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:33432 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753232AbdHOHuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 03:50:01 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "imitsyanko@quantenna.com" <imitsyanko@quantenna.com>,
-        "avinashp@quantenna.com" <avinashp@quantenna.com>,
-        "smatyukevich@quantenna.com" <smatyukevich@quantenna.com>,
-        "jouni@qca.qualcomm.com" <jouni@qca.qualcomm.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
-Date: Tue, 15 Aug 2017 07:49:56 +0000
-Message-ID: <1502783395.8162.5.camel@intel.com> (sfid-20170815_095005_163030_4C9A4CDC)
-References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
-         <87lgmmt6l7.fsf@purkki.adurom.net> <1502734400.3282.4.camel@intel.com>
-         <8760dpb8se.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8760dpb8se.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32919 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751456AbdHJMpD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Aug 2017 08:45:03 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 0/2] Avoid unnecessary usage of random_mac
+Date: Thu, 10 Aug 2017 18:11:24 +0530
+Message-ID: <1502368886-16539-1-git-send-email-gbhat@marvell.com> (sfid-20170810_144506_654376_182A0A77)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTA4LTE1IGF0IDEwOjE2ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiAi
-R3J1bWJhY2gsIEVtbWFudWVsIiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cml0ZXM6
-DQo+IA0KPiA+IE9uIE1vbiwgMjAxNy0wOC0xNCBhdCAyMDoxNCArMDMwMCwgS2FsbGUgVmFsbyB3
-cm90ZToNCj4gPiA+IEVtbWFudWVsIEdydW1iYWNoIDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5j
-b20+IHdyaXRlczoNCj4gPiA+IA0KPiA+ID4gPiBVc2VyIHNwYWNlIGNhbiBub3cgYWxsb3cgdGhl
-IGtlcm5lbCB0byBhc3NvY2lhdGUgdG8gYW4gQVANCj4gPiA+ID4gdGhhdCByZXF1aXJlcyBNRlAg
-b3IgdGhhdCBkb2Vzbid0IGhhdmUgTUZQIGVuYWJsZWQgaW4gdGhlDQo+ID4gPiA+IHNhbWUgTkw4
-MDIxMV9DTURfQ09OTkVDVCBjb21tYW5kLg0KPiA+ID4gPiBUaGUgZHJpdmVyIC8gZmlybXdhcmUg
-d2lsbCBkZWNpZGUgd2hldGhlciB0byB1c2UgaXQgb3Igbm90Lg0KPiA+ID4gPiANCj4gPiA+ID4g
-U2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVs
-LmNvbT4NCj4gDQo+IFsuLi5dDQo+IA0KPiA+ID4gPiAtLS0gYS9uZXQvd2lyZWxlc3Mvbmw4MDIx
-MS5jDQo+ID4gPiA+ICsrKyBiL25ldC93aXJlbGVzcy9ubDgwMjExLmMNCj4gPiA+ID4gQEAgLTkx
-MTUsNiArOTExNSw3IEBAIHN0YXRpYyBpbnQgbmw4MDIxMV9jb25uZWN0KHN0cnVjdCBza19idWZm
-DQo+ID4gPiA+ICpza2IsIHN0cnVjdCBnZW5sX2luZm8gKmluZm8pDQo+ID4gPiA+IMKgCWlmIChp
-bmZvLT5hdHRyc1tOTDgwMjExX0FUVFJfVVNFX01GUF0pIHsNCj4gPiA+ID4gwqAJCWNvbm5lY3Qu
-bWZwID0gbmxhX2dldF91MzIoaW5mby0NCj4gPiA+ID4gPiBhdHRyc1tOTDgwMjExX0FUVFJfVVNF
-X01GUF0pOw0KPiA+ID4gPiANCj4gPiA+ID4gwqAJCWlmIChjb25uZWN0Lm1mcCAhPSBOTDgwMjEx
-X01GUF9SRVFVSVJFRCAmJg0KPiA+ID4gPiArCQnCoMKgwqDCoGNvbm5lY3QubWZwICE9IE5MODAy
-MTFfTUZQX09QVElPTkFMICYmDQo+ID4gPiA+IMKgCQnCoMKgwqDCoGNvbm5lY3QubWZwICE9IE5M
-ODAyMTFfTUZQX05PKQ0KPiA+ID4gPiDCoAkJCXJldHVybiAtRUlOVkFMOw0KPiA+ID4gPiDCoAl9
-IGVsc2Ugew0KPiA+ID4gDQo+ID4gPiBJIGd1ZXNzIEknbSBtaXNzaW5nIHNvbWV0aGluZywgYnV0
-IGhvdyBpcyBiYWNrd2FyZHMgY29tcGF0aWJpbGl0eQ0KPiA+ID4gc3VwcG9zZWQgdG8gd29yayBm
-cm9tIHVzZXIgc3BhY2UgcG9pbnQgb2Ygdmlldz8gSWYgdXNlciBzcGFjZQ0KPiA+ID4gdXNlcw0K
-PiA+ID4gTkw4MDIxMV9NRlBfT1BUSU9OQUwgd2l0aCBhbiBvbGQga2VybmVsLCB0aGUga2VybmVs
-IHdpbGwgcmVqZWN0DQo+ID4gPiB0aGUNCj4gPiA+IGNvbW1hbmQgd2l0aCAtRUlOVkFMIGFuZCB1
-c2VyIHNwYWNlIHdpbGwgdHJ5IGFnYWluIHdpdGhvdXQNCj4gPiA+IE5MODAyMTFfTUZQX09QVElP
-TkFMPw0KPiA+IA0KPiA+IE5vIHlvdSBhcmUgbm90LiBJIHNpbXBseSBmb3Jnb3QgdGhhdCBwb2lu
-dC4gSSBndWVzcyB0aGF0IHRoaXMgd291bGQNCj4gPiBiZQ0KPiA+IHRoZSBiZWhhdmlvciwgeWVz
-Li4uDQo+IA0KPiBJIGRvbid0IHRoaW5rIHRoYXQncyB2ZXJ5IHJvYnVzdC4gSG93IHdvdWxkIHVz
-ZXIgc3BhY2UNCj4gKHdwYXN1cHBsaWNhbnQpDQo+IGtub3cgaWYgdGhlIHRoZSBFSU5WQUwgaXMg
-YmVjYXVzZSBOTDgwMjExX01GUF9PUFRJT05BTCBpcyBub3QNCj4gc3VwcG9ydGVkDQo+IGJ5IHRo
-ZSBrZXJuZWwgb3IgYmVjYXVzZSBvZiBzb21lIG90aGVyIGVycm9yPw0KDQpJIGhlYXIsIEkgaGVh
-ci4gVGhpcyBpcyBub3QgYW4gb3B0aW9uLCB5b3UgYXJlIHJpZ2h0Lg0KDQo+IA0KPiA+IFRoaXMg
-aXMgcmVsZXZhbnQgZm9yIGFwX3NjYW49MiB3cGFfcyBjb25maWd1cmF0aW9uIG9ubHkgd2hpY2gg
-bWFrZXMNCj4gPiBpdA0KPiA+IG5vdCByZWFsbHkgY29tbW9uLCBidXQgc3RpbGwsIHlvdSBhcmUg
-cmlnaHQuIE5vdCBzdXJlIGhvdyBlYXN5IGl0DQo+ID4gd2lsbA0KPiA+IGJlIHRvIHdyaXRlIHRo
-aXMgbG9naWMgaW4gdGhlIHN1cHBsaWNhbnQgdGhvdWdoLi4uIFVubGVzcyB3ZSBhZGQgYW4NCj4g
-PiBubDgwMjExIGZlYXR1cmUgYml0IGJ1dCBJIGZlZWwgaXQnZCBiZSBhIGJpdCBvZiBhIHdhc3Rl
-Lg0KPiANCj4gSSBkb24ndCBmZWVsIHRoYXQgYWRkaW5nIGEgZmVhdHVyZSBiaXQgaXMgd2FzdGUs
-IEkgcmF0aGVyIHVzZSBhDQo+IGZlYXR1cmUNCj4gZmxhZyB0aGFuIG1ha2luZyB1Z2x5IGhhY2tz
-IHRvIHVzZXIgc3BhY2UuIEJ1dCBvZiBjb3Vyc2UgdGhpcyBpcyB1cA0KPiB0bw0KPiBKb3VuaSBh
-bmQgSm9oYW5uZXMuDQoNCk15IGxhdGVzdCBwb2ludCBpcyB0aGF0IGl0IHdvdWxkbid0IGhlbHAg
-c2luY2UgdGhlIHVzZWZ1bCB1c2FnZSB3YXMNCndpdGggYXBfc2Nhbj0yIGluIHdoaWNoIHdwYV9z
-dXBwbGljYW50IGNhbid0IHJlYWxseSBrbm93IHdoYXQgdG8gcHV0DQp0aGVyZS4gT3IuLi4gTm8u
-IEl0IF9jYW5fIHdvcmsuIFRoZSB1c2VyIHdvdWxkIGNvbmZpZ3VyZSBwbWY9b3B0aW9uYWwNCmlu
-IHRoZSB3cGFfc3VwcGxpY2FudCBjb25maWd1cmF0aW9uLCBhbmQgd3BhX3N1cHBsaWNhbnQgY2Fu
-IGNoZWNrIGlmDQp0aGF0IHRoZSB1bmRlcmx5aW5nIGtlcm5lbCBzdXBwb3J0cyBpdCB3aXRoIHRo
-ZSBoZWxwIG9mIHRoZSBmZWF0dXJlDQpmbGFnLg0KU2luY2UgdGhlIHBtZj1vcHRpb25hbCBjb25m
-aWd1cmF0aW9uIGluIHdwYV9zdXBwbGljYW50IHdpbGwgY29tZSBmcm9tDQp0aGUgdXNlciAodGhh
-dCBjb25maWd1cmVzIHRoZSBuZXR3b3JrIGluc2lkZSB3cGFfc3VwcGxpY2FudCksDQp3cGFfc3Vw
-cGxpY2FudCBjYW4gZG8gdGhpcyBjaGVjay4NCg0KSSdsbCBhZGQgdGhpcy4=
+This patch series addresses unnecessary usage of random_mac from
+user scan_request.
+
+Ganapathi Bhat (2):
+  mwifiex: do not use random MAC for pre-association scanning
+  mwifiex: check for NL80211_SCAN_FLAG_RANDOM_ADDR during hidden SSID
+    scan
+
+ drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+-- 
+1.9.1
