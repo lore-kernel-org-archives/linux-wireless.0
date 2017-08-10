@@ -1,42 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:55906 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751533AbdHSUSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Aug 2017 16:18:13 -0400
-Subject: Re: [PATCH 09/34] brcmfmac: Remove noisy debugging.
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-10-ian@mnementh.co.uk> <59884E5C.1050007@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <bbe0840d-c847-82b4-17fa-541a720842e6@mnementh.co.uk> (sfid-20170819_221822_230410_39FF47DB)
-Date: Sat, 19 Aug 2017 21:18:11 +0100
+Received: from mx2.suse.de ([195.135.220.15]:39100 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753045AbdHJRHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Aug 2017 13:07:41 -0400
+Date: Thu, 10 Aug 2017 19:07:38 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "mcgrof@kernel.org" <mcgrof@kernel.org>,
+        "pieter-paul.giesberts@broadcom.com"
+        <pieter-paul.giesberts@broadcom.com>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "keescook@chromium.org" <keescook@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "alan@linux.intel.com" <alan@linux.intel.com>,
+        "moritz.fischer@ettus.com" <moritz.fischer@ettus.com>,
+        "pjones@redhat.com" <pjones@redhat.com>,
+        "wagi@monom.org" <wagi@monom.org>,
+        "pmladek@suse.com" <pmladek@suse.com>,
+        "atull@kernel.org" <atull@kernel.org>,
+        "yi1.li@linux.intel.com" <yi1.li@linux.intel.com>,
+        "wright.feng@cypress.com" <wright.feng@cypress.com>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "takahiro.akashi@linaro.org" <takahiro.akashi@linaro.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "hdegoede@redhat.com" <hdegoede@redhat.com>,
+        "rafal@milecki.pl" <rafal@milecki.pl>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "tytso@mit.edu" <tytso@mit.edu>,
+        "dhowells@redhat.com" <dhowells@redhat.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "chi-hsien.lin@cypress.com" <chi-hsien.lin@cypress.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "franky.lin@broadcom.com" <franky.lin@broadcom.com>
+Subject: Re: [PATCH V5 1/2] firmware: add more flexible
+ request_firmware_async function
+Message-ID: <20170810170738.GD27873@wotan.suse.de> (sfid-20170810_190755_244238_58D53396)
+References: <20170731150945.8925-1-zajec5@gmail.com>
+ <20170802213010.GM18884@wotan.suse.de>
+ <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
+ <1501739717.15969.26.camel@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <59884E5C.1050007@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1501739717.15969.26.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/17 12:26, Arend van Spriel wrote:
+On Thu, Aug 03, 2017 at 05:55:18AM +0000, Coelho, Luciano wrote:
+> On Thu, 2017-08-03 at 08:23 +0300, Kalle Valo wrote:
+> > "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+> > 
+> > > > +int request_firmware_nowait(struct module *module, bool uevent,
+> > > > +			    const char *name, struct device *device, gfp_t gfp,
+> > > > +			    void *context,
+> > > > +			    void (*cont)(const struct firmware *fw, void *context))
+> > > > +{
+> > > > +	unsigned int opt_flags = FW_OPT_FALLBACK |
+> > > > +		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+> > > > +
+> > > > +	return __request_firmware_nowait(module, opt_flags, name, device, gfp,
+> > > > +					 context, cont);
+> > > > +}
+> > > >  EXPORT_SYMBOL(request_firmware_nowait);
+> > > >  
+> > > > +int __request_firmware_async(struct module *module, const char *name,
+> > > > +			     struct firmware_opts *fw_opts, struct device *dev,
+> > > > +			     void *context,
+> > > > +			     void (*cont)(const struct firmware *fw, void *context))
+> > > > +{
+> > > > +	unsigned int opt_flags = FW_OPT_UEVENT;
+> > > 
+> > > This exposes a long issue. Think -- why do we want this enabled by default? Its
+> > > actually because even though the fallback stuff is optional and can be, the uevent
+> > > internal flag *also* provides caching support as a side consequence only. We
+> > > don't want to add a new API without first cleaning up that mess.
+> > > 
+> > > This is a slipery slope and best to clean that up before adding any new API.
+> > > 
+> > > That and also Greg recently stated he would like to see at least 3 users of
+> > > a feature before adding it. Although I think that's pretty arbitrary, and
+> > > considering that request_firmware_into_buf() only has *one* user -- its what
+> > > he wishes.
+> > 
+> > ath10k at least needs a way to silence the warning for missing firmware
+> > and I think iwlwifi also.
 > 
-> Needing this debugging does not necessarily means you are doing
-> something wrong. You may be dealing with hardware that is doing
-> something wrong and when that happens this debug can be useful. I
-> frankly hardly ever enable SDIO debug level unless I am in that
-> scenario. Maybe adding a debug level for low-level access would be
-> useful to reduce the noise for SDIO debug level.
+> Yes, iwlwifi needs to silence the warning.  It the feature (only one,
+> really) that I've been waiting for.
 
-Perhaps, but its only actually called from a half dozen or so places in
-the code + the buscore_*32 entrypoints.
+Luca,
 
-All it actually does now is ensure the address window is right and call
-the Linux SDIO core readl method. if we can't trust that, we're kinda
-screwed anyway. If we later bring the SDIO code in line with the PCIe
-code, it wont even do the address window checking (it'll just assume its
-already correct).
+can you confirm? The API revision thing is one thing but as I noted to
+Kalle that can be done using a different API scheme as I had proposed on
+the driver data API.
 
-We can always enable the SDIO core lowlevel debug if we really want to
-see register level acceses.
+Other than that are there specific firmware requests which are async which
+are not API revision style (min...max) for which an async request is optional?
 
--Ian
+ Luis
