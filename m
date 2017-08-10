@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0047.outbound.protection.outlook.com ([104.47.42.47]:25312
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750761AbdH3Uwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 16:52:32 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com
-Subject: [PATCH] nl80211: look for HT/VHT capabilities in beacon's tail
-Date: Wed, 30 Aug 2017 13:52:25 -0700
-Message-Id: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com> (sfid-20170830_225237_473549_D1647CAE)
+Received: from smtp.codeaurora.org ([198.145.29.96]:46886 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751391AbdHJI5U (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Aug 2017 04:57:20 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2,01/20] ar5523: constify usb_device_id
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1502295823-20824-2-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502295823-20824-2-git-send-email-arvind.yadav.cs@gmail.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: petkan@nucleusys.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Message-Id: <20170810085720.2830F60132@smtp.codeaurora.org> (sfid-20170810_105739_432990_C69789EF)
+Date: Thu, 10 Aug 2017 08:57:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
 
-There are no HT/VHT capabilities in cfg80211_ap_settings::beacon_ies,
-these should be looked for in beacon's tail instead.
+> usb_device_id are not supposed to change at runtime. All functions
+> working with usb_device_id provided by <linux/usb.h> work with
+> const usb_device_id. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
+17 patches applied to wireless-drivers-next.git, thanks.
 
-This is true for hostapd (at least the one in mainline): it does not
-include HT/VHT caps and WLAN_EID_SUPP_RATES into beacon_ies.
-But worth noting that there is no clear documentation that I could find
-on what IEs could and could not be included into beacon_ies.
+c5c60b2d577e ar5523: constify usb_device_id
+76f6a5c80a4b carl9170: constify usb_device_id
+22796d149229 at76c50x: constify usb_device_id
+c4291319b6fe orinoco: constify usb_device_id
+54c9f21605d8 p54: constify usb_device_id
+3673c417f509 libertas: constify usb_device_id
+8a3132fa6bbb libertas_tf: constify usb_device_id
+7516dbd470e3 mwifiex: constify usb_device_id
+e2717b312750 mt7601u: constify usb_device_id
+88ee79a1a11c rt2500usb: constify usb_device_id
+c7bb7d79cf4f rt2800usb: constify usb_device_id
+543e4f87508b rt73usb: constify usb_device_id
+e0b081b20523 rtl8187: constify usb_device_id
+5033d70de169 rtl8xxxu: constify usb_device_id
+3a55a4afd187 rtl8192cu: constify usb_device_id
+b924ffd7a4cd zd1201: constify usb_device_id
+ecf23a788e13 zd1211rw: constify usb_device_id
 
- net/wireless/nl80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8ce8542..0df8023 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3791,8 +3791,8 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
- static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
- {
- 	const struct cfg80211_beacon_data *bcn = &params->beacon;
--	size_t ies_len = bcn->beacon_ies_len;
--	const u8 *ies = bcn->beacon_ies;
-+	size_t ies_len = bcn->tail_len;
-+	const u8 *ies = bcn->tail;
- 	const u8 *rates;
- 	const u8 *cap;
- 
 -- 
-2.9.5
+https://patchwork.kernel.org/patch/9890989/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
