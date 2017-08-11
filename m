@@ -1,89 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43166 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751506AbdH3Qtj (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36848 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750815AbdHKFYU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:49:39 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [2/2] rsi: update some comments
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170825084037.gxgsieknkb5hxdfs@mwanda>
-References: <20170825084037.gxgsieknkb5hxdfs@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20170830164938.CBEEF60209@smtp.codeaurora.org> (sfid-20170830_184943_135055_FAC18E41)
-Date: Wed, 30 Aug 2017 16:49:38 +0000 (UTC)
+        Fri, 11 Aug 2017 01:24:20 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com, wsa-dev@sang-engineering.com
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 06/20] brcm80211: constify usb_device_id
+Date: Fri, 11 Aug 2017 10:53:50 +0530
+Message-Id: <ff83342cc9413d79ba18e05b2cb0b53bff338b2f.1502428689.git.arvind.yadav.cs@gmail.com> (sfid-20170811_072441_216244_CC3A8EB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+usb_device_id are not supposed to change at runtime. All functions
+working with usb_device_id provided by <linux/usb.h> work with
+const usb_device_id. So mark the non-const structs as const.
 
-> These functions don't return -1 on failure.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> index 25331aa16e8e..e78e87e99804 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> @@ -754,7 +754,7 @@ static int rsi_mac80211_conf_tx(struct ieee80211_hw *hw,
->   * @vif: Pointer to the ieee80211_vif structure.
->   * @key: Pointer to the ieee80211_key_conf structure.
->   *
-> - * Return: status: 0 on success, -1 on failure.
-> + * Return: status: 0 on success, negative error codes on failure.
->   */
->  static int rsi_hal_key_config(struct ieee80211_hw *hw,
->  			      struct ieee80211_vif *vif,
-> @@ -1194,7 +1194,7 @@ static void rsi_set_min_rate(struct ieee80211_hw *hw,
->   * @vif: Pointer to the ieee80211_vif structure.
->   * @sta: Pointer to the ieee80211_sta structure.
->   *
-> - * Return: 0 on success, -1 on failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
->  				struct ieee80211_vif *vif,
-> @@ -1306,7 +1306,7 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
->   * @vif: Pointer to the ieee80211_vif structure.
->   * @sta: Pointer to the ieee80211_sta structure.
->   *
-> - * Return: 0 on success, -1 on failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
->  				   struct ieee80211_vif *vif,
-> @@ -1426,7 +1426,7 @@ static int rsi_mac80211_set_antenna(struct ieee80211_hw *hw,
->   * @tx_ant: Bitmap for tx antenna
->   * @rx_ant: Bitmap for rx antenna
->   * 
-> - * Return: 0 on success, -1 on failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
->  				    u32 *tx_ant, u32 *rx_ant)
-> @@ -1533,7 +1533,7 @@ static struct ieee80211_ops mac80211_ops = {
->   * rsi_mac80211_attach() - This function is used to initialize Mac80211 stack.
->   * @common: Pointer to the driver private structure.
->   *
-> - * Return: 0 on success, -1 on failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  int rsi_mac80211_attach(struct rsi_common *common)
->  {
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+              Re-submitting wireless separately.
+changes in v3:
+              Resolve Merge conflic.
 
-2 patches applied to wireless-drivers-next.git, thanks.
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-fc4386729491 rsi: update some comments
-0270639e899e rsi: missing unlocks on error paths
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 8f20a4b..11ffaa0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1468,7 +1468,7 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ #define CYPRESS_USB_DEVICE(dev_id)	\
+ 	{ USB_DEVICE(CY_USB_VENDOR_ID_CYPRESS, dev_id) }
+ 
+-static struct usb_device_id brcmf_usb_devid_table[] = {
++static const struct usb_device_id brcmf_usb_devid_table[] = {
+ 	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
 -- 
-https://patchwork.kernel.org/patch/9921425/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
