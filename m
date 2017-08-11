@@ -1,107 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39100 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753045AbdHJRHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 13:07:41 -0400
-Date: Thu, 10 Aug 2017 19:07:38 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "pieter-paul.giesberts@broadcom.com"
-        <pieter-paul.giesberts@broadcom.com>,
-        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
-        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "alan@linux.intel.com" <alan@linux.intel.com>,
-        "moritz.fischer@ettus.com" <moritz.fischer@ettus.com>,
-        "pjones@redhat.com" <pjones@redhat.com>,
-        "wagi@monom.org" <wagi@monom.org>,
-        "pmladek@suse.com" <pmladek@suse.com>,
-        "atull@kernel.org" <atull@kernel.org>,
-        "yi1.li@linux.intel.com" <yi1.li@linux.intel.com>,
-        "wright.feng@cypress.com" <wright.feng@cypress.com>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "takahiro.akashi@linaro.org" <takahiro.akashi@linaro.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>,
-        "rafal@milecki.pl" <rafal@milecki.pl>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "dhowells@redhat.com" <dhowells@redhat.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "chi-hsien.lin@cypress.com" <chi-hsien.lin@cypress.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "franky.lin@broadcom.com" <franky.lin@broadcom.com>
-Subject: Re: [PATCH V5 1/2] firmware: add more flexible
- request_firmware_async function
-Message-ID: <20170810170738.GD27873@wotan.suse.de> (sfid-20170810_190755_244238_58D53396)
-References: <20170731150945.8925-1-zajec5@gmail.com>
- <20170802213010.GM18884@wotan.suse.de>
- <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
- <1501739717.15969.26.camel@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501739717.15969.26.camel@intel.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33839 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752703AbdHKNqP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Aug 2017 09:46:15 -0400
+Received: by mail-pf0-f196.google.com with SMTP id t86so3539408pfe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:46:15 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 05/11] rsi: handle station connection in AP mode
+Date: Fri, 11 Aug 2017 19:11:23 +0530
+Message-Id: <1502458889-9690-6-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154720_980162_512686C8)
+In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 05:55:18AM +0000, Coelho, Luciano wrote:
-> On Thu, 2017-08-03 at 08:23 +0300, Kalle Valo wrote:
-> > "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
-> > 
-> > > > +int request_firmware_nowait(struct module *module, bool uevent,
-> > > > +			    const char *name, struct device *device, gfp_t gfp,
-> > > > +			    void *context,
-> > > > +			    void (*cont)(const struct firmware *fw, void *context))
-> > > > +{
-> > > > +	unsigned int opt_flags = FW_OPT_FALLBACK |
-> > > > +		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
-> > > > +
-> > > > +	return __request_firmware_nowait(module, opt_flags, name, device, gfp,
-> > > > +					 context, cont);
-> > > > +}
-> > > >  EXPORT_SYMBOL(request_firmware_nowait);
-> > > >  
-> > > > +int __request_firmware_async(struct module *module, const char *name,
-> > > > +			     struct firmware_opts *fw_opts, struct device *dev,
-> > > > +			     void *context,
-> > > > +			     void (*cont)(const struct firmware *fw, void *context))
-> > > > +{
-> > > > +	unsigned int opt_flags = FW_OPT_UEVENT;
-> > > 
-> > > This exposes a long issue. Think -- why do we want this enabled by default? Its
-> > > actually because even though the fallback stuff is optional and can be, the uevent
-> > > internal flag *also* provides caching support as a side consequence only. We
-> > > don't want to add a new API without first cleaning up that mess.
-> > > 
-> > > This is a slipery slope and best to clean that up before adding any new API.
-> > > 
-> > > That and also Greg recently stated he would like to see at least 3 users of
-> > > a feature before adding it. Although I think that's pretty arbitrary, and
-> > > considering that request_firmware_into_buf() only has *one* user -- its what
-> > > he wishes.
-> > 
-> > ath10k at least needs a way to silence the warning for missing firmware
-> > and I think iwlwifi also.
-> 
-> Yes, iwlwifi needs to silence the warning.  It the feature (only one,
-> really) that I've been waiting for.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Luca,
+Station structures are maintained in driver with required
+fields. When mac80211 callback sta_add is called, driver
+iterates through list of connected stations to check available
+index and assigns station id which is important for further
+communication to that station. Then peer notify frame is send
+to firmware to inform the firmware about new station connection.
 
-can you confirm? The API revision thing is one thing but as I noted to
-Kalle that can be done using a different API scheme as I had proposed on
-the driver data API.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 79 ++++++++++++++++++++++++++---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 49 +++++++++++-------
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  9 +++-
+ 3 files changed, 111 insertions(+), 26 deletions(-)
 
-Other than that are there specific firmware requests which are async which
-are not API revision style (min...max) for which an async request is optional?
-
- Luis
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 6038a2f..cf86162 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -626,10 +626,12 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
+ 			rsi_send_rx_filter_frame(common, rx_filter_word);
+ 		}
+ 		rsi_inform_bss_status(common,
++				      STA_OPMODE,
+ 				      bss_conf->assoc,
+ 				      bss_conf->bssid,
+ 				      bss_conf->qos,
+-				      bss_conf->aid);
++				      bss_conf->aid,
++				      NULL, 0);
+ 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
+ 		adapter->ps_info.listen_interval = conf->listen_interval;
+ 
+@@ -1157,18 +1159,81 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+ {
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
++	bool sta_exist = false;
++	struct rsi_sta *rsta;
++
++	print_hex_dump(KERN_INFO, "Station add: ", DUMP_PREFIX_OFFSET,
++		       16, 1, sta->addr, ETH_ALEN, 0);
+ 
+ 	mutex_lock(&common->mutex);
+ 
+-	rsi_set_min_rate(hw, sta, common);
++	if (vif->type == NL80211_IFTYPE_AP) {
++		u8 cnt;
++		int sta_idx = -1;
++		int free_index = -1;
++
++		/* Check if max stations reached */
++		if (common->num_stations >= common->max_stations) {
++			rsi_dbg(ERR_ZONE, "Reject: Max Stations exists\n");
++			mutex_unlock(&common->mutex);
++			return -EOPNOTSUPP;
++		}
++		for (cnt = 0; cnt < common->max_stations; cnt++) {
++			rsta = &common->stations[cnt];
+ 
+-	if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ||
+-	    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)) {
+-		common->vif_info[0].sgi = true;
++			if (!rsta->sta) {
++				if (free_index < 0)
++					free_index = cnt;
++				continue;
++			}
++			if (!memcmp(rsta->sta->addr, sta->addr, ETH_ALEN)) {
++				rsi_dbg(INFO_ZONE, "Station exists\n");
++				sta_idx = cnt;
++				sta_exist = true;
++				break;
++			}
++		}
++		if (!sta_exist) {
++			if (free_index >= 0)
++				sta_idx = free_index;
++		}
++		if (sta_idx < 0) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Some problem reaching here...\n",
++				__func__);
++			return -EINVAL;
++		}
++		rsta = &common->stations[sta_idx];
++		rsta->sta = sta;
++		rsta->sta_id = sta_idx;
++		for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
++			rsta->start_tx_aggr[cnt] = false;
++		for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
++			rsta->seq_start[cnt] = 0;
++		if (!sta_exist) {
++			rsi_dbg(INFO_ZONE, "New Station\n");
++
++			/* Send peer notify to device */
++			rsi_dbg(INFO_ZONE, "Indicate bss status to device\n");
++			rsi_inform_bss_status(common, AP_OPMODE, 1, sta->addr,
++					      sta->wme, sta->aid, sta, sta_idx);
++
++			common->num_stations++;
++		}
+ 	}
+ 
+-	if (sta->ht_cap.ht_supported)
+-		ieee80211_start_tx_ba_session(sta, 0, 0);
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		rsi_set_min_rate(hw, sta, common);
++		if (sta->ht_cap.ht_supported) {
++			common->vif_info[0].is_ht = true;
++			common->bitrate_mask[NL80211_BAND_2GHZ] =
++					sta->supp_rates[NL80211_BAND_2GHZ];
++			if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ||
++			    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
++				common->vif_info[0].sgi = true;
++			ieee80211_start_tx_ba_session(sta, 0, 0);
++		}
++	}
+ 
+ 	mutex_unlock(&common->mutex);
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index e47fc0d..7c0f27a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -455,12 +455,14 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
+  * Return: status: 0 on success, corresponding negative error code on failure.
+  */
+ static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
+-					 u8 opmode,
++					 enum opmode opmode,
+ 					 u8 notify_event,
+ 					 const unsigned char *bssid,
+ 					 u8 qos_enable,
+-					 u16 aid)
++					 u16 aid,
++					 u16 sta_id)
+ {
++	struct ieee80211_vif *vif = common->priv->vifs[0];
+ 	struct sk_buff *skb = NULL;
+ 	struct rsi_peer_notify *peer_notify;
+ 	u16 vap_id = 0;
+@@ -480,7 +482,10 @@ static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
+ 	memset(skb->data, 0, frame_len);
+ 	peer_notify = (struct rsi_peer_notify *)skb->data;
+ 
+-	peer_notify->command = cpu_to_le16(opmode << 1);
++	if (opmode == STA_OPMODE)
++		peer_notify->command = cpu_to_le16(PEER_TYPE_AP << 1);
++	else if (opmode == AP_OPMODE)
++		peer_notify->command = cpu_to_le16(PEER_TYPE_STA << 1);
+ 
+ 	switch (notify_event) {
+ 	case STA_CONNECTED:
+@@ -502,13 +507,15 @@ static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
+ 			(frame_len - FRAME_DESC_SZ),
+ 			RSI_WIFI_MGMT_Q);
+ 	peer_notify->desc.desc_dword0.frame_type = PEER_NOTIFY;
++	peer_notify->desc.desc_dword3.qid_tid = sta_id;
+ 	peer_notify->desc.desc_dword3.sta_id = vap_id;
+ 
+ 	skb_put(skb, frame_len);
+ 
+ 	status = rsi_send_internal_mgmt_frame(common, skb);
+ 
+-	if (!status && qos_enable) {
++	if ((vif->type == NL80211_IFTYPE_STATION) &&
++	    (!status && qos_enable)) {
+ 		rsi_set_contention_vals(common);
+ 		status = rsi_load_radio_caps(common);
+ 	}
+@@ -1279,32 +1286,40 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+  * Return: None.
+  */
+ void rsi_inform_bss_status(struct rsi_common *common,
++			   enum opmode opmode,
+ 			   u8 status,
+-			   const unsigned char *bssid,
++			   const u8 *addr,
+ 			   u8 qos_enable,
+-			   u16 aid)
++			   u16 aid,
++			   struct ieee80211_sta *sta,
++			   u16 sta_id)
+ {
+ 	if (status) {
+-		common->hw_data_qs_blocked = true;
++		if (opmode == STA_OPMODE)
++			common->hw_data_qs_blocked = true;
+ 		rsi_hal_send_sta_notify_frame(common,
+-					      RSI_IFTYPE_STATION,
++					      opmode,
+ 					      STA_CONNECTED,
+-					      bssid,
++					      addr,
+ 					      qos_enable,
+-					      aid);
++					      aid, sta_id);
+ 		if (common->min_rate == 0xffff)
+ 			rsi_send_auto_rate_request(common);
+-		if (!rsi_send_block_unblock_frame(common, false))
+-			common->hw_data_qs_blocked = false;
++		if (opmode == STA_OPMODE) {
++			if (!rsi_send_block_unblock_frame(common, false))
++				common->hw_data_qs_blocked = false;
++		}
+ 	} else {
+-		common->hw_data_qs_blocked = true;
++		if (opmode == STA_OPMODE)
++			common->hw_data_qs_blocked = true;
+ 		rsi_hal_send_sta_notify_frame(common,
+-					      RSI_IFTYPE_STATION,
++					      opmode,
+ 					      STA_DISCONNECTED,
+-					      bssid,
++					      addr,
+ 					      qos_enable,
+-					      aid);
+-		rsi_send_block_unblock_frame(common, true);
++					      aid, sta_id);
++		if (opmode == STA_OPMODE)
++			rsi_send_block_unblock_frame(common, true);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index a00aa10..a2e377f 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -209,6 +209,10 @@ enum vap_status {
+ 	VAP_UPDATE = 3
+ };
+ 
++enum peer_type {
++	PEER_TYPE_AP,
++	PEER_TYPE_STA,
++};
+ extern struct ieee80211_rate rsi_rates[12];
+ extern const u16 rsi_mcsrates[8];
+ 
+@@ -611,8 +615,9 @@ int rsi_set_channel(struct rsi_common *common,
+ 		    struct ieee80211_channel *channel);
+ int rsi_send_vap_dynamic_update(struct rsi_common *common);
+ int rsi_send_block_unblock_frame(struct rsi_common *common, bool event);
+-void rsi_inform_bss_status(struct rsi_common *common, u8 status,
+-			   const u8 *bssid, u8 qos_enable, u16 aid);
++void rsi_inform_bss_status(struct rsi_common *common, enum opmode opmode,
++			   u8 status, const u8 *addr, u8 qos_enable, u16 aid,
++			   struct ieee80211_sta *sta, u16 sta_id);
+ void rsi_indicate_pkt_to_os(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_mac80211_attach(struct rsi_common *common);
+ void rsi_indicate_tx_status(struct rsi_hw *common, struct sk_buff *skb,
+-- 
+2.7.4
