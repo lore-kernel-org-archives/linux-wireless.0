@@ -1,343 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:35029 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751242AbdH3Jnd (ORCPT
+Received: from mail-qt0-f178.google.com ([209.85.216.178]:33960 "EHLO
+        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753181AbdHKSoD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 05:43:33 -0400
-Received: by mail-pg0-f65.google.com with SMTP id r133so4718712pgr.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 02:43:33 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 2/8] rsi: add/remove interface enhancements for p2p
-Date: Wed, 30 Aug 2017 15:08:22 +0530
-Message-Id: <1504085908-2163-3-git-send-email-amitkarwar@gmail.com> (sfid-20170830_114411_631236_B6C6184F)
-In-Reply-To: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
-References: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
+        Fri, 11 Aug 2017 14:44:03 -0400
+Received: by mail-qt0-f178.google.com with SMTP id s6so25990966qtc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 11:44:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1502303131.9777.7.camel@redhat.com>
+References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
+ <1502228547.24881.5.camel@redhat.com> <3a24351b-6875-fe65-58f1-f624c9f1832f@candelatech.com>
+ <5f4422cc-2943-7863-bef3-c2c2653bde24@nurealm.net> <5a5cb91f-443c-8cc1-ea1f-50de4d07cb25@candelatech.com>
+ <3d16a276-0e15-c722-483c-c17d715ebb5e@nurealm.net> <598AD624.1060003@broadcom.com>
+ <318f60de-5589-1218-9848-d3514724e9c1@nurealm.net> <1502303131.9777.7.camel@redhat.com>
+From: Andy Gospodarek <andy@greyhouse.net>
+Date: Fri, 11 Aug 2017 14:43:41 -0400
+Message-ID: <CAHashqDypwFtpXbP0Mw+XRWAbSiar8ozepmHF3r0fGs3nrsu_g@mail.gmail.com> (sfid-20170811_204407_971064_68223DCE)
+Subject: Re: wireless drivers fail to report link speed?
+To: Dan Williams <dcbw@redhat.com>
+Cc: James Feeney <james@nurealm.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Ben Greear <greearb@candelatech.com>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Wed, Aug 9, 2017 at 2:25 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Wed, 2017-08-09 at 11:01 -0600, James Feeney wrote:
+>> @ Dan Williams
+>>
+>> > I'm not really arguing against updating mac80211 to report this
+>> > information if somebody actually wants to do the patch.  I'm only
+>> > saying that even with the patch, it's not going to do exactly what
+>> > you
+>> > want it to do, and even if it works for you 90% of the time, it's
+>> > not
+>> > going to work for others that much of the time, and thus it gives a
+>> > false sense of "correctness" which is just wrong.
+>>
+>> Hey - don't put this on me!  This is not about "what I want it to
+>> do".  I'm only
+>
+> I had a whole email written out, but it wasn't very constructive.
+>
+> To be clear: I am not putting anything on you, or blaming you for
+> anything :)  Sorry if my tone implied that to you.  I feel like the
+> tone of this thread is becoming contentious and that's not my desire.
+>
+> There is clearly a problem.  That problem was exposed by a patch to the
+> bonding driver that newly requires information that the WiFi drivers
+> don't provide.
+>
+> The relevant questions, in my view, are:
+>
+> 1) why does the bonding driver now require this information?
+>
+> 2) is this information reasonable to request from WiFi drivers?
+>
+> 3) how would this information affect the operation of the bonding
+> driver if it doesn't mean the same thing as it means for wired devices?
+>
+> My answers are:
+>
+> 1) I have no idea, though to continue being constructive to this
+> discussion, I should probably go find out.  We should also get the
+> bonding module patch authors to weigh in.  But the core point is that
+> it used to work, and now it doesn't work, and the WiFi drivers have not
+> changed in this area.
 
-STA_OPMODE and AP_OPMODE macros are renamed to RSI_OPMODE_STA
-and RSI_OPMODE_AP. New opmodes are added to this list for P2P
-support. Mapping of mac80211 interface types to rsi interface
-types are added.
-Add and remove interface callbacks are handled for P2P mode.
+I actually reached out to Mahesh a while ago to get more details on
+what exactly he was trying to fix with c4adfc822bf5 ("bonding: make
+speed, duplex setting consistent with link state") and 3f3c278c94d
+("bonding: fix active-backup transition") but did not get a response.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 117 +++++++++++++++++-----------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  12 +--
- drivers/net/wireless/rsi/rsi_main.h         |   6 +-
- drivers/net/wireless/rsi/rsi_mgmt.h         |   9 ++-
- 4 files changed, 89 insertions(+), 55 deletions(-)
+I've been AFK for quite a bit of August, so unfortunately I haven't
+had a change to dig into this deeply.  I'll pledge to look at this in
+detail before the end of next week.  I even put it on my calendar so I
+do not forget!
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 992ac6c..db69d87 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -355,6 +355,24 @@ static void rsi_mac80211_stop(struct ieee80211_hw *hw)
- 	mutex_unlock(&common->mutex);
- }
- 
-+static int rsi_map_intf_mode(enum nl80211_iftype vif_type)
-+{
-+	switch (vif_type) {
-+	case NL80211_IFTYPE_STATION:
-+		return RSI_OPMODE_STA;
-+	case NL80211_IFTYPE_AP:
-+		return RSI_OPMODE_AP;
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		return RSI_OPMODE_P2P_CLIENT;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		return RSI_OPMODE_P2P_CLIENT;
-+	case NL80211_IFTYPE_P2P_GO:
-+		return RSI_OPMODE_P2P_GO;
-+	default:
-+		return RSI_OPMODE_UNSUPPORTED;
-+	}
-+}
-+
- /**
-  * rsi_mac80211_add_interface() - This function is called when a netdevice
-  *				  attached to the hardware is enabled.
-@@ -368,54 +386,62 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	struct vif_priv *vif_info = (struct vif_priv *)vif->drv_priv;
- 	enum opmode intf_mode;
--	int ret = -EOPNOTSUPP;
-+	enum vap_status vap_status;
-+	int vap_idx = -1, i;
- 
- 	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
- 	mutex_lock(&common->mutex);
- 
--	if (adapter->sc_nvifs > 1) {
--		mutex_unlock(&common->mutex);
--		return -EOPNOTSUPP;
--	}
--
--	switch (vif->type) {
--	case NL80211_IFTYPE_STATION:
--		rsi_dbg(INFO_ZONE, "Station Mode");
--		intf_mode = STA_OPMODE;
--		break;
--	case NL80211_IFTYPE_AP:
--		rsi_dbg(INFO_ZONE, "AP Mode");
--		intf_mode = AP_OPMODE;
--		break;
--	default:
-+	intf_mode = rsi_map_intf_mode(vif->type);
-+	if (intf_mode == RSI_OPMODE_UNSUPPORTED) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Interface type %d not supported\n", __func__,
- 			vif->type);
--		goto out;
-+		mutex_unlock(&common->mutex);
-+		return -EOPNOTSUPP;
-+	}
-+	if ((vif->type == NL80211_IFTYPE_P2P_DEVICE) ||
-+	    (vif->type == NL80211_IFTYPE_P2P_CLIENT) ||
-+	    (vif->type == NL80211_IFTYPE_P2P_GO))
-+		common->p2p_enabled = true;
-+
-+	/* Get free vap index */
-+	for (i = 0; i < RSI_MAX_VIFS; i++) {
-+		if (!adapter->vifs[i]) {
-+			vap_idx = i;
-+			break;
-+		}
-+	}
-+	if (vap_idx < 0) {
-+		rsi_dbg(ERR_ZONE, "Reject: Max VAPs reached\n");
-+		mutex_unlock(&common->mutex);
-+		return -EOPNOTSUPP;
- 	}
-+	vif_info->vap_id = vap_idx;
-+	adapter->vifs[vap_idx] = vif;
-+	adapter->sc_nvifs++;
-+	vap_status = VAP_ADD;
- 
--	adapter->vifs[adapter->sc_nvifs++] = vif;
--	ret = rsi_set_vap_capabilities(common, intf_mode, common->mac_addr,
--				       0, VAP_ADD);
--	if (ret) {
-+	if (rsi_set_vap_capabilities(common, intf_mode, vif->addr,
-+				     vif_info->vap_id, vap_status)) {
- 		rsi_dbg(ERR_ZONE, "Failed to set VAP capabilities\n");
--		goto out;
-+		mutex_unlock(&common->mutex);
-+		return -EINVAL;
- 	}
- 
--	if (vif->type == NL80211_IFTYPE_AP) {
--		int i;
--
-+	if ((vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_P2P_GO)) {
- 		rsi_send_rx_filter_frame(common, DISALLOW_BEACONS);
- 		common->min_rate = RSI_RATE_AUTO;
- 		for (i = 0; i < common->max_stations; i++)
- 			common->stations[i].sta = NULL;
- 	}
- 
--out:
- 	mutex_unlock(&common->mutex);
- 
--	return ret;
-+	return 0;
- }
- 
- /**
-@@ -432,6 +458,7 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
- 	enum opmode opmode;
-+	int i;
- 
- 	rsi_dbg(INFO_ZONE, "Remove Interface Called\n");
- 
-@@ -442,23 +469,22 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
- 		return;
- 	}
- 
--	switch (vif->type) {
--	case NL80211_IFTYPE_STATION:
--		opmode = STA_OPMODE;
--		break;
--	case NL80211_IFTYPE_AP:
--		opmode = AP_OPMODE;
--		break;
--	default:
-+	opmode = rsi_map_intf_mode(vif->type);
-+	if (opmode == RSI_OPMODE_UNSUPPORTED) {
-+		rsi_dbg(ERR_ZONE, "Opmode error : %d\n", opmode);
- 		mutex_unlock(&common->mutex);
- 		return;
- 	}
--	rsi_set_vap_capabilities(common, opmode, vif->addr,
--				 0, VAP_DELETE);
--	adapter->sc_nvifs--;
--
--	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
--		adapter->vifs[0] = NULL;
-+	for (i = 0; i < RSI_MAX_VIFS; i++) {
-+		if (!adapter->vifs[i])
-+			continue;
-+		if (vif == adapter->vifs[i]) {
-+			rsi_set_vap_capabilities(common, opmode, vif->addr,
-+						 i, VAP_DELETE);
-+			adapter->sc_nvifs--;
-+			adapter->vifs[i] = NULL;
-+		}
-+	}
- 	mutex_unlock(&common->mutex);
- }
- 
-@@ -652,7 +678,7 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
- 			rsi_send_rx_filter_frame(common, rx_filter_word);
- 		}
- 		rsi_inform_bss_status(common,
--				      STA_OPMODE,
-+				      RSI_OPMODE_STA,
- 				      bss_conf->assoc,
- 				      bss_conf->bssid,
- 				      bss_conf->qos,
-@@ -1285,8 +1311,9 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
- 
- 			/* Send peer notify to device */
- 			rsi_dbg(INFO_ZONE, "Indicate bss status to device\n");
--			rsi_inform_bss_status(common, AP_OPMODE, 1, sta->addr,
--					      sta->wme, sta->aid, sta, sta_idx);
-+			rsi_inform_bss_status(common, RSI_OPMODE_AP, 1,
-+					      sta->addr, sta->wme, sta->aid,
-+					      sta, sta_idx);
- 
- 			if (common->key) {
- 				struct ieee80211_key_conf *key = common->key;
-@@ -1358,7 +1385,7 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
- 			if (!rsta->sta)
- 				continue;
- 			if (!memcmp(rsta->sta->addr, sta->addr, ETH_ALEN)) {
--				rsi_inform_bss_status(common, AP_OPMODE, 0,
-+				rsi_inform_bss_status(common, RSI_OPMODE_AP, 0,
- 						      sta->addr, sta->wme,
- 						      sta->aid, sta, sta_idx);
- 				rsta->sta = NULL;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index f7b550f..082329d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -482,9 +482,9 @@ static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
- 	memset(skb->data, 0, frame_len);
- 	peer_notify = (struct rsi_peer_notify *)skb->data;
- 
--	if (opmode == STA_OPMODE)
-+	if (opmode == RSI_OPMODE_STA)
- 		peer_notify->command = cpu_to_le16(PEER_TYPE_AP << 1);
--	else if (opmode == AP_OPMODE)
-+	else if (opmode == RSI_OPMODE_AP)
- 		peer_notify->command = cpu_to_le16(PEER_TYPE_STA << 1);
- 
- 	switch (notify_event) {
-@@ -1321,7 +1321,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 			   u16 sta_id)
- {
- 	if (status) {
--		if (opmode == STA_OPMODE)
-+		if (opmode == RSI_OPMODE_STA)
- 			common->hw_data_qs_blocked = true;
- 		rsi_hal_send_sta_notify_frame(common,
- 					      opmode,
-@@ -1331,12 +1331,12 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 					      aid, sta_id);
- 		if (common->min_rate == 0xffff)
- 			rsi_send_auto_rate_request(common, sta, sta_id);
--		if (opmode == STA_OPMODE) {
-+		if (opmode == RSI_OPMODE_STA) {
- 			if (!rsi_send_block_unblock_frame(common, false))
- 				common->hw_data_qs_blocked = false;
- 		}
- 	} else {
--		if (opmode == STA_OPMODE)
-+		if (opmode == RSI_OPMODE_STA)
- 			common->hw_data_qs_blocked = true;
- 		rsi_hal_send_sta_notify_frame(common,
- 					      opmode,
-@@ -1344,7 +1344,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 					      addr,
- 					      qos_enable,
- 					      aid, sta_id);
--		if (opmode == STA_OPMODE)
-+		if (opmode == RSI_OPMODE_STA)
- 			rsi_send_block_unblock_frame(common, true);
- 	}
- }
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 2c18dde..a4837fa 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -60,7 +60,7 @@ enum RSI_FSM_STATES {
- extern u32 rsi_zone_enabled;
- extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- 
--#define RSI_MAX_VIFS                    1
-+#define RSI_MAX_VIFS                    3
- #define NUM_EDCA_QUEUES                 4
- #define IEEE80211_ADDR_LEN              6
- #define FRAME_DESC_SZ                   16
-@@ -157,6 +157,7 @@ struct vif_priv {
- 	bool is_ht;
- 	bool sgi;
- 	u16 seq_start;
-+	int vap_id;
- };
- 
- struct rsi_event {
-@@ -270,6 +271,9 @@ struct rsi_common {
- 	int num_stations;
- 	int max_stations;
- 	struct ieee80211_key_conf *key;
-+
-+	/* Wi-Fi direct mode related */
-+	bool p2p_enabled;
- };
- 
- enum host_intf {
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index c6e1fa6..8bd7dfa 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -200,8 +200,11 @@
- #define RSI_DATA_DESC_INSERT_SEQ_NO	BIT(2)
- 
- enum opmode {
--	AP_OPMODE = 0,
--	STA_OPMODE,
-+	RSI_OPMODE_UNSUPPORTED = -1,
-+	RSI_OPMODE_AP = 0,
-+	RSI_OPMODE_STA,
-+	RSI_OPMODE_P2P_GO,
-+	RSI_OPMODE_P2P_CLIENT
- };
- 
- enum vap_status {
-@@ -363,9 +366,9 @@ struct rsi_vap_caps {
- 	u8 vif_type;
- 	u8 channel_bw;
- 	__le16 antenna_info;
-+	__le16 token;
- 	u8 radioid_macid;
- 	u8 vap_id;
--	__le16 reserved3;
- 	u8 mac_addr[6];
- 	__le16 keep_alive_period;
- 	u8 bssid[6];
--- 
-2.7.4
+>
+> 2) ethtool's API doesn't say much about semantics.  It is likely
+> reasonable to request this information from WiFi drivers, but
+> unfortunately WiFi has some different semantics for the information
+> than ethernet devices do.
+>
+> 3) The bonding module is interpreting the speed in a certain way that
+> can hugely affect its operation, and ethernet devices don't change
+> speed very frequently.  But wifi devices do.  This may well cause
+> unexpected operation from bonding, and we should be well aware of that
+> before we do anything to fix this problem.
+>
+> I'd also like to point out the various virtual devices (veth, virtio,
+> etc) and how they report speed.  They lock the speed to a certain
+> value, but that doesn't actually mean anything because they are not
+> hardware based and their throughput is more a function of current CPU
+> load rather than actual wire speed.  The 'tun' driver locks the rate to
+> 10Mb/s with no capability to change.  These are another case of
+> mismatch in expectations between bonding and reported speeds.
+>
+> Again, there is a problem that should be solved.  I am only advocating
+> that instead of simply adding ethtool get_settings support to WiFi
+> drivers and washing our hands of it, which may have unintended
+> consequences, we gather all the information first, and discuss whether
+> the bonding driver may need to adjust its expectations before this kind
+> of change is made.
+
+Thanks for thoughtfully weighing in on this, Dan.  I do think that if
+support for this is as significant as suggested by the many concerned
+users in this thread, you are correct it is worth examining to make
+sure that bonding and wireless can work happily together.
+
+>
+> Dan
+>
+>> trying to make my wireless bonding work again.  But I also don't want
+>> to simply
+>> "slap down" Mahesh, by only reverting his patch, which addressed
+>> another, real,
+>> problem.  This needs to be a cooperative effort.  How do *we all*
+>> address the
+>> problem that Mahesh was trying to resolve, and, at the same time,
+>> continue to
+>> support wireless bonding?  Please, don't just "kick the can down the
+>> road".  It
+>> seems to me that Mahesh must have been pretty upset about the
+>> wireless drivers
+>> not reporting speed, to have written a patch that just disables the
+>> wireless
+>> interface when the reporting fails.  Think about it.
+>>
+>> If there is a long-standing screw-up with the wireless drivers
+>> failing to
+>> properly support 'section 11.46 ("Estimated throughput") of
+>> IEEE802.11-2016',
+>> then let's start-off by admitting that.  *Then* everyone can argue
+>> about what to
+>> do about it.  And, if that's not the underlying problem, let's make
+>> that
+>> determination.  I'm just trying to find a way forward.
+>>
+>> > No, it's not a fault of ethtool.  Ethtool only reports something,
+>> > it's
+>> > up to the thing that interprets that data (eg, bonding) to do the
+>> > right
+>> > thing with it.
+>>
+>> It has not yet been established that there is anything - "Estimated
+>> throughput"
+>> - being provided universally by the wireless drivers for the kernel
+>> ethtool to
+>> report.  So, you cannot blame this immediately upon "the thing that
+>> interprets
+>> the data (eg, bonding)", when there *is no data* to interpret.  That
+>> was the
+>> original question and issue.  There first *has* to be some data to
+>> interpret!
+>>
+>> I will say that it is no more appropriate that the wireless drivers
+>> generate a
+>> "piss-off" error on a get_settings() request than that the bonding
+>> module
+>> respond with a "screw-you", disabling the wireless interface when it
+>> returns
+>> that error.  This has turned into some kind of nasty lovers
+>> quarrel.  Or like a
+>> couple of children having temper tantrums and retaliations.
+>>
+>> > Likely every wireless driver, except that for mac80211-based
+>> > drivers it
+>> > would only take updating the mac80211 stack.
+>>
+>> Ok.  That sounds positive.  Then there is a possibility to both
+>> update the
+>> mac80211 stack, to provide "Estimated throughput", and also for the
+>> bonding
+>> module to fall-back to a work-around for those wireless drivers that
+>> do not use
+>> the mac80211 stack.
+>>
+>> > I'm only
+>> > saying that even with the patch, it's not going to do exactly what
+>> > you
+>> > want it to do, and even if it works for you 90% of the time, it's
+>> > not
+>> > going to work for others that much of the time, and thus it gives a
+>> > false sense of "correctness" which is just wrong.
+>>
+>> Ok.  So what *is* the "right thing" to do here?
+>>
+>> The current, actual, in-place, "solution", implemented now, in the
+>> linux kernel,
+>> is to simply "nuke" all wireless network interfaces that try to use
+>> the bonding
+>> module.  I'd say that is a "rude, slap in the face" solution, but it
+>> suggests to
+>> me that there is a sense of "hopelessness" in trying to get some
+>> support from
+>> the wireless driver people, to actually fix the wireless speed
+>> reporting issue.
+>> We could say that a patch "nuking" all wireless network interfaces is
+>> really a
+>> desperate cry for help.  And this patch was signed-off by David
+>> Miller.
+>>
+>> > When I did 'iw dev wlp4s0 link' with a 2.4GHz baby monitor on in
+>> > the
+>> > next room, my device flipped continuously between ~70Mb/s and
+>> > 130Mb/s
+>> > every couple seconds. YMMV.  It's gonna be the same anywhere near a
+>> > microwave.
+>>
+>> It appears to me to be absolutely certain that both 70Mb/s and
+>> 130Mb/s are
+>> greater link speeds than, for instance, 10Mb/s wired ethernet, or
+>> 54Mb/s 802.11g
+>> wireless.  You see?
+>>
+>> > There is no "stable" link speed.  The link selects the maximum
+>> > speed
+>> > that produces as few errors as possible, and adjusts that speed
+>> > continuously due to the radio environment.  Again, many external
+>> > factors that you have no control over affect link speed.
+>>
+>> It is *not* the responsibility of the wireless driver to determine
+>> the policy of
+>> the bonding module!  It is only the responsibility of the wireless
+>> driver to
+>> *report* the speed of the wireless link.  Don't try to "second-guess"
+>> the
+>> bonding module people!
+>>
+>> I imagine that a huge step forward would be made if only the kernel
+>> ethtool did
+>> not just report an error in response to a wireless driver
+>> get_settings() request!
+>>
+>> > I'm suggesting that if the bonding driver is expecting a
+>> > *continuous*
+>> > stable link rate from any kind of radio device, whether that's
+>> > WiFi,
+>> > WWAN, Bluetooth, or whatever, it's being unreasonable.
+>> >
+>> > It's not necessarily unreasonable to add speed/duplex reporting to
+>> > the
+>> > ethtool hooks for wifi drivers.  But before that happens, we should
+>> > understand what other bits will use that information, how they use
+>> > it,
+>> > and if they are going to use it incorrectly and thus do something
+>> > that
+>> > users don't expect and consider a bug itself.
+>>
+>> I really appreciate that you are engaging this topic - because lots
+>> of people
+>> have not responded at all.  So, what do you suggest, with respect to
+>> addressing
+>> the issue that Mahesh's patch was trying to address?  Do we ridicule
+>> Mahesh for
+>> his "slap in the face" patch?  And David Miller for signing-off on
+>> it?  Or do we
+>> update speed reporting in the wireless drivers, and provide some
+>> support for the
+>> bonding module people, to make the bonding module do what they want?
+>>
+>> Because, right now, wireless bonding is absolutely, and purposefully,
+>> "broken".
+>>
+>>
+>> James
