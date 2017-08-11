@@ -1,80 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f177.google.com ([209.85.128.177]:38275 "EHLO
-        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbdHBVnW (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33918 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753042AbdHKNqd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:43:22 -0400
-Received: by mail-wr0-f177.google.com with SMTP id f21so1408971wrf.5
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 14:43:22 -0700 (PDT)
-Subject: Re: [PATCH v2 9/9] wil6210: make debugfs compilation optional
-To: Maya Erez <qca_merez@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Gidon Studinski <QCA_gidons@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
- <1501707649-9665-10-git-send-email-qca_merez@qca.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <07dd021a-ee9a-182c-704f-f7c48a8e299e@broadcom.com> (sfid-20170802_234327_486367_DA8C9A6B)
-Date: Wed, 2 Aug 2017 23:43:19 +0200
-MIME-Version: 1.0
-In-Reply-To: <1501707649-9665-10-git-send-email-qca_merez@qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+        Fri, 11 Aug 2017 09:46:33 -0400
+Received: by mail-pf0-f194.google.com with SMTP id t86so3540054pfe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:46:32 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 09/11] rsi: update tx auto rate command frame for AP mode
+Date: Fri, 11 Aug 2017 19:11:27 +0530
+Message-Id: <1502458889-9690-10-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154649_429044_293FA33E)
+In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02-08-17 23:00, Maya Erez wrote:
-> From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
-> 
-> Since debugfs is a kernel configuration option, enable the driver to
-> compile without debugfs.
-> 
-> Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/wil6210/debugfs.c | 14 ++++++++++----
->  drivers/net/wireless/ath/wil6210/main.c    |  1 +
->  drivers/net/wireless/ath/wil6210/txrx.c    |  6 +++---
->  drivers/net/wireless/ath/wil6210/wil6210.h |  2 +-
->  4 files changed, 15 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-> index d4e8865..5e803e2 100644
-> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
-> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-> @@ -14,6 +14,10 @@
->   * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->   */
->  
-> +#include "wil6210.h"
-> +
-> +#ifdef CONFIG_DEBUG_FS
-> +
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-[...]
+Auto rate frame is sent to firmware when a new station is
+connected. Station id and station's ht capabilities are updated
+in auto rate command frame.
 
-> +#else /* !CONFIG_DEBUG_FS */
-> +int wil6210_debugfs_init(struct wil6210_priv *wil) { return 0; }
-> +void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
-> +#endif
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 44 +++++++++++++++++++++++++--------
+ 1 file changed, 34 insertions(+), 10 deletions(-)
 
-I think it would be better to have these stubs defined in the header
-file, ie. in wil6210.h. That way you can conditionally compile this
-source file through Makefile as below keeping debugfs.c clean.
-
-Regards,
-Arend
-
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile
-b/drivers/net/wireless/ath/wil6210/Makefile
-index 4ae21da..0f98904c 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -4,7 +4,7 @@ wil6210-y := main.o
- wil6210-y += netdev.o
- wil6210-y += cfg80211.o
- wil6210-y += pcie_bus.o
--wil6210-y += debugfs.o
-+wil6210-$(CONFIG_DEBUG_FS) += debugfs.o
- wil6210-y += wmi.o
- wil6210-y += interrupt.o
- wil6210-y += txrx.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index c5d48cd..8762d13 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1152,8 +1152,11 @@ static bool rsi_map_rates(u16 rate, int *offset)
+  *
+  * Return: 0 on success, corresponding error code on failure.
+  */
+-static int rsi_send_auto_rate_request(struct rsi_common *common)
++static int rsi_send_auto_rate_request(struct rsi_common *common,
++				      struct ieee80211_sta *sta,
++				      u16 sta_id)
+ {
++	struct ieee80211_vif *vif = common->priv->vifs[0];
+ 	struct sk_buff *skb;
+ 	struct rsi_auto_rate *auto_rate;
+ 	int ii = 0, jj = 0, kk = 0;
+@@ -1161,11 +1164,14 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 	u8 band = hw->conf.chandef.chan->band;
+ 	u8 num_supported_rates = 0;
+ 	u8 rate_table_offset, rate_offset = 0;
+-	u32 rate_bitmap = common->bitrate_mask[band];
+-
++	u32 rate_bitmap;
+ 	u16 *selected_rates, min_rate;
++	bool is_ht = false, is_sgi = false;
+ 	u16 frame_len = sizeof(struct rsi_auto_rate);
+ 
++	rsi_dbg(MGMT_TX_ZONE,
++		"%s: Sending auto rate request frame\n", __func__);
++
+ 	skb = dev_alloc_skb(frame_len);
+ 	if (!skb) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
+@@ -1193,12 +1199,31 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 
+ 	if (common->channel_width == BW_40MHZ)
+ 		auto_rate->desc.desc_dword3.qid_tid = BW_40MHZ;
++	auto_rate->desc.desc_dword3.sta_id = sta_id;
++
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		rate_bitmap = common->bitrate_mask[band];
++		is_ht = common->vif_info[0].is_ht;
++		is_sgi = common->vif_info[0].sgi;
++	} else {
++		rate_bitmap = sta->supp_rates[band];
++		is_ht = sta->ht_cap.ht_supported;
++		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ||
++		    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
++			is_sgi = true;
++	}
+ 
+ 	if (band == NL80211_BAND_2GHZ) {
+-		min_rate = RSI_RATE_1;
++		if ((rate_bitmap == 0) && (is_ht))
++			min_rate = RSI_RATE_MCS0;
++		else
++			min_rate = RSI_RATE_1;
+ 		rate_table_offset = 0;
+ 	} else {
+-		min_rate = RSI_RATE_6;
++		if ((rate_bitmap == 0) && (is_ht))
++			min_rate = RSI_RATE_MCS0;
++		else
++			min_rate = RSI_RATE_6;
+ 		rate_table_offset = 4;
+ 	}
+ 
+@@ -1212,7 +1237,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 	}
+ 	num_supported_rates = jj;
+ 
+-	if (common->vif_info[0].is_ht) {
++	if (is_ht) {
+ 		for (ii = 0; ii < ARRAY_SIZE(mcs); ii++)
+ 			selected_rates[jj++] = mcs[ii];
+ 		num_supported_rates += ARRAY_SIZE(mcs);
+@@ -1233,11 +1258,10 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+ 	}
+ 
+ 	/* loading HT rates in the bottom half of the auto rate table */
+-	if (common->vif_info[0].is_ht) {
++	if (is_ht) {
+ 		for (ii = rate_offset, kk = ARRAY_SIZE(rsi_mcsrates) - 1;
+ 		     ii < rate_offset + 2 * ARRAY_SIZE(rsi_mcsrates); ii++) {
+-			if (common->vif_info[0].sgi ||
+-			    conf_is_ht40(&common->priv->hw->conf))
++			if (is_sgi || conf_is_ht40(&common->priv->hw->conf))
+ 				auto_rate->supported_rates[ii++] =
+ 					cpu_to_le16(rsi_mcsrates[kk] | BIT(9));
+ 			else
+@@ -1300,7 +1324,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
+ 					      qos_enable,
+ 					      aid, sta_id);
+ 		if (common->min_rate == 0xffff)
+-			rsi_send_auto_rate_request(common);
++			rsi_send_auto_rate_request(common, sta, sta_id);
+ 		if (opmode == STA_OPMODE) {
+ 			if (!rsi_send_block_unblock_frame(common, false))
+ 				common->hw_data_qs_blocked = false;
+-- 
+2.7.4
