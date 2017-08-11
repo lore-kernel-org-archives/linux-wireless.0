@@ -1,79 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:5506 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751494AbdHNSN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 14:13:26 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "jouni@qca.qualcomm.com" <jouni@qca.qualcomm.com>,
-        "avinashp@quantenna.com" <avinashp@quantenna.com>,
-        "smatyukevich@quantenna.com" <smatyukevich@quantenna.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "imitsyanko@quantenna.com" <imitsyanko@quantenna.com>
-Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
-Date: Mon, 14 Aug 2017 18:13:22 +0000
-Message-ID: <1502734400.3282.4.camel@intel.com> (sfid-20170814_201329_888475_F405DB22)
-References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
-         <87lgmmt6l7.fsf@purkki.adurom.net>
-In-Reply-To: <87lgmmt6l7.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33209 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753159AbdHKNpu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Aug 2017 09:45:50 -0400
+Received: by mail-pf0-f194.google.com with SMTP id c65so3549651pfl.0
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:45:50 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 01/11] rsi: advertise ap mode support
+Date: Fri, 11 Aug 2017 19:11:19 +0530
+Message-Id: <1502458889-9690-2-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154754_359965_C255D19F)
+In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE3LTA4LTE0IGF0IDIwOjE0ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBF
-bW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cml0ZXM6DQo+
-IA0KPiA+IFVzZXIgc3BhY2UgY2FuIG5vdyBhbGxvdyB0aGUga2VybmVsIHRvIGFzc29jaWF0ZSB0
-byBhbiBBUA0KPiA+IHRoYXQgcmVxdWlyZXMgTUZQIG9yIHRoYXQgZG9lc24ndCBoYXZlIE1GUCBl
-bmFibGVkIGluIHRoZQ0KPiA+IHNhbWUgTkw4MDIxMV9DTURfQ09OTkVDVCBjb21tYW5kLg0KPiA+
-IFRoZSBkcml2ZXIgLyBmaXJtd2FyZSB3aWxsIGRlY2lkZSB3aGV0aGVyIHRvIHVzZSBpdCBvciBu
-b3QuDQo+ID4gDQo+ID4gU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVs
-LmdydW1iYWNoQGludGVsLmNvbT4NCj4gDQo+IFsuLi5dDQo+IA0KPiA+IEBAIC00MDg2LDEwICs0
-MDkwLDEyIEBAIGVudW0gbmw4MDIxMV9rZXlfdHlwZSB7DQo+ID4gwqAgKiBlbnVtIG5sODAyMTFf
-bWZwIC0gTWFuYWdlbWVudCBmcmFtZSBwcm90ZWN0aW9uIHN0YXRlDQo+ID4gwqAgKiBATkw4MDIx
-MV9NRlBfTk86IE1hbmFnZW1lbnQgZnJhbWUgcHJvdGVjdGlvbiBub3QgdXNlZA0KPiA+IMKgICog
-QE5MODAyMTFfTUZQX1JFUVVJUkVEOiBNYW5hZ2VtZW50IGZyYW1lIHByb3RlY3Rpb24gcmVxdWly
-ZWQNCj4gPiArICogQE5MODAyMTFfTUZQX09QVElPTkFMOiBNYW5hZ2VtZW50IGZyYW1lIGlzIG9w
-dGlvbmFsDQo+ID4gwqAgKi8NCj4gPiDCoGVudW0gbmw4MDIxMV9tZnAgew0KPiA+IMKgCU5MODAy
-MTFfTUZQX05PLA0KPiA+IMKgCU5MODAyMTFfTUZQX1JFUVVJUkVELA0KPiA+ICsJTkw4MDIxMV9N
-RlBfT1BUSU9OQUwsDQo+ID4gwqB9Ow0KPiA+IMKgDQo+ID4gwqBlbnVtIG5sODAyMTFfd3BhX3Zl
-cnNpb25zIHsNCj4gPiBkaWZmIC0tZ2l0IGEvbmV0L3dpcmVsZXNzL25sODAyMTEuYyBiL25ldC93
-aXJlbGVzcy9ubDgwMjExLmMNCj4gPiBpbmRleCA4ZjAzNWQ5ODY4ZDEuLjgyOTg2NzEzMjMyNiAx
-MDA2NDQNCj4gPiAtLS0gYS9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jDQo+ID4gKysrIGIvbmV0L3dp
-cmVsZXNzL25sODAyMTEuYw0KPiA+IEBAIC05MTE1LDYgKzkxMTUsNyBAQCBzdGF0aWMgaW50IG5s
-ODAyMTFfY29ubmVjdChzdHJ1Y3Qgc2tfYnVmZg0KPiA+ICpza2IsIHN0cnVjdCBnZW5sX2luZm8g
-KmluZm8pDQo+ID4gwqAJaWYgKGluZm8tPmF0dHJzW05MODAyMTFfQVRUUl9VU0VfTUZQXSkgew0K
-PiA+IMKgCQljb25uZWN0Lm1mcCA9IG5sYV9nZXRfdTMyKGluZm8tDQo+ID4gPmF0dHJzW05MODAy
-MTFfQVRUUl9VU0VfTUZQXSk7DQo+ID4gwqAJCWlmIChjb25uZWN0Lm1mcCAhPSBOTDgwMjExX01G
-UF9SRVFVSVJFRCAmJg0KPiA+ICsJCcKgwqDCoMKgY29ubmVjdC5tZnAgIT0gTkw4MDIxMV9NRlBf
-T1BUSU9OQUwgJiYNCj4gPiDCoAkJwqDCoMKgwqBjb25uZWN0Lm1mcCAhPSBOTDgwMjExX01GUF9O
-TykNCj4gPiDCoAkJCXJldHVybiAtRUlOVkFMOw0KPiA+IMKgCX0gZWxzZSB7DQo+IA0KPiBJIGd1
-ZXNzIEknbSBtaXNzaW5nIHNvbWV0aGluZywgYnV0IGhvdyBpcyBiYWNrd2FyZHMgY29tcGF0aWJp
-bGl0eQ0KPiBzdXBwb3NlZCB0byB3b3JrIGZyb20gdXNlciBzcGFjZSBwb2ludCBvZiB2aWV3PyBJ
-ZiB1c2VyIHNwYWNlIHVzZXMNCj4gTkw4MDIxMV9NRlBfT1BUSU9OQUwgd2l0aCBhbiBvbGQga2Vy
-bmVsLCB0aGUga2VybmVsIHdpbGwgcmVqZWN0IHRoZQ0KPiBjb21tYW5kIHdpdGggLUVJTlZBTCBh
-bmQgdXNlciBzcGFjZSB3aWxsIHRyeSBhZ2FpbiB3aXRob3V0DQo+IE5MODAyMTFfTUZQX09QVElP
-TkFMPw0KPiANCg0KDQpObyB5b3UgYXJlIG5vdC4gSSBzaW1wbHkgZm9yZ290IHRoYXQgcG9pbnQu
-IEkgZ3Vlc3MgdGhhdCB0aGlzIHdvdWxkIGJlDQp0aGUgYmVoYXZpb3IsIHllcy4uLiBUaGlzIGlz
-IHJlbGV2YW50IGZvciBhcF9zY2FuPTIgd3BhX3MgY29uZmlndXJhdGlvbg0Kb25seSB3aGljaCBt
-YWtlcyBpdCBub3QgcmVhbGx5IGNvbW1vbiwgYnV0IHN0aWxsLCB5b3UgYXJlIHJpZ2h0Lg0KTm90
-IHN1cmUgaG93IGVhc3kgaXQgd2lsbCBiZSB0byB3cml0ZSB0aGlzIGxvZ2ljIGluIHRoZSBzdXBw
-bGljYW50DQp0aG91Z2guLi4gVW5sZXNzIHdlIGFkZCBhbiBubDgwMjExIGZlYXR1cmUgYml0IGJ1
-dCBJIGZlZWwgaXQnZCBiZSBhIGJpdA0Kb2YgYSB3YXN0ZS4NCkpvdW5pLCB3aGF0IGRvIHlvdSB0
-aGluaz8NCkkga25vdyB5b3UgaGF2ZW4ndCBzZWVuIHRoZSBzdXBwbGljYW50IHBhdGNoIHlldCwg
-YnV0IGhlcmUgaXMgdGhlIGdpc3QNCm9mIGl0LiBJIGFsbG93IE9QVElPTkFMIGluIGNvbm5lY3Qo
-KSBvbmx5LCBhbmQgbm90IGluIGFzc29jaWF0ZSgpOg0KDQpAQCAtNTc5MCw2ICs1Nzg2LDE0IEBA
-IHN0YXRpYyBpbnQgd3BhX2RyaXZlcl9ubDgwMjExX3RyeV9jb25uZWN0KA0KwqDCoMKgwqDCoMKg
-wqDCoGlmIChyZXQpDQrCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGdvdG8gZmFpbDsN
-CsKgDQorwqDCoMKgwqDCoMKgwqBpZiAocGFyYW1zLT5tZ210X2ZyYW1lX3Byb3RlY3Rpb24gPT0g
-TUdNVF9GUkFNRV9QUk9URUNUSU9OX1JFUVVJUkVEICYmDQorwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oG5sYV9wdXRfdTMyKG1zZywgTkw4MDIxMV9BVFRSX1VTRV9NRlAsIE5MODAyMTFfTUZQX1JFUVVJ
-UkVEKSkNCivCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBnb3RvIGZhaWw7DQorDQorwqDC
-oMKgwqDCoMKgwqBpZiAocGFyYW1zLT5tZ210X2ZyYW1lX3Byb3RlY3Rpb24gPT0gTUdNVF9GUkFN
-RV9QUk9URUNUSU9OX09QVElPTkFMICYmDQorwqDCoMKgwqDCoMKgwqDCoMKgwqDCoG5sYV9wdXRf
-dTMyKG1zZywgTkw4MDIxMV9BVFRSX1VTRV9NRlAsIE5MODAyMTFfTUZQX09QVElPTkFMKSkNCivC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBnb3RvIGZhaWw7DQorDQrCoMKgwqDCoMKgwqDC
-oMKgYWxncyA9IDA7DQrCoMKgwqDCoMKgwqDCoMKgaWYgKHBhcmFtcy0+YXV0aF9hbGcgJiBXUEFf
-QVVUSF9BTEdfT1BFTikNCsKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgYWxncysrOw0K
-DQog
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+
+AP mode support is advertised to cfg80211. Necessary wiphy
+parameters are initialized.
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 28 +++++++++++++++++++++++++++-
+ drivers/net/wireless/rsi/rsi_main.h         | 10 ++++++++++
+ 2 files changed, 37 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 210ad79..2da5493 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -122,6 +122,23 @@ const u16 rsi_mcsrates[8] = {
+ 	RSI_RATE_MCS4, RSI_RATE_MCS5, RSI_RATE_MCS6, RSI_RATE_MCS7
+ };
+ 
++static const u32 rsi_max_ap_stas[16] = {
++	32,	/* 1 - Wi-Fi alone */
++	0,	/* 2 */
++	0,	/* 3 */
++	0,	/* 4 - BT EDR alone */
++	4,	/* 5 - STA + BT EDR */
++	32,	/* 6 - AP + BT EDR */
++	0,	/* 7 */
++	0,	/* 8 - BT LE alone */
++	4,	/* 9 - STA + BE LE */
++	0,	/* 10 */
++	0,	/* 11 */
++	0,	/* 12 */
++	1,	/* 13 - STA + BT Dual */
++	4,	/* 14 - AP + BT Dual */
++};
++
+ /**
+  * rsi_is_cipher_wep() -  This function determines if the cipher is WEP or not.
+  * @common: Pointer to the driver private structure.
+@@ -1348,7 +1365,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 	SET_IEEE80211_PERM_ADDR(hw, common->mac_addr);
+ 	ether_addr_copy(hw->wiphy->addr_mask, addr_mask);
+ 
+-	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
++	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_AP);
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 	wiphy->retry_short = RETRY_SHORT;
+ 	wiphy->retry_long  = RETRY_LONG;
+@@ -1363,6 +1381,14 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 	wiphy->bands[NL80211_BAND_5GHZ] =
+ 		&adapter->sbands[NL80211_BAND_5GHZ];
+ 
++	/* AP Parameters */
++	wiphy->max_ap_assoc_sta = rsi_max_ap_stas[common->oper_mode - 1];
++	common->max_stations = wiphy->max_ap_assoc_sta;
++	rsi_dbg(ERR_ZONE, "Max Stations Allowed = %d\n", common->max_stations);
++	hw->sta_data_size = sizeof(struct rsi_sta);
++	wiphy->flags = WIPHY_FLAG_REPORTS_OBSS;
++	wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
++	wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER;
+ 	wiphy->reg_notifier = rsi_reg_notify;
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index d05b5e0..0077888 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -21,6 +21,13 @@
+ #include <linux/skbuff.h>
+ #include <net/mac80211.h>
+ 
++struct rsi_sta {
++	struct ieee80211_sta *sta;
++	s16 sta_id;
++	u16 seq_start[IEEE80211_NUM_TIDS];
++	bool start_tx_aggr[IEEE80211_NUM_TIDS];
++};
++
+ struct rsi_hw;
+ 
+ #include "rsi_ps.h"
+@@ -253,6 +260,9 @@ struct rsi_common {
+ 
+ 	u16 beacon_interval;
+ 	u8 dtim_cnt;
++
++	/* AP mode parameters */
++	int max_stations;
+ };
+ 
+ enum host_intf {
+-- 
+2.7.4
