@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:35116 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752149AbdHBOgx (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:33768 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752610AbdHKOAP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 10:36:53 -0400
-Received: by mail-qt0-f182.google.com with SMTP id p3so27890564qtg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Aug 2017 07:36:53 -0700 (PDT)
+        Fri, 11 Aug 2017 10:00:15 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Reply-To: mike@hellotwist.com
-In-Reply-To: <87h8xqrso6.fsf@kamboji.qca.qualcomm.com>
-References: <CAKXXJEw72EYHJpdwoWhudmOmFF=w+u_JG3vrp=-TCfR3zhANZw@mail.gmail.com>
- <20170802070117.GA2790@redhat.com> <1501676470.11126.2.camel@sipsolutions.net>
- <87h8xqrso6.fsf@kamboji.qca.qualcomm.com>
-From: Michael Skeffington <mike@astro.ai>
-Date: Wed, 2 Aug 2017 10:36:52 -0400
-Message-ID: <CAKXXJEwT0EK=dmswxP90WNJQcSM1sUAE3E46AzZ8Pd9a2XXtxg@mail.gmail.com> (sfid-20170802_163657_019706_2FB1B00F)
-Subject: Re: [PATCH] rt2x00: Fix MMIC countermeasures.
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [v2,02/20] ath6kl: constify usb_device_id
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+CC: <kvalo@codeaurora.org>, <petkan@nucleusys.com>,
+        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <e5102d3d94654b16b3c57455dd1c6991@euamsexm01a.eu.qualcomm.com> (sfid-20170811_160031_220056_107AF1D9)
+Date: Fri, 11 Aug 2017 15:59:37 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I traced through this code during MMIC failure and
-ieee80211_rx_h_decrypt() drops the frame before getting to
-ieee80211_rx_h_michael_mic_verify().  Johannes suggested this change
-to me in response to a previous thread and I am offering this patch
-after having conducted the proper testing on it.
+Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
 
-On Wed, Aug 2, 2017 at 9:43 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Wed, 2017-08-02 at 09:01 +0200, Stanislaw Gruszka wrote:
->>
->>> The relevant mac80211 code look like this:
->>>
->>> ieee80211_rx_result
->>> ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
->>
->> I believe that ieee80211_rx_h_decrypt() will drop the frames you're
->> looking at, and I do think the original patch is correct. If MMIC
->> validation was (and could be) done, then the frame must have been
->> decrypted properly.
->
-> Just to avoid any confusion, with original patch you mean this one?
->
-> rt2x00: Fix MMIC countermeasures.
-> https://patchwork.kernel.org/patch/9875647/
->
-> --
-> Kalle Valo
+> usb_device_id are not supposed to change at runtime. All functions
+> working with usb_device_id provided by <linux/usb.h> work with
+> const usb_device_id. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> Reviewed-by: Steve deRosier <derosier@gmail.com>
+> Tested-by: Steve deRosier <derosier@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+2 patches applied to ath-next branch of ath.git, thanks.
+
+e881a6584941 ath6kl: constify usb_device_id
+76b07b30c46b ath9k: constify usb_device_id
+
+-- 
+https://patchwork.kernel.org/patch/9890987/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
