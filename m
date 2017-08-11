@@ -1,78 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36994 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751010AbdHCOrd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59338 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751545AbdHKKaq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 10:47:33 -0400
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux@endlessm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH v3] iwlwifi: Demote messages about fw flags size to info
-Date: Thu,  3 Aug 2017 07:47:28 -0700
-Message-Id: <20170803144728.32305-1-jprvita@endlessm.com> (sfid-20170803_164809_083467_0E57BF4F)
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD004A3CC@AcuExch.aculab.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DD004A3CC@AcuExch.aculab.com>
+        Fri, 11 Aug 2017 06:30:46 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH for-4.13] brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices
+References: <1502446056-30035-1-git-send-email-arend.vanspriel@broadcom.com>
+Date: Fri, 11 Aug 2017 13:30:41 +0300
+In-Reply-To: <1502446056-30035-1-git-send-email-arend.vanspriel@broadcom.com>
+        (Arend van Spriel's message of "Fri, 11 Aug 2017 11:07:36 +0100")
+Message-ID: <87378yflbi.fsf@kamboji.qca.qualcomm.com> (sfid-20170811_123052_181771_BC1E6B4F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages are not reporting a real error, just the fact that the
-firmware knows about more flags than the driver.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Currently these messages are presented to the user during boot if there
-is no bootsplash covering the console, even when booting the kernel with
-"quiet".
+> The firmware feature check introduced for multi-scheduled scan turned out
+> to be failing for bcm4343{0,1,8} devices resulting in a firmware crash.
+> The reason for this crash has not yet been root cause so this patch avoids
+> the feature check for those device as a short-term fix.
+>
+> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
+> Reported-by: Ian Molton <ian@mnementh.co.uk>
+> Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan feature")
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Demoting it to the warn level helps having a clean boot process.
+So the first release for 9fe929aaace6 was v4.13-rc1 so no stable tag
+needed.
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
+(This is mostly to remind myself about this :)
 
-v2 changes:
- - Set to warn level instead of info
-
-v3 changes:
- - Fix commit message typo
-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index be466a074c1d..c98a254bbd4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -461,9 +461,9 @@ static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
- 	int i;
- 
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_API, 32)) {
--		IWL_ERR(drv,
--			"api flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_WARN(drv,
-+			 "api flags index %d larger than supported by driver\n",
-+			 api_index);
- 		/* don't return an error so we can load FW that has more bits */
- 		return 0;
- 	}
-@@ -485,9 +485,9 @@ static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
- 	int i;
- 
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_CAPA, 32)) {
--		IWL_ERR(drv,
--			"capa flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_WARN(drv,
-+			 "capa flags index %d larger than supported by driver\n",
-+			 api_index);
- 		/* don't return an error so we can load FW that has more bits */
- 		return 0;
- 	}
 -- 
-2.13.2
+Kalle Valo
