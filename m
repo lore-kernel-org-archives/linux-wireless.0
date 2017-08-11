@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59674 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34932 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751405AbdH3QWm (ORCPT
+        with ESMTP id S1752724AbdHKNOz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:22:42 -0400
+        Fri, 11 Aug 2017 09:14:55 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org,
-        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 00/27] qtnfmac: allow to configure channel, BW, HT/VHT caps
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-        <87ziahni8p.fsf@purkki.adurom.net>
-Date: Wed, 30 Aug 2017 19:22:37 +0300
-In-Reply-To: <87ziahni8p.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
-        30 Aug 2017 19:16:38 +0300")
-Message-ID: <87val5nhyq.fsf@purkki.adurom.net> (sfid-20170830_182245_971638_CA026E5D)
+To: Andreas Born <futur.andy@googlemail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Mahesh Bandewar <maheshb@google.com>,
+        Andy Gospodarek <andy@greyhouse.net>,
+        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, James Feeney <james@nurealm.net>
+Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working with wireless drivers
+References: <87shh0gewn.fsf@kamboji.qca.qualcomm.com>
+        <8845e49b-3165-e6df-5935-c86278d220d9@broadcom.com>
+        <CADps9UA7S2betC-+5sOXjYWmDC8gnk6JJ9aEueEOoYAC3DU8hg@mail.gmail.com>
+Date: Fri, 11 Aug 2017 16:14:48 +0300
+In-Reply-To: <CADps9UA7S2betC-+5sOXjYWmDC8gnk6JJ9aEueEOoYAC3DU8hg@mail.gmail.com>
+        (Andreas Born's message of "Thu, 10 Aug 2017 19:52:03 +0200")
+Message-ID: <87tw1edz5j.fsf@kamboji.qca.qualcomm.com> (sfid-20170811_151503_171087_E50CE671)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Andreas Born <futur.andy@googlemail.com> writes:
 
-> igor.mitsyanko.os@quantenna.com writes:
+> Earlier today I submitted the patch (bonding: require speed/duplex
+> only for 802.3ad, alb and tlb) [2] that only partially reverts what is
+> a regression following my aforementioned logic. This seems to me like
+> the best solution in the short term since it should satisfy both
+> usergroups represented by Mahesh and James and restores consistence
+> with the bonding documentation. James already commented approvingly on
+> that patch in the bug report. [3]
 >
->> This patchset has a goal to make operational parameters (channel, BW,
->> HT/VHT capabilities) configuration possible for qtnfmac driver.
->> Basically the idea is to make driver level as thin as possible, and let
->> everything to be handled by userspace/nl80211 and wireless device itself.
+> Regards
+> Andreas
 >
-> This patchset is just too big and pain to review. Preferably no more
-> than 10-12 patches per set, please. If the patches bigger then the limit
-> should be even lower.
+> [1]
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/networking/bonding.txt
 
-And I noticed that patch 25 didn't make it to patchwork:
+Great, thanks.
 
-https://patchwork.kernel.org/project/linux-wireless/list/?state=*&q=qtnfmac
+I'll take it the patch is meant for net tree (and not net-next) so that
+it will be fixed for v4.13? Also it should backported to v4.12 stable
+tree. I don't see any mention of that in the patch submission and that's
+why I'm asking.
 
 -- 
 Kalle Valo
