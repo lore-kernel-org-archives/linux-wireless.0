@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28019 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750942AbdHaMxB (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35013 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753245AbdHKNqA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 08:53:01 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3,1/2] ath10k: add the PCI PM core suspend/resume ops
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
-References: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
-To: <ryanhsu@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <ryanhsu@qti.qualcomm.com>
-Message-ID: <f4652c401e1f462d89b4611afe9bd623@euamsexm01a.eu.qualcomm.com> (sfid-20170831_145304_939567_72F339CD)
-Date: Thu, 31 Aug 2017 14:52:54 +0200
+        Fri, 11 Aug 2017 09:46:00 -0400
+Received: by mail-pg0-f67.google.com with SMTP id l64so3184659pge.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:46:00 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 03/11] rsi: remove interface changes for AP mode
+Date: Fri, 11 Aug 2017 19:11:21 +0530
+Message-Id: <1502458889-9690-4-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154605_860499_46558046)
+In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ryanhsu@qti.qualcomm.com wrote:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> The actual PCI suspend/resume in ath10k has been handled in wow.c,
-> but in the case of the device doesn't support remote wakeup,
-> the .hif_suspend() and .hif_resume() will never be handled.
-> 
->   ath10k_wow_op_suspend()
->   {
-> 	if (WARN_ON(!test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
-> 		    ar->running_fw->fw_file.fw_features))) {
-> 		ret = 1;
-> 		goto exit;
-> 	}
-> 
-> 	....
-> 
-> 	ret = ath10k_hif_suspend(ar);
->   }
-> 
-> So register the PCI PM core to support the suspend/resume if the device
-> doesn't support remote wakeup.
-> 
-> Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+remove_interface callback of mac80211 is handled for AP mode.
+Same is notified to firmware through vap_capabilities frame
+with VAP status VAP_DELETE.
 
-This had a warning:
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
 
-drivers/net/wireless/ath/ath10k/pci.c:3651:1: warning: symbol 'ath10k_pci_pm_ops' was not declared. Should it be static?
-
-I fixed it in the pending branch by making it static:
-
-static SIMPLE_DEV_PM_OPS(ath10k_pci_pm_ops,
-			 ath10k_pci_pm_suspend,
-			 ath10k_pci_pm_resume);
-
-Please review.
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index edcba56..99446bb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -405,13 +405,31 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
+ {
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
++	enum opmode opmode;
++
++	rsi_dbg(INFO_ZONE, "Remove Interface Called\n");
+ 
+ 	mutex_lock(&common->mutex);
+-	if (vif->type == NL80211_IFTYPE_STATION) {
+-		adapter->sc_nvifs--;
+-		rsi_set_vap_capabilities(common, STA_OPMODE, vif->addr,
+-					 0, VAP_DELETE);
++
++	if (adapter->sc_nvifs <= 0) {
++		mutex_unlock(&common->mutex);
++		return;
++	}
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		opmode = STA_OPMODE;
++		break;
++	case NL80211_IFTYPE_AP:
++		opmode = AP_OPMODE;
++		break;
++	default:
++		mutex_unlock(&common->mutex);
++		return;
+ 	}
++	rsi_set_vap_capabilities(common, opmode, vif->addr,
++				 0, VAP_DELETE);
++	adapter->sc_nvifs--;
+ 
+ 	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
+ 		adapter->vifs[0] = NULL;
 -- 
-https://patchwork.kernel.org/patch/9916215/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
