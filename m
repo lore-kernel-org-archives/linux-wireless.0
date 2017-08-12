@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46886 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751391AbdHJI5U (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52307 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751944AbdHLWAn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 04:57:20 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sat, 12 Aug 2017 18:00:43 -0400
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: btcoex: make function btc8723b2ant_dac_swing static
+Date: Sat, 12 Aug 2017 23:00:17 +0100
+Message-Id: <20170812220017.6505-1-colin.king@canonical.com> (sfid-20170813_000103_905946_780B7CD6)
 MIME-Version: 1.0
-Subject: Re: [v2,01/20] ar5523: constify usb_device_id
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1502295823-20824-2-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502295823-20824-2-git-send-email-arvind.yadav.cs@gmail.com>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: petkan@nucleusys.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Message-Id: <20170810085720.2830F60132@smtp.codeaurora.org> (sfid-20170810_105739_432990_C69789EF)
-Date: Thu, 10 Aug 2017 08:57:20 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> usb_device_id are not supposed to change at runtime. All functions
-> working with usb_device_id provided by <linux/usb.h> work with
-> const usb_device_id. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+The function btc8723b2ant_dac_swing  is local to the source and
+does not need to be in global scope, so make it static.
 
-17 patches applied to wireless-drivers-next.git, thanks.
+Cleans up sparse warning:
+symbol 'btc8723b2ant_dac_swing' was not declared. Should it be static?
 
-c5c60b2d577e ar5523: constify usb_device_id
-76f6a5c80a4b carl9170: constify usb_device_id
-22796d149229 at76c50x: constify usb_device_id
-c4291319b6fe orinoco: constify usb_device_id
-54c9f21605d8 p54: constify usb_device_id
-3673c417f509 libertas: constify usb_device_id
-8a3132fa6bbb libertas_tf: constify usb_device_id
-7516dbd470e3 mwifiex: constify usb_device_id
-e2717b312750 mt7601u: constify usb_device_id
-88ee79a1a11c rt2500usb: constify usb_device_id
-c7bb7d79cf4f rt2800usb: constify usb_device_id
-543e4f87508b rt73usb: constify usb_device_id
-e0b081b20523 rtl8187: constify usb_device_id
-5033d70de169 rtl8xxxu: constify usb_device_id
-3a55a4afd187 rtl8192cu: constify usb_device_id
-b924ffd7a4cd zd1201: constify usb_device_id
-ecf23a788e13 zd1211rw: constify usb_device_id
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 31965f0ef69d..9d2ecfbc7b33 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -833,9 +833,9 @@ static void btc8723b2ant_set_sw_fulltime_dac_swing(struct btc_coexist *btcoex,
+ 		btc8723b2ant_set_dac_swing_reg(btcoex, 0x18);
+ }
+ 
+-void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
+-			    bool force_exec, bool dac_swing_on,
+-			    u32 dac_swing_lvl)
++static void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
++				   bool force_exec, bool dac_swing_on,
++				   u32 dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
 -- 
-https://patchwork.kernel.org/patch/9890989/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
