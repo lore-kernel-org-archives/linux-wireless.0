@@ -1,118 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51538 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932132AbdHVIls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 04:41:48 -0400
-Message-ID: <1503391305.2409.12.camel@redhat.com> (sfid-20170822_104212_712442_9A9739D2)
-Subject: Re: [PATCH] drivers: net: wireless: atmel: check memory allocation
- failure
-From: Matteo Croce <mcroce@redhat.com>
-To: Himanshu Jha <himanshujha199640@gmail.com>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org
-Date: Tue, 22 Aug 2017 10:41:45 +0200
-In-Reply-To: <1503389481-4988-1-git-send-email-himanshujha199640@gmail.com>
-References: <1503389481-4988-1-git-send-email-himanshujha199640@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from resqmta-po-12v.sys.comcast.net ([96.114.154.171]:58856 "EHLO
+        resqmta-po-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751100AbdHLTba (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 Aug 2017 15:31:30 -0400
+Reply-To: james@nurealm.net
+Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working
+ with wireless drivers
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Andreas Born <futur.andy@googlemail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Mahesh Bandewar <maheshb@google.com>,
+        Andy Gospodarek <andy@greyhouse.net>,
+        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+References: <87shh0gewn.fsf@kamboji.qca.qualcomm.com>
+ <8845e49b-3165-e6df-5935-c86278d220d9@broadcom.com>
+ <CADps9UA7S2betC-+5sOXjYWmDC8gnk6JJ9aEueEOoYAC3DU8hg@mail.gmail.com>
+ <87tw1edz5j.fsf@kamboji.qca.qualcomm.com>
+ <87tw1dck6o.fsf@kamboji.qca.qualcomm.com>
+From: James Feeney <james@nurealm.net>
+Message-ID: <deb37db2-a55b-4010-475a-e756e67d3bc9@nurealm.net> (sfid-20170812_213133_777959_C4A62EEA)
+Date: Sat, 12 Aug 2017 13:30:53 -0600
+MIME-Version: 1.0
+In-Reply-To: <87tw1dck6o.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Il giorno mar, 22/08/2017 alle 13.41 +0530, Himanshu Jha ha scritto:
-> Check memory allocation failure and return -ENOMEM if failure
-> occurs.
+Hey Kalle
+
+Still, a problem:
+
+On 08/12/2017 01:35 AM, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
 > 
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
->  drivers/net/wireless/atmel/at76c50x-usb.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
+>> Andreas Born <futur.andy@googlemail.com> writes:
+>>
+>>> Earlier today I submitted the patch (bonding: require speed/duplex
+>>> only for 802.3ad, alb and tlb) [2] that only partially reverts what is
+>>> a regression following my aforementioned logic. This seems to me like
+>>> the best solution in the short term since it should satisfy both
+>>> usergroups represented by Mahesh and James and restores consistence
+>>> with the bonding documentation. James already commented approvingly on
+>>> that patch in the bug report. [3]
+>>>
+>>> Regards
+>>> Andreas
+>>>
+>>> [1]
+>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/networking/bonding.txt
+>>
+>> Great, thanks.
+>>
+>> I'll take it the patch is meant for net tree (and not net-next) so that
+>> it will be fixed for v4.13? Also it should backported to v4.12 stable
+>> tree. I don't see any mention of that in the patch submission and that's
+>> why I'm asking.
 > 
-> diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c
-> b/drivers/net/wireless/atmel/at76c50x-usb.c
-> index 09defbc..73f0924 100644
-> --- a/drivers/net/wireless/atmel/at76c50x-usb.c
-> +++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-> @@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct
-> at76_priv *priv)
->  					 GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
->  			   sizeof(struct mib_mac_addr));
-> @@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct
-> at76_priv *priv)
->  	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep),
-> GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
->  			   sizeof(struct mib_mac_wep));
-> @@ -1006,7 +1006,7 @@ static void at76_dump_mib_mac_mgmt(struct
-> at76_priv *priv)
->  					 GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
->  			   sizeof(struct mib_mac_mgmt));
-> @@ -1043,7 +1043,7 @@ static void at76_dump_mib_mac(struct at76_priv
-> *priv)
->  	struct mib_mac *m = kmalloc(sizeof(struct mib_mac),
-> GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct
-> mib_mac));
->  	if (ret < 0) {
-> @@ -1080,7 +1080,7 @@ static void at76_dump_mib_phy(struct at76_priv
-> *priv)
->  	struct mib_phy *m = kmalloc(sizeof(struct mib_phy),
-> GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct
-> mib_phy));
->  	if (ret < 0) {
-> @@ -1113,7 +1113,7 @@ static void at76_dump_mib_local(struct
-> at76_priv *priv)
->  	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
->  	if (ret < 0) {
-> @@ -1138,7 +1138,7 @@ static void at76_dump_mib_mdomain(struct
-> at76_priv *priv)
->  	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain),
-> GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
->  
->  	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
->  			   sizeof(struct mib_mdomain));
+> I see that Dave applied this to the net tree and queued also for stable,
+> excellent. Thanks everyone!
+> 
+> https://patchwork.ozlabs.org/patch/800080/
+> 
 
-Perhaps these functions should return something instead of being void.
+Andreas patch failed to address the continuous, *10-times per second* warning
+which will "spam" the log file, sometimes the console, whenever the test fails:
+ if (bond_update_speed_duplex(slave) && bond_needs_speed_duplex(bond)) {...}
+which then has:
+ netdev_warn(bond->dev, "failed to get link speed/duplex for%s\n",
+			slave->dev->name);
 
-Regards,
+That is the sort of irresponsible code that "works fine" as long as there are no
+errors, and it never actually runs!
 
--- 
-Matteo Croce
-per aspera ad upstream
+I'm guessing that the simple fix is to use "net_warn_ratelimited()" instead of
+"netdev_warn()", where net/core/utils.c says:
+
+/*
+ * All net warning printk()s should be guarded by this function.
+ */
+int net_ratelimit(void)
+{
+        return __ratelimit(&net_ratelimit_state);
+}
+
+though Andreas has also suggested "pr_warn_ratelimited()", which instead uses
+"__ratelimit(&_rs)".
+
+Here's a link to the rate-limiting patch, after Andreas' patch is already
+applied, since you say that David has already applied the first patch:
+
+https://bugzilla.kernel.org/attachment.cgi?id=257903
+
+
+Thanks
+James
