@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.astracom.cz ([52.28.180.220]:45350 "EHLO mx2.astracom.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751746AbdHAO1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 10:27:46 -0400
-Received: from localhost ([127.0.0.1])
-        by mx2.astracom.cz
-        (using TLSv1/SSLv3 with cipher AES256-SHA (256 bits))
-        for linux-wireless@vger.kernel.org;
-        Tue, 1 Aug 2017 13:48:52 +0000
-Received: from wondra by trosca.trosc with local (Exim 4.89)
-        (envelope-from <wondra@volny.cz>)
-        id 1dcXg3-0003EZ-LU
-        for linux-wireless@vger.kernel.org; Tue, 01 Aug 2017 15:57:39 +0200
-Date: Tue, 1 Aug 2017 15:57:39 +0200
-From: Tomas Vondra <wondra@volny.cz>
-To: linux-wireless@vger.kernel.org
-Subject: [bug report][repost] ath9k does not select legacy rates in 802.11n
- mode
-Message-ID: <20170801135739.maukzupec6da64v7@trosca.trosc> (sfid-20170801_162749_820933_7133EBA0)
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:60093 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750922AbdHMNH6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 13 Aug 2017 09:07:58 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sebastian.reichel@collabora.co.uk"
+        <sebastian.reichel@collabora.co.uk>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: RE: [v6] wlcore: add missing nvs file name info for wilink8
+Date: Sun, 13 Aug 2017 13:07:49 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36425195@DFRE01.ent.ti.com> (sfid-20170813_150812_683329_177BC4A0)
+References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
+ <20170809172651.GA3934@atomide.com>
+ <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
+ <20170809211620.GF3934@atomide.com>
+ <8665E2433BC68541A24DFFCA87B70F5B364233E7@DFRE01.ent.ti.com>
+ <20170810172635.GO8569@atomide.com>
+In-Reply-To: <20170810172635.GO8569@atomide.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear list,
-I am currently trying to tune my R52n ath9k minipci card for maximum performance in a \
-high interference city environment. Mode is 802.11n in the 5 GHz band.
+> > > >
+> > >
+> > > Sure, just want to make sure we are not trying to add work around jus=
+t
+> for
+> > > A couple of faulty devices.
+> > >
+> > > > > I have verified using a couple of com6 modules with an am335x-evm
+> and
+> > > > they had mac addresses read ok.
+> > > >
+> > > > Sounds like there are multiple variants of the wl12xx
+> > > > available then.
+> > > >
+> > > I am trying to find out internally if there is a possibility that the=
+re were
+> > > devices
+> > > Produced in the past where the internal fuses were not programmed
+> with a
+> > > valid
+> > > Address before being assembled into the modules.
+> > >
+> >
+> > Seems like MAC address for wilink6/7 was added to devices that were
+> produced  around Q3 of 2010
+> > In case you still have this omap3-evm up and can just do a quick check =
+for
+> me as I don't have this board, can you try using the following command:
+> >
+> > cat /sys/bus/platform/drivers/wl12xx_driver/wl12xx.0.auto/hw_pg_ver
+> >
+> > and let me know what the output you get is?
+>=20
+> Sure, my omap3-evm has hw_pg_ver set to 3.
+>=20
+Ok, you have a PG3.0 device. Mac address was added in PG3.1 so it explains
+Why the mac address remains zero and not read from fuse.
+Will use random mac in case it is read a zero.
 
-What I see is better download compared to an R52 ath5k in 802.11a mode, but worse \
-upload. I suspect either that the 802.11n modulation is less robust to noise OR that \
-AMSDU aggregation is in use and is worsening resiliency to interference. See this \
-monitoring screenshot: https://pasteboard.co/o8ykSMG.png The first part is 802.11a, \
-the second is 802.11n, and the third was obtained by limiting the uplink to legacy \
-rates by:
-
-iw dev wlan0 set bitrates legacy-5 6 9 12 18 ht-mcs-5
-
-The problem: Unfortunately, the result of that is that only the 6 Mb/s rate is used. \
-When I allow any ht-mcs-5 rate, none of the legacy rates is ever selected and the \
-throughput is worse. It seems that the wandering minstrel algorithm is failing. The \
-other side is a Mikrotik router and it freely mixes legacy and mcs rates to get \
-optimal throughput, the Linux driver does not. 1. How would I debug this? Last time I \
-did it in Madwifi, minstrel had some debug stats in procfs. 2. How to find out if \
-AMSDU aggregation is in use and to disable it to see if that is the thing hurting \
-performance?
-
-The kernel version is 4.9.0 from Debian.
-
-Thanks for your insights, Tomas Vondra
+Best Regards,
+Eyal
