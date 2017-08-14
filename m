@@ -1,91 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751600AbdHCNZs (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35964 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752453AbdHNVRv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 09:25:48 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 2/9] wil6210: allow configuring scan timers
-Date: Thu,  3 Aug 2017 16:25:32 +0300
-Message-Id: <1501766739-31996-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152550_539050_1CE7B951)
-In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Mon, 14 Aug 2017 17:17:51 -0400
+Received: by mail-oi0-f68.google.com with SMTP id b130so10449766oii.3
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 14:17:51 -0700 (PDT)
+Subject: Re: [PATCH v2 09/10] rtlwifi: use debugfs to debug.
+To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+ <20170625154344.19213-10-Larry.Finger@lwfinger.net>
+ <1502736968.8295.22.camel@perches.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <9007f821-764b-9bd5-da13-bcbd032e57e1@lwfinger.net> (sfid-20170814_231754_337862_277AB00F)
+Date: Mon, 14 Aug 2017 16:17:49 -0500
+MIME-Version: 1.0
+In-Reply-To: <1502736968.8295.22.camel@perches.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+On 08/14/2017 01:56 PM, Joe Perches wrote:
+> On Sun, 2017-06-25 at 10:43 -0500, Larry Finger wrote:
+>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>
+>> Use debugfs to dump register and btcoex status.
+> []
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
+> []
+>> +void rtl_debug_add_one(struct ieee80211_hw *hw)
+>> +{
+>> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>> +	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+>> +	struct dentry *parent;
+>> +
+>> +	snprintf(rtlpriv->dbg.debugfs_name, 18, "%02x-%02x-%02x-%02x-%02x-%02x",
+>> +		 rtlefuse->dev_addr[0], rtlefuse->dev_addr[1],
+>> +		 rtlefuse->dev_addr[2], rtlefuse->dev_addr[3],
+>> +		 rtlefuse->dev_addr[4], rtlefuse->dev_addr[5]);
+> 
+> Why uses dashes and why not just use %pM
 
-Allow setting scan timeout and scan dwell time
-through module parameters.
+This snprintf() supplies the MAC address in a file name of the type
+/sys/kernel/debug/rtlwifi/00-11-22-33-44-55-66/mac_0
+Using %pM would put colons there, and I have had trouble with colons in a file 
+name. We could use %#pM and drop the separators.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 17 ++++++++++++++---
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
- 2 files changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 77af749..d079533 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -26,6 +26,14 @@
- module_param(disable_ap_sme, bool, 0444);
- MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
- 
-+static uint scan_dwell_time  = WMI_SCAN_DWELL_TIME_MS;
-+module_param(scan_dwell_time, uint, 0644);
-+MODULE_PARM_DESC(scan_dwell_time, " Scan dwell time (msec)");
-+
-+static uint scan_timeout = WIL6210_SCAN_TO_SEC;
-+module_param(scan_timeout, uint, 0644);
-+MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
-+
- #define CHAN60G(_channel, _flags) {				\
- 	.band			= NL80211_BAND_60GHZ,		\
- 	.center_freq		= 56160 + (2160 * (_channel)),	\
-@@ -528,8 +536,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 
- 	(void)wil_p2p_stop_discovery(wil);
- 
--	wil_dbg_misc(wil, "Start scan_request 0x%p\n", request);
--	wil_dbg_misc(wil, "SSID count: %d", request->n_ssids);
-+	wil_dbg_misc(wil,
-+		     "Start scan_request 0x%p, dwell_time %dms, timeout %dsec, SSID count %d\n",
-+		     request, scan_dwell_time, scan_timeout, request->n_ssids);
- 
- 	for (i = 0; i < request->n_ssids; i++) {
- 		wil_dbg_misc(wil, "SSID[%d]", i);
-@@ -550,10 +559,12 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 	}
- 
- 	wil->scan_request = request;
--	mod_timer(&wil->scan_timer, jiffies + WIL6210_SCAN_TO);
-+	mod_timer(&wil->scan_timer,
-+		  jiffies + msecs_to_jiffies(1000U * scan_timeout));
- 
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.cmd.scan_type = WMI_ACTIVE_SCAN;
-+	cmd.cmd.dwell_time = cpu_to_le32(scan_dwell_time);
- 	cmd.cmd.num_channels = 0;
- 	n = min(request->n_channels, 4U);
- 	for (i = 0; i < n; i++) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d085ccf..ac32284 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -112,7 +112,7 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
- #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
- #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
- #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
--#define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
-+#define WIL6210_SCAN_TO_SEC		10
- #define WIL6210_DISCONNECT_TO_MS (2000)
- #define WIL6210_RX_HIGH_TRSH_INIT		(0)
- #define WIL6210_RX_HIGH_TRSH_DEFAULT \
--- 
-1.9.1
+Larry
