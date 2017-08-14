@@ -1,114 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:37533 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753089AbdHNMTP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 08:19:15 -0400
-Received: by mail-pg0-f65.google.com with SMTP id 83so10426500pgb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 05:19:15 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 3/3] mwifiex: debugfs: trigger device dump for usb interface
-Date: Mon, 14 Aug 2017 12:19:03 +0000
-Message-Id: <1502713143-24373-3-git-send-email-huxinming820@gmail.com> (sfid-20170814_141918_947641_A94AC326)
-In-Reply-To: <1502713143-24373-1-git-send-email-huxinming820@gmail.com>
-References: <1502713143-24373-1-git-send-email-huxinming820@gmail.com>
+Received: from mail-bl2nam02on0062.outbound.protection.outlook.com ([104.47.38.62]:18656
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751518AbdHNSoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Aug 2017 14:44:46 -0400
+Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Avinash Patil <avinashp@quantenna.com>,
+        sergey.matyukevich.os@quantenna.com
+References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <0fa0e9e5-fc62-8c64-f595-b1d5f8af9108@quantenna.com> (sfid-20170814_204451_364306_CF11DFC2)
+Date: Mon, 14 Aug 2017 11:44:40 -0700
+MIME-Version: 1.0
+In-Reply-To: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 08/14/2017 06:49 AM, Emmanuel Grumbach wrote:
+> 
+> User space can now allow the kernel to associate to an AP
+> that requires MFP or that doesn't have MFP enabled in the
+> same NL80211_CMD_CONNECT command.
+> The driver / firmware will decide whether to use it or not.
+> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
 
-This patch extend device_dump debugfs function to make it
-works for usb interface.
+No issues from quantenna driver.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c  | 11 +++++++----
- drivers/net/wireless/marvell/mwifiex/debugfs.c |  9 +++++----
- drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  4 ++++
- 4 files changed, 17 insertions(+), 8 deletions(-)
+Acked-by Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 0edc5d6..b16dd6a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -290,13 +290,16 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
- 			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
- 
-+	/* Setup the timer after transmit command, except that specific
-+	 * command might not have command response.
-+	 */
-+	if (cmd_code != HostCmd_CMD_FW_DUMP_EVENT)
-+		mod_timer(&adapter->cmd_timer,
-+			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
-+
- 	/* Clear BSS_NO_BITS from HostCmd */
- 	cmd_code &= HostCmd_CMD_ID_MASK;
- 
--	/* Setup the timer after transmit command */
--	mod_timer(&adapter->cmd_timer,
--		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index 6f4239b..5d476de 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -168,10 +168,11 @@
- {
- 	struct mwifiex_private *priv = file->private_data;
- 
--	if (!priv->adapter->if_ops.device_dump)
--		return -EIO;
--
--	priv->adapter->if_ops.device_dump(priv->adapter);
-+	if (priv->adapter->iface_type == MWIFIEX_USB)
-+		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
-+				 HostCmd_ACT_GEN_SET, 0, NULL, true);
-+	else
-+		priv->adapter->if_ops.device_dump(priv->adapter);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 610a3ea..2d3a644 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -398,6 +398,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_TDLS_CONFIG                       0x0100
- #define HostCmd_CMD_MC_POLICY                         0x0121
- #define HostCmd_CMD_TDLS_OPER                         0x0122
-+#define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
- #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
- #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
- #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index fb09014..211e47d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2206,6 +2206,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_CHAN_REGION_CFG:
- 		ret = mwifiex_cmd_chan_region_cfg(priv, cmd_ptr, cmd_action);
- 		break;
-+	case HostCmd_CMD_FW_DUMP_EVENT:
-+		cmd_ptr->command = cpu_to_le16(cmd_no);
-+		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
-+		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
--- 
-1.9.1
+[...]
+
+> @@ -4086,10 +4090,12 @@ enum nl80211_key_type {
+>    * enum nl80211_mfp - Management frame protection state
+>    * @NL80211_MFP_NO: Management frame protection not used
+>    * @NL80211_MFP_REQUIRED: Management frame protection required
+> + * @NL80211_MFP_OPTIONAL: Management frame is optional
+
+Probable meant to be "Management frame _protection_ is optional"
+
+>    */
+>   enum nl80211_mfp {
+>          NL80211_MFP_NO,
+>          NL80211_MFP_REQUIRED,
+> +       NL80211_MFP_OPTIONAL,
+>   };
+> 
+>   enum nl80211_wpa_versions {
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 8f035d9868d1..829867132326 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -9115,6 +9115,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+>          if (info->attrs[NL80211_ATTR_USE_MFP]) {
+>                  connect.mfp = nla_get_u32(info->attrs[NL80211_ATTR_USE_MFP]);
+>                  if (connect.mfp != NL80211_MFP_REQUIRED &&
+> +                   connect.mfp != NL80211_MFP_OPTIONAL &&
+>                      connect.mfp != NL80211_MFP_NO)
+>                          return -EINVAL;
+>          } else {
+> --
+> 2.9.3
+> 
