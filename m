@@ -1,115 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:37743 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751562AbdH3Jn5 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:37533 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753089AbdHNMTP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 05:43:57 -0400
-Received: by mail-pf0-f195.google.com with SMTP id a2so4003332pfj.4
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 02:43:57 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 8/8] rsi: miscellaneous changes for p2p mode
-Date: Wed, 30 Aug 2017 15:08:28 +0530
-Message-Id: <1504085908-2163-9-git-send-email-amitkarwar@gmail.com> (sfid-20170830_114413_412704_51943743)
-In-Reply-To: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
-References: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
+        Mon, 14 Aug 2017 08:19:15 -0400
+Received: by mail-pg0-f65.google.com with SMTP id 83so10426500pgb.4
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 05:19:15 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 3/3] mwifiex: debugfs: trigger device dump for usb interface
+Date: Mon, 14 Aug 2017 12:19:03 +0000
+Message-Id: <1502713143-24373-3-git-send-email-huxinming820@gmail.com> (sfid-20170814_141918_947641_A94AC326)
+In-Reply-To: <1502713143-24373-1-git-send-email-huxinming820@gmail.com>
+References: <1502713143-24373-1-git-send-email-huxinming820@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Xinming Hu <huxm@marvell.com>
 
-Add P2P_GO condition as well when handling BEACON_ENABLE
-from mac80211. Also passing 'vif' for auto rate request.
+This patch extend device_dump debugfs function to make it
+works for usb interface.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 15 +++++++++------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  6 +++---
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c  | 11 +++++++----
+ drivers/net/wireless/marvell/mwifiex/debugfs.c |  9 +++++----
+ drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  4 ++++
+ 4 files changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 79426a2..b1f5dbb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -756,7 +756,8 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 0edc5d6..b16dd6a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -290,13 +290,16 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
+ 			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
  
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
--	    (vif->type == NL80211_IFTYPE_AP)) {
-+	    ((vif->type == NL80211_IFTYPE_AP) ||
-+	     (vif->type == NL80211_IFTYPE_P2P_GO))) {
- 		if (bss->enable_beacon) {
- 			rsi_dbg(INFO_ZONE, "===> BEACON ENABLED <===\n");
- 			common->beacon_enabled = 1;
-@@ -1147,9 +1148,9 @@ static int rsi_mac80211_set_rate_mask(struct ieee80211_hw *hw,
-  */
- static void rsi_perform_cqm(struct rsi_common *common,
- 			    u8 *bssid,
--			    s8 rssi)
-+			    s8 rssi,
-+			    struct ieee80211_vif *vif)
- {
--	struct rsi_hw *adapter = common->priv;
- 	s8 last_event = common->cqm_info.last_cqm_event_rssi;
- 	int thold = common->cqm_info.rssi_thold;
- 	u32 hyst = common->cqm_info.rssi_hyst;
-@@ -1165,7 +1166,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
++	/* Setup the timer after transmit command, except that specific
++	 * command might not have command response.
++	 */
++	if (cmd_code != HostCmd_CMD_FW_DUMP_EVENT)
++		mod_timer(&adapter->cmd_timer,
++			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
++
+ 	/* Clear BSS_NO_BITS from HostCmd */
+ 	cmd_code &= HostCmd_CMD_ID_MASK;
  
- 	common->cqm_info.last_cqm_event_rssi = rssi;
- 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
--	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
-+	ieee80211_cqm_rssi_notify(vif, event, rssi, GFP_KERNEL);
- 
- 	return;
+-	/* Setup the timer after transmit command */
+-	mod_timer(&adapter->cmd_timer,
+-		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
+-
+ 	return 0;
  }
-@@ -1228,15 +1229,17 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
- 		vif = adapter->vifs[i];
- 		if (!vif)
- 			continue;
--		if (vif->type == NL80211_IFTYPE_STATION)
-+		if (vif->type == NL80211_IFTYPE_STATION) {
- 			bss = &vif->bss_conf;
-+			break;
-+		}
- 	}
- 	if (!bss)
- 		return;
- 	/* CQM only for connected AP beacons, the RSSI is a weighted avg */
- 	if (bss->assoc && !(memcmp(bss->bssid, hdr->addr2, ETH_ALEN))) {
- 		if (ieee80211_is_beacon(hdr->frame_control))
--			rsi_perform_cqm(common, hdr->addr2, rxs->signal);
-+			rsi_perform_cqm(common, hdr->addr2, rxs->signal, vif);
- 	}
  
- 	return;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 383cd43..4b94190 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1160,9 +1160,9 @@ static bool rsi_map_rates(u16 rate, int *offset)
-  */
- static int rsi_send_auto_rate_request(struct rsi_common *common,
- 				      struct ieee80211_sta *sta,
--				      u16 sta_id)
-+				      u16 sta_id,
-+				      struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index 6f4239b..5d476de 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -168,10 +168,11 @@
  {
--	struct ieee80211_vif *vif = common->priv->vifs[0];
- 	struct sk_buff *skb;
- 	struct rsi_auto_rate *auto_rate;
- 	int ii = 0, jj = 0, kk = 0;
-@@ -1332,7 +1332,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 					      aid, sta_id,
- 					      vif);
- 		if (common->min_rate == 0xffff)
--			rsi_send_auto_rate_request(common, sta, sta_id);
-+			rsi_send_auto_rate_request(common, sta, sta_id, vif);
- 		if (opmode == RSI_OPMODE_STA) {
- 			if (!rsi_send_block_unblock_frame(common, false))
- 				common->hw_data_qs_blocked = false;
+ 	struct mwifiex_private *priv = file->private_data;
+ 
+-	if (!priv->adapter->if_ops.device_dump)
+-		return -EIO;
+-
+-	priv->adapter->if_ops.device_dump(priv->adapter);
++	if (priv->adapter->iface_type == MWIFIEX_USB)
++		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
++				 HostCmd_ACT_GEN_SET, 0, NULL, true);
++	else
++		priv->adapter->if_ops.device_dump(priv->adapter);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 610a3ea..2d3a644 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -398,6 +398,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_TDLS_CONFIG                       0x0100
+ #define HostCmd_CMD_MC_POLICY                         0x0121
+ #define HostCmd_CMD_TDLS_OPER                         0x0122
++#define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
+ #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
+ #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
+ #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index fb09014..211e47d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -2206,6 +2206,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 	case HostCmd_CMD_CHAN_REGION_CFG:
+ 		ret = mwifiex_cmd_chan_region_cfg(priv, cmd_ptr, cmd_action);
+ 		break;
++	case HostCmd_CMD_FW_DUMP_EVENT:
++		cmd_ptr->command = cpu_to_le16(cmd_no);
++		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
++		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
 -- 
-2.7.4
+1.9.1
