@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40926 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752047AbdHHLpk (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33410 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752133AbdHNVTt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:45:40 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 14 Aug 2017 17:19:49 -0400
+Received: by mail-oi0-f66.google.com with SMTP id e124so10446978oig.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 14:19:48 -0700 (PDT)
+Subject: Re: [PATCH v2 09/10] rtlwifi: use debugfs to debug.
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Joe Perches <joe@perches.com>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
+ <20170625154344.19213-10-Larry.Finger@lwfinger.net>
+ <1502736968.8295.22.camel@perches.com>
+ <02ab7fe7-9e82-3aae-1273-321c26129196@broadcom.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <862f3c86-91fd-e72d-734d-df2f0b0100c0@lwfinger.net> (sfid-20170814_231951_938213_5B4F9394)
+Date: Mon, 14 Aug 2017 16:19:47 -0500
 MIME-Version: 1.0
-Subject: Re: rsi: fix uninitialized descriptor pointer issue
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1501770400-6659-1-git-send-email-amitkarwar@gmail.com>
-References: <1501770400-6659-1-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Message-Id: <20170808114539.B98E560241@smtp.codeaurora.org> (sfid-20170808_134543_187851_B01F3E83)
-Date: Tue,  8 Aug 2017 11:45:39 +0000 (UTC)
+In-Reply-To: <02ab7fe7-9e82-3aae-1273-321c26129196@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> wrote:
-
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 08/14/2017 02:08 PM, Arend van Spriel wrote:
+> On 14-08-17 20:56, Joe Perches wrote:
+>> On Sun, 2017-06-25 at 10:43 -0500, Larry Finger wrote:
+>>> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> This patch fixes the uninitialized descriptor pointer
-> issue in function rsi_send_internal_mgmt_frame().
-> Descriptor should point to start of the skb data.
-> 
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Fixes: 9a629fafe7d8 ("rsi: immediate wakeup bit and priority for TX command packets")
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> Also the subject line is kinda generic. At least it made me smile ;-p
 
-Patch applied to wireless-drivers-next.git, thanks.
+Subject now changed to "rtlwifi: Use debugfs to improve debugging"
 
-6345016d4bea rsi: fix uninitialized descriptor pointer issue
-
--- 
-https://patchwork.kernel.org/patch/9879245/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Larry
