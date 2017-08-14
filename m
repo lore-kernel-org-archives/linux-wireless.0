@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:33243 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbdH1RPS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54480 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750765AbdHNEyt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 13:15:18 -0400
-Received: by mail-wm0-f42.google.com with SMTP id b14so14478077wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2017 10:15:17 -0700 (PDT)
-Subject: Re: [PATCH v4] brcmfmac: add CLM download support
-To: Steve deRosier <derosier@gmail.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        kvalo@codeaurora.org, chi-hsien.lin@cypress.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>
-References: <1503912332-4275-1-git-send-email-wright.feng@cypress.com>
- <CALupW3AWFvGqWDCfvHKkodAMcjf00JrDMHgyuLk3Facg=aqQBA@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <82bb64a9-4ddd-98dd-9068-ddbe9eabb930@broadcom.com> (sfid-20170828_191521_763717_AA2FB66D)
-Date: Mon, 28 Aug 2017 19:15:15 +0200
+        Mon, 14 Aug 2017 00:54:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: Re: [PATCH 05/11] rsi: handle station connection in AP mode
+References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+        <1502458889-9690-6-git-send-email-amitkarwar@gmail.com>
+Date: Mon, 14 Aug 2017 07:54:42 +0300
+In-Reply-To: <1502458889-9690-6-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Fri, 11 Aug 2017 19:11:23 +0530")
+Message-ID: <87k226da0d.fsf@kamboji.qca.qualcomm.com> (sfid-20170814_065454_524365_BC7545C4)
 MIME-Version: 1.0
-In-Reply-To: <CALupW3AWFvGqWDCfvHKkodAMcjf00JrDMHgyuLk3Facg=aqQBA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> Station structures are maintained in driver with required
+> fields. When mac80211 callback sta_add is called, driver
+> iterates through list of connected stations to check available
+> index and assigns station id which is important for further
+> communication to that station. Then peer notify frame is send
+> to firmware to inform the firmware about new station connection.
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-On 28-08-17 16:52, Steve deRosier wrote:
-> On Mon, Aug 28, 2017 at 2:25 AM, Wright Feng <wright.feng@cypress.com> wrote:
->> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
->>
->> The firmware for brcmfmac devices includes information regarding
->> regulatory constraints. For certain devices this information is kept
->> separately in a binary form that needs to be downloaded to the device.
->> This patch adds support to download this so-called CLM blob file. It
->> uses the same naming scheme as the other firmware files with extension
->> of .clm_blob.
->>
-> 
-> Not to bikeshed this, but why not just ".clm"?  ".clm_blob" seems
-> unnecessary and could feel "unprofessional" to users.
-> 
-> To me simple seems better.
+[...]
 
-Hi Steve,
+> @@ -1157,18 +1159,81 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+>  {
+>  	struct rsi_hw *adapter = hw->priv;
+>  	struct rsi_common *common = adapter->priv;
+> +	bool sta_exist = false;
+> +	struct rsi_sta *rsta;
+> +
+> +	print_hex_dump(KERN_INFO, "Station add: ", DUMP_PREFIX_OFFSET,
+> +		       16, 1, sta->addr, ETH_ALEN, 0);
 
-Glad you ask ;-) It was one of my comments pre-reviewing this 
-"internally"*. The problem with calling it .clm is that it means 
-something else within Broadcom and Cypress for that matter. The 
-.clm_blob is the output of tool compiling the regulatory data according 
-an input specification which uses the .clm extension. It is similar to 
-regdb.txt and regulatory.bin.
+The driver should not spam the logs every time a client connects, so
+this should be a debug message.
 
-Regards,
-Arend
-
-* internally does not quite cover Cypress+Broadcom collaboration.
+-- 
+Kalle Valo
