@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0053.outbound.protection.outlook.com ([104.47.34.53]:52734
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:43520
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751317AbdH3OCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 10:02:23 -0400
-Date: Wed, 30 Aug 2017 17:02:10 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        id S1752374AbdHNUIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Aug 2017 16:08:34 -0400
+Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         johannes@sipsolutions.net
-Subject: Re: [PATCH 06/27] qtnfmac: pass full channel definition to device on
- start_ap command
-Message-ID: <20170830140209.r3gbg22rlvzziklf@bars> (sfid-20170830_160227_153997_31E5000B)
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-7-igor.mitsyanko.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Avinash Patil <avinashp@quantenna.com>,
+        sergey.matyukevich.os@quantenna.com
+References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
+ <a35aea64-b391-2719-c8cb-92ef9c9288c7@broadcom.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <1723b617-2272-330e-958c-bb988aa504d5@quantenna.com> (sfid-20170814_220842_155139_11F1369C)
+Date: Mon, 14 Aug 2017 13:08:26 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825023024.10565-7-igor.mitsyanko.os@quantenna.com>
+In-Reply-To: <a35aea64-b391-2719-c8cb-92ef9c9288c7@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +	if (s->ssid && s->ssid_len > 0 && s->ssid_len <= IEEE80211_MAX_SSID_LEN)
-> +		qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, s->ssid,
-> +					 s->ssid_len);
-> +
-> +	if (cfg80211_chandef_valid(&s->chandef)) {
-> +		struct qlink_tlv_chandef *chtlv =
-> +			(struct qlink_tlv_chandef *)skb_put(cmd_skb,
-> +							    sizeof(*chtlv));
-> +
-> +		chtlv->hdr.type = cpu_to_le16(QTN_TLV_ID_CHANDEF);
-> +		chtlv->hdr.len = sizeof(*chtlv) - sizeof(chtlv->hdr);
+On 08/14/2017 12:22 PM, Arend van Spriel wrote:
+> On 14-08-17 15:49, Emmanuel Grumbach wrote:
+>> User space can now allow the kernel to associate to an AP
+>> that requires MFP or that doesn't have MFP enabled in the
+>> same NL80211_CMD_CONNECT command.
+>> The driver / firmware will decide whether to use it or not.
+>>
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> ---
+>> A short tour of the drivers taught me that only Quantenna really look
+>> at cfg80211_connect_params::sme which can now be 2. This is why
+>> the maintainer of this driver is CCed.
+> 
+> Indeed in brcmfmac the IE is processed to determine whether it is
+> required or optional. Probably will change our driver to use the
+> explicit mfp values from cfg80211_connect_params::sme.
 
-It looks like cpu_to_le16 is needed here as well.
+Maybe this is a right way to do that, avoiding that compatibility 
+problem (no new NL* flags)? Except for maybe nl80211 layer should parse 
+it instead, not driver.
 
-> +		qlink_chandef_cfg2q(&s->chandef, &chtlv->chan);
-> +	}
-> +
+It is kind of not clear right now for drivers where to get information from:
+- NL attributes passed from userspace and forwarded to a driver
+- IEs passed from userspace, parsed by nl80211 and forwarded to a driver
+- IEs that are passed from userspace and parsed by drivers directly
+
+> 
+> Thanks,
+> Arend
