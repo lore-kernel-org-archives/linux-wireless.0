@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36272 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbdH3QjA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:39:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 5/5] qtnfmac: implement 64-bit dma support
-References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
-        <20170829121623.24761-6-sergey.matyukevich.os@quantenna.com>
-Date: Wed, 30 Aug 2017 19:38:56 +0300
-In-Reply-To: <20170829121623.24761-6-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Tue, 29 Aug 2017 15:16:23 +0300")
-Message-ID: <87lgm1nh7j.fsf@purkki.adurom.net> (sfid-20170830_183903_791503_8C3E3ABF)
+Received: from mx1.redhat.com ([209.132.183.28]:57556 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751160AbdHNRZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Aug 2017 13:25:38 -0400
+Subject: Re: [4.13 REGRESSION] Re: brcm43430 sdio wifi regression with
+ 4.13-rc1
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        russianneuromancer <russianneuromancer@ya.ru>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
+ <03779c4f-b48b-444f-59c5-e10324dc77bd@mnementh.co.uk>
+ <04f1050f-966e-b0c8-7714-ee5065ba69cf@mnementh.co.uk>
+ <9e616361-da87-6f46-8ee3-4a4f673c3c80@broadcom.com>
+ <d6c43415-186d-ea1d-c1da-f68020267508@redhat.com>
+ <2323972d-280f-048f-31fb-1c31b0228b22@redhat.com>
+ <87d17yb195.fsf@kamboji.qca.qualcomm.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <3abe4265-fd1c-4f1b-a416-429b8062856f@redhat.com> (sfid-20170814_192543_850372_0561FA1C)
+Date: Mon, 14 Aug 2017 19:25:35 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87d17yb195.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Hi,
 
-> Use 64-bit dma for hosts with CONFIG_ARCH_DMA_ADDR_T_64BIT enabled.
->
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> ---
->  .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 70 ++++++++++++++++++----
->  .../wireless/quantenna/qtnfmac/pearl/pcie_ipc.h    | 10 ++--
->  .../quantenna/qtnfmac/pearl/pcie_regs_pearl.h      |  1 +
->  3 files changed, 65 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-> index 2921d8069bf2..502e72b7cdcc 100644
-> --- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-> @@ -403,10 +403,12 @@ static int alloc_bd_table(struct qtnf_pcie_bus_priv *priv)
->  	priv->rx_bd_vbase = vaddr;
->  	priv->rx_bd_pbase = paddr;
->  
-> -	writel(QTN_HOST_LO32(paddr),
-> -	       PCIE_HDP_TX_HOST_Q_BASE_L(priv->pcie_reg_base));
-> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
->  	writel(QTN_HOST_HI32(paddr),
->  	       PCIE_HDP_TX_HOST_Q_BASE_H(priv->pcie_reg_base));
-> +#endif
+On 14-08-17 17:46, Kalle Valo wrote:
+> Hans de Goede <hdegoede@redhat.com> writes:
+> 
+>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>>> index d21258d..def120c 100644
+>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>>> @@ -159,8 +159,9 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>>>>
+>>>>           brcmf_feat_firmware_capabilities(ifp);
+>>>>           memset(&gscan_cfg, 0, sizeof(gscan_cfg));
+>>>> -       brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
+>>>> -                                 &gscan_cfg, sizeof(gscan_cfg));
+>>>> +       if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID)
+>>>> +               brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
+>>>> "pfn_gscan_cfg",
+>>>> +                                         &gscan_cfg, sizeof(gscan_cfg));
+>>>>           brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+>>>>           if (drvr->bus_if->wowl_supported)
+>>>>                   brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+>>>>
+>>
+>> AFAICT this is still a problem with 4.13-rc5, can we at least get
+>> the above workaround merged for 4.13 ?
+> 
+> Just applied it few hours ago:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=e9bf53ab1ee34bb05c104bbfd2b77c844773f8e6
+> 
+> I'll try to get it to -rc6 but of course it depends on pull schedules if
+> it makes it or not.
 
-Personally I detest ifdefs and try to write code like this using
-IS_ENABLED():
+Ok, thank you.
 
-if (IS_ENABLED(CONFIG_ARCH_DMA_ADDR_T_64BIT))
-  	writel(QTN_HOST_HI32(paddr),
-  	       PCIE_HDP_TX_HOST_Q_BASE_H(priv->pcie_reg_base));
+Regards,
 
-But up to you which style you prefer.
-
--- 
-Kalle Valo
+Hans
