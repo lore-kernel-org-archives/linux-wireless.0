@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55324 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751350AbdHRW6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 18:58:14 -0400
-Message-ID: <1503097091.2730.14.camel@redhat.com> (sfid-20170819_005817_943149_F07B37BB)
-Subject: Re: [POC/GIT] mac80211 multicast rate selection (help wanted!)
-From: Matteo Croce <mcroce@redhat.com>
-To: David Lamparter <equinox@diac24.net>,
-        linux-wireless@vger.kernel.org
-Date: Sat, 19 Aug 2017 00:58:11 +0200
-In-Reply-To: <20170818222910.GT773745@eidolon>
-References: <20170818222910.GT773745@eidolon>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:6509 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751147AbdHOLeD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Aug 2017 07:34:03 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [5/6] ath10k: add memory dump support for QCA6174/QCA9377
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
+References: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <e8f8ba72414c48dea427357170975b66@euamsexm01a.eu.qualcomm.com> (sfid-20170815_133406_980879_351908B4)
+Date: Tue, 15 Aug 2017 13:33:51 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Il giorno sab, 19/08/2017 alle 00.29 +0200, David Lamparter ha scritto:
-> Hello Linux Wireless hackers,
-> 
-> 
-> I've taken up an hacking endeavour in trying to improve multicast on
-> wifi, specifically to get it off the stupid 1 MBit rate.  Before
-> anyone
-> yells "that's not allowed by the spec" - it actually is, please refer
-> to
-> section 9.7.5 of 802.11-2012. ("... using one of the rates included
-> in
-> the BSSBasicRateSet parameter ...")  Also, Cisco and Aruba are doing
-> this in their enterprise APs, and it's rather nice.
-> 
-> So, from some completely unrelated datacenter work, I have hacked up
-> the
-> bridge to hand back down to the driver detailed info on multicast
-> receivers.  Then I took this and fudged around in the minstrel_ht
-> code
-> and, well, it gave me 9 MBit/s ;)
-> 
-> Now, I have pretty little no clue about the Linux wireless stack, so
-> I'd
-> appreciate if someone could tell me how massively wrong I'm doing
-> this
-> and which places in particular are the wrongest!
-> 
-> You can find the code here:
-> https://github.com/eqvinox/vpls-linux-kernel/commits/mdb-hack
-> https://github.com/eqvinox/vpls-iproute2/tree/mdb-hack
-> 
-> Please note that all of this is proof-of-concept level, it probably
-> leaks tons of memory, has great race conditions and eats your cat for
-> breakfast.  It also contains some debug printks like this:
-> [ 9006.253504] mac80211_hwsim hwsim0 wlan0: multi-dst TX:
-> 02:00:00:00:02:00 02:00:00:00:01:00
-> [ 9006.255007] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:02:00 =>
-> rate #1
-> [ 9006.256095] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:01:00 =>
-> rate #12
-> [ 9006.257186] mac80211_hwsim hwsim0 wlan0: result rate #1
-> 
-> 
-> Cheers,
-> 
-> -David
-> 
-> 
-> P.S.: yes, I know about unicast conversion.  But that's not helpful
-> when, for example, you want to get a 10 MBit multicast TV livestream
-> to
-> 5 simultaneous wifi clients...
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
-So you are scanning the multicast receivers list to select the lowest
-rate, comparing the rates by data rate?
-I think that this is incorrect, the data rate is a combination of many
-parameters (modulation, GI interval, coding rate, streams, etc.) so a
-rate with higher data rate could be better than another with lower
-speed in some circumstances. Or even worse, some station could not
-receive the packet at all (too many streams, unsupported modulations.
-etc.).
+> Add memory dump to the firmware crash data file which is provided to user space
+> via devcoredump interface. This makes it easier for firmware engineers to debug
+> firmware crashes.
+> 
+> Due to increased memory consumption the memory dump is disabled by default. To
+> enable it make sure that bit 3 is set in coredump_mask module parameter:
+> 
+> modprobe ath10k_core coredump_mask=0xffffffff
+> 
+> When RAMDUMP is enabled a buffer for the dump is allocated with vmalloc during
+> device probe. The actual memory layout is different in hardware versions and
+> the layouts are defined in coredump.c. The memory is split to regions and, to
+> get even finegrained control of what to copy, the region can split to smaller
+> sections as not all registers are readable (which could cause the whole system
+> to stall).
+> 
+> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
+> [kvalo@qca.qualcomm.com: refactoring and cleanup]
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-You could try to select the lowest MCS rate, the longer GI and the
-minimum number of stream from all the receivers and use a data rate
-compatible with these settings, if any (not all combinations are
-allowed unfortunately)
+kbuild bot reported:
 
-Ciao,
+coccinelle warnings: (new ones prefixed by >>)
+
+>> drivers/net/wireless/ath/ath10k/pci.c:1561:2-3: Unneeded semicolon
+--
+>> drivers/net/wireless/ath/ath10k/pci.c:1522:6-15: WARNING: Unsigned expression compared with zero: skip_size < 0
+
 -- 
-Matteo Croce
-per aspera ad upstream
+https://patchwork.kernel.org/patch/9901255/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
