@@ -1,43 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751739AbdHCNZv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38206 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751500AbdHOLaj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 09:25:51 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v3 4/9] wil6210: check no_fw_recovery in resume failure recovery
-Date: Thu,  3 Aug 2017 16:25:34 +0300
-Message-Id: <1501766739-31996-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152554_031446_A8D92703)
-In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 15 Aug 2017 07:30:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-08-15
+Date: Tue, 15 Aug 2017 14:30:34 +0300
+Message-ID: <87d17x9ig5.fsf@kamboji.qca.qualcomm.com> (sfid-20170815_133112_009608_A5027CA6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reset 11ad device on resume failure only if no_fw_recovery
-is not set.
+Hi Dave,
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/pm.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+more fixes to net tree for 4.13. More info in the signed tag below,
+please let me know if there are any problems.
 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index ce1f384..4548829 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -85,7 +85,9 @@ static int wil_resume_keep_radio_on(struct wil6210_priv *wil)
- 	/* Send WMI resume request to the device */
- 	rc = wmi_resume(wil);
- 	if (rc) {
--		wil_err(wil, "device failed to resume (%d), resetting\n", rc);
-+		wil_err(wil, "device failed to resume (%d)\n", rc);
-+		if (no_fw_recovery)
-+			goto out;
- 		rc = wil_down(wil);
- 		if (rc) {
- 			wil_err(wil, "wil_down failed (%d)\n", rc);
--- 
-1.9.1
+Kalle
+
+The following changes since commit 5f5d03143de5e0c593da4ab18fc6393c2815e108:
+
+  brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice (2017-07-27 14:03:14 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-08-15
+
+for you to fetch changes up to e9bf53ab1ee34bb05c104bbfd2b77c844773f8e6:
+
+  brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices (2017-08-14 11:09:30 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.13
+
+This time quite a few fixes for iwlwifi and one major regression fix
+for brcmfmac. For the iwlwifi aggregation bug a small change was
+needed for mac80211, but as Johannes is still away the mac80211 patch
+is taken via wireless-drivers tree.
+
+brcmfmac
+
+* fix firmware crash (a recent regression in bcm4343{0,1,8}
+
+iwlwifi
+
+* Some simple PCI HW ID fix-ups and additions for family 9000
+
+* Remove a bogus warning message with new FWs (bug #196915)
+
+* Don't allow illegal channel options to be used (bug #195299)
+
+* A fix for checksum offload in family 9000
+
+* A fix serious throughput degradation in 11ac with multiple streams
+
+* An old bug in SMPS where the firmware was not aware of SMPS changes
+
+* Fix a memory leak in the SAR code
+
+* Fix a stuck queue case in AP mode;
+
+* Convert a WARN to a simple debug in a legitimate race case (from
+  which we can recover)
+
+* Fix a severe throughput aggregation on 9000-family devices due to
+  aggregation issues, needed a small change in mac80211
+
+----------------------------------------------------------------
+Arend Van Spriel (1):
+      brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices
+
+Avraham Stern (1):
+      iwlwifi: mvm: start mac queues when deferred tx frames are purged
+
+Christophe Jaillet (1):
+      iwlwifi: mvm: Fix a memory leak in an error handling path in 'iwl_mvm_sar_get_wgds_table()'
+
+Emmanuel Grumbach (4):
+      iwlwifi: mvm: fix TCP CSUM offload with WEP and A000 series
+      iwlwifi: add TLV for MLME offload firmware capability
+      iwlwifi: split the regulatory rules when the bandwidth flags require it
+      iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU
+
+Gregory Greenman (2):
+      iwlwifi: mvm: set A-MPDU bit upon empty BA notification from FW
+      iwlwifi: mvm: rs: fix TLC statistics collection
+
+Haim Dreyfuss (1):
+      iwlwifi: fix fw_pre_next_step to apply also for C step
+
+Kalle Valo (2):
+      Merge tag 'iwlwifi-for-kalle-2017-08-02' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+      Merge tag 'iwlwifi-for-kalle-2018-08-09' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Naftali Goldstein (3):
+      iwlwifi: mvm: set the RTS_MIMO_PROT bit in flag mask when sending sta to fw
+      mac80211: add api to start ba session timer expired flow
+      iwlwifi: mvm: send delba upon rx ba session timeout
+
+Tzipi Peres (1):
+      iwlwifi: add the new 9000 series PCI IDs
+
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  6 ++++--
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c      | 14 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |  2 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  8 ++++----
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  5 +++--
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 19 +++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  6 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 12 +++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 10 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  7 ++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 12 ++++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      | 20 ++++++++++++++++++++
+ include/net/mac80211.h                             | 15 +++++++++++++++
+ net/mac80211/agg-rx.c                              | 22 +++++++++++++++++++++-
+ 15 files changed, 126 insertions(+), 40 deletions(-)
