@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:60142 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932427AbdHVLpc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:45:32 -0400
-From: Ian Molton <ian@mnementh.co.uk>
+Received: from mail-by2nam03on0073.outbound.protection.outlook.com ([104.47.42.73]:15232
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751071AbdHONGz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Aug 2017 09:06:55 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 13/30] brcmfmac: Clarify if using braces.
-Date: Tue, 22 Aug 2017 12:25:33 +0100
-Message-Id: <20170822112550.60311-14-ian@mnementh.co.uk> (sfid-20170822_134539_651440_108F4D9C)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH] qtnfmac: pcie datapath optimizations and cleanups
+Date: Tue, 15 Aug 2017 16:06:30 +0300
+Message-Id: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com> (sfid-20170815_150659_202810_74975DC6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whilst this if () statement is technically correct, it lacks clarity.
+Hello Kalle and all,
 
+This patchset implements several optimizations and cleanups for
+pcie datapath in qtnfmac driver. Major changes include:
+- switch to kernel circ_buf implementation
+- modify tx reclaim locking
+- introduce counter for rx underflow events
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index d5d2b2222cc1..257655d7fce4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -745,16 +745,17 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 	if (err)
- 		return err;
- 
--	if (pktq->qlen == 1 || !sdiodev->sg_support)
-+	if (pktq->qlen == 1 || !sdiodev->sg_support) {
- 		skb_queue_walk(pktq, skb) {
- 			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
- 						     addr, skb);
- 			if (err)
- 				break;
- 		}
--	else
-+	} else {
- 		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
- 					    pktq);
-+	}
- 
- 	return err;
- }
--- 
-2.11.0
+ bus.h                   |    1 
+ pearl/pcie.c            |  285 +++++++++++++++++++++++++++++-------------------
+ pearl/pcie_bus_priv.h   |   15 +-
+ pearl/pcie_ipc.h        |    1 
+ pearl/pcie_regs_pearl.h |    1 
+ 5 files changed, 183 insertions(+), 120 deletions(-)
