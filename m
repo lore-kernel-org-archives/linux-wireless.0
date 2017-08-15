@@ -1,159 +1,424 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0068.outbound.protection.outlook.com ([104.47.42.68]:39264
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754347AbdHYCau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 22:30:50 -0400
-From: igor.mitsyanko.os@quantenna.com
+        id S1751517AbdHONHF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Aug 2017 09:07:05 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [PATCH 04/27] qtnfmac: do not cache AP settings in driver structures
-Date: Thu, 24 Aug 2017 19:30:01 -0700
-Message-Id: <20170825023024.10565-5-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043145_576867_BAE31CAC)
-In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 6/9] qtnfmac: switch to kernel circ_buf implementation
+Date: Tue, 15 Aug 2017 16:06:36 +0300
+Message-Id: <20170815130638.31718-7-sergey.matyukevich.os@quantenna.com> (sfid-20170815_150717_050046_46637204)
+In-Reply-To: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Current code for both Rx and Tx queue management is a custom and incomplete
+circular buffer implementation. It makes a lot of sense to switch to kernel
+built-in circ_buf implementation.
 
-Cached AP setings are passed to WiFi card right away and never used.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 17 +--------
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 46 +++++++++++------------
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  3 +-
- 3 files changed, 25 insertions(+), 41 deletions(-)
+ .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 206 +++++++++++++--------
+ .../quantenna/qtnfmac/pearl/pcie_bus_priv.h        |  10 +-
+ 2 files changed, 136 insertions(+), 80 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 8bfe61d..f6eb681 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -267,7 +267,6 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
--	struct qtnf_bss_config *bss_cfg;
- 	int ret;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index f18e8a724c68..f8207ab25576 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -25,6 +25,7 @@
+ #include <linux/completion.h>
+ #include <linux/crc32.h>
+ #include <linux/spinlock.h>
++#include <linux/circ_buf.h>
  
- 	if (!cfg80211_chandef_identical(&mac->chandef, &settings->chandef)) {
-@@ -278,21 +277,7 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 				settings->chandef.chan->center_freq);
- 	}
+ #include "qtn_hw_ids.h"
+ #include "pcie_bus_priv.h"
+@@ -44,10 +45,6 @@ static unsigned int rx_bd_size_param = 256;
+ module_param(rx_bd_size_param, uint, 0644);
+ MODULE_PARM_DESC(rx_bd_size_param, "Rx descriptors queue size");
  
--	bss_cfg = &vif->bss_cfg;
--	memset(bss_cfg, 0, sizeof(*bss_cfg));
+-static unsigned int rx_bd_reserved_param = 16;
+-module_param(rx_bd_reserved_param, uint, 0644);
+-MODULE_PARM_DESC(rx_bd_reserved_param, "Reserved RX descriptors");
 -
--	bss_cfg->bcn_period = settings->beacon_interval;
--	bss_cfg->dtim = settings->dtim_period;
--	bss_cfg->auth_type = settings->auth_type;
--	bss_cfg->privacy = settings->privacy;
+ static u8 flashboot = 1;
+ module_param(flashboot, byte, 0644);
+ MODULE_PARM_DESC(flashboot, "set to 0 to use FW binary file on FS");
+@@ -392,9 +389,8 @@ static int alloc_bd_table(struct qtnf_pcie_bus_priv *priv)
+ 
+ 	pr_debug("TX descriptor table: vaddr=0x%p paddr=%pad\n", vaddr, &paddr);
+ 
+-	priv->tx_bd_reclaim_start = 0;
+-	priv->tx_bd_index = 0;
+-	priv->tx_queue_len = 0;
++	priv->tx_bd_r_index = 0;
++	priv->tx_bd_w_index = 0;
+ 
+ 	/* rx bd */
+ 
+@@ -413,8 +409,6 @@ static int alloc_bd_table(struct qtnf_pcie_bus_priv *priv)
+ 
+ 	pr_debug("RX descriptor table: vaddr=0x%p paddr=%pad\n", vaddr, &paddr);
+ 
+-	priv->rx_bd_index = 0;
 -
--	bss_cfg->ssid_len = settings->ssid_len;
--	memcpy(&bss_cfg->ssid, settings->ssid, bss_cfg->ssid_len);
--
--	memcpy(&bss_cfg->crypto, &settings->crypto,
--	       sizeof(struct cfg80211_crypto_settings));
--
--	ret = qtnf_cmd_send_config_ap(vif);
-+	ret = qtnf_cmd_send_config_ap(vif, settings);
+ 	return 0;
+ }
+ 
+@@ -445,6 +439,8 @@ static int skb2rbd_attach(struct qtnf_pcie_bus_priv *priv, u16 index)
+ 	rxbd->addr_h = cpu_to_le32(QTN_HOST_HI32(paddr));
+ 	rxbd->info = 0x0;
+ 
++	priv->rx_bd_w_index = index;
++
+ 	/* sync up all descriptor updates */
+ 	wmb();
+ 
+@@ -510,6 +506,8 @@ static int qtnf_pcie_init_xfer(struct qtnf_pcie_bus_priv *priv)
+ 
+ 	priv->tx_bd_num = tx_bd_size_param;
+ 	priv->rx_bd_num = rx_bd_size_param;
++	priv->rx_bd_w_index = 0;
++	priv->rx_bd_r_index = 0;
+ 
+ 	ret = alloc_skb_array(priv);
  	if (ret) {
- 		pr_err("VIF%u.%u: failed to push config to FW\n",
- 		       vif->mac->macid, vif->vifid);
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 806b88b..b498019 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -181,10 +181,10 @@ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif)
+@@ -532,67 +530,69 @@ static int qtnf_pcie_init_xfer(struct qtnf_pcie_bus_priv *priv)
  	return ret;
  }
  
--int qtnf_cmd_send_config_ap(struct qtnf_vif *vif)
-+int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
-+			    const struct cfg80211_ap_settings *s)
+-static int qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_bus_priv *priv)
  {
- 	struct sk_buff *cmd_skb;
--	struct qtnf_bss_config *bss_cfg = &vif->bss_cfg;
- 	struct cfg80211_chan_def *chandef = &vif->mac->chandef;
- 	struct qlink_tlv_channel *qchan;
- 	struct qlink_auth_encr aen;
-@@ -200,11 +200,13 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif)
+ 	struct qtnf_tx_bd *txbd;
+ 	struct sk_buff *skb;
+ 	dma_addr_t paddr;
+-	int last_sent;
+-	int count;
++	u32 tx_done_index;
++	int count = 0;
+ 	int i;
  
- 	qtnf_bus_lock(vif->mac->bus);
+-	last_sent = readl(PCIE_HDP_RX0DMA_CNT(priv->pcie_reg_base))
+-			% priv->tx_bd_num;
+-	i = priv->tx_bd_reclaim_start;
+-	count = 0;
  
--	qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, bss_cfg->ssid,
--				 bss_cfg->ssid_len);
-+	if (s->ssid && s->ssid_len > 0 && s->ssid_len <= IEEE80211_MAX_SSID_LEN)
-+		qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, s->ssid,
-+					 s->ssid_len);
+-	while (i != last_sent) {
+-		skb = priv->tx_skb[i];
+-		if (!skb)
+-			break;
++	tx_done_index = readl(PCIE_HDP_RX0DMA_CNT(priv->pcie_reg_base))
++			& (priv->tx_bd_num - 1);
+ 
+-		txbd = &priv->tx_bd_vbase[i];
+-		paddr = QTN_HOST_ADDR(le32_to_cpu(txbd->addr_h),
+-				      le32_to_cpu(txbd->addr));
+-		pci_unmap_single(priv->pdev, paddr, skb->len, PCI_DMA_TODEVICE);
++	i = priv->tx_bd_r_index;
+ 
+-		if (skb->dev) {
+-			skb->dev->stats.tx_packets++;
+-			skb->dev->stats.tx_bytes += skb->len;
++	while (CIRC_CNT(tx_done_index, i, priv->tx_bd_num)) {
++		skb = priv->tx_skb[i];
++		if (likely(skb)) {
++			txbd = &priv->tx_bd_vbase[i];
++			paddr = QTN_HOST_ADDR(le32_to_cpu(txbd->addr_h),
++					      le32_to_cpu(txbd->addr));
++			pci_unmap_single(priv->pdev, paddr, skb->len,
++					 PCI_DMA_TODEVICE);
 +
- 	qtnf_cmd_skb_put_tlv_u16(cmd_skb, QTN_TLV_ID_BCN_PERIOD,
--				 bss_cfg->bcn_period);
--	qtnf_cmd_skb_put_tlv_u8(cmd_skb, QTN_TLV_ID_DTIM, bss_cfg->dtim);
-+				 s->beacon_interval);
-+	qtnf_cmd_skb_put_tlv_u8(cmd_skb, QTN_TLV_ID_DTIM, s->dtim_period);
++			if (skb->dev) {
++				skb->dev->stats.tx_packets++;
++				skb->dev->stats.tx_bytes += skb->len;
++
++				if (netif_queue_stopped(skb->dev))
++					netif_wake_queue(skb->dev);
++			}
  
- 	qchan = skb_put_zero(cmd_skb, sizeof(*qchan));
- 	qchan->hdr.type = cpu_to_le16(QTN_TLV_ID_CHANNEL);
-@@ -214,26 +216,22 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif)
- 		ieee80211_frequency_to_channel(chandef->chan->center_freq));
+-			if (netif_queue_stopped(skb->dev))
+-				netif_wake_queue(skb->dev);
++			dev_kfree_skb_any(skb);
+ 		}
  
- 	memset(&aen, 0, sizeof(aen));
--	aen.auth_type = bss_cfg->auth_type;
--	aen.privacy = !!bss_cfg->privacy;
--	aen.mfp = bss_cfg->mfp;
--	aen.wpa_versions = cpu_to_le32(bss_cfg->crypto.wpa_versions);
--	aen.cipher_group = cpu_to_le32(bss_cfg->crypto.cipher_group);
--	aen.n_ciphers_pairwise = cpu_to_le32(
--					bss_cfg->crypto.n_ciphers_pairwise);
-+	aen.auth_type = s->auth_type;
-+	aen.privacy = !!s->privacy;
-+	aen.mfp = 0;
-+	aen.wpa_versions = cpu_to_le32(s->crypto.wpa_versions);
-+	aen.cipher_group = cpu_to_le32(s->crypto.cipher_group);
-+	aen.n_ciphers_pairwise = cpu_to_le32(s->crypto.n_ciphers_pairwise);
- 	for (i = 0; i < QLINK_MAX_NR_CIPHER_SUITES; i++)
--		aen.ciphers_pairwise[i] = cpu_to_le32(
--					bss_cfg->crypto.ciphers_pairwise[i]);
--	aen.n_akm_suites = cpu_to_le32(
--					bss_cfg->crypto.n_akm_suites);
-+		aen.ciphers_pairwise[i] =
-+			cpu_to_le32(s->crypto.ciphers_pairwise[i]);
-+	aen.n_akm_suites = cpu_to_le32(s->crypto.n_akm_suites);
- 	for (i = 0; i < QLINK_MAX_NR_AKM_SUITES; i++)
--		aen.akm_suites[i] = cpu_to_le32(
--					bss_cfg->crypto.akm_suites[i]);
--	aen.control_port = bss_cfg->crypto.control_port;
--	aen.control_port_no_encrypt =
--			bss_cfg->crypto.control_port_no_encrypt;
--	aen.control_port_ethertype = cpu_to_le16(be16_to_cpu(
--				bss_cfg->crypto.control_port_ethertype));
-+		aen.akm_suites[i] = cpu_to_le32(s->crypto.akm_suites[i]);
-+	aen.control_port = s->crypto.control_port;
-+	aen.control_port_no_encrypt =s->crypto.control_port_no_encrypt;
-+	aen.control_port_ethertype =
-+		cpu_to_le16(be16_to_cpu(s->crypto.control_port_ethertype));
+-		dev_kfree_skb_any(skb);
+ 		priv->tx_skb[i] = NULL;
+-		priv->tx_queue_len--;
+ 		count++;
  
- 	qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_CRYPTO, (u8 *)&aen,
- 				 sizeof(aen));
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index e1bcb83..634b057 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -33,7 +33,8 @@ int qtnf_cmd_send_del_intf(struct qtnf_vif *vif);
- int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
- 			       struct ieee80211_supported_band *band);
- int qtnf_cmd_send_regulatory_config(struct qtnf_wmac *mac, const char *alpha2);
--int qtnf_cmd_send_config_ap(struct qtnf_vif *vif);
-+int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
-+			    const struct cfg80211_ap_settings *s);
- int qtnf_cmd_send_start_ap(struct qtnf_vif *vif);
- int qtnf_cmd_send_stop_ap(struct qtnf_vif *vif);
- int qtnf_cmd_send_register_mgmt(struct qtnf_vif *vif, u16 frame_type, bool reg);
+ 		if (++i >= priv->tx_bd_num)
+ 			i = 0;
+ 	}
+ 
+-	priv->tx_bd_reclaim_start = i;
+ 	priv->tx_reclaim_done += count;
+ 	priv->tx_reclaim_req++;
++	priv->tx_bd_r_index = i;
+ 
+-	return count;
+ }
+ 
+-static bool qtnf_tx_queue_ready(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_tx_queue_ready(struct qtnf_pcie_bus_priv *priv)
+ {
+-	if (priv->tx_queue_len >= priv->tx_bd_num - 1) {
++	if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
++			priv->tx_bd_num)) {
+ 		pr_err_ratelimited("reclaim full Tx queue\n");
+ 		qtnf_pcie_data_tx_reclaim(priv);
+ 
+-		if (priv->tx_queue_len >= priv->tx_bd_num - 1) {
++		if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
++				priv->tx_bd_num)) {
+ 			priv->tx_full_count++;
+-			return false;
++			return 0;
+ 		}
+ 	}
+ 
+-	return true;
++	return 1;
+ }
+ 
+ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+@@ -617,7 +617,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ 		return NETDEV_TX_BUSY;
+ 	}
+ 
+-	i = priv->tx_bd_index;
++	i = priv->tx_bd_w_index;
+ 	priv->tx_skb[i] = skb;
+ 	len = skb->len;
+ 
+@@ -649,8 +649,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ 	if (++i >= priv->tx_bd_num)
+ 		i = 0;
+ 
+-	priv->tx_bd_index = i;
+-	priv->tx_queue_len++;
++	priv->tx_bd_w_index = i;
+ 
+ tx_done:
+ 	if (ret && skb) {
+@@ -709,16 +708,19 @@ static irqreturn_t qtnf_interrupt(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static inline void hw_txproc_wr_ptr_inc(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_rx_data_ready(struct qtnf_pcie_bus_priv *priv)
+ {
+-	u32 index;
++	u16 index = priv->rx_bd_r_index;
++	struct qtnf_rx_bd *rxbd;
++	u32 descw;
+ 
+-	index = priv->hw_txproc_wr_ptr;
++	rxbd = &priv->rx_bd_vbase[index];
++	descw = le32_to_cpu(rxbd->info);
+ 
+-	if (++index >= priv->rx_bd_num)
+-		index = 0;
++	if (descw & QTN_TXDONE_MASK)
++		return 1;
+ 
+-	priv->hw_txproc_wr_ptr = index;
++	return 0;
+ }
+ 
+ static int qtnf_rx_poll(struct napi_struct *napi, int budget)
+@@ -730,26 +732,52 @@ static int qtnf_rx_poll(struct napi_struct *napi, int budget)
+ 	int processed = 0;
+ 	struct qtnf_rx_bd *rxbd;
+ 	dma_addr_t skb_paddr;
++	int consume;
+ 	u32 descw;
+-	u16 index;
++	u32 psize;
++	u16 r_idx;
++	u16 w_idx;
+ 	int ret;
+ 
+-	index = priv->rx_bd_index;
+-	rxbd = &priv->rx_bd_vbase[index];
++	while (processed < budget) {
+ 
+-	descw = le32_to_cpu(rxbd->info);
+ 
+-	while ((descw & QTN_TXDONE_MASK) && (processed < budget)) {
+-		skb = priv->rx_skb[index];
++		if (!qtnf_rx_data_ready(priv))
++			goto rx_out;
+ 
+-		if (likely(skb)) {
+-			skb_put(skb, QTN_GET_LEN(descw));
++		r_idx = priv->rx_bd_r_index;
++		rxbd = &priv->rx_bd_vbase[r_idx];
++		descw = le32_to_cpu(rxbd->info);
++
++		skb = priv->rx_skb[r_idx];
++		psize = QTN_GET_LEN(descw);
++		consume = 1;
+ 
++		if (!(descw & QTN_TXDONE_MASK)) {
++			pr_warn("skip invalid rxbd[%d]\n", r_idx);
++			consume = 0;
++		}
++
++		if (!skb) {
++			pr_warn("skip missing rx_skb[%d]\n", r_idx);
++			consume = 0;
++		}
++
++		if (skb && (skb_tailroom(skb) <  psize)) {
++			pr_err("skip packet with invalid length: %u > %u\n",
++			       psize, skb_tailroom(skb));
++			consume = 0;
++		}
++
++		if (skb) {
+ 			skb_paddr = QTN_HOST_ADDR(le32_to_cpu(rxbd->addr_h),
+ 						  le32_to_cpu(rxbd->addr));
+ 			pci_unmap_single(priv->pdev, skb_paddr, SKB_BUF_SIZE,
+ 					 PCI_DMA_FROMDEVICE);
++		}
+ 
++		if (consume) {
++			skb_put(skb, psize);
+ 			ndev = qtnf_classify_skb(bus, skb);
+ 			if (likely(ndev)) {
+ 				ndev->stats.rx_packets++;
+@@ -762,30 +790,38 @@ static int qtnf_rx_poll(struct napi_struct *napi, int budget)
+ 				bus->mux_dev.stats.rx_dropped++;
+ 				dev_kfree_skb_any(skb);
+ 			}
+-
+-			processed++;
+ 		} else {
+-			pr_err("missing rx_skb[%d]\n", index);
++			if (skb) {
++				bus->mux_dev.stats.rx_dropped++;
++				dev_kfree_skb_any(skb);
++			}
+ 		}
+ 
+-		/* attached rx buffer is passed upstream: map a new one */
+-		ret = skb2rbd_attach(priv, index);
+-		if (likely(!ret)) {
+-			if (++index >= priv->rx_bd_num)
+-				index = 0;
++		priv->rx_skb[r_idx] = NULL;
++		if (++r_idx >= priv->rx_bd_num)
++			r_idx = 0;
+ 
+-			priv->rx_bd_index = index;
+-			hw_txproc_wr_ptr_inc(priv);
++		priv->rx_bd_r_index = r_idx;
+ 
+-			rxbd = &priv->rx_bd_vbase[index];
+-			descw = le32_to_cpu(rxbd->info);
+-		} else {
+-			pr_err("failed to allocate new rx_skb[%d]\n", index);
+-			break;
++		/* repalce processed buffer by a new one */
++		w_idx = priv->rx_bd_w_index;
++		while (CIRC_SPACE(priv->rx_bd_w_index, priv->rx_bd_r_index,
++				  priv->rx_bd_num) > 0) {
++			if (++w_idx >= priv->rx_bd_num)
++				w_idx = 0;
++
++			ret = skb2rbd_attach(priv, w_idx);
++			if (ret) {
++				pr_err("failed to allocate new rx_skb[%d]\n",
++				       w_idx);
++				break;
++			}
+ 		}
+ 
++		processed++;
+ 	}
+ 
++rx_out:
+ 	if (processed < budget) {
+ 		napi_complete(napi);
+ 		qtnf_en_rxdone_irq(priv);
+@@ -1056,10 +1092,18 @@ static int qtnf_dbg_irq_stats(struct seq_file *s, void *data)
+ {
+ 	struct qtnf_bus *bus = dev_get_drvdata(s->private);
+ 	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++	u32 reg = readl(PCIE_HDP_INT_EN(priv->pcie_reg_base));
++	u32 status;
+ 
+ 	seq_printf(s, "pcie_irq_count(%u)\n", priv->pcie_irq_count);
+ 	seq_printf(s, "pcie_irq_tx_count(%u)\n", priv->pcie_irq_tx_count);
++	status = reg &  PCIE_HDP_INT_TX_BITS;
++	seq_printf(s, "pcie_irq_tx_status(%s)\n",
++		   (status == PCIE_HDP_INT_TX_BITS) ? "EN" : "DIS");
+ 	seq_printf(s, "pcie_irq_rx_count(%u)\n", priv->pcie_irq_rx_count);
++	status = reg &  PCIE_HDP_INT_RX_BITS;
++	seq_printf(s, "pcie_irq_rx_status(%s)\n",
++		   (status == PCIE_HDP_INT_RX_BITS) ? "EN" : "DIS");
+ 
+ 	return 0;
+ }
+@@ -1073,10 +1117,24 @@ static int qtnf_dbg_hdp_stats(struct seq_file *s, void *data)
+ 	seq_printf(s, "tx_done_count(%u)\n", priv->tx_done_count);
+ 	seq_printf(s, "tx_reclaim_done(%u)\n", priv->tx_reclaim_done);
+ 	seq_printf(s, "tx_reclaim_req(%u)\n", priv->tx_reclaim_req);
+-	seq_printf(s, "tx_bd_reclaim_start(%u)\n", priv->tx_bd_reclaim_start);
+-	seq_printf(s, "tx_bd_index(%u)\n", priv->tx_bd_index);
+-	seq_printf(s, "rx_bd_index(%u)\n", priv->rx_bd_index);
+-	seq_printf(s, "tx_queue_len(%u)\n", priv->tx_queue_len);
++
++	seq_printf(s, "tx_bd_r_index(%u)\n", priv->tx_bd_r_index);
++	seq_printf(s, "tx_bd_p_index(%u)\n",
++		   readl(PCIE_HDP_RX0DMA_CNT(priv->pcie_reg_base))
++			& (priv->tx_bd_num - 1));
++	seq_printf(s, "tx_bd_w_index(%u)\n", priv->tx_bd_w_index);
++	seq_printf(s, "tx queue len(%u)\n",
++		   CIRC_CNT(priv->tx_bd_w_index, priv->tx_bd_r_index,
++			    priv->tx_bd_num));
++
++	seq_printf(s, "rx_bd_r_index(%u)\n", priv->rx_bd_r_index);
++	seq_printf(s, "rx_bd_p_index(%u)\n",
++		   readl(PCIE_HDP_TX0DMA_CNT(priv->pcie_reg_base))
++			& (priv->rx_bd_num - 1));
++	seq_printf(s, "rx_bd_w_index(%u)\n", priv->rx_bd_w_index);
++	seq_printf(s, "rx alloc queue len(%u)\n",
++		   CIRC_SPACE(priv->rx_bd_w_index, priv->rx_bd_r_index,
++			      priv->rx_bd_num));
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
+index 2a897db2bd79..1b37914299e9 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
+@@ -66,13 +66,11 @@ struct qtnf_pcie_bus_priv {
+ 	void *bd_table_vaddr;
+ 	u32 bd_table_len;
+ 
+-	u32 hw_txproc_wr_ptr;
++	u32 rx_bd_w_index;
++	u32 rx_bd_r_index;
+ 
+-	u16 tx_bd_reclaim_start;
+-	u16 tx_bd_index;
+-	u32 tx_queue_len;
+-
+-	u16 rx_bd_index;
++	u32 tx_bd_w_index;
++	u32 tx_bd_r_index;
+ 
+ 	u32 pcie_irq_mask;
+ 
 -- 
-2.9.5
+2.11.0
