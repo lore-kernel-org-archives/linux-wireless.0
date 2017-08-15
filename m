@@ -1,48 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42458 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751401AbdHETnh (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:36034 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751500AbdHORTk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:43:37 -0400
-From: Luca Coelho <luca@coelho.fi>
+        Tue, 15 Aug 2017 13:19:40 -0400
+Date: Tue, 15 Aug 2017 10:19:37 -0700 (PDT)
+Message-Id: <20170815.101937.899870089340172536.davem@davemloft.net> (sfid-20170815_192001_373590_C64BFEF3)
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:13 +0300
-Message-Id: <20170805194331.17426-2-luca@coelho.fi> (sfid-20170805_214342_864227_2E55E136)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 01/19] iwlwifi: mvm: remove useless condition in LED code
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2017-08-15
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87d17x9ig5.fsf@kamboji.qca.qualcomm.com>
+References: <87d17x9ig5.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 15 Aug 2017 14:30:34 +0300
 
-If the module parameter is set to disable the LED, we leave the
-initialization routine before setting the LEDS_INIT_COMPLETE
-status bit. Therefore, there's no need to check the parameter
-again on exit, just the status check is sufficient.
+> more fixes to net tree for 4.13. More info in the signed tag below,
+> please let me know if there are any problems.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/led.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-index 3cac4278a5fd..95ef37df292f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-@@ -129,8 +129,7 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
- 
- void iwl_mvm_leds_exit(struct iwl_mvm *mvm)
- {
--	if (iwlwifi_mod_params.led_mode == IWL_LED_DISABLE ||
--	    !(mvm->init_status & IWL_MVM_INIT_STATUS_LEDS_INIT_COMPLETE))
-+	if (!(mvm->init_status & IWL_MVM_INIT_STATUS_LEDS_INIT_COMPLETE))
- 		return;
- 
- 	led_classdev_unregister(&mvm->led);
--- 
-2.13.2
+Pulled, thanks Kalle.
