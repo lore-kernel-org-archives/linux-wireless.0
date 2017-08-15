@@ -1,159 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdHBVBG (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38480 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbdHOJmP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:01:06 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 5/9] wil6210: add statistics for suspend time
-Date: Thu,  3 Aug 2017 00:00:45 +0300
-Message-Id: <1501707649-9665-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230109_845431_EE459E41)
-In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 15 Aug 2017 05:42:15 -0400
+Received: by mail-wm0-f50.google.com with SMTP id f15so5899975wmg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Aug 2017 02:42:14 -0700 (PDT)
+Subject: Re: AP mode with Broadcom 4330
+To: Russell King - ARM Linux <linux@armlinux.org.uk>, rosenp@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+References: <20170728141503.GU31807@n2100.armlinux.org.uk>
+ <20170728174930.GA3313@n2100.armlinux.org.uk>
+ <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
+ <20170814233028.GK20805@n2100.armlinux.org.uk>
+ <1502778303.2319.2.camel@gmail.com>
+ <20170815082219.GL20805@n2100.armlinux.org.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f0e75add-c4b9-954b-b37d-2cef447d47dc@broadcom.com> (sfid-20170815_114218_780623_378BC09F)
+Date: Tue, 15 Aug 2017 11:42:12 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170815082219.GL20805@n2100.armlinux.org.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add statistics for total, min and max suspend time, that
-calculates the time the 11ad device was in suspend.
-Those statistics will help to estimate the power impact
-of d3hot feature.
+On 15-08-17 10:22, Russell King - ARM Linux wrote:
+> On Mon, Aug 14, 2017 at 11:25:03PM -0700, rosenp@gmail.com wrote:
+>> If using rtlwifi, you could try using rtl8xxxu and see if you get
+>> similar results. ¯\_(ツ)_/¯
+> 
+> I'm using rtl8xxxu.  I don't think rtlwifi supports the 8192eu - it
+> certainly does not list the device id:
+> Bus 001 Device 002: ID 0bda:818b Realtek Semiconductor Corp.
+> 
+> As an extra data point, trying to associate to the 4330 with an Intel
+> client gives:
+> 
+> [8821752.691490] wlan0: authenticate with 6c:ad:f8:1d:4c:d9
+> [8821752.693448] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
+> [8821752.696230] wlan0: authenticated
+> [8821752.697493] wlan0: associate with 6c:ad:f8:1d:4c:d9 (try 1/3)
+> [8821752.700816] wlan0: RX AssocResp from 6c:ad:f8:1d:4c:d9 (capab=0x411 status=0 aid=1)
+> [8821752.704407] wlan0: associated
+> [8821755.814844] wlan0: deauthenticated from 6c:ad:f8:1d:4c:d9 (Reason: 2=PREV_AUTH_NOT_VALID)
+> 
+> which gets slightly further but ultimately still fails.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
- drivers/net/wireless/ath/wil6210/main.c    |  2 ++
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
- 4 files changed, 40 insertions(+), 4 deletions(-)
+Hi Russell,
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 21b6611..d4e8865 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1617,6 +1617,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
-+	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1628,18 +1630,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
-+	unsigned long long stats_collection_time =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n"
-+		     "total suspend time:%lld min suspend time:%lld\n"
-+		     "max suspend time:%lld stats collection time: %lld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device);
-+		     wil->suspend_stats.rejected_by_device,
-+		     wil->suspend_stats.total_suspend_time,
-+		     wil->suspend_stats.min_suspend_time,
-+		     wil->suspend_stats.max_suspend_time,
-+		     stats_collection_time);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1795,6 +1806,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
-+	wil->suspend_stats.collection_start = ktime_get();
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index daf944a..8968c2c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
- 
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
-+	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 4548829..820ed17 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -300,6 +300,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
-+	if (!rc)
-+		wil->suspend_stats.suspend_start_time = ktime_get();
-+
- 	return rc;
- }
- 
-@@ -309,6 +312,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	bool keep_radio_on = ndev->flags & IFF_UP &&
- 			     wil->keep_radio_on_during_sleep;
-+	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -326,8 +330,20 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
-+	if (rc)
-+		goto out;
-+
-+	suspend_time_usec =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.suspend_start_time));
-+	wil->suspend_stats.total_suspend_time += suspend_time_usec;
-+	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
-+		wil->suspend_stats.min_suspend_time = suspend_time_usec;
-+	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
-+		wil->suspend_stats.max_suspend_time = suspend_time_usec;
-+
- out:
--	wil_dbg_pm(wil, "resume: %s => %d\n",
--		   is_runtime ? "runtime" : "system", rc);
-+	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
-+		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
- 	return rc;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ac32284..724ad59 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -90,6 +90,11 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
-+	unsigned long long total_suspend_time;
-+	unsigned long long min_suspend_time;
-+	unsigned long long max_suspend_time;
-+	ktime_t collection_start;
-+	ktime_t suspend_start_time;
- };
- 
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
--- 
-1.9.1
+On vacation this week, but it is raining over here so have some moments 
+to kill. Here a couple of things to try:
+
+1) try without encryption.
+2) does hostapd log show anything interesting.
+3) can you use the Intel client to make a sniff.
+
+I can check what could trigger the firmware after 3 sec. to deauth. Just 
+not sure if I will get to that this week. Could be failing EAPOL handshake.
+
+Regards,
+Arend
