@@ -1,41 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:33768 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:14225 "EHLO
         alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752610AbdHKOAP (ORCPT
+        by vger.kernel.org with ESMTP id S1750994AbdHOIXF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 10:00:15 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,02/20] ath6kl: constify usb_device_id
+        Tue, 15 Aug 2017 04:23:05 -0400
+Subject: [PATCH 1/6] ath10k: remove deprecated fw_crash_dump debugfs file
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502295823-20824-3-git-send-email-arvind.yadav.cs@gmail.com>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-CC: <kvalo@codeaurora.org>, <petkan@nucleusys.com>,
-        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <e5102d3d94654b16b3c57455dd1c6991@euamsexm01a.eu.qualcomm.com> (sfid-20170811_160031_220056_107AF1D9)
-Date: Fri, 11 Aug 2017 15:59:37 +0200
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 15 Aug 2017 11:22:49 +0300
+Message-ID: <150278536928.22482.13768610556657786942.stgit@potku.adurom.net> (sfid-20170815_102310_092251_4F783B67)
+In-Reply-To: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
+References: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+The fw_crash_dump file was deprecated by commmit 727000e6af34 ("ath10k: support
+dev_coredump for crash dump") in v4.11 in favor of dev_coredump interface,
+remove it now for good. Everyone should use dev_coredump now.
 
-> usb_device_id are not supposed to change at runtime. All functions
-> working with usb_device_id provided by <linux/usb.h> work with
-> const usb_device_id. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> Reviewed-by: Steve deRosier <derosier@gmail.com>
-> Tested-by: Steve deRosier <derosier@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |   46 -------------------------------
+ 1 file changed, 46 deletions(-)
 
-2 patches applied to ath-next branch of ath.git, thanks.
-
-e881a6584941 ath6kl: constify usb_device_id
-76b07b30c46b ath9k: constify usb_device_id
-
--- 
-https://patchwork.kernel.org/patch/9890987/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index df514507d3f1..266bb697d960 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -851,49 +851,6 @@ int ath10k_debug_fw_devcoredump(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static int ath10k_fw_crash_dump_open(struct inode *inode, struct file *file)
+-{
+-	struct ath10k *ar = inode->i_private;
+-	struct ath10k_dump_file_data *dump;
+-
+-	ath10k_warn(ar, "fw_crash_dump debugfs file is deprecated, please use /sys/class/devcoredump instead.");
+-
+-	dump = ath10k_build_dump_file(ar, true);
+-	if (!dump)
+-		return -ENODATA;
+-
+-	file->private_data = dump;
+-
+-	return 0;
+-}
+-
+-static ssize_t ath10k_fw_crash_dump_read(struct file *file,
+-					 char __user *user_buf,
+-					 size_t count, loff_t *ppos)
+-{
+-	struct ath10k_dump_file_data *dump_file = file->private_data;
+-
+-	return simple_read_from_buffer(user_buf, count, ppos,
+-				       dump_file,
+-				       le32_to_cpu(dump_file->len));
+-}
+-
+-static int ath10k_fw_crash_dump_release(struct inode *inode,
+-					struct file *file)
+-{
+-	vfree(file->private_data);
+-
+-	return 0;
+-}
+-
+-static const struct file_operations fops_fw_crash_dump = {
+-	.open = ath10k_fw_crash_dump_open,
+-	.read = ath10k_fw_crash_dump_read,
+-	.release = ath10k_fw_crash_dump_release,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+ static ssize_t ath10k_reg_addr_read(struct file *file,
+ 				    char __user *user_buf,
+ 				    size_t count, loff_t *ppos)
+@@ -2460,9 +2417,6 @@ int ath10k_debug_register(struct ath10k *ar)
+ 	debugfs_create_file("simulate_fw_crash", 0600, ar->debug.debugfs_phy, ar,
+ 			    &fops_simulate_fw_crash);
+ 
+-	debugfs_create_file("fw_crash_dump", 0400, ar->debug.debugfs_phy, ar,
+-			    &fops_fw_crash_dump);
+-
+ 	debugfs_create_file("reg_addr", 0600, ar->debug.debugfs_phy, ar,
+ 			    &fops_reg_addr);
+ 
