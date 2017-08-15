@@ -1,50 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35176 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753109AbdHOHU1 (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:36266 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753423AbdHOK3c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 03:20:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
+        Tue, 15 Aug 2017 06:29:32 -0400
+Date: Tue, 15 Aug 2017 11:29:25 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Subject: Re: [PATCH 05/11] rsi: handle station connection in AP mode
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
-        <1502458889-9690-6-git-send-email-amitkarwar@gmail.com>
-        <87k226da0d.fsf@kamboji.qca.qualcomm.com>
-        <CAC_mnDkiUkMK6utKnZjDXR6=B-=n9G10xHvWfodb9XEZrY9xKw@mail.gmail.com>
-        <416d9508-0cd2-24d5-420d-7002c1882202@broadcom.com>
-Date: Tue, 15 Aug 2017 10:20:19 +0300
-In-Reply-To: <416d9508-0cd2-24d5-420d-7002c1882202@broadcom.com> (Arend van
-        Spriel's message of "Mon, 14 Aug 2017 21:10:50 +0200")
-Message-ID: <871sodb8lo.fsf@kamboji.qca.qualcomm.com> (sfid-20170815_092030_927435_389AF2BC)
+Cc: rosenp@gmail.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: AP mode with Broadcom 4330
+Message-ID: <20170815102925.GA15030@n2100.armlinux.org.uk> (sfid-20170815_122936_306299_C9D2B5A5)
+References: <20170728141503.GU31807@n2100.armlinux.org.uk>
+ <20170728174930.GA3313@n2100.armlinux.org.uk>
+ <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
+ <20170814233028.GK20805@n2100.armlinux.org.uk>
+ <1502778303.2319.2.camel@gmail.com>
+ <20170815082219.GL20805@n2100.armlinux.org.uk>
+ <f0e75add-c4b9-954b-b37d-2cef447d47dc@broadcom.com>
+ <20170815095841.GM20805@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170815095841.GM20805@n2100.armlinux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+On Tue, Aug 15, 2017 at 10:58:42AM +0100, Russell King - ARM Linux wrote:
+> Sorry for the confusion - the problem with iwlwifi turned out to be a
+> lack of /dev/random entropy, causing hostapd to forcefully deauth the
+> client - that was hidden when running hostapd from systemd and is only
+> visible if you run hostapd manually.
+> 
+> (I have other problems there - manually starting hostapd works every
+> time, but when started using systemctl start hostapd, systemctl status
+> hostapd always reports that it's started but exited and it definitely
+> isn't running... I'm just hitting one problem after another here with
+> wireless, I'm quite sure this tech hates me!)
+> 
+> However, I'm still having problems with the Realtek not getting further
+> than _allegedly_ sending the auth frames - I'm not convinced that the
+> driver is actually sending anything yet.  I can't see anything suggesting
+> it is from iwlwifi in monitor mode, and enabling all the debug for the
+> rtl8xxxu driver doesn't give the slightest hint that this driver is
+> doing anything remotely useful to transmit these frames.  For instance:
+> 
+> [41742.979480] usb 1-1: rtl8xxxu_read32(0440)  = 0x0000000f, len 4
+> [41742.985826] usb 1-1: rtl8xxxu_write32(0440) = 0x0000000f
+> [41742.994470] usb 1-1: rtl8xxxu_write8(0480) = 0x04
+> [41742.999430] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
+> [41743.206163] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 2/3)
+> [41743.414148] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 3/3)
+> [41743.622138] wlan0: authentication with 6c:ad:f8:1d:4c:d9 timed out
+> [41743.629100] usb 1-1: rtl8xxxu_write8(0618) = 0x00
+> [41743.636490] usb 1-1: rtl8xxxu_write8(0619) = 0x00
+> [41743.641573] usb 1-1: rtl8xxxu_write8(061a) = 0x00
+> 
+> How can it send auth packets without writing to any registers (this is
+> with all debug options set in /sys/module/rtl8xxxu/parameters/debug !)
+> 
+> So, I don't think the 4330 has a problem, I think it's all down to
+> the Realtek driver being buggy.
 
->>>> @@ -1157,18 +1159,81 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
->>>>   {
->>>>        struct rsi_hw *adapter = hw->priv;
->>>>        struct rsi_common *common = adapter->priv;
->>>> +     bool sta_exist = false;
->>>> +     struct rsi_sta *rsta;
->>>> +
->>>> +     print_hex_dump(KERN_INFO, "Station add: ", DUMP_PREFIX_OFFSET,
->>>> +                    16, 1, sta->addr, ETH_ALEN, 0);
->>>
->>> The driver should not spam the logs every time a client connects, so
->>> this should be a debug message.
->
-> I am wondering why print_hex_dump() is used for printing the station
-> mac address. Just use: pr_debug("Station add: %pM\n", sta->addr);
+And things get even weirder - if I reboot, rtl8xxxu fails to associate:
 
-Good point. Except that IIRC rsi has it's own debugging macros and you
-can use those, you don't need to use pr_debug() (unless you want to).
+[   38.377649] wlan0: authenticate with 6c:ad:f8:1d:4c:d9
+[   38.410252] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
+[   38.616678] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 2/3)
+[   38.824660] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 3/3)
+[   39.032645] wlan0: authentication with 6c:ad:f8:1d:4c:d9 timed out
+
+if I then rmmod the rtl8xxxu module and reinsert the exact same module:
+
+[   49.914724] wlan0: authenticate with 6c:ad:f8:1d:4c:d9
+[   49.935765] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
+[   49.943182] wlan0: authenticated
+[   49.956116] wlan0: associate with 6c:ad:f8:1d:4c:d9 (try 1/3)
+[   49.971504] wlan0: RX AssocResp from 6c:ad:f8:1d:4c:d9 (capab=0x411 status=0 aid=2)
+[   49.985466] usb 1-1: rtl8xxxu_bss_info_changed: HT supported
+[   49.997918] wlan0: associated
+
+This looks like a rtl8xxxu driver / core mac80211 bug, so I'll take it
+to the rtl8xxx folk now.
 
 -- 
-Kalle Valo
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
+According to speedtest.net: 8.21Mbps down 510kbps up
