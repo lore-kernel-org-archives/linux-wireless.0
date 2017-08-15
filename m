@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:60098 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932427AbdHVLp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:45:29 -0400
-From: Ian Molton <ian@mnementh.co.uk>
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:5536
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750997AbdHONHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Aug 2017 09:07:03 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 22/30] brcmfmac: Rename buscore->core for consistency
-Date: Tue, 22 Aug 2017 12:25:42 +0100
-Message-Id: <20170822112550.60311-23-ian@mnementh.co.uk> (sfid-20170822_134533_042090_BFCAC93B)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 5/9] qtnfmac: decrease default Tx queue size
+Date: Tue, 15 Aug 2017 16:06:35 +0300
+Message-Id: <20170815130638.31718-6-sergey.matyukevich.os@quantenna.com> (sfid-20170815_150715_406310_9DFF441C)
+In-Reply-To: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid confusion with unrelated _buscore labels.
+Avoid extra buffering in driver by default. Use max hardware Tx queue size.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index c1f3366871e5..09b4db117e0d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -2475,14 +2475,12 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index a0b65d487ddb..f18e8a724c68 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -36,7 +36,7 @@ static bool use_msi = true;
+ module_param(use_msi, bool, 0644);
+ MODULE_PARM_DESC(use_msi, "set 0 to use legacy interrupt");
  
- static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- {
--	struct brcmf_core *buscore = bus->sdio_core;
--	u32 addr;
-+	struct brcmf_core *core = bus->sdio_core;
- 	unsigned long val;
- 	int ret;
+-static unsigned int tx_bd_size_param = 256;
++static unsigned int tx_bd_size_param = 32;
+ module_param(tx_bd_size_param, uint, 0644);
+ MODULE_PARM_DESC(tx_bd_size_param, "Tx descriptors queue size");
  
--	addr = buscore->base + __sd_reg(intstatus);
--
--	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
-+	val = brcmf_sdiod_readl(bus->sdiodev, core->base + __sd_reg(intstatus),
-+				&ret);
- 	bus->sdcnt.f1regdata++;
- 	if (ret != 0)
- 		return ret;
-@@ -2492,7 +2490,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 
- 	/* Clear interrupts */
- 	if (val) {
--		brcmf_sdiod_writel(bus->sdiodev, addr, val, &ret);
-+		brcmf_sdiod_writel(bus->sdiodev,
-+				   core->base + __sd_reg(intstatus), val, &ret);
- 		bus->sdcnt.f1regdata++;
- 		atomic_or(val, &bus->intstatus);
- 	}
 -- 
 2.11.0
