@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36164 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752427AbdHHQEb (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:20044 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751467AbdHOIWq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:04:31 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, sgruszka@redhat.com,
-        helmut.schaa@googlemail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 29/35] wireless: ralink: rt2800usb: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:34:18 +0530
-Message-Id: <1502208259-12287-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180602_170304_153B51FA)
-In-Reply-To: <1502208259-12287-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502208259-12287-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Tue, 15 Aug 2017 04:22:46 -0400
+Subject: [PATCH 0/6] ath10k: firmware ramdump support
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 15 Aug 2017 11:22:36 +0300
+Message-ID: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net> (sfid-20170815_102251_269096_56E2FE26)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+Hi,
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+here are patches adding firmware ramdump support to make it easier to
+debug firmware crashes. This also removes the depracated fw_crash_dump
+debugfs file.
+
+Kalle
+
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-index 685b8e0..cd9547e 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-@@ -915,7 +915,7 @@ static const struct rt2x00_ops rt2800usb_ops = {
- /*
-  * rt2800usb module information.
-  */
--static struct usb_device_id rt2800usb_device_table[] = {
-+static const struct usb_device_id rt2800usb_device_table[] = {
- 	/* Abocom */
- 	{ USB_DEVICE(0x07b8, 0x2870) },
- 	{ USB_DEVICE(0x07b8, 0x2770) },
--- 
-2.7.4
+Alan Liu (1):
+      ath10k: add memory dump support for QCA6174/QCA9377
+
+Kalle Valo (5):
+      ath10k: remove deprecated fw_crash_dump debugfs file
+      ath10k: refactor firmware crashdump code to coredump.c
+      ath10k: detach coredump.c from debug.c
+      ath10k: add coredump_mask module parameter
+      ath10k: add memory dump support QCA988X
+
+
+ drivers/net/wireless/ath/ath10k/Makefile   |    1 
+ drivers/net/wireless/ath/ath10k/core.c     |   31 +
+ drivers/net/wireless/ath/ath10k/core.h     |   17 
+ drivers/net/wireless/ath/ath10k/coredump.c |  993 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/coredump.h |  225 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c    |  275 --------
+ drivers/net/wireless/ath/ath10k/debug.h    |   16 
+ drivers/net/wireless/ath/ath10k/hw.h       |    1 
+ drivers/net/wireless/ath/ath10k/pci.c      |  220 ++++++
+ 9 files changed, 1480 insertions(+), 299 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/coredump.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/coredump.h
