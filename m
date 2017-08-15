@@ -1,103 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from resqmta-ch2-12v.sys.comcast.net ([69.252.207.44]:39834 "EHLO
-        resqmta-ch2-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752098AbdHJBUv (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5505 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751078AbdHOIXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 21:20:51 -0400
-Reply-To: james@nurealm.net
-Subject: Re: wireless drivers fail to report link speed?
-To: Dan Williams <dcbw@redhat.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Cc: Andy Gospodarek <andy@greyhouse.net>
-References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
- <1502228547.24881.5.camel@redhat.com>
- <3a24351b-6875-fe65-58f1-f624c9f1832f@candelatech.com>
- <5f4422cc-2943-7863-bef3-c2c2653bde24@nurealm.net>
- <5a5cb91f-443c-8cc1-ea1f-50de4d07cb25@candelatech.com>
- <3d16a276-0e15-c722-483c-c17d715ebb5e@nurealm.net>
- <598AD624.1060003@broadcom.com>
- <318f60de-5589-1218-9848-d3514724e9c1@nurealm.net>
- <1502303131.9777.7.camel@redhat.com>
-From: James Feeney <james@nurealm.net>
-Message-ID: <21548605-ffb3-1206-208c-9c01f5d8bf7b@nurealm.net> (sfid-20170810_032055_361787_0BB591B5)
-Date: Wed, 9 Aug 2017 19:20:06 -0600
+        Tue, 15 Aug 2017 04:23:30 -0400
+Subject: [PATCH 3/6] ath10k: detach coredump.c from debug.c
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 15 Aug 2017 11:23:17 +0300
+Message-ID: <150278539688.22482.3577133520037595343.stgit@potku.adurom.net> (sfid-20170815_102333_690293_2DCC53D9)
+In-Reply-To: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
+References: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1502303131.9777.7.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Dan
+Now coredump is totally separate from debug.c and doesn't depend on
+CONFIG_ATH10K_DEBUGFS anymore, only on CONFIG_DEV_COREDUMP. Also remove
+leftovers from the removed debugfs file support.
 
-On 08/09/2017 12:25 PM, Dan Williams wrote:
-> The relevant questions, in my view, are:
-> 
-> 1) why does the bonding driver now require this information?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/Makefile   |    2 +
+ drivers/net/wireless/ath/ath10k/core.c     |   10 +++++-
+ drivers/net/wireless/ath/ath10k/core.h     |   10 +++---
+ drivers/net/wireless/ath/ath10k/coredump.c |   49 ++++++++++------------------
+ drivers/net/wireless/ath/ath10k/coredump.h |   11 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c    |    7 ----
+ 6 files changed, 45 insertions(+), 44 deletions(-)
 
-Well, it *always* required the information.  Just now, Mahesh has finally
-decided "up with this I will not put", not being able to get the information needed.
-
-Please see Mahesh's first patch:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=c4adfc822bf5d8e97660b6114b5a8892530ce8cb
-
-----
-
-bonding: make speed, duplex setting consistent with link state
-
-bond_update_speed_duplex() retrieves speed and duplex settings. There
-is a possibility of failure in retrieving these values but caller has
-to assume it's always successful. This leads to having inconsistent
-slave link settings. If these (speed, duplex) values cannot be
-retrieved, then keeping the link UP causes problems.
-
-The updated bond_update_speed_duplex() returns 0 on success if it
-retrieves sane values for speed and duplex. On failure it returns 1
-and marks the link down.
-
-Signed-off-by: Mahesh Bandewar <maheshb@google.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
-----
-
-Mahesh does not explain what these specific "problems" might be, though.
-
-Generally, the bonding module has to be able to dynamically prioritize, enable,
-and disable different network interfaces, as network circumstances change.  It
-constantly monitors link speeds and connectivity, comparing links and
-reconfiguring interfaces.
-
-
-> 2) is this information reasonable to request from WiFi drivers?
->
-> 3) how would this information affect the operation of the bonding
-> driver if it doesn't mean the same thing as it means for wired devices?
-
-I don't know that that dialog, between bonding module and wireless, have ever
-happened, until now, since there just was never any link information returned
-from the wireless drivers.
-
-You might want to look through "linux/Documentation/networking/bonding.txt".
-
-I do know that the Bonding Driver Option "primary_reselect=better" does not work
-with a wireless interface - because the bonding module does not receive the
-wireless link speed.  That's not the bonding module's fault, it turns out.
-
-But then, with no information, the bonding module would be forced to "punt".
-For instance, it is not correct to simply assume that a wired connection is
-always faster than a wireless connection, though that assumption might be needed
-as a fall-back with older non-reporting wireless drivers.
-
-> Again, there is a problem that should be solved.  I am only advocating
-> that instead of simply adding ethtool get_settings support to WiFi
-> drivers and washing our hands of it, which may have unintended
-> consequences, we gather all the information first, and discuss whether
-> the bonding driver may need to adjust its expectations before this kind
-> of change is made.
-
-Yes, please.
-
-
-James
+diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
+index 769478b567a2..80f5556c4a68 100644
+--- a/drivers/net/wireless/ath/ath10k/Makefile
++++ b/drivers/net/wireless/ath/ath10k/Makefile
+@@ -20,7 +20,7 @@ ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
+ ath10k_core-$(CONFIG_THERMAL) += thermal.o
+ ath10k_core-$(CONFIG_MAC80211_DEBUGFS) += debugfs_sta.o
+ ath10k_core-$(CONFIG_PM) += wow.o
+-ath10k_core-$(CONFIG_ATH10K_DEBUGFS) += coredump.o
++ath10k_core-$(CONFIG_DEV_COREDUMP) += coredump.o
+ 
+ obj-$(CONFIG_ATH10K_PCI) += ath10k_pci.o
+ ath10k_pci-y += pci.o \
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index caecfca4a38a..7b465973d2ca 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2584,12 +2584,19 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 
+ 	init_dummy_netdev(&ar->napi_dev);
+ 
+-	ret = ath10k_debug_create(ar);
++	ret = ath10k_coredump_create(ar);
+ 	if (ret)
+ 		goto err_free_aux_wq;
+ 
++	ret = ath10k_debug_create(ar);
++	if (ret)
++		goto err_free_coredump;
++
+ 	return ar;
+ 
++err_free_coredump:
++	ath10k_coredump_destroy(ar);
++
+ err_free_aux_wq:
+ 	destroy_workqueue(ar->workqueue_aux);
+ err_free_wq:
+@@ -2611,6 +2618,7 @@ void ath10k_core_destroy(struct ath10k *ar)
+ 	destroy_workqueue(ar->workqueue_aux);
+ 
+ 	ath10k_debug_destroy(ar);
++	ath10k_coredump_destroy(ar);
+ 	ath10k_htt_tx_destroy(&ar->htt);
+ 	ath10k_wmi_free_host_mem(ar);
+ 	ath10k_mac_destroy(ar);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 949ebb3e967b..06f85ae752fe 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -460,8 +460,6 @@ struct ath10k_ce_crash_hdr {
+ 
+ /* used for crash-dump storage, protected by data-lock */
+ struct ath10k_fw_crash_data {
+-	bool crashed_since_read;
+-
+ 	guid_t guid;
+ 	struct timespec timestamp;
+ 	__le32 registers[REG_DUMP_COUNT_QCA988X];
+@@ -492,8 +490,6 @@ struct ath10k_debug {
+ 	u32 reg_addr;
+ 	u32 nf_cal_period;
+ 	void *cal_data;
+-
+-	struct ath10k_fw_crash_data *fw_crash_data;
+ };
+ 
+ enum ath10k_state {
+@@ -960,6 +956,12 @@ struct ath10k {
+ 	} spectral;
+ #endif
+ 
++#ifdef CONFIG_DEV_COREDUMP
++	struct {
++		struct ath10k_fw_crash_data *fw_crash_data;
++	} coredump;
++#endif
++
+ 	struct {
+ 		/* protected by conf_mutex */
+ 		struct ath10k_fw_components utf_mode_fw;
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index b4631e573851..512d44fa5848 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -23,11 +23,10 @@
+ 
+ struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar)
+ {
+-	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
++	struct ath10k_fw_crash_data *crash_data = ar->coredump.fw_crash_data;
+ 
+ 	lockdep_assert_held(&ar->data_lock);
+ 
+-	crash_data->crashed_since_read = true;
+ 	guid_gen(&crash_data->guid);
+ 	getnstimeofday(&crash_data->timestamp);
+ 
+@@ -35,10 +34,9 @@ struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_coredump_new);
+ 
+-static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
+-							   bool mark_read)
++static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar)
+ {
+-	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
++	struct ath10k_fw_crash_data *crash_data = ar->coredump.fw_crash_data;
+ 	struct ath10k_ce_crash_hdr *ce_hdr;
+ 	struct ath10k_dump_file_data *dump_data;
+ 	struct ath10k_tlv_dump_data *dump_tlv;
+@@ -62,12 +60,6 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 
+-	if (!crash_data->crashed_since_read) {
+-		spin_unlock_bh(&ar->data_lock);
+-		vfree(buf);
+-		return NULL;
+-	}
+-
+ 	dump_data = (struct ath10k_dump_file_data *)(buf);
+ 	strlcpy(dump_data->df_magic, "ATH10K-FW-DUMP",
+ 		sizeof(dump_data->df_magic));
+@@ -120,8 +112,6 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
+ 	sofar += sizeof(*dump_tlv) + sizeof(*ce_hdr) +
+ 		 CE_COUNT * sizeof(ce_hdr->entries[0]);
+ 
+-	ar->debug.fw_crash_data->crashed_since_read = !mark_read;
+-
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	return dump_data;
+@@ -130,32 +120,29 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
+ int ath10k_coredump_submit(struct ath10k *ar)
+ {
+ 	struct ath10k_dump_file_data *dump;
+-	void *dump_ptr;
+-	u32 dump_len;
+ 
+-	/* To keep the dump file available also for debugfs don't mark the
+-	 * file read, only debugfs should do that.
+-	 */
+-	dump = ath10k_coredump_build(ar, false);
++	dump = ath10k_coredump_build(ar);
+ 	if (!dump) {
+ 		ath10k_warn(ar, "no crash dump data found for devcoredump");
+ 		return -ENODATA;
+ 	}
+ 
+-	/* Make a copy of the dump file for dev_coredumpv() as during the
+-	 * transition period we need to own the original file. Once
+-	 * fw_crash_dump debugfs file is removed no need to have a copy
+-	 * anymore.
+-	 */
+-	dump_len = le32_to_cpu(dump->len);
+-	dump_ptr = vzalloc(dump_len);
+-
+-	if (!dump_ptr)
+-		return -ENOMEM;
++	dev_coredumpv(ar->dev, dump, le32_to_cpu(dump->len), GFP_KERNEL);
+ 
+-	memcpy(dump_ptr, dump, dump_len);
++	return 0;
++}
+ 
+-	dev_coredumpv(ar->dev, dump_ptr, dump_len, GFP_KERNEL);
++int ath10k_coredump_create(struct ath10k *ar)
++{
++	ar->coredump.fw_crash_data = vzalloc(sizeof(*ar->coredump.fw_crash_data));
++	if (!ar->coredump.fw_crash_data)
++		return -ENOMEM;
+ 
+ 	return 0;
+ }
++
++void ath10k_coredump_destroy(struct ath10k *ar)
++{
++	vfree(ar->coredump.fw_crash_data);
++	ar->coredump.fw_crash_data = NULL;
++}
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.h b/drivers/net/wireless/ath/ath10k/coredump.h
+index 2d2f45b5aa37..2d33075f081a 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.h
++++ b/drivers/net/wireless/ath/ath10k/coredump.h
+@@ -103,6 +103,8 @@ struct ath10k_dump_file_data {
+ 
+ int ath10k_coredump_submit(struct ath10k *ar);
+ struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar);
++int ath10k_coredump_create(struct ath10k *ar);
++void ath10k_coredump_destroy(struct ath10k *ar);
+ 
+ #else /* CONFIG_DEV_COREDUMP */
+ 
+@@ -116,6 +118,15 @@ static inline struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar
+ 	return NULL;
+ }
+ 
++static inline int ath10k_coredump_create(struct ath10k *ar)
++{
++	return 0;
++}
++
++static inline void ath10k_coredump_destroy(struct ath10k *ar)
++{
++}
++
+ #endif /* CONFIG_DEV_COREDUMP */
+ 
+ #endif /* _COREDUMP_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 28f96359ee73..eed4e9cc47ef 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2137,10 +2137,6 @@ static const struct file_operations fops_fw_checksums = {
+ 
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+-	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+-	if (!ar->debug.fw_crash_data)
+-		return -ENOMEM;
+-
+ 	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
+ 	if (!ar->debug.cal_data)
+ 		return -ENOMEM;
+@@ -2155,9 +2151,6 @@ int ath10k_debug_create(struct ath10k *ar)
+ 
+ void ath10k_debug_destroy(struct ath10k *ar)
+ {
+-	vfree(ar->debug.fw_crash_data);
+-	ar->debug.fw_crash_data = NULL;
+-
+ 	vfree(ar->debug.cal_data);
+ 	ar->debug.cal_data = NULL;
+ 
