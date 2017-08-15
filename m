@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:35348 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751775AbdHGRva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 13:51:30 -0400
-Subject: Re: [PATCH 07/34] brcmfmac: Remove brcmf_sdiod_request_data()
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-8-ian@mnementh.co.uk> <59884E46.5090000@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <62cd90bd-718d-e7a7-d73e-e868b5499ed5@mnementh.co.uk> (sfid-20170807_195133_757484_D2E070CE)
-Date: Mon, 7 Aug 2017 18:51:28 +0100
+Received: from mail-by2nam03on0073.outbound.protection.outlook.com ([104.47.42.73]:15232
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751344AbdHONG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Aug 2017 09:06:57 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 3/9] qtnfmac: use __netdev_alloc_skb_ip_align
+Date: Tue, 15 Aug 2017 16:06:33 +0300
+Message-Id: <20170815130638.31718-4-sergey.matyukevich.os@quantenna.com> (sfid-20170815_150703_155172_96A77F9B)
+In-Reply-To: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <59884E46.5090000@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/17 12:25, Arend van Spriel wrote:
->> Handling of -ENOMEDIUM is altered, but as that's pretty much broken
->> anyway
->> we can ignore that.
-> 
-> Please explain why you think it is broken.
+Replace __dev_alloc_skb and explicit NET_IP_ALIGN alignment by built-in
+__netdev_alloc_skb_ip_align function.
 
-Not got the code to hand right now, but from memory, theres a trapdoor
-case where the state can wind up set to something that prevents it ever
-being changed again. I'll dig it up when I get back from holiday (this
-next few days).
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
--Ian
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 08b35dc30bc8..079aa1693ff5 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -429,8 +429,7 @@ static int skb2rbd_attach(struct qtnf_pcie_bus_priv *priv, u16 rx_bd_index)
+ 	struct sk_buff *skb;
+ 	dma_addr_t paddr;
+ 
+-	skb = __dev_alloc_skb(SKB_BUF_SIZE + NET_IP_ALIGN,
+-			      GFP_ATOMIC);
++	skb = __netdev_alloc_skb_ip_align(NULL, SKB_BUF_SIZE, GFP_ATOMIC);
+ 	if (!skb) {
+ 		priv->rx_skb[rx_bd_index] = NULL;
+ 		return -ENOMEM;
+@@ -438,8 +437,6 @@ static int skb2rbd_attach(struct qtnf_pcie_bus_priv *priv, u16 rx_bd_index)
+ 
+ 	priv->rx_skb[rx_bd_index] = skb;
+ 
+-	skb_reserve(skb, NET_IP_ALIGN);
+-
+ 	rxbd = &priv->rx_bd_vbase[rx_bd_index];
+ 
+ 	paddr = pci_map_single(priv->pdev, skb->data,
+-- 
+2.11.0
