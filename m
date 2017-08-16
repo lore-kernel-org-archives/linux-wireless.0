@@ -1,39 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:30066 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753362AbdHXO1R (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:38882 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbdHPNSd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 10:27:17 -0400
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k: fix napi_poll budget overflow
-Date: Thu, 24 Aug 2017 14:27:02 +0000
-Message-ID: <be0d2b7d-e498-64ac-282a-bf23d10a5b18@qti.qualcomm.com> (sfid-20170824_162737_692454_0803E6CA)
-References: <1503438242-5657-1-git-send-email-ryanhsu@qti.qualcomm.com>
- <2cd00da66a6847c1829ed9edf7ad7009@euamsexm01a.eu.qualcomm.com>
-In-Reply-To: <2cd00da66a6847c1829ed9edf7ad7009@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Wed, 16 Aug 2017 09:18:33 -0400
+Received: by mail-pg0-f67.google.com with SMTP id 123so5231547pga.5
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:18:32 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 10/11] rsi: aggregation parameters frame for AP mode
+Date: Wed, 16 Aug 2017 18:43:17 +0530
+Message-Id: <1502889198-4478-11-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151836_146858_62E42BCB)
+In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQpPbiAwOC8yNC8yMDE3IDAyOjA3IEFNLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiByeWFuaHN1QHF0
-aS5xdWFsY29tbS5jb20gd3JvdGU6DQo+DQo+PiBGcm9tOiBSeWFuIEhzdSA8cnlhbmhzdUBxdGku
-cXVhbGNvbW0uY29tPg0KPj4NCj4+IEluIG5hcGlfcG9sbCwgdGhlIGJ1ZGdldCBudW1iZXIgaXMg
-dXNlZCB0byBjb250cm9sIHRoZSBhbW91bnQgb2YgcGFja2V0cw0KPj4gd2Ugc2hvdWxkIGhhbmRs
-ZSBwZXIgcG9sbCB0byBiYWxhbmNlIHRoZSByZXNvdXJjZSBpbiB0aGUgc3lzdGVtLg0KPj4NCj4+
-IEluIHRoZSBsaXN0IG9mIHRoZSBhbXNkdSBwYWNrZXRzIHJlY2VwdGlvbiwgd2UgY2hlY2sgaWYg
-dGhlcmUgaXMgYnVkZ2V0DQo+PiBjb3VudCBsZWZ0IGFuZCBoYW5kbGUgdGhlIGNvbXBsZXRlIGxp
-c3Qgb2YgdGhlIHBhY2tldHMsIHRoYXQgaXQgd2lsbCBoYXZlDQo+PiBjaGFuY2VzIHRoZSB2ZXJ5
-IGxhc3QgbGlzdCB3aWxsIG92ZXIgdGhlIGJ1ZGdldCBsZWZ0b3Zlci4NCj4+DQo+PiBTbyBhZGRp
-bmcgb25lIG1vcmUgcGFyYW1ldGVyIC0gYnVkZ2V0X2xlZnQsIHRoaXMgd291bGQgaGVscCB3aGls
-ZQ0KPj4gdHJhdmVyc2luZyB0aGUgbGlzdCB0byBhdm9pZCBoYW5kbGluZyBtb3JlIHRoYW4gdGhl
-IGJ1ZGdldCBnaXZlbi4NCj4+DQo+PiBSZXBvcnRlZC1ieTogQW5kcmV5IFJ5YWJpbmluIDxhcnlh
-YmluaW5AdmlydHVvenpvLmNvbT4NCj4+IEZpeC1zdWdnZXN0ZWQtYnk6IElnb3IgTWl0c3lhbmtv
-IDxpZ29yLm1pdHN5YW5rby5vc0BxdWFudGVubmEuY29tPg0KPj4NCj4+IFNpZ25lZC1vZmYtYnk6
-IFJ5YW4gSHN1IDxyeWFuaHN1QHF0aS5xdWFsY29tbS5jb20+DQo+IFdhcyB0aGVyZSBhIGJ1ZyBy
-ZXBvcnQgYWJvdXQgdGhpcz8gSSBjYW4gYWRkIGEgbGluayB0byB0aGF0IGFuZCBtYXliZSBhbHNv
-DQo+IGluY2x1ZGUgdGhlIHdhcm5pbmcuDQoNCmh0dHBzOi8vbWFyYy5pbmZvLz9sPWxpbnV4LW5l
-dGRldiZtPTE0OTg4NDA0NzgyMzg3MCZ3PTINCg0KLS0gDQpSeWFuIEhzdQ0K
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+
+TX command frame ampdu aggregation parameters is updated to
+include sta_id for AP mode.
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 43 +++++++++++++++++++++++------
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  6 ++--
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  3 +-
+ 3 files changed, 39 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index be10d50..f2cb61f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -866,9 +866,11 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+ 	int status = -EOPNOTSUPP;
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
+-	u16 seq_no = 0;
++	struct rsi_sta *rsta = NULL;
++	u16 seq_no = 0, seq_start = 0;
+ 	u8 ii = 0;
+ 	struct ieee80211_sta *sta = params->sta;
++	u8 sta_id = 0;
+ 	enum ieee80211_ampdu_mlme_action action = params->action;
+ 	u16 tid = params->tid;
+ 	u16 *ssn = &params->ssn;
+@@ -880,17 +882,31 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	mutex_lock(&common->mutex);
+-	rsi_dbg(INFO_ZONE, "%s: AMPDU action %d called\n", __func__, action);
++
+ 	if (ssn != NULL)
+ 		seq_no = *ssn;
+ 
++	if (vif->type == NL80211_IFTYPE_AP) {
++		rsta = rsi_find_sta(common, sta->addr);
++		if (!rsta) {
++			rsi_dbg(ERR_ZONE, "No station mapped\n");
++			return 0;
++		}
++		sta_id = rsta->sta_id;
++	}
++
++	rsi_dbg(INFO_ZONE,
++		"%s: AMPDU action tid=%d ssn=0x%x, buf_size=%d sta_id=%d\n",
++		__func__, tid, seq_no, buf_size, sta_id);
++
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+ 		status = rsi_send_aggregation_params_frame(common,
+ 							   tid,
+ 							   seq_no,
+ 							   buf_size,
+-							   STA_RX_ADDBA_DONE);
++							   STA_RX_ADDBA_DONE,
++							   sta_id);
+ 		break;
+ 
+ 	case IEEE80211_AMPDU_RX_STOP:
+@@ -898,11 +914,15 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+ 							   tid,
+ 							   0,
+ 							   buf_size,
+-							   STA_RX_DELBA);
++							   STA_RX_DELBA,
++							   sta_id);
+ 		break;
+ 
+ 	case IEEE80211_AMPDU_TX_START:
+-		common->vif_info[ii].seq_start = seq_no;
++		if (vif->type == NL80211_IFTYPE_STATION)
++			common->vif_info[ii].seq_start = seq_no;
++		else if (vif->type == NL80211_IFTYPE_AP)
++			rsta->seq_start[tid] = seq_no;
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		status = 0;
+ 		break;
+@@ -914,18 +934,23 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+ 							   tid,
+ 							   seq_no,
+ 							   buf_size,
+-							   STA_TX_DELBA);
++							   STA_TX_DELBA,
++							   sta_id);
+ 		if (!status)
+ 			ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		if (vif->type == NL80211_IFTYPE_STATION)
++			seq_start = common->vif_info[ii].seq_start;
++		else if (vif->type == NL80211_IFTYPE_AP)
++			seq_start = rsta->seq_start[tid];
+ 		status = rsi_send_aggregation_params_frame(common,
+ 							   tid,
+-							   common->vif_info[ii]
+-								.seq_start,
++							   seq_start,
+ 							   buf_size,
+-							   STA_TX_ADDBA_DONE);
++							   STA_TX_ADDBA_DONE,
++							   sta_id);
+ 		break;
+ 
+ 	default:
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 8762d13..2d3cae5 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -537,11 +537,11 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
+ 				      u16 tid,
+ 				      u16 ssn,
+ 				      u8 buf_size,
+-				      u8 event)
++				      u8 event,
++				      u8 sta_id)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	struct rsi_aggr_params *aggr_params;
+-	u8 peer_id = 0;
+ 	u16 frame_len = sizeof(struct rsi_aggr_params);
+ 
+ 	skb = dev_alloc_skb(frame_len);
+@@ -561,7 +561,7 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common,
+ 	aggr_params->desc_dword0.frame_type = AMPDU_IND;
+ 
+ 	aggr_params->aggr_params = tid & RSI_AGGR_PARAMS_TID_MASK;
+-	aggr_params->peer_id = peer_id;
++	aggr_params->peer_id = sta_id;
+ 	if (event == STA_TX_ADDBA_DONE) {
+ 		aggr_params->seq_start = cpu_to_le16(ssn);
+ 		aggr_params->baw_size = cpu_to_le16(buf_size);
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index c50153d..2d82733 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -609,7 +609,8 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
+ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
+ 			     u8 *mac_addr, u8 vap_id, u8 vap_status);
+ int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
+-				      u16 ssn, u8 buf_size, u8 event);
++				      u16 ssn, u8 buf_size, u8 event,
++				      u8 sta_id);
+ int rsi_hal_load_key(struct rsi_common *common, u8 *data, u16 key_len,
+ 		     u8 key_type, u8 key_id, u32 cipher);
+ int rsi_set_channel(struct rsi_common *common,
+-- 
+2.7.4
