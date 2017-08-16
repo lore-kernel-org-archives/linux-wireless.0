@@ -1,124 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42506 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752280AbdHETnm (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36460 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751605AbdHPNRt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:43:42 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Wed, 16 Aug 2017 09:17:49 -0400
+Received: by mail-pf0-f196.google.com with SMTP id t83so1362761pfj.3
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:17:49 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Tzipi Peres <tzipi.peres@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:19 +0300
-Message-Id: <20170805194331.17426-8-luca@coelho.fi> (sfid-20170805_214401_007423_B89432D0)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 07/19] iwlwifi: add support of FPGA fw
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 02/11] rsi: add interface changes for ap mode
+Date: Wed, 16 Aug 2017 18:43:09 +0530
+Message-Id: <1502889198-4478-3-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151752_090808_8F8ADC0E)
+In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tzipi Peres <tzipi.peres@intel.com>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Load FW according to NIC type,
-taking into account simulation, if exists.
-This is determined by a prph register.
+AP mode is handled in add_interface callback of mac80211.
+Also for AP mode, sending rx filter frame to disallow beacons
+to host is added. Station structures are initialized to NULL.
 
-Signed-off-by: Tzipi Peres <tzipi.peres@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c   | 14 ++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h   |  6 ++++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 11 +++++++++++
- 4 files changed, 32 insertions(+)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 43 +++++++++++++++++++++++------
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  5 ++--
+ drivers/net/wireless/rsi/rsi_main.h         |  3 ++
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  6 ++--
+ 4 files changed, 44 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-index 98f24cd1b44f..40d67a5a2635 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-@@ -75,11 +75,14 @@
- #define IWL_A000_JF_FW_PRE	"iwlwifi-Qu-a0-jf-b0-"
- #define IWL_A000_HR_FW_PRE	"iwlwifi-Qu-a0-hr-a0-"
- #define IWL_A000_HR_CDB_FW_PRE	"iwlwifi-QuIcp-z0-hrcdb-a0-"
-+#define IWL_A000_HR_F0_FW_PRE	"iwlwifi-QuQnj-f0-hr-a0-"
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 2da5493..edcba56 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -342,25 +342,51 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
+ {
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
++	enum opmode intf_mode;
+ 	int ret = -EOPNOTSUPP;
  
- #define IWL_A000_HR_MODULE_FIRMWARE(api) \
- 	IWL_A000_HR_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_A000_JF_MODULE_FIRMWARE(api) \
- 	IWL_A000_JF_FW_PRE "-" __stringify(api) ".ucode"
-+#define IWL_A000_HR_QNJ_MODULE_FIRMWARE(api) \
-+	IWL_A000_HR_F0_FW_PRE "-" __stringify(api) ".ucode"
+ 	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
+ 	mutex_lock(&common->mutex);
++
++	if (adapter->sc_nvifs > 1) {
++		mutex_unlock(&common->mutex);
++		return -EOPNOTSUPP;
++	}
++
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+-		if (!adapter->sc_nvifs) {
+-			++adapter->sc_nvifs;
+-			adapter->vifs[0] = vif;
+-			ret = rsi_set_vap_capabilities(common,
+-						       STA_OPMODE,
+-						       VAP_ADD);
+-		}
++		rsi_dbg(INFO_ZONE, "Station Mode");
++		intf_mode = STA_OPMODE;
++		break;
++	case NL80211_IFTYPE_AP:
++		rsi_dbg(INFO_ZONE, "AP Mode");
++		intf_mode = AP_OPMODE;
+ 		break;
+ 	default:
+ 		rsi_dbg(ERR_ZONE,
+ 			"%s: Interface type %d not supported\n", __func__,
+ 			vif->type);
++		goto out;
+ 	}
++
++	adapter->vifs[adapter->sc_nvifs++] = vif;
++	ret = rsi_set_vap_capabilities(common, intf_mode, common->mac_addr,
++				       0, VAP_ADD);
++	if (ret) {
++		rsi_dbg(ERR_ZONE, "Failed to set VAP capabilities\n");
++		goto out;
++	}
++
++	if (vif->type == NL80211_IFTYPE_AP) {
++		int i;
++
++		rsi_send_rx_filter_frame(common, DISALLOW_BEACONS);
++		common->min_rate = RSI_RATE_AUTO;
++		for (i = 0; i < common->max_stations; i++)
++			common->stations[i].sta = NULL;
++	}
++
++out:
+ 	mutex_unlock(&common->mutex);
  
- #define NVM_HW_SECTION_NUM_FAMILY_A000		10
+ 	return ret;
+@@ -383,7 +409,8 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&common->mutex);
+ 	if (vif->type == NL80211_IFTYPE_STATION) {
+ 		adapter->sc_nvifs--;
+-		rsi_set_vap_capabilities(common, STA_OPMODE, VAP_DELETE);
++		rsi_set_vap_capabilities(common, STA_OPMODE, vif->addr,
++					 0, VAP_DELETE);
+ 	}
  
-@@ -168,5 +171,16 @@ const struct iwl_cfg iwla000_2ax_cfg_hr = {
- 		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ 	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index f93499d0..233a418 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -624,6 +624,8 @@ static int rsi_program_bb_rf(struct rsi_common *common)
+  */
+ int rsi_set_vap_capabilities(struct rsi_common *common,
+ 			     enum opmode mode,
++			     u8 *mac_addr,
++			     u8 vap_id,
+ 			     u8 vap_status)
+ {
+ 	struct sk_buff *skb = NULL;
+@@ -632,7 +634,6 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
+ 	struct ieee80211_hw *hw = adapter->hw;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	u16 frame_len = sizeof(struct rsi_vap_caps);
+-	u16 vap_id = 0;
+ 
+ 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending VAP capabilities frame\n", __func__);
+ 
+@@ -656,7 +657,7 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
+ 	vap_caps->radioid_macid = ((common->mac_id & 0xf) << 4) |
+ 				   (common->radio_id & 0xf);
+ 
+-	memcpy(vap_caps->mac_addr, common->mac_addr, IEEE80211_ADDR_LEN);
++	memcpy(vap_caps->mac_addr, mac_addr, IEEE80211_ADDR_LEN);
+ 	vap_caps->keep_alive_period = cpu_to_le16(90);
+ 	vap_caps->frag_threshold = cpu_to_le16(IEEE80211_MAX_FRAG_THRESHOLD);
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 0077888..9f5f33f 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -90,6 +90,7 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ #define IEEE80211_MGMT_FRAME            0x00
+ #define IEEE80211_CTL_FRAME             0x04
+ 
++#define RSI_MAX_ASSOC_STAS		32
+ #define IEEE80211_QOS_TID               0x0f
+ #define IEEE80211_NONQOS_TID            16
+ 
+@@ -262,6 +263,8 @@ struct rsi_common {
+ 	u8 dtim_cnt;
+ 
+ 	/* AP mode parameters */
++	struct rsi_sta stations[RSI_MAX_ASSOC_STAS + 1];
++	int num_stations;
+ 	int max_stations;
  };
  
-+const struct iwl_cfg iwla000_2ax_cfg_qnj_hr = {
-+		.name = "Intel(R) Dual Band Wireless AX a000",
-+		.fw_name_pre = IWL_A000_HR_F0_FW_PRE,
-+		IWL_DEVICE_A000,
-+		.ht_params = &iwl_a000_ht_params,
-+		.nvm_ver = IWL_A000_NVM_VERSION,
-+		.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
-+		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
-+
- MODULE_FIRMWARE(IWL_A000_HR_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_A000_JF_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL_A000_HR_QNJ_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index c52623cb7c2a..573dbeed3fbf 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -463,6 +463,7 @@ extern const struct iwl_cfg iwla000_2ac_cfg_hr;
- extern const struct iwl_cfg iwla000_2ac_cfg_hr_cdb;
- extern const struct iwl_cfg iwla000_2ac_cfg_jf;
- extern const struct iwl_cfg iwla000_2ax_cfg_hr;
-+extern const struct iwl_cfg iwla000_2ax_cfg_qnj_hr;
- #endif /* CONFIG_IWLMVM */
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 201a465..9093ba6 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -188,8 +188,8 @@
+ 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
  
- #endif /* __IWL_CONFIG_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 6772c59b7764..fbce97ed4ecd 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -404,6 +404,12 @@ enum aux_misc_master1_en {
- #define SB_CPU_2_STATUS			0xA01E34
- #define UMAG_SB_CPU_1_STATUS		0xA038C0
- #define UMAG_SB_CPU_2_STATUS		0xA038C4
-+#define UMAG_GEN_HW_STATUS		0xA038C8
-+
-+/* For UMAG_GEN_HW_STATUS reg check */
-+enum {
-+	UMAG_GEN_HW_IS_FPGA = BIT(1),
-+};
+ enum opmode {
+-	STA_OPMODE = 1,
+-	AP_OPMODE = 2
++	AP_OPMODE = 0,
++	STA_OPMODE,
+ };
  
- /* FW chicken bits */
- #define LMPM_CHICK			0xA01FF8
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 3fac3f29a139..4a8fff9a5528 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3137,7 +3137,18 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		iwl_set_bit(trans, CSR_HOST_CHICKEN,
- 			    CSR_HOST_CHICKEN_PM_IDLE_SRC_DIS_SB_PME);
+ enum vap_status {
+@@ -591,7 +591,7 @@ static inline void rsi_set_len_qno(__le16 *addr, u16 len, u8 qno)
  
-+#if IS_ENABLED(CONFIG_IWLMVM)
- 	trans->hw_rf_id = iwl_read32(trans, CSR_HW_RF_ID);
-+	if (trans->hw_rf_id == CSR_HW_RF_ID_TYPE_HR) {
-+		u32 hw_status;
-+
-+		hw_status = iwl_read_prph(trans, UMAG_GEN_HW_STATUS);
-+		if (hw_status & UMAG_GEN_HW_IS_FPGA)
-+			trans->cfg = &iwla000_2ax_cfg_qnj_hr;
-+		else
-+			trans->cfg = &iwla000_2ac_cfg_hr;
-+	}
-+#endif
- 
- 	iwl_pcie_set_interrupt_capa(pdev, trans);
- 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
+ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
+ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
+-			     u8 vap_status);
++			     u8 *mac_addr, u8 vap_id, u8 vap_status);
+ int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
+ 				      u16 ssn, u8 buf_size, u8 event);
+ int rsi_hal_load_key(struct rsi_common *common, u8 *data, u16 key_len,
 -- 
-2.13.2
+2.7.4
