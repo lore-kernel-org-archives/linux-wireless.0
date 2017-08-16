@@ -1,206 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33563 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751242AbdH3Jnt (ORCPT
+Received: from magic.merlins.org ([209.81.13.136]:45492 "EHLO
+        mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752594AbdHQAKb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 05:43:49 -0400
-Received: by mail-pf0-f193.google.com with SMTP id r62so1256672pfj.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 02:43:49 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 6/8] rsi: disallow power save config when AP vap running
-Date: Wed, 30 Aug 2017 15:08:26 +0530
-Message-Id: <1504085908-2163-7-git-send-email-amitkarwar@gmail.com> (sfid-20170830_114412_931079_9594A740)
-In-Reply-To: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
-References: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
+        Wed, 16 Aug 2017 20:10:31 -0400
+Date: Wed, 16 Aug 2017 16:38:44 -0700
+From: Marc MERLIN <marc@merlins.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <20170816233844.qtigfurckdr44awa@merlins.org> (sfid-20170817_021037_537439_F8B92ED1)
+References: <20170526024826.3qjx7pe3kz44klk3@merlins.org>
+ <1496396575.9478.54.camel@coelho.fi>
+ <20170603165950.GC29546@merlins.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170603165950.GC29546@merlins.org>
+Subject: Re: After upgrading to 4.11.1, wifi driver refuses to load after
+ being unloaded once.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Sat, Jun 03, 2017 at 09:59:50AM -0700, Marc MERLIN wrote:
+> On Fri, Jun 02, 2017 at 12:42:55PM +0300, Luca Coelho wrote:
+> > I kernel v4.9, we stopped supporting firmware versions smaller than 22
+> > for the 8260.  But unfortunately I made a mistake in the patch[1] when I
+> > removed support for those firmwares and I used 17, which is the lowest
+> > version for 7260 devices.
+> > 
+> > I have just sent out a patch[2] with a fix for that.
+> > 
+> > You can probably solve your problem by getting the latest firmware we
+> > have released, which is version 27.  You can get it from the linux-
+> > firmware.git repository[3].  Please try that and let us know how it
+> > goes.
+>  
+> Thanks. I think the other problem is that
+> https://wireless.wiki.kernel.org/en/users/drivers/iwlwifihttps://wireless.wiki.kernel.org/en/users/drivers/iwlwifi
+> says to use 'iwlwifi-8000-ucode-16.242414.0.tgz' for 4.3+ kenrels.
+> and strangely says "iwlwifi-8000-ucode-25.30.13.0.tgz" for 4.1+ kernels.
+> 
+> Unless I'm crazy, it didn't have -25 when I looked last time.
+> Is there a way to keep what I thought was the canonical page, up to date?
+> 
+> Firmware 27 seems to work, but I'm getting allocation error/warnings?
 
-When AP or P2P GO VAP is running, power save configuration should
-be disallowed. To check interface type in power save configuration
-'vif' parameters is passed.
+Ok, now I'm getting this error with 4.11.6 when loading the module
+(after having unloaded it while on batteries, to save power):
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 33 ++++++++++++++++++++---------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  5 +++--
- drivers/net/wireless/rsi/rsi_91x_ps.c       | 15 +++++++------
- drivers/net/wireless/rsi/rsi_mgmt.h         |  2 ++
- drivers/net/wireless/rsi/rsi_ps.h           |  7 +++---
- 5 files changed, 39 insertions(+), 23 deletions(-)
+Intel(R) Wireless WiFi driver for Linux
+Copyright(c) 2003- 2015 Intel Corporation
+------------[ cut here ]------------
+WARNING: CPU: 3 PID: 1147 at drivers/net/wireless/intel/iwlwifi/pcie/trans.c:1913 iwl_trans_pcie_grab_nic_access+0xcc/0xe1 [iwlwifi]
+Timeout waiting for hardware access (CSR_GP_CNTRL 0xffffffff)
+Modules linked in: iwlwifi(+) cfg80211 uvcvideo e1000e rndis_host cdc_ether usbnet cmac ccm ipt_MASQUERADE nf_nat_masquerade_ipv4 ipt_REJECT nf_reject_ipv4 xt_tcpudp xt_conntrack nf_log_ipv4 nf_log_common xt_LOG iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle ebtable_filter ebtables ip6table_filter ip6_tables rfcomm iptable_filter ip_tables x_tables bnep pci_stub vboxpci(OE) vboxnetadp(OE) vboxnetflt(OE) vboxdrv(OE) autofs4 binfmt_misc uinput nfsd auth_rpcgss nfs_acl nfs lockd grace fscache sunrpc nls_utf8 nls_cp437 vfat fat configs input_polldev loop firewire_sbp2 firewire_core crc_itu_t cuse ecryptfs ppdev parport_pc lp parport hid_generic videobuf2_vmalloc videobuf2_memops btusb videobuf2_v4l2 btrtl videobuf2_core btbcm btintel videodev media
+ usbhid bluetooth hid joydev arc4 snd_hda_codec_realtek snd_hda_codec_generic coretemp snd_hda_intel x86_pkg_temp_thermal intel_powerclamp snd_hda_codec kvm_intel snd_hda_core rtsx_pci_ms iTCO_wdt kvm memstick rtsx_pci_sdmmc iTCO_vendor_support mei_wdt snd_hwdep thinkpad_acpi irqbypass snd_pcm nvram crct10dif_pclmul crc32_pclmul snd_seq ghash_clmulni_intel snd_seq_device intel_cstate efi_pstore intel_rapl_perf snd_timer xhci_pci pcspkr psmouse efivars i2c_i801 xhci_hcd snd rtsx_pci nvidiafb sg usbcore vgastate fb_ddc mei_me intel_pch_thermal soundcore rfkill wmi hwmon battery ac tpm_crb tpm_tis tpm_tis_core tpm sata_sil24 r8169 mii fuse fan raid456 multipath mmc_block mmc_core dm_snapshot dm_bufio dm_mirror dm_region_hash dm_log dm_crypt dm_mod async_raid6_recov async_pq async_xor async_memcpy
+ async_tx blowfish_x86_64 blowfish_common crc32c_intel bcache aesni_intel i915 ptp aes_x86_64 crypto_simd input_leds cryptd glue_helper serio_raw pps_core shpchp thermal evdev [last unloaded: cfg80211]
+CPU: 3 PID: 1147 Comm: modprobe Tainted: G        W  OE   4.11.6-amd64-preempt-sysrq-20170406 #6
+Hardware name: LENOVO 20ERCTO1WW/20ERCTO1WW, BIOS N1DET41W (1.15 ) 12/31/2015
+Call Trace:
+ dump_stack+0x61/0x7d
+ __warn+0xc2/0xdd
+ warn_slowpath_fmt+0x5a/0x76
+ ? iwl_read32+0x1f/0x7f [iwlwifi]
+ iwl_trans_pcie_grab_nic_access+0xcc/0xe1 [iwlwifi]
+ iwl_trans_pcie_alloc+0x2fb/0x7d4 [iwlwifi]
+ iwl_pci_probe+0x30/0x301 [iwlwifi]
+ ? _raw_spin_unlock_irqrestore+0x14/0x24
+ ? __pm_runtime_resume+0x4d/0x58
+ local_pci_probe+0x3d/0x80
+ pci_device_probe+0xf9/0x13c
+ driver_probe_device+0x19d/0x3f2
+ __driver_attach+0x80/0xdb
+ ? driver_probe_device+0x3f2/0x3f2
+ bus_for_each_dev+0x69/0xa7
+ driver_attach+0x1e/0x20
+ bus_add_driver+0xfd/0x239
+ driver_register+0x88/0xbf
+ ? 0xffffffffc06bf000
+ __pci_register_driver+0x4c/0x4e
+ iwl_pci_register_driver+0x24/0x3b [iwlwifi]
+ ? 0xffffffffc06bf000
+ iwl_drv_init+0x65/0x67 [iwlwifi]
+ do_one_initcall+0x9f/0x160
+ ? slab_pre_alloc_hook+0x1a/0x44
+ ? slab_post_alloc_hook.isra.47+0xe/0x1d
+ ? kmem_cache_alloc_trace+0xec/0xfc
+ do_init_module+0x5f/0x1f7
+ load_module+0x1e6e/0x2595
+ ? strstarts+0x28/0x28
+ ? vfs_read+0xb5/0xdc
+ SYSC_finit_module+0xa2/0xe6
+ ? SYSC_finit_module+0xa2/0xe6
+ SyS_finit_module+0xe/0x10
+ do_syscall_64+0x6b/0x7d
+ entry_SYSCALL64_slow_path+0x25/0x25
+RIP: 0033:0x7f3e447ce119
+RSP: 002b:00007ffec7b402d8 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+RAX: ffffffffffffffda RBX: 0000564e79be53e0 RCX: 00007f3e447ce119
+RDX: 0000000000000000 RSI: 0000564e79345246 RDI: 0000000000000004
+RBP: 0000564e79345246 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000004 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000564e79be7770 R14: 0000000000040000 R15: 0000000000040000
+---[ end trace 35b5c8836a5906b1 ]---
+iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
+iwlwifi 0000:04:00.0: Falling back to user helper
+iwlwifi 0000:04:00.0: capa flags index 3 larger than supported by driver
+iwlwifi 0000:04:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
+iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0xFFFC
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
+[drm:intel_pipe_update_end [i915]] *ERROR* Atomic update failure on pipe A (start=90832 end=90833) time 312 us, min 2146, max 2159, scanline start 2120, end 2162
+iwlwifi 0000:04:00.0: Could not load the [0] uCode section
+iwlwifi 0000:04:00.0: Failed to start INIT ucode: -5
+[drm:intel_pipe_update_end [i915]] *ERROR* Atomic update failure on pipe A (start=93049 end=93050) time 335 us, min 2146, max 2159, scanline start 2131, end 2176
+iwlwifi 0000:04:00.0: Failed to run INIT ucode: -5
+iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index b1550bc..09ad909 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -592,7 +592,6 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
--	struct ieee80211_vif *vif = adapter->vifs[0];
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int status = -EOPNOTSUPP;
- 
-@@ -608,16 +607,30 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
- 	}
- 
- 	/* Power save parameters */
--	if ((changed & IEEE80211_CONF_CHANGE_PS) &&
--	    (vif->type == NL80211_IFTYPE_STATION)) {
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		struct ieee80211_vif *vif;
- 		unsigned long flags;
-+		int i, set_ps = 1;
- 
--		spin_lock_irqsave(&adapter->ps_lock, flags);
--		if (conf->flags & IEEE80211_CONF_PS)
--			rsi_enable_ps(adapter);
--		else
--			rsi_disable_ps(adapter);
--		spin_unlock_irqrestore(&adapter->ps_lock, flags);
-+		for (i = 0; i < RSI_MAX_VIFS; i++) {
-+			vif = adapter->vifs[i];
-+			if (!vif)
-+				continue;
-+			/* Don't go to power save if AP vap exists */
-+			if ((vif->type == NL80211_IFTYPE_AP) ||
-+			    (vif->type == NL80211_IFTYPE_P2P_GO)) {
-+				set_ps = 0;
-+				break;
-+			}
-+		}
-+		if (set_ps) {
-+			spin_lock_irqsave(&adapter->ps_lock, flags);
-+			if (conf->flags & IEEE80211_CONF_PS)
-+				rsi_enable_ps(adapter, vif);
-+			else
-+				rsi_disable_ps(adapter, vif);
-+			spin_unlock_irqrestore(&adapter->ps_lock, flags);
-+		}
- 	}
- 
- 	/* RTS threshold */
-@@ -726,7 +739,7 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
- 	if (bss->assoc) {
- 		if (common->uapsd_bitmap) {
- 			rsi_dbg(INFO_ZONE, "Configuring UAPSD\n");
--			rsi_conf_uapsd(adapter);
-+			rsi_conf_uapsd(adapter, vif);
- 		}
- 	} else {
- 		common->uapsd_bitmap = 0;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 4e50cfd..383cd43 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1474,10 +1474,11 @@ int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word)
- 	return rsi_send_internal_mgmt_frame(common, skb);
- }
- 
--int rsi_send_ps_request(struct rsi_hw *adapter, bool enable)
-+int rsi_send_ps_request(struct rsi_hw *adapter, bool enable,
-+			struct ieee80211_vif *vif)
- {
- 	struct rsi_common *common = adapter->priv;
--	struct ieee80211_bss_conf *bss = &adapter->vifs[0]->bss_conf;
-+	struct ieee80211_bss_conf *bss = &vif->bss_conf;
- 	struct rsi_request_ps *ps;
- 	struct rsi_ps_info *ps_info;
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_ps.c b/drivers/net/wireless/rsi/rsi_91x_ps.c
-index 48c79f0..523f532 100644
---- a/drivers/net/wireless/rsi/rsi_91x_ps.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_ps.c
-@@ -67,7 +67,7 @@ void rsi_default_ps_params(struct rsi_hw *adapter)
- 	ps_info->deep_sleep_wakeup_period = RSI_DEF_DS_WAKEUP_PERIOD;
- }
- 
--void rsi_enable_ps(struct rsi_hw *adapter)
-+void rsi_enable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
- {
- 	if (adapter->ps_state != PS_NONE) {
- 		rsi_dbg(ERR_ZONE,
-@@ -76,7 +76,7 @@ void rsi_enable_ps(struct rsi_hw *adapter)
- 		return;
- 	}
- 
--	if (rsi_send_ps_request(adapter, true)) {
-+	if (rsi_send_ps_request(adapter, true, vif)) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Failed to send PS request to device\n",
- 			__func__);
-@@ -86,7 +86,8 @@ void rsi_enable_ps(struct rsi_hw *adapter)
- 	rsi_modify_ps_state(adapter, PS_ENABLE_REQ_SENT);
- }
- 
--void rsi_disable_ps(struct rsi_hw *adapter)
-+/* This function is used to disable power save */
-+void rsi_disable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
- {
- 	if (adapter->ps_state != PS_ENABLED) {
- 		rsi_dbg(ERR_ZONE,
-@@ -95,7 +96,7 @@ void rsi_disable_ps(struct rsi_hw *adapter)
- 		return;
- 	}
- 
--	if (rsi_send_ps_request(adapter, false)) {
-+	if (rsi_send_ps_request(adapter, false, vif)) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Failed to send PS request to device\n",
- 			__func__);
-@@ -105,16 +106,16 @@ void rsi_disable_ps(struct rsi_hw *adapter)
- 	rsi_modify_ps_state(adapter, PS_DISABLE_REQ_SENT);
- }
- 
--void rsi_conf_uapsd(struct rsi_hw *adapter)
-+void rsi_conf_uapsd(struct rsi_hw *adapter, struct ieee80211_vif *vif)
- {
- 	int ret;
- 
- 	if (adapter->ps_state != PS_ENABLED)
- 		return;
- 
--	ret = rsi_send_ps_request(adapter, false);
-+	ret = rsi_send_ps_request(adapter, false, vif);
- 	if (!ret)
--		ret = rsi_send_ps_request(adapter, true);
-+		ret = rsi_send_ps_request(adapter, true, vif);
- 	if (ret)
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Failed to send PS request to device\n",
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 331d64b..b9d0802 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -641,4 +641,6 @@ int rsi_band_check(struct rsi_common *common, struct ieee80211_channel *chan);
- int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word);
- int rsi_send_radio_params_update(struct rsi_common *common);
- int rsi_set_antenna(struct rsi_common *common, u8 antenna);
-+int rsi_send_ps_request(struct rsi_hw *adapter, bool enable,
-+			struct ieee80211_vif *vif);
- #endif
-diff --git a/drivers/net/wireless/rsi/rsi_ps.h b/drivers/net/wireless/rsi/rsi_ps.h
-index d847587..98ff6a4 100644
---- a/drivers/net/wireless/rsi/rsi_ps.h
-+++ b/drivers/net/wireless/rsi/rsi_ps.h
-@@ -55,10 +55,9 @@ struct rsi_ps_info {
- } __packed;
- 
- char *str_psstate(enum ps_state state);
--void rsi_enable_ps(struct rsi_hw *adapter);
--void rsi_disable_ps(struct rsi_hw *adapter);
-+void rsi_enable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif);
-+void rsi_disable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif);
- int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg);
- void rsi_default_ps_params(struct rsi_hw *hw);
--int rsi_send_ps_request(struct rsi_hw *adapter, bool enable);
--void rsi_conf_uapsd(struct rsi_hw *adapter);
-+void rsi_conf_uapsd(struct rsi_hw *adapter, struct ieee80211_vif *vif);
- #endif
 -- 
-2.7.4
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
