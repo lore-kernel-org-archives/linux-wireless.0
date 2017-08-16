@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51724 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751752AbdHQHGE (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:38134 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752368AbdHPVBy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2017 03:06:04 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/9] qtnfmac: remove unused qtnf_rx_frame declaration
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170815130638.31718-2-sergey.matyukevich.os@quantenna.com>
-References: <20170815130638.31718-2-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Message-Id: <20170817070603.9EE1960274@smtp.codeaurora.org> (sfid-20170817_090607_765240_1233336B)
-Date: Thu, 17 Aug 2017 07:06:03 +0000 (UTC)
+        Wed, 16 Aug 2017 17:01:54 -0400
+Date: Wed, 16 Aug 2017 14:01:52 -0700 (PDT)
+Message-Id: <20170816.140152.199379342704102455.davem@davemloft.net> (sfid-20170816_230202_021798_2F1D91F6)
+To: james@nurealm.net
+Cc: futur.andy@googlemail.com, kvalo@codeaurora.org,
+        arend.vanspriel@broadcom.com, maheshb@google.com,
+        andy@greyhouse.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        dcbw@redhat.com
+Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not
+ working with wireless drivers
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net>
+References: <deb37db2-a55b-4010-475a-e756e67d3bc9@nurealm.net>
+        <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com>
+        <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+From: James Feeney <james@nurealm.net>
+Date: Wed, 16 Aug 2017 14:44:27 -0600
 
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> On 08/13/2017 11:42 AM, Andreas Born wrote:
+>> On a side note I would recommend some of my own reading to you about
+>> patch submission in general [1] and on netdev specifically [2].
+> 
+> Mmm - [2] and [3], I suspect.  Thanks Andreas.  I'll be studying those.  Yeah,
+> I'm still learning what is needed and what works.  Sometimes, just a note to the
+> author is more than enough to resolve a problem.  Sometimes, discussion is
+> needed.  And other times... well, certain people are infamous... but no problem
+> here, thankfully.
+> 
+>> And, just wondering, who's going to eventually close that bugreport?
+>> https://bugzilla.kernel.org/show_bug.cgi?id=196547
+> 
+> I can close it when the patches actually land in the kernel.
 
-8 patches applied to wireless-drivers-next.git, thanks.
-
-0db63e37992c qtnfmac: remove unused qtnf_rx_frame declaration
-7376947dfb80 qtnfmac: switch to napi_gro_receive
-c58730cab8ea qtnfmac: use __netdev_alloc_skb_ip_align
-867ba964fa69 qtnfmac: skb2rbd_attach cleanup
-dfb13db68f3e qtnfmac: decrease default Tx queue size
-3cbc3a0f19ac qtnfmac: switch to kernel circ_buf implementation
-cc75f9e5bc66 qtnfmac: introduce counter for Rx underflow events
-0593da274d4d qtnfmac: modify tx reclaim locking
-
--- 
-https://patchwork.kernel.org/patch/9901845/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+All of the patches are in Linus's tree.
