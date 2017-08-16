@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:59150 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932575AbdHVLoV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:44:21 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 23/30] brcmfmac: stabilise the value of ->sbwad in use for some xfer routines.
-Date: Tue, 22 Aug 2017 12:25:43 +0100
-Message-Id: <20170822112550.60311-24-ian@mnementh.co.uk> (sfid-20170822_134428_593238_C26F3F6E)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33728 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751466AbdHPOy0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Aug 2017 10:54:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH v2 1/2] rtlwifi: use debugfs to debug.
+References: <20170810164744.9336-1-Larry.Finger@lwfinger.net>
+        <20170810164744.9336-2-Larry.Finger@lwfinger.net>
+Date: Wed, 16 Aug 2017 17:54:21 +0300
+In-Reply-To: <20170810164744.9336-2-Larry.Finger@lwfinger.net> (Larry Finger's
+        message of "Thu, 10 Aug 2017 11:47:43 -0500")
+Message-ID: <87efsbtvfm.fsf@purkki.adurom.net> (sfid-20170816_165434_076560_75FB495A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IO functions operate within the Chipcommon IO window. Explicitly
-set this, rather than relying on the last initialisation IO access to
-leave it set to the right value by chance.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
- 3 files changed, 10 insertions(+), 4 deletions(-)
+> From: Ping-Ke Shih <pkshih@realtek.com>
+>
+> Use debugfs to dump register and btcoex status.
+>
+> We create topdir in /sys/kernel/debug/rtlwifi/, and use the MAC address
+> as subdirectory with several entries to dump mac_reg, bb_reg, rf_reg etc.
+> An example is
+>     /sys/kernel/debug/rtlwifi/00-11-22-33-44-55-66/mac_0
+>
+> This change permits examination of device registers in a dynamic manner,
+> a feature not available with the current debug mechanism.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index cabfab9a02a2..eeddefeef9b9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -527,7 +527,7 @@ int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 
- int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- {
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err = 0;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
-@@ -550,7 +550,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- {
- 	struct sk_buff *glom_skb = NULL;
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err = 0;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
-@@ -591,7 +591,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err;
- 
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-@@ -623,7 +623,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 			 struct sk_buff_head *pktq)
- {
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err;
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 09b4db117e0d..62561782ab90 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3833,6 +3833,11 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 	if (!bus->sdio_core)
- 		goto fail;
- 
-+	/* Pick up the CHIPCOMMON core info struct, for bulk IO in bcmsdh.c */
-+	sdiodev->cc_core = brcmf_chip_get_core(bus->ci, BCMA_CORE_CHIPCOMMON);
-+	if (!sdiodev->cc_core)
-+		goto fail;
-+
- 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
- 						   BRCMF_BUSTYPE_SDIO,
- 						   bus->ci->chip,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 01def16cd236..ac5f814ff019 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -178,6 +178,7 @@ struct brcmf_sdio_dev {
- 	struct sdio_func *func[SDIO_MAX_FUNCS];
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 sbwad;			/* Save backplane window address */
-+	struct brcmf_core *cc_core;	/* chipcommon core info struct */
- 	struct brcmf_sdio *bus;
- 	struct device *dev;
- 	struct brcmf_bus *bus_if;
+Not just dump but apparently also to write to registers, I see a
+write_reg file there which takes commands like "h2c", "rf" and none
+meaning BB/MAC registers. IMHO it would be cleaner to have separate files
+for each register type, currently rtl_debugfs_set_write_reg() is pretty
+ugly.
+
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
+
+[...]
+
+> +static ssize_t rtl_debugfs_set_write_reg(struct file *filp,
+> +					 const char __user *buffer,
+> +					 size_t count, loff_t *loff)
+> +{
+> +	struct rtl_debgufs_priv *debugfs_priv = filp->private_data;
+> +	struct rtl_priv *rtlpriv = debugfs_priv->rtlpriv;
+> +	struct ieee80211_hw *hw = rtlpriv->hw;
+> +	char tmp[32 + 1];
+> +	int tmp_len;
+> +	u32 addr, val, len;
+> +	int num;
+> +
+> +	if (count < 3) {
+> +		/*printk("argument size is less than 3\n");*/
+> +		return -EFAULT;
+> +	}
+
+Commented out code. I saw few other cases in this patch also.
+
 -- 
-2.11.0
+Kalle Valo
