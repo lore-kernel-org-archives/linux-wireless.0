@@ -1,86 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42620 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752665AbdHEToy (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33504 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752253AbdHPNR5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:44:54 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Wed, 16 Aug 2017 09:17:57 -0400
+Received: by mail-pf0-f194.google.com with SMTP id c65so1361064pfl.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:17:57 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:30 +0300
-Message-Id: <20170805194331.17426-19-luca@coelho.fi> (sfid-20170805_220252_333764_7D725158)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 18/19] iwlwifi: pcie: free the TSO page when a Tx queue is unmapped on A000 devices
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 03/11] rsi: remove interface changes for AP mode
+Date: Wed, 16 Aug 2017 18:43:10 +0530
+Message-Id: <1502889198-4478-4-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151801_048841_1CBFC8B1)
+In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-When we unmap a non-empty Tx queue, we need to free the
-pages that we allocated for the headers in TSO flows.
-This code existed for the 9000 device family, but somehow
-it got left out when the new Tx path for the A000 devices
-was written.
+remove_interface callback of mac80211 is handled for AP mode.
+Same is notified to firmware through vap_capabilities frame
+with VAP status VAP_DELETE.
 
-Fixes: 2b0c5946d9ed ("iwlwifi: pcie: introduce a000 TX queues management")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 2 ++
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 9 +++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 4 ++--
- 3 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index a8ffd4ca8cd8..f46871840fd2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -806,6 +806,8 @@ int iwl_pcie_alloc_dma_ptr(struct iwl_trans *trans,
- 			   struct iwl_dma_ptr *ptr, size_t size);
- void iwl_pcie_free_dma_ptr(struct iwl_trans *trans, struct iwl_dma_ptr *ptr);
- void iwl_pcie_apply_destination(struct iwl_trans *trans);
-+void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
-+			    struct sk_buff *skb);
- #ifdef CONFIG_INET
- struct iwl_tso_hdr_page *get_page_hdr(struct iwl_trans *trans, size_t len);
- #endif
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 83a28892dc4f..4db45e56b6ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -937,6 +937,15 @@ void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id)
- 		IWL_DEBUG_TX_REPLY(trans, "Q %d Free %d\n",
- 				   txq_id, txq->read_ptr);
- 
-+		if (txq_id != trans_pcie->cmd_queue) {
-+			int idx = get_cmd_index(txq, txq->read_ptr);
-+			struct sk_buff *skb = txq->entries[idx].skb;
-+
-+			if (WARN_ON_ONCE(!skb))
-+				continue;
-+
-+			iwl_pcie_free_tso_page(trans_pcie, skb);
-+		}
- 		iwl_pcie_gen2_free_tfd(trans, txq);
- 		txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 073793a53d8e..1602ea1175c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -574,8 +574,8 @@ int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
- 	return 0;
- }
- 
--static void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
--				   struct sk_buff *skb)
-+void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
-+			    struct sk_buff *skb)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index edcba56..99446bb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -405,13 +405,31 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
  {
- 	struct page **page_ptr;
+ 	struct rsi_hw *adapter = hw->priv;
+ 	struct rsi_common *common = adapter->priv;
++	enum opmode opmode;
++
++	rsi_dbg(INFO_ZONE, "Remove Interface Called\n");
  
+ 	mutex_lock(&common->mutex);
+-	if (vif->type == NL80211_IFTYPE_STATION) {
+-		adapter->sc_nvifs--;
+-		rsi_set_vap_capabilities(common, STA_OPMODE, vif->addr,
+-					 0, VAP_DELETE);
++
++	if (adapter->sc_nvifs <= 0) {
++		mutex_unlock(&common->mutex);
++		return;
++	}
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		opmode = STA_OPMODE;
++		break;
++	case NL80211_IFTYPE_AP:
++		opmode = AP_OPMODE;
++		break;
++	default:
++		mutex_unlock(&common->mutex);
++		return;
+ 	}
++	rsi_set_vap_capabilities(common, opmode, vif->addr,
++				 0, VAP_DELETE);
++	adapter->sc_nvifs--;
+ 
+ 	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
+ 		adapter->vifs[0] = NULL;
 -- 
-2.13.2
+2.7.4
