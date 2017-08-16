@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb2-smtp-cloud8.xs4all.net ([194.109.24.25]:39816 "EHLO
-        lb2-smtp-cloud8.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751274AbdH2Vnc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42450 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751471AbdHPPCh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 17:43:32 -0400
-From: Antony Antony <antony@phenome.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc: Icenowy Zheng <icenowy@aosc.io>, devicetree@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        Maxime Ripard <maxime.ripard@free-electrons.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Antony Antony <antony@phenome.org>
-Subject: [PATCH] Documentation: dt-binding: net: wireless: add bcm43430-fmac
-Date: Tue, 29 Aug 2017 23:43:09 +0200
-Message-Id: <20170829214309.34466-1-antony@phenome.org> (sfid-20170829_234335_464838_B05AB4A9)
+        Wed, 16 Aug 2017 11:02:37 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH] qtnfmac: pcie datapath optimizations and cleanups
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+Date: Wed, 16 Aug 2017 18:02:33 +0300
+In-Reply-To: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Tue, 15 Aug 2017 16:06:30 +0300")
+Message-ID: <8760dntv1y.fsf@purkki.adurom.net> (sfid-20170816_170241_347461_A4958A14)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation for Broadcom BCM43430
-AMPAK AP6212A has this chip.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-e.g
-compatible = "brcm,bcm43430-fmac";
+> Hello Kalle and all,
+>
+> This patchset implements several optimizations and cleanups for
+> pcie datapath in qtnfmac driver. Major changes include:
+> - switch to kernel circ_buf implementation
+> - modify tx reclaim locking
+> - introduce counter for rx underflow events
+>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+>
+>  bus.h                   |    1 
+>  pearl/pcie.c            |  285 +++++++++++++++++++++++++++++-------------------
+>  pearl/pcie_bus_priv.h   |   15 +-
+>  pearl/pcie_ipc.h        |    1 
+>  pearl/pcie_regs_pearl.h |    1 
+>  5 files changed, 183 insertions(+), 120 deletions(-)
 
-NanoPi NEO Plus2 has an AMPAK AP6212A WiFi module
-with BCM43430 rev=1 inside.
-brcmf_chip_recognition found AXI chip: BCM43430, rev=1
-brcmf_ops_sdio_probe sdio vendor ID: 0x02d0
-brcmf_ops_sdio_probe sdio device ID: 0xa9a6
+I don't see patch 9 in the mailing list. Did it get lost somewhere?
 
-Signed-off-by: Antony Antony <antony@phenome.org>
----
- Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
- NanoPi Neo Plus2 Kernel DT propsed patch
- https://patchwork.kernel.org/patch/9925387/
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-index 590f622..9107e1a 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-@@ -6,7 +6,9 @@ connects the device to the system.
- 
- Required properties:
- 
-- - compatible : Should be "brcm,bcm4329-fmac".
-+ - compatible : should be one of the following:
-+	* "brcm,bcm4329-fmac"
-+	* "brcm,bcm43430-fmac"
- 
- Optional properties:
-  - brcm,drive-strength : drive strength used for SDIO pins on device in mA
 -- 
-2.9.3
+Kalle Valo
