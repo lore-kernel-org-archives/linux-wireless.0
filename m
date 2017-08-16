@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34371 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750744AbdH3GEL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43192 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751531AbdHPQ2T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 02:04:11 -0400
-Received: by mail-pf0-f195.google.com with SMTP id p69so3730708pfk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Aug 2017 23:04:11 -0700 (PDT)
-To: arend.vanspriel@broadcom.com, kvalo@codeaurora.org,
-        ian@mnementh.co.uk, linux-wireless@vger.kernel.org
-From: Ian W MORRISON <ianwmorrison@gmail.com>
-Subject: [PATCH] brcmfmac: feature check for multi-scheduled scan fails on
- bcm4345 devices
-Message-ID: <277a202d-7949-ddba-4893-17536d909559@gmail.com> (sfid-20170830_080457_898129_8EA22CEF)
-Date: Wed, 30 Aug 2017 16:04:07 +1000
+        Wed, 16 Aug 2017 12:28:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH] qtnfmac: pcie datapath optimizations and cleanups
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+        <8760dntv1y.fsf@purkki.adurom.net>
+        <20170816155313.xtl4vfq7m7zfu5dj@bars>
+Date: Wed, 16 Aug 2017 19:28:14 +0300
+In-Reply-To: <20170816155313.xtl4vfq7m7zfu5dj@bars> (Sergey Matyukevich's
+        message of "Wed, 16 Aug 2017 18:53:14 +0300")
+Message-ID: <87r2wb5vfl.fsf@kamboji.qca.qualcomm.com> (sfid-20170816_182822_591375_7FDE494E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware feature check introduced for multi-scheduled scan is also
-failing for bcm4345 devices resulting in a firmware crash.
-The reason for this crash has not yet been root cause so this patch avoids
-the feature check for those device as a short-term fix.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan feature")
-Signed-off-by: Ian W Morrison <ianwmorrison@gmail.com>
----
-Tested on MINIX NEO Z83-4 and MINIX NEO Z83-4 Pro devices.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+>> I don't see patch 9 in the mailing list. Did it get lost somewhere?
+>
+> No, this is my fault. The last patch was sort of experimental shuffling
+> dma memory barriers. I kept it for testing, but forgot to remove it
+> before sending. Let me know if it matters, then I will resend
+> a properly numbered patchset.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index f1b60740e..53ae302 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -159,7 +159,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+Not a problem, I just always check if I see a patch missing.
 
-        brcmf_feat_firmware_capabilities(ifp);
-        memset(&gscan_cfg, 0, sizeof(gscan_cfg));
--       if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID)
-+       if (drvr->bus_if->chip != BRCM_CC_43430_CHIP_ID &&
-+           drvr->bus_if->chip != BRCM_CC_4345_CHIP_ID)
-                brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
-                                          "pfn_gscan_cfg",
-                                          &gscan_cfg, sizeof(gscan_cfg));
 -- 
-1.9.1
+Kalle Valo
