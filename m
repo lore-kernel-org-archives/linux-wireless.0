@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57732 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbdH3QTt (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:38238 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751637AbdHPNRj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:19:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
-Subject: Re: pull-request: iwlwifi-next 2017-08-30
-References: <1504085929.31031.8.camel@coelho.fi>
-Date: Wed, 30 Aug 2017 19:19:43 +0300
-In-Reply-To: <1504085929.31031.8.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 30 Aug 2017 12:38:49 +0300")
-Message-ID: <87ziahrpsw.fsf@kamboji.qca.qualcomm.com> (sfid-20170830_181953_074281_7E836ECE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Wed, 16 Aug 2017 09:17:39 -0400
+Received: by mail-pf0-f194.google.com with SMTP id h75so1362746pfh.5
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:17:38 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 00/11] rsi: support for AP mode
+Date: Wed, 16 Aug 2017 18:43:07 +0530
+Message-Id: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151742_940574_DE926DAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-> Here's my fourth and final pull-request intended for v4.14.=C2=A0 It cont=
-ains
-> just a couple of small fixes and a FW API number bump.=C2=A0=C2=A0More de=
-tails in
-> the tag description.
->
-> I have fixed the subject of one of the patches for the typo you reported
-> during review.
->
-> I have sent this out before, and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit d081a16db80ef7a260fb178aa1199e01f74326=
-25:
->
->   net: bcmgenet: Do not return from void function (2017-08-29 22:39:51 -0=
-700)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
-tags/iwlwifi-next-for-kalle-2017-08-30
->
-> for you to fetch changes up to d7a5b3e9e42ee95190742fef0d617bbde4f74d80:
->
->   iwlwifi: mvm: bump API to 34 for 8000 and up (2017-08-30 12:30:56 +0300)
->
-> ----------------------------------------------------------------
-> Last set of iwlwifi patches for 4.14
->
-> * Fix a queue hang problem due to 11w behavior
-> * Fix a warning caused by a too long debug print
-> * Bump API number to the latest version we support
->
-> ----------------------------------------------------------------
+This patchset contains enhancements for AP mode operation.
+Major changes are maintaining the station structures in
+driver and adding station id parameter to the Tx packets
+whenever required.
+Tests are performed to confirm aggregation, connections in
+WEP and WPA/WPA2 security.
 
-Pulled, thanks.
+Changes in v2:
+patch 5/10: Avoided print_hex_dump to print station MAC in sta_add
+patch 6/10: Avoided print hex_dump to print station MAC in sta_remove
 
---=20
-Kalle Valo
+Prameela Rani Garnepudi (11):
+  rsi: advertise ap mode support
+  rsi: add interface changes for ap mode
+  rsi: remove interface changes for AP mode
+  rsi: add beacon changes for AP mode
+  rsi: handle station connection in AP mode
+  rsi: handle station disconnection in AP mode
+  rsi: data and managemet path changes for AP mode
+  rsi: use common descriptor for auto rate frame
+  rsi: update tx auto rate command frame for AP mode
+  rsi: aggregation parameters frame for AP mode
+  rsi: security enhancements for AP mode
+
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  70 ++++--
+ drivers/net/wireless/rsi/rsi_91x_hal.c      | 129 +++++++++--
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 342 +++++++++++++++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 180 +++++++++++----
+ drivers/net/wireless/rsi/rsi_common.h       |   1 +
+ drivers/net/wireless/rsi/rsi_hal.h          |   4 +-
+ drivers/net/wireless/rsi/rsi_main.h         |  27 ++-
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  35 ++-
+ 8 files changed, 641 insertions(+), 147 deletions(-)
+
+-- 
+2.7.4
