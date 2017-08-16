@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38062 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44088 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751963AbdHCKKc (ORCPT
+        with ESMTP id S1751764AbdHPPEr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 06:10:32 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [10/11] net: qtnfmac: constify pci_device_id.
+        Wed, 16 Aug 2017 11:04:47 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1500315263-3373-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1500315263-3373-1-git-send-email-arvind.yadav.cs@gmail.com>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: imitsyanko@quantenna.com, avinashp@quantenna.com,
-        smatyukevich@quantenna.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Message-Id: <20170803101031.6BEBA607B6@smtp.codeaurora.org> (sfid-20170803_121055_166320_291DECCA)
-Date: Thu,  3 Aug 2017 10:10:31 +0000 (UTC)
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 2/9] qtnfmac: switch to napi_gro_receive
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+        <20170815130638.31718-3-sergey.matyukevich.os@quantenna.com>
+Date: Wed, 16 Aug 2017 18:04:43 +0300
+In-Reply-To: <20170815130638.31718-3-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Tue, 15 Aug 2017 16:06:32 +0300")
+Message-ID: <871sobtuyc.fsf@purkki.adurom.net> (sfid-20170816_170450_996742_F6DF9C6A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-> pci_device_id are not supposed to change at runtime. All functions
-> working with pci_device_id provided by <linux/pci.h> work with
-> const pci_device_id. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> Use napi_gro_receive() rather than netif_receive_skb() in qtnfmac driver.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-cc5becd38e87 net: qtnfmac: constify pci_device_id.
+Yes, I can easily see that from the diff so no need to document that :)
+But the commit log should tell _why_ you did it.
 
 -- 
-https://patchwork.kernel.org/patch/9845911/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
