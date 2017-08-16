@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:32888 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752190AbdHHQDP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49150 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbdHPPJG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:03:15 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 25/35] wireless: marvell: libertas_tf: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:32:51 +0530
-Message-Id: <1502208171-12118-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180806_832842_A4052578)
-In-Reply-To: <1502208171-12118-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502208171-12118-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Wed, 16 Aug 2017 11:09:06 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 2/9] qtnfmac: switch to napi_gro_receive
+References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
+        <20170815130638.31718-3-sergey.matyukevich.os@quantenna.com>
+        <871sobtuyc.fsf@purkki.adurom.net>
+Date: Wed, 16 Aug 2017 18:08:59 +0300
+In-Reply-To: <871sobtuyc.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
+        16 Aug 2017 18:04:43 +0300")
+Message-ID: <87tw17sg6s.fsf@purkki.adurom.net> (sfid-20170816_170911_031009_5C279DB6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+>
+>> Use napi_gro_receive() rather than netif_receive_skb() in qtnfmac driver.
+>
+> Yes, I can easily see that from the diff so no need to document that :)
+> But the commit log should tell _why_ you did it.
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-index e0ade40..e9104ec 100644
---- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-@@ -31,7 +31,7 @@ module_param_named(fw_name, lbtf_fw_name, charp, 0644);
- 
- MODULE_FIRMWARE("lbtf_usb.bin");
- 
--static struct usb_device_id if_usb_table[] = {
-+static const struct usb_device_id if_usb_table[] = {
- 	/* Enter the device signature inside */
- 	{ USB_DEVICE(0x1286, 0x2001) },
- 	{ USB_DEVICE(0x05a3, 0x8388) },
+And no need to resend because of this, I can improve the commit log
+during commit. Just let me know what I should add.
+
 -- 
-2.7.4
+Kalle Valo
