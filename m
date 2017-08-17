@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50500 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752070AbdHHVnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 17:43:53 -0400
-Message-ID: <1502228547.24881.5.camel@redhat.com> (sfid-20170808_234358_078631_15127FE7)
-Subject: Re: wireless drivers fail to report link speed?
-From: Dan Williams <dcbw@redhat.com>
-To: james@nurealm.net, linux-wireless@vger.kernel.org
-Date: Tue, 08 Aug 2017 16:42:27 -0500
-In-Reply-To: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
-References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:10067 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751169AbdHQGtp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Aug 2017 02:49:45 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [2/6] ath10k: refactor firmware crashdump code to coredump.c
+Date: Thu, 17 Aug 2017 06:49:40 +0000
+Message-ID: <87378q664c.fsf@kamboji.qca.qualcomm.com> (sfid-20170817_084949_032241_343D7FF7)
+References: <150278538298.22482.10986802411848917689.stgit@potku.adurom.net>
+        <ec54c0ff3af546d2a52d75428c38d06b@euamsexm01a.eu.qualcomm.com>
+In-Reply-To: <ec54c0ff3af546d2a52d75428c38d06b@euamsexm01a.eu.qualcomm.com>
+        (Kalle Valo's message of "Thu, 17 Aug 2017 06:20:02 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-08-08 at 13:07 -0600, James Feeney wrote:
-> Hello All
-> 
-> Would you please look at kernel bug report "Since 4.12 - bonding
-> module not
-> working with wireless drivers", and tell me if you know why the
-> kernel ethtool
-> does not receive a speed report from the wireless drivers?
-> 
->  https://bugzilla.kernel.org/show_bug.cgi?id=196547
-> 
-> It seems that Mahesh Bandewar became annoyed that some network
-> drivers do not
-> report speed and duplex to the bonding module properly, so that it
-> becomes
-> impossible to make "best connection" decisions.  A patch was applied
-> to the
-> bonding module in linux 4.12 which now disables any network interface
-> that does
-> not successfully report its speed and duplex.  In practice, this
-> seems to
-> include every wireless network driver I've tried, the ath5k, ath9k,
-> the
-> rtl8192ce and RTL8188CUS.  Of course, this new behavior breaks
-> wireless bonding!
-> 
-> Do you know if there is some general reason why the wireless drivers
-> do not work
-> with the kernel ethtool?  Is this something that can be fixed?  Can
-> you tell if
-> this reporting failure would be the fault of the kernel ethtool?  Or
-> the
-> wireless driver?  Or the bonding module?
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Because the "speed" (whatever that means) can and sometimes does change
-with every packet.  The driver dynamically adjusts the link rate based
-on all kinds of things.  But mainly the current radio environment; how
-many other APs are around, how much interference there is, how many
-other clients are trying to talk, that kind of thing.
+> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>
+>> In preparation to add RAM dump support. No functional changes, only movi=
+ng code
+>> and renaming function names.
+>>=20
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>
+> With only this patch applied, and CONFIG_DEV_COREDUMP disabled, there's a=
+ build error:
+>
+> drivers/net/wireless/ath/ath10k/coredump.c:24:30: error: redefinition
+> of 'ath10k_coredump_new'
+> drivers/net/wireless/ath/ath10k/coredump.c:130:5: error: redefinition
+> of 'ath10k_coredump_submit'
 
-So one second the wifi might be the "best" link and then when somebody
-turns on a microwave oven or a baby monitor, it may be the "worst"
-until the microwave's duty cycle completes a few seconds later then
-it'll become the "best" again for a couple seconds then "worst" again,
-repeat until your Easy Mac is nice and warm and creamy.
+Fixed in pending branch like this:
 
-Furthermore, for some drivers IIRC when there isn't any traffic, they
-might drop the link rate very low because there's no reason keep
-powering blocks when you're not transmitting/receiving any data.  IIRC
-the Intel drivers used to do that a couple years ago.
+--- a/drivers/net/wireless/ath/ath10k/Makefile
++++ b/drivers/net/wireless/ath/ath10k/Makefile
+@@ -20,7 +20,7 @@ ath10k_core-$(CONFIG_ATH10K_TRACING) +=3D trace.o
+ ath10k_core-$(CONFIG_THERMAL) +=3D thermal.o
+ ath10k_core-$(CONFIG_MAC80211_DEBUGFS) +=3D debugfs_sta.o
+ ath10k_core-$(CONFIG_PM) +=3D wow.o
+-ath10k_core-$(CONFIG_ATH10K_DEBUGFS) +=3D coredump.o
++ath10k_core-$(CONFIG_DEV_COREDUMP) +=3D coredump.o
 
-Also, "duplex" doesn't mean anything in wireless land.  So no clue what
-bonding is expecting them to say here.  I would say the modifications
-to the bonding core made assumptions that simply aren't applicable to
-mediums other than wired ones.
-
-Dan
+--=20
+Kalle Valo=
