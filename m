@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49568 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752263AbdHCKAH (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:44284 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751517AbdHQCmG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 06:00:07 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,01/12] qtnfmac: updates for regulatory support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170727230654.30850-2-sergey.matyukevich.os@quantenna.com>
-References: <20170727230654.30850-2-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Message-Id: <20170803100007.7EE0E607C6@smtp.codeaurora.org> (sfid-20170803_120021_648013_634E09B0)
-Date: Thu,  3 Aug 2017 10:00:07 +0000 (UTC)
+        Wed, 16 Aug 2017 22:42:06 -0400
+Date: Wed, 16 Aug 2017 19:42:03 -0700 (PDT)
+Message-Id: <20170816.194203.2292396744409301402.davem@davemloft.net> (sfid-20170817_044213_947101_233B80C6)
+To: dcbw@redhat.com
+Cc: james@nurealm.net, futur.andy@googlemail.com, kvalo@codeaurora.org,
+        arend.vanspriel@broadcom.com, maheshb@google.com,
+        andy@greyhouse.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, greearb@candelatech.com
+Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not
+ working with wireless drivers
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1502935907.30484.4.camel@redhat.com>
+References: <1502918561.30484.1.camel@redhat.com>
+        <20170816.143116.1172751167543812070.davem@davemloft.net>
+        <1502935907.30484.4.camel@redhat.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+From: Dan Williams <dcbw@redhat.com>
+Date: Wed, 16 Aug 2017 21:11:47 -0500
 
-> On startup driver obtains regulatory rules from firmware and
-> enables them during wiphy registration. Later on regulatory
-> domain change can be requested by host. In this case firmware
-> is notified about the upcoming changes. If the change is valid,
-> then firmware updates hardware channel configuration and host
-> driver receives updated channel info for each band.
-> 
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+> You'll probably say "aim for the 75% case" or something like that,
+> which is fine, but then you're depending on your 75% case to be (a)
+> single AP, (b) never move (eg, only bond wifi + ethernet), (c) little
+> radio interference.  I'm not sure I'd buy that.  If I've put words in
+> your mouth, forgive me.
 
-12 patches applied to wireless-drivers-next.git, thanks.
+You can interpret what I'm saying as "some reasonable value is
+better than no value at all."
 
-4dd07d2b58d5 qtnfmac: updates for regulatory support
-ea19479f6849 qtnfmac: regulatory configuration for self-managed setup
-9ef7509505c8 qtnfmac: add missing bus lock
-7c04b43984a5 qtnfmac: implement cfg80211 dump_survey handler
-278944482b29 qtnfmac: implement reporting current channel
-fd19ecebe03e qtnfmac: fix station leave reason endianness
-34f1145b2c5e qtnfmac: move current channel info from vif to mac
-97883695d596 qtnfmac: implement cfg80211 channel_switch handler
-c7ead2abd26a qtnfmac: implement scan timeout
-41c8fa0c6274 qtnfmac: fix handling of iftype mask reported by firmware
-03ddf59d786d qtnfmac: remove function qtnf_cmd_skb_put_action
-805b28c05c8e qtnfmac: prepare for AP_VLAN interface type support
+You can keep arguing about AP changes, radio interference, etc.
+but anything is better than the current situation.
 
--- 
-https://patchwork.kernel.org/patch/9867659/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Start small and simple, try to handle everything over time and
+gradually.
