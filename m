@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:44284 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751517AbdHQCmG (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48398 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752027AbdHQQz2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 22:42:06 -0400
-Date: Wed, 16 Aug 2017 19:42:03 -0700 (PDT)
-Message-Id: <20170816.194203.2292396744409301402.davem@davemloft.net> (sfid-20170817_044213_947101_233B80C6)
-To: dcbw@redhat.com
-Cc: james@nurealm.net, futur.andy@googlemail.com, kvalo@codeaurora.org,
-        arend.vanspriel@broadcom.com, maheshb@google.com,
-        andy@greyhouse.net, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, greearb@candelatech.com
-Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not
- working with wireless drivers
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1502935907.30484.4.camel@redhat.com>
-References: <1502918561.30484.1.camel@redhat.com>
-        <20170816.143116.1172751167543812070.davem@davemloft.net>
-        <1502935907.30484.4.camel@redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 17 Aug 2017 12:55:28 -0400
+Date: Thu, 17 Aug 2017 09:55:30 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, chunkeey@googlemail.com,
+        kvalo@codeaurora.org
+Subject: Re: [PATCH v2 1/2] wireless: move prism54 out to staging
+Message-ID: <20170817165530.GA32640@kroah.com> (sfid-20170817_185543_282146_C71209E8)
+References: <20170807223011.21926-1-mcgrof@kernel.org>
+ <20170807223011.21926-2-mcgrof@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170807223011.21926-2-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Wed, 16 Aug 2017 21:11:47 -0500
+On Mon, Aug 07, 2017 at 03:30:10PM -0700, Luis R. Rodriguez wrote:
+> prism54 is deprecated in favor of the p54pci device driver. Although
+> only *one soul* had reported issues with it long ago Linux most Linux
+> distributions these days just disable the device driver given the
+> conflicts with the PCI IDs of p54pci and the *very* unlikely situation
+> of folks really need this driver anymore.
+> 
+> Before trying to due away with prism54 once more stuff it into staging,
+> which is our hospice for dying drivers.
+> 
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 
-> You'll probably say "aim for the 75% case" or something like that,
-> which is fine, but then you're depending on your 75% case to be (a)
-> single AP, (b) never move (eg, only bond wifi + ethernet), (c) little
-> radio interference.  I'm not sure I'd buy that.  If I've put words in
-> your mouth, forgive me.
+Did you build this?
 
-You can interpret what I'm saying as "some reasonable value is
-better than no value at all."
+I get the following error:
 
-You can keep arguing about AP changes, radio interference, etc.
-but anything is better than the current situation.
+drivers/staging/Kconfig:117: can't open file "drivers/staging/prism54/Kconfig"
 
-Start small and simple, try to handle everything over time and
-gradually.
+Can you fix this and _test it_ and resend it?
+
+thanks,
+
+greg k-h
