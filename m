@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59640 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51724 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdHaLum (ORCPT
+        with ESMTP id S1751752AbdHQHGE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 07:50:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: David Miller <davem@davemloft.net>, xiyou.wangcong@gmail.com,
-        torvalds@linux-foundation.org, akpm@linux-foundation.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [GIT] Networking
-References: <87pobdt8qc.fsf@kamboji.qca.qualcomm.com>
-        <20170830.101143.2305098064824357647.davem@davemloft.net>
-        <87val5rmh8.fsf@kamboji.qca.qualcomm.com>
-        <20170830.105447.125174575140677062.davem@davemloft.net>
-        <87fuc8s5v9.fsf@kamboji.qca.qualcomm.com> <20170831065204.GA17812@amd>
-Date: Thu, 31 Aug 2017 14:50:28 +0300
-In-Reply-To: <20170831065204.GA17812@amd> (Pavel Machek's message of "Thu, 31
-        Aug 2017 08:52:04 +0200")
-Message-ID: <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com> (sfid-20170831_135129_101998_DF4F1149)
+        Thu, 17 Aug 2017 03:06:04 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/9] qtnfmac: remove unused qtnf_rx_frame declaration
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170815130638.31718-2-sergey.matyukevich.os@quantenna.com>
+References: <20170815130638.31718-2-sergey.matyukevich.os@quantenna.com>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Message-Id: <20170817070603.9EE1960274@smtp.codeaurora.org> (sfid-20170817_090607_765240_1233336B)
+Date: Thu, 17 Aug 2017 07:06:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding linux-wireless)
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
 
-Pavel Machek <pavel@ucw.cz> writes:
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-> On Thu 2017-08-31 07:44:58, Kalle Valo wrote:
->> David Miller <davem@davemloft.net> writes:
->> 
->> > From: Kalle Valo <kvalo@codeaurora.org>
->> > Date: Wed, 30 Aug 2017 20:31:31 +0300
->> >
->> >> AFAICS the bug was introduced by 9df86e2e702c6 back in 2010. If the bug
->> >> has been there for 7 years so waiting for a few more weeks should not
->> >> hurt.
->> >
->> > As a maintainer you have a right to handle bug fixing in that way, but
->> > certainly that is not how I would handle this.
->> >
->> > It's easy to validate this fix, it's extremely unlikely to cause
->> > a regression, and fixes a problem someone actually was able to
->> > trigger.
->> >
->> > Deferring to -next only has the side effect of making people wait
->> > longer for the fix.
->> 
->> Yeah, you are right there. I did actually ponder which I tree should
->> commit it back in July but due to various reasons decided differently.
->
-> Can we still get the fix to v4.13-final? :-).
+8 patches applied to wireless-drivers-next.git, thanks.
 
-I'm not planning to submit pull requests to 4.13 anymore. If you think
-this is so important that it needs to be applied in the last minute (I
-don't) you could always try to convince Dave to take it directly.
-
-Or better yet, push it to the stable tree. If the merge window opens on
-Sunday I suspect that the commit will be in Linus' tree sometime next
-week. Then you can submit the request to the stable team to take it.
+0db63e37992c qtnfmac: remove unused qtnf_rx_frame declaration
+7376947dfb80 qtnfmac: switch to napi_gro_receive
+c58730cab8ea qtnfmac: use __netdev_alloc_skb_ip_align
+867ba964fa69 qtnfmac: skb2rbd_attach cleanup
+dfb13db68f3e qtnfmac: decrease default Tx queue size
+3cbc3a0f19ac qtnfmac: switch to kernel circ_buf implementation
+cc75f9e5bc66 qtnfmac: introduce counter for Rx underflow events
+0593da274d4d qtnfmac: modify tx reclaim locking
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9901845/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
