@@ -1,369 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42644 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752665AbdHETpH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:45:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:22 +0300
-Message-Id: <20170805194331.17426-11-luca@coelho.fi> (sfid-20170805_220252_484135_99CB4ED9)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 10/19] iwlwifi: mvm: move a000 device NVM retrieval to a common place
+Received: from mx1.redhat.com ([209.132.183.28]:52346 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751569AbdHQDT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Aug 2017 23:19:56 -0400
+Message-ID: <1502939894.30484.9.camel@redhat.com> (sfid-20170817_052003_778069_0E82AEDE)
+Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not
+ working with wireless drivers
+From: Dan Williams <dcbw@redhat.com>
+To: Ben Greear <greearb@candelatech.com>,
+        David Miller <davem@davemloft.net>
+Cc: james@nurealm.net, futur.andy@googlemail.com, kvalo@codeaurora.org,
+        arend.vanspriel@broadcom.com, maheshb@google.com,
+        andy@greyhouse.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date: Wed, 16 Aug 2017 22:18:14 -0500
+In-Reply-To: <2abaf7ec-947a-6a30-e6d3-4f75605dd50d@candelatech.com>
+References: <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com>
+         <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net>
+         <1502918561.30484.1.camel@redhat.com>
+         <20170816.143116.1172751167543812070.davem@davemloft.net>
+         <1502935907.30484.4.camel@redhat.com>
+         <2abaf7ec-947a-6a30-e6d3-4f75605dd50d@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+On Wed, 2017-08-16 at 19:36 -0700, Ben Greear wrote:
+> On 08/16/2017 07:11 PM, Dan Williams wrote:
+> > On Wed, 2017-08-16 at 14:31 -0700, David Miller wrote:
+> > > From: Dan Williams <dcbw@redhat.com>
+> > > Date: Wed, 16 Aug 2017 16:22:41 -0500
+> > > 
+> > > > My biggest suggestion is that perhaps bonding should grow
+> > > 
+> > > hysteresis
+> > > > for link speeds. Since WiFi can change speed every packet, you
+> > > 
+> > > probably
+> > > > don't want the bond characteristics changing every couple
+> > > > seconds
+> > > 
+> > > just
+> > > > in case your WiFi link is jumping around.  Ethernet won't
+> > > > bounce
+> > > 
+> > > around
+> > > > that much, so the hysteresis would have no effect there.  Or,
+> > > > if
+> > > 
+> > > people
+> > > > are concerned about response time to speed changes on ethernet
+> > > 
+> > > (where
+> > > > you probably do want an instant switch-over) some new flag to
+> > > 
+> > > indicate
+> > > > that certain devices don't have stable speeds over time.
+> > > 
+> > > Or just report the average of the range the wireless link can
+> > > hit,
+> > > and
+> > > be done with it.
+> > > 
+> > > I think you guys are overcomplicating things.
+> > 
+> > That range can be from 1 to > 800Mb/s.  No, it won't usually be all
+> > over that range, but it won't be uncommon to fluctuate by hundreds
+> > of
+> > Mb/s.  I'm not sure a simple average is really the answer
+> > here.  Even
+> > doing that would require new knobs to ethtool, since the rate
+> > depends
+> > heavily on card capabilities and also what AP you're connected to
+> > *at
+> > that moment*.  If you roam to another AP, then the max speed can
+> > certainly change.
+> > 
+> > You'll probably say "aim for the 75% case" or something like that,
+> > which is fine, but then you're depending on your 75% case to be (a)
+> > single AP, (b) never move (eg, only bond wifi + ethernet), (c)
+> > little
+> > radio interference.  I'm not sure I'd buy that.  If I've put words
+> > in
+> > your mouth, forgive me.
+> 
+> If you keep ethtool API simple and just return the last (rx-rate +
+> tx-rate) / 2, or the rate averaged
+> over the last 100 frames or 10 seconds, then the caller can do longer
+> term averaging
+> as it sees fit.  Probably no need for lots of averaging complexity in
+> the kernel.
 
-Getting the NVM data in a000 devices should be shared
-across operation mode.
+Yeah, that works too, but I was thinking it was better to present the
+actual data through ethtool so that things other than bonding could use
+it, and since bonding is the thing that actually cares about the
+fluctuation, make it do the more extensive processing.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/Makefile     |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/nvm.c     | 162 ++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h |   2 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |   1 -
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c    |  91 -------------
- 6 files changed, 169 insertions(+), 95 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+Dan
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index 5dcb4a848dba..35a32a3ec882 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -12,7 +12,7 @@ iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
- iwlwifi-objs		+= iwl-trans.o
- iwlwifi-objs		+= fw/notif-wait.o
- iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
--iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o
-+iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o fw/nvm.o
- 
- iwlwifi-objs += $(iwlwifi-m)
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-new file mode 100644
-index 000000000000..ae03d0f5564f
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-@@ -0,0 +1,162 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include "iwl-drv.h"
-+#include "runtime.h"
-+#include "fw/api/nvm-reg.h"
-+#include "fw/api/commands.h"
-+#include "iwl-nvm-parse.h"
-+
-+struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
-+{
-+	struct iwl_nvm_get_info cmd = {};
-+	struct iwl_nvm_get_info_rsp *rsp;
-+	struct iwl_trans *trans = fwrt->trans;
-+	struct iwl_nvm_data *nvm;
-+	struct iwl_host_cmd hcmd = {
-+		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
-+		.data = { &cmd, },
-+		.len = { sizeof(cmd) },
-+		.id = WIDE_ID(REGULATORY_AND_NVM_GROUP, NVM_GET_INFO)
-+	};
-+	int  ret;
-+	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
-+				fw_has_capa(&fwrt->fw->ucode_capa,
-+					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
-+
-+	ret = iwl_trans_send_cmd(trans, &hcmd);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
-+	if (WARN(iwl_rx_packet_payload_len(hcmd.resp_pkt) != sizeof(*rsp),
-+		 "Invalid payload len in NVM response from FW %d",
-+		 iwl_rx_packet_payload_len(hcmd.resp_pkt))) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	rsp = (void *)hcmd.resp_pkt->data;
-+	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
-+		IWL_INFO(fwrt, "OTP is empty\n");
-+
-+	nvm = kzalloc(sizeof(*nvm) +
-+		      sizeof(struct ieee80211_channel) * IWL_NUM_CHANNELS,
-+		      GFP_KERNEL);
-+	if (!nvm) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	iwl_set_hw_address_from_csr(trans, nvm);
-+	/* TODO: if platform NVM has MAC address - override it here */
-+
-+	if (!is_valid_ether_addr(nvm->hw_addr)) {
-+		IWL_ERR(fwrt, "no valid mac address was found\n");
-+		ret = -EINVAL;
-+		goto err_free;
-+	}
-+
-+	IWL_INFO(trans, "base HW address: %pM\n", nvm->hw_addr);
-+
-+	/* Initialize general data */
-+	nvm->nvm_version = le16_to_cpu(rsp->general.nvm_version);
-+
-+	/* Initialize MAC sku data */
-+	nvm->sku_cap_11ac_enable =
-+		le32_to_cpu(rsp->mac_sku.enable_11ac);
-+	nvm->sku_cap_11n_enable =
-+		le32_to_cpu(rsp->mac_sku.enable_11n);
-+	nvm->sku_cap_band_24GHz_enable =
-+		le32_to_cpu(rsp->mac_sku.enable_24g);
-+	nvm->sku_cap_band_52GHz_enable =
-+		le32_to_cpu(rsp->mac_sku.enable_5g);
-+	nvm->sku_cap_mimo_disabled =
-+		le32_to_cpu(rsp->mac_sku.mimo_disable);
-+
-+	/* Initialize PHY sku data */
-+	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
-+	nvm->valid_rx_ant = (u8)le32_to_cpu(rsp->phy_sku.rx_chains);
-+
-+	/* Initialize regulatory data */
-+	nvm->lar_enabled =
-+		le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported;
-+
-+	iwl_init_sbands(trans->dev, trans->cfg, nvm,
-+			rsp->regulatory.channel_profile,
-+			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
-+			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
-+			rsp->regulatory.lar_enabled && lar_fw_supported);
-+
-+	iwl_free_resp(&hcmd);
-+	return nvm;
-+
-+err_free:
-+	kfree(nvm);
-+out:
-+	iwl_free_resp(&hcmd);
-+	return ERR_PTR(ret);
-+}
-+IWL_EXPORT_SYMBOL(iwl_fw_get_nvm);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 66bea6545690..50cfb6d795a5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -63,6 +63,7 @@
- #include "img.h"
- #include "fw/api/debug.h"
- #include "fw/api/paging.h"
-+#include "iwl-eeprom-parse.h"
- 
- struct iwl_fw_runtime_ops {
- 	int (*dump_start)(void *ctx);
-@@ -152,5 +153,6 @@ void iwl_get_shared_mem_conf(struct iwl_fw_runtime *fwrt);
- 
- void iwl_fwrt_handle_notification(struct iwl_fw_runtime *fwrt,
- 				  struct iwl_rx_cmd_buffer *rxb);
-+struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt);
- 
- #endif /* __iwl_fw_runtime_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 304e8434328a..c5a9259145ea 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -412,8 +412,10 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 
- 	/* Read the NVM only at driver load time, no need to do this twice */
- 	if (!IWL_MVM_PARSE_NVM && read_nvm) {
--		ret = iwl_mvm_nvm_get_from_fw(mvm);
--		if (ret) {
-+		mvm->nvm_data = iwl_fw_get_nvm(&mvm->fwrt);
-+		if (IS_ERR(mvm->nvm_data)) {
-+			ret = PTR_ERR(mvm->nvm_data);
-+			mvm->nvm_data = NULL;
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
- 			return ret;
- 		}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 7423b5632bfa..1aa057a65e88 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1375,7 +1375,6 @@ void iwl_mvm_accu_radio_stats(struct iwl_mvm *mvm);
- 
- /* NVM */
- int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic);
--int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm);
- int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm);
- int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index 5cc749261ce3..08020386c3d4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -546,97 +546,6 @@ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
- 	return ret;
- }
- 
--int iwl_mvm_nvm_get_from_fw(struct iwl_mvm *mvm)
--{
--	struct iwl_nvm_get_info cmd = {};
--	struct iwl_nvm_get_info_rsp *rsp;
--	struct iwl_trans *trans = mvm->trans;
--	struct iwl_host_cmd hcmd = {
--		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
--		.data = { &cmd, },
--		.len = { sizeof(cmd) },
--		.id = WIDE_ID(REGULATORY_AND_NVM_GROUP, NVM_GET_INFO)
--	};
--	int  ret;
--	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
--				fw_has_capa(&mvm->fw->ucode_capa,
--					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
--
--	lockdep_assert_held(&mvm->mutex);
--
--	ret = iwl_mvm_send_cmd(mvm, &hcmd);
--	if (ret)
--		return ret;
--
--	if (WARN(iwl_rx_packet_payload_len(hcmd.resp_pkt) != sizeof(*rsp),
--		 "Invalid payload len in NVM response from FW %d",
--		 iwl_rx_packet_payload_len(hcmd.resp_pkt))) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	rsp = (void *)hcmd.resp_pkt->data;
--	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
--		IWL_INFO(mvm, "OTP is empty\n");
--
--	mvm->nvm_data = kzalloc(sizeof(*mvm->nvm_data) +
--				sizeof(struct ieee80211_channel) *
--				IWL_NUM_CHANNELS, GFP_KERNEL);
--	if (!mvm->nvm_data) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	iwl_set_hw_address_from_csr(trans, mvm->nvm_data);
--	/* TODO: if platform NVM has MAC address - override it here */
--
--	if (!is_valid_ether_addr(mvm->nvm_data->hw_addr)) {
--		IWL_ERR(trans, "no valid mac address was found\n");
--		ret = -EINVAL;
--		goto err_free;
--	}
--
--	IWL_INFO(trans, "base HW address: %pM\n", mvm->nvm_data->hw_addr);
--
--	/* Initialize general data */
--	mvm->nvm_data->nvm_version = le16_to_cpu(rsp->general.nvm_version);
--
--	/* Initialize MAC sku data */
--	mvm->nvm_data->sku_cap_11ac_enable =
--		le32_to_cpu(rsp->mac_sku.enable_11ac);
--	mvm->nvm_data->sku_cap_11n_enable =
--		le32_to_cpu(rsp->mac_sku.enable_11n);
--	mvm->nvm_data->sku_cap_band_24GHz_enable =
--		le32_to_cpu(rsp->mac_sku.enable_24g);
--	mvm->nvm_data->sku_cap_band_52GHz_enable =
--		le32_to_cpu(rsp->mac_sku.enable_5g);
--	mvm->nvm_data->sku_cap_mimo_disabled =
--		le32_to_cpu(rsp->mac_sku.mimo_disable);
--
--	/* Initialize PHY sku data */
--	mvm->nvm_data->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
--	mvm->nvm_data->valid_rx_ant = (u8)le32_to_cpu(rsp->phy_sku.rx_chains);
--
--	/* Initialize regulatory data */
--	mvm->nvm_data->lar_enabled =
--		le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported;
--
--	iwl_init_sbands(trans->dev, trans->cfg, mvm->nvm_data,
--			rsp->regulatory.channel_profile,
--			mvm->nvm_data->valid_tx_ant & mvm->fw->valid_tx_ant,
--			mvm->nvm_data->valid_rx_ant & mvm->fw->valid_rx_ant,
--			rsp->regulatory.lar_enabled && lar_fw_supported);
--
--	iwl_free_resp(&hcmd);
--	return 0;
--
--err_free:
--	kfree(mvm->nvm_data);
--out:
--	iwl_free_resp(&hcmd);
--	return ret;
--}
--
- int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
- {
- 	int ret, section;
--- 
-2.13.2
+
+> rate-ctrl for wifi basically doesn't happen until you transmit or
+> receive a
+> fairly steady stream, so it will fluctuate a lot.
