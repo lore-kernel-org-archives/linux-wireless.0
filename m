@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:36654 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751684AbdHSU1D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Aug 2017 16:27:03 -0400
-Subject: Re: [PATCH 14/34] brcmfmac: Remove brcmf_sdiod_addrprep()
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-15-ian@mnementh.co.uk> <59884E86.9040502@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <5a49f7ef-bddf-f5ba-95e1-0875a6379643@mnementh.co.uk> (sfid-20170819_222707_555904_A8B30DCB)
-Date: Sat, 19 Aug 2017 21:27:01 +0100
-MIME-Version: 1.0
-In-Reply-To: <59884E86.9040502@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from pv35p12im-ztdg05031101.me.com ([17.133.186.213]:38068 "EHLO
+        pv35p12im-ztdg05031101.me.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753375AbdHRAcu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Aug 2017 20:32:50 -0400
+Received: from process-dkim-sign-daemon.pv35p12im-ztdg05031101.me.com by
+ pv35p12im-ztdg05031101.me.com
+ (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
+ 2017)) id <0OUU00600S1HDC00@pv35p12im-ztdg05031101.me.com> for
+ linux-wireless@vger.kernel.org; Thu, 17 Aug 2017 23:32:49 +0000 (GMT)
+Received: from icloud.com ([127.0.0.1]) by pv35p12im-ztdg05031101.me.com
+ (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
+ 2017)) with ESMTPSA id <0OUU003B2S2MGQ00@pv35p12im-ztdg05031101.me.com> for
+ linux-wireless@vger.kernel.org; Thu, 17 Aug 2017 23:32:49 +0000 (GMT)
+From: =?utf-8?Q?H=C3=A5vard_Rabbe?= <hrabbe@me.com>
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: ath9k driver - is it possible to disable tx/rx radio chains?
+Message-id: <0DB9FDCC-490C-438E-AA50-1C751565A9AE@me.com> (sfid-20170818_023253_784859_0F677FF9)
+Date: Fri, 18 Aug 2017 01:32:44 +0200
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/17 12:27, Arend van Spriel wrote:
-> On 7/26/2017 10:25 PM, Ian Molton wrote:
->> This function has become trivial enough that it may as well be pushed
->> into
->> its callers, which has the side-benefit of clarifying what's going on.
->>
->> Remove it, and rename brcmf_sdiod_set_sbaddr_window() to
->> brcmf_sdiod_set_backplane_window() as it's easier to understand.
-> 
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> 
-> comments below...
-> 
+Hi
+I=E2=80=99m using wifi card with AR9280 chipset that uses the ath9k =
+driver.
 
->> -    if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
->> -        return -ENOMEDIUM;
-> 
-> So now you are dropping the state check here, which seems significant
-> enough to mention in the commit log. We need to discuss that. The idea
-> of it was to refrain from using IO function of the MMC stack when we no
-> there is no longer a device, ie. when stack has previously returned a
-> -ENOMEDIUM.
+The card has 2 available radio chains and I=E2=80=99m only going to =
+connect 1 antenna.
 
-Yeah, that code is broken (see earlier email) AFAICT anyway, and we
-should probably handle losing our card a lot more gracefully in general.
+Is it possible to disable the radio chain im not using?
 
->> +    if (bar0 == sdiodev->sbwad)
->> +        return 0;
->>
->> -    addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
->> +    v = bar0 >> 8;
-> 
-> why introducing a new variable on the stack. You actually don't need any
-> and just mask and shift the addr variable passed to the function.
 
-Linux code *generally* doesn't do this. Its stylistic anyway, since the
-compiler certainly won't be dumb enough to allocate another register (or
-stack space) in this instance.
+Best Regards,
 
->>       if (!retval)
->>           data = sdio_readl(sdiodev->func[1], addr, &retval);
-> 
-> The if-statement is now redundant here...
-
-Good catch! :)
-
--Ian
+H=C3=A5vard Rabbe=
