@@ -1,53 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39789 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751415AbdH3Suo (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34206 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752291AbdHQDcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 14:50:44 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
-Date: Thu, 31 Aug 2017 00:16:58 +0530
-Message-ID: <1504118818-1749-1-git-send-email-gbhat@marvell.com> (sfid-20170830_205048_024559_A4D93A51)
+        Wed, 16 Aug 2017 23:32:12 -0400
+Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working
+ with wireless drivers
+To: Dan Williams <dcbw@redhat.com>, David Miller <davem@davemloft.net>
+References: <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com>
+ <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net>
+ <1502918561.30484.1.camel@redhat.com>
+ <20170816.143116.1172751167543812070.davem@davemloft.net>
+ <1502935907.30484.4.camel@redhat.com>
+ <2abaf7ec-947a-6a30-e6d3-4f75605dd50d@candelatech.com>
+ <1502939894.30484.9.camel@redhat.com>
+Cc: james@nurealm.net, futur.andy@googlemail.com, kvalo@codeaurora.org,
+        arend.vanspriel@broadcom.com, maheshb@google.com,
+        andy@greyhouse.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <51235f75-efd1-20af-31ab-19dbba91b359@candelatech.com> (sfid-20170817_053216_896964_5CE84A57)
+Date: Wed, 16 Aug 2017 20:32:11 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1502939894.30484.9.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If driver is loaded with 'mfg_mode' enabled, then the sending
-commands are not allowed. So, when mwifiex_send_cmd fails in
-mwifiex_add_virtual_intf, driver must check for 'mfg_mode' before
-returning error.
+On 08/16/2017 08:18 PM, Dan Williams wrote:
+> On Wed, 2017-08-16 at 19:36 -0700, Ben Greear wrote:
+>> On 08/16/2017 07:11 PM, Dan Williams wrote:
+>>> On Wed, 2017-08-16 at 14:31 -0700, David Miller wrote:
+>>>> From: Dan Williams <dcbw@redhat.com>
+>>>> Date: Wed, 16 Aug 2017 16:22:41 -0500
+>>>>
+>>>>> My biggest suggestion is that perhaps bonding should grow
+>>>>
+>>>> hysteresis
+>>>>> for link speeds. Since WiFi can change speed every packet, you
+>>>>
+>>>> probably
+>>>>> don't want the bond characteristics changing every couple
+>>>>> seconds
+>>>>
+>>>> just
+>>>>> in case your WiFi link is jumping around.  Ethernet won't
+>>>>> bounce
+>>>>
+>>>> around
+>>>>> that much, so the hysteresis would have no effect there.  Or,
+>>>>> if
+>>>>
+>>>> people
+>>>>> are concerned about response time to speed changes on ethernet
+>>>>
+>>>> (where
+>>>>> you probably do want an instant switch-over) some new flag to
+>>>>
+>>>> indicate
+>>>>> that certain devices don't have stable speeds over time.
+>>>>
+>>>> Or just report the average of the range the wireless link can
+>>>> hit,
+>>>> and
+>>>> be done with it.
+>>>>
+>>>> I think you guys are overcomplicating things.
+>>>
+>>> That range can be from 1 to > 800Mb/s.  No, it won't usually be all
+>>> over that range, but it won't be uncommon to fluctuate by hundreds
+>>> of
+>>> Mb/s.  I'm not sure a simple average is really the answer
+>>> here.  Even
+>>> doing that would require new knobs to ethtool, since the rate
+>>> depends
+>>> heavily on card capabilities and also what AP you're connected to
+>>> *at
+>>> that moment*.  If you roam to another AP, then the max speed can
+>>> certainly change.
+>>>
+>>> You'll probably say "aim for the 75% case" or something like that,
+>>> which is fine, but then you're depending on your 75% case to be (a)
+>>> single AP, (b) never move (eg, only bond wifi + ethernet), (c)
+>>> little
+>>> radio interference.  I'm not sure I'd buy that.  If I've put words
+>>> in
+>>> your mouth, forgive me.
+>>
+>> If you keep ethtool API simple and just return the last (rx-rate +
+>> tx-rate) / 2, or the rate averaged
+>> over the last 100 frames or 10 seconds, then the caller can do longer
+>> term averaging
+>> as it sees fit.  Probably no need for lots of averaging complexity in
+>> the kernel.
+>
+> Yeah, that works too, but I was thinking it was better to present the
+> actual data through ethtool so that things other than bonding could use
+> it, and since bonding is the thing that actually cares about the
+> fluctuation, make it do the more extensive processing.
 
-Fixes: 7311ea850079 ("mwifiex: fix AP start problem for newly added interface")
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+What do you mean by 'actual data'?  If you want to know the most accurate
+transmit/rx rate info, then you need to pay attention to each and every frame's tx/rx rate, as
+well as it's ampdu/amsdu, retries, etc.  It is virtually impossible.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ffada17..1856205 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2967,11 +2967,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 
- 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
- 			       HostCmd_ACT_GEN_SET, 0, NULL, true);
--	if (ret)
-+	if (ret && !adapter->mfg_mode)
- 		goto err_set_bss_mode;
- 
- 	ret = mwifiex_sta_init_cmd(priv, false, false);
--	if (ret)
-+	if (ret && !adapter->mfg_mode)
- 		goto err_sta_init;
- 
- 	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
+So, you will have to settle for something less...  I suggest something simple
+to calculate, similar to existing values that are available via debugfs and/or
+'iw dev foo station dump', etc.  Let higher layers manipulate the raw data
+as they see fit (they can query ethtool as often as they like).
+
+Thanks,
+Ben
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
