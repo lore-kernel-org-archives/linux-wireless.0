@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:22664 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751940AbdHCLfe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 07:35:34 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from eidolon.nox.tf ([185.142.180.128]:35630 "EHLO eidolon.nox.tf"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751055AbdHRXcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Aug 2017 19:32:10 -0400
+Date: Sat, 19 Aug 2017 01:32:08 +0200
+From: David Lamparter <equinox@diac24.net>
+To: Matteo Croce <mcroce@redhat.com>
+Cc: David Lamparter <equinox@diac24.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [POC/GIT] mac80211 multicast rate selection (help wanted!)
+Message-ID: <20170818233208.GU773745@eidolon> (sfid-20170819_013212_967602_12E14C65)
+References: <20170818222910.GT773745@eidolon>
+ <1503097091.2730.14.camel@redhat.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: sdio: fix compile warning
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1499540921-18521-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1499540921-18521-1-git-send-email-erik.stromdahl@gmail.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <4a06a6fc064e43009a37fc7a4a1c52af@euamsexm01a.eu.qualcomm.com> (sfid-20170803_133549_316401_B01A07EB)
-Date: Thu, 3 Aug 2017 13:35:27 +0200
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503097091.2730.14.camel@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
+On Sat, Aug 19, 2017 at 12:58:11AM +0200, Matteo Croce wrote:
+> Il giorno sab, 19/08/2017 alle 00.29 +0200, David Lamparter ha scritto:
+> > So, from some completely unrelated datacenter work, I have hacked up
+> > the bridge to hand back down to the driver detailed info on
+> > multicast receivers.  Then I took this and fudged around in the
+> > minstrel_ht code and, well, it gave me 9 MBit/s ;)
+> > 
+> > Now, I have pretty little no clue about the Linux wireless stack, so
+> > I'd appreciate if someone could tell me how massively wrong I'm
+> > doing this and which places in particular are the wrongest!
+[cut]
+> So you are scanning the multicast receivers list to select the lowest
+> rate, comparing the rates by data rate?
 
-> As suggested by Arnd Bergmann, replace
-> "while (time_before_...) {}"
-> with
-> "do {} while (time_before_...)"
-> 
-> This fixes the following warnings detected by gcc 4.1.2:
-> 
-> drivers/net/wireless/ath/ath10k/sdio.c: In function
-> ‘ath10k_sdio_mbox_rxmsg_pending_handler’:
-> drivers/net/wireless/ath/ath10k/sdio.c:676: warning: ‘ret’ may be used uninitialized in this function
-> 
-> ...
-> 
-> drivers/net/wireless/ath/ath10k/sdio.c: In function
-> ‘ath10k_sdio_irq_handler’:
-> drivers/net/wireless/ath/ath10k/sdio.c:1331: warning: ‘ret’ may be used uninitialized in this function
-> 
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Right now it's just using the lowest rate index.  I did say I have no
+clue, right? :)
 
-Patch applied to ath-next branch of ath.git, thanks.
+> I think that this is incorrect, the data rate is a combination of many
+> parameters (modulation, GI interval, coding rate, streams, etc.) so a
+> rate with higher data rate could be better than another with lower
+> speed in some circumstances. Or even worse, some station could not
+> receive the packet at all (too many streams, unsupported modulations.
+> etc.).
+>
+> You could try to select the lowest MCS rate, the longer GI and the
+> minimum number of stream from all the receivers and use a data rate
+> compatible with these settings, if any (not all combinations are
+> allowed unfortunately)
 
-433ef1b22678 ath10k: sdio: fix compile warning
+Yes, basically I need to find the best rate in the common subset
+supported by all receivers.  This is far from trivial and will have
+'interesting' interactions (for example, if a station only does
+multicast, minstrel has nothing to learn the rate on because multicast
+isn't ACKed so you can't probe with it).  That said, my goal here is
+"simple", not "perfect".  There's always room and time for
+improvement...
 
--- 
-https://patchwork.kernel.org/patch/9831499/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-David
