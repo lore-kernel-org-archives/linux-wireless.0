@@ -1,47 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41818 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756282AbdHYLib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Aug 2017 07:38:31 -0400
-Date: Fri, 25 Aug 2017 13:38:29 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Daniel Golle <daniel@makrotopia.org>
-Subject: [PATCH] rt2800: fix TX_PIN_CFG setting for non MT7620 chips
-Message-ID: <20170825113828.GA3959@redhat.com> (sfid-20170825_133835_370916_5085A04A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from paleale.coelho.fi ([176.9.41.70]:44450 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751593AbdHRPtd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Aug 2017 11:49:33 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:01 +0300
+Message-Id: <20170818154922.2904-4-luca@coelho.fi> (sfid-20170818_174942_252467_85ACB7FC)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 03/24] iwlwifi: call iwl_remove_notification from iwl_wait_notification
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit 41977e86c984 ("rt2x00: add support for MT7620") we do not
-initialize TX_PIN_CFG setting. This cause breakage at least on some
-RT3573 devices. To fix the problem patch restores previous behaviour
-for non MT7620 chips.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1480829
-Reported-and-tested-by: Jussi Eloranta <jussi.eloranta@csun.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The iwl_wait_notification() function removes the wait entry from the
+list.  To make it clearer that it's doing the same thing as
+iwl_remove_notification(), call the latter instead of having duplicate
+code.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c | 25 +++++++++++-----------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index d11c7b2..5672aec 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -3699,7 +3699,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	if (rt2x00_rt(rt2x00dev, RT3572))
- 		rt2800_rfcsr_write(rt2x00dev, 8, 0);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+index 29bb92e3df59..1096c945a68b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
+@@ -6,7 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -32,6 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -161,6 +162,15 @@ iwl_init_notification_wait(struct iwl_notif_wait_data *notif_wait,
+ }
+ IWL_EXPORT_SYMBOL(iwl_init_notification_wait);
  
--	rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
-+	if (rt2x00_rt(rt2x00dev, RT6352))
-+		rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
-+	else
-+		tx_pin = 0;
++void iwl_remove_notification(struct iwl_notif_wait_data *notif_wait,
++			     struct iwl_notification_wait *wait_entry)
++{
++	spin_lock_bh(&notif_wait->notif_wait_lock);
++	list_del(&wait_entry->list);
++	spin_unlock_bh(&notif_wait->notif_wait_lock);
++}
++IWL_EXPORT_SYMBOL(iwl_remove_notification);
++
+ int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
+ 			  struct iwl_notification_wait *wait_entry,
+ 			  unsigned long timeout)
+@@ -171,9 +181,7 @@ int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
+ 				 wait_entry->triggered || wait_entry->aborted,
+ 				 timeout);
  
- 	switch (rt2x00dev->default_ant.tx_chain_num) {
- 	case 3:
+-	spin_lock_bh(&notif_wait->notif_wait_lock);
+-	list_del(&wait_entry->list);
+-	spin_unlock_bh(&notif_wait->notif_wait_lock);
++	iwl_remove_notification(notif_wait, wait_entry);
+ 
+ 	if (wait_entry->aborted)
+ 		return -EIO;
+@@ -184,12 +192,3 @@ int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
+ 	return 0;
+ }
+ IWL_EXPORT_SYMBOL(iwl_wait_notification);
+-
+-void iwl_remove_notification(struct iwl_notif_wait_data *notif_wait,
+-			     struct iwl_notification_wait *wait_entry)
+-{
+-	spin_lock_bh(&notif_wait->notif_wait_lock);
+-	list_del(&wait_entry->list);
+-	spin_unlock_bh(&notif_wait->notif_wait_lock);
+-}
+-IWL_EXPORT_SYMBOL(iwl_remove_notification);
 -- 
-2.7.5
+2.14.1
