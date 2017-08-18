@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:54227 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbdHKF4c (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 01:56:32 -0400
-Subject: Re: brcmfmac: BCM43431 won't get probed on Raspberry Pi Zero W
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-rpi-kernel@lists.infradead.org,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>
-References: <384537059.123625.1498678388857@email.1und1.de>
- <1133935948.74840.1500297053336@email.1und1.de>
- <CA+8PC_eKn_LddvcpYG=V6vD7qZfVNEmmzR3gWXxWO80SNKR-3Q@mail.gmail.com>
- <1389331679.85833.1500323470395@email.1und1.de>
- <314866679.136055.1501049965582@email.1und1.de>
- <597857D6.4010508@broadcom.com>
-From: Stefan Wahren <stefan.wahren@i2se.com>
-Message-ID: <683db4ef-662f-3ef2-f69a-c78ca8297115@i2se.com> (sfid-20170811_075636_612655_6F9B3665)
-Date: Fri, 11 Aug 2017 07:55:42 +0200
+Received: from eidolon.nox.tf ([185.142.180.128]:60064 "EHLO eidolon.nox.tf"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750988AbdHRWeT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Aug 2017 18:34:19 -0400
+Date: Sat, 19 Aug 2017 00:29:10 +0200
+From: David Lamparter <equinox@diac24.net>
+To: linux-wireless@vger.kernel.org
+Subject: [POC/GIT] mac80211 multicast rate selection (help wanted!)
+Message-ID: <20170818222910.GT773745@eidolon> (sfid-20170819_003422_359325_73798F95)
 MIME-Version: 1.0
-In-Reply-To: <597857D6.4010508@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Hello Linux Wireless hackers,
 
-Am 26.07.2017 um 10:50 schrieb Arend van Spriel:
-> On 7/26/2017 8:19 AM, Stefan Wahren wrote:
->> Hi,
->>
->>
->> what are the plans to fix this regression?
->
-> I am a bit in doubt about this one. We can avoid the firmware config
-> above for bcm4343x devices as a short term fix. However, I would like
-> to root cause the issue. Received a Pi Zero over here so gearing it up.
->
-> Regards,
-> Arend
->
-is there an update about this issue? Should i prepare such a short term fix?
 
-Regards
-Stefan
+I've taken up an hacking endeavour in trying to improve multicast on
+wifi, specifically to get it off the stupid 1 MBit rate.  Before anyone
+yells "that's not allowed by the spec" - it actually is, please refer to
+section 9.7.5 of 802.11-2012. ("... using one of the rates included in
+the BSSBasicRateSet parameter ...")  Also, Cisco and Aruba are doing
+this in their enterprise APs, and it's rather nice.
+
+So, from some completely unrelated datacenter work, I have hacked up the
+bridge to hand back down to the driver detailed info on multicast
+receivers.  Then I took this and fudged around in the minstrel_ht code
+and, well, it gave me 9 MBit/s ;)
+
+Now, I have pretty little no clue about the Linux wireless stack, so I'd
+appreciate if someone could tell me how massively wrong I'm doing this
+and which places in particular are the wrongest!
+
+You can find the code here:
+https://github.com/eqvinox/vpls-linux-kernel/commits/mdb-hack
+https://github.com/eqvinox/vpls-iproute2/tree/mdb-hack
+
+Please note that all of this is proof-of-concept level, it probably
+leaks tons of memory, has great race conditions and eats your cat for
+breakfast.  It also contains some debug printks like this:
+[ 9006.253504] mac80211_hwsim hwsim0 wlan0: multi-dst TX: 02:00:00:00:02:00 02:00:00:00:01:00
+[ 9006.255007] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:02:00 => rate #1
+[ 9006.256095] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:01:00 => rate #12
+[ 9006.257186] mac80211_hwsim hwsim0 wlan0: result rate #1
+
+
+Cheers,
+
+-David
+
+
+P.S.: yes, I know about unicast conversion.  But that's not helpful
+when, for example, you want to get a 10 MBit multicast TV livestream to
+5 simultaneous wifi clients...
