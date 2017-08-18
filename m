@@ -1,115 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49570 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752137AbdHHXoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 19:44:34 -0400
-Message-ID: <1502235788.24881.9.camel@redhat.com> (sfid-20170809_014438_093532_84694179)
-Subject: Re: wireless drivers fail to report link speed?
-From: Dan Williams <dcbw@redhat.com>
-To: james@nurealm.net, Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 08 Aug 2017 18:43:08 -0500
-In-Reply-To: <5f4422cc-2943-7863-bef3-c2c2653bde24@nurealm.net>
-References: <9645388a-2350-8fa0-ca34-e2289743888b@nurealm.net>
-         <1502228547.24881.5.camel@redhat.com>
-         <3a24351b-6875-fe65-58f1-f624c9f1832f@candelatech.com>
-         <5f4422cc-2943-7863-bef3-c2c2653bde24@nurealm.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from gateway31.websitewelcome.com ([192.185.143.36]:46530 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753515AbdHRBJM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Aug 2017 21:09:12 -0400
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id E58CC1F30C
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2017 19:22:25 -0500 (CDT)
+Date: Thu, 17 Aug 2017 19:22:19 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] rtlwifi: btcoex: 23b 1ant: fix duplicated code for different
+ branches
+Message-ID: <20170818002219.GA9475@embeddedgus> (sfid-20170818_030916_266106_B66BB510)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-08-08 at 16:25 -0600, James Feeney wrote:
-> Hey Dan
-> 
-> > ...
-> > So one second the wifi might be the "best" link and then when
-> > somebody
-> > turns on a microwave oven or a baby monitor, it may be the "worst"
-> > until the microwave's duty cycle completes a few seconds later then
-> > it'll become the "best" again for a couple seconds then "worst"
-> > again,
-> > repeat until your Easy Mac is nice and warm and creamy.
-> > 
-> > Furthermore, for some drivers IIRC when there isn't any traffic,
-> > they
-> > might drop the link rate very low because there's no reason keep
-> > powering blocks when you're not transmitting/receiving any
-> > data.  IIRC
-> > the Intel drivers used to do that a couple years ago.
-> 
-> Yes, thanks, but, while all of that is true, it has nothing to do
-> with the
-> question asked.
+Refactor code in order to avoid identical code for different branches.
 
-It's very relevant to the question.  Because if the speed is actually
-not useful for the requested purpose, there is no real point in having
-it reported it via ethtool.  Same for duplex.  Wifi is only "half
-duplex", and so the property is actually meaningless for WiFi.
+This issue was detected with the help of Coccinelle.
 
-The bonding driver is requiring completely irrelevant information, or
-at least information that simply doesn't make sense for some
-communication mechanisms.  There's no way the bonding driver can make a
-useful decision if the speed *intentionally* changes regularly.  At
-worst, your bonding link will flip-flop between slaves every second or
-two.  At best, bonding won't do anything differently than if the speed
-was just faked to some fake lowest common denominator number so that
-your wired link was always faster.
+Addresses-Coverity-ID: 1415177
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+This issue was reported by Coverity and it was tested by compilation only.
 
-Sure, somebody could do a patch (like Ben has) that plumbs all this
-stuff through.  But that's not solving the *actual* problem, which is
-that this bonding change makes assumptions of slave devices that simply
-don't match how those devices work.
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c   | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-Dan
-
-> The question is, regardless that the wireless speed may be constantly
-> changing,
-> why is it that the kernel ethtool returns an error on get_settings(),
-> instead of
-> returning the current wireless speed, whatever that link speed might
-> be at the
-> moment?
-> 
-> > Also, "duplex" doesn't mean anything in wireless land.  So no clue
-> > what
-> > bonding is expecting them to say here.  I would say the
-> > modifications
-> > to the bonding core made assumptions that simply aren't applicable
-> > to
-> > mediums other than wired ones.
-> 
-> Since, as Ben mentions,
-> 
-> > Well, wifi acts half-duplex in that only one side can transmit at
-> > once.
-> 
-> then the wireless drivers would be expected to simply report "half-
-> duplex".
-> 
-> Again, the issue is not that wireless is half-duplex or full-duplex,
-> but rather,
-> why does the kernel ethtool return an error on get_settings()?
-> 
-> And, why is it that it seems get_settings() returns an error with
-> multiple
-> wireless drivers?  Is there some assumption, or convention, that
-> causes the
-> kernel ethtool to fail with *all* the wireless drivers?
-> 
-> I see that, on bugzilla, Florian is suggesting that wireless network
-> devices
-> *cannot* report a speed/duplex, simply because the wireless speed
-> changes on a
-> per-packet basis, but that does not seem to me to be a persuasive
-> argument.  A
-> wireless connection *does* always have a current speed, even if that
-> speed
-> changes frequently.  The kernel ethtool get_settings() should simply
-> report that
-> speed, not throw an error, yes?
-> 
-> 
-> Thanks
-> James
-> 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 03998d2..c044252 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -600,14 +600,8 @@ static void halbtc8723b1ant_coex_table_with_type(struct btc_coexist *btcoexist,
+ 						   0xffffff, 0x3);
+ 		break;
+ 	case 5:
+-		if ((coex_sta->cck_ever_lock) && (coex_sta->scan_ap_num <= 5))
+-			halbtc8723b1ant_coex_table(btcoexist, force_exec,
+-						   0x5a5a5a5a, 0x5aaa5a5a,
+-						   0xffffff, 0x3);
+-		else
+-			halbtc8723b1ant_coex_table(btcoexist, force_exec,
+-						   0x5a5a5a5a, 0x5aaa5a5a,
+-						   0xffffff, 0x3);
++		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x5a5a5a5a,
++					   0x5aaa5a5a, 0xffffff, 0x3);
+ 		break;
+ 	case 6:
+ 		halbtc8723b1ant_coex_table(btcoexist, force_exec, 0x55555555,
+-- 
+2.5.0
