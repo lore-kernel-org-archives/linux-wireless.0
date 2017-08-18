@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:39086 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751079AbdHCLkr (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:36710 "EHLO
+        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751045AbdHRMsF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 07:40:47 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 18 Aug 2017 08:48:05 -0400
+Received: by mail-lf0-f42.google.com with SMTP id o85so42055521lff.3
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Aug 2017 05:48:04 -0700 (PDT)
+Received: from leonard (178.43.177.250.ipv4.supernova.orange.pl. [178.43.177.250])
+        by smtp.gmail.com with ESMTPSA id u128sm1130455lja.68.2017.08.18.05.48.02
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 18 Aug 2017 05:48:02 -0700 (PDT)
+Date: Fri, 18 Aug 2017 14:48:00 +0200
+From: Dariusz Gadomski <dariusz.gadomski@canonical.com>
+To: linux-wireless@vger.kernel.org
+Subject: Cisco's Wi-Fi Direct Client Policy and iwlwifi (8260)
+Message-ID: <20170818124800.q4r6xtflexkbetzq@leonard> (sfid-20170818_144808_666041_F9EF6E0C)
 MIME-Version: 1.0
-Subject: Re: wcn36xx: check dma_mapping_error()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170703133845.13638-1-robdclark@gmail.com>
-References: <20170703133845.13638-1-robdclark@gmail.com>
-To: Rob Clark <robdclark@gmail.com>
-CC: <linux-arm-msm@vger.kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        <linux-wireless@vger.kernel.org>, Rob Clark <robdclark@gmail.com>
-Message-ID: <ef4b41b2e0c54b2f87aee586511a5d9f@euamsexm01a.eu.qualcomm.com> (sfid-20170803_134050_902391_3A21479E)
-Date: Thu, 3 Aug 2017 13:40:39 +0200
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rob Clark <robdclark@gmail.com> wrote:
+Hi,
 
-> Fixes splat:
-> 
->   wcn36xx a204000.wcnss:smd-edge:wcnss:wifi: DMA-API: device driver failed to check map error[device address=0x00000000b45ba000] [size=3872 bytes] [mapped as single]
->   ------------[ cut here ]------------
->   WARNING: CPU: 0 PID: 0 at ../lib/dma-debug.c:1167 check_unmap+0x474/0x8d0
->   Modules linked in: bnep(E) arc4(E) wcn36xx(E) mac80211(E) btqcomsmd(E) btqca(E) bluetooth(E) cfg80211(E) ecdh_generic(E) rfkill(E) vfat(E) fat(E) wcnss_ctrl qcom_wcnss_pil(E) mdt_loader(E) qcom_common(E) remoteproc(E) crc32_ce(E) virtio_ring(E) snd_soc_lpass_apq8016(E) snd_soc_lpass_cpu(E) virtio(E) snd_soc_lpass_platform(E) leds_gpio(E) snd_soc_hdmi_codec(E) snd_soc_apq8016_sbc(E) snd_soc_msm8916_digital(E) snd_soc_core(E) qcom_spmi_temp_alarm(E) ac97_bus(E) snd_pcm_dmaengine(E) snd_seq(E) snd_seq_device(E) snd_pcm(E) spi_qup(E) nvmem_qfprom(E) snd_timer(E) snd(E) soundcore(E) msm_rng(E) qcom_tsens(E) nvmem_core(E) uas(E) usb_storage(E) dm9601(E) cdc_ether(E) usbnet(E) mii(E) mmc_block(E) sdhci_msm(E) sdhci_pltfm(E) qcom_spmi_vadc(E) qcom_vadc_common(PE) clk_smd_rpm(E) industrialio(E)
->    qcom_smd_regulator(E) pinctrl_spmi_mpp(E) pinctrl_spmi_gpio(E) rtc_pm8xxx(E) adv7511(E) smd_rpm(E) qcom_spmi_pmic(E) regmap_spmi(E) phy_msm_usb(E) usb3503(E) extcon_usb_gpio(E) ci_hdrc_msm(E) ci_hdrc(E) qcom_hwspinlock(E) udc_core(E) extcon_core(E) ehci_msm(E) i2c_qup(E) sdhci(E) msm(E) mmc_core(E) drm_kms_helper(E) syscopyarea(E) sysfillrect(E) sysimgblt(E) fb_sys_fops(E) spmi_pmic_arb(E) drm(E) spmi(E) qcom_smd(E) rpmsg_core smsm(E) gpio_keys(E) smp2p(E) smem(E) hwspinlock_core(E) sunrpc(E) scsi_transport_iscsi(E)
->   CPU: 0 PID: 0 Comm: swapper/0 Tainted: P            E   4.12.0-rc7+ #1476
->   Hardware name: qualcomm dragonboard410c/dragonboard410c, BIOS 2017.07-rc1-00234-g22fa70a-dirty 06/26/2017
->   task: ffff000009049780 task.stack: ffff000009030000
->   PC is at check_unmap+0x474/0x8d0
->   LR is at check_unmap+0x474/0x8d0
->   ...
->   Mapped at:
->    dma_entry_alloc+0x68/0xa8
->    debug_dma_map_page+0x94/0x148
->    wcn36xx_dxe_fill_skb.isra.1+0xbc/0xf8 [wcn36xx]
->    wcn36xx_dxe_init+0x244/0x398 [wcn36xx]
->    wcn36xx_start+0xf4/0x298 [wcn36xx]
-> 
-> Signed-off-by: Rob Clark <robdclark@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+There is a “Wi-Fi Direct Client Policy” setting in some Cisco AP hardware [1].
+I am unaware how that works exactly behind the scenes (except for some hints at
+[2]), but I have noticed that with that setting set to “Deny” I am observing
+issues when trying to connect from a machine with an Intel 8260 on a 4.10.0
+kernel - all connection attempts lead to failure.
 
-Patch applied to ath-next branch of ath.git, thanks.
+I have managed to obtain some captured packets from that attempt as well as
+from a successful attempt (a machine with Broadcom bcm43224). What I have
+noticed is that AP puts the P2P IE in the beacon frames and when 8260 sends a
+probe request it also puts a P2P IE element in it. No response from the AP is
+ever transmitted.
 
-4165cf7ba52a wcn36xx: check dma_mapping_error()
+In case of the Broadcom-based device the probe request does not contain P2P IE
+and it is able to correct normally. My understanding of this issue is that the
+AP makes the decision to temporarily blacklist the client after receiving a P2P
+IE from it.
 
--- 
-https://patchwork.kernel.org/patch/9823509/
+I have made an additional test by commenting out the P2P interface types from
+iwlwifi/mvn/mac80211.c - using such kernel allowed the 8260 device to connect
+successfully.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I’m wondering if there’s a way of changing this behavior to enable the 8260 to
+connect to a network ‘secured’ in this way?  I would also appreciate some
+information about which behavior is correct (bcm43224 vs 8260) and is it
+specified anywhere in the Wi-Fi P2P specs (or anywhere else ftm)?
+
+Thanks, Dariusz
+
+[1] https://www.cisco.com/c/en/us/td/docs/wireless/controller/7-4/configuration/guides/consolidated/b_cg74_CONSOLIDATED/b_cg74_CONSOLIDATED_chapter_010111110.html
+[2] https://supportforums.cisco.com/discussion/11851216/wi-fi-direct-client-policy
