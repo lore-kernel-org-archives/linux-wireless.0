@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway24.websitewelcome.com ([192.185.50.84]:26981 "EHLO
-        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751656AbdH3OF3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44664 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751695AbdHRPxA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 10:05:29 -0400
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway24.websitewelcome.com (Postfix) with ESMTP id C2C473011
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 08:42:25 -0500 (CDT)
-Date: Wed, 30 Aug 2017 08:42:23 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] rtlwifi: btcoex: 23b 1ant: fix duplicated code for different
- branches
-Message-ID: <20170830134223.GA13596@embeddedgus> (sfid-20170830_160538_292499_0ACD1286)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 18 Aug 2017 11:53:00 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:21 +0300
+Message-Id: <20170818154922.2904-24-luca@coelho.fi> (sfid-20170818_175303_484623_F4B04D88)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 23/24] iwlwifi: mvm: remove useless check for mvm->cfg in iwl_parse_nvm_section()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor code in order to avoid identical code for different branches.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This issue was detected with the help of Coccinelle.
+At this point we have already copied the cfg pointer to mvm and we
+have been dereferencing this pointer many times before, so it will
+never be NULL or we would have crashed.  Remove the useless check.
 
-Addresses-Coverity-ID: 1226788
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-This issue was reported by Coverity and it was tested by compilation only.
-I'm suspicious this may be a copy/paste error. Please, verify.
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c   | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index c044252..960ce80f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -2260,14 +2260,8 @@ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 5a6916f0b9ec..b05673e4a193 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -326,9 +326,6 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 		}
+ 	}
  
- 		if (iot_peer != BTC_IOT_PEER_CISCO &&
- 		    iot_peer != BTC_IOT_PEER_BROADCOM) {
--			if (bt_link_info->sco_exist)
--				halbtc8723b1ant_limited_rx(btcoexist,
--							   NORMAL_EXEC, false,
--							   false, 0x5);
--			else
--				halbtc8723b1ant_limited_rx(btcoexist,
--							   NORMAL_EXEC, false,
--							   false, 0x5);
-+			halbtc8723b1ant_limited_rx(btcoexist, NORMAL_EXEC,
-+						   false, false, 0x5);
- 		} else {
- 			if (bt_link_info->sco_exist) {
- 				halbtc8723b1ant_limited_rx(btcoexist,
+-	if (WARN_ON(!mvm->cfg))
+-		return NULL;
+-
+ 	hw = (const __le16 *)sections[mvm->cfg->nvm_hw_section_num].data;
+ 	sw = (const __le16 *)sections[NVM_SECTION_TYPE_SW].data;
+ 	calib = (const __le16 *)sections[NVM_SECTION_TYPE_CALIBRATION].data;
 -- 
-2.5.0
+2.14.1
