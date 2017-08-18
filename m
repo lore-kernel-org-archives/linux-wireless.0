@@ -1,76 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28142 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751921AbdHHLD6 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44636 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752066AbdHRPwr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:03:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: qca_merez <qca_merez@qca.qualcomm.com>
-CC: QCA_gidons <QCA_gidons@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH v4 10/10] wil6210: make debugfs compilation optional
-Date: Tue, 8 Aug 2017 11:03:52 +0000
-Message-ID: <87r2wmianc.fsf@kamboji.qca.qualcomm.com> (sfid-20170808_130402_296807_65659D64)
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-        <1501787302-22885-11-git-send-email-qca_merez@qca.qualcomm.com>
-In-Reply-To: <1501787302-22885-11-git-send-email-qca_merez@qca.qualcomm.com>
-        (Maya Erez's message of "Thu, 3 Aug 2017 22:08:22 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 18 Aug 2017 11:52:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
+Date: Fri, 18 Aug 2017 18:49:18 +0300
+Message-Id: <20170818154922.2904-21-luca@coelho.fi> (sfid-20170818_175250_397097_A37DAF65)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 20/24] iwlwifi: add workaround to disable wide channels in 5GHz
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
->
-> Since debugfs is a kernel configuration option, enable the driver to
-> compile without debugfs.
->
-> Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/wil6210/Makefile  | 2 +-
->  drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
->  2 files changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wire=
-less/ath/wil6210/Makefile
-> index 4ae21da..63a751a 100644
-> --- a/drivers/net/wireless/ath/wil6210/Makefile
-> +++ b/drivers/net/wireless/ath/wil6210/Makefile
-> @@ -4,7 +4,7 @@ wil6210-y :=3D main.o
->  wil6210-y +=3D netdev.o
->  wil6210-y +=3D cfg80211.o
->  wil6210-y +=3D pcie_bus.o
-> -wil6210-y +=3D debugfs.o
-> +wil6210-$(CONFIG_DEBUG_FS) +=3D debugfs.o
->  wil6210-y +=3D wmi.o
->  wil6210-y +=3D interrupt.o
->  wil6210-y +=3D txrx.o
-> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wir=
-eless/ath/wil6210/wil6210.h
-> index cf20a8c..d7b1e03 100644
-> --- a/drivers/net/wireless/ath/wil6210/wil6210.h
-> +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-> @@ -940,8 +940,14 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct=
- wireless_dev *wdev,
->  			 struct cfg80211_mgmt_tx_params *params,
->  			 u64 *cookie);
-> =20
-> +#if defined(CONFIG_DEBUG_FS)
->  int wil6210_debugfs_init(struct wil6210_priv *wil);
->  void wil6210_debugfs_remove(struct wil6210_priv *wil);
-> +#else
-> +static inline int wil6210_debugfs_init(struct wil6210_priv *wil) { retur=
-n 0; }
-> +static inline void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
-> +#endif
+The OTP in some SKUs have erroneously allowed 40MHz and 80MHz channels
+in the 5.2GHz band.  The firmware has been modified to not allow this
+in those SKUs, so the driver needs to do the same otherwise the
+firmware will assert when we try to use it.
 
-I was thinking more that should we have CONFIG_WIL6210_DEBUGFS, just
-like we have CONFIG_ATH10K_DEBUGFS and CONFIG_ATH9K_DEBUGFS? This way it
-can be controlled per driver if debugfs interface is available or not.
+Cc: stable@vger.kernel.org
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c        |  3 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 62 ++++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  3 +-
+ 3 files changed, 56 insertions(+), 12 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+index ae03d0f5564f..e81f6dd3744e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+@@ -148,7 +148,8 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
+ 			rsp->regulatory.channel_profile,
+ 			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
+ 			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
+-			rsp->regulatory.lar_enabled && lar_fw_supported);
++			rsp->regulatory.lar_enabled && lar_fw_supported,
++			false);
+ 
+ 	iwl_free_resp(&hcmd);
+ 	return nvm;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 1172e4572a82..ea165b3e6dd3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -79,6 +79,7 @@
+ /* NVM offsets (in words) definitions */
+ enum wkp_nvm_offsets {
+ 	/* NVM HW-Section offset (in words) definitions */
++	SUBSYSTEM_ID = 0x0A,
+ 	HW_ADDR = 0x15,
+ 
+ 	/* NVM SW-Section offset (in words) definitions */
+@@ -258,13 +259,12 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
+ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 				struct iwl_nvm_data *data,
+ 				const __le16 * const nvm_ch_flags,
+-				bool lar_supported)
++				bool lar_supported, bool no_wide_in_5ghz)
+ {
+ 	int ch_idx;
+ 	int n_channels = 0;
+ 	struct ieee80211_channel *channel;
+ 	u16 ch_flags;
+-	bool is_5ghz;
+ 	int num_of_ch, num_2ghz_channels;
+ 	const u8 *nvm_chan;
+ 
+@@ -279,12 +279,20 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 	}
+ 
+ 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
++		bool is_5ghz = (ch_idx >= num_2ghz_channels);
++
+ 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
+ 
+-		if (ch_idx >= num_2ghz_channels &&
+-		    !data->sku_cap_band_52GHz_enable)
++		if (is_5ghz && !data->sku_cap_band_52GHz_enable)
+ 			continue;
+ 
++		/* workaround to disable wide channels in 5GHz */
++		if (no_wide_in_5ghz && is_5ghz) {
++			ch_flags &= ~(NVM_CHANNEL_40MHZ |
++				     NVM_CHANNEL_80MHZ |
++				     NVM_CHANNEL_160MHZ);
++		}
++
+ 		if (ch_flags & NVM_CHANNEL_160MHZ)
+ 			data->vht160_supported = true;
+ 
+@@ -307,8 +315,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 		n_channels++;
+ 
+ 		channel->hw_value = nvm_chan[ch_idx];
+-		channel->band = (ch_idx < num_2ghz_channels) ?
+-				NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
++		channel->band = is_5ghz ?
++				NL80211_BAND_5GHZ : NL80211_BAND_2GHZ;
+ 		channel->center_freq =
+ 			ieee80211_channel_to_frequency(
+ 				channel->hw_value, channel->band);
+@@ -320,7 +328,6 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 		 * is not used in mvm, and is used for backwards compatibility
+ 		 */
+ 		channel->max_power = IWL_DEFAULT_MAX_TX_POWER;
+-		is_5ghz = channel->band == NL80211_BAND_5GHZ;
+ 
+ 		/* don't put limitations in case we're using LAR */
+ 		if (!lar_supported)
+@@ -438,14 +445,15 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 
+ void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
+-		     u8 tx_chains, u8 rx_chains, bool lar_supported)
++		     u8 tx_chains, u8 rx_chains, bool lar_supported,
++		     bool no_wide_in_5ghz)
+ {
+ 	int n_channels;
+ 	int n_used = 0;
+ 	struct ieee80211_supported_band *sband;
+ 
+ 	n_channels = iwl_init_channel_map(dev, cfg, data, nvm_ch_flags,
+-					  lar_supported);
++					  lar_supported, no_wide_in_5ghz);
+ 	sband = &data->bands[NL80211_BAND_2GHZ];
+ 	sband->band = NL80211_BAND_2GHZ;
+ 	sband->bitrates = &iwl_cfg80211_rates[RATES_24_OFFS];
+@@ -651,6 +659,39 @@ static int iwl_set_hw_address(struct iwl_trans *trans,
+ 	return 0;
+ }
+ 
++static bool
++iwl_nvm_no_wide_in_5ghz(struct device *dev, const struct iwl_cfg *cfg,
++			const __le16 *nvm_hw)
++{
++	/*
++	 * Workaround a bug in Indonesia SKUs where the regulatory in
++	 * some 7000-family OTPs erroneously allow wide channels in
++	 * 5GHz.  To check for Indonesia, we take the SKU value from
++	 * bits 1-4 in the subsystem ID and check if it is either 5 or
++	 * 9.  In those cases, we need to force-disable wide channels
++	 * in 5GHz otherwise the FW will throw a sysassert when we try
++	 * to use them.
++	 */
++	if (cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		/*
++		 * Unlike the other sections in the NVM, the hw
++		 * section uses big-endian.
++		 */
++		u16 subsystem_id = be16_to_cpup((const __be16 *)nvm_hw
++						+ SUBSYSTEM_ID);
++		u8 sku = (subsystem_id & 0x1e) >> 1;
++
++		if (sku == 5 || sku == 9) {
++			IWL_DEBUG_EEPROM(dev,
++					 "disabling wide channels in 5GHz (0x%0x %d)\n",
++					 subsystem_id, sku);
++			return true;
++		}
++	}
++
++	return false;
++}
++
+ struct iwl_nvm_data *
+ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
+@@ -661,6 +702,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	struct device *dev = trans->dev;
+ 	struct iwl_nvm_data *data;
+ 	bool lar_enabled;
++	bool no_wide_in_5ghz = iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw);
+ 	u32 sku, radio_cfg;
+ 	u16 lar_config;
+ 	const __le16 *ch_section;
+@@ -731,7 +773,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	}
+ 
+ 	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
+-			lar_fw_supported && lar_enabled);
++			lar_fw_supported && lar_enabled, no_wide_in_5ghz);
+ 	data->calib_version = 255;
+ 
+ 	return data;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+index 3fd6506a02ab..50d9b3eaa4f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+@@ -93,7 +93,8 @@ void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
+  */
+ void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
+-		     u8 tx_chains, u8 rx_chains, bool lar_supported);
++		     u8 tx_chains, u8 rx_chains, bool lar_supported,
++		     bool no_wide_in_5ghz);
+ 
+ /**
+  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
+-- 
+2.14.1
