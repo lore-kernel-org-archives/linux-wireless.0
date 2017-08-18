@@ -1,126 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward1h.cmail.yandex.net ([87.250.230.16]:58546 "EHLO
-        forward1h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752332AbdHIPuA (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44658 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751446AbdHRPw5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 11:50:00 -0400
-From: "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Hans de Goede <hdegoede@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>
-In-Reply-To: <b564db86-5990-8629-7931-fa65410ad983@broadcom.com>
-References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
-         <1570131501706612@web24o.yandex.ru> <b564db86-5990-8629-7931-fa65410ad983@broadcom.com>
-Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
-MIME-Version: 1.0
-Message-Id: <27781502293354@web14g.yandex.ru> (sfid-20170809_175004_460772_E7A158A8)
-Date: Wed, 09 Aug 2017 23:42:34 +0800
-Content-Type: text/plain; charset=utf-8
+        Fri, 18 Aug 2017 11:52:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:16 +0300
+Message-Id: <20170818154922.2904-19-luca@coelho.fi> (sfid-20170818_175300_081315_A98F4A49)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 18/24] iwlwifi: update channel flags parser
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> There are three patches currently in wireless tree, maybe also in netdev tree, which will probably be included in 4.13-rc4 fixing the issue below.
+There are some new flags in the channel flags that we don't know
+about.  Also, the "WIDE" flag is very confusing, because it actually
+means 20MHz bandwidth, which is not very wide.
 
-With Linux 4.13rc4 issue is no longer reproducible on Lenovo Miix2 8.
+Add the new flags and rename the confusing one.
 
-03.08.2017, 05:05, "Arend van Spriel" <arend.vanspriel@broadcom.com>:
-> On 02-08-17 22:43, russianneuromancer@ya.ru wrote:
->>  Hello!
->>
->>  Sorry for late answer.
->>
->>>  russianneuromancer has reported seeing a similar problem with 4.13.
->>
->>>  russianneuromancer, can you check if the device you are seeing this with
->>  also has a brcm43430 sdio wifi and if so if switching to:
->>
->>>  http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
->>
->>>  Fixes this ?
->>
->>  Judging by this error message
->>
->>>  [ 7.744262] brcmfmac mmc0:0001:1: Direct firmware load for brcm/brcmfmac43241b4-sdio.txt failed with error -2
->>
->>  Lenovo Miix2 8 have brcm43241b4 sdio wifi.
->>
->>  With brcmfmac43241b4-sdio.txt from NVRAM, as suggested here https://wireless.wiki.kernel.org/en/users/drivers/brcm80211 WiFi connection works for me with upstream Linux 4.12.4, but doesn't work with Linux 4.13rc1 and Linux 4.13rc3.
->
-> Yeah. There are three patches currently in wireless tree, maybe also in
-> netdev tree, which will probably be included in 4.13-rc4 fixing the
-> issue below.
->
-> Regards,
-> Arend
->
->>  Few connection attempts with Linux 4.13rc3 looks like this:
->>
->>>  [ 7.779370] usbcore: registered new interface driver brcmfmac
->>>  [ 7.948487] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
->>>  [ 32.282374] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
->>>  [ 32.282393] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlan0 type 10 failed: err=-16
->>>  [ 43.560596] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 44.494422] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 45.492956] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 46.491317] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 54.922652] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 55.849565] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 56.849437] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 57.853150] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 66.542999] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 67.483115] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>>  [ 68.483434] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
->>
->>  23.07.2017, 02:44, "Hans de Goede" <hdegoede@redhat.com>:
->>>  Hi,
->>>
->>>  When upgrading my devel environment to 4.13-rc1+ I noticed that
->>>  the brcm43430 sdio wifi on a Chuwi Hi8 plus stopped working:
->>>
->>>  jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_probe: Loading firmware brcm/brcmfmac43430-sdio.bin for chip 0000a9a6 rev 00000001
->>>  jul 22 14:13:23 localhost.localdomain kernel: usbcore: registered new interface driver brcmfmac
->>>  jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
->>>  jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
->>>  jul 22 14:13:26 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->>>  jul 22 14:13:28 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->>>  jul 22 14:13:31 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
->>>  <repeats>
->>>
->>>  The real culprit here seems to be:
->>>
->>>  jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
->>>
->>>  I've tried reverting allmost all changes under drivers/net/wireless/broadcom/brcm80211
->>>  as well as those under drivers/mmc, but that did not help.
->>>
->>>  Googling for the "Unknown mailbox data content" error found some Raspberry Pi 3
->>>  related comments where users report success with a different firmware version
->>>  from: https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/bcm4343/
->>>
->>>  So I tried that as well as a version extracted from the Android install
->>>  on the tablet and both work fine, only the "version 7.45.41.26" which
->>>  happens to be the one in linux-firmware causes this problem, I've put
->>>  all (Linux build, not NDIS) versions I could find here:
->>>
->>>  http://jwrdegoede.danny.cz/brcm-firmware/
->>>
->>>  I've the feeling that the 7.45.41.26 version is a bit buggy / suspect to
->>>  certain timing problems and 4.13 just happens to trigger those timing
->>>  conditions...
->>>
->>>  russianneuromancer has reported seeing a similar problem with 4.13.
->>>
->>>  russianneuromancer, can you check if the device you are seeing this with
->>>  also has a brcm43430 sdio wifi and if so if switching to:
->>>
->>>  http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
->>>
->>>  Fixes this ?
->>>
->>>  Regards,
->>>
->>>  Hans
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 51 +++++++++++++---------
+ 1 file changed, 30 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 5c08f4d40f6a..1172e4572a82 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -183,22 +183,26 @@ static struct ieee80211_rate iwl_cfg80211_rates[] = {
+  * @NVM_CHANNEL_INDOOR_ONLY: only indoor use is allowed
+  * @NVM_CHANNEL_GO_CONCURRENT: GO operation is allowed when connected to BSS
+  *	on same channel on 2.4 or same UNII band on 5.2
+- * @NVM_CHANNEL_WIDE: 20 MHz channel okay (?)
+- * @NVM_CHANNEL_40MHZ: 40 MHz channel okay (?)
+- * @NVM_CHANNEL_80MHZ: 80 MHz channel okay (?)
+- * @NVM_CHANNEL_160MHZ: 160 MHz channel okay (?)
++ * @NVM_CHANNEL_UNIFORM: uniform spreading required
++ * @NVM_CHANNEL_20MHZ: 20 MHz channel okay
++ * @NVM_CHANNEL_40MHZ: 40 MHz channel okay
++ * @NVM_CHANNEL_80MHZ: 80 MHz channel okay
++ * @NVM_CHANNEL_160MHZ: 160 MHz channel okay
++ * @NVM_CHANNEL_DC_HIGH: DC HIGH required/allowed (?)
+  */
+ enum iwl_nvm_channel_flags {
+-	NVM_CHANNEL_VALID = BIT(0),
+-	NVM_CHANNEL_IBSS = BIT(1),
+-	NVM_CHANNEL_ACTIVE = BIT(3),
+-	NVM_CHANNEL_RADAR = BIT(4),
+-	NVM_CHANNEL_INDOOR_ONLY = BIT(5),
+-	NVM_CHANNEL_GO_CONCURRENT = BIT(6),
+-	NVM_CHANNEL_WIDE = BIT(8),
+-	NVM_CHANNEL_40MHZ = BIT(9),
+-	NVM_CHANNEL_80MHZ = BIT(10),
+-	NVM_CHANNEL_160MHZ = BIT(11),
++	NVM_CHANNEL_VALID		= BIT(0),
++	NVM_CHANNEL_IBSS		= BIT(1),
++	NVM_CHANNEL_ACTIVE		= BIT(3),
++	NVM_CHANNEL_RADAR		= BIT(4),
++	NVM_CHANNEL_INDOOR_ONLY		= BIT(5),
++	NVM_CHANNEL_GO_CONCURRENT	= BIT(6),
++	NVM_CHANNEL_UNIFORM		= BIT(7),
++	NVM_CHANNEL_20MHZ		= BIT(8),
++	NVM_CHANNEL_40MHZ		= BIT(9),
++	NVM_CHANNEL_80MHZ		= BIT(10),
++	NVM_CHANNEL_160MHZ		= BIT(11),
++	NVM_CHANNEL_DC_HIGH		= BIT(12),
+ };
+ 
+ #define CHECK_AND_PRINT_I(x)	\
+@@ -327,7 +331,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 			channel->flags = 0;
+ 
+ 		IWL_DEBUG_EEPROM(dev,
+-				 "Ch. %d [%sGHz] flags 0x%x %s%s%s%s%s%s%s%s%s%s(%ddBm): Ad-Hoc %ssupported\n",
++				 "Ch. %d [%sGHz] flags 0x%x %s%s%s%s%s%s%s%s%s%s%s%s(%ddBm): Ad-Hoc %ssupported\n",
+ 				 channel->hw_value,
+ 				 is_5ghz ? "5.2" : "2.4",
+ 				 ch_flags,
+@@ -337,10 +341,12 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 				 CHECK_AND_PRINT_I(RADAR),
+ 				 CHECK_AND_PRINT_I(INDOOR_ONLY),
+ 				 CHECK_AND_PRINT_I(GO_CONCURRENT),
+-				 CHECK_AND_PRINT_I(WIDE),
++				 CHECK_AND_PRINT_I(UNIFORM),
++				 CHECK_AND_PRINT_I(20MHZ),
+ 				 CHECK_AND_PRINT_I(40MHZ),
+ 				 CHECK_AND_PRINT_I(80MHZ),
+ 				 CHECK_AND_PRINT_I(160MHZ),
++				 CHECK_AND_PRINT_I(DC_HIGH),
+ 				 channel->max_power,
+ 				 ((ch_flags & NVM_CHANNEL_IBSS) &&
+ 				  !(ch_flags & NVM_CHANNEL_RADAR))
+@@ -865,22 +871,25 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		prev_center_freq = center_freq;
+ 
+ 		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+-			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s(0x%02x): Ad-Hoc %ssupported\n",
++			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x): %s\n",
+ 			      center_freq,
+ 			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
+ 			      CHECK_AND_PRINT_I(VALID),
++			      CHECK_AND_PRINT_I(IBSS),
+ 			      CHECK_AND_PRINT_I(ACTIVE),
+ 			      CHECK_AND_PRINT_I(RADAR),
+-			      CHECK_AND_PRINT_I(WIDE),
++			      CHECK_AND_PRINT_I(INDOOR_ONLY),
++			      CHECK_AND_PRINT_I(GO_CONCURRENT),
++			      CHECK_AND_PRINT_I(UNIFORM),
++			      CHECK_AND_PRINT_I(20MHZ),
+ 			      CHECK_AND_PRINT_I(40MHZ),
+ 			      CHECK_AND_PRINT_I(80MHZ),
+ 			      CHECK_AND_PRINT_I(160MHZ),
+-			      CHECK_AND_PRINT_I(INDOOR_ONLY),
+-			      CHECK_AND_PRINT_I(GO_CONCURRENT),
++			      CHECK_AND_PRINT_I(DC_HIGH),
+ 			      ch_flags,
+ 			      ((ch_flags & NVM_CHANNEL_ACTIVE) &&
+ 			       !(ch_flags & NVM_CHANNEL_RADAR))
+-					 ? "" : "not ");
++					 ? "Ad-Hoc" : "");
+ 	}
+ 
+ 	regd->n_reg_rules = valid_rules;
+-- 
+2.14.1
