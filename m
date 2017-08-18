@@ -1,106 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751963AbdHCTIn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:43 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 08/10] wil6210: store FW RF calibration result
-Date: Thu,  3 Aug 2017 22:08:20 +0300
-Message-Id: <1501787302-22885-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210909_072775_E01A84AF)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from eidolon.nox.tf ([185.142.180.128]:36080 "EHLO eidolon.nox.tf"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751679AbdHRXiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Aug 2017 19:38:23 -0400
+Date: Sat, 19 Aug 2017 01:38:22 +0200
+From: David Lamparter <equinox@diac24.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: David Lamparter <equinox@diac24.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [POC/GIT] mac80211 multicast rate selection (help wanted!)
+Message-ID: <20170818233822.GV773745@eidolon> (sfid-20170819_013827_660982_F86C23C1)
+References: <20170818222910.GT773745@eidolon>
+ <eb338f20-9829-9848-bb27-448261ff528d@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eb338f20-9829-9848-bb27-448261ff528d@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+On Fri, Aug 18, 2017 at 03:49:39PM -0700, Ben Greear wrote:
+> On 08/18/2017 03:29 PM, David Lamparter wrote:
+> > I've taken up an hacking endeavour in trying to improve multicast on
+> > wifi, specifically to get it off the stupid 1 MBit rate.  Before anyone
+> > yells "that's not allowed by the spec" - it actually is, please refer to
+> > section 9.7.5 of 802.11-2012. ("... using one of the rates included in
+> > the BSSBasicRateSet parameter ...")  Also, Cisco and Aruba are doing
+> > this in their enterprise APs, and it's rather nice.
+> 
+> For ath10k, at least, rate-ctrl is controlled in the firmware.
+> But, the driver can set the multicast rate to a fixed value.
 
-Store initial FW RF calibration result in driver. Set this calibration
-result back to FW after each FW reset in order to avoid future calibration
-procedures.
+Yeah, I've hacked this straight in minstrel_ht, so it's only gonna work
+on mac80211 drivers.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c    | 6 ++++++
- drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
- drivers/net/wireless/ath/wil6210/wmi.c     | 5 +++++
- drivers/net/wireless/ath/wil6210/wmi.h     | 2 ++
- 4 files changed, 19 insertions(+)
+The information about which STAs are joined to a multicast group is
+available to all drivers though, so, if a hardmac driver has sufficient
+information on STA rates, it could still dynamically pick a multicast
+rate on a per-packet level and tell that to the MAC.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b1e2814..b89d017 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1034,6 +1034,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
- 
-+		if (wil->fw_calib_result > 0) {
-+			__le32 val = cpu_to_le32(wil->fw_calib_result |
-+						 (CALIB_RESULT_SIGNATURE << 8));
-+			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
-+		}
-+
- 		wil_release_cpu(wil);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 724ad59..e3c0c2f 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -171,6 +171,10 @@ struct RGF_ICR {
- #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
- #define RGF_USER_BL			(0x880A3C) /* Boot Loader */
- #define RGF_USER_FW_REV_ID		(0x880a8c) /* chip revision */
-+#define RGF_USER_FW_CALIB_RESULT	(0x880a90) /* b0-7:result
-+						    * b8-15:signature
-+						    */
-+	#define CALIB_RESULT_SIGNATURE	(0x11)
- #define RGF_USER_CLKS_CTL_0		(0x880abc)
- 	#define BIT_USER_CLKS_CAR_AHB_SW_SEL	BIT(1) /* ref clk/PLL */
- 	#define BIT_USER_CLKS_RST_PWGD	BIT(11) /* reset on "power good" */
-@@ -724,6 +728,8 @@ struct wil6210_priv {
- 
- 	enum wmi_ps_profile_type ps_profile;
- 
-+	int fw_calib_result;
-+
- #ifdef CONFIG_PM
- #ifdef CONFIG_PM_SLEEP
- 	struct notifier_block pm_notify;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a9487f2..ffdd2fa 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -344,6 +344,11 @@ static void wmi_evt_ready(struct wil6210_priv *wil, int id, void *d, int len)
- 	strlcpy(wdev->wiphy->fw_version, wil->fw_version,
- 		sizeof(wdev->wiphy->fw_version));
- 
-+	if (len > offsetof(struct wmi_ready_event, rfc_read_calib_result)) {
-+		wil_dbg_wmi(wil, "rfc calibration result %d\n",
-+			    evt->rfc_read_calib_result);
-+		wil->fw_calib_result = evt->rfc_read_calib_result;
-+	}
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 	set_bit(wil_status_fwready, wil->status);
- 	/* let the reset sequence continue */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 4e31c2f..1b426d7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -1300,6 +1300,8 @@ struct wmi_ready_event {
- 	/* enum wmi_phy_capability */
- 	u8 phy_capability;
- 	u8 numof_additional_mids;
-+	u8 rfc_read_calib_result;
-+	u8 reserved[3];
- } __packed;
- 
- /* WMI_NOTIFY_REQ_DONE_EVENTID */
--- 
-1.9.1
+> I am pretty sure this works on stock firmware, maybe with some driver
+> tweaks.  It definitely works on my ath10k-ct driver/firmware (tested on
+> the wave-1 stuff, not sure anyone has tested on the wave-2 stuff yet).
+> 
+> My api is through the ath10k debugfs API, so a kludge at best, but it could
+> be wired into a better API with some work.
+
+I actually need to try the CT stuff, particularly the TX rate reporting
+-- wonder how useful the information is (cf. above).  Unfortunately the
+only ath10k I have is in my plastic router...  a bit annoying to hack
+around on.
+
+> I'll read through your stuff when I get a chance.
+
+Thanks in advance, all input appreciated!
+
+
+-David
