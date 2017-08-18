@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751600AbdHCTIa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44492 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751674AbdHRPth (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:30 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>,
-        Lior David <qca_liord@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 01/10] wil6210: protect against invalid length of tx management frame
-Date: Thu,  3 Aug 2017 22:08:13 +0300
-Message-Id: <1501787302-22885-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210834_939419_3ADFDAD1)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 18 Aug 2017 11:49:37 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:06 +0300
+Message-Id: <20170818154922.2904-9-luca@coelho.fi> (sfid-20170818_174941_100562_E6339FDE)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 08/24] iwlwifi: mvm: group all dummy SAR function declarations together
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Validate buffer length has the minimum needed size
-when sending management frame to protect against
-possible buffer overrun.
+We have some of the SAR dummy functions when ACPI is not set declared
+in mvm.h and some declared in fw.c.  Group them all together in fw.c
+for consistency and to avoid static/non-static issues.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +++
- drivers/net/wireless/ath/wil6210/debugfs.c  | 3 +++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 11 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 14 --------------
+ 2 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 0b5383a..77af749 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -884,6 +884,9 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
- 			  len, true);
- 
-+	if (len < sizeof(struct ieee80211_hdr_3addr))
-+		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index ed18479a7b8c..90ae50f7768a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -996,6 +996,17 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
+ {
+ 	return 0;
+ }
 +
- 	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
- 	if (!cmd) {
- 		rc = -ENOMEM;
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index f82506d..a2b5d59 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -801,6 +801,9 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
- 	int rc;
- 	void *frame;
- 
-+	if (!len)
-+		return -EINVAL;
++int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a,
++			       int prof_b)
++{
++	return -ENOENT;
++}
 +
- 	frame = memdup_user(buf, len);
- 	if (IS_ERR(frame))
- 		return PTR_ERR(frame);
++int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
++{
++	return -ENOENT;
++}
+ #endif /* CONFIG_ACPI */
+ 
+ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index d58de9b80886..74fdd33fd9fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1825,21 +1825,7 @@ int iwl_mvm_send_lqm_cmd(struct ieee80211_vif *vif,
+ 			 u32 duration, u32 timeout);
+ bool iwl_mvm_lqm_active(struct iwl_mvm *mvm);
+ 
+-#ifdef CONFIG_ACPI
+ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b);
+ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm);
+-#else
+-static inline
+-int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
+-{
+-	return -ENOENT;
+-}
+-
+-static inline
+-int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
+-{
+-	return -ENOENT;
+-}
+-#endif /* CONFIG_ACPI */
+ 
+ #endif /* __IWL_MVM_H__ */
 -- 
-1.9.1
+2.14.1
