@@ -1,45 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36401 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752723AbdHIQYB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44650 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751537AbdHRPwx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:24:01 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, petkan@nucleusys.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 01/20] ar5523: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:53:42 +0530
-Message-Id: <1502295823-20824-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182620_671568_8159D748)
-In-Reply-To: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502295823-20824-1-git-send-email-arvind.yadav.cs@gmail.com>
+        Fri, 18 Aug 2017 11:52:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:17 +0300
+Message-Id: <20170818154922.2904-20-luca@coelho.fi> (sfid-20170818_175257_130336_5EEA8204)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 19/24] iwlwifi: mvm: change open and close criteria of a BA session
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Tx BA session should be started according to the current throughput
+without any dependence on the internal rate scaling state. The criteria
+for opening a BA session will be 10 frames per second.
+
+Sending frequent del BAs can cause inter-op issues with some APs. We'll
+not close a BA session until we receive an explicit del BA from the
+peer.
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-changes in v2:
-              Re-submitting wireless separately.
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 117 ++++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 ++
+ 3 files changed, 73 insertions(+), 52 deletions(-)
 
- drivers/net/wireless/ath/ar5523/ar5523.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index 106d6f8..68f0463 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -1749,7 +1749,7 @@ static void ar5523_disconnect(struct usb_interface *intf)
- 	{ USB_DEVICE((vendor), (device) + 1), \
- 		.driver_info = AR5523_FLAG_ABG|AR5523_FLAG_PRE_FIRMWARE }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
+index 753d4138e30f..976640fed334 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
+@@ -136,6 +136,7 @@
+ #define IWL_MVM_RS_SR_NO_DECREASE		85	/* percent */
+ #define IWL_MVM_RS_AGG_TIME_LIMIT	        4000    /* 4 msecs. valid 100-8000 */
+ #define IWL_MVM_RS_AGG_DISABLE_START	        3
++#define IWL_MVM_RS_AGG_START_THRESHOLD	        10	/* num frames per second */
+ #define IWL_MVM_RS_TPC_SR_FORCE_INCREASE	75	/* percent */
+ #define IWL_MVM_RS_TPC_SR_NO_INCREASE		85	/* percent */
+ #define IWL_MVM_RS_TPC_TX_POWER_STEP		3
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index cdf10ce9dbea..44c873082a31 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -622,7 +622,9 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_mvm *mvm,
  
--static struct usb_device_id ar5523_id_table[] = {
-+static const struct usb_device_id ar5523_id_table[] = {
- 	AR5523_DEVICE_UG(0x168c, 0x0001),	/* Atheros / AR5523 */
- 	AR5523_DEVICE_UG(0x0cf3, 0x0001),	/* Atheros2 / AR5523_1 */
- 	AR5523_DEVICE_UG(0x0cf3, 0x0003),	/* Atheros2 / AR5523_2 */
+ 	IWL_DEBUG_HT(mvm, "Starting Tx agg: STA: %pM tid: %d\n",
+ 		     sta->addr, tid);
+-	ret = ieee80211_start_tx_ba_session(sta, tid, 5000);
++
++	/* start BA session until the peer sends del BA */
++	ret = ieee80211_start_tx_ba_session(sta, tid, 0);
+ 	if (ret == -EAGAIN) {
+ 		/*
+ 		 * driver and mac80211 is out of sync
+@@ -636,15 +638,31 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_mvm *mvm,
+ 	return ret;
+ }
+ 
+-static void rs_tl_turn_on_agg(struct iwl_mvm *mvm, u8 tid,
+-			      struct iwl_lq_sta *lq_data,
++static void rs_tl_turn_on_agg(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
++			      u8 tid, struct iwl_lq_sta *lq_sta,
+ 			      struct ieee80211_sta *sta)
+ {
+-	if (tid < IWL_MAX_TID_COUNT)
+-		rs_tl_turn_on_agg_for_tid(mvm, lq_data, tid, sta);
+-	else
++	struct iwl_mvm_tid_data *tid_data;
++
++	/*
++	 * In AP mode, tid can be equal to IWL_MAX_TID_COUNT
++	 * when the frame is not QoS
++	 */
++	if (WARN_ON_ONCE(tid > IWL_MAX_TID_COUNT)) {
+ 		IWL_ERR(mvm, "tid exceeds max TID count: %d/%d\n",
+ 			tid, IWL_MAX_TID_COUNT);
++		return;
++	} else if (tid == IWL_MAX_TID_COUNT) {
++		return;
++	}
++
++	tid_data = &mvmsta->tid_data[tid];
++	if ((tid_data->state == IWL_AGG_OFF) &&
++	    (lq_sta->tx_agg_tid_en & BIT(tid)) &&
++	    (tid_data->tx_count_last >= IWL_MVM_RS_AGG_START_THRESHOLD)) {
++		IWL_DEBUG_RATE(mvm, "try to aggregate tid %d\n", tid);
++		rs_tl_turn_on_agg_for_tid(mvm, lq_sta, tid, sta);
++	}
+ }
+ 
+ static inline int get_num_of_ant_from_rate(u32 rate_n_flags)
+@@ -753,8 +771,38 @@ static int rs_collect_tpc_data(struct iwl_mvm *mvm,
+ 				    window);
+ }
+ 
++static void rs_update_tid_tpt_stats(struct iwl_mvm *mvm,
++				    struct iwl_mvm_sta *mvmsta,
++				    u8 tid, int successes)
++{
++	struct iwl_mvm_tid_data *tid_data;
++
++	if (tid >= IWL_MAX_TID_COUNT)
++		return;
++
++	tid_data = &mvmsta->tid_data[tid];
++
++	/*
++	 * Measure if there're enough successful transmits per second.
++	 * These statistics are used only to decide if we can start a
++	 * BA session, so it should be updated only when A-MPDU is
++	 * off.
++	 */
++	if (tid_data->state != IWL_AGG_OFF)
++		return;
++
++	if (time_is_before_jiffies(tid_data->tpt_meas_start + HZ) ||
++	    (tid_data->tx_count >= IWL_MVM_RS_AGG_START_THRESHOLD)) {
++		tid_data->tx_count_last = tid_data->tx_count;
++		tid_data->tx_count = 0;
++		tid_data->tpt_meas_start = jiffies;
++	} else {
++		tid_data->tx_count += successes;
++	}
++}
++
+ static int rs_collect_tlc_data(struct iwl_mvm *mvm,
+-			       struct iwl_lq_sta *lq_sta,
++			       struct iwl_mvm_sta *mvmsta, u8 tid,
+ 			       struct iwl_scale_tbl_info *tbl,
+ 			       int scale_index, int attempts, int successes)
+ {
+@@ -764,12 +812,14 @@ static int rs_collect_tlc_data(struct iwl_mvm *mvm,
+ 		return -EINVAL;
+ 
+ 	if (tbl->column != RS_COLUMN_INVALID) {
+-		struct lq_sta_pers *pers = &lq_sta->pers;
++		struct lq_sta_pers *pers = &mvmsta->lq_sta.pers;
+ 
+ 		pers->tx_stats[tbl->column][scale_index].total += attempts;
+ 		pers->tx_stats[tbl->column][scale_index].success += successes;
+ 	}
+ 
++	rs_update_tid_tpt_stats(mvm, mvmsta, tid, successes);
++
+ 	/* Select window for current tx bit rate */
+ 	window = &(tbl->win[scale_index]);
+ 	return _rs_collect_tx_data(mvm, tbl, scale_index, attempts, successes,
+@@ -1211,12 +1261,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	if (time_after(jiffies,
+ 		       (unsigned long)(lq_sta->last_tx +
+ 				       (IWL_MVM_RS_IDLE_TIMEOUT * HZ)))) {
+-		int t;
+-
+ 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
+-		for (t = 0; t < IWL_MAX_TID_COUNT; t++)
+-			ieee80211_stop_tx_ba_session(sta, t);
+-
+ 		iwl_mvm_rs_rate_init(mvm, sta, info->band, false);
+ 		return;
+ 	}
+@@ -1312,7 +1357,8 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		if (info->status.ampdu_ack_len == 0)
+ 			info->status.ampdu_len = 1;
+ 
+-		rs_collect_tlc_data(mvm, lq_sta, curr_tbl, lq_rate.index,
++		rs_collect_tlc_data(mvm, mvmsta, tid, curr_tbl,
++				    lq_rate.index,
+ 				    info->status.ampdu_len,
+ 				    info->status.ampdu_ack_len);
+ 
+@@ -1351,7 +1397,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 					    lq_rate.index, 1,
+ 					    i < retries ? 0 : legacy_success,
+ 					    reduced_txp);
+-			rs_collect_tlc_data(mvm, lq_sta, tmp_tbl,
++			rs_collect_tlc_data(mvm, mvmsta, tid, tmp_tbl,
+ 					    lq_rate.index, 1,
+ 					    i < retries ? 0 : legacy_success);
+ 		}
+@@ -2229,7 +2275,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	s32 sr;
+ 	u8 prev_agg = lq_sta->is_agg;
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	struct iwl_mvm_tid_data *tid_data;
+ 	struct rs_rate *rate;
+ 
+ 	lq_sta->is_agg = !!mvmsta->agg_tids;
+@@ -2480,44 +2525,12 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 		}
+ 	}
+ 
++	if (!ndp)
++		rs_tl_turn_on_agg(mvm, mvmsta, tid, lq_sta, sta);
++
+ 	if (done_search && lq_sta->rs_state == RS_STATE_SEARCH_CYCLE_ENDED) {
+-		/* If the "active" (non-search) mode was legacy,
+-		 * and we've tried switching antennas,
+-		 * but we haven't been able to try HT modes (not available),
+-		 * stay with best antenna legacy modulation for a while
+-		 * before next round of mode comparisons. */
+ 		tbl1 = &(lq_sta->lq_info[lq_sta->active_tbl]);
+-		if (is_legacy(&tbl1->rate)) {
+-			IWL_DEBUG_RATE(mvm, "LQ: STAY in legacy table\n");
+-
+-			if (tid != IWL_MAX_TID_COUNT) {
+-				tid_data = &mvmsta->tid_data[tid];
+-				if (tid_data->state != IWL_AGG_OFF) {
+-					IWL_DEBUG_RATE(mvm,
+-						       "Stop aggregation on tid %d\n",
+-						       tid);
+-					ieee80211_stop_tx_ba_session(sta, tid);
+-				}
+-			}
+-			rs_set_stay_in_table(mvm, 1, lq_sta);
+-		} else {
+-		/* If we're in an HT mode, and all 3 mode switch actions
+-		 * have been tried and compared, stay in this best modulation
+-		 * mode for a while before next round of mode comparisons. */
+-			if ((lq_sta->last_tpt > IWL_AGG_TPT_THREHOLD) &&
+-			    (lq_sta->tx_agg_tid_en & (1 << tid)) &&
+-			    (tid != IWL_MAX_TID_COUNT)) {
+-				tid_data = &mvmsta->tid_data[tid];
+-				if (tid_data->state == IWL_AGG_OFF && !ndp) {
+-					IWL_DEBUG_RATE(mvm,
+-						       "try to aggregate tid %d\n",
+-						       tid);
+-					rs_tl_turn_on_agg(mvm, tid,
+-							  lq_sta, sta);
+-				}
+-			}
+-			rs_set_stay_in_table(mvm, 0, lq_sta);
+-		}
++		rs_set_stay_in_table(mvm, is_legacy(&tbl1->rate), lq_sta);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 005037aa3122..d13893806513 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -316,6 +316,10 @@ enum iwl_mvm_agg_state {
+  * @is_tid_active: has this TID sent traffic in the last
+  *	%IWL_MVM_DQA_QUEUE_TIMEOUT time period. If %txq_id is invalid, this
+  *	field should be ignored.
++ * @tpt_meas_start: time of the throughput measurements start, is reset every HZ
++ * @tx_count_last: number of frames transmitted during the last second
++ * @tx_count: counts the number of frames transmitted since the last reset of
++ *	 tpt_meas_start
+  */
+ struct iwl_mvm_tid_data {
+ 	struct sk_buff_head deferred_tx_frames;
+@@ -330,6 +334,9 @@ struct iwl_mvm_tid_data {
+ 	u16 ssn;
+ 	u16 tx_time;
+ 	bool is_tid_active;
++	unsigned long tpt_meas_start;
++	u32 tx_count_last;
++	u32 tx_count;
+ };
+ 
+ struct iwl_mvm_key_pn {
 -- 
-2.7.4
+2.14.1
