@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:53670 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752666AbdHJOXr (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44482 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751646AbdHRPtg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 10:23:47 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: RE: [v6] wlcore: add missing nvs file name info for wilink8
-Date: Thu, 10 Aug 2017 14:23:37 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B364233E7@DFRE01.ent.ti.com> (sfid-20170810_162434_728265_595944A6)
-References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
- <20170809172651.GA3934@atomide.com>
- <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
- <20170809211620.GF3934@atomide.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Fri, 18 Aug 2017 11:49:36 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:05 +0300
+Message-Id: <20170818154922.2904-8-luca@coelho.fi> (sfid-20170818_180252_695477_5549EE7B)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 07/24] iwlwifi: mvm: include more debug data when we get an unexpected baid
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >
->=20
-> Sure, just want to make sure we are not trying to add work around just fo=
-r
-> A couple of faulty devices.
->=20
-> > > I have verified using a couple of com6 modules with an am335x-evm and
-> > they had mac addresses read ok.
-> >
-> > Sounds like there are multiple variants of the wl12xx
-> > available then.
-> >
-> I am trying to find out internally if there is a possibility that there w=
-ere
-> devices
-> Produced in the past where the internal fuses were not programmed with a
-> valid
-> Address before being assembled into the modules.
->=20
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Seems like MAC address for wilink6/7 was added to devices that were produce=
-d  around Q3 of 2010=20
-In case you still have this omap3-evm up and can just do a quick check for =
-me as I don't have this board, can you try using the following command:
+When we get a valid baid in a received frame, we need to
+check that we are aware of this baid. If not, we check
+that the OLD_SN bit set. If that's not the case, we issue
+a WARNING. Print more data when that happens.
 
-cat /sys/bus/platform/drivers/wl12xx_driver/wl12xx.0.auto/hw_pg_ver
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-and let me know what the output you get is?
-
-Best Regards,
-Eyal
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 6b8e57b7234a..4fbf102b3a98 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -636,8 +636,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 	baid_data = rcu_dereference(mvm->baid_map[baid]);
+ 	if (!baid_data) {
+ 		WARN(!(reorder & IWL_RX_MPDU_REORDER_BA_OLD_SN),
+-		     "Received baid %d, but no data exists for this BAID\n",
+-		     baid);
++		     "Received baid %d, but no data exists for this BAID - reorder data 0x%x\n",
++		     baid, reorder);
+ 		return false;
+ 	}
+ 
+@@ -758,7 +758,9 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
+ 
+ 	data = rcu_dereference(mvm->baid_map[baid]);
+ 	if (!data) {
+-		WARN_ON(!(reorder_data & IWL_RX_MPDU_REORDER_BA_OLD_SN));
++		WARN(!(reorder_data & IWL_RX_MPDU_REORDER_BA_OLD_SN),
++		     "OLD_SN isn't set, but no data exists for baid %d - reorder data 0x%x\n",
++		     baid, reorder_data);
+ 		goto out;
+ 	}
+ 
+-- 
+2.14.1
