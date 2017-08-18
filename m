@@ -1,63 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45600 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752629AbdHORmi (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44460 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751243AbdHRPte (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 13:42:38 -0400
-Subject: Re: [PATCH 5/6] ath10k: add memory dump support for QCA6174/QCA9377
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org
-References: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
- <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <8be660a1-fde8-ad87-b3ef-0d3e8590ed01@candelatech.com> (sfid-20170815_194242_115738_BF6A2524)
-Date: Tue, 15 Aug 2017 10:42:38 -0700
-MIME-Version: 1.0
-In-Reply-To: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Fri, 18 Aug 2017 11:49:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:02 +0300
+Message-Id: <20170818154922.2904-5-luca@coelho.fi> (sfid-20170818_174945_459546_99D87CB5)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 04/24] iwlwifi: mvm: support new Coex firmware API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/15/2017 01:23 AM, Kalle Valo wrote:
-> From: Alan Liu <alanliu@qca.qualcomm.com>
->
-> Add memory dump to the firmware crash data file which is provided to user space
-> via devcoredump interface. This makes it easier for firmware engineers to debug
-> firmware crashes.
->
-> Due to increased memory consumption the memory dump is disabled by default. To
-> enable it make sure that bit 3 is set in coredump_mask module parameter:
->
-> modprobe ath10k_core coredump_mask=0xffffffff
->
-> When RAMDUMP is enabled a buffer for the dump is allocated with vmalloc during
-> device probe. The actual memory layout is different in hardware versions and
-> the layouts are defined in coredump.c. The memory is split to regions and, to
-> get even finegrained control of what to copy, the region can split to smaller
-> sections as not all registers are readable (which could cause the whole system
-> to stall).
->
-> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
-> [kvalo@qca.qualcomm.com: refactoring and cleanup]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
->  #include "debug.h"
-> +#include "hw.h"
-> +
-> +static const struct ath10k_mem_section qca6174_hw21_register_sections[] = {
-> +	{0x800, 0x810},
-> +	{0x820, 0x82C},
-> +	{0x830, 0x8F4},
-> +	{0x90C, 0x91C},
-> +	{0xA14, 0xA18},
+The firmware now adds more information about time sharing
+with the Bluetooth core.
+Adapt the API structures and add the new fields in the
+debugfs hooks.
 
-This looks pretty fragile.  Any chance this type of info could be packaged
-into the firmware image and then the driver just pulls it out of there
-instead of having all these hard coded magic values in the driver?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h | 31 ++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h     |  3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c    | 33 +++++++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 13 +++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  6 +++++
+ 5 files changed, 77 insertions(+), 9 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
+index 2ba3ea4fa999..d9a74db01f90 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
+@@ -178,6 +178,7 @@ enum iwl_bt_mxbox_dw3 {
+ 	BT_MBOX(3, ACL_STATE, 3, 1),
+ 	BT_MBOX(3, MSTR_STATE, 4, 1),
+ 	BT_MBOX(3, OBX_STATE, 5, 1),
++	BT_MBOX(3, A2DP_SRC, 6, 1),
+ 	BT_MBOX(3, OPEN_CON_2, 8, 2),
+ 	BT_MBOX(3, TRAFFIC_LOAD, 10, 2),
+ 	BT_MBOX(3, CHL_SEQN_LSB, 12, 1),
+@@ -187,6 +188,11 @@ enum iwl_bt_mxbox_dw3 {
+ 	BT_MBOX(3, UPDATE_REQUEST, 21, 1),
+ };
+ 
++enum iwl_bt_mxbox_dw4 {
++	BT_MBOX(4, ATS_BT_INTERVAL, 0, 7),
++	BT_MBOX(4, ATS_BT_ACTIVE_MAX_TH, 7, 7),
++};
++
+ #define BT_MBOX_MSG(_notif, _num, _field)				     \
+ 	((le32_to_cpu((_notif)->mbox_msg[(_num)]) & BT_MBOX##_num##_##_field)\
+ 	>> BT_MBOX##_num##_##_field##_POS)
+@@ -220,6 +226,31 @@ enum iwl_bt_ci_compliance {
+  * @reserved: reserved
+  */
+ struct iwl_bt_coex_profile_notif {
++	__le32 mbox_msg[8];
++	__le32 msg_idx;
++	__le32 bt_ci_compliance;
++
++	__le32 primary_ch_lut;
++	__le32 secondary_ch_lut;
++	__le32 bt_activity_grading;
++	u8 ttc_status;
++	u8 rrc_status;
++	__le16 reserved;
++} __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_5 */
++
++/**
++ * struct iwl_bt_coex_profile_notif - notification about BT coex
++ * @mbox_msg: message from BT to WiFi
++ * @msg_idx: the index of the message
++ * @bt_ci_compliance: enum %iwl_bt_ci_compliance
++ * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
++ * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
++ * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
++ * @ttc_status: is TTC enabled - one bit per PHY
++ * @rrc_status: is RRC enabled - one bit per PHY
++ * @reserved: reserved
++ */
++struct iwl_bt_coex_profile_notif_v4 {
+ 	__le32 mbox_msg[4];
+ 	__le32 msg_idx;
+ 	__le32 bt_ci_compliance;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index d933aa324ffe..a1cd2f41b026 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -246,6 +246,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
+  * @IWL_UCODE_TLV_API_STA_TYPE: This ucode supports station type assignement.
+  * @IWL_UCODE_TLV_API_NAN2_VER2: This ucode supports NAN API version 2
+  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
++ * @IWL_UCODE_TLV_API_ATS_COEX_EXTERNAL: the coex notification is enlared to
++ *	include information about ACL time sharing.
+  *
+  * @NUM_IWL_UCODE_TLV_API: number of bits used
+  */
+@@ -262,6 +264,7 @@ enum iwl_ucode_tlv_api {
+ 	/* API Set 1 */
+ 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
++	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
+ 
+ 	NUM_IWL_UCODE_TLV_API
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index 890dbfff3a06..79c80f181f7d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2017        Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  *
+  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2017        Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -512,17 +514,36 @@ void iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_bt_coex_profile_notif *notif = (void *)pkt->data;
+ 
++	if (!iwl_mvm_has_new_ats_coex_api(mvm)) {
++		struct iwl_bt_coex_profile_notif_v4 *v4 = (void *)pkt->data;
++
++		mvm->last_bt_notif.mbox_msg[0] = v4->mbox_msg[0];
++		mvm->last_bt_notif.mbox_msg[1] = v4->mbox_msg[1];
++		mvm->last_bt_notif.mbox_msg[2] = v4->mbox_msg[2];
++		mvm->last_bt_notif.mbox_msg[3] = v4->mbox_msg[3];
++		mvm->last_bt_notif.msg_idx = v4->msg_idx;
++		mvm->last_bt_notif.bt_ci_compliance = v4->bt_ci_compliance;
++		mvm->last_bt_notif.primary_ch_lut = v4->primary_ch_lut;
++		mvm->last_bt_notif.secondary_ch_lut = v4->secondary_ch_lut;
++		mvm->last_bt_notif.bt_activity_grading =
++			v4->bt_activity_grading;
++		mvm->last_bt_notif.ttc_status = v4->ttc_status;
++		mvm->last_bt_notif.rrc_status = v4->rrc_status;
++	} else {
++		/* save this notification for future use: rssi fluctuations */
++		memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
++	}
++
+ 	IWL_DEBUG_COEX(mvm, "BT Coex Notification received\n");
+-	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n", notif->bt_ci_compliance);
++	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n",
++		       mvm->last_bt_notif.bt_ci_compliance);
+ 	IWL_DEBUG_COEX(mvm, "\tBT primary_ch_lut %d\n",
+-		       le32_to_cpu(notif->primary_ch_lut));
++		       le32_to_cpu(mvm->last_bt_notif.primary_ch_lut));
+ 	IWL_DEBUG_COEX(mvm, "\tBT secondary_ch_lut %d\n",
+-		       le32_to_cpu(notif->secondary_ch_lut));
++		       le32_to_cpu(mvm->last_bt_notif.secondary_ch_lut));
+ 	IWL_DEBUG_COEX(mvm, "\tBT activity grading %d\n",
+-		       le32_to_cpu(notif->bt_activity_grading));
++		       le32_to_cpu(mvm->last_bt_notif.bt_activity_grading));
+ 
+-	/* remember this notification for future use: rssi fluctuations */
+-	memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
+ 
+ 	iwl_mvm_bt_coex_notif_handle(mvm);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 3d7b5bd7a6b7..c88a37397075 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -482,7 +482,8 @@ static ssize_t iwl_dbgfs_disable_power_off_write(struct iwl_mvm *mvm, char *buf,
+ 					 true ? "\n" : ", ");
+ 
+ static
+-int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
++int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
++			   struct iwl_bt_coex_profile_notif *notif, char *buf,
+ 			   int pos, int bufsz)
+ {
+ 	pos += scnprintf(buf+pos, bufsz-pos, "MBOX dw0:\n");
+@@ -526,6 +527,7 @@ int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
+ 	BT_MBOX_PRINT(3, SCO_STATE, false);
+ 	BT_MBOX_PRINT(3, SNIFF_STATE, false);
+ 	BT_MBOX_PRINT(3, A2DP_STATE, false);
++	BT_MBOX_PRINT(3, A2DP_SRC, false);
+ 	BT_MBOX_PRINT(3, ACL_STATE, false);
+ 	BT_MBOX_PRINT(3, MSTR_STATE, false);
+ 	BT_MBOX_PRINT(3, OBX_STATE, false);
+@@ -535,7 +537,12 @@ int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
+ 	BT_MBOX_PRINT(3, INBAND_P, false);
+ 	BT_MBOX_PRINT(3, MSG_TYPE_2, false);
+ 	BT_MBOX_PRINT(3, SSN_2, false);
+-	BT_MBOX_PRINT(3, UPDATE_REQUEST, true);
++	BT_MBOX_PRINT(3, UPDATE_REQUEST, !iwl_mvm_has_new_ats_coex_api(mvm));
++
++	if (iwl_mvm_has_new_ats_coex_api(mvm)) {
++		BT_MBOX_PRINT(4, ATS_BT_INTERVAL, false);
++		BT_MBOX_PRINT(4, ATS_BT_ACTIVE_MAX_TH, true);
++	}
+ 
+ 	return pos;
+ }
+@@ -554,7 +561,7 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	pos += iwl_mvm_coex_dump_mbox(notif, buf, pos, bufsz);
++	pos += iwl_mvm_coex_dump_mbox(mvm, notif, buf, pos, bufsz);
+ 
+ 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ci_compliance = %d\n",
+ 			 notif->bt_ci_compliance);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 54e5c8c6736b..d58de9b80886 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1242,6 +1242,12 @@ static inline bool iwl_mvm_has_new_rx_stats_api(struct iwl_mvm *mvm)
+ 			  IWL_UCODE_TLV_API_NEW_RX_STATS);
+ }
+ 
++static inline bool iwl_mvm_has_new_ats_coex_api(struct iwl_mvm *mvm)
++{
++	return fw_has_api(&mvm->fw->ucode_capa,
++			  IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL);
++}
++
+ static inline struct agg_tx_status *
+ iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
+ {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.14.1
