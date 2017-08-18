@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:38712 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752203AbdHHQBN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44610 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751646AbdHRPwd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:01:13 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, petkan@nucleusys.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 20/35] wireless: atmel: at76c50x: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:30:38 +0530
-Message-Id: <1502208038-11857-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180139_912584_CF371852)
+        Fri, 18 Aug 2017 11:52:33 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:13 +0300
+Message-Id: <20170818154922.2904-16-luca@coelho.fi> (sfid-20170818_175236_005606_B0FC06D0)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 15/24] iwlwifi: mvm: Fix channel switch in case of count <= 1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+The code did not consider the case that the channel switch counter
+is <= 1, which would result with an inaccurate calculation of the
+time event apply time.
+
+As the specification states that in case of counter == 0 the switch
+occurs at any time after the reception the frame, and for counter == 1
+the switch would happens before the next TBTT, schedule the time
+event immediately.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/atmel/at76c50x-usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index 09defbc..94bf01f 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -130,7 +130,7 @@ MODULE_FIRMWARE("atmel_at76c505amx-rfmd.bin");
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 01143c491e53..cfabe302c9c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3875,11 +3875,16 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
  
- #define USB_DEVICE_DATA(__ops)	.driver_info = (kernel_ulong_t)(__ops)
+ 		/* Schedule the time event to a bit before beacon 1,
+ 		 * to make sure we're in the new channel when the
+-		 * GO/AP arrives.
++		 * GO/AP arrives. In case count <= 1 immediately schedule the
++		 * TE (this might result with some packet loss or connection
++		 * loss).
+ 		 */
+-		apply_time = chsw->device_timestamp +
+-			((vif->bss_conf.beacon_int * (chsw->count - 1) -
+-			  IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT) * 1024);
++		if (chsw->count <= 1)
++			apply_time = 0;
++		else
++			apply_time = chsw->device_timestamp +
++				((vif->bss_conf.beacon_int * (chsw->count - 1) -
++				  IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT) * 1024);
  
--static struct usb_device_id dev_table[] = {
-+static const struct usb_device_id dev_table[] = {
- 	/*
- 	 * at76c503-i3861
- 	 */
+ 		if (chsw->block_tx)
+ 			iwl_mvm_csa_client_absent(mvm, vif);
 -- 
-2.7.4
+2.14.1
