@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:52628 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbdHaS5V (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44402 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750846AbdHRMeE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 14:57:21 -0400
-Date: Thu, 31 Aug 2017 20:57:19 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: David Miller <davem@davemloft.net>
-Cc: kvalo@codeaurora.org, torvalds@linux-foundation.org,
-        xiyou.wangcong@gmail.com, akpm@linux-foundation.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: add a missing spin_lock_init()
-Message-ID: <20170831185718.GA31245@amd> (sfid-20170831_205738_216972_1B5665A5)
-References: <20170831065204.GA17812@amd>
- <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com>
- <20170831144743.GA21261@amd>
- <20170831.103305.1809212990680774811.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
-In-Reply-To: <20170831.103305.1809212990680774811.davem@davemloft.net>
+        Fri, 18 Aug 2017 08:34:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 15:33:57 +0300
+Message-Id: <20170818123357.19646-3-luca@coelho.fi> (sfid-20170818_143410_433232_5390C995)
+In-Reply-To: <20170818123357.19646-1-luca@coelho.fi>
+References: <20170818123357.19646-1-luca@coelho.fi>
+Subject: [PATCH 2/2] mac80211: flush hw_roc_start work before cancelling the ROC
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Avraham Stern <avraham.stern@intel.com>
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+When HW ROC is supported it is possible that after the HW notified
+that the ROC has started, the ROC was cancelled and another ROC was
+added while the hw_roc_start worker is waiting on the mutex (since
+cancelling the ROC and adding another one also holds the same mutex).
+As a result, the hw_roc_start worker will continue to run after the
+new ROC is added but before it is actually started by the HW.
+This may result in notifying userspace that the ROC has started before
+it actually does, or in case of management tx ROC, in an attempt to
+tx while not on the right channel.
 
-Hi!
+In addition, when the driver will notify mac80211 that the second ROC
+has started, mac80211 will warn that this ROC has already been
+notified.
 
-> From: Pavel Machek <pavel@ucw.cz>
-> Date: Thu, 31 Aug 2017 16:47:43 +0200
->=20
-> > Dave, Linus -- can you still take the patch?
->=20
-> Pavel, please do not bypass maintainers like this.
->=20
-> It's really rude, and if you do things like that instead of
-> trying to work properly with us, your relationship with
-> these maintainers will suffer in the long term.
+Fix this by flushing the hw_roc_start work before cancelling an ROC.
 
-Do you mean I'm being rude to Kalle, or rude to you?
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/offchannel.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-In the part you snipped, Kalle asked me to do just that:
-
-# I'm not planning to submit pull requests to 4.13 anymore. If you think
-# this is so important that it needs to be applied in the last minute (I
-# don't) you could always try to convince Dave to take it directly.
-
-=2E.and as I still believe patch should go in, that's what I did.
-
-Best regards,
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlmoXA4ACgkQMOfwapXb+vLwzQCfUH/sTzIQGI368mHh7goYMqyr
-Y0MAoJHYk44NU6GToYbDVRI7RU9aBN7S
-=bFME
------END PGP SIGNATURE-----
-
---W/nzBZO5zC0uMSeA--
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index f8e7a8bbc618..faf4f6055000 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -707,6 +707,8 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
+ 	if (!cookie)
+ 		return -ENOENT;
+ 
++	flush_work(&local->hw_roc_start);
++
+ 	mutex_lock(&local->mtx);
+ 	list_for_each_entry_safe(roc, tmp, &local->roc_list, list) {
+ 		if (!mgmt_tx && roc->cookie != cookie)
+-- 
+2.14.1
