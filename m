@@ -1,62 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35924 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751468AbdHJHqZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44672 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751695AbdHRPxE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 03:46:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Reizer\, Eyal" <eyalr@ti.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel\@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
-References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
-        <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
-        <20170809172651.GA3934@atomide.com>
-        <ngx9scofrw0qb2vkesion8v9.1502300336052@email.android.com>
-        <20170809211620.GF3934@atomide.com>
-        <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
-Date: Thu, 10 Aug 2017 10:46:19 +0300
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36422C65@DFRE01.ent.ti.com>
-        (Eyal Reizer's message of "Thu, 10 Aug 2017 06:35:46 +0000")
-Message-ID: <87r2wjeugk.fsf@codeaurora.org> (sfid-20170810_094638_832801_8AF3AAC4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 18 Aug 2017 11:53:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:20 +0300
+Message-Id: <20170818154922.2904-23-luca@coelho.fi> (sfid-20170818_175307_252294_57BF5A73)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 22/24] iwlwifi: mvm: remove useless argument in iwl_nvm_init()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Reizer, Eyal" <eyalr@ti.com> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
->> The fact that is old does not change a thing, we still need to
->> support it no matter what the data sheet and your system design
->> says. A fix that breaks other things is not really a fix :)
->> 
->
-> Sure, just want to make sure we are not trying to add work around just for
-> A couple of faulty devices.
->
->> > I have verified using a couple of com6 modules with an am335x-evm and
->> they had mac addresses read ok.
->> 
->> Sounds like there are multiple variants of the wl12xx
->> available then.
->> 
-> I am trying to find out internally if there is a possibility that there were devices
-> Produced in the past where the internal fuses were not programmed with a valid 
-> Address before being assembled into the modules.
+We always call iwl_nvm_init() with read_nvm_from_nic == true, so this
+argument is useless.  Remove it.
 
-Just a general remark, based on my past experience, you can't really
-know what hardware is out there, no matter how someone in the company
-claims otherwise. Uncalibrated devices, prototypes and calibration data
-broken are all possible and better be preparared for that in the driver.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c  |  5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 98 ++++++++++++++--------------
+ 3 files changed, 51 insertions(+), 54 deletions(-)
 
-It's a good idea at least to detect and print a proper error message if
-the calibration data is broken. But if the data on the device only
-consists of MAC address and nothing else, then I guess using a random
-address is fine.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 90ae50f7768a..3d65ab49a8a6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -388,7 +388,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	}
+ 
+ 	if (IWL_MVM_PARSE_NVM && read_nvm) {
+-		ret = iwl_nvm_init(mvm, true);
++		ret = iwl_nvm_init(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
+ 			goto error;
+@@ -486,8 +486,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 
+ 	/* Read the NVM only at driver load time, no need to do this twice */
+ 	if (read_nvm) {
+-		/* Read nvm */
+-		ret = iwl_nvm_init(mvm, true);
++		ret = iwl_nvm_init(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
+ 			goto remove_notif;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 74fdd33fd9fb..83303bac0e4b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1373,7 +1373,7 @@ int iwl_mvm_request_statistics(struct iwl_mvm *mvm, bool clear);
+ void iwl_mvm_accu_radio_stats(struct iwl_mvm *mvm);
+ 
+ /* NVM */
+-int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic);
++int iwl_nvm_init(struct iwl_mvm *mvm);
+ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm);
+ int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 08020386c3d4..5a6916f0b9ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -546,7 +546,7 @@ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
+ 	return ret;
+ }
+ 
+-int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
++int iwl_nvm_init(struct iwl_mvm *mvm)
+ {
+ 	int ret, section;
+ 	u32 size_read = 0;
+@@ -557,63 +557,61 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 		return -EINVAL;
+ 
+ 	/* load NVM values from nic */
+-	if (read_nvm_from_nic) {
+-		/* Read From FW NVM */
+-		IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from NVM\n");
+-
+-		nvm_buffer = kmalloc(mvm->cfg->base_params->eeprom_size,
+-				     GFP_KERNEL);
+-		if (!nvm_buffer)
+-			return -ENOMEM;
+-		for (section = 0; section < NVM_MAX_NUM_SECTIONS; section++) {
+-			/* we override the constness for initial read */
+-			ret = iwl_nvm_read_section(mvm, section, nvm_buffer,
+-						   size_read);
+-			if (ret < 0)
+-				continue;
+-			size_read += ret;
+-			temp = kmemdup(nvm_buffer, ret, GFP_KERNEL);
+-			if (!temp) {
+-				ret = -ENOMEM;
+-				break;
+-			}
++	/* Read From FW NVM */
++	IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from NVM\n");
++
++	nvm_buffer = kmalloc(mvm->cfg->base_params->eeprom_size,
++			     GFP_KERNEL);
++	if (!nvm_buffer)
++		return -ENOMEM;
++	for (section = 0; section < NVM_MAX_NUM_SECTIONS; section++) {
++		/* we override the constness for initial read */
++		ret = iwl_nvm_read_section(mvm, section, nvm_buffer,
++					   size_read);
++		if (ret < 0)
++			continue;
++		size_read += ret;
++		temp = kmemdup(nvm_buffer, ret, GFP_KERNEL);
++		if (!temp) {
++			ret = -ENOMEM;
++			break;
++		}
+ 
+-			iwl_mvm_nvm_fixups(mvm, section, temp, ret);
++		iwl_mvm_nvm_fixups(mvm, section, temp, ret);
+ 
+-			mvm->nvm_sections[section].data = temp;
+-			mvm->nvm_sections[section].length = ret;
++		mvm->nvm_sections[section].data = temp;
++		mvm->nvm_sections[section].length = ret;
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+-			switch (section) {
+-			case NVM_SECTION_TYPE_SW:
+-				mvm->nvm_sw_blob.data = temp;
+-				mvm->nvm_sw_blob.size  = ret;
+-				break;
+-			case NVM_SECTION_TYPE_CALIBRATION:
+-				mvm->nvm_calib_blob.data = temp;
+-				mvm->nvm_calib_blob.size  = ret;
+-				break;
+-			case NVM_SECTION_TYPE_PRODUCTION:
+-				mvm->nvm_prod_blob.data = temp;
+-				mvm->nvm_prod_blob.size  = ret;
+-				break;
+-			case NVM_SECTION_TYPE_PHY_SKU:
+-				mvm->nvm_phy_sku_blob.data = temp;
+-				mvm->nvm_phy_sku_blob.size  = ret;
++		switch (section) {
++		case NVM_SECTION_TYPE_SW:
++			mvm->nvm_sw_blob.data = temp;
++			mvm->nvm_sw_blob.size  = ret;
++			break;
++		case NVM_SECTION_TYPE_CALIBRATION:
++			mvm->nvm_calib_blob.data = temp;
++			mvm->nvm_calib_blob.size  = ret;
++			break;
++		case NVM_SECTION_TYPE_PRODUCTION:
++			mvm->nvm_prod_blob.data = temp;
++			mvm->nvm_prod_blob.size  = ret;
++			break;
++		case NVM_SECTION_TYPE_PHY_SKU:
++			mvm->nvm_phy_sku_blob.data = temp;
++			mvm->nvm_phy_sku_blob.size  = ret;
++			break;
++		default:
++			if (section == mvm->cfg->nvm_hw_section_num) {
++				mvm->nvm_hw_blob.data = temp;
++				mvm->nvm_hw_blob.size = ret;
+ 				break;
+-			default:
+-				if (section == mvm->cfg->nvm_hw_section_num) {
+-					mvm->nvm_hw_blob.data = temp;
+-					mvm->nvm_hw_blob.size = ret;
+-					break;
+-				}
+ 			}
+-#endif
+ 		}
+-		if (!size_read)
+-			IWL_ERR(mvm, "OTP is blank\n");
+-		kfree(nvm_buffer);
++#endif
+ 	}
++	if (!size_read)
++		IWL_ERR(mvm, "OTP is blank\n");
++	kfree(nvm_buffer);
+ 
+ 	/* Only if PNVM selected in the mod param - load external NVM  */
+ 	if (mvm->nvm_file_name) {
 -- 
-Kalle Valo
+2.14.1
