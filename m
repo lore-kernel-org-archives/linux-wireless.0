@@ -1,66 +1,320 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:57180 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751977AbdHIR2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 13:28:30 -0400
-Date: Wed, 9 Aug 2017 10:28:26 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [v6] wlcore: add missing nvs file name info for wilink8
-Message-ID: <20170809172826.GB3934@atomide.com> (sfid-20170809_192844_966971_6F6E98CC)
-References: <1502264840-10569-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B36420E5A@DFRE01.ent.ti.com>
- <20170809172651.GA3934@atomide.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170809172651.GA3934@atomide.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:44468 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751636AbdHRPtg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Aug 2017 11:49:36 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:49:03 +0300
+Message-Id: <20170818154922.2904-6-luca@coelho.fi> (sfid-20170818_174949_152297_5D348D20)
+In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
+References: <20170818154922.2904-1-luca@coelho.fi>
+Subject: [PATCH 05/24] iwlwifi: pcie: support short Tx queues for A000 device family
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Tony Lindgren <tony@atomide.com> [170809 10:26]:
-> * Reizer, Eyal <eyalr@ti.com> [170809 00:55]:
-> > --- a/drivers/net/wireless/ti/wlcore/main.c
-> > +++ b/drivers/net/wireless/ti/wlcore/main.c
-> > @@ -6040,6 +6040,21 @@ static int wl1271_register_hw(struct wl1271 *wl)
-> >  		nic_addr = wl->fuse_nic_addr + 1;
-> >  	}
-> >  
-> > +	if (oui_addr == 0xdeadbe && nic_addr == 0xef0000) {
-> > +		wl1271_warning("Detected unconfigured mac address in nvs.\n"
-> > +				"derive from fuse instead.\n"
-> > +				"in case of using a wl12xx device, your "
-> > +				"device performance may not be optimized.\n"
-> > +				"Please use the calibrator tool to configure "
-> > +				"your device.\n"
-> > +				"When using a wl18xx device this default nvs "
-> > +				"file can be removed from the file system\n");
-> > +
-> > +		oui_addr = wl->fuse_oui_addr;
-> > +		/* fuse has the BD_ADDR, the WLAN addresses are the next two */
-> > +		nic_addr = wl->fuse_nic_addr + 1;
-> > +	}
-> > +
-> >  	wl12xx_derive_mac_addresses(wl, oui_addr, nic_addr);
-> 
-> I just gave this a quick try on omap3-evm with wl1271, now I get
-> mac address of 00:00:00:00:00:01 :) So looks like at least wl1271 needs
-> to use the random mac address here.
-> 
-> Note that we should now have struct wilink_family_data available
-> so maybe that can be used to check if the hardware mac address
-> exists?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Or actually, in the case where no hardawre mac address exists,
-the mac is all zeroes at this point it seems. So maybe that
-can be used to determine if a random mac address should be used
-here.
+This allows to modify TFD_TX_CMD_SLOTS to a power of 2
+which is smaller than 256.
+Note that we still need to set values to wrap at 256
+into the scheduler's write pointer, but all the rest of
+the code can use shorter transmit queues.
 
-Regards,
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 13 +++----
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 41 +++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 13 +++----
+ 6 files changed, 37 insertions(+), 36 deletions(-)
 
-Tony
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+index eddaca76d514..3fc4343581ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+@@ -244,7 +244,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
+ 	ctxt_info->hcmd_cfg.cmd_queue_addr =
+ 		cpu_to_le64(trans_pcie->txq[trans_pcie->cmd_queue]->dma_addr);
+ 	ctxt_info->hcmd_cfg.cmd_queue_size =
+-		TFD_QUEUE_CB_SIZE(TFD_QUEUE_SIZE_MAX);
++		TFD_QUEUE_CB_SIZE(TFD_CMD_SLOTS);
+ 
+ 	/* allocate ucode sections in dram and set addresses */
+ 	ret = iwl_pcie_ctxt_info_init_fw_sec(trans, fw, ctxt_info);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index f46871840fd2..79020cf8c79c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -661,10 +661,16 @@ static inline void iwl_pcie_sw_reset(struct iwl_trans *trans)
+ 	usleep_range(5000, 6000);
+ }
+ 
++static inline u8 iwl_pcie_get_cmd_index(struct iwl_txq *q, u32 index)
++{
++	return index & (q->n_window - 1);
++}
++
+ static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
+ 				     struct iwl_txq *txq, int idx)
+ {
+-	return txq->tfds + trans_pcie->tfd_size * idx;
++	return txq->tfds + trans_pcie->tfd_size * iwl_pcie_get_cmd_index(txq,
++									 idx);
+ }
+ 
+ static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
+@@ -726,11 +732,6 @@ static inline bool iwl_queue_used(const struct iwl_txq *q, int i)
+ 		!(i < q->read_ptr && i >= q->write_ptr);
+ }
+ 
+-static inline u8 get_cmd_index(struct iwl_txq *q, u32 index)
+-{
+-	return index & (q->n_window - 1);
+-}
+-
+ static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 351c4423125a..e5d2bf0bde37 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1176,7 +1176,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 
+ 		sequence = le16_to_cpu(pkt->hdr.sequence);
+ 		index = SEQ_TO_INDEX(sequence);
+-		cmd_index = get_cmd_index(txq, index);
++		cmd_index = iwl_pcie_get_cmd_index(txq, index);
+ 
+ 		if (rxq->id == 0)
+ 			iwl_op_mode_rx(trans->op_mode, &rxq->napi,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 382d7c251066..3ecafa2ad922 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2835,7 +2835,7 @@ static struct iwl_trans_dump_data
+ 	spin_lock_bh(&cmdq->lock);
+ 	ptr = cmdq->write_ptr;
+ 	for (i = 0; i < cmdq->n_window; i++) {
+-		u8 idx = get_cmd_index(cmdq, ptr);
++		u8 idx = iwl_pcie_get_cmd_index(cmdq, ptr);
+ 		u32 caplen, cmdlen;
+ 
+ 		cmdlen = iwl_trans_pcie_get_cmdlen(trans, cmdq->tfds +
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 4db45e56b6ba..d74613fcb756 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -88,14 +88,14 @@ static void iwl_pcie_gen2_update_byte_tbl(struct iwl_txq *txq, u16 byte_cnt,
+ 					  int num_tbs)
+ {
+ 	struct iwlagn_scd_bc_tbl *scd_bc_tbl = txq->bc_tbl.addr;
+-	int write_ptr = txq->write_ptr;
++	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
+ 	u8 filled_tfd_size, num_fetch_chunks;
+ 	u16 len = byte_cnt;
+ 	__le16 bc_ent;
+ 
+ 	len = DIV_ROUND_UP(len, 4);
+ 
+-	if (WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX))
++	if (WARN_ON(len > 0xFFF || idx >= txq->n_window))
+ 		return;
+ 
+ 	filled_tfd_size = offsetof(struct iwl_tfh_tfd, tbs) +
+@@ -111,7 +111,7 @@ static void iwl_pcie_gen2_update_byte_tbl(struct iwl_txq *txq, u16 byte_cnt,
+ 	num_fetch_chunks = DIV_ROUND_UP(filled_tfd_size, 64) - 1;
+ 
+ 	bc_ent = cpu_to_le16(len | (num_fetch_chunks << 12));
+-	scd_bc_tbl->tfd_offset[write_ptr] = bc_ent;
++	scd_bc_tbl->tfd_offset[idx] = bc_ent;
+ }
+ 
+ /*
+@@ -176,16 +176,12 @@ static void iwl_pcie_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	/* rd_ptr is bounded by TFD_QUEUE_SIZE_MAX and
+ 	 * idx is bounded by n_window
+ 	 */
+-	int rd_ptr = txq->read_ptr;
+-	int idx = get_cmd_index(txq, rd_ptr);
++	int idx = iwl_pcie_get_cmd_index(txq, txq->read_ptr);
+ 
+ 	lockdep_assert_held(&txq->lock);
+ 
+-	/* We have only q->n_window txq->entries, but we use
+-	 * TFD_QUEUE_SIZE_MAX tfds
+-	 */
+ 	iwl_pcie_gen2_tfd_unmap(trans, &txq->entries[idx].meta,
+-				iwl_pcie_get_tfd(trans_pcie, txq, rd_ptr));
++				iwl_pcie_get_tfd(trans_pcie, txq, idx));
+ 
+ 	/* free SKB */
+ 	if (txq->entries) {
+@@ -373,8 +369,9 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
+ 	struct iwl_tfh_tfd *tfd =
+-		iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
++		iwl_pcie_get_tfd(trans_pcie, txq, idx);
+ 	dma_addr_t tb_phys;
+ 	bool amsdu;
+ 	int i, len, tb1_len, tb2_len, hdr_len;
+@@ -386,10 +383,10 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 		(*ieee80211_get_qos_ctl(hdr) &
+ 		 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
+ 
+-	tb_phys = iwl_pcie_get_first_tb_dma(txq, txq->write_ptr);
++	tb_phys = iwl_pcie_get_first_tb_dma(txq, idx);
+ 	/* The first TB points to bi-directional DMA data */
+ 	if (!amsdu)
+-		memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
++		memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr,
+ 		       IWL_FIRST_TB_SIZE);
+ 
+ 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, IWL_FIRST_TB_SIZE);
+@@ -431,7 +428,7 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 		 * building the A-MSDU might have changed this data, so memcpy
+ 		 * it now
+ 		 */
+-		memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
++		memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr,
+ 		       IWL_FIRST_TB_SIZE);
+ 		return tfd;
+ 	}
+@@ -484,6 +481,7 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	struct iwl_tx_cmd_gen2 *tx_cmd = (void *)dev_cmd->payload;
+ 	struct iwl_cmd_meta *out_meta;
+ 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
++	int idx;
+ 	void *tfd;
+ 
+ 	if (WARN_ONCE(!test_bit(txq_id, trans_pcie->queue_used),
+@@ -497,16 +495,18 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 
+ 	spin_lock(&txq->lock);
+ 
++	idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
++
+ 	/* Set up driver data for this TFD */
+-	txq->entries[txq->write_ptr].skb = skb;
+-	txq->entries[txq->write_ptr].cmd = dev_cmd;
++	txq->entries[idx].skb = skb;
++	txq->entries[idx].cmd = dev_cmd;
+ 
+ 	dev_cmd->hdr.sequence =
+ 		cpu_to_le16((u16)(QUEUE_TO_SEQ(txq_id) |
+-			    INDEX_TO_SEQ(txq->write_ptr)));
++			    INDEX_TO_SEQ(idx)));
+ 
+ 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
+-	out_meta = &txq->entries[txq->write_ptr].meta;
++	out_meta = &txq->entries[idx].meta;
+ 	out_meta->flags = 0;
+ 
+ 	tfd = iwl_pcie_gen2_build_tfd(trans, txq, dev_cmd, skb, out_meta);
+@@ -562,7 +562,7 @@ static int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
+ 	unsigned long flags;
+ 	void *dup_buf = NULL;
+ 	dma_addr_t phys_addr;
+-	int idx, i, cmd_pos;
++	int i, cmd_pos, idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
+ 	u16 copy_size, cmd_size, tb0_size;
+ 	bool had_nocopy = false;
+ 	u8 group_id = iwl_cmd_groupid(cmd->id);
+@@ -651,7 +651,6 @@ static int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
+ 		goto free_dup_buf;
+ 	}
+ 
+-	idx = get_cmd_index(txq, txq->write_ptr);
+ 	out_cmd = txq->entries[idx].cmd;
+ 	out_meta = &txq->entries[idx].meta;
+ 
+@@ -938,7 +937,7 @@ void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id)
+ 				   txq_id, txq->read_ptr);
+ 
+ 		if (txq_id != trans_pcie->cmd_queue) {
+-			int idx = get_cmd_index(txq, txq->read_ptr);
++			int idx = iwl_pcie_get_cmd_index(txq, txq->read_ptr);
+ 			struct sk_buff *skb = txq->entries[idx].skb;
+ 
+ 			if (WARN_ON_ONCE(!skb))
+@@ -1070,7 +1069,7 @@ int iwl_trans_pcie_dyn_txq_alloc(struct iwl_trans *trans,
+ 
+ 	cmd->tfdq_addr = cpu_to_le64(txq->dma_addr);
+ 	cmd->byte_cnt_addr = cpu_to_le64(txq->bc_tbl.dma);
+-	cmd->cb_size = cpu_to_le32(TFD_QUEUE_CB_SIZE(TFD_QUEUE_SIZE_MAX));
++	cmd->cb_size = cpu_to_le32(TFD_QUEUE_CB_SIZE(TFD_TX_CMD_SLOTS));
+ 
+ 	ret = iwl_trans_send_cmd(trans, &hcmd);
+ 	if (ret)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index c893f9088f9d..c645d10d3707 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -106,7 +106,7 @@ static int iwl_queue_init(struct iwl_txq *q, int slots_num)
+ 	q->n_window = slots_num;
+ 
+ 	/* slots_num must be power-of-two size, otherwise
+-	 * get_cmd_index is broken. */
++	 * iwl_pcie_get_cmd_index is broken. */
+ 	if (WARN_ON(!is_power_of_2(slots_num)))
+ 		return -EINVAL;
+ 
+@@ -428,7 +428,7 @@ void iwl_pcie_txq_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	 * idx is bounded by n_window
+ 	 */
+ 	int rd_ptr = txq->read_ptr;
+-	int idx = get_cmd_index(txq, rd_ptr);
++	int idx = iwl_pcie_get_cmd_index(txq, rd_ptr);
+ 
+ 	lockdep_assert_held(&txq->lock);
+ 
+@@ -1100,7 +1100,8 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 	for (;
+ 	     txq->read_ptr != tfd_num;
+ 	     txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr)) {
+-		struct sk_buff *skb = txq->entries[txq->read_ptr].skb;
++		int idx = iwl_pcie_get_cmd_index(txq, txq->read_ptr);
++		struct sk_buff *skb = txq->entries[idx].skb;
+ 
+ 		if (WARN_ON_ONCE(!skb))
+ 			continue;
+@@ -1109,7 +1110,7 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 
+ 		__skb_queue_tail(skbs, skb);
+ 
+-		txq->entries[txq->read_ptr].skb = NULL;
++		txq->entries[idx].skb = NULL;
+ 
+ 		if (!trans->cfg->use_tfh)
+ 			iwl_pcie_txq_inval_byte_cnt_tbl(trans, txq);
+@@ -1559,7 +1560,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 		goto free_dup_buf;
+ 	}
+ 
+-	idx = get_cmd_index(txq, txq->write_ptr);
++	idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
+ 	out_cmd = txq->entries[idx].cmd;
+ 	out_meta = &txq->entries[idx].meta;
+ 
+@@ -1751,7 +1752,7 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ 
+ 	spin_lock_bh(&txq->lock);
+ 
+-	cmd_index = get_cmd_index(txq, index);
++	cmd_index = iwl_pcie_get_cmd_index(txq, index);
+ 	cmd = txq->entries[cmd_index].cmd;
+ 	meta = &txq->entries[cmd_index].meta;
+ 	group_id = cmd->hdr.group_id;
+-- 
+2.14.1
