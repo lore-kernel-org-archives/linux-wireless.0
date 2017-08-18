@@ -1,91 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751600AbdHCTIc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44430 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751007AbdHRPtb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:32 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 02/10] wil6210: allow configuring scan timers
-Date: Thu,  3 Aug 2017 22:08:14 +0300
-Message-Id: <1501787302-22885-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210835_483296_23C18922)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 18 Aug 2017 11:49:31 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 Aug 2017 18:48:58 +0300
+Message-Id: <20170818154922.2904-1-luca@coelho.fi> (sfid-20170818_174938_364688_506B04F4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 00/24] iwlwifi: updates intended for v4.14 2017-08-18
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Allow setting scan timeout and scan dwell time
-through module parameters.
+Hi,
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 17 ++++++++++++++---
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
- 2 files changed, 15 insertions(+), 4 deletions(-)
+Here's one more set of patches for v4.14.  These are the changes:
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 77af749..d079533 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -26,6 +26,14 @@
- module_param(disable_ap_sme, bool, 0444);
- MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
- 
-+static uint scan_dwell_time  = WMI_SCAN_DWELL_TIME_MS;
-+module_param(scan_dwell_time, uint, 0644);
-+MODULE_PARM_DESC(scan_dwell_time, " Scan dwell time (msec)");
-+
-+static uint scan_timeout = WIL6210_SCAN_TO_SEC;
-+module_param(scan_timeout, uint, 0644);
-+MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
-+
- #define CHAN60G(_channel, _flags) {				\
- 	.band			= NL80211_BAND_60GHZ,		\
- 	.center_freq		= 56160 + (2160 * (_channel)),	\
-@@ -528,8 +536,9 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 
- 	(void)wil_p2p_stop_discovery(wil);
- 
--	wil_dbg_misc(wil, "Start scan_request 0x%p\n", request);
--	wil_dbg_misc(wil, "SSID count: %d", request->n_ssids);
-+	wil_dbg_misc(wil,
-+		     "Start scan_request 0x%p, dwell_time %dms, timeout %dsec, SSID count %d\n",
-+		     request, scan_dwell_time, scan_timeout, request->n_ssids);
- 
- 	for (i = 0; i < request->n_ssids; i++) {
- 		wil_dbg_misc(wil, "SSID[%d]", i);
-@@ -550,10 +559,12 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 	}
- 
- 	wil->scan_request = request;
--	mod_timer(&wil->scan_timer, jiffies + WIL6210_SCAN_TO);
-+	mod_timer(&wil->scan_timer,
-+		  jiffies + msecs_to_jiffies(1000U * scan_timeout));
- 
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.cmd.scan_type = WMI_ACTIVE_SCAN;
-+	cmd.cmd.dwell_time = cpu_to_le32(scan_dwell_time);
- 	cmd.cmd.num_channels = 0;
- 	n = min(request->n_channels, 4U);
- 	for (i = 0; i < n; i++) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d085ccf..ac32284 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -112,7 +112,7 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
- #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
- #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
- #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
--#define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
-+#define WIL6210_SCAN_TO_SEC		10
- #define WIL6210_DISCONNECT_TO_MS (2000)
- #define WIL6210_RX_HIGH_TRSH_INIT		(0)
- #define WIL6210_RX_HIGH_TRSH_DEFAULT \
+* Work for the upcoming A000 device family continues;
+* Improvements in debugging;
+* A couple of improvements in block-ack sessions;
+* Some fixes for channel switch;
+* A workaround for a HW data bug;
+* Some FW API updates;
+* General fixes and cleanups here and there.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+Avraham Stern (1):
+  iwlwifi: mvm: remove session protection to allow channel switch
+
+Emmanuel Grumbach (7):
+  iwlwifi: mvm: remove the corunning support
+  iwlwifi: mvm: support new Coex firmware API
+  iwlwifi: pcie: support short Tx queues for A000 device family
+  iwlwifi: mvm: add command name for FRAME_RELEASE
+  iwlwifi: mvm: include more debug data when we get an unexpected baid
+  iwlwifi: mvm: update the firmware API in TX
+  iwlwifi: mvm: don't send BAR on flushed frames
+
+Gregory Greenman (1):
+  iwlwifi: mvm: change open and close criteria of a BA session
+
+Ilan Peer (1):
+  iwlwifi: mvm: Fix channel switch in case of count <= 1
+
+João Paulo Rechi Vita (1):
+  iwlwifi: Demote messages about fw flags size to info
+
+Luca Coelho (12):
+  iwlwifi: mvm: consider RFKILL during INIT as success
+  iwlwifi: call iwl_remove_notification from iwl_wait_notification
+  iwlwifi: mvm: group all dummy SAR function declarations together
+  iwlwifi: mvm: use mvmsta consistently in rs.c
+  iwlwifi: move BT_MBOX_PRINT macro to common header
+  iwlwifi: pci: add new PCI ID for 7265D
+  iwlwifi: update channel flags parser
+  iwlwifi: add workaround to disable wide channels in 5GHz
+  iwlwifi: fw: fix lar_enabled endian problem in iwl_fw_get_nvm
+  iwlwifi: mvm: remove useless argument in iwl_nvm_init()
+  iwlwifi: mvm: remove useless check for mvm->cfg in
+    iwl_parse_nvm_section()
+  iwlwifi: use big-endian for the hw section of the nvm
+
+Tzipi Peres (1):
+  iwlwifi: distinguish different RF modules in A000 devices
+
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |  34 ++-
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h   |  50 +++-
+ .../net/wireless/intel/iwlwifi/fw/api/commands.h   |  12 -
+ drivers/net/wireless/intel/iwlwifi/fw/api/config.h |   8 -
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h     |   9 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |   3 +
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c |  25 +-
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |   7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  12 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 118 +++++---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      | 301 ++-------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |  30 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  54 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  31 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 106 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 143 +++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 +
+ .../net/wireless/intel/iwlwifi/mvm/time-event.c    |  34 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   9 +-
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  24 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  13 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  41 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  13 +-
+ 33 files changed, 511 insertions(+), 624 deletions(-)
+
 -- 
-1.9.1
+2.14.1
