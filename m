@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:36150 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753355AbdHQSCF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2017 14:02:05 -0400
-Received: by mail-oi0-f54.google.com with SMTP id g131so74129026oic.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2017 11:02:05 -0700 (PDT)
-Subject: Re: iw not finding physical interface
-To: Fredrik Gustafsson <iveqy@iveqy.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:55324 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751350AbdHRW6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Aug 2017 18:58:14 -0400
+Message-ID: <1503097091.2730.14.camel@redhat.com> (sfid-20170819_005817_943149_F07B37BB)
+Subject: Re: [POC/GIT] mac80211 multicast rate selection (help wanted!)
+From: Matteo Croce <mcroce@redhat.com>
+To: David Lamparter <equinox@diac24.net>,
         linux-wireless@vger.kernel.org
-References: <20170817111804.GE24362@paksenarrion.iveqy.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <89c3c2c0-9ec7-f7a0-3032-c5ebc469a308@lwfinger.net> (sfid-20170817_200209_280320_181E49E0)
-Date: Thu, 17 Aug 2017 13:02:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170817111804.GE24362@paksenarrion.iveqy.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Date: Sat, 19 Aug 2017 00:58:11 +0200
+In-Reply-To: <20170818222910.GT773745@eidolon>
+References: <20170818222910.GT773745@eidolon>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/17/2017 06:18 AM, Fredrik Gustafsson wrote:
-> I've a dwlink dwi-131 usb wifi adapter that I'm trying to use with buildroot (for a sama5d2xplained board) for hostadp.
+Il giorno sab, 19/08/2017 alle 00.29 +0200, David Lamparter ha scritto:
+> Hello Linux Wireless hackers,
 > 
-> I use a driver from github:
-> https://github.com/Mange/rtl8192eu-linux-driver
 > 
-> The driver works and I can successfully connect to my AP. But setting up hostapd on the device itself fails. I suppose this is because the physical network device is not found by iw. However it is found by ip, iwconfig and ipconfig.
+> I've taken up an hacking endeavour in trying to improve multicast on
+> wifi, specifically to get it off the stupid 1 MBit rate.  Before
+> anyone
+> yells "that's not allowed by the spec" - it actually is, please refer
+> to
+> section 9.7.5 of 802.11-2012. ("... using one of the rates included
+> in
+> the BSSBasicRateSet parameter ...")  Also, Cisco and Aruba are doing
+> this in their enterprise APs, and it's rather nice.
 > 
-> How can I debug this?
+> So, from some completely unrelated datacenter work, I have hacked up
+> the
+> bridge to hand back down to the driver detailed info on multicast
+> receivers.  Then I took this and fudged around in the minstrel_ht
+> code
+> and, well, it gave me 9 MBit/s ;)
+> 
+> Now, I have pretty little no clue about the Linux wireless stack, so
+> I'd
+> appreciate if someone could tell me how massively wrong I'm doing
+> this
+> and which places in particular are the wrongest!
+> 
+> You can find the code here:
+> https://github.com/eqvinox/vpls-linux-kernel/commits/mdb-hack
+> https://github.com/eqvinox/vpls-iproute2/tree/mdb-hack
+> 
+> Please note that all of this is proof-of-concept level, it probably
+> leaks tons of memory, has great race conditions and eats your cat for
+> breakfast.  It also contains some debug printks like this:
+> [ 9006.253504] mac80211_hwsim hwsim0 wlan0: multi-dst TX:
+> 02:00:00:00:02:00 02:00:00:00:01:00
+> [ 9006.255007] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:02:00 =>
+> rate #1
+> [ 9006.256095] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:01:00 =>
+> rate #12
+> [ 9006.257186] mac80211_hwsim hwsim0 wlan0: result rate #1
+> 
+> 
+> Cheers,
+> 
+> -David
+> 
+> 
+> P.S.: yes, I know about unicast conversion.  But that's not helpful
+> when, for example, you want to get a 10 MBit multicast TV livestream
+> to
+> 5 simultaneous wifi clients...
 
-The first thing to check if that out-of-kernel driver supports CFG80211.  With 
-most of these, there is a configuration parameter that is used to enable the 
-feature.
+So you are scanning the multicast receivers list to select the lowest
+rate, comparing the rates by data rate?
+I think that this is incorrect, the data rate is a combination of many
+parameters (modulation, GI interval, coding rate, streams, etc.) so a
+rate with higher data rate could be better than another with lower
+speed in some circumstances. Or even worse, some station could not
+receive the packet at all (too many streams, unsupported modulations.
+etc.).
 
-Those Realtek USB drivers are a real mess. Debugging them is never an easy job. 
-In addition, I'm not sure if any kernel developers will be interested in 
-helping. I certainly am not.
+You could try to select the lowest MCS rate, the longer GI and the
+minimum number of stream from all the receivers and use a data rate
+compatible with these settings, if any (not all combinations are
+allowed unfortunately)
 
-The long-term future for RTL8192EU is to use rtl8xxxu. As far as I know, it 
-works, and that driver will work just fine with hostapd. If not, that is the 
-place to devote some effort. The USB Id for your device may not be in the driver 
-yet. That would be the first thing to check.
-
-Larry
+Ciao,
+-- 
+Matteo Croce
+per aspera ad upstream
