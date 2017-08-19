@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41520 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751012AbdHAJks (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:40:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  1 Aug 2017 12:40:35 +0300
-Message-Id: <20170801094039.22349-5-luca@coelho.fi> (sfid-20170801_114107_130281_859CF95C)
-In-Reply-To: <20170801094039.22349-1-luca@coelho.fi>
-References: <20170801094039.22349-1-luca@coelho.fi>
-Subject: [PATCH 4/8] iwlwifi: mvm: set A-MPDU bit upon empty BA notification from FW
+Received: from [217.148.43.144] ([217.148.43.144]:42496 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751586AbdHSVlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Aug 2017 17:41:46 -0400
+Subject: Re: [PATCH 11/34] brcmfmac: Split brcmf_sdiod_buffrw function up.
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
+References: <20170726202557.15632-1-ian@mnementh.co.uk>
+ <20170726202557.15632-12-ian@mnementh.co.uk> <59884E6B.5050801@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <28e96521-b214-1193-6c3e-d021db47e771@mnementh.co.uk> (sfid-20170819_234150_190660_CE2A1C3A)
+Date: Sat, 19 Aug 2017 22:41:42 +0100
+MIME-Version: 1.0
+In-Reply-To: <59884E6B.5050801@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+On 07/08/17 12:26, Arend van Spriel wrote:
 
-The bit was set only if there was at least one reclaimed frame in an
-aggregation. It's important to set it also in the case that the whole
-A-MPDU was lost, otherwise rate scaling statistics will not be
-updated correctly. Thus, set it always in ba notification handler.
+>> +        err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+>>
+>>       brcmu_pkt_buf_free_skb(mypkt);
+>> +
+> 
+> You are keen on sprinkling whitespace here and there. Could you please
+> use separate patches for that as much as possible. Not sure why you
+> added this one...
+> 
+>>       return err;
+>>
+> 
+> ...and kept this one.
+> 
+>>   }
+> 
 
-This fixes a throughput degradation of about 20% in certain scenarios
-with multiple streams on 11ac.
+Good catch. There's a couple of others - I'll break them out. That
+latter one is clearly an error on my part.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index e5d3eba2e82a..5fcc9dd6be56 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1821,6 +1821,8 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 	struct iwl_mvm_tid_data *tid_data;
- 	struct iwl_mvm_sta *mvmsta;
- 
-+	ba_info.flags = IEEE80211_TX_STAT_AMPDU;
-+
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
- 		struct iwl_mvm_compressed_ba_notif *ba_res =
- 			(void *)pkt->data;
--- 
-2.13.2
+-Ian
