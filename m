@@ -1,159 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45841 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751739AbdHCNZx (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44750 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750854AbdHSImI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 09:25:53 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v3 5/9] wil6210: add statistics for suspend time
-Date: Thu,  3 Aug 2017 16:25:35 +0300
-Message-Id: <1501766739-31996-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_152556_636942_CE7020E9)
-In-Reply-To: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501766739-31996-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Sat, 19 Aug 2017 04:42:08 -0400
+Message-ID: <1503132116.15969.327.camel@coelho.fi> (sfid-20170819_104213_425550_0359E061)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Date: Sat, 19 Aug 2017 11:41:56 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-+p3Ks+/ZlU8Z7QKl1bkZ"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2017-08-18
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add statistics for total, min and max suspend time, that
-calculates the time the 11ad device was in suspend.
-Those statistics will help to estimate the power impact
-of d3hot feature.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+--=-+p3Ks+/ZlU8Z7QKl1bkZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Kalle,
+
+Here's my third pull-request intended for v4.14.=C2=A0 We continued doing
+generic development work, with improvements, bug fixes and=C2=A0cleanups al=
+l
+around.=C2=A0 More=C2=A0details in the tag description.
+
+My patch "iwlwifi: update channel flags parser" is going to cause a
+conflict with net because they both change the same string in debug
+message.  Emmanuel's patch "iwlwifi: split the regulatory rules when the
+bandwidth flags require it" added "reg_flags" to the string and changed
+the Ad-hoc string.  My patch added a few %s's and also changed the Ad-
+hoc string.  The result of the conflict resolution should look like
+this:
+
+"Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n"
+
+
+I have sent this out before, and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 38ef62353acbaa0eea062a9f047b33aebd7d52ce=
+:
+
+  rsi: security enhancements for AP mode (2017-08-17 10:07:00 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2017-08-18
+
+for you to fetch changes up to 8fe34b060a4b11be35ffd9383acdd0bc7bee72e2:
+
+  iwlwifi: use big-endian for the hw section of the nvm (2017-08-18 17:36:4=
+2 +0300)
+
+----------------------------------------------------------------
+Third set of iwlwifi patches for 4.14
+
+* Work for the upcoming A000 device family continues;
+* Improvements in debugging;
+* A couple of improvements in block-ack sessions;
+* Some fixes for channel switch;
+* A workaround for a HW data bug;
+* Some FW API updates;
+* General fixes and cleanups here and there.
+
+----------------------------------------------------------------
+Avraham Stern (1):
+      iwlwifi: mvm: remove session protection to allow channel switch
+
+Emmanuel Grumbach (7):
+      iwlwifi: mvm: remove the corunning support
+      iwlwifi: mvm: support new Coex firmware API
+      iwlwifi: pcie: support short Tx queues for A000 device family
+      iwlwifi: mvm: add command name for FRAME_RELEASE
+      iwlwifi: mvm: include more debug data when we get an unexpected baid
+      iwlwifi: mvm: update the firmware API in TX
+      iwlwifi: mvm: don't send BAR on flushed frames
+
+Gregory Greenman (1):
+      iwlwifi: mvm: change open and close criteria of a BA session
+
+Ilan Peer (1):
+      iwlwifi: mvm: Fix channel switch in case of count <=3D 1
+
+Jo=C3=A3o Paulo Rechi Vita (1):
+      iwlwifi: Demote messages about fw flags size to info
+
+Luca Coelho (12):
+      iwlwifi: mvm: consider RFKILL during INIT as success
+      iwlwifi: call iwl_remove_notification from iwl_wait_notification
+      iwlwifi: mvm: group all dummy SAR function declarations together
+      iwlwifi: mvm: use mvmsta consistently in rs.c
+      iwlwifi: move BT_MBOX_PRINT macro to common header
+      iwlwifi: pci: add new PCI ID for 7265D
+      iwlwifi: update channel flags parser
+      iwlwifi: add workaround to disable wide channels in 5GHz
+      iwlwifi: fw: fix lar_enabled endian problem in iwl_fw_get_nvm
+      iwlwifi: mvm: remove useless argument in iwl_nvm_init()
+      iwlwifi: mvm: remove useless check for mvm->cfg in iwl_parse_nvm_sect=
+ion()
+      iwlwifi: use big-endian for the hw section of the nvm
+
+Tzipi Peres (1):
+      iwlwifi: distinguish different RF modules in A000 devices
+
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c        |  34 ++++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h     |  50 +++++++++++----=
+-
+ drivers/net/wireless/intel/iwlwifi/fw/api/commands.h |  12 ----
+ drivers/net/wireless/intel/iwlwifi/fw/api/config.h   |   8 ---
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h       |   9 +--
+ drivers/net/wireless/intel/iwlwifi/fw/file.h         |   3 +
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c   |  25 ++++----
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c          |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h         |   7 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c         |  12 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c   | 118 +++++++++++++++=
+++++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h   |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c        | 301 +++++++++------=
+---------------------------------------------------------------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c     |  30 ++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c          |  54 ++++++++++-----=
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
- drivers/net/wireless/ath/wil6210/main.c    |  2 ++
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
- 4 files changed, 40 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  16 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |  31 +++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c         | 106 +++++++++++++++=
+++-----------------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c          | 143 +++++++++++++++=
+++++++++++---------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |   8 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h         |   7 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c  |  34 ++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c          |   9 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c        |  24 ++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h   |  13 +++--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c         |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c    |  41 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c         |  13 +++--
+ 33 files changed, 511 insertions(+), 624 deletions(-)
+--=-+p3Ks+/ZlU8Z7QKl1bkZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 21b6611..d4e8865 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1617,6 +1617,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
-+	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1628,18 +1630,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
-+	unsigned long long stats_collection_time =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n"
-+		     "total suspend time:%lld min suspend time:%lld\n"
-+		     "max suspend time:%lld stats collection time: %lld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device);
-+		     wil->suspend_stats.rejected_by_device,
-+		     wil->suspend_stats.total_suspend_time,
-+		     wil->suspend_stats.min_suspend_time,
-+		     wil->suspend_stats.max_suspend_time,
-+		     stats_collection_time);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1795,6 +1806,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
-+	wil->suspend_stats.collection_start = ktime_get();
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index daf944a..8968c2c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
- 
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
-+	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 4548829..820ed17 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -300,6 +300,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
-+	if (!rc)
-+		wil->suspend_stats.suspend_start_time = ktime_get();
-+
- 	return rc;
- }
- 
-@@ -309,6 +312,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	bool keep_radio_on = ndev->flags & IFF_UP &&
- 			     wil->keep_radio_on_during_sleep;
-+	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -326,8 +330,20 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
-+	if (rc)
-+		goto out;
-+
-+	suspend_time_usec =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.suspend_start_time));
-+	wil->suspend_stats.total_suspend_time += suspend_time_usec;
-+	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
-+		wil->suspend_stats.min_suspend_time = suspend_time_usec;
-+	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
-+		wil->suspend_stats.max_suspend_time = suspend_time_usec;
-+
- out:
--	wil_dbg_pm(wil, "resume: %s => %d\n",
--		   is_runtime ? "runtime" : "system", rc);
-+	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
-+		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
- 	return rc;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ac32284..724ad59 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -90,6 +90,11 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
-+	unsigned long long total_suspend_time;
-+	unsigned long long min_suspend_time;
-+	unsigned long long max_suspend_time;
-+	ktime_t collection_start;
-+	ktime_t suspend_start_time;
- };
- 
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
--- 
-1.9.1
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlmX+dUACgkQoUecoho8
+xfqtrQ//ZbHvHU0wOZmC6D+Fl6ZMGGN0gNxS9YulUWZXLCnhuBE+P+9dXpakoP1+
+yVPi1e4w1MpUKajwufdBBSP1tCtLZb+VRMtpG7aEgfeK3w1zSJUtOuNcMU5UFJ83
+2rHF79aFF2YZoIILwPDHa4UjGvQkSzZ6dfdWnrqb89LaLwG5nCUmWiX/wfH4O7/8
+PF7PYDNGsZFGoyp9KLf+K3BKBu1tkEmWizKpvMbQldXfiq8wYfYZhaUnEY4lJrck
+yF/gE30JEyroK4d/iaBkFwYuB5s5fJ4ceHd1Tj/iH2O/75m11SHyZIVZbs3RXlG6
+LAJOdUcDtJV6CfxrbwlLBxHYOKF/3i4YWMTwh6a2CuNswfpSncdnwTRxj8kN/ZET
+FujAQUuvez6ea6ooTaOcozlf6kdJTJ9y+FzV3An+ieUL5sh3LBb0vUb4Vb3S0UBU
+6Fv30a09Ib9/Jg4TJtfd8RUmDez4Qn75sjkTk8aiFbIPDdQSYDbdZ7J0YRDDOcjg
+HwFuYcSXl61Cevsq88yWmiOrsB8PLfWxtD7qYt++YxithmUl7wVndM4/AE3woFba
+JUeYNrAEZh+355b5+MORWBNXELPPLRVTNwaN1wzeduviF5S3yZpJFN/xB/EuBeSD
+p4B/8VnrbL3aurU25S2czHm0bOoIiW98b+RsH7LLOR7/S3gHW2U=
+=oNlI
+-----END PGP SIGNATURE-----
+
+--=-+p3Ks+/ZlU8Z7QKl1bkZ--
