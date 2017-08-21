@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0068.outbound.protection.outlook.com ([104.47.41.68]:41312
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753323AbdH2MRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 08:17:12 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 4/5] qtnfmac: fix free_xfer_buffer cleanup
-Date: Tue, 29 Aug 2017 15:16:22 +0300
-Message-Id: <20170829121623.24761-5-sergey.matyukevich.os@quantenna.com> (sfid-20170829_141718_099473_1317E01F)
-In-Reply-To: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
-References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
+Received: from mx4.wp.pl ([212.77.101.12]:45625 "EHLO mx4.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753907AbdHUVln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Aug 2017 17:41:43 -0400
+Date: Mon, 21 Aug 2017 14:41:36 -0700
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: kvalo@codeaurora.org, matthias.bgg@gmail.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] mt7601u: check memory allocation failure
+Message-ID: <20170821144136.477bf655@cakuba.netronome.com> (sfid-20170821_234213_587727_032CF411)
+In-Reply-To: <20170821143430.635e4b92@cakuba.netronome.com>
+References: <20170821205956.20859-1-christophe.jaillet@wanadoo.fr>
+        <20170821143430.635e4b92@cakuba.netronome.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check if skb tracking arrays has been already allocated. This additional
-check handles the case when init partially failed.
+On Mon, 21 Aug 2017 14:34:30 -0700, Jakub Kicinski wrote:
+> On Mon, 21 Aug 2017 22:59:56 +0200, Christophe JAILLET wrote:
+> > Check memory allocation failure and return -ENOMEM in such a case, as
+> > already done a few lines below
+> > 
+> > Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>  
+> 
+> Acked-by: Jakub Kicinski <kubakici@wp.pl>
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Wait, I take that back.  This code is a bit weird.  We would return an
+error, then mt7601u_dma_init() will call mt7601u_free_tx_queue() which
+doesn't check for tx_q == NULL condition.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index bfbcd0bf75bf..2921d8069bf2 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -483,7 +483,7 @@ static void free_xfer_buffers(void *data)
- 
- 	/* free rx buffers */
- 	for (i = 0; i < priv->rx_bd_num; i++) {
--		if (priv->rx_skb[i]) {
-+		if (priv->rx_skb && priv->rx_skb[i]) {
- 			rxbd = &priv->rx_bd_vbase[i];
- 			paddr = QTN_HOST_ADDR(le32_to_cpu(rxbd->addr_h),
- 					      le32_to_cpu(rxbd->addr));
-@@ -496,7 +496,7 @@ static void free_xfer_buffers(void *data)
- 
- 	/* free tx buffers */
- 	for (i = 0; i < priv->tx_bd_num; i++) {
--		if (priv->tx_skb[i]) {
-+		if (priv->tx_skb && priv->tx_skb[i]) {
- 			dev_kfree_skb_any(priv->tx_skb[i]);
- 			priv->tx_skb[i] = NULL;
- 		}
--- 
-2.11.0
+Looks like mt7601u_free_tx() has to check for dev->tx_q == NULL and
+return early if that's the case.  Or mt7601u_alloc_tx() should really
+clean things up on it's own on failure.  Ugh.
