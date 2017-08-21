@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53472 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751247AbdHGNLg (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36231 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753546AbdHUREP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 09:11:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 04/19] iwlwifi: mvm: add debugfs to force CT-kill
-References: <20170805194331.17426-1-luca@coelho.fi>
-        <20170805194331.17426-5-luca@coelho.fi>
-Date: Mon, 07 Aug 2017 16:11:30 +0300
-In-Reply-To: <20170805194331.17426-5-luca@coelho.fi> (Luca Coelho's message of
-        "Sat, 5 Aug 2017 22:43:16 +0300")
-Message-ID: <87zibbjzel.fsf@kamboji.qca.qualcomm.com> (sfid-20170807_151140_008766_4176817C)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 21 Aug 2017 13:04:15 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
+        charles.gorand@effinnov.com, r.baldyga@samsung.com,
+        k.opasiak@samsung.com, davem@davemloft.net
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/8] constify nfc i2c_device_id
+Date: Mon, 21 Aug 2017 22:33:52 +0530
+Message-Id: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190647_604202_EA01EE68)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+i2c_device_id are not supposed to change at runtime. All functions
+working with i2c_device_id provided by <linux/i2c.h> work with
+const i2c_device_id. So mark the non-const structs as const.
 
-> From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
->
-> In order to test the enter/exit CT-kill flow.
->
-> Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Arvind Yadav (8):
+  [PATCH 1/8] nfc: microread: constify i2c_device_id
+  [PATCH 2/8] nfc: nfcmrvl: constify i2c_device_id
+  [PATCH 3/8] nfc: nxp-nci: constify i2c_device_id
+  [PATCH 4/8] nfc: pn533: constify i2c_device_id
+  [PATCH 5/8] nfc: pn544: constify i2c_device_id
+  [PATCH 6/8] nfc: s3fwrn5: constify i2c_device_id
+  [PATCH 7/8] nfc: st-nci: constify i2c_device_id
+  [PATCH 8/8] nfc: st21nfca: constify i2c_device_id
 
-The commit log doesn't explain what's CT-kill and how/where it could be
-used. For example, I have no clue what this could be about.
+ drivers/nfc/microread/i2c.c | 2 +-
+ drivers/nfc/nfcmrvl/i2c.c   | 2 +-
+ drivers/nfc/nxp-nci/i2c.c   | 2 +-
+ drivers/nfc/pn533/i2c.c     | 2 +-
+ drivers/nfc/pn544/i2c.c     | 2 +-
+ drivers/nfc/s3fwrn5/i2c.c   | 2 +-
+ drivers/nfc/st-nci/i2c.c    | 2 +-
+ drivers/nfc/st21nfca/i2c.c  | 2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
 
 -- 
-Kalle Valo
+2.7.4
