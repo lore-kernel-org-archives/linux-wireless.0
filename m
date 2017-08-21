@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42186 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751933AbdHCKSj (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35122 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754253AbdHUREc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 06:18:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Souptick Joarder <jrdr.linux@gmail.com>,
-        arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5] rtlwifi: Replace hardcode value with macro
-References: <20170802122915.GA4759@symbol-HP-ZBook-15>
-        <4d6b58d1-3e26-e6ea-0c0e-7e2b7aa3b75e@lwfinger.net>
-Date: Thu, 03 Aug 2017 13:18:34 +0300
-In-Reply-To: <4d6b58d1-3e26-e6ea-0c0e-7e2b7aa3b75e@lwfinger.net> (Larry
-        Finger's message of "Wed, 2 Aug 2017 09:35:37 -0500")
-Message-ID: <87fud9nedh.fsf@kamboji.qca.qualcomm.com> (sfid-20170803_121847_760788_C01837C7)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 21 Aug 2017 13:04:32 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
+        charles.gorand@effinnov.com, r.baldyga@samsung.com,
+        k.opasiak@samsung.com, davem@davemloft.net
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 5/8] nfc: pn544: constify i2c_device_id
+Date: Mon, 21 Aug 2017 22:33:57 +0530
+Message-Id: <1503335040-27101-6-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190541_713153_66787BF9)
+In-Reply-To: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+i2c_device_id are not supposed to change at runtime. All functions
+working with i2c_device_id provided by <linux/i2c.h> work with
+const i2c_device_id. So mark the non-const structs as const.
 
-> On 08/02/2017 07:29 AM, Souptick Joarder wrote:
->> In _rtl_init_mac80211(), hardcoded value for hw->max_listen_interval
->> and hw->max_rate_tries are replaced by macro and removed the comment.
->>
->> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
->
-> Finally!
->
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->
-> @Kalle: I'm sure you can work around this, but patchwork shows two
-> different "v5" versions and a "v4" entry for this same patch. That may
-> be due to no one formally rejecting the patch.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/nfc/pn544/i2c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It's because Souptick submitted two v5 patches, but yeah I can that sort
-it out.
-
-Souptick, the idea with patch versions is that maintainers and reviewers
-can easily find the latest version and drop the rest so ALWAYS increase
-the version number. Submitting duplicate version numbers defeats the
-purpose and creates extra work for others.
-
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index 4b14740..d0207f8 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -54,7 +54,7 @@
+ #define PN544_HCI_I2C_LLC_MAX_SIZE	(PN544_HCI_I2C_LLC_LEN_CRC + 1 + \
+ 					 PN544_HCI_I2C_LLC_MAX_PAYLOAD)
+ 
+-static struct i2c_device_id pn544_hci_i2c_id_table[] = {
++static const struct i2c_device_id pn544_hci_i2c_id_table[] = {
+ 	{"pn544", 0},
+ 	{}
+ };
 -- 
-Kalle Valo
+2.7.4
