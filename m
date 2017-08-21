@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:38768 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752298AbdHPVbR (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33985 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753546AbdHURES (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 17:31:17 -0400
-Date: Wed, 16 Aug 2017 14:31:16 -0700 (PDT)
-Message-Id: <20170816.143116.1172751167543812070.davem@davemloft.net> (sfid-20170816_233124_343381_D20D1A07)
-To: dcbw@redhat.com
-Cc: james@nurealm.net, futur.andy@googlemail.com, kvalo@codeaurora.org,
-        arend.vanspriel@broadcom.com, maheshb@google.com,
-        andy@greyhouse.net, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, greearb@candelatech.com
-Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not
- working with wireless drivers
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1502918561.30484.1.camel@redhat.com>
-References: <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com>
-        <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net>
-        <1502918561.30484.1.camel@redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 21 Aug 2017 13:04:18 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
+        charles.gorand@effinnov.com, r.baldyga@samsung.com,
+        k.opasiak@samsung.com, davem@davemloft.net
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 1/8] nfc: microread: constify i2c_device_id
+Date: Mon, 21 Aug 2017 22:33:53 +0530
+Message-Id: <1503335040-27101-2-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190637_199942_424D243E)
+In-Reply-To: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dcbw@redhat.com>
-Date: Wed, 16 Aug 2017 16:22:41 -0500
+i2c_device_id are not supposed to change at runtime. All functions
+working with i2c_device_id provided by <linux/i2c.h> work with
+const i2c_device_id. So mark the non-const structs as const.
 
-> My biggest suggestion is that perhaps bonding should grow hysteresis
-> for link speeds. Since WiFi can change speed every packet, you probably
-> don't want the bond characteristics changing every couple seconds just
-> in case your WiFi link is jumping around.  Ethernet won't bounce around
-> that much, so the hysteresis would have no effect there.  Or, if people
-> are concerned about response time to speed changes on ethernet (where
-> you probably do want an instant switch-over) some new flag to indicate
-> that certain devices don't have stable speeds over time.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/nfc/microread/i2c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Or just report the average of the range the wireless link can hit, and
-be done with it.
-
-I think you guys are overcomplicating things.
+diff --git a/drivers/nfc/microread/i2c.c b/drivers/nfc/microread/i2c.c
+index b668b7b..1806d20 100644
+--- a/drivers/nfc/microread/i2c.c
++++ b/drivers/nfc/microread/i2c.c
+@@ -294,7 +294,7 @@ static int microread_i2c_remove(struct i2c_client *client)
+ 	return 0;
+ }
+ 
+-static struct i2c_device_id microread_i2c_id[] = {
++static const struct i2c_device_id microread_i2c_id[] = {
+ 	{ MICROREAD_I2C_DRIVER_NAME, 0},
+ 	{ }
+ };
+-- 
+2.7.4
