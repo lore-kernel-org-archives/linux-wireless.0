@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:32922 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750794AbdH3TFJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:05:09 -0400
-Received: by mail-wm0-f52.google.com with SMTP id r202so3634673wmd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:05:08 -0700 (PDT)
-Subject: Re: [PATCH 12/30] brcmfmac: Whitespace fixes.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-13-ian@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <17496ac5-2186-d111-73ac-f7532b9e107e@broadcom.com> (sfid-20170830_210512_396428_1D2DC1E4)
-Date: Wed, 30 Aug 2017 21:05:06 +0200
+Received: from mail.toke.dk ([52.28.52.200]:43275 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753264AbdHUNlb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Aug 2017 09:41:31 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name, Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
+In-Reply-To: <20170622102030.9795-3-johannes@sipsolutions.net>
+References: <20170622102030.9795-1-johannes@sipsolutions.net> <20170622102030.9795-3-johannes@sipsolutions.net>
+Date: Mon, 21 Aug 2017 15:32:16 +0200
+Message-ID: <87378lvyfz.fsf@toke.dk> (sfid-20170821_154135_094658_E8FF41A0)
 MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-13-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Maybe mention the function you are making whitespace changes in as it 
-involves only one here.
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index b2b5419467cc..263cb30d77c8 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -919,21 +919,10 @@ struct ieee80211_tx_info {
+>  				unsigned long jiffies;
+>  			};
+>  			/* NB: vif can be NULL for injected frames */
+> -			union {
+> -				/* NB: vif can be NULL for injected frames */
+> -				struct ieee80211_vif *vif;
+> -
+> -				/* When packets are enqueued on txq it's easy
+> -				 * to re-construct the vif pointer. There's no
+> -				 * more space in tx_info so it can be used to
+> -				 * store the necessary enqueue time for packet
+> -				 * sojourn time computation.
+> -				 */
+> -				codel_time_t enqueue_time;
+> -			};
+> +			struct ieee80211_vif *vif;
+>  			struct ieee80211_key_conf *hw_key;
+>  			u32 flags;
+> -			/* 4 bytes free */
+> +			codel_time_t enqueue_time;
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index 916f75e5e7a1..d5d2b2222cc1 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -713,6 +713,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
->   	int err;
->   
->   	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-> +
->   	if (!mypkt) {
->   		brcmf_err("brcmu_pkt_buf_get_skb failed: len %d\n",
->   			  nbytes);
-> @@ -727,8 +728,8 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
->   		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
->   
->   	brcmu_pkt_buf_free_skb(mypkt);
-> -	return err;
->   
-> +	return err;
->   }
->   
->   int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
-> 
+A side effect of this is that enqueue_time will be valid in the driver;
+which is good as far as I'm concerned (I've been thinking about using it
+to make decisions about when to stop retrying a frame).
+
+If we want to save the four bytes, is there any reason we can't just
+change the codel code to use skb->tstamp instead?
+
+-Toke
