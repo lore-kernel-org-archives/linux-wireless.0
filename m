@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42730 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751167AbdHQHAL (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:38006 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754289AbdHUREi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2017 03:00:11 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: do not use random MAC for pre-association scanning
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1502368886-16539-2-git-send-email-gbhat@marvell.com>
-References: <1502368886-16539-2-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20170817070010.9D5BD6037B@smtp.codeaurora.org> (sfid-20170817_090014_707734_7E48CA85)
-Date: Thu, 17 Aug 2017 07:00:10 +0000 (UTC)
+        Mon, 21 Aug 2017 13:04:38 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sameo@linux.intel.com, clement.perrochaud@effinnov.com,
+        charles.gorand@effinnov.com, r.baldyga@samsung.com,
+        k.opasiak@samsung.com, davem@davemloft.net
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 7/8] nfc: st-nci: constify i2c_device_id
+Date: Mon, 21 Aug 2017 22:33:59 +0530
+Message-Id: <1503335040-27101-8-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170821_190523_250752_6E7F50AD)
+In-Reply-To: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1503335040-27101-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+i2c_device_id are not supposed to change at runtime. All functions
+working with i2c_device_id provided by <linux/i2c.h> work with
+const i2c_device_id. So mark the non-const structs as const.
 
-> Driver should use random MAC address only if the scan is
-> requested by user(provided NL80211_SCAN_FLAG_RANDOM_ADDR
-> is set in scan request). It should not be used for a scan
-> performed before association.
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/nfc/st-nci/i2c.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-2 patches applied to wireless-drivers-next.git, thanks.
-
-2af2c2c77e5a mwifiex: do not use random MAC for pre-association scanning
-89001c1c8dc3 mwifiex: check for NL80211_SCAN_FLAG_RANDOM_ADDR during hidden SSID scan
-
+diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
+index 515f08d..f9525ef 100644
+--- a/drivers/nfc/st-nci/i2c.c
++++ b/drivers/nfc/st-nci/i2c.c
+@@ -279,7 +279,7 @@ static int st_nci_i2c_remove(struct i2c_client *client)
+ 	return 0;
+ }
+ 
+-static struct i2c_device_id st_nci_i2c_id_table[] = {
++static const struct i2c_device_id st_nci_i2c_id_table[] = {
+ 	{ST_NCI_DRIVER_NAME, 0},
+ 	{}
+ };
 -- 
-https://patchwork.kernel.org/patch/9893639/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
