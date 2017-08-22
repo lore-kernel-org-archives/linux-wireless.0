@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42450 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751471AbdHPPCh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 11:02:37 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH] qtnfmac: pcie datapath optimizations and cleanups
-References: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
-Date: Wed, 16 Aug 2017 18:02:33 +0300
-In-Reply-To: <20170815130638.31718-1-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Tue, 15 Aug 2017 16:06:30 +0300")
-Message-ID: <8760dntv1y.fsf@purkki.adurom.net> (sfid-20170816_170241_347461_A4958A14)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from [217.148.43.144] ([217.148.43.144]:60098 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932427AbdHVLp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:45:29 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 22/30] brcmfmac: Rename buscore->core for consistency
+Date: Tue, 22 Aug 2017 12:25:42 +0100
+Message-Id: <20170822112550.60311-23-ian@mnementh.co.uk> (sfid-20170822_134533_042090_BFCAC93B)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Avoid confusion with unrelated _buscore labels.
 
-> Hello Kalle and all,
->
-> This patchset implements several optimizations and cleanups for
-> pcie datapath in qtnfmac driver. Major changes include:
-> - switch to kernel circ_buf implementation
-> - modify tx reclaim locking
-> - introduce counter for rx underflow events
->
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
->
->  bus.h                   |    1 
->  pearl/pcie.c            |  285 +++++++++++++++++++++++++++++-------------------
->  pearl/pcie_bus_priv.h   |   15 +-
->  pearl/pcie_ipc.h        |    1 
->  pearl/pcie_regs_pearl.h |    1 
->  5 files changed, 183 insertions(+), 120 deletions(-)
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-I don't see patch 9 in the mailing list. Did it get lost somewhere?
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index c1f3366871e5..09b4db117e0d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2475,14 +2475,12 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_core *buscore = bus->sdio_core;
+-	u32 addr;
++	struct brcmf_core *core = bus->sdio_core;
+ 	unsigned long val;
+ 	int ret;
+ 
+-	addr = buscore->base + __sd_reg(intstatus);
+-
+-	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
++	val = brcmf_sdiod_readl(bus->sdiodev, core->base + __sd_reg(intstatus),
++				&ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+ 		return ret;
+@@ -2492,7 +2490,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ 	/* Clear interrupts */
+ 	if (val) {
+-		brcmf_sdiod_writel(bus->sdiodev, addr, val, &ret);
++		brcmf_sdiod_writel(bus->sdiodev,
++				   core->base + __sd_reg(intstatus), val, &ret);
+ 		bus->sdcnt.f1regdata++;
+ 		atomic_or(val, &bus->intstatus);
+ 	}
 -- 
-Kalle Valo
+2.11.0
