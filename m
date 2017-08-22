@@ -1,33 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:36309 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752840AbdHGLL6 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3456 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752893AbdHVVrH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 07:11:58 -0400
-Received: by mail-wm0-f45.google.com with SMTP id t201so4423506wmt.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 04:11:58 -0700 (PDT)
-Subject: Re: [PATCH 15/34] brcmfamc: remove unnecessary call to
- brcmf_sdiod_set_backplane_window()
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-16-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59884AFC.8090508@broadcom.com> (sfid-20170807_131203_767675_FB584C7F)
-Date: Mon, 7 Aug 2017 13:11:56 +0200
+        Tue, 22 Aug 2017 17:47:07 -0400
+From: <ryanhsu@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: <ryanhsu@qti.qualcomm.com>
+Subject: [PATCH v3 2/2] ath10k: Configure and enable the wakeup capability
+Date: Tue, 22 Aug 2017 14:47:35 -0700
+Message-ID: <1503438455-6133-2-git-send-email-ryanhsu@qti.qualcomm.com> (sfid-20170822_234712_138017_5625ADA4)
+In-Reply-To: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
+References: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-16-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/26/2017 10:25 PM, Ian Molton wrote:
-> All functions that might require the window address changing call
-> brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
-> the window is not required.
+From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 -----
->   1 file changed, 5 deletions(-)
+ACPI will rely on device driver to tell it if the device could support
+wakeup function when system in D3 state.
+
+This has caused some platform can't support remote wakeup correctly,
+because the ACPI wakeup GPE is not enabled, hence registers the .set_wakeup
+callback to handle it if device supports wakeup.
+
+Tested with QCA6174 hw3.0, firmware ('WLAN.RM.4.4.1-00008-QCARMSWP-1')
+
+Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |  1 +
+ drivers/net/wireless/ath/ath10k/wow.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/wow.h |  1 +
+ 3 files changed, 16 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2e5d2ca..bbf7da1 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7488,6 +7488,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_wow_op_suspend,
+ 	.resume				= ath10k_wow_op_resume,
++	.set_wakeup			= ath10k_wow_op_set_wakeup,
+ #endif
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
+diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
+index 77100d4..0d46d6d 100644
+--- a/drivers/net/wireless/ath/ath10k/wow.c
++++ b/drivers/net/wireless/ath/ath10k/wow.c
+@@ -277,6 +277,18 @@ exit:
+ 	return ret ? 1 : 0;
+ }
+ 
++void ath10k_wow_op_set_wakeup(struct ieee80211_hw *hw, bool enabled)
++{
++	struct ath10k *ar = hw->priv;
++
++	mutex_lock(&ar->conf_mutex);
++	if (test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
++		     ar->running_fw->fw_file.fw_features)) {
++		device_set_wakeup_enable(ar->dev, enabled);
++	}
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ int ath10k_wow_op_resume(struct ieee80211_hw *hw)
+ {
+ 	struct ath10k *ar = hw->priv;
+@@ -336,5 +348,7 @@ int ath10k_wow_init(struct ath10k *ar)
+ 	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
+ 	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
+ 
++	device_set_wakeup_capable(ar->dev, true);
++
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wow.h b/drivers/net/wireless/ath/ath10k/wow.h
+index abbb04b..9745b9d 100644
+--- a/drivers/net/wireless/ath/ath10k/wow.h
++++ b/drivers/net/wireless/ath/ath10k/wow.h
+@@ -28,6 +28,7 @@ int ath10k_wow_init(struct ath10k *ar);
+ int ath10k_wow_op_suspend(struct ieee80211_hw *hw,
+ 			  struct cfg80211_wowlan *wowlan);
+ int ath10k_wow_op_resume(struct ieee80211_hw *hw);
++void ath10k_wow_op_set_wakeup(struct ieee80211_hw *hw, bool enabled);
+ 
+ #else
+ 
+-- 
+1.9.1
