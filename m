@@ -1,79 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:48941 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750715AbdHXBYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 21:24:22 -0400
-Date: Thu, 24 Aug 2017 11:24:19 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: linux-next: manual merge of the wireless-drivers-next tree with
- Linus' tree
-Message-ID: <20170824112419.40149e36@canb.auug.org.au> (sfid-20170824_032436_552326_97AFB62A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from [217.148.43.144] ([217.148.43.144]:35088 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932350AbdHVL0Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:26:16 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 05/30] brcmfmac: Remove dead IO code
+Date: Tue, 22 Aug 2017 12:25:25 +0100
+Message-Id: <20170822112550.60311-6-ian@mnementh.co.uk> (sfid-20170822_132620_427541_8045D5C4)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+	The value passed to brcmf_sdiod_addrprep() is *always* 4
+remove this parameter and the unused code to handle it.
 
-Today's linux-next merge of the wireless-drivers-next tree got a
-conflict in:
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-  drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-
-between commit:
-
-  87f55616f81b ("iwlwifi: mvm: rs: fix TLC statistics collection")
-
-from Linus' tree and commit:
-
-  482e48440a0e ("iwlwifi: mvm: change open and close criteria of a BA session")
-
-from the wireless-drivers-next tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 7b2184d1e365..609a934c1658 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -425,7 +425,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ }
+ 
+ static int
+-brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
++brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
+ {
+ 	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+@@ -439,9 +439,7 @@ brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
+ 	}
+ 
+ 	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
+-
+-	if (width == 4)
+-		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
++	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	return 0;
+ }
+@@ -467,7 +465,7 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (retval)
+ 		goto done;
+ 
+@@ -500,7 +498,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (retval)
+ 		goto done;
+ 
+@@ -736,7 +734,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -757,7 +755,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
+ 		  addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		goto done;
+ 
+@@ -801,7 +799,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 
+ 	memcpy(mypkt->data, buf, nbytes);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 
+ 	if (!err)
+ 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
+@@ -821,7 +819,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
+ 
+-	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
++	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 	if (err)
+ 		return err;
+ 
 -- 
-Cheers,
-Stephen Rothwell
-
-diff --cc drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 8999a1199d60,44c873082a31..000000000000
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@@ -1312,7 -1357,8 +1357,8 @@@ void iwl_mvm_rs_tx_status(struct iwl_mv
-  		if (info->status.ampdu_ack_len == 0)
-  			info->status.ampdu_len = 1;
-  
-- 		rs_collect_tlc_data(mvm, lq_sta, curr_tbl, tx_resp_rate.index,
-+ 		rs_collect_tlc_data(mvm, mvmsta, tid, curr_tbl,
- -				    lq_rate.index,
-++				    tx_resp_rate.index,
-  				    info->status.ampdu_len,
-  				    info->status.ampdu_ack_len);
-  
-@@@ -1348,11 -1394,11 +1394,11 @@@
-  				continue;
-  
-  			rs_collect_tpc_data(mvm, lq_sta, tmp_tbl,
- -					    lq_rate.index, 1,
- +					    tx_resp_rate.index, 1,
-  					    i < retries ? 0 : legacy_success,
-  					    reduced_txp);
-- 			rs_collect_tlc_data(mvm, lq_sta, tmp_tbl,
-+ 			rs_collect_tlc_data(mvm, mvmsta, tid, tmp_tbl,
- -					    lq_rate.index, 1,
- +					    tx_resp_rate.index, 1,
-  					    i < retries ? 0 : legacy_success);
-  		}
-  
+2.11.0
