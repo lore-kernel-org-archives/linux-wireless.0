@@ -1,48 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:63780
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754484AbdHYCbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 22:31:11 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [PATCH 25/27] nl80211: look for HT/VHT capabilities in beacon's tail
-Date: Thu, 24 Aug 2017 19:30:22 -0700
-Message-Id: <20170825023024.10565-26-igor.mitsyanko.os@quantenna.com> (sfid-20170825_044309_360193_919D6EFC)
-In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:45056 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754728AbdHVHhs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 03:37:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: jikos@kernel.org, linux-wireless@vger.kernel.org
+Cc: luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
+        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
+        linux-pm@vger.kernel.org, david.weinehall@intel.com,
+        johannes.berg@intel.com, kvalo@codeaurora.org,
+        sara.sharon@intel.com, emmanuel.grumbach@intel.com
+Date: Tue, 22 Aug 2017 10:37:29 +0300
+Message-Id: <20170822073729.4856-1-luca@coelho.fi> (sfid-20170822_093811_470480_4BE1D8D1)
+In-Reply-To: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+Subject: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-There are no HT/VHT capabilities in cfg80211_ap_settings::beacon_ies,
-these should be looked for in beacon's tail instead.
+Work queues cannot be allocated when a mutex is held because the mutex
+may be in use and that would make it sleep.  Doing so generates the
+following splat with 4.13+:
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+[   19.513298] ======================================================
+[   19.513429] WARNING: possible circular locking dependency detected
+[   19.513557] 4.13.0-rc5+ #6 Not tainted
+[   19.513638] ------------------------------------------------------
+[   19.513767] cpuhp/0/12 is trying to acquire lock:
+[   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
+[   19.514047]
+[   19.514047] but task is already holding lock:
+[   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
+[   19.514338]
+[   19.514338] which lock already depends on the new lock.
+
+This lock dependency already existed with previous kernel versions,
+but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
+lock stacks for hotplug callbacks") was introduced.
+
+Reported-by: David Weinehall <david.weinehall@intel.com>
+Reported-by: Jiri Kosina <jikos@kernel.org>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/nl80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+In v2:
+   - updated the commit message to a new version, with a grammar fix
+     and the actual commit that exposed the problem;
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8ce8542..0df8023 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3791,8 +3791,8 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
- static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
- {
- 	const struct cfg80211_beacon_data *bcn = &params->beacon;
--	size_t ies_len = bcn->beacon_ies_len;
--	const u8 *ies = bcn->beacon_ies;
-+	size_t ies_len = bcn->tail_len;
-+	const u8 *ies = bcn->tail;
- 	const u8 *rates;
- 	const u8 *cap;
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +---------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  9 +++++++++
+ 3 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index fa315d84e98e..a1ea9ef97ed9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -787,6 +787,8 @@ int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans);
  
+ void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable);
+ 
++void iwl_pcie_rx_allocator_work(struct work_struct *data);
++
+ /* common functions that are used by gen2 transport */
+ void iwl_pcie_apm_config(struct iwl_trans *trans);
+ int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 351c4423125a..942736d3fa75 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -597,7 +597,7 @@ static void iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
+ 	rxq->free_count += RX_CLAIM_REQ_ALLOC;
+ }
+ 
+-static void iwl_pcie_rx_allocator_work(struct work_struct *data)
++void iwl_pcie_rx_allocator_work(struct work_struct *data)
+ {
+ 	struct iwl_rb_allocator *rba_p =
+ 		container_of(data, struct iwl_rb_allocator, rx_alloc);
+@@ -900,10 +900,6 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 			return err;
+ 	}
+ 	def_rxq = trans_pcie->rxq;
+-	if (!rba->alloc_wq)
+-		rba->alloc_wq = alloc_workqueue("rb_allocator",
+-						WQ_HIGHPRI | WQ_UNBOUND, 1);
+-	INIT_WORK(&rba->rx_alloc, iwl_pcie_rx_allocator_work);
+ 
+ 	spin_lock(&rba->lock);
+ 	atomic_set(&rba->req_pending, 0);
+@@ -1017,10 +1013,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 	}
+ 
+ 	cancel_work_sync(&rba->rx_alloc);
+-	if (rba->alloc_wq) {
+-		destroy_workqueue(rba->alloc_wq);
+-		rba->alloc_wq = NULL;
+-	}
+ 
+ 	iwl_pcie_free_rbs_pool(trans);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f95eec52508e..3927bbf04f72 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1786,6 +1786,11 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 		iwl_pcie_tx_free(trans);
+ 	iwl_pcie_rx_free(trans);
+ 
++	if (trans_pcie->rba.alloc_wq) {
++		destroy_workqueue(trans_pcie->rba.alloc_wq);
++		trans_pcie->rba.alloc_wq = NULL;
++	}
++
+ 	if (trans_pcie->msix_enabled) {
+ 		for (i = 0; i < trans_pcie->alloc_vecs; i++) {
+ 			irq_set_affinity_hint(
+@@ -3169,6 +3174,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		trans_pcie->inta_mask = CSR_INI_SET_MASK;
+ 	 }
+ 
++	trans_pcie->rba.alloc_wq = alloc_workqueue("rb_allocator",
++						   WQ_HIGHPRI | WQ_UNBOUND, 1);
++	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
++
+ #ifdef CONFIG_IWLWIFI_PCIE_RTPM
+ 	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_D0I3;
+ #else
 -- 
-2.9.5
+2.14.1
