@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44476 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751643AbdHRPtg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:49:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:04 +0300
-Message-Id: <20170818154922.2904-7-luca@coelho.fi> (sfid-20170818_174949_882677_A46500DF)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 06/24] iwlwifi: mvm: add command name for FRAME_RELEASE
+Received: from [217.148.43.144] ([217.148.43.144]:34934 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932464AbdHVL0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:26:07 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 01/30] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
+Date: Tue, 22 Aug 2017 12:25:21 +0100
+Message-Id: <20170822112550.60311-2-ian@mnementh.co.uk> (sfid-20170822_132615_490075_8E0BC1FC)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	All the other IO functions are the other way round in this
+driver. Make this one match.
 
-This name was missing in the list.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 76d256a9ad71..231878969332 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -384,6 +384,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(SCAN_ITERATION_COMPLETE_UMAC),
- 	HCMD_NAME(REPLY_RX_PHY_CMD),
- 	HCMD_NAME(REPLY_RX_MPDU_CMD),
-+	HCMD_NAME(FRAME_RELEASE),
- 	HCMD_NAME(BA_NOTIF),
- 	HCMD_NAME(MCC_UPDATE_CMD),
- 	HCMD_NAME(MCC_CHUB_UPDATE_CMD),
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 984c1d0560b1..f585dfd89453 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -230,8 +230,8 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 	sdiodev->state = state;
+ }
+ 
+-static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
+-					uint regaddr, u8 byte)
++static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte,
++					uint regaddr)
+ {
+ 	int err_ret;
+ 
+@@ -269,8 +269,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+ 			else
+-				ret = brcmf_sdiod_f0_writeb(func, addr,
+-							    *(u8 *)data);
++				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data,
++							    addr);
+ 		} else {
+ 			if (fn)
+ 				*(u8 *)data = sdio_readb(func, addr, &ret);
 -- 
-2.14.1
+2.11.0
