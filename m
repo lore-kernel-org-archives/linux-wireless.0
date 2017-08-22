@@ -1,107 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42636 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752665AbdHETpC (ORCPT
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:33197 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752063AbdHVTid (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:45:02 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:29 +0300
-Message-Id: <20170805194331.17426-18-luca@coelho.fi> (sfid-20170805_220252_150869_41457810)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 17/19] iwlwifi: remove references to unsupported HW
+        Tue, 22 Aug 2017 15:38:33 -0400
+Received: by mail-wr0-f177.google.com with SMTP id a47so16336755wra.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2017 12:38:32 -0700 (PDT)
+Subject: Re: [PATCH 17/30] brcmfamc: remove unnecessary call to
+ brcmf_sdiod_set_backplane_window()
+To: Julian Calaby <julian.calaby@gmail.com>,
+        Ian Molton <ian@mnementh.co.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-18-ian@mnementh.co.uk>
+ <CAGRGNgWUFx=cXjMZdTAkYoXTa=V-6Uty6+ccoXwO7WJA9udQRQ@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <71fdb0e7-f31d-fa98-c3c6-92ebe2f1a047@broadcom.com> (sfid-20170822_213837_268563_6CF29C14)
+Date: Tue, 22 Aug 2017 21:38:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgWUFx=cXjMZdTAkYoXTa=V-6Uty6+ccoXwO7WJA9udQRQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 22-08-17 14:50, Julian Calaby wrote:
+> Hi Ian,
+> 
+> On Tue, Aug 22, 2017 at 9:25 PM, Ian Molton <ian@mnementh.co.uk> wrote:
+>> All functions that might require the window address changing call
+>> brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
+>> the window is not required.
+> 
+> Wouldn't it be more safe to write these sorts of functions so that
+> they set the window themselves instead of relying on the caller?
 
-There are still some references to 3945 and 4965 HW, which were never
-supported in iwlwifi.  These references were inherited from a previous
-project and are irrelevant here.  Additionally, remove some irrelevant
-references to 5100 HW.  Remove all these.
+The function brcmf_sdiod_set_backplane_window() is a helper function by 
+which these sorts of functions set the window themselves. It would be 
+duplicating too much code as setting the window involves three register 
+accesses (or so) on the device.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/commands.h | 8 +-------
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h      | 2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   | 9 +++++----
- 3 files changed, 7 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-index ede47e3c5971..f89736d60a3d 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-@@ -311,11 +311,6 @@ enum {
- 
- /**
-  * rate_n_flags Tx antenna masks
-- * 4965 has 2 transmitters
-- * 5100 has 1 transmitter B
-- * 5150 has 1 transmitter A
-- * 5300 has 3 transmitters
-- * 5350 has 3 transmitters
-  * bit14:16
-  */
- #define RATE_MCS_ANT_POS	14
-@@ -1230,7 +1225,6 @@ struct iwl_rx_mpdu_res_start {
-  */
- 
- /*
-- * 4965 uCode updates these Tx attempt count values in host DRAM.
-  * Used for managing Tx retries when expecting block-acks.
-  * Driver should set these fields to 0.
-  */
-@@ -1540,7 +1534,7 @@ struct iwl_link_qual_general_params {
- 	/* Best single antenna to use for single stream (legacy, SISO). */
- 	u8 single_stream_ant_msk;	/* LINK_QUAL_ANT_* */
- 
--	/* Best antennas to use for MIMO (unused for 4965, assumes both). */
-+	/* Best antennas to use for MIMO */
- 	u8 dual_stream_ant_msk;		/* LINK_QUAL_ANT_* */
- 
- 	/*
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 560de9de5232..7d468ad7cb6a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -169,7 +169,7 @@
- 
- /*
-  * CSR Hardware Revision Workaround Register.  Indicates hardware rev;
-- * "step" determines CCK backoff for txpower calculation.  Used for 4965 only.
-+ * "step" determines CCK backoff for txpower calculation.
-  * See also CSR_HW_REV register.
-  * Bit fields:
-  *  3-2:  0 = A, 1 = B, 2 = C, 3 = D step
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 4a8fff9a5528..6757c4799375 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1842,8 +1842,8 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
- 	 * These bits say the device is running, and should keep running for
- 	 * at least a short while (at least as long as MAC_ACCESS_REQ stays 1),
- 	 * but they do not indicate that embedded SRAM is restored yet;
--	 * 3945 and 4965 have volatile SRAM, and must save/restore contents
--	 * to/from host DRAM when sleeping/waking for power-saving.
-+	 * HW with volatile SRAM must save/restore contents to/from
-+	 * host DRAM when sleeping/waking for power-saving.
- 	 * Each direction takes approximately 1/4 millisecond; with this
- 	 * overhead, it's a good idea to grab and hold MAC_ACCESS_REQUEST if a
- 	 * series of register accesses are expected (e.g. reading Event Log),
-@@ -1851,8 +1851,9 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
- 	 *
- 	 * CSR_UCODE_DRV_GP1 register bit MAC_SLEEP == 0 indicates that
- 	 * SRAM is okay/restored.  We don't check that here because this call
--	 * is just for hardware register access; but GP1 MAC_SLEEP check is a
--	 * good idea before accessing 3945/4965 SRAM (e.g. reading Event Log).
-+	 * is just for hardware register access; but GP1 MAC_SLEEP
-+	 * check is a good idea before accessing the SRAM of HW with
-+	 * volatile SRAM (e.g. reading Event Log).
- 	 *
- 	 * 5000 series and later (including 1000 series) have non-volatile SRAM,
- 	 * and do not save/restore SRAM when power cycling.
--- 
-2.13.2
+Regards,
+Arend
