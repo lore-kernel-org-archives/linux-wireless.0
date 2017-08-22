@@ -1,74 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:35119 "EHLO
-        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751453AbdHZCPV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Aug 2017 22:15:21 -0400
-Received: by mail-oi0-f48.google.com with SMTP id k77so11975379oib.2
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Aug 2017 19:15:20 -0700 (PDT)
-Subject: Re: rtlwifi handling of sequence numbers with aggregation
-To: Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <17ea196f-2f77-5110-8f33-4a25765ad34e@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a258b2fa-c960-88db-5934-af4c0f4b6435@lwfinger.net> (sfid-20170826_041525_604059_A9F23326)
-Date: Fri, 25 Aug 2017 21:15:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <17ea196f-2f77-5110-8f33-4a25765ad34e@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from [217.148.43.144] ([217.148.43.144]:60260 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932631AbdHVLpk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:45:40 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 15/30] brcmfmac: Tidy register definitions a little
+Date: Tue, 22 Aug 2017 12:25:35 +0100
+Message-Id: <20170822112550.60311-16-ian@mnementh.co.uk> (sfid-20170822_134602_248356_F8EE8240)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2017 12:51 PM, Jes Sorensen wrote:
-> Hi,
-> 
-> Looking at some bits in rtlwifi I came across a discrepancy between the
-> PCI and USB code.
-> 
-> Consider the following code:
-> 
-> In rtl_pci_tx():
-> 	if (ieee80211_is_data_qos(fc)) {
-> 		tid = rtl_get_tid(skb);
-> 		if (sta) {
-> 			sta_entry = (struct rtl_sta_info *)sta->drv_priv;
-> 			seq_number = (le16_to_cpu(hdr->seq_ctrl) &
-> 				      IEEE80211_SCTL_SEQ) >> 4;
-> 			seq_number += 1;
-> 
-> 			if (!ieee80211_has_morefrags(hdr->frame_control))
-> 				sta_entry->tids[tid].seq_number = seq_number;
-> 		}
-> 
-> In _rtl_usb_tx_preprocess():
-> 	if (ieee80211_is_data_qos(fc)) {
-> 		qc = ieee80211_get_qos_ctl(hdr);
-> 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
-> 		seq_number = (le16_to_cpu(hdr->seq_ctrl) &
-> 			     IEEE80211_SCTL_SEQ) >> 4;
-> 		seq_number += 1;
-> 		seq_number <<= 4;
-> 	}
-> [snip]
-> 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
-> 		if (qc)
-> 			mac->tids[tid].seq_number = seq_number;
-> 	}
-> 
-> The seq_number is picked up from ieee80211_ops->ampdu_action()
-> which calls into rtl_tx_agg_start():
-> 	tid_data = &sta_entry->tids[tid];
-> 
-> 	RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG,
-> 		 "on ra = %pM tid = %d seq:%d\n", sta->addr, tid,
-> 		 tid_data->seq_number);
-> 
-> 	*ssn = tid_data->seq_number;
-> 
-> My question here is why does the USB code shift seq_number << 4 while
-> the PCI code doesn't? I assume one of these is wrong, but which one?
+Trivial tidy of register definitions.
 
-Based on my prejudices, I would suspect the USB driver before that of the PCI 
-version. I have BCc'd my contact at Realtek to see what he has to say on the issue.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  4 ++--
+ .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 19 ++++++++++---------
+ 2 files changed, 12 insertions(+), 11 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 50f207bb3dc6..721c7bd9478f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -152,9 +152,9 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
+ 
+ 		/* redirect, configure and enable io for interrupt signal */
+-		data = SDIO_SEPINT_MASK | SDIO_SEPINT_OE;
++		data = SDIO_CCCR_BRCM_SEPINT_MASK | SDIO_CCCR_BRCM_SEPINT_OE;
+ 		if (pdata->oob_irq_flags & IRQF_TRIGGER_HIGH)
+-			data |= SDIO_SEPINT_ACT_HI;
++			data |= SDIO_CCCR_BRCM_SEPINT_ACT_HI;
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_BRCM_SEPINT, data, &ret);
+ 		sdio_release_host(sdiodev->func[1]);
+ 	} else {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 453213b071de..01def16cd236 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -52,16 +52,17 @@
+ /* function 0 vendor specific CCCR registers */
+ 
+ #define SDIO_CCCR_BRCM_CARDCAP			0xf0
+-#define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
+-#define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
+-#define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	0x08
+-#define SDIO_CCCR_BRCM_CARDCTRL		0xf1
+-#define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	0x02
+-#define SDIO_CCCR_BRCM_SEPINT			0xf2
++#define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	BIT(1)
++#define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	BIT(2)
++#define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	BIT(3)
++
++#define SDIO_CCCR_BRCM_CARDCTRL			0xf1
++#define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	BIT(1)
+ 
+-#define  SDIO_SEPINT_MASK		0x01
+-#define  SDIO_SEPINT_OE			0x02
+-#define  SDIO_SEPINT_ACT_HI		0x04
++#define SDIO_CCCR_BRCM_SEPINT			0xf2
++#define SDIO_CCCR_BRCM_SEPINT_MASK		BIT(0)
++#define SDIO_CCCR_BRCM_SEPINT_OE		BIT(1)
++#define SDIO_CCCR_BRCM_SEPINT_ACT_HI		BIT(2)
+ 
+ /* function 1 miscellaneous registers */
+ 
+-- 
+2.11.0
