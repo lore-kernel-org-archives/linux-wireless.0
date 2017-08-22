@@ -1,67 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:57004 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750727AbdHHEU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 00:20:58 -0400
-Date: Mon, 7 Aug 2017 21:20:55 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "sebastian.reichel@collabora.co.uk"
-        <sebastian.reichel@collabora.co.uk>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [v5] wlcore: add missing nvs file name info for wilink8
-Message-ID: <20170808042054.GI5190@atomide.com> (sfid-20170808_062112_268106_353D1C1A)
-References: <1502090869-8833-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B3641E25B@DFRE01.ent.ti.com>
- <20170807073808.GD5487@atomide.com>
- <8665E2433BC68541A24DFFCA87B70F5B3641E339@DFRE01.ent.ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3641E339@DFRE01.ent.ti.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:45042 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754616AbdHVHcj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 03:32:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: jikos@kernel.org, linux-wireless@vger.kernel.org
+Cc: luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
+        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
+        linux-pm@vger.kernel.org, david.weinehall@intel.com,
+        johannes.berg@intel.com, kvalo@codeaurora.org,
+        sara.sharon@intel.com, emmanuel.grumbach@intel.com
+Date: Tue, 22 Aug 2017 10:32:26 +0300
+Message-Id: <20170822073226.4660-1-luca@coelho.fi> (sfid-20170822_093304_552591_E34D8533)
+In-Reply-To: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+Subject: [PATCH] iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [170807 00:47]:
-> Hi Tony,
-> > 
-> > * Reizer, Eyal <eyalr@ti.com> [170807 00:32]:
-> > > The following commits:
-> > > c815fde wlcore: spi: Populate config firmware data
-> > > d776fc8 wlcore: sdio: Populate config firmware data
-> > >
-> > > Populated the nvs entry for wilink6 and wilink7 only while it is
-> > > still needed for wilink8 as well.
-> > > This broke user space backward compatibility when upgrading from older
-> > > kernels, as the alternate mac address would not be read from the nvs that
-> > is
-> > > present in the file system (lib/firmware/ti-connectivity/wl1271-nvs.bin)
-> > > causing mac address change of the wlan interface.
-> > >
-> > > This patch fix this and update the structure field with the same default
-> > > nvs file name that has been used before.
-> > >
-> > > In addition, some distros hold a default wl1271-nvs.bin in the file
-> > > system with a bogus mac address (deadbeef...) that for a wl18xx device
-> > > also overrides the mac address that is stored inside the device.
-> > > Warn users about this bogus mac address and use a random mac instead
-> > 
-> > Hmm looks pretty good to me except for one more thing I just noticed.
-> > 
-> > Why don't you just use the hardware mac address instead of a random
-> > mac address on wl18xx device when you see a bogus nvs file?
-> > 
-> 
-> I agree that this would have been better but the problem is that hardware 
-> mac address is available for wilink8 onlyWilink6/7 don't have one stored.
-> The wlcore code responsible for handling mac address is common code 
-> and there is method for detecting between them in this module.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Care to clarify a bit.. Are you saying wilink8 will use the hardware
-mac address in case of bogus nvs file?
+Work queues cannot be allocated in when a mutex is held because the
+mutex may be in use and that would make it sleep.  Doing so generates
+the following splat with 4.13+:
 
-Regards,
+[   19.513298] ======================================================
+[   19.513429] WARNING: possible circular locking dependency detected
+[   19.513557] 4.13.0-rc5+ #6 Not tainted
+[   19.513638] ------------------------------------------------------
+[   19.513767] cpuhp/0/12 is trying to acquire lock:
+[   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
+[   19.514047]
+[   19.514047] but task is already holding lock:
+[   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
+[   19.514338]
+[   19.514338] which lock already depends on the new lock.
 
-Tony
+This lock dependency already existed with previous kernel versions,
+but it was not detected until commit ... was introduced.
+
+Reported-by: David Weinehall <david.weinehall@intel.com>
+Reported-by: Jiri Kosina <jikos@kernel.org>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +---------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  9 +++++++++
+ 3 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index fa315d84e98e..a1ea9ef97ed9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -787,6 +787,8 @@ int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans);
+ 
+ void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable);
+ 
++void iwl_pcie_rx_allocator_work(struct work_struct *data);
++
+ /* common functions that are used by gen2 transport */
+ void iwl_pcie_apm_config(struct iwl_trans *trans);
+ int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 351c4423125a..942736d3fa75 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -597,7 +597,7 @@ static void iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
+ 	rxq->free_count += RX_CLAIM_REQ_ALLOC;
+ }
+ 
+-static void iwl_pcie_rx_allocator_work(struct work_struct *data)
++void iwl_pcie_rx_allocator_work(struct work_struct *data)
+ {
+ 	struct iwl_rb_allocator *rba_p =
+ 		container_of(data, struct iwl_rb_allocator, rx_alloc);
+@@ -900,10 +900,6 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 			return err;
+ 	}
+ 	def_rxq = trans_pcie->rxq;
+-	if (!rba->alloc_wq)
+-		rba->alloc_wq = alloc_workqueue("rb_allocator",
+-						WQ_HIGHPRI | WQ_UNBOUND, 1);
+-	INIT_WORK(&rba->rx_alloc, iwl_pcie_rx_allocator_work);
+ 
+ 	spin_lock(&rba->lock);
+ 	atomic_set(&rba->req_pending, 0);
+@@ -1017,10 +1013,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 	}
+ 
+ 	cancel_work_sync(&rba->rx_alloc);
+-	if (rba->alloc_wq) {
+-		destroy_workqueue(rba->alloc_wq);
+-		rba->alloc_wq = NULL;
+-	}
+ 
+ 	iwl_pcie_free_rbs_pool(trans);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f95eec52508e..3927bbf04f72 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1786,6 +1786,11 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 		iwl_pcie_tx_free(trans);
+ 	iwl_pcie_rx_free(trans);
+ 
++	if (trans_pcie->rba.alloc_wq) {
++		destroy_workqueue(trans_pcie->rba.alloc_wq);
++		trans_pcie->rba.alloc_wq = NULL;
++	}
++
+ 	if (trans_pcie->msix_enabled) {
+ 		for (i = 0; i < trans_pcie->alloc_vecs; i++) {
+ 			irq_set_affinity_hint(
+@@ -3169,6 +3174,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		trans_pcie->inta_mask = CSR_INI_SET_MASK;
+ 	 }
+ 
++	trans_pcie->rba.alloc_wq = alloc_workqueue("rb_allocator",
++						   WQ_HIGHPRI | WQ_UNBOUND, 1);
++	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
++
+ #ifdef CONFIG_IWLWIFI_PCIE_RTPM
+ 	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_D0I3;
+ #else
+-- 
+2.14.1
