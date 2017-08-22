@@ -1,110 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward3p.cmail.yandex.net ([77.88.31.18]:45582 "EHLO
-        forward3p.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752299AbdHBUy0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 16:54:26 -0400
-From: "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
-To: Hans de Goede <hdegoede@redhat.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>
-In-Reply-To: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
-References: <d33144fc-c03e-0d71-41b2-e0cd235f5ffa@redhat.com>
-Subject: Re: brcm43430 sdio wifi regression with 4.13-rc1
-MIME-Version: 1.0
-Message-Id: <1570131501706612@web24o.yandex.ru> (sfid-20170802_225430_609762_776CD8FB)
-Date: Thu, 03 Aug 2017 04:43:32 +0800
-Content-Type: text/plain
+Received: from [217.148.43.144] ([217.148.43.144]:57904 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932499AbdHVLnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:43:08 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 21/30] brcmfmac: Remove {r,w}_sdreg32
+Date: Tue, 22 Aug 2017 12:25:41 +0100
+Message-Id: <20170822112550.60311-22-ian@mnementh.co.uk> (sfid-20170822_134311_023492_C222338C)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Remove yet another IO function from the code and replace with one
+that already exists.
 
-Sorry for late answer.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 91 +++++++++++-----------
+ 1 file changed, 45 insertions(+), 46 deletions(-)
 
-> russianneuromancer has reported seeing a similar problem with 4.13.
-
-> russianneuromancer, can you check if the device you are seeing this with
-also has a brcm43430 sdio wifi and if so if switching to:
-
-> http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
-
-> Fixes this ?
-
-Judging by this error message
-
-> [    7.744262] brcmfmac mmc0:0001:1: Direct firmware load for brcm/brcmfmac43241b4-sdio.txt failed with error -2
-
-Lenovo Miix2 8 have brcm43241b4 sdio wifi. 
-
-With brcmfmac43241b4-sdio.txt from NVRAM, as suggested here https://wireless.wiki.kernel.org/en/users/drivers/brcm80211 WiFi connection works for me with upstream Linux 4.12.4, but doesn't work with Linux 4.13rc1 and Linux 4.13rc3.
-
-Few connection attempts with Linux 4.13rc3 looks like this:
-
-> [    7.779370] usbcore: registered new interface driver brcmfmac
-> [    7.948487] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
-> [   32.282374] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-> [   32.282393] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlan0 type 10 failed: err=-16
-> [   43.560596] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   44.494422] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   45.492956] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   46.491317] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   54.922652] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   55.849565] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   56.849437] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   57.853150] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   66.542999] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   67.483115] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-> [   68.483434] brcmfmac: brcmf_proto_bcdc_hdrpull: wlan0: non-BCDC packet received, flags 0x0
-
-23.07.2017, 02:44, "Hans de Goede" <hdegoede@redhat.com>:
-> Hi,
->
-> When upgrading my devel environment to 4.13-rc1+ I noticed that
-> the brcm43430 sdio wifi on a Chuwi Hi8 plus stopped working:
->
-> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_probe: Loading firmware brcm/brcmfmac43430-sdio.bin for chip 0000a9a6 rev 00000001
-> jul 22 14:13:23 localhost.localdomain kernel: usbcore: registered new interface driver brcmfmac
-> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Aug 29 2016 20:48:16 version 7.45.41.26 (r640327) FWID 01-4527cfab
-> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
-> jul 22 14:13:26 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-> jul 22 14:13:28 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-> jul 22 14:13:31 localhost.localdomain kernel: brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-> <repeats>
->
-> The real culprit here seems to be:
->
-> jul 22 14:13:23 localhost.localdomain kernel: brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
->
-> I've tried reverting allmost all changes under drivers/net/wireless/broadcom/brcm80211
-> as well as those under drivers/mmc, but that did not help.
->
-> Googling for the "Unknown mailbox data content" error found some Raspberry Pi 3
-> related comments where users report success with a different firmware version
-> from: https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/bcm4343/
->
-> So I tried that as well as a version extracted from the Android install
-> on the tablet and both work fine, only the "version 7.45.41.26" which
-> happens to be the one in linux-firmware causes this problem, I've put
-> all (Linux build, not NDIS) versions I could find here:
->
-> http://jwrdegoede.danny.cz/brcm-firmware/
->
-> I've the feeling that the 7.45.41.26 version is a bit buggy / suspect to
-> certain timing problems and 4.13 just happens to trigger those timing
-> conditions...
->
-> russianneuromancer has reported seeing a similar problem with 4.13.
->
-> russianneuromancer, can you check if the device you are seeing this with
-> also has a brcm43430 sdio wifi and if so if switching to:
->
-> http://jwrdegoede.danny.cz/brcm-firmware/brcmfmac43430-sdio.bin.7.45.77.0.ucode1043.2054
->
-> Fixes this ?
->
-> Regards,
->
-> Hans
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 289ff61b7bf8..c1f3366871e5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -657,30 +657,6 @@ static bool data_ok(struct brcmf_sdio *bus)
+ 	       ((u8)(bus->tx_max - bus->tx_seq) & 0x80) == 0;
+ }
+ 
+-/*
+- * Reads a register in the SDIO hardware block. This block occupies a series of
+- * adresses on the 32 bit backplane bus.
+- */
+-static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+-{
+-	struct brcmf_core *core = bus->sdio_core;
+-	int ret;
+-
+-	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
+-
+-	return ret;
+-}
+-
+-static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+-{
+-	struct brcmf_core *core = bus->sdio_core;
+-	int ret;
+-
+-	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
+-
+-	return ret;
+-}
+-
+ static int
+ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+ {
+@@ -1075,6 +1051,8 @@ static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
+ 
+ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ {
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_core *core = bus->sdio_core;
+ 	u32 intstatus = 0;
+ 	u32 hmb_data;
+ 	u8 fcbits;
+@@ -1083,10 +1061,13 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* Read mailbox data and ack that we did so */
+-	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
++	hmb_data = brcmf_sdiod_readl(sdiod, core->base +
++					__sd_reg(tohostmailboxdata), &ret);
++
++	if (!ret)
++		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailbox),
++				   SMB_INT_ACK, &ret);
+ 
+-	if (ret == 0)
+-		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
+ 	bus->sdcnt.f1regdata += 2;
+ 
+ 	/* Dongle recomposed rx frames, accept them again */
+@@ -1155,6 +1136,8 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 
+ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ {
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_core *core = bus->sdio_core;
+ 	uint retries = 0;
+ 	u16 lastrbc;
+ 	u8 hi, lo;
+@@ -1194,7 +1177,8 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 
+ 	if (rtx) {
+ 		bus->sdcnt.rxrtx++;
+-		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
++		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailbox),
++				   SMB_NAK, &err);
+ 
+ 		bus->sdcnt.f1regdata++;
+ 		if (err == 0)
+@@ -2279,6 +2263,7 @@ static int brcmf_sdio_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
+ 
+ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ {
++	struct brcmf_core *core = bus->sdio_core;
+ 	struct sk_buff *pkt;
+ 	struct sk_buff_head pktq;
+ 	u32 intstatus = 0;
+@@ -2319,7 +2304,9 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		if (!bus->intr) {
+ 			/* Check device status, signal pending interrupt */
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+-			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
++			intstatus = brcmf_sdiod_readl(bus->sdiodev, core->base +
++						      __sd_reg(intstatus),
++						      &ret);
+ 			sdio_release_host(bus->sdiodev->func[1]);
+ 			bus->sdcnt.f2txdata++;
+ 			if (ret != 0)
+@@ -2403,12 +2390,13 @@ static int brcmf_sdio_tx_ctrlframe(struct brcmf_sdio *bus, u8 *frame, u16 len)
+ 
+ static void brcmf_sdio_bus_stop(struct device *dev)
+ {
+-	u32 local_hostintmask;
+-	u8 saveclk;
+-	int err;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_core *core = bus->sdio_core;
++	u32 local_hostintmask;
++	u8 saveclk;
++	int err;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -2425,7 +2413,9 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		brcmf_sdio_bus_sleep(bus, false, false);
+ 
+ 		/* Disable and clear interrupts at the chip level also */
+-		w_sdreg32(bus, 0, __sd_reg(hostintmask));
++		brcmf_sdiod_writel(sdiodev, core->base + __sd_reg(hostintmask),
++				   0, NULL);
++
+ 		local_hostintmask = bus->hostintmask;
+ 		bus->hostintmask = 0;
+ 
+@@ -2444,7 +2434,8 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 		/* Clear any pending interrupts now that F2 is disabled */
+-		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
++		brcmf_sdiod_writel(sdiodev, core->base + __sd_reg(intstatus),
++				   local_hostintmask, NULL);
+ 
+ 		sdio_release_host(sdiodev->func[1]);
+ 	}
+@@ -2511,6 +2502,8 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ {
++	struct brcmf_core *core = bus->sdio_core;
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
+ 	u32 newstatus = 0;
+ 	unsigned long intstatus;
+ 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
+@@ -2566,9 +2559,13 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
++		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(intstatus),
++				   I_HMB_FC_CHANGE, &err);
++
++		newstatus = brcmf_sdiod_readl(sdiod,
++					      core->base + __sd_reg(intstatus),
++					      &err);
+ 
+-		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
+ 		bus->sdcnt.f1regdata += 2;
+ 		atomic_set(&bus->fcstate,
+ 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
+@@ -3987,22 +3984,21 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 					 const struct firmware *code,
+ 					 void *nvram, u32 nvram_len)
+ {
+-	struct brcmf_bus *bus_if;
+-	struct brcmf_sdio_dev *sdiodev;
+-	struct brcmf_sdio *bus;
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_core *core = bus->sdio_core;
+ 	u8 saveclk;
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
+-	bus_if = dev_get_drvdata(dev);
+-	sdiodev = bus_if->bus_priv.sdio;
++
+ 	if (err)
+ 		goto fail;
+ 
+ 	if (!bus_if->drvr)
+ 		return;
+ 
+-	bus = sdiodev->bus;
+-
+ 	/* try to download image and nvram to the dongle */
+ 	bus->alp_only = true;
+ 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
+@@ -4033,8 +4029,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	}
+ 
+ 	/* Enable function 2 (frame transfers) */
+-	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
+-		  __sd_reg(tosbmailboxdata));
++	brcmf_sdiod_writel(sdiod, core->base + __sd_reg(tosbmailboxdata),
++			   SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
++
+ 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 
+@@ -4044,7 +4041,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (!err) {
+ 		/* Set up the interrupt mask and enable interrupts */
+ 		bus->hostintmask = HOSTINTMASK;
+-		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
++		brcmf_sdiod_writel(sdiod, core->base + __sd_reg(hostintmask),
++				   bus->hostintmask, NULL);
++
+ 
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
+-- 
+2.11.0
