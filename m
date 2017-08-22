@@ -1,188 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43374 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752802AbdHISVB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 14:21:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  9 Aug 2017 21:20:56 +0300
-Message-Id: <20170809182056.14473-1-luca@coelho.fi> (sfid-20170809_202107_493201_C168A8E6)
-In-Reply-To: <20170809064619.14147-1-luca@coelho.fi>
-References: <20170809064619.14147-1-luca@coelho.fi>
-Subject: [PATCH v3 12/19] iwlwifi: mvm: support new beacon template command
+Received: from [217.148.43.144] ([217.148.43.144]:60056 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932427AbdHVLpZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:45:25 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 28/30] brcmfmac: Clean up interrupt macros
+Date: Tue, 22 Aug 2017 12:25:48 +0100
+Message-Id: <20170822112550.60311-29-ian@mnementh.co.uk> (sfid-20170822_134529_805526_68ED0AFA)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Make it more obvious that this code acually enables interrupts, and
+provide nice definitions for the bits in the register.
 
-Support a new version of the beacon template command. This replaces v8
-of the command, which was missing the rate code.  Also, export rate
-decision logic to a separate function.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 8 +++++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-In v3:
-   * fix a bug in the CCK flag check
-
-drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    | 17 +++++---
- drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 47 ++++++++++++++++-------
- 3 files changed, 47 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 2909d1ed89cf..4928310ddd31 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -786,13 +786,20 @@ struct iwl_mac_beacon_cmd_v7 {
- 	struct ieee80211_hdr frame[0];
- } __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_7 */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 0cd081d732f9..75e9a70857e3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -148,7 +148,8 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
  
-+enum iwl_mac_beacon_flags {
-+	IWL_MAC_BEACON_CCK	= BIT(8),
-+	IWL_MAC_BEACON_ANT_A	= BIT(9),
-+	IWL_MAC_BEACON_ANT_B	= BIT(10),
-+	IWL_MAC_BEACON_ANT_C	= BIT(11),
-+};
+ 		/* must configure SDIO_CCCR_IENx to enable irq */
+ 		data = brcmf_sdiod_func0_rb(sdiodev, SDIO_CCCR_IENx, &ret);
+-		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
++		data |= SDIO_CCCR_IEN_FUNC1 | SDIO_CCCR_IEN_FUNC2 |
++			SDIO_CCCR_IEN_FUNC0;
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
+ 
+ 		/* redirect, configure and enable io for interrupt signal */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 54a03036fccb..04661ecbf395 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -24,9 +24,6 @@
+ /* Maximum number of I/O funcs */
+ #define NUM_SDIO_FUNCS	3
+ 
+-#define SDIO_FUNC_1		1
+-#define SDIO_FUNC_2		2
+-
+ #define SDIOD_FBR_SIZE		0x100
+ 
+ /* io_en */
+@@ -52,6 +49,11 @@
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	BIT(2)
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	BIT(3)
+ 
++/* Interrupt enable bits for each function */
++#define SDIO_CCCR_IEN_FUNC0			BIT(0)
++#define SDIO_CCCR_IEN_FUNC1			BIT(1)
++#define SDIO_CCCR_IEN_FUNC2			BIT(2)
 +
- /**
-  * struct iwl_mac_beacon_cmd - beacon template command with offloaded CSA
-- * @byte_cnt: byte count of the beacon frame
-- * @flags: for future use
-+ * @byte_cnt: byte count of the beacon frame.
-+ * @flags: least significant byte for rate code. The most significant byte
-+ *	is &enum iwl_mac_beacon_flags.
-  * @reserved: reserved
-- * @template_id: currently equal to the mac context id of the coresponding
-- *  mac.
-+ * @template_id: currently equal to the mac context id of the coresponding mac.
-  * @tim_idx: the offset of the tim IE in the beacon
-  * @tim_size: the length of the tim IE
-  * @ecsa_offset: offset to the ECSA IE if present
-@@ -809,7 +816,7 @@ struct iwl_mac_beacon_cmd {
- 	__le32 ecsa_offset;
- 	__le32 csa_offset;
- 	struct ieee80211_hdr frame[0];
--} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_8 */
-+} __packed; /* BEACON_TEMPLATE_CMD_API_S_VER_9 */
+ #define SDIO_CCCR_BRCM_CARDCTRL			0xf1
+ #define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	BIT(1)
  
- struct iwl_beacon_notif {
- 	struct iwl_mvm_tx_resp beacon_notify_hdr;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 0fa8c473f1e2..d933aa324ffe 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -260,6 +260,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_STA_TYPE		= (__force iwl_ucode_tlv_api_t)30,
- 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
- 	/* API Set 1 */
-+	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
- 
- 	NUM_IWL_UCODE_TLV_API
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 8fe955d58c6e..a2bf530eeae4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -923,6 +923,19 @@ static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
- 	return ie - beacon;
- }
- 
-+static u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct ieee80211_tx_info *info,
-+					   struct ieee80211_vif *vif)
-+{
-+	u8 rate;
-+
-+	if (info->band == NL80211_BAND_5GHZ || vif->p2p)
-+		rate = IWL_FIRST_OFDM_RATE;
-+	else
-+		rate = IWL_FIRST_CCK_RATE;
-+
-+	return rate;
-+}
-+
- static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif,
- 				    struct sk_buff *beacon,
-@@ -930,7 +943,8 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct ieee80211_tx_info *info;
--	u32 rate, tx_flags;
-+	u8 rate;
-+	u32 tx_flags;
- 
- 	info = IEEE80211_SKB_CB(beacon);
- 
-@@ -955,14 +969,12 @@ static void iwl_mvm_mac_ctxt_set_tx(struct iwl_mvm *mvm,
- 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
- 			    RATE_MCS_ANT_POS);
- 
--	if (info->band == NL80211_BAND_5GHZ || vif->p2p) {
--		rate = IWL_FIRST_OFDM_RATE;
--	} else {
--		rate = IWL_FIRST_CCK_RATE;
--		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
--	}
-+	rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
- 
- 	tx->rate_n_flags |= cpu_to_le32(iwl_mvm_mac80211_idx_to_hwrate(rate));
-+	if (rate == IWL_FIRST_CCK_RATE)
-+		tx->rate_n_flags |= cpu_to_le32(RATE_MCS_CCK_MSK);
-+
- }
- 
- static int iwl_mvm_mac_ctxt_send_beacon_cmd(struct iwl_mvm *mvm,
-@@ -1033,19 +1045,27 @@ static int iwl_mvm_mac_ctxt_send_beacon_v7(struct iwl_mvm *mvm,
- 						sizeof(beacon_cmd));
- }
- 
--static int iwl_mvm_mac_ctxt_send_beacon_v8(struct iwl_mvm *mvm,
-+static int iwl_mvm_mac_ctxt_send_beacon_v9(struct iwl_mvm *mvm,
- 					   struct ieee80211_vif *vif,
- 					   struct sk_buff *beacon)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(beacon);
- 	struct iwl_mac_beacon_cmd beacon_cmd = {};
-+	u8 rate = iwl_mvm_mac_ctxt_get_lowest_rate(info, vif);
-+	u16 flags;
-+
-+	flags = iwl_mvm_mac80211_idx_to_hwrate(rate);
- 
-+	if (rate == IWL_FIRST_CCK_RATE)
-+		flags |= IWL_MAC_BEACON_CCK;
-+
-+	beacon_cmd.flags = cpu_to_le16(flags);
- 	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
- 	beacon_cmd.template_id = cpu_to_le32((u32)mvmvif->id);
- 
- 	if (vif->type == NL80211_IFTYPE_AP)
--		iwl_mvm_mac_ctxt_set_tim(mvm,
--					 &beacon_cmd.tim_idx,
-+		iwl_mvm_mac_ctxt_set_tim(mvm, &beacon_cmd.tim_idx,
- 					 &beacon_cmd.tim_size,
- 					 beacon->data, beacon->len);
- 
-@@ -1073,10 +1093,11 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 			 IWL_UCODE_TLV_CAPA_CSA_AND_TBTT_OFFLOAD))
- 		return iwl_mvm_mac_ctxt_send_beacon_v6(mvm, vif, beacon);
- 
--	if (!iwl_mvm_has_new_tx_api(mvm))
--		return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
-+	if (fw_has_api(&mvm->fw->ucode_capa,
-+		       IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE))
-+		return iwl_mvm_mac_ctxt_send_beacon_v9(mvm, vif, beacon);
- 
--	return iwl_mvm_mac_ctxt_send_beacon_v8(mvm, vif, beacon);
-+	return iwl_mvm_mac_ctxt_send_beacon_v7(mvm, vif, beacon);
- }
- 
- /* The beacon template for the AP/GO/IBSS has changed and needs update */
 -- 
-2.13.2
+2.11.0
