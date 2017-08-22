@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:37193 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752442AbdHBR5c (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 13:57:32 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, harish.patil@cavium.com,
-        manish.chopra@cavium.com, Dept-GELinuxNICDev@cavium.com
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 1/2] wlcore: add const to bin_attribute structure
-Date: Wed,  2 Aug 2017 23:27:13 +0530
-Message-Id: <1501696634-15765-2-git-send-email-bhumirks@gmail.com> (sfid-20170802_195823_038608_38E600B1)
-In-Reply-To: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
-References: <1501696634-15765-1-git-send-email-bhumirks@gmail.com>
+Received: from [217.148.43.144] ([217.148.43.144]:35020 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932350AbdHVL0M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:26:12 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 04/30] brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
+Date: Tue, 22 Aug 2017 12:25:24 +0100
+Message-Id: <20170822112550.60311-5-ian@mnementh.co.uk> (sfid-20170822_132616_426377_82DB9053)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add const to bin_attribute structure as it is only passed to the
-functions sysfs_{remove/create}_bin_file. The corresponding arguments
-are of type const, so declare the structure to be const.
+	This function sets the address of the IO window used for
+SDIO accesses onto the backplane of the chip.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+It currently uses 3 separate masks despite the full mask being
+defined in the code already. Remove the separate masks and clean up.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ti/wlcore/sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c   | 17 +++++------------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h |  3 ---
+ 2 files changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/sysfs.c b/drivers/net/wireless/ti/wlcore/sysfs.c
-index a9218e5..b72e210 100644
---- a/drivers/net/wireless/ti/wlcore/sysfs.c
-+++ b/drivers/net/wireless/ti/wlcore/sysfs.c
-@@ -138,7 +138,7 @@ static ssize_t wl1271_sysfs_read_fwlog(struct file *filp, struct kobject *kobj,
- 	return len;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 1ee0f91b6c50..7b2184d1e365 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -410,23 +410,16 @@ static int
+ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ {
+ 	int err = 0, i;
+-	u8 addr[3];
++	u32 addr;
  
--static struct bin_attribute fwlog_attr = {
-+static const struct bin_attribute fwlog_attr = {
- 	.attr = {.name = "fwlog", .mode = S_IRUSR},
- 	.read = wl1271_sysfs_read_fwlog,
- };
+ 	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
+ 		return -ENOMEDIUM;
+ 
+-	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
+-	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
+-	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
++	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
+ 
+-	for (i = 0; i < 3; i++) {
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
+-				  &err);
+-		if (err) {
+-			brcmf_err("failed at addr: 0x%0x\n",
+-				  SBSDIO_FUNC1_SBADDRLOW + i);
+-		}
+-	}
++	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
++				  addr & 0xff, &err);
+ 
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index f3da32fc6360..e3b78db331b5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -133,9 +133,6 @@
+ 
+ /* valid bits in SBSDIO_FUNC1_SBADDRxxx regs */
+ 
+-#define SBSDIO_SBADDRLOW_MASK		0x80	/* Valid bits in SBADDRLOW */
+-#define SBSDIO_SBADDRMID_MASK		0xff	/* Valid bits in SBADDRMID */
+-#define SBSDIO_SBADDRHIGH_MASK		0xffU	/* Valid bits in SBADDRHIGH */
+ /* Address bits from SBADDR regs */
+ #define SBSDIO_SBWINDOW_MASK		0xffff8000
+ 
 -- 
-1.9.1
+2.11.0
