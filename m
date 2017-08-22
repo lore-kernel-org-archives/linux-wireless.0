@@ -1,37 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52952 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750733AbdHaHzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 03:55:17 -0400
-Date: Thu, 31 Aug 2017 09:55:15 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RT2870 failure in kernel 4.12.8
-Message-ID: <20170831075514.GA12340@redhat.com> (sfid-20170831_095520_786063_BEC3116A)
-References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:60255 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752019AbdHVVne (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 17:43:34 -0400
+From: <ryanhsu@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: <ryanhsu@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix napi_poll budget overflow
+Date: Tue, 22 Aug 2017 14:44:02 -0700
+Message-ID: <1503438242-5657-1-git-send-email-ryanhsu@qti.qualcomm.com> (sfid-20170822_234337_987456_CE502E1D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 12:03:06PM -0500, Larry Finger wrote:
-> Stanislaw and Helmut,
-> 
-> In a bug report at https://bugzilla.suse.com/show_bug.cgi?id=1055826, the OP
-> reports that his RT3572 fails to work after an upgrade from the openSUSE
-> Tumbleweed kernel 4.12.7 to 4.12.8. I checked the kernel configuration and
-> did not see any problems.
-> 
-> Are you aware of anyone reporting problems with rt2800usb in 4.12.8 kernels?
+From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 
-I think it is the issue addressed by this 4.12 patch:
-https://marc.info/?l=linux-wireless&m=150366111408179&w=2 
+In napi_poll, the budget number is used to control the amount of packets
+we should handle per poll to balance the resource in the system.
 
-Patch for 4.13+ kernels is here:
-https://marc.info/?l=linux-wireless&m=150367345912061&w=2
+In the list of the amsdu packets reception, we check if there is budget
+count left and handle the complete list of the packets, that it will have
+chances the very last list will over the budget leftover.
 
-Thanks
-Stanislaw
+So adding one more parameter - budget_left, this would help while
+traversing the list to avoid handling more than the budget given.
+
+Reported-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Fix-suggested-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+
+Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 0b4c156..95a5a18 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1718,7 +1718,8 @@ static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
+ }
+ 
+ static int ath10k_htt_rx_extract_amsdu(struct sk_buff_head *list,
+-				       struct sk_buff_head *amsdu)
++				       struct sk_buff_head *amsdu,
++				       int budget_left)
+ {
+ 	struct sk_buff *msdu;
+ 	struct htt_rx_desc *rxd;
+@@ -1729,8 +1730,9 @@ static int ath10k_htt_rx_extract_amsdu(struct sk_buff_head *list,
+ 	if (WARN_ON(!skb_queue_empty(amsdu)))
+ 		return -EINVAL;
+ 
+-	while ((msdu = __skb_dequeue(list))) {
++	while ((msdu = __skb_dequeue(list)) && budget_left) {
+ 		__skb_queue_tail(amsdu, msdu);
++		budget_left--;
+ 
+ 		rxd = (void *)msdu->data - sizeof(*rxd);
+ 		if (rxd->msdu_end.common.info0 &
+@@ -1821,7 +1823,8 @@ static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
+ 	return num_msdu;
+ }
+ 
+-static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
++static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb,
++				    int budget_left)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+ 	struct htt_resp *resp = (void *)skb->data;
+@@ -1878,9 +1881,9 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 	if (offload)
+ 		num_msdus = ath10k_htt_rx_h_rx_offload(ar, &list);
+ 
+-	while (!skb_queue_empty(&list)) {
++	while (!skb_queue_empty(&list) && budget_left) {
+ 		__skb_queue_head_init(&amsdu);
+-		ret = ath10k_htt_rx_extract_amsdu(&list, &amsdu);
++		ret = ath10k_htt_rx_extract_amsdu(&list, &amsdu, budget_left);
+ 		switch (ret) {
+ 		case 0:
+ 			/* Note: The in-order indication may report interleaved
+@@ -1890,6 +1893,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 			 * should still give an idea about rx rate to the user.
+ 			 */
+ 			num_msdus += skb_queue_len(&amsdu);
++			budget_left -= skb_queue_len(&amsdu);
+ 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
+ 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
+ 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
+@@ -2400,7 +2404,8 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+ 		}
+ 
+ 		spin_lock_bh(&htt->rx_ring.lock);
+-		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb);
++		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb,
++							(budget - quota));
+ 		spin_unlock_bh(&htt->rx_ring.lock);
+ 		if (num_rx_msdus < 0) {
+ 			resched_napi = true;
+-- 
+1.9.1
