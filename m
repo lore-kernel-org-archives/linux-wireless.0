@@ -1,68 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43182 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750820AbdHIF7C (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 01:59:02 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  9 Aug 2017 08:58:53 +0300
-Message-Id: <20170809055853.8560-1-luca@coelho.fi> (sfid-20170809_075905_952802_7A1B62A0)
-In-Reply-To: <78tivleks.fsf@kamboji.qca.qualcomm.com>
-References: <78tivleks.fsf@kamboji.qca.qualcomm.com>
-Subject: [PATCH v2 2/3] iwlwifi: mvm: start mac queues when deferred tx frames are purged
+Received: from [217.148.43.144] ([217.148.43.144]:58092 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932561AbdHVLnP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:43:15 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 20/30] brcmfmac: Remove repeated calls to brcmf_chip_get_core()
+Date: Tue, 22 Aug 2017 12:25:40 +0100
+Message-Id: <20170822112550.60311-21-ian@mnementh.co.uk> (sfid-20170822_134324_480667_94C43ED5)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+There is no need to repeatdly call brcmf_chip_get_core(), which
+traverses a list of cores every time its called (including during
+register access code!).
 
-In AP mode, if a station is removed just as it is adding a new stream,
-the queue in question will remain stopped and no more TX will happen
-in this queue, leading to connection failures and other problems.
+Call it once, and store a pointer to the core structure. The existing
+code does nto keep track of users of the cores anyway, and even so, this
+will allow for easier refcounting in future.
 
-This is because under DQA, when tx is deferred because a queue needs
-to be allocated, the mac queue for that TID is stopped until the new
-stream is added.  If at this point the station that this stream
-belongs to is removed, all the deferred tx frames are purged, but the
-mac queue is not restarted. As a result, all following tx on this
-queue will not be transmitted.
-
-Fix this by starting the relevant mac queues when the deferred tx
-frames are purged.
-
-Fixes: 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 25 +++++++++++++---------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index c7b1e58e3384..ce901be5fba8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2597,8 +2597,18 @@ static void iwl_mvm_purge_deferred_tx_frames(struct iwl_mvm *mvm,
- 	spin_lock_bh(&mvm_sta->lock);
- 	for (i = 0; i <= IWL_MAX_TID_COUNT; i++) {
- 		tid_data = &mvm_sta->tid_data[i];
--		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames)))
-+
-+		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames))) {
-+			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+			/*
-+			 * The first deferred frame should've stopped the MAC
-+			 * queues, so we should never get a second deferred
-+			 * frame for the RA/TID.
-+			 */
-+			iwl_mvm_start_mac_queues(mvm, info->hw_queue);
- 			ieee80211_free_txskb(mvm->hw, skb);
-+		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index b095bb66fe96..289ff61b7bf8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -435,6 +435,7 @@ struct brcmf_sdio_count {
+ struct brcmf_sdio {
+ 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
+ 	struct brcmf_chip *ci;	/* Chip info struct */
++	struct brcmf_core *sdio_core; /* sdio core info struct */
+ 
+ 	u32 hostintmask;	/* Copy of Host Interrupt Mask */
+ 	atomic_t intstatus;	/* Intstatus bits (events) pending */
+@@ -662,10 +663,9 @@ static bool data_ok(struct brcmf_sdio *bus)
+  */
+ static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+ {
+-	struct brcmf_core *core;
++	struct brcmf_core *core = bus->sdio_core;
+ 	int ret;
+ 
+-	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
+ 
+ 	return ret;
+@@ -673,10 +673,9 @@ static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+ 
+ static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+ {
+-	struct brcmf_core *core;
++	struct brcmf_core *core = bus->sdio_core;
+ 	int ret;
+ 
+-	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
+ 
+ 	return ret;
+@@ -2485,12 +2484,11 @@ static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
+ 
+ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_core *buscore;
++	struct brcmf_core *buscore = bus->sdio_core;
+ 	u32 addr;
+ 	unsigned long val;
+ 	int ret;
+ 
+-	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	addr = buscore->base + __sd_reg(intstatus);
+ 
+ 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
+@@ -3367,13 +3365,14 @@ static void brcmf_sdio_sr_init(struct brcmf_sdio *bus)
+ /* enable KSO bit */
+ static int brcmf_sdio_kso_init(struct brcmf_sdio *bus)
+ {
++	struct brcmf_core *core = bus->sdio_core;
+ 	u8 val;
+ 	int err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	/* KSO bit added in SDIO core rev 12 */
+-	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12)
++	if (core->rev < 12)
+ 		return 0;
+ 
+ 	val = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, &err);
+@@ -3401,6 +3400,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_core *core = bus->sdio_core;
+ 	uint pad_size;
+ 	u32 value;
+ 	int err;
+@@ -3409,7 +3409,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 	 * a device perspective, ie. bus:txglom affects the
+ 	 * bus transfers from device to host.
+ 	 */
+-	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12) {
++	if (core->rev < 12) {
+ 		/* for sdio core rev < 12, disable txgloming */
+ 		value = 0;
+ 		err = brcmf_iovar_data_set(dev, "bus:txglom", &value,
+@@ -3747,11 +3747,10 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 					u32 rstvec)
+ {
+ 	struct brcmf_sdio_dev *sdiodev = ctx;
+-	struct brcmf_core *core;
++	struct brcmf_core *core = sdiodev->bus->sdio_core;
+ 	u32 reg_addr;
+ 
+ 	/* clear all interrupts */
+-	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
+ 	reg_addr = core->base + __sd_reg(intstatus);
+ 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
+ 
+@@ -3832,6 +3831,12 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 		bus->ci = NULL;
+ 		goto fail;
  	}
- 	spin_unlock_bh(&mvm_sta->lock);
- }
++
++	/* Pick up the SDIO core info struct from chip.c */
++	bus->sdio_core   = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
++	if (!bus->sdio_core)
++		goto fail;
++
+ 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
+ 						   BRCMF_BUSTYPE_SDIO,
+ 						   bus->ci->chip,
 -- 
-2.13.2
+2.11.0
