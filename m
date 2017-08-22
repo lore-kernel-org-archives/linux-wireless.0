@@ -1,68 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:36718 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751125AbdHNGxI (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35294 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932205AbdHVJ3i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 02:53:08 -0400
-Received: by mail-qk0-f193.google.com with SMTP id d136so8609335qkg.3
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Aug 2017 23:53:08 -0700 (PDT)
+        Tue, 22 Aug 2017 05:29:38 -0400
+Date: Tue, 22 Aug 2017 14:59:31 +0530
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: Matteo Croce <mcroce@redhat.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvalo@codeaurora.org
+Subject: Re: [PATCH] drivers: net: wireless: atmel: check memory allocation
+ failure
+Message-ID: <20170822092931.GA8490@himanshu-Vostro-3559> (sfid-20170822_112958_507361_FDE15130)
+References: <1503389481-4988-1-git-send-email-himanshujha199640@gmail.com>
+ <1503391305.2409.12.camel@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <87k226da0d.fsf@kamboji.qca.qualcomm.com>
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
- <1502458889-9690-6-git-send-email-amitkarwar@gmail.com> <87k226da0d.fsf@kamboji.qca.qualcomm.com>
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Date: Mon, 14 Aug 2017 12:23:07 +0530
-Message-ID: <CAC_mnDkiUkMK6utKnZjDXR6=B-=n9G10xHvWfodb9XEZrY9xKw@mail.gmail.com> (sfid-20170814_085312_871310_D664D3F5)
-Subject: Re: [PATCH 05/11] rsi: handle station connection in AP mode
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503391305.2409.12.camel@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Tue, Aug 22, 2017 at 10:41:45AM +0200, Matteo Croce wrote:
+> Il giorno mar, 22/08/2017 alle 13.41 +0530, Himanshu Jha ha scritto:
+> > Check memory allocation failure and return -ENOMEM if failure
+> > occurs.
+> > 
+> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> > ---
+> >  drivers/net/wireless/atmel/at76c50x-usb.c | 14 +++++++-------
+> >  1 file changed, 7 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c
+> > b/drivers/net/wireless/atmel/at76c50x-usb.c
+> > index 09defbc..73f0924 100644
+> > --- a/drivers/net/wireless/atmel/at76c50x-usb.c
+> > +++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+> > @@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct
+> > at76_priv *priv)
+> >  					 GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
+> >  			   sizeof(struct mib_mac_addr));
+> > @@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct
+> > at76_priv *priv)
+> >  	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep),
+> > GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
+> >  			   sizeof(struct mib_mac_wep));
+> > @@ -1006,7 +1006,7 @@ static void at76_dump_mib_mac_mgmt(struct
+> > at76_priv *priv)
+> >  					 GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
+> >  			   sizeof(struct mib_mac_mgmt));
+> > @@ -1043,7 +1043,7 @@ static void at76_dump_mib_mac(struct at76_priv
+> > *priv)
+> >  	struct mib_mac *m = kmalloc(sizeof(struct mib_mac),
+> > GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct
+> > mib_mac));
+> >  	if (ret < 0) {
+> > @@ -1080,7 +1080,7 @@ static void at76_dump_mib_phy(struct at76_priv
+> > *priv)
+> >  	struct mib_phy *m = kmalloc(sizeof(struct mib_phy),
+> > GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct
+> > mib_phy));
+> >  	if (ret < 0) {
+> > @@ -1113,7 +1113,7 @@ static void at76_dump_mib_local(struct
+> > at76_priv *priv)
+> >  	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
+> >  	if (ret < 0) {
+> > @@ -1138,7 +1138,7 @@ static void at76_dump_mib_mdomain(struct
+> > at76_priv *priv)
+> >  	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain),
+> > GFP_KERNEL);
+> >  
+> >  	if (!m)
+> > -		return;
+> > +		return -ENOMEM;
+> >  
+> >  	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
+> >  			   sizeof(struct mib_mdomain));
+> 
+> Perhaps these functions should return something instead of being void.
+> 
+> Regards,
+> 
+> -- 
+> Matteo Croce
+> per aspera ad upstream
 
-I will change the debug level and send the updated patches again.
+Yes, it should return int to signal memory allocation failures and
+therefore function prototype should be static int rather than static
+void.
 
-Thanks,
-Prameela
-
-On Mon, Aug 14, 2017 at 10:24 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>
->> Station structures are maintained in driver with required
->> fields. When mac80211 callback sta_add is called, driver
->> iterates through list of connected stations to check available
->> index and assigns station id which is important for further
->> communication to that station. Then peer notify frame is send
->> to firmware to inform the firmware about new station connection.
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> [...]
->
->> @@ -1157,18 +1159,81 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
->>  {
->>       struct rsi_hw *adapter = hw->priv;
->>       struct rsi_common *common = adapter->priv;
->> +     bool sta_exist = false;
->> +     struct rsi_sta *rsta;
->> +
->> +     print_hex_dump(KERN_INFO, "Station add: ", DUMP_PREFIX_OFFSET,
->> +                    16, 1, sta->addr, ETH_ALEN, 0);
->
-> The driver should not spam the logs every time a client connects, so
-> this should be a debug message.
->
-> --
-> Kalle Valo
-
-
-
--- 
-G. Prameela Rani (M.Tech,CSE)
+Thanks!
