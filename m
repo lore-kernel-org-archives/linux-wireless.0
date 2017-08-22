@@ -1,87 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34980 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751101AbdHAJKT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:10:19 -0400
-Received: by mail-pg0-f65.google.com with SMTP id l64so1724174pge.2
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:10:19 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: [PATCH 5/8] rsi: rename sdio_read_buffer_status_register
-Date: Tue,  1 Aug 2017 14:35:49 +0530
-Message-Id: <1501578352-10795-6-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111022_266892_420D0309)
-In-Reply-To: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
-References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+Received: from [217.148.43.144] ([217.148.43.144]:57966 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932499AbdHVLnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:43:09 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 18/30] brcmfmac: Cleanup offsetof()
+Date: Tue, 22 Aug 2017 12:25:38 +0100
+Message-Id: <20170822112550.60311-19-ian@mnementh.co.uk> (sfid-20170822_134314_283559_550674C5)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+Create a macro to make the code a bit more readable, whilst we're stuck
+with using struct element offsets as register offsets.
 
-rsi_sdio_check_buffer_status would be the appropriate name
-for this function as we are checking hardware buffers
-availability status.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |  2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 13 +++----------
- drivers/net/wireless/rsi/rsi_sdio.h         |  2 +-
- 3 files changed, 5 insertions(+), 12 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 35 +++++++++-------------
+ 1 file changed, 14 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 42d558b..742f6cd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -860,7 +860,7 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
- 	sdio_release_host(pfunction);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index ce19ccf5d1d6..8f3e99da871a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -161,6 +161,8 @@ struct rte_console {
  
- 	adapter->determine_event_timeout = rsi_sdio_determine_event_timeout;
--	adapter->check_hw_queue_status = rsi_sdio_read_buffer_status_register;
-+	adapter->check_hw_queue_status = rsi_sdio_check_buffer_status;
+ #define CORE_BUS_REG(base, field) \
+ 		(base + offsetof(struct sdpcmd_regs, field))
++#define __sd_reg(field) \
++		(offsetof(struct sdpcmd_regs, field))
  
- #ifdef CONFIG_RSI_DEBUGFS
- 	adapter->num_debugfs_entries = MAX_DEBUGFS_ENTRIES;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index b3f7adc..9b94ba7 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -323,17 +323,10 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 	} while (1);
- }
+ /* SDIO function 1 register CHIPCLKCSR */
+ /* Force ALP request to backplane */
+@@ -1084,12 +1086,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 	brcmf_dbg(SDIO, "Enter\n");
  
--/**
-- * rsi_sdio_read_buffer_status_register() - This function is used to the read
-- *					    buffer status register and set
-- *					    relevant fields in
-- *					    rsi_91x_sdiodev struct.
-- * @adapter: Pointer to the driver hw structure.
-- * @q_num: The Q number whose status is to be found.
-- *
-- * Return: status: -1 on failure or else queue full/stop is indicated.
-+/* This function is used to read buffer status register and
-+ * set relevant fields in rsi_91x_sdiodev struct.
-  */
--int rsi_sdio_read_buffer_status_register(struct rsi_hw *adapter, u8 q_num)
-+int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num)
- {
- 	struct rsi_common *common = adapter->priv;
- 	struct rsi_91x_sdiodev *dev =
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index 3cf6756..9239fbe 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -127,5 +127,5 @@ int rsi_sdio_write_register_multiple(struct rsi_hw *adapter, u32 addr,
- int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word);
- void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
- int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
--int rsi_sdio_read_buffer_status_register(struct rsi_hw *adapter, u8 q_num);
-+int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num);
- #endif
+ 	/* Read mailbox data and ack that we did so */
+-	ret = r_sdreg32(bus, &hmb_data,
+-			offsetof(struct sdpcmd_regs, tohostmailboxdata));
++	ret = r_sdreg32(bus, &hmb_data,	__sd_reg(tohostmailboxdata));
+ 
+ 	if (ret == 0)
+-		w_sdreg32(bus, SMB_INT_ACK,
+-			  offsetof(struct sdpcmd_regs, tosbmailbox));
++		w_sdreg32(bus, SMB_INT_ACK, __sd_reg(tosbmailbox));
+ 	bus->sdcnt.f1regdata += 2;
+ 
+ 	/* Dongle recomposed rx frames, accept them again */
+@@ -1197,8 +1197,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 
+ 	if (rtx) {
+ 		bus->sdcnt.rxrtx++;
+-		err = w_sdreg32(bus, SMB_NAK,
+-				offsetof(struct sdpcmd_regs, tosbmailbox));
++		err = w_sdreg32(bus, SMB_NAK, __sd_reg(tosbmailbox));
+ 
+ 		bus->sdcnt.f1regdata++;
+ 		if (err == 0)
+@@ -2323,9 +2322,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		if (!bus->intr) {
+ 			/* Check device status, signal pending interrupt */
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+-			ret = r_sdreg32(bus, &intstatus,
+-					offsetof(struct sdpcmd_regs,
+-						 intstatus));
++			ret = r_sdreg32(bus, &intstatus, __sd_reg(intstatus));
+ 			sdio_release_host(bus->sdiodev->func[1]);
+ 			bus->sdcnt.f2txdata++;
+ 			if (ret != 0)
+@@ -2431,7 +2428,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		brcmf_sdio_bus_sleep(bus, false, false);
+ 
+ 		/* Disable and clear interrupts at the chip level also */
+-		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
++		w_sdreg32(bus, 0, __sd_reg(hostintmask));
+ 		local_hostintmask = bus->hostintmask;
+ 		bus->hostintmask = 0;
+ 
+@@ -2450,8 +2447,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 		/* Clear any pending interrupts now that F2 is disabled */
+-		w_sdreg32(bus, local_hostintmask,
+-			  offsetof(struct sdpcmd_regs, intstatus));
++		w_sdreg32(bus, local_hostintmask, __sd_reg(intstatus));
+ 
+ 		sdio_release_host(sdiodev->func[1]);
+ 	}
+@@ -2497,7 +2493,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	int ret;
+ 
+ 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+-	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
++	addr = buscore->base + __sd_reg(intstatus);
+ 
+ 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
+ 	bus->sdcnt.f1regdata++;
+@@ -2574,11 +2570,9 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
+-				offsetof(struct sdpcmd_regs, intstatus));
++		err = w_sdreg32(bus, I_HMB_FC_CHANGE, __sd_reg(intstatus));
+ 
+-		err = r_sdreg32(bus, &newstatus,
+-				offsetof(struct sdpcmd_regs, intstatus));
++		err = r_sdreg32(bus, &newstatus, __sd_reg(intstatus));
+ 		bus->sdcnt.f1regdata += 2;
+ 		atomic_set(&bus->fcstate,
+ 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
+@@ -3760,7 +3754,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 
+ 	/* clear all interrupts */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
+-	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
++	reg_addr = core->base + __sd_reg(intstatus);
+ 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
+ 
+ 	if (rstvec)
+@@ -4037,7 +4031,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 
+ 	/* Enable function 2 (frame transfers) */
+ 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
+-		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
++		  __sd_reg(tosbmailboxdata));
+ 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 
+@@ -4047,8 +4041,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (!err) {
+ 		/* Set up the interrupt mask and enable interrupts */
+ 		bus->hostintmask = HOSTINTMASK;
+-		w_sdreg32(bus, bus->hostintmask,
+-			  offsetof(struct sdpcmd_regs, hostintmask));
++		w_sdreg32(bus, bus->hostintmask, __sd_reg(hostintmask));
+ 
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
 -- 
-2.7.4
+2.11.0
