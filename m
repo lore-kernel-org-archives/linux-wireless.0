@@ -1,35 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:38778 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751309AbdH3Stc (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35038 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932468AbdHVILl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 14:49:32 -0400
-Received: by mail-wm0-f49.google.com with SMTP id 187so6892144wmn.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 11:49:31 -0700 (PDT)
-Subject: Re: [PATCH v2] brcmfmac: Log chip id and revision
-To: Hans de Goede <hdegoede@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20170830135449.1075-1-hdegoede@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0bb5aefd-a3d9-0d00-eea6-f0da9ea6ebfc@broadcom.com> (sfid-20170830_204935_843257_DA98F542)
-Date: Wed, 30 Aug 2017 20:49:29 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170830135449.1075-1-hdegoede@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 22 Aug 2017 04:11:41 -0400
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH] drivers: net: wireless: atmel: check memory allocation failure
+Date: Tue, 22 Aug 2017 13:41:21 +0530
+Message-Id: <1503389481-4988-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170822_101249_863198_F6F58380)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30-08-17 15:54, Hans de Goede wrote:
-> For debugging some problems, it is useful to know the chip revision
-> add a brcmf_info message logging this.
+Check memory allocation failure and return -ENOMEM if failure
+occurs.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
-> Changes in v2:
-> -Put the brcmf_info in brcmf_fw_map_chip_to_name() so that it works for
->   e.g. pcie devices too
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 3 +++
->   1 file changed, 3 insertions(+)
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+---
+ drivers/net/wireless/atmel/at76c50x-usb.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index 09defbc..73f0924 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
+ 					 GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
+ 			   sizeof(struct mib_mac_addr));
+@@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+ 	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
+ 			   sizeof(struct mib_mac_wep));
+@@ -1006,7 +1006,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+ 					 GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
+ 			   sizeof(struct mib_mac_mgmt));
+@@ -1043,7 +1043,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+ 	struct mib_mac *m = kmalloc(sizeof(struct mib_mac), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct mib_mac));
+ 	if (ret < 0) {
+@@ -1080,7 +1080,7 @@ static void at76_dump_mib_phy(struct at76_priv *priv)
+ 	struct mib_phy *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct mib_phy));
+ 	if (ret < 0) {
+@@ -1113,7 +1113,7 @@ static void at76_dump_mib_local(struct at76_priv *priv)
+ 	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
+ 	if (ret < 0) {
+@@ -1138,7 +1138,7 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
+ 	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
+ 			   sizeof(struct mib_mdomain));
+-- 
+2.7.4
