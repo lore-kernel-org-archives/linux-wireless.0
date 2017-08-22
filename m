@@ -1,135 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751961AbdHCTIp (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:36619 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751347AbdHVTle (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:45 -0400
-Cc: Gidon Studinski <QCA_gidons@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 09/10] wil6210: move vring_idle_trsh definition to wil6210_priv
-Date: Thu,  3 Aug 2017 22:08:21 +0300
-Message-Id: <1501787302-22885-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210914_640810_2EB44F92)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 22 Aug 2017 15:41:34 -0400
+Received: by mail-wm0-f52.google.com with SMTP id z132so1005357wmg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2017 12:41:33 -0700 (PDT)
+Subject: Re: [PATCH v5] brcmfmac cleanup
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0e3ce8c6-6a4c-b6dc-be20-47be1566aa50@broadcom.com> (sfid-20170822_214136_903486_E44EE4E9)
+Date: Tue, 22 Aug 2017 21:41:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
+On 22-08-17 13:25, Ian Molton wrote:
+> Hi folks,
+> 
+> Arend, as requested - a respin to take account of your comments.
+> 
+> Unfortunately, although I've only included the patches you requested from v4,
+> breaking out some of the simpler changes (whitespace, macos, etc.) has grown
+> the set back up to 30 patches. I hope this is OK.
 
-vring_idle_trsh is used in the operational driver, hence
-should not be defined as a debugfs variable.
+:-( Grumbl, you also introduced some new ideas, eg. patch 26/30. I 
+reviewed 15 patches that mostly involved in cleaning up bcmsdh.c. My 
+hopes were that you addressed those 15 patches with a respin to get that 
+part at least in for 4.14 as we are steadily moving towards the merge 
+window. Maybe you did, but going from 15 to 30 feels like things are 
+moving in the wrong direction. I will dig through it again.
 
-Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 5 +----
- drivers/net/wireless/ath/wil6210/main.c    | 1 +
- drivers/net/wireless/ath/wil6210/txrx.c    | 6 +++---
- drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
- 4 files changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index d4e8865..6db00c1 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -20,7 +20,6 @@
- #include <linux/pci.h>
- #include <linux/rtnetlink.h>
- #include <linux/power_supply.h>
--
- #include "wil6210.h"
- #include "wmi.h"
- #include "txrx.h"
-@@ -30,7 +29,6 @@
- static u32 mem_addr;
- static u32 dbg_txdesc_index;
- static u32 dbg_vring_index; /* 24+ for Rx, 0..23 for Tx */
--u32 vring_idle_trsh = 16; /* HW fetches up to 16 descriptors at once */
- 
- enum dbg_off_type {
- 	doff_u32 = 0,
-@@ -1763,6 +1761,7 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
- 	WIL_FIELD(chip_revision, 0444,	doff_u8),
- 	WIL_FIELD(abft_len, 0644,		doff_u8),
- 	WIL_FIELD(wakeup_trigger, 0644,		doff_u8),
-+	WIL_FIELD(vring_idle_trsh, 0644,	doff_u32),
- 	{},
- };
- 
-@@ -1778,8 +1777,6 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
- 	{"desc_index",	0644, (ulong)&dbg_txdesc_index, doff_u32},
- 	{"vring_index",	0644, (ulong)&dbg_vring_index, doff_u32},
- 	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
--	{"vring_idle_trsh", 0644, (ulong)&vring_idle_trsh,
--	 doff_u32},
- 	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
- 	{},
- };
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b89d017..e2ea490 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -581,6 +581,7 @@ int wil_priv_init(struct wil6210_priv *wil)
- 			      WMI_WAKEUP_TRIGGER_BCAST;
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
- 	wil->suspend_stats.min_suspend_time = ULONG_MAX;
-+	wil->vring_idle_trsh = 16;
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index ec57bcc..389c718 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1666,7 +1666,7 @@ static int __wil_tx_vring_tso(struct wil6210_priv *wil, struct vring *vring,
- 
- 	/* performance monitoring */
- 	used = wil_vring_used_tx(vring);
--	if (wil_val_in_range(vring_idle_trsh,
-+	if (wil_val_in_range(wil->vring_idle_trsh,
- 			     used, used + descs_used)) {
- 		txdata->idle += get_cycles() - txdata->last_idle;
- 		wil_dbg_txrx(wil,  "Ring[%2d] not idle %d -> %d\n",
-@@ -1813,7 +1813,7 @@ static int __wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 
- 	/* performance monitoring */
- 	used = wil_vring_used_tx(vring);
--	if (wil_val_in_range(vring_idle_trsh,
-+	if (wil_val_in_range(wil->vring_idle_trsh,
- 			     used, used + nr_frags + 1)) {
- 		txdata->idle += get_cycles() - txdata->last_idle;
- 		wil_dbg_txrx(wil,  "Ring[%2d] not idle %d -> %d\n",
-@@ -2175,7 +2175,7 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 
- 	/* performance monitoring */
- 	used_new = wil_vring_used_tx(vring);
--	if (wil_val_in_range(vring_idle_trsh,
-+	if (wil_val_in_range(wil->vring_idle_trsh,
- 			     used_new, used_before_complete)) {
- 		wil_dbg_txrx(wil, "Ring[%2d] idle %d -> %d\n",
- 			     ringid, used_before_complete, used_new);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index e3c0c2f..cf20a8c 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -30,7 +30,6 @@
- extern unsigned int mtu_max;
- extern unsigned short rx_ring_overflow_thrsh;
- extern int agg_wsize;
--extern u32 vring_idle_trsh;
- extern bool rx_align_2;
- extern bool rx_large_buf;
- extern bool debug_fw;
-@@ -693,6 +692,7 @@ struct wil6210_priv {
- 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
- 	struct wil_sta_info sta[WIL6210_MAX_CID];
- 	int bcast_vring;
-+	u32 vring_idle_trsh; /* HW fetches up to 16 descriptors at once  */
- 	bool use_extended_dma_addr; /* indicates whether we are using 48 bits */
- 	/* scan */
- 	struct cfg80211_scan_request *scan_request;
--- 
-1.9.1
+Regards,
+Arend
