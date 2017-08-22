@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44494 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753985AbdHWOtU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 10:49:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] at76c50x-usb: check memory allocation failure
-References: <1503498556-13835-1-git-send-email-himanshujha199640@gmail.com>
-Date: Wed, 23 Aug 2017 17:49:15 +0300
-In-Reply-To: <1503498556-13835-1-git-send-email-himanshujha199640@gmail.com>
-        (Himanshu Jha's message of "Wed, 23 Aug 2017 19:59:16 +0530")
-Message-ID: <87tw0ywd90.fsf@kamboji.qca.qualcomm.com> (sfid-20170823_164923_915359_DA146469)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from [217.148.43.144] ([217.148.43.144]:60046 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932427AbdHVLpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:45:24 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 12/30] brcmfmac: Whitespace fixes.
+Date: Tue, 22 Aug 2017 12:25:32 +0100
+Message-Id: <20170822112550.60311-13-ian@mnementh.co.uk> (sfid-20170822_134527_533526_656BFA6B)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Himanshu Jha <himanshujha199640@gmail.com> writes:
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> Check memory allocation failure and return -ENOMEM rather than just
-> retuning void.
->
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-
-[...]
-
-> -static void at76_dump_mib_mac_addr(struct at76_priv *priv)
-> +static int at76_dump_mib_mac_addr(struct at76_priv *priv)
->  {
->  	int i;
->  	int ret;
-> @@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
->  					 GFP_KERNEL);
->  
->  	if (!m)
-> -		return;
-> +		return -ENOMEM;
-
-This feels rather pointless. You are changing these functions to return
-an error code but the callers it anyway. And besides, did you check
-where these are actually used?
-
-	if (at76_debug & DBG_MIB) {
-		at76_dump_mib_mac(priv);
-		at76_dump_mib_mac_addr(priv);
-		at76_dump_mib_mac_mgmt(priv);
-		at76_dump_mib_mac_wep(priv);
-		at76_dump_mib_mdomain(priv);
-		at76_dump_mib_phy(priv);
-		at76_dump_mib_local(priv);
-	}
-
-So it's just for debug messages and the current error handling looks the
-correct approach. There is not much anything else we can do than just
-skip the message printout.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 916f75e5e7a1..d5d2b2222cc1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -713,6 +713,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 	int err;
+ 
+ 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
++
+ 	if (!mypkt) {
+ 		brcmf_err("brcmu_pkt_buf_get_skb failed: len %d\n",
+ 			  nbytes);
+@@ -727,8 +728,8 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+ 
+ 	brcmu_pkt_buf_free_skb(mypkt);
+-	return err;
+ 
++	return err;
+ }
+ 
+ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
 -- 
-Kalle Valo
+2.11.0
