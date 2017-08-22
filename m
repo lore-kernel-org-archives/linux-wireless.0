@@ -1,29 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0192.hostedemail.com ([216.40.44.192]:44636 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751309AbdHaV5t (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 17:57:49 -0400
-Message-ID: <1504216665.2786.48.camel@perches.com> (sfid-20170831_235752_629839_DC0F6B85)
-Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
-From: Joe Perches <joe@perches.com>
-To: Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 31 Aug 2017 14:57:45 -0700
-In-Reply-To: <20170825082730.31388-2-luca@coelho.fi>
-References: <20170825082730.31388-1-luca@coelho.fi>
-         <20170825082730.31388-2-luca@coelho.fi>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from [217.148.43.144] ([217.148.43.144]:34988 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932541AbdHVL0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:26:11 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 03/30] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
+Date: Tue, 22 Aug 2017 12:25:23 +0100
+Message-Id: <20170822112550.60311-4-ian@mnementh.co.uk> (sfid-20170822_132618_348425_5EC4AE07)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
-> From: Liad Kaufman <liad.kaufman@intel.com>
-> 
-> There is a debug print that sometimes reaches over
-> 110 chars, thus generating a warning in those cases.
+	This large function is concealing a LOT of obscure logic about
+how the hardware functions. Time to split it up.
 
-What emits a warning here?
+This first patch splits the function into two pieces - read and write,
+doing away with the rw flag in the process.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
+ 1 file changed, 73 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 2b441ce91d5f..1ee0f91b6c50 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 	return ret;
+ }
+ 
+-static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-				   u8 regsz, void *data, bool write)
++static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				 u8 regsz, void *data)
+ {
+ 	u8 func;
+ 	s32 retry = 0;
+@@ -324,13 +324,66 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		func = SDIO_FUNC_1;
+ 
+ 	do {
+-		if (!write)
+-			memset(data, 0, regsz);
+ 		/* for retry wait for 1 ms till bus get settled down */
+ 		if (retry)
+ 			usleep_range(1000, 2000);
++
++		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
++					       data, true);
++
++	} while (ret != 0 && ret != -ENOMEDIUM &&
++		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
++
++	if (ret == -ENOMEDIUM) {
++		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
++	} else if (ret != 0) {
++		/*
++		 * SleepCSR register access can fail when
++		 * waking up the device so reduce this noise
++		 * in the logs.
++		 */
++		if (addr != SBSDIO_FUNC1_SLEEPCSR)
++			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
++		else
++			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
++	}
++
++	return ret;
++}
++
++static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				u8 regsz, void *data)
++{
++	u8 func;
++	s32 retry = 0;
++	int ret;
++
++	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
++		return -ENOMEDIUM;
++
++	/*
++	 * figure out how to read the register based on address range
++	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
++	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
++	 * The rest: function 1 silicon backplane core registers
++	 */
++	if ((addr & ~REG_F0_REG_MASK) == 0)
++		func = SDIO_FUNC_0;
++	else
++		func = SDIO_FUNC_1;
++
++	do {
++		memset(data, 0, regsz);
++
++		/* for retry wait for 1 ms till bus get settled down */
++		if (retry)
++			usleep_range(1000, 2000);
++
+ 		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
+-					       data, write);
++					       data, false);
++
+ 	} while (ret != 0 && ret != -ENOMEDIUM &&
+ 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
+ 
+@@ -343,12 +396,13 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		 * in the logs.
+ 		 */
+ 		if (addr != SBSDIO_FUNC1_SLEEPCSR)
+-			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
+-				  write ? "write" : "read", func, addr, ret);
++			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
+ 		else
+-			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
+-				  write ? "write" : "read", func, addr, ret);
++			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
+ 	}
++
+ 	return ret;
+ }
+ 
+@@ -366,13 +420,11 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ 	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
+ 
+ 	for (i = 0; i < 3; i++) {
+-		err = brcmf_sdiod_regrw_helper(sdiodev,
+-					       SBSDIO_FUNC1_SBADDRLOW + i,
+-					       1, &addr[i], true);
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
++				  &err);
+ 		if (err) {
+ 			brcmf_err("failed at addr: 0x%0x\n",
+ 				  SBSDIO_FUNC1_SBADDRLOW + i);
+-			break;
+ 		}
+ 	}
+ 
+@@ -407,8 +459,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+-					  false);
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
+ 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
+ 	if (ret)
+@@ -426,8 +477,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+-					  false);
++
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
++
+ 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 
+ done:
+@@ -443,8 +495,8 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+-					  true);
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
++
+ 	if (ret)
+ 		*ret = retval;
+ }
+@@ -458,8 +510,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+-					  true);
++
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+ 
+ done:
+ 	if (ret)
+-- 
+2.11.0
