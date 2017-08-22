@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50312 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752323AbdHBJar (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:30:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH 1/3] brcmfmac: set wpa_auth to WPA_AUTH_DISABLED in AP/opensecurity mode
-References: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
-Date: Wed, 02 Aug 2017 12:30:42 +0300
-In-Reply-To: <1501577287-28904-1-git-send-email-wright.feng@cypress.com>
-        (Wright Feng's message of "Tue, 1 Aug 2017 16:48:05 +0800")
-Message-ID: <87r2wu48ql.fsf@codeaurora.org> (sfid-20170802_113050_430042_82DA8EE0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from [217.148.43.144] ([217.148.43.144]:60142 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S932427AbdHVLpc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Aug 2017 07:45:32 -0400
+From: Ian Molton <ian@mnementh.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com
+Subject: [PATCH 13/30] brcmfmac: Clarify if using braces.
+Date: Tue, 22 Aug 2017 12:25:33 +0100
+Message-Id: <20170822112550.60311-14-ian@mnementh.co.uk> (sfid-20170822_134539_651440_108F4D9C)
+In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> writes:
+Whilst this if () statement is technically correct, it lacks clarity.
 
-> When setting wpa_auth to WPA_AUTH_NONE(1) in AP mode with WEP secuirty,
-> firmware will set privacy bit and add WPA OUI in VENDOR IE in beacon and
-> probe response.
 
-typo: "secuirty"
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> It confuses the supplicant in sation client by the security type from
-> softAP beacon and we will see [WPA-?] in scan result. 
-
-"sation"? Also the sentence is a bit unclear.
-
-> So we set WPA_AUTH_DISABLED in softAP mode with opensecurity.
-
-Space missing between "open" and "security".
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index d5d2b2222cc1..257655d7fce4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -745,16 +745,17 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 	if (err)
+ 		return err;
+ 
+-	if (pktq->qlen == 1 || !sdiodev->sg_support)
++	if (pktq->qlen == 1 || !sdiodev->sg_support) {
+ 		skb_queue_walk(pktq, skb) {
+ 			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
+ 						     addr, skb);
+ 			if (err)
+ 				break;
+ 		}
+-	else
++	} else {
+ 		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
+ 					    pktq);
++	}
+ 
+ 	return err;
+ }
 -- 
-Kalle Valo
+2.11.0
