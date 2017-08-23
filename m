@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43234 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752159AbdHIHHR (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:37072 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932467AbdHWTdJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 03:07:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Naftali Goldstein <naftali.goldstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  9 Aug 2017 10:07:06 +0300
-Message-Id: <20170809070706.14862-3-luca@coelho.fi> (sfid-20170809_090720_656719_8649FC01)
-In-Reply-To: <20170809070706.14862-1-luca@coelho.fi>
-References: <20170809070706.14862-1-luca@coelho.fi>
-Subject: [PATCH 2/2] iwlwifi: mvm: send delba upon rx ba session timeout
+        Wed, 23 Aug 2017 15:33:09 -0400
+Received: by mail-lf0-f68.google.com with SMTP id s12so298786lfk.4
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2017 12:33:09 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH v2] ath10k: sdio: remove unused struct member
+Date: Wed, 23 Aug 2017 21:32:58 +0200
+Message-Id: <1503516778-5835-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20170823_213320_566276_F67E996B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naftali Goldstein <naftali.goldstein@intel.com>
+irq_wq in struct ath10k_sdio is a remnant from an earlier
+version of the sdio patchset.
 
-When an RX block-ack session times out, the firmware, which offloads
-RX reordering but not the BA session negotiation, stops the session
-but doesn't send a DELBA.  This causes the the session to remain
-active in the remote device, so no more BA sessions will be
-established, causing a severe throughput degradation due to the lack
-of aggregation.
+Its use was removed as a result of Kalle's review, but somehow
+the struct member survived.
 
-Use the new ieee80211_rx_ba_timer_expired API when the ba session timer
-expires, since this will tear down the ba session and also send a delba.
+It is not used and can therefore safely be removed.
 
-The previous API used is intended for drivers that offload the
-addba/delba negotiation, but not the rx reordering, while our driver
-does the opposite.
-
-This patch depends on "mac80211: add api to start ba session timer
-expired flow".
-
-Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+V2: Fix typo in commit log (It's -> Its)
+---
+ drivers/net/wireless/ath/ath10k/sdio.c | 4 ----
+ drivers/net/wireless/ath/ath10k/sdio.h | 2 --
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index dcaef7c043ac..027ee5e72172 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -291,8 +291,8 @@ static void iwl_mvm_rx_agg_session_expired(unsigned long data)
- 		goto unlock;
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 48268f0..03a69e5 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -1344,8 +1344,6 @@ static void ath10k_sdio_irq_handler(struct sdio_func *func)
  
- 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
--	ieee80211_stop_rx_ba_session_offl(mvm_sta->vif,
--					  sta->addr, ba_data->tid);
-+	ieee80211_rx_ba_timer_expired(mvm_sta->vif,
-+				      sta->addr, ba_data->tid);
- unlock:
- 	rcu_read_unlock();
- }
+ 	sdio_claim_host(ar_sdio->func);
+ 
+-	wake_up(&ar_sdio->irq_wq);
+-
+ 	if (ret && ret != -ECANCELED)
+ 		ath10k_warn(ar, "failed to process pending SDIO interrupts: %d\n",
+ 			    ret);
+@@ -2000,8 +1998,6 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 		goto err_free_bmi_buf;
+ 	}
+ 
+-	init_waitqueue_head(&ar_sdio->irq_wq);
+-
+ 	for (i = 0; i < ATH10K_SDIO_BUS_REQUEST_MAX_NUM; i++)
+ 		ath10k_sdio_free_bus_req(ar, &ar_sdio->bus_req[i]);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
+index 3f61c67..4ff7b54 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.h
++++ b/drivers/net/wireless/ath/ath10k/sdio.h
+@@ -210,8 +210,6 @@ struct ath10k_sdio {
+ 	/* temporary buffer for BMI requests */
+ 	u8 *bmi_buf;
+ 
+-	wait_queue_head_t irq_wq;
+-
+ 	bool is_disabled;
+ 
+ 	struct workqueue_struct *workqueue;
 -- 
-2.13.2
+2.7.4
