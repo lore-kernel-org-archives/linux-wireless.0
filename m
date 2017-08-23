@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:36842 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751921AbdHHJgi (ORCPT
+Received: from mail-io0-f175.google.com ([209.85.223.175]:36592 "EHLO
+        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932565AbdHWUwn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 05:36:38 -0400
-Received: by mail-wm0-f53.google.com with SMTP id t201so2403452wmt.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 02:36:38 -0700 (PDT)
-Subject: Re: [PATCH v2 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
-To: chi-hsien.lin@cypress.com, Wright Feng <wright.feng@cypress.com>,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
- <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
- <59885CB5.2040007@broadcom.com>
- <b13203ce-e111-09ac-0339-c79d6767c752@cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <23cc6e03-c859-8ff6-f0aa-3dfcd3f3fbe4@broadcom.com> (sfid-20170808_113642_891841_0DD8A774)
-Date: Tue, 8 Aug 2017 11:36:36 +0200
+        Wed, 23 Aug 2017 16:52:43 -0400
+Received: by mail-io0-f175.google.com with SMTP id p141so4512720iop.3
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2017 13:52:43 -0700 (PDT)
+Date: Wed, 23 Aug 2017 15:52:40 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Singapore
+ (SG)
+Message-ID: <20170823205240.ycyrszsvjugtosdi@ubuntu-xps13> (sfid-20170823_225247_141933_03E2608B)
+References: <20170807081950.13327-1-sven.eckelmann@openmesh.com>
 MIME-Version: 1.0
-In-Reply-To: <b13203ce-e111-09ac-0339-c79d6767c752@cypress.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170807081950.13327-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08-08-17 08:53, Chi-Hsien Lin wrote:
+On Mon, Aug 07, 2017 at 10:19:50AM +0200, Sven Eckelmann wrote:
+> 2.4GHz and the lower 5GHz band can now be use with up to 23dBm. But the DFS
+> channels in general require TPC to be usable. Only 5150 - 5250 has an
+> exception which allows the use of it without TPC when reducing the power to
+> 20 dBm.
 > 
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+
+Thanks for the patch, and apologies for the slow response. One comment
+below.
+
+> ---
+> Please check this twice because this is my first attempt in converting an
+> official regulatory document to an wireless-regdb entry.
 > 
-> On 08/07/2017 8:27, Arend van Spriel wrote:
->> On 8/3/2017 11:37 AM, Wright Feng wrote:
->>> From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->>>
->>> Add support for CYW4373 SDIO/USB chipset.
->>> CYW4373 is a 1x1 dual-band 11ac chipset with 20/40/80Mhz channel
->>> support.
->>> It's a WiFi/BT combo device.
->>
->> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->>> ---
->>> v2: add new chip(4737) info in commit message
->>
->> comment below...
->>
->>> ---
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c       | 4 +++-
->>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 9
->>> ++++++++-
->>>   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
->>>   include/linux/mmc/sdio_ids.h                                  | 1 +
->>>   6 files changed, 18 insertions(+), 2 deletions(-)
->>>
->>
->> [...]
->>
->>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
->>> index b733eb4..abacd54 100644
->>> --- a/include/linux/mmc/sdio_ids.h
->>> +++ b/include/linux/mmc/sdio_ids.h
->>> @@ -39,6 +39,7 @@
->>>   #define SDIO_DEVICE_ID_BROADCOM_43455        0xa9bf
->>>   #define SDIO_DEVICE_ID_BROADCOM_4354        0x4354
->>>   #define SDIO_DEVICE_ID_BROADCOM_4356        0x4356
->>> +#define SDIO_DEVICE_ID_CYPRESS_4373        0x4373
->>
->> So is there no specific Cypress SDIO vendor ID?
-> There is no Cypress SDIO vid. I believe the legacy chips 4343w ...etc.
-> shipped are still using BRCM SDIO vid. Also, 4373 project was initiated
-> in Broadcom so the default id was set to the Broadcom id. Will it a
-> requirement to add Cypress vid here?
+>  db.txt | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/db.txt b/db.txt
+> index 0bc068e..df30f37 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -1078,12 +1078,17 @@ country SE: DFS-ETSI
+>  	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+>  	(57000 - 66000 @ 2160), (40)
+>  
+> +# Source
+> +# https://www.imda.gov.sg/~/media/imda/files/regulation%20licensing%20and%20consultations/ict%20standards/telecommunication%20standards/radio-comms/imdatssrd.pdf?la=en
+> +# page 12-14
+> +# The EIRP for 5250 – 5350 can be increased by 3dB if TPC is implemented.
+>  country SG: DFS-FCC
+> -	(2402 - 2482 @ 40), (20)
+> -	(5170 - 5250 @ 80), (17), AUTO-BW
+> -	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
+> -	(5490 - 5730 @ 160), (24), DFS
+> -	(5735 - 5835 @ 80), (30)
+> +	(2400 - 2483.5 @ 40), (23)
+> +	(5150 - 5250 @ 80), (23), AUTO-BW
+> +	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
+> +	# 5470 - 5725 is only allowed when TPC is implemented
+> +	# (5470 - 5725 @ 160), (30), DFS
 
-I was just wondering about it. It seems appropriate to do so although I
-understand the 4373 history of things. Also for USB (in this same patch)
-you seem to have used a Cypress USB vendor id so things just did not
-look consistent. Hence I raised my comment.
+I'm not sure that the lack of a specific provision for operating without
+TPC in this range means that it cannot be used. As I understand it, TPC
+would only result in a reduction in EIRP of 3 dB, so as long as we use
+a power limit of half of the maximum allowed we will be safe.
 
-Regards,
-Arend
+If this is incorrect I'd appreciate it if someone more knowledgable on
+the topic could chime in.
 
->>
->>>   #define SDIO_VENDOR_ID_INTEL            0x0089
->>>   #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX    0x1402
->>>
->>
->> .
->>
+Thanks,
+Seth
