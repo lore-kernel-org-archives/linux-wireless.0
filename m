@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:63780
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754478AbdHYCbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 22:31:03 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [PATCH 17/27] qtnfmac: do not report channel changes until wiphy is registered
-Date: Thu, 24 Aug 2017 19:30:14 -0700
-Message-Id: <20170825023024.10565-18-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043138_117882_228CB279)
-In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34747 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753799AbdHWJ7y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Aug 2017 05:59:54 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: davem@davemloft.net, Larry.Finger@lwfinger.net,
+        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
+        jon.maloy@ericsson.com, ying.xue@windriver.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH 0/3] constify *_ops
+Date: Wed, 23 Aug 2017 15:29:32 +0530
+Message-Id: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_120057_533019_0EAFB646)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+*_ops are not supposed to change at runtime and none of the structures
+is modified.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/event.c | 3 +++
- 1 file changed, 3 insertions(+)
+Arvind Yadav (3):
+  [PATCH 1/3] net: rtlwifi: constify rate_control_ops
+  [PATCH 2/3] net: rsi: mac80211: constify ieee80211_ops
+  [PATCH 3/3] net: rsi: netlink: constify genl_ops
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 9befc9f..b2f6410 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -356,6 +356,9 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 		return -EINVAL;
- 	}
- 
-+	if (!wiphy->registered)
-+		return 0;
-+
- 	qlink_chandef_q2cfg(wiphy, &data->chan, &chdef);
- 
- 	if (!cfg80211_chandef_valid(&chdef)) {
+ drivers/net/wireless/realtek/rtlwifi/rc.c   | 2 +-
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
+ net/tipc/netlink_compat.c                   | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
 -- 
-2.9.5
+1.9.1
