@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0055.outbound.protection.outlook.com ([104.47.40.55]:41664
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751098AbdHNUgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 16:36:42 -0400
-Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "avinashp@quantenna.com" <avinashp@quantenna.com>,
-        "sergey.matyukevich.os@quantenna.com"
-        <sergey.matyukevich.os@quantenna.com>
-References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
- <a35aea64-b391-2719-c8cb-92ef9c9288c7@broadcom.com>
- <1723b617-2272-330e-958c-bb988aa504d5@quantenna.com>
- <1502741597.8162.1.camel@intel.com>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <ac8bfacb-9b2c-c3e5-12df-a5f7b4711bce@quantenna.com> (sfid-20170814_223646_577625_C93BBE9E)
-Date: Mon, 14 Aug 2017 13:36:36 -0700
+Received: from smtp.codeaurora.org ([198.145.29.96]:58362 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753673AbdHWKUc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Aug 2017 06:20:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: davem@davemloft.net, Larry.Finger@lwfinger.net,
+        chaoming_li@realsil.com.cn, jon.maloy@ericsson.com,
+        ying.xue@windriver.com, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/3 v2] net: netlink: constify genl_ops
+References: <1503482923-21640-1-git-send-email-arvind.yadav.cs@gmail.com>
+Date: Wed, 23 Aug 2017 13:20:26 +0300
+In-Reply-To: <1503482923-21640-1-git-send-email-arvind.yadav.cs@gmail.com>
+        (Arvind Yadav's message of "Wed, 23 Aug 2017 15:38:43 +0530")
+Message-ID: <87y3qawpp1.fsf@kamboji.qca.qualcomm.com> (sfid-20170823_122048_665828_3861671A)
 MIME-Version: 1.0
-In-Reply-To: <1502741597.8162.1.camel@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/14/2017 01:13 PM, Grumbach, Emmanuel wrote:
->> It is kind of not clear right now for drivers where to get
->> information from:
->> - NL attributes passed from userspace and forwarded to a driver
-> 
-> Since those exist, it seems to make more sense to me to use those
-> rather than any in-driver decided policy. Usually, deciding upon
-> policies from lower levels is frowned upon I'd say.
+Arvind Yadav <arvind.yadav.cs@gmail.com> writes:
 
-I agree, what I mean is that drivers should know where to take this 
-information from, if there are multiple sources.
+> genl_ops are not supposed to change at runtime. All functions
+> working with genl_ops provided by <net/genetlink.h> work with
+> const genl_ops. So mark the non-const structs as const.
+>
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> ---
+> Changes in v2:
+>              Patch Subject was wrong.
+>
+>  net/tipc/netlink_compat.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-An example are HT/VHT capabilities for start_ap command: they can be 
-parsed directly by drivers by looking at beacon's IEs in 
-"cfg80211_ap_settings". At the same time those are also parsed by 
-nl80211 which fills cfg80211_ap_settings::ht_cap, 
-cfg80211_ap_settings::vht_cap.
-Why HT/VHT caps are not passed directly from usespace as one of NL 
-attributes? I guess because there is not much point in it since 
-userspace passes entire IE set anyway, which can be used by lower levels.
+I don't think the title is still misleading. Other patches have used
+"tipc:", I think you should use the same:
 
+$ git log --oneline --no-merges -20 net/tipc
+41c6d650f653 net: convert sock.sk_refcnt from atomic_t to refcount_t
+343eba69c696 net: tipc: Fix a sleep-in-atomic bug in tipc_msg_reverse
+844cf763fba6 tipc: make macro tipc_wait_for_cond() smp safe
+ec8a09fbbeff tipc: refactor function tipc_sk_recv_stream()
+e9f8b10101c6 tipc: refactor function tipc_sk_recvmsg()
+c1be7756284b tipc: close the connection if protocol messages contain errors
+4e0df4951e9e tipc: improve error validations for sockets in CONNECTING state
+42b531de17d2 tipc: Fix missing connection request handling
+05ff8378975a tipc: fix socket flow control accounting error at tipc_recv_stream
+3364d61c92ec tipc: fix socket flow control accounting error at tipc_send_stream
+78302fd40576 tipc: check return value of nlmsg_new
+fe52145f91fe netlink: pass extended ACK struct where available
+fceb6435e852 netlink: pass extended ACK struct to parsing functions
+66bc1e8d5d1d tipc: allow rdm/dgram socketpairs
+70b03759e9ec tipc: add support for stream/seqpacket socketpairs
+7efea60dcffc tipc: adjust the policy of holding subscription kref
+139bb36f754a tipc: advance the time of deleting subscription from subscriber->subscrp_list
+557d054c01da tipc: fix nametbl deadlock at tipc_nametbl_unsubscribe
+cdfbabfb2f0c net: Work around lockdep limitation in sockets that use sockets
+174cd4b1e5fb sched/headers: Prepare to move signal wakeup & sigpending methods from <linux/sched.h> into <linux/sched/signal.h>
 
-> 
->> - IEs passed from userspace, parsed by nl80211 and forwarded to a
->> driver
->> - IEs that are passed from userspace and parsed by drivers directly
->>
->>>
->>> Thanks,
->>> Arend
->>
->>
+-- 
+Kalle Valo
