@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:57018 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752665AbdHNXai (ORCPT
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:35184 "EHLO
+        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753919AbdHWMg7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 19:30:38 -0400
-Date: Tue, 15 Aug 2017 00:30:28 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: AP mode with Broadcom 4330
-Message-ID: <20170814233028.GK20805@n2100.armlinux.org.uk> (sfid-20170815_013042_487968_63237F61)
-References: <20170728141503.GU31807@n2100.armlinux.org.uk>
- <20170728174930.GA3313@n2100.armlinux.org.uk>
- <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
+        Wed, 23 Aug 2017 08:36:59 -0400
+Received: by mail-yw0-f181.google.com with SMTP id s187so8613966ywf.2
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2017 05:36:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
+In-Reply-To: <2ef60e61-1a55-21c9-744e-39bb5dadfa66@mnementh.co.uk>
+References: <20170822112550.60311-1-ian@mnementh.co.uk> <20170822112550.60311-18-ian@mnementh.co.uk>
+ <CAGRGNgWUFx=cXjMZdTAkYoXTa=V-6Uty6+ccoXwO7WJA9udQRQ@mail.gmail.com>
+ <71fdb0e7-f31d-fa98-c3c6-92ebe2f1a047@broadcom.com> <CAGRGNgXWg6Gj4ND+BrfziX9Je5=b8Ovv=6fafYmg1CiSh6m9Mw@mail.gmail.com>
+ <2ef60e61-1a55-21c9-744e-39bb5dadfa66@mnementh.co.uk>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 23 Aug 2017 22:36:38 +1000
+Message-ID: <CAGRGNgW4a5Ld0=HZ4AfBMzKoD2PvCJR=wfuAz3pxXupfbBw7YA@mail.gmail.com> (sfid-20170823_143702_336611_F1C96CE2)
+Subject: Re: [PATCH 17/30] brcmfamc: remove unnecessary call to brcmf_sdiod_set_backplane_window()
+To: Ian Molton <ian@mnementh.co.uk>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 28, 2017 at 09:50:21PM +0200, Arend van Spriel wrote:
-> On 28-07-17 19:49, Russell King - ARM Linux wrote:
-> > Replacing that "(!mbss)" with "mbss" results in AP mode working on the
-> > 4330.  However, I suspect:
-> > 
-> > 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS))
-> > 			brcmf_fil_iovar_int_set(ifp, "mbss", mbss);
-> > 
-> > actually makes much more sense.
-> > 
-> > Given that this is direct firmware interaction, I can't say which is
-> > correct - all I can say is that mainline kernels are currently broken.
-> 
-> Indeed. I have to come up with a proper fix for both scenarios. Thanks
-> for the report.
+Hi Ian,
 
-I'm now on 4.13-rc4, and running with my patch.  I've configured AP mode:
+On Wed, Aug 23, 2017 at 10:27 PM, Ian Molton <ian@mnementh.co.uk> wrote:
+> On 23/08/17 11:09, Julian Calaby wrote:
+>> I don't think I explained my point well.
+>>
+>> The description of this patch implies that this method
+>> brcmf_sdiod_ramrw(), now relies on the window being set elsewhere
+>> before it's called.
+>
+> I don't think it does.
 
-Interface wlan0
-	ifindex 3
-	wdev 0x1
-	addr 6c:ad:f8:1d:4c:d9
-	ssid Time
-	type AP
-	wiphy 0
-	channel 5 (2432 MHz), width: 20 MHz, center1: 2432 MHz
+"Resetting" can mean both changing it back after setting it to
+something or changing it from some other state to a known one. I read
+it as the latter.
 
-using NetworkManager with a WPA2 key.  However, a Realtek RTL8192EU
-client is trying to connect to it, but is unable:
+>> I'm asking why we can't move the setting of the window inside this
+>> function and remove any redundant calls to
+>> brcmf_sdiod_set_backplane_window() outside of it.
+>
+> We do call brcmf_sdiod_set_backplane_window() in this function. We just
+> dont need to call it a second time to restore the original window.
 
-[ 1750.497436] wlan0: authenticate with 6c:ad:f8:1d:4c:d9
-[ 1750.530929] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 1/3)
-[ 1750.738795] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 2/3)
-[ 1750.946780] wlan0: send auth to 6c:ad:f8:1d:4c:d9 (try 3/3)
-[ 1751.154764] wlan0: authentication with 6c:ad:f8:1d:4c:d9 timed out
+Ah, I do not have the full code in front of me, so I couldn't see
+that, therefore my point is invalid.
 
-The antennas are definitely within range (finger to thumb distance)
-and the Realtek can definitely see the BCM4330 in AP mode.  I don't
-see the interrupts for the SDIO interface increment while the client
-tries to connect.
-
-The WPA2 password is definitely the same on both ends.
-
-Any ideas how to debug this?
-
-Thanks.
+Thanks,
 
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
-According to speedtest.net: 8.21Mbps down 510kbps up
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
