@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752173AbdHBVA7 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:32779 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753691AbdHWLLF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:00:59 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>,
-        Lior David <qca_liord@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 1/9] wil6210: protect against invalid length of tx management frame
-Date: Thu,  3 Aug 2017 00:00:41 +0300
-Message-Id: <1501707649-9665-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230103_043493_7835402F)
-In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 23 Aug 2017 07:11:05 -0400
+Date: Wed, 23 Aug 2017 14:10:55 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: prameela.j04cs@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] rsi: data and managemet path changes for AP mode
+Message-ID: <20170823110547.4pjlb6k6eptljdlf@mwanda> (sfid-20170823_131108_820939_4CEB4643)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Hello Prameela Rani Garnepudi,
 
-Validate buffer length has the minimum needed size
-when sending management frame to protect against
-possible buffer overrun.
+The patch 19844c0a9a19: "rsi: data and managemet path changes for AP
+mode" from Aug 16, 2017, leads to the following static checker
+warning:
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +++
- drivers/net/wireless/ath/wil6210/debugfs.c  | 3 +++
- 2 files changed, 6 insertions(+)
+	drivers/net/wireless/rsi/rsi_91x_core.c:397 rsi_core_xmit()
+	error: buffer overflow 'rsta->start_tx_aggr' 16 <= 16
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 0b5383a..77af749 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -884,6 +884,9 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
- 			  len, true);
- 
-+	if (len < sizeof(struct ieee80211_hdr_3addr))
-+		return -EINVAL;
-+
- 	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
- 	if (!cmd) {
- 		rc = -ENOMEM;
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index f82506d..a2b5d59 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -801,6 +801,9 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
- 	int rc;
- 	void *frame;
- 
-+	if (!len)
-+		return -EINVAL;
-+
- 	frame = memdup_user(buf, len);
- 	if (IS_ERR(frame))
- 		return PTR_ERR(frame);
--- 
-1.9.1
+drivers/net/wireless/rsi/rsi_91x_core.c
+   369          if ((ieee80211_is_mgmt(wh->frame_control)) ||
+   370              (ieee80211_is_ctl(wh->frame_control)) ||
+   371              (ieee80211_is_qos_nullfunc(wh->frame_control))) {
+   372                  q_num = MGMT_SOFT_Q;
+   373                  skb->priority = q_num;
+   374          } else {
+   375                  if (ieee80211_is_data_qos(wh->frame_control)) {
+   376                          tid = (skb->data[24] & IEEE80211_QOS_TID);
+                                ^^^
+tid is capped at 15 here so that's fine.
+
+   377                          skb->priority = TID_TO_WME_AC(tid);
+   378                  } else {
+   379                          tid = IEEE80211_NONQOS_TID;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+but here it's set to 16.
+
+   380                          skb->priority = BE_Q;
+   381                  }
+   382  
+   383                  q_num = skb->priority;
+   384                  tx_params->tid = tid;
+   385  
+   386                  if ((vif->type == NL80211_IFTYPE_AP) &&
+   387                      (!is_broadcast_ether_addr(wh->addr1)) &&
+   388                      (!is_multicast_ether_addr(wh->addr1))) {
+   389                          rsta = rsi_find_sta(common, wh->addr1);
+   390                          if (!rsta)
+   391                                  goto xmit_fail;
+   392                          tx_params->sta_id = rsta->sta_id;
+   393                  }
+   394  
+   395                  if (rsta) {
+   396                          /* Start aggregation if not done for this tid */
+   397                          if (!rsta->start_tx_aggr[tid]) {
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+Smatch complains that this might be out of bounds.
+
+   398                                  rsta->start_tx_aggr[tid] = true;
+   399                                  ieee80211_start_tx_ba_session(rsta->sta,
+   400                                                                tid, 0);
+   401                          }
+   402                  }
+   403          }
+
+regards,
+dan carpenter
