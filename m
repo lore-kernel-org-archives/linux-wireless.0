@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32953 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751456AbdHJMqY (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:36093 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751774AbdHWVE6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 08:46:24 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 1/2] mwifiex: do not use random MAC for pre-association scanning
-Date: Thu, 10 Aug 2017 18:11:25 +0530
-Message-ID: <1502368886-16539-2-git-send-email-gbhat@marvell.com> (sfid-20170810_144628_013326_0B918513)
-In-Reply-To: <1502368886-16539-1-git-send-email-gbhat@marvell.com>
-References: <1502368886-16539-1-git-send-email-gbhat@marvell.com>
+        Wed, 23 Aug 2017 17:04:58 -0400
+Received: by mail-io0-f170.google.com with SMTP id p141so4609419iop.3
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2017 14:04:58 -0700 (PDT)
+Date: Wed, 23 Aug 2017 16:04:55 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] wireless-regdb: Update regulatory document
+ references for Taiwan (TW)
+Message-ID: <20170823210455.3pxj4pzuuvshtsnn@ubuntu-xps13> (sfid-20170823_230502_091505_91BB241A)
+References: <20170808033804.6053-1-wens@csie.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170808033804.6053-1-wens@csie.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver should use random MAC address only if the scan is
-requested by user(provided NL80211_SCAN_FLAG_RANDOM_ADDR
-is set in scan request). It should not be used for a scan
-performed before association.
+On Tue, Aug 08, 2017 at 11:38:03AM +0800, Chen-Yu Tsai wrote:
+> Taiwan's Ministry of Transportation and Communications updated its
+> frequency allocation rules again on 2017/02/22. The amended articles
+> are not related to this database, but the link should be kept up to
+> date, as the old one is no longer accessible.
+> 
+> Taiwan's regulatory body, NCC, published its updated technical
+> regulatory standard for low-power radio frequency devices, LP0002.
+> The URL has not changed. The new standard opens up more bandwidth
+> for 5g U-NII WiFi and 60g WiGig devices. Transmission power for
+> 5.25 ~ 5.35 GHz is also increased, but this was already covered
+> in commit 9a618d9b5fb2 ("wireless-regdb: Update 5 GHz rules for
+> Taiwan (TW) to follow US").
+> 
+> This patch updates the link and comments for the rules and standards,
+> and also adds inline comments referencing the governing section of the
+> LP0002 standard for each band.
+> 
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index d8e8b85..79b4aff 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2790,7 +2790,6 @@ static int mwifiex_scan_specific_ssid(struct mwifiex_private *priv,
- 	if (!scan_cfg)
- 		return -ENOMEM;
- 
--	ether_addr_copy(scan_cfg->random_mac, priv->random_mac);
- 	scan_cfg->ssid_list = req_ssid;
- 	scan_cfg->num_ssids = 1;
- 
--- 
-1.9.1
+Applied both patches, thanks!
