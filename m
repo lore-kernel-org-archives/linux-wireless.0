@@ -1,43 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35107 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753846AbdHIQav (ORCPT
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:43649 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753263AbdHWHRH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:30:51 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, Jes.Sorensen@gmail.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 17/20] rtl8xxxu: constify usb_device_id
-Date: Wed,  9 Aug 2017 22:00:39 +0530
-Message-Id: <1502296239-21673-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183122_741283_AB4B07D0)
+        Wed, 23 Aug 2017 03:17:07 -0400
+From: Romain Perier <romain.perier@collabora.com>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH RESEND v12 7/8] wireless: ipw2200: Replace PCI pool old API
+Date: Wed, 23 Aug 2017 09:16:51 +0200
+Message-Id: <20170823071651.7865-1-romain.perier@collabora.com> (sfid-20170823_091723_356486_83CD40B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 ---
-changes in v2:
-              Re-submitting wireless separately.
 
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Note: As requested by Kalle Valo, resend and add linux-wireless to Cc:
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 21e5ef0..7806a4d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6190,7 +6190,7 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
- 	ieee80211_free_hw(hw);
- }
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index c311b1a994c1..c57c567add4d 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -3209,7 +3209,7 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+ 	struct fw_chunk *chunk;
+ 	int total_nr = 0;
+ 	int i;
+-	struct pci_pool *pool;
++	struct dma_pool *pool;
+ 	void **virts;
+ 	dma_addr_t *phys;
  
--static struct usb_device_id dev_table[] = {
-+static const struct usb_device_id dev_table[] = {
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8724, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8723au_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x1724, 0xff, 0xff, 0xff),
+@@ -3226,9 +3226,10 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+ 		kfree(virts);
+ 		return -ENOMEM;
+ 	}
+-	pool = pci_pool_create("ipw2200", priv->pci_dev, CB_MAX_LENGTH, 0, 0);
++	pool = dma_pool_create("ipw2200", &priv->pci_dev->dev, CB_MAX_LENGTH, 0,
++			       0);
+ 	if (!pool) {
+-		IPW_ERROR("pci_pool_create failed\n");
++		IPW_ERROR("dma_pool_create failed\n");
+ 		kfree(phys);
+ 		kfree(virts);
+ 		return -ENOMEM;
+@@ -3253,7 +3254,7 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+ 
+ 		nr = (chunk_len + CB_MAX_LENGTH - 1) / CB_MAX_LENGTH;
+ 		for (i = 0; i < nr; i++) {
+-			virts[total_nr] = pci_pool_alloc(pool, GFP_KERNEL,
++			virts[total_nr] = dma_pool_alloc(pool, GFP_KERNEL,
+ 							 &phys[total_nr]);
+ 			if (!virts[total_nr]) {
+ 				ret = -ENOMEM;
+@@ -3297,9 +3298,9 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+ 	}
+  out:
+ 	for (i = 0; i < total_nr; i++)
+-		pci_pool_free(pool, virts[i], phys[i]);
++		dma_pool_free(pool, virts[i], phys[i]);
+ 
+-	pci_pool_destroy(pool);
++	dma_pool_destroy(pool);
+ 	kfree(phys);
+ 	kfree(virts);
+ 
 -- 
-2.7.4
+2.11.0
