@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35909 "EHLO
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:35826 "EHLO
         mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752858AbdHIQ0i (ORCPT
+        with ESMTP id S1753712AbdHWKwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:26:38 -0400
+        Wed, 23 Aug 2017 06:52:39 -0400
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, elena.reshetova@intel.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 07/20] orinoco: constify usb_device_id
-Date: Wed,  9 Aug 2017 21:56:28 +0530
-Message-Id: <1502295988-21144-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_182719_263964_767EE79D)
+To: davem@davemloft.net, Larry.Finger@lwfinger.net,
+        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
+        jon.maloy@ericsson.com, ying.xue@windriver.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH 3/3 v3] net: tipc: constify genl_ops
+Date: Wed, 23 Aug 2017 16:22:20 +0530
+Message-Id: <1503485540-22113-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_125257_281775_25031D08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+genl_ops are not supposed to change at runtime. All functions
+working with genl_ops provided by <net/genetlink.h> work with
+const genl_ops. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
-changes in v2:
-              Re-submitting wireless separately.
+Changes in v2:
+             Patch Subject was wrong.
+changes in v3 :
+             Updated patch subject as per comment.
 
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 2 +-
+ net/tipc/netlink_compat.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-index c84fd84..56f6e3b 100644
---- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -210,7 +210,7 @@ struct ezusb_packet {
- } __packed;
+diff --git a/net/tipc/netlink_compat.c b/net/tipc/netlink_compat.c
+index 750949d..e48f0b2 100644
+--- a/net/tipc/netlink_compat.c
++++ b/net/tipc/netlink_compat.c
+@@ -1217,7 +1217,7 @@ static int tipc_nl_compat_recv(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
  
- /* Table of devices that work or may work with this driver */
--static struct usb_device_id ezusb_table[] = {
-+static const struct usb_device_id ezusb_table[] = {
- 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_COMPAQ_WL215_ID)},
- 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_HP_WL215_ID)},
- 	{USB_DEVICE(USB_COMPAQ_VENDOR_ID, USB_COMPAQ_W200_ID)},
+-static struct genl_ops tipc_genl_compat_ops[] = {
++static const struct genl_ops tipc_genl_compat_ops[] = {
+ 	{
+ 		.cmd		= TIPC_GENL_CMD,
+ 		.doit		= tipc_nl_compat_recv,
 -- 
-2.7.4
+1.9.1
