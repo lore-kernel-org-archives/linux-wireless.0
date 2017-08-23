@@ -1,83 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:33053 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751942AbdH2OSF (ORCPT
+Received: from pv35p12im-ztdg05031101.me.com ([17.133.186.213]:46393 "EHLO
+        pv35p12im-ztdg05031101.me.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754113AbdHWPAN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 10:18:05 -0400
-Received: by mail-oi0-f50.google.com with SMTP id r203so28473703oih.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Aug 2017 07:18:05 -0700 (PDT)
-Subject: Re: rtlwifi handling of sequence numbers with aggregation
-To: Jes Sorensen <jes.sorensen@gmail.com>
-References: <17ea196f-2f77-5110-8f33-4a25765ad34e@gmail.com>
- <a258b2fa-c960-88db-5934-af4c0f4b6435@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a1d2f17d-dca5-d6c1-f489-74f69e0f146b@lwfinger.net> (sfid-20170829_161809_338087_E3FC2B09)
-Date: Tue, 29 Aug 2017 09:18:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <a258b2fa-c960-88db-5934-af4c0f4b6435@lwfinger.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 23 Aug 2017 11:00:13 -0400
+Received: from process-dkim-sign-daemon.pv35p12im-ztdg05031101.me.com by
+ pv35p12im-ztdg05031101.me.com
+ (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
+ 2017)) id <0OV500M0078S3Q00@pv35p12im-ztdg05031101.me.com> for
+ linux-wireless@vger.kernel.org; Wed, 23 Aug 2017 15:00:13 +0000 (GMT)
+Received: from icloud.com ([127.0.0.1]) by pv35p12im-ztdg05031101.me.com
+ (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
+ 2017)) with ESMTPSA id <0OV500HNV8C8ZY40@pv35p12im-ztdg05031101.me.com> for
+ linux-wireless@vger.kernel.org; Wed, 23 Aug 2017 15:00:11 +0000 (GMT)
+From: =?utf-8?Q?H=C3=A5vard_Rabbe?= <hrabbe@me.com>
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: How can I get WDS to work? I need some help
+Message-id: <6B96DBC1-F290-4853-BC5F-F884727BF591@me.com> (sfid-20170823_170017_289214_D6D7BDC5)
+Date: Wed, 23 Aug 2017 17:00:08 +0200
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2017 09:15 PM, Larry Finger wrote:
-> On 08/25/2017 12:51 PM, Jes Sorensen wrote:
->> Hi,
->>
->> Looking at some bits in rtlwifi I came across a discrepancy between the
->> PCI and USB code.
->>
->> Consider the following code:
->>
->> In rtl_pci_tx():
->>     if (ieee80211_is_data_qos(fc)) {
->>         tid = rtl_get_tid(skb);
->>         if (sta) {
->>             sta_entry = (struct rtl_sta_info *)sta->drv_priv;
->>             seq_number = (le16_to_cpu(hdr->seq_ctrl) &
->>                       IEEE80211_SCTL_SEQ) >> 4;
->>             seq_number += 1;
->>
->>             if (!ieee80211_has_morefrags(hdr->frame_control))
->>                 sta_entry->tids[tid].seq_number = seq_number;
->>         }
->>
->> In _rtl_usb_tx_preprocess():
->>     if (ieee80211_is_data_qos(fc)) {
->>         qc = ieee80211_get_qos_ctl(hdr);
->>         tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
->>         seq_number = (le16_to_cpu(hdr->seq_ctrl) &
->>                  IEEE80211_SCTL_SEQ) >> 4;
->>         seq_number += 1;
->>         seq_number <<= 4;
->>     }
->> [snip]
->>     if (!ieee80211_has_morefrags(hdr->frame_control)) {
->>         if (qc)
->>             mac->tids[tid].seq_number = seq_number;
->>     }
->>
->> The seq_number is picked up from ieee80211_ops->ampdu_action()
->> which calls into rtl_tx_agg_start():
->>     tid_data = &sta_entry->tids[tid];
->>
->>     RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG,
->>          "on ra = %pM tid = %d seq:%d\n", sta->addr, tid,
->>          tid_data->seq_number);
->>
->>     *ssn = tid_data->seq_number;
->>
->> My question here is why does the USB code shift seq_number << 4 while
->> the PCI code doesn't? I assume one of these is wrong, but which one?
-> 
-> Based on my prejudices, I would suspect the USB driver before that of the PCI 
-> version. I have BCc'd my contact at Realtek to see what he has to say on the issue.
+Hi
 
-My contact at Realtek replies that the PCI code is correct. He further states 
-that "Since mac80211 uses ieee80211_tx_next_seq() to store next sequence number 
-in sta->tid_seq[tid] and fill the sequence number in AMPDU parameters, I think 
-driver doesn't need to maintain the seq_number anymore. So, let's remove 'u16 
-seq_number' from 'struct rtl_tid_data', please refer to attachment." I have not 
-had a chance to test his patch, but I trust his analysis.
+Im trying to get wds working. I haven=E2=80=99t found much documentation =
+on this topic. This is what i have found: =
+https://wireless.wiki.kernel.org/en/users/documentation/iw#setting_up_a_wd=
+s_peer
 
-Larry
+I have configured two machines with hostapd with the same config. Its =
+also the same wifi card WLE200NX using the AR9280 chipset.
+
+After APs is running I have used this commands on both AP=E2=80=99s with =
+the other APs wifi mac address:
+
+iw phy phy0 interface add wds0 type wds
+iw dev wds0 set peer <MAC address>
+
+then wds0 interface is showing up
+
+------------------
+wds0      IEEE 802.11abgn  Mode:Repeater  Access Point: Not-Associated  =20=
+
+          Tx-Power=3D20 dBm  =20
+          Retry short limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+---------------------
+
+
+But it says Access Point: Not-Associated
+
+
+I have no clue what to do next.
+
+Is there anyone who know something about this?
+
+Thank you for any help
+
+
+Best Regards,
+
+H=C3=A5vard Rabbe=
