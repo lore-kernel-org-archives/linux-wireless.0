@@ -1,45 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36837 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751516AbdHGFBP (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35191 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932146AbdHWO3n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 01:01:15 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2] rtlwifi: constify rate_control_ops structure
-Date: Mon,  7 Aug 2017 10:30:51 +0530
-Message-Id: <1502082051-4904-1-git-send-email-bhumirks@gmail.com> (sfid-20170807_070135_133029_946DAF0C)
+        Wed, 23 Aug 2017 10:29:43 -0400
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH v2] at76c50x-usb: check memory allocation failure
+Date: Wed, 23 Aug 2017 19:59:16 +0530
+Message-Id: <1503498556-13835-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170823_162948_797716_876FE853)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rate_control_ops structure is only passed as an argument to the
-function ieee80211_rate_control_{register/unregister}. This argument
-is of type const, so declare the structure as const.
+Check memory allocation failure and return -ENOMEM rather than just
+retuning void.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 ---
-Changes in v2:
-* Change subject line.
+ drivers/net/wireless/atmel/at76c50x-usb.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
- drivers/net/wireless/realtek/rtlwifi/rc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index 951d257..02811ed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -283,7 +283,7 @@ static void rtl_rate_free_sta(void *rtlpriv,
- 	kfree(rate_priv);
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index 09defbc..ceb453b 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -932,7 +932,7 @@ static int at76_set_autorate_fallback(struct at76_priv *priv, int onoff)
+ 	return ret;
  }
  
--static struct rate_control_ops rtl_rate_ops = {
-+static const struct rate_control_ops rtl_rate_ops = {
- 	.name = "rtl_rc",
- 	.alloc = rtl_rate_alloc,
- 	.free = rtl_rate_free,
+-static void at76_dump_mib_mac_addr(struct at76_priv *priv)
++static int at76_dump_mib_mac_addr(struct at76_priv *priv)
+ {
+ 	int i;
+ 	int ret;
+@@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
+ 					 GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
+ 			   sizeof(struct mib_mac_addr));
+@@ -961,7 +961,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
+ 	kfree(m);
+ }
+ 
+-static void at76_dump_mib_mac_wep(struct at76_priv *priv)
++static int at76_dump_mib_mac_wep(struct at76_priv *priv)
+ {
+ 	int i;
+ 	int ret;
+@@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+ 	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
+ 			   sizeof(struct mib_mac_wep));
+@@ -999,14 +999,14 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+ 	kfree(m);
+ }
+ 
+-static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
++static int at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+ {
+ 	int ret;
+ 	struct mib_mac_mgmt *m = kmalloc(sizeof(struct mib_mac_mgmt),
+ 					 GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
+ 			   sizeof(struct mib_mac_mgmt));
+@@ -1037,13 +1037,13 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+ 	kfree(m);
+ }
+ 
+-static void at76_dump_mib_mac(struct at76_priv *priv)
++static int at76_dump_mib_mac(struct at76_priv *priv)
+ {
+ 	int ret;
+ 	struct mib_mac *m = kmalloc(sizeof(struct mib_mac), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct mib_mac));
+ 	if (ret < 0) {
+@@ -1074,13 +1074,13 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+ 	kfree(m);
+ }
+ 
+-static void at76_dump_mib_phy(struct at76_priv *priv)
++static int at76_dump_mib_phy(struct at76_priv *priv)
+ {
+ 	int ret;
+ 	struct mib_phy *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct mib_phy));
+ 	if (ret < 0) {
+@@ -1107,13 +1107,13 @@ static void at76_dump_mib_phy(struct at76_priv *priv)
+ 	kfree(m);
+ }
+ 
+-static void at76_dump_mib_local(struct at76_priv *priv)
++static int at76_dump_mib_local(struct at76_priv *priv)
+ {
+ 	int ret;
+ 	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
+ 	if (ret < 0) {
+@@ -1132,13 +1132,13 @@ static void at76_dump_mib_local(struct at76_priv *priv)
+ 	kfree(m);
+ }
+ 
+-static void at76_dump_mib_mdomain(struct at76_priv *priv)
++static int at76_dump_mib_mdomain(struct at76_priv *priv)
+ {
+ 	int ret;
+ 	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain), GFP_KERNEL);
+ 
+ 	if (!m)
+-		return;
++		return -ENOMEM;
+ 
+ 	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
+ 			   sizeof(struct mib_mdomain));
 -- 
-1.9.1
+2.7.4
