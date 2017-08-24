@@ -1,155 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35554 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752933AbdHBVBN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45566 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751168AbdHXUAW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:01:13 -0400
-Cc: Gidon Studinski <QCA_gidons@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 9/9] wil6210: make debugfs compilation optional
-Date: Thu,  3 Aug 2017 00:00:49 +0300
-Message-Id: <1501707649-9665-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170802_230115_900649_F84A357A)
-In-Reply-To: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501707649-9665-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 24 Aug 2017 16:00:22 -0400
+Message-ID: <1503604818.15969.433.camel@coelho.fi> (sfid-20170824_220037_564955_EF43A5D1)
+From: Luca Coelho <luca@coelho.fi>
+To: Jiri Kosina <jikos@kernel.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
+        linux-pm@vger.kernel.org, david.weinehall@intel.com,
+        johannes.berg@intel.com, kvalo@codeaurora.org,
+        sara.sharon@intel.com, emmanuel.grumbach@intel.com
+Date: Thu, 24 Aug 2017 23:00:18 +0300
+In-Reply-To: <alpine.LSU.2.20.1708242153000.3581@cbobk.fhfr.pm>
+References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+          <20170822073729.4856-1-luca@coelho.fi>
+         <1503554432.15969.415.camel@coelho.fi>
+         <alpine.LSU.2.20.1708242153000.3581@cbobk.fhfr.pm>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to
+ iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
+On Thu, 2017-08-24 at 21:56 +0200, Jiri Kosina wrote:
+> On Thu, 24 Aug 2017, Luca Coelho wrote:
+> 
+> > > Work queues cannot be allocated when a mutex is held because the mutex
+> > > may be in use and that would make it sleep.  Doing so generates the
+> > > following splat with 4.13+:
+> > > 
+> > > [   19.513298] ======================================================
+> > > [   19.513429] WARNING: possible circular locking dependency detected
+> > > [   19.513557] 4.13.0-rc5+ #6 Not tainted
+> > > [   19.513638] ------------------------------------------------------
+> > > [   19.513767] cpuhp/0/12 is trying to acquire lock:
+> > > [   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
+> > > [   19.514047]
+> > > [   19.514047] but task is already holding lock:
+> > > [   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
+> > > [   19.514338]
+> > > [   19.514338] which lock already depends on the new lock.
+> > > 
+> > > This lock dependency already existed with previous kernel versions,
+> > > but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
+> > > lock stacks for hotplug callbacks") was introduced.
+> > > 
+> > > Reported-by: David Weinehall <david.weinehall@intel.com>
+> > > Reported-by: Jiri Kosina <jikos@kernel.org>
+> > > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > 
+> > Jiri, did you have a chance to try this out? I'm about to ask Kalle to
+> > merge this so it gets in in time for 4.13-rc7.
+> 
+> Sorry, I am almost completely offline for one more week (vacation), and 
+> will not have access to the affected system before that.
 
-Since debugfs is a kernel configuration option, enable the driver to
-compile without debugfs.
+Sounds good! Enjoy! ;)
 
-Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 14 ++++++++++----
- drivers/net/wireless/ath/wil6210/main.c    |  1 +
- drivers/net/wireless/ath/wil6210/txrx.c    |  6 +++---
- drivers/net/wireless/ath/wil6210/wil6210.h |  2 +-
- 4 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index d4e8865..5e803e2 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -14,6 +14,10 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include "wil6210.h"
-+
-+#ifdef CONFIG_DEBUG_FS
-+
- #include <linux/module.h>
- #include <linux/debugfs.h>
- #include <linux/seq_file.h>
-@@ -21,7 +25,6 @@
- #include <linux/rtnetlink.h>
- #include <linux/power_supply.h>
- 
--#include "wil6210.h"
- #include "wmi.h"
- #include "txrx.h"
- #include "pmc.h"
-@@ -30,7 +33,6 @@
- static u32 mem_addr;
- static u32 dbg_txdesc_index;
- static u32 dbg_vring_index; /* 24+ for Rx, 0..23 for Tx */
--u32 vring_idle_trsh = 16; /* HW fetches up to 16 descriptors at once */
- 
- enum dbg_off_type {
- 	doff_u32 = 0,
-@@ -1763,6 +1765,7 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
- 	WIL_FIELD(chip_revision, 0444,	doff_u8),
- 	WIL_FIELD(abft_len, 0644,		doff_u8),
- 	WIL_FIELD(wakeup_trigger, 0644,		doff_u8),
-+	WIL_FIELD(vring_idle_trsh, 0644,	doff_u32),
- 	{},
- };
- 
-@@ -1778,8 +1781,6 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
- 	{"desc_index",	0644, (ulong)&dbg_txdesc_index, doff_u32},
- 	{"vring_index",	0644, (ulong)&dbg_vring_index, doff_u32},
- 	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
--	{"vring_idle_trsh", 0644, (ulong)&vring_idle_trsh,
--	 doff_u32},
- 	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
- 	{},
- };
-@@ -1821,3 +1822,8 @@ void wil6210_debugfs_remove(struct wil6210_priv *wil)
- 	 */
- 	wil_pmc_free(wil, false);
- }
-+
-+#else /* !CONFIG_DEBUG_FS */
-+int wil6210_debugfs_init(struct wil6210_priv *wil) { return 0; }
-+void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
-+#endif
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index b89d017..e2ea490 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -581,6 +581,7 @@ int wil_priv_init(struct wil6210_priv *wil)
- 			      WMI_WAKEUP_TRIGGER_BCAST;
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
- 	wil->suspend_stats.min_suspend_time = ULONG_MAX;
-+	wil->vring_idle_trsh = 16;
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index ec57bcc..389c718 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1666,7 +1666,7 @@ static int __wil_tx_vring_tso(struct wil6210_priv *wil, struct vring *vring,
- 
- 	/* performance monitoring */
- 	used = wil_vring_used_tx(vring);
--	if (wil_val_in_range(vring_idle_trsh,
-+	if (wil_val_in_range(wil->vring_idle_trsh,
- 			     used, used + descs_used)) {
- 		txdata->idle += get_cycles() - txdata->last_idle;
- 		wil_dbg_txrx(wil,  "Ring[%2d] not idle %d -> %d\n",
-@@ -1813,7 +1813,7 @@ static int __wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 
- 	/* performance monitoring */
- 	used = wil_vring_used_tx(vring);
--	if (wil_val_in_range(vring_idle_trsh,
-+	if (wil_val_in_range(wil->vring_idle_trsh,
- 			     used, used + nr_frags + 1)) {
- 		txdata->idle += get_cycles() - txdata->last_idle;
- 		wil_dbg_txrx(wil,  "Ring[%2d] not idle %d -> %d\n",
-@@ -2175,7 +2175,7 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 
- 	/* performance monitoring */
- 	used_new = wil_vring_used_tx(vring);
--	if (wil_val_in_range(vring_idle_trsh,
-+	if (wil_val_in_range(wil->vring_idle_trsh,
- 			     used_new, used_before_complete)) {
- 		wil_dbg_txrx(wil, "Ring[%2d] idle %d -> %d\n",
- 			     ringid, used_before_complete, used_new);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index e3c0c2f..cf20a8c 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -30,7 +30,6 @@
- extern unsigned int mtu_max;
- extern unsigned short rx_ring_overflow_thrsh;
- extern int agg_wsize;
--extern u32 vring_idle_trsh;
- extern bool rx_align_2;
- extern bool rx_large_buf;
- extern bool debug_fw;
-@@ -693,6 +692,7 @@ struct wil6210_priv {
- 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
- 	struct wil_sta_info sta[WIL6210_MAX_CID];
- 	int bcast_vring;
-+	u32 vring_idle_trsh; /* HW fetches up to 16 descriptors at once  */
- 	bool use_extended_dma_addr; /* indicates whether we are using 48 bits */
- 	/* scan */
- 	struct cfg80211_scan_request *scan_request;
--- 
-1.9.1
+>  But this indeed 
+> looks like a correct fix to me, so feel free to add
+> 
+> 	Acked-by: Jiri Kosina <jkosina@suse.cz>
+> 
+> I'll be able to provide my Tested-by: eventually only in ~10 days.
+
+
+Kalle already picked it up in wireless-drivers and this should make it's
+way to 4.13-rc7 (we hope).
+
+In any case, thanks for reporting and the help debugging it.
+
+--
+Cheers,
+Luca.
