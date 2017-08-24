@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:38726 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753781AbdHWKYU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33612 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbdHXJyK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 06:24:20 -0400
-Subject: Re: [PATCH 3/3 v2] net: netlink: constify genl_ops
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1503482923-21640-1-git-send-email-arvind.yadav.cs@gmail.com>
- <87y3qawpp1.fsf@kamboji.qca.qualcomm.com>
-Cc: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, jon.maloy@ericsson.com,
-        ying.xue@windriver.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Message-ID: <84dbca9a-8a08-1975-cf1f-93ee94b890ca@gmail.com> (sfid-20170823_122441_834369_B307F2B5)
-Date: Wed, 23 Aug 2017 15:54:05 +0530
+        Thu, 24 Aug 2017 05:54:10 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87y3qawpp1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: rtlwifi: make a couple arrays larger
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170818080519.mvjls5pgnxeknzpk@mwanda>
+References: <20170818080519.mvjls5pgnxeknzpk@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Maxim Samoylov <max7255@gmail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20170824095410.1E2B9606B7@smtp.codeaurora.org> (sfid-20170824_115413_413940_4B05CB76)
+Date: Thu, 24 Aug 2017 09:54:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
+> This is a static checker fix.  "cal_num" is 10.  We're declaring the
+> tx_dt[] and rx_td[] arrays as 3 element arrays.  The static checker
+> complains that we do:
+> 
+> 	tx_dt[cal] = (vdf_y[1]>>20)-(vdf_y[0]>>20);
+> 
+> "cal" is the iterator and it is in the 0-9 range so it looks like
+> we could corrupt memory.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-On Wednesday 23 August 2017 03:50 PM, Kalle Valo wrote:
-> Arvind Yadav <arvind.yadav.cs@gmail.com> writes:
->
->> genl_ops are not supposed to change at runtime. All functions
->> working with genl_ops provided by <net/genetlink.h> work with
->> const genl_ops. So mark the non-const structs as const.
->>
->> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
->> ---
->> Changes in v2:
->>               Patch Subject was wrong.
->>
->>   net/tipc/netlink_compat.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
-> I don't think the title is still misleading. Other patches have used
-> "tipc:", I think you should use the same:
-Ok, I will update as per your suggestion.
->
-> $ git log --oneline --no-merges -20 net/tipc
-> 41c6d650f653 net: convert sock.sk_refcnt from atomic_t to refcount_t
-> 343eba69c696 net: tipc: Fix a sleep-in-atomic bug in tipc_msg_reverse
-> 844cf763fba6 tipc: make macro tipc_wait_for_cond() smp safe
-> ec8a09fbbeff tipc: refactor function tipc_sk_recv_stream()
-> e9f8b10101c6 tipc: refactor function tipc_sk_recvmsg()
-> c1be7756284b tipc: close the connection if protocol messages contain errors
-> 4e0df4951e9e tipc: improve error validations for sockets in CONNECTING state
-> 42b531de17d2 tipc: Fix missing connection request handling
-> 05ff8378975a tipc: fix socket flow control accounting error at tipc_recv_stream
-> 3364d61c92ec tipc: fix socket flow control accounting error at tipc_send_stream
-> 78302fd40576 tipc: check return value of nlmsg_new
-> fe52145f91fe netlink: pass extended ACK struct where available
-> fceb6435e852 netlink: pass extended ACK struct to parsing functions
-> 66bc1e8d5d1d tipc: allow rdm/dgram socketpairs
-> 70b03759e9ec tipc: add support for stream/seqpacket socketpairs
-> 7efea60dcffc tipc: adjust the policy of holding subscription kref
-> 139bb36f754a tipc: advance the time of deleting subscription from subscriber->subscrp_list
-> 557d054c01da tipc: fix nametbl deadlock at tipc_nametbl_unsubscribe
-> cdfbabfb2f0c net: Work around lockdep limitation in sockets that use sockets
-> 174cd4b1e5fb sched/headers: Prepare to move signal wakeup & sigpending methods from <linux/sched.h> into <linux/sched/signal.h>
->
-~arvind
+Patch applied to wireless-drivers-next.git, thanks.
+
+d9ee6015e573 rtlwifi: make a couple arrays larger
+
+-- 
+https://patchwork.kernel.org/patch/9907821/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
