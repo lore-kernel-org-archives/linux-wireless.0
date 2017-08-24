@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:38662 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752318AbdH1IjL (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63608 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751276AbdHXJHm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 04:39:11 -0400
-Date: Mon, 28 Aug 2017 10:39:12 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Ben Hutchings <ben.hutchings@codethink.co.uk>
-Subject: Re: [PATCH] NFC: fix device-allocation error return
-Message-ID: <20170828083912.GB20634@localhost> (sfid-20170828_103931_657940_251A8F5E)
-References: <20170709110858.20331-1-johan@kernel.org>
- <20170722133228.GE2729@localhost>
+        Thu, 24 Aug 2017 05:07:42 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170722133228.GE2729@localhost>
+Subject: Re: ath10k: fix napi_poll budget overflow
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1503438242-5657-1-git-send-email-ryanhsu@qti.qualcomm.com>
+References: <1503438242-5657-1-git-send-email-ryanhsu@qti.qualcomm.com>
+To: <ryanhsu@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <ryanhsu@qti.qualcomm.com>
+Message-ID: <2cd00da66a6847c1829ed9edf7ad7009@euamsexm01a.eu.qualcomm.com> (sfid-20170824_110750_441983_1E250D01)
+Date: Thu, 24 Aug 2017 11:07:35 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Samuel or David,
+ryanhsu@qti.qualcomm.com wrote:
 
-On Sat, Jul 22, 2017 at 03:32:28PM +0200, Johan Hovold wrote:
-> On Sun, Jul 09, 2017 at 01:08:58PM +0200, Johan Hovold wrote:
-> > A recent change fixing NFC device allocation itself introduced an
-> > error-handling bug by returning an error pointer in case device-id
-> > allocation failed. This is clearly broken as the callers still expected
-> > NULL to be returned on errors as detected by Dan's static checker.
-> > 
-> > Fix this up by returning NULL in the event that we've run out of memory
-> > when allocating a new device id.
-> > 
-> > Note that the offending commit is marked for stable (3.8) so this fix
-> > needs to be backported along with it.
-> > 
-> > Fixes: 20777bc57c34 ("NFC: fix broken device allocation")
-> > Cc: stable <stable@vger.kernel.org>	# 3.8
-> > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > Signed-off-by: Johan Hovold <johan@kernel.org>
-
-> Could you apply this follow-up fix so that it can be backported along
-> with the offending commit (which was just added to the stable queues)?
+> From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 > 
-> We would only hit this error path if an ida allocation fails due to OOM;
-> so while this is not critical, it would still be nice to get it fixed.
+> In napi_poll, the budget number is used to control the amount of packets
+> we should handle per poll to balance the resource in the system.
+> 
+> In the list of the amsdu packets reception, we check if there is budget
+> count left and handle the complete list of the packets, that it will have
+> chances the very last list will over the budget leftover.
+> 
+> So adding one more parameter - budget_left, this would help while
+> traversing the list to avoid handling more than the budget given.
+> 
+> Reported-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+> Fix-suggested-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> 
+> Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 
-Another reminder about this one; can you apply it so we can get it into
-4.14-rc1?
+Was there a bug report about this? I can add a link to that and maybe also
+include the warning.
 
-Note that the offending commit has now been backported to the stable
-trees and we really want this trivial follow-up fix to be backported as
-well.
+-- 
+https://patchwork.kernel.org/patch/9916207/
 
-Let me know if you want me to resend the patch.
-
-Thanks,
-Johan
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
