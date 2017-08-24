@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44618 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751077AbdHRPwh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:37 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
+Received: from ozlabs.org ([103.22.144.67]:47559 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750715AbdHXB21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Aug 2017 21:28:27 -0400
+Date: Thu, 24 Aug 2017 11:28:25 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:11 +0300
-Message-Id: <20170818154922.2904-14-luca@coelho.fi> (sfid-20170818_175240_715961_ED2A4408)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 13/24] iwlwifi: move BT_MBOX_PRINT macro to common header
+Subject: linux-next: manual merge of the wireless-drivers-next tree with
+ Linus' tree
+Message-ID: <20170824112825.29c2f8a0@canb.auug.org.au> (sfid-20170824_032840_902001_0A954C00)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Hi all,
 
-Move the BT_MBOX_PRINT() macro from mvm/debugfs.c to fw/api/coex.h so
-it can be reused and remove duplicate definition of BT_MBOX_MSG(),
-keeping only the one already in coex.h.
+Today's linux-next merge of the wireless-drivers-next tree got a
+conflict in:
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/coex.h |  6 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 12 ------------
- 2 files changed, 6 insertions(+), 12 deletions(-)
+  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-index d9a74db01f90..d09555afe2c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-@@ -197,6 +197,12 @@ enum iwl_bt_mxbox_dw4 {
- 	((le32_to_cpu((_notif)->mbox_msg[(_num)]) & BT_MBOX##_num##_##_field)\
- 	>> BT_MBOX##_num##_##_field##_POS)
- 
-+#define BT_MBOX_PRINT(_num, _field, _end)				    \
-+			pos += scnprintf(buf + pos, bufsz - pos,	    \
-+					 "\t%s: %d%s",			    \
-+					 #_field,			    \
-+					 BT_MBOX_MSG(notif, _num, _field),  \
-+					 true ? "\n" : ", ");
- enum iwl_bt_activity_grading {
- 	BT_OFF			= 0,
- 	BT_ON_NO_CONNECTION	= 1,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index c88a37397075..e97904c2c4d4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -469,18 +469,6 @@ static ssize_t iwl_dbgfs_disable_power_off_write(struct iwl_mvm *mvm, char *buf,
- 	return ret ?: count;
- }
- 
--#define BT_MBOX_MSG(_notif, _num, _field)				     \
--	((le32_to_cpu((_notif)->mbox_msg[(_num)]) & BT_MBOX##_num##_##_field)\
--	>> BT_MBOX##_num##_##_field##_POS)
--
--
--#define BT_MBOX_PRINT(_num, _field, _end)				    \
--			pos += scnprintf(buf + pos, bufsz - pos,	    \
--					 "\t%s: %d%s",			    \
--					 #_field,			    \
--					 BT_MBOX_MSG(notif, _num, _field),  \
--					 true ? "\n" : ", ");
--
- static
- int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
- 			   struct iwl_bt_coex_profile_notif *notif, char *buf,
+between commit:
+
+  a600852a9d00 ("iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU")
+
+from Linus' tree and commit:
+
+  790e663433d8 ("iwlwifi: mvm: include more debug data when we get an unexpected baid")
+
+from the wireless-drivers-next tree.
+
+I fixed it up (I just used the former) and can carry the fix as
+necessary. This is now fixed as far as linux-next is concerned, but any
+non trivial conflicts should be mentioned to your upstream maintainer
+when your tree is submitted for merging.  You may also want to consider
+cooperating with the maintainer of the conflicting tree to minimise any
+particularly complex conflicts.
+
 -- 
-2.14.1
+Cheers,
+Stephen Rothwell
