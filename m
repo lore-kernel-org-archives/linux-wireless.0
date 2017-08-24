@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41548 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751368AbdHAJku (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44162 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751317AbdHXNuY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:40:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Naftali Goldstein <naftali.goldstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  1 Aug 2017 12:40:38 +0300
-Message-Id: <20170801094039.22349-8-luca@coelho.fi> (sfid-20170801_114054_207595_A7CD4F3A)
-In-Reply-To: <20170801094039.22349-1-luca@coelho.fi>
-References: <20170801094039.22349-1-luca@coelho.fi>
-Subject: [PATCH 7/8] iwlwifi: mvm: set the RTS_MIMO_PROT bit in flag mask when sending sta to fw
+        Thu, 24 Aug 2017 09:50:24 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] iwlwifi: pcie: move rx workqueue initialization to
+ iwl_trans_pcie_alloc()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170822073729.4856-1-luca@coelho.fi>
+References: <20170822073729.4856-1-luca@coelho.fi>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: jikos@kernel.org, linux-wireless@vger.kernel.org,
+        luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
+        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
+        linux-pm@vger.kernel.org, david.weinehall@intel.com,
+        johannes.berg@intel.com, sara.sharon@intel.com,
+        emmanuel.grumbach@intel.com
+Message-Id: <20170824135023.EB43F60712@smtp.codeaurora.org> (sfid-20170824_155043_872236_B4AB3921)
+Date: Thu, 24 Aug 2017 13:50:23 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naftali Goldstein <naftali.goldstein@intel.com>
+Luciano Coelho <luca@coelho.fi> wrote:
 
-Set the STA_FLG_RTS_MIMO_PROT bit in station_flags_msk of the add sta
-command, so that when smps mode changes, the FW will know about it.
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Work queues cannot be allocated when a mutex is held because the mutex
+> may be in use and that would make it sleep.  Doing so generates the
+> following splat with 4.13+:
+> 
+> [   19.513298] ======================================================
+> [   19.513429] WARNING: possible circular locking dependency detected
+> [   19.513557] 4.13.0-rc5+ #6 Not tainted
+> [   19.513638] ------------------------------------------------------
+> [   19.513767] cpuhp/0/12 is trying to acquire lock:
+> [   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
+> [   19.514047]
+> [   19.514047] but task is already holding lock:
+> [   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
+> [   19.514338]
+> [   19.514338] which lock already depends on the new lock.
+> 
+> This lock dependency already existed with previous kernel versions,
+> but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
+> lock stacks for hotplug callbacks") was introduced.
+> 
+> Reported-by: David Weinehall <david.weinehall@intel.com>
+> Reported-by: Jiri Kosina <jikos@kernel.org>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-In particular, in AP mode, clients are added upon receival of an auth
-request, at which point there's no knowledge of the client's smps mode.
-When the assoc request arrives, the add_sta command is resent to modify
-the station parameters. At this point the driver knows the smps mode,
-but since the corresponding bit in the mask is not set, the fw doesn't
-update this field so there's no rts protection for mimo.
+Patch applied to wireless-drivers.git, thanks.
 
-Fixes: 5bc5aaad407c ("iwlwifi: mvm: set up initial SMPS/NSS station info")
-Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+10a54d8196d1 iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc()
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index ab66b4394dfc..dcaef7c043ac 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -121,7 +121,8 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		.mac_id_n_color = cpu_to_le32(mvm_sta->mac_id_n_color),
- 		.add_modify = update ? 1 : 0,
- 		.station_flags_msk = cpu_to_le32(STA_FLG_FAT_EN_MSK |
--						 STA_FLG_MIMO_EN_MSK),
-+						 STA_FLG_MIMO_EN_MSK |
-+						 STA_FLG_RTS_MIMO_PROT),
- 		.tid_disable_tx = cpu_to_le16(mvm_sta->tid_disable_agg),
- 	};
- 	int ret;
 -- 
-2.13.2
+https://patchwork.kernel.org/patch/9914349/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
