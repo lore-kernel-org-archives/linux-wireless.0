@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.cypress.com ([157.95.67.100]:45030 "EHLO
-        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751918AbdHHGxo (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45468 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751283AbdHXGAl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 02:53:44 -0400
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH v2 2/3] brcmfmac: Add support for CYW4373 SDIO/USB chipset
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
- <1501753079-1758-2-git-send-email-wright.feng@cypress.com>
- <59885CB5.2040007@broadcom.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <b13203ce-e111-09ac-0339-c79d6767c752@cypress.com> (sfid-20170808_085347_569729_E29088EE)
-Date: Tue, 8 Aug 2017 14:53:25 +0800
-MIME-Version: 1.0
-In-Reply-To: <59885CB5.2040007@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Thu, 24 Aug 2017 02:00:41 -0400
+Message-ID: <1503554432.15969.415.camel@coelho.fi> (sfid-20170824_080056_072524_4926F1A1)
+From: Luca Coelho <luca@coelho.fi>
+To: jikos@kernel.org, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linuxwifi@intel.com,
+        rui.zhang@intel.com, edubezval@gmail.com, linux-pm@vger.kernel.org,
+        david.weinehall@intel.com, johannes.berg@intel.com,
+        kvalo@codeaurora.org, sara.sharon@intel.com,
+        emmanuel.grumbach@intel.com
+Date: Thu, 24 Aug 2017 09:00:32 +0300
+In-Reply-To: <20170822073729.4856-1-luca@coelho.fi>
+References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+         <20170822073729.4856-1-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to
+ iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2017-08-22 at 10:37 +0300, Luca Coelho wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Work queues cannot be allocated when a mutex is held because the mutex
+> may be in use and that would make it sleep.  Doing so generates the
+> following splat with 4.13+:
+> 
+> [   19.513298] ======================================================
+> [   19.513429] WARNING: possible circular locking dependency detected
+> [   19.513557] 4.13.0-rc5+ #6 Not tainted
+> [   19.513638] ------------------------------------------------------
+> [   19.513767] cpuhp/0/12 is trying to acquire lock:
+> [   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
+> [   19.514047]
+> [   19.514047] but task is already holding lock:
+> [   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
+> [   19.514338]
+> [   19.514338] which lock already depends on the new lock.
+> 
+> This lock dependency already existed with previous kernel versions,
+> but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
+> lock stacks for hotplug callbacks") was introduced.
+> 
+> Reported-by: David Weinehall <david.weinehall@intel.com>
+> Reported-by: Jiri Kosina <jikos@kernel.org>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
+Jiri, did you have a chance to try this out? I'm about to ask Kalle to
+merge this so it gets in in time for 4.13-rc7.
 
-On 08/07/2017 8:27, Arend van Spriel wrote:
-> On 8/3/2017 11:37 AM, Wright Feng wrote:
->> From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->>
->> Add support for CYW4373 SDIO/USB chipset.
->> CYW4373 is a 1x1 dual-band 11ac chipset with 20/40/80Mhz channel support.
->> It's a WiFi/BT combo device.
-> 
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->> ---
->> v2: add new chip(4737) info in commit message
-> 
-> comment below...
-> 
->> ---
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c     | 1 +
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c       | 4 +++-
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 9 
->> ++++++++-
->>   drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
->>   include/linux/mmc/sdio_ids.h                                  | 1 +
->>   6 files changed, 18 insertions(+), 2 deletions(-)
->>
-> 
-> [...]
-> 
->> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
->> index b733eb4..abacd54 100644
->> --- a/include/linux/mmc/sdio_ids.h
->> +++ b/include/linux/mmc/sdio_ids.h
->> @@ -39,6 +39,7 @@
->>   #define SDIO_DEVICE_ID_BROADCOM_43455        0xa9bf
->>   #define SDIO_DEVICE_ID_BROADCOM_4354        0x4354
->>   #define SDIO_DEVICE_ID_BROADCOM_4356        0x4356
->> +#define SDIO_DEVICE_ID_CYPRESS_4373        0x4373
-> 
-> So is there no specific Cypress SDIO vendor ID?
-There is no Cypress SDIO vid. I believe the legacy chips 4343w ...etc. 
-shipped are still using BRCM SDIO vid. Also, 4373 project was initiated 
-in Broadcom so the default id was set to the Broadcom id. Will it a 
-requirement to add Cypress vid here?
-
-
-> 
->>   #define SDIO_VENDOR_ID_INTEL            0x0089
->>   #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX    0x1402
->>
-> 
-> .
-> 
+--
+Cheers,
+Luca.
