@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35074 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752369AbdHCKFY (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36438 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752875AbdHXSv7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 06:05:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH v2 3/3] brcmfmac: fix wrong num_different_channels when mchan feature enabled
-References: <1501753079-1758-1-git-send-email-wright.feng@cypress.com>
-        <1501753079-1758-3-git-send-email-wright.feng@cypress.com>
-Date: Thu, 03 Aug 2017 13:05:17 +0300
-In-Reply-To: <1501753079-1758-3-git-send-email-wright.feng@cypress.com>
-        (Wright Feng's message of "Thu, 3 Aug 2017 17:37:59 +0800")
-Message-ID: <87k22lnezm.fsf@kamboji.qca.qualcomm.com> (sfid-20170803_120608_571917_BC9D793E)
+        Thu, 24 Aug 2017 14:51:59 -0400
+Subject: Re: [PATCH] staging: rtlwifi: check for array overflow
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Souptick Joarder <jrdr.linux@gmail.com>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <1d7fce37-9f91-4346-4816-a12a2159fcc5@lwfinger.net> (sfid-20170824_205233_609721_2C76A16E)
+Date: Thu, 24 Aug 2017 13:51:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> writes:
+On 08/24/2017 05:08 AM, Dan Carpenter wrote:
+> Smatch is distrustful of the "capab" value and marks it as user
+> controlled.  I think it actually comes from the firmware?  Anyway, I
+> looked at other drivers and they added a bounds check and it seems like
+> a harmless thing to have so I have added it here as well.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> brcmfmac: fix wrong num_different_channels when mchan feature enabled
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Here also the title is duplicated, but I'll fix that.
+Thanks,
 
-> When the device/firmware supports multi-channel, it can have P2P
-> connection and regular connection with AP simultaneous. In this case,
-> the num_different_channels in wiphy info was not correct when firmware
-> supports multi-channel (The iw wiphy# info showed "#channels <= 1" in 
-> interface combinations). It caused association failed and error message
-> "CTRL-EVENT-FREQ-CONFLICT error" in wpa_supplicant when P2P GO interface
-> was running at the same time.
-> The root cause is that the num_different_channels was always overridden
-> to 1 in brcmf_setup_ifmodes even multi-channel was enabled.
-> We correct the logic by moving num_different_channels setting forward.
->
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
-> ---
-> v2: Describe the motivation and reason for this patch in commit message
+Larry
 
-Perfect, thanks.
-
--- 
-Kalle Valo
+> 
+> diff --git a/drivers/staging/rtlwifi/base.c b/drivers/staging/rtlwifi/base.c
+> index f7f207cbaee3..a30b928d5ee1 100644
+> --- a/drivers/staging/rtlwifi/base.c
+> +++ b/drivers/staging/rtlwifi/base.c
+> @@ -1414,6 +1414,10 @@ bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
+>   				  le16_to_cpu(mgmt->u.action.u.addba_req.capab);
+>   				tid = (capab &
+>   				       IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
+> +				if (tid >= MAX_TID_COUNT) {
+> +					rcu_read_unlock();
+> +					return true;
+> +				}
+>   				tid_data = &sta_entry->tids[tid];
+>   				if (tid_data->agg.rx_agg_state ==
+>   				    RTL_RX_AGG_START)
+> 
