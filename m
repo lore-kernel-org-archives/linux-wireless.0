@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751961AbdHCTIl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:41 -0400
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 07/10] wil6210: fix interface-up check
-Date: Thu,  3 Aug 2017 22:08:19 +0300
-Message-Id: <1501787302-22885-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210845_666678_CC9648BA)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from ozlabs.org ([103.22.144.67]:49209 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750715AbdHXBcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Aug 2017 21:32:17 -0400
+Date: Thu, 24 Aug 2017 11:32:14 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ Linus' tree
+Message-ID: <20170824113214.352b5c18@canb.auug.org.au> (sfid-20170824_033231_536697_40A977C5)
+In-Reply-To: <20170824111753.2b1c508e@canb.auug.org.au>
+References: <20170824111753.2b1c508e@canb.auug.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Hi all,
 
-While wil_open is executed, any call to netif_running
-would return a success. In case there are failures
-within wil_open, should not treat the device as if it
-is already opened in relevant functions (like FW recovery
-and runtime suspend check).
+On Thu, 24 Aug 2017 11:17:53 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+>
+>   		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+> - 			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n",
+>  -			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x): %s\n",
+> ++			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n"
 
-Fix that by checking the device up flag instead.
+Rats! I missed the comma ... I have added it back.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 3 ++-
- drivers/net/wireless/ath/wil6210/pm.c   | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 8968c2c..b1e2814 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -394,10 +394,11 @@ static void wil_fw_error_worker(struct work_struct *work)
- 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
- 						fw_error_worker);
- 	struct wireless_dev *wdev = wil->wdev;
-+	struct net_device *ndev = wil_to_ndev(wil);
- 
- 	wil_dbg_misc(wil, "fw error worker\n");
- 
--	if (!netif_running(wil_to_ndev(wil))) {
-+	if (!(ndev->flags & IFF_UP)) {
- 		wil_info(wil, "No recovery - interface is down\n");
- 		return;
- 	}
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 820ed17..8f5d1b44 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -21,10 +21,11 @@ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime)
- {
- 	int rc = 0;
- 	struct wireless_dev *wdev = wil->wdev;
-+	struct net_device *ndev = wil_to_ndev(wil);
- 
- 	wil_dbg_pm(wil, "can_suspend: %s\n", is_runtime ? "runtime" : "system");
- 
--	if (!netif_running(wil_to_ndev(wil))) {
-+	if (!(ndev->flags & IFF_UP)) {
- 		/* can always sleep when down */
- 		wil_dbg_pm(wil, "Interface is down\n");
- 		goto out;
 -- 
-1.9.1
+Cheers,
+Stephen Rothwell
