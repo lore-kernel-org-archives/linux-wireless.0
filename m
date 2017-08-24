@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:38509 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753657AbdHWKFZ (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:37850 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752370AbdHXOl0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 06:05:25 -0400
-Subject: Re: [PATCH 3/3] net: rsi: netlink: constify genl_ops
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1503482375-19983-1-git-send-email-arvind.yadav.cs@gmail.com>
- <1503482375-19983-4-git-send-email-arvind.yadav.cs@gmail.com>
- <87378iy52u.fsf@kamboji.qca.qualcomm.com>
-Cc: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, jon.maloy@ericsson.com,
-        ying.xue@windriver.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Message-ID: <34315266-d6be-0c88-4d6e-129c1300e3f7@gmail.com> (sfid-20170823_120540_769490_646DDC6E)
-Date: Wed, 23 Aug 2017 15:35:11 +0530
+        Thu, 24 Aug 2017 10:41:26 -0400
+Subject: Re: Two rtlwifi drivers?
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Souptick Joarder <jrdr.linux@gmail.com>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+ <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net> (sfid-20170824_164131_040188_7C9E9E42)
+Date: Thu, 24 Aug 2017 09:41:24 -0500
 MIME-Version: 1.0
-In-Reply-To: <87378iy52u.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-
-On Wednesday 23 August 2017 03:32 PM, Kalle Valo wrote:
-> Arvind Yadav <arvind.yadav.cs@gmail.com> writes:
->
->> genl_ops are not supposed to change at runtime. All functions
->> working with genl_ops provided by <net/genetlink.h> work with
->> const genl_ops. So mark the non-const structs as const.
+On 08/24/2017 07:14 AM, Kalle Valo wrote:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
+> 
+>> Smatch is distrustful of the "capab" value and marks it as user
+>> controlled.  I think it actually comes from the firmware?  Anyway, I
+>> looked at other drivers and they added a bounds check and it seems like
+>> a harmless thing to have so I have added it here as well.
 >>
->> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
->> ---
->>   net/tipc/netlink_compat.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
-> Using the prefix "rsi:" looks wrong for this patch.
-Thanks for pointing. I will update.
->
-~arvind
+>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>>
+>> diff --git a/drivers/staging/rtlwifi/base.c b/drivers/staging/rtlwifi/base.c
+>> index f7f207cbaee3..a30b928d5ee1 100644
+>> --- a/drivers/staging/rtlwifi/base.c
+>> +++ b/drivers/staging/rtlwifi/base.c
+> 
+> I'm getting slightly annoyed that we now apparently have two duplicate
+> rtlwifi drivers (with the same name!) and I'm being spammed by staging
+> patches. Was this really a smart thing to do? And what will be the
+> future of these two drivers?
+> 
+> (Of course this is not directed to Dan, he is just fixing bugs found by
+> smatch, but more like a general question.)
+
+That was the decision that you and Greg made. The version in wireless-drivers 
+needs many patches to handle the new device. The progress in applying these to 
+wireless-drivers was very slow for many reasons. Keeping a single version of 
+that code would have required coordination between you and Greg, which was 
+discouraged.
+
+The future, as stated in the TODO in staging, is to merge all the changes in the 
+support drivers into wireless-drivers, and then move the new RTL8822BE driver 
+out of staging.
+
+I'm sorry about the fallout affecting you, and I probably should have changed 
+the directory names. In any case, ignore any patches that belong in staging. If 
+I see any that do not include GregKH in the "To" list, I will NACK them and 
+request proper routing.
+
+Larry
