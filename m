@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42406 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752581AbdHESrw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39518 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752111AbdHXJ5s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 14:47:52 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 21:47:40 +0300
-Message-Id: <20170805184743.23650-1-luca@coelho.fi> (sfid-20170805_205039_834191_6EA92B75)
-Subject: [PATCH 0/3] iwlwifi: fixes intended for 4.13 2017-08-05
+        Thu, 24 Aug 2017 05:57:48 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] net: rtlwifi: constify rate_control_ops
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1503482375-19983-2-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1503482375-19983-2-git-send-email-arvind.yadav.cs@gmail.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: davem@davemloft.net, Larry.Finger@lwfinger.net,
+        chaoming_li@realsil.com.cn, jon.maloy@ericsson.com,
+        ying.xue@windriver.com, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Message-Id: <20170824095748.41364606B7@smtp.codeaurora.org> (sfid-20170824_115805_528547_1DFF3F4B)
+Date: Thu, 24 Aug 2017 09:57:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
 
-Hi,
+> rate_control_ops are not supposed to change at runtime. All functions
+> working with rate_control_ops provided by <net/mac80211.h> work with
+> const rate_control_ops. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-This is the third set of fixes for 4.13.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-The issues solved here are:
-
-* Fix a memory leak in the SAR code;
-* Fix a stuck queue case in AP mode;
-* Convert a WARN to a simple debug in a legitimate race case (from
-  which we can recover);
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (1):
-  iwlwifi: mvm: start mac queues when deferred tx frames are purged
-
-Christophe Jaillet (1):
-  iwlwifi: mvm: Fix a memory leak in an error handling path in
-    'iwl_mvm_sar_get_wgds_table()'
-
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: don't WARN when a legit race happens in A-MPDU
-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 10 ++++++----
- 3 files changed, 21 insertions(+), 7 deletions(-)
+28b75415ad19 wireless: ipw2200: Replace PCI pool old API
+9ea792a48cdd net: rsi: mac80211: constify ieee80211_ops
 
 -- 
-2.13.2
+https://patchwork.kernel.org/patch/9917001/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
