@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54916 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750911AbdHaM7H (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 08:59:07 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from ozlabs.org ([103.22.144.67]:48941 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750715AbdHXBYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Aug 2017 21:24:22 -0400
+Date: Thu, 24 Aug 2017 11:24:19 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: linux-next: manual merge of the wireless-drivers-next tree with
+ Linus' tree
+Message-ID: <20170824112419.40149e36@canb.auug.org.au> (sfid-20170824_032436_552326_97AFB62A)
 MIME-Version: 1.0
-Subject: Re: [v2] brcmfmac: Log chip id and revision
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170830135449.1075-1-hdegoede@redhat.com>
-References: <20170830135449.1075-1-hdegoede@redhat.com>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Message-Id: <20170831125907.4DB16617D8@smtp.codeaurora.org> (sfid-20170831_145910_336927_6458394E)
-Date: Thu, 31 Aug 2017 12:59:07 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hans de Goede <hdegoede@redhat.com> wrote:
+Hi all,
 
-> For debugging some problems, it is useful to know the chip revision
-> add a brcmf_info message logging this.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Today's linux-next merge of the wireless-drivers-next tree got a
+conflict in:
 
-Patch applied to wireless-drivers-next.git, thanks.
+  drivers/net/wireless/intel/iwlwifi/mvm/rs.c
 
-f38966a7ace8 brcmfmac: Log chip id and revision
+between commit:
+
+  87f55616f81b ("iwlwifi: mvm: rs: fix TLC statistics collection")
+
+from Linus' tree and commit:
+
+  482e48440a0e ("iwlwifi: mvm: change open and close criteria of a BA session")
+
+from the wireless-drivers-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
 
 -- 
-https://patchwork.kernel.org/patch/9929651/
+Cheers,
+Stephen Rothwell
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+diff --cc drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 8999a1199d60,44c873082a31..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@@ -1312,7 -1357,8 +1357,8 @@@ void iwl_mvm_rs_tx_status(struct iwl_mv
+  		if (info->status.ampdu_ack_len == 0)
+  			info->status.ampdu_len = 1;
+  
+- 		rs_collect_tlc_data(mvm, lq_sta, curr_tbl, tx_resp_rate.index,
++ 		rs_collect_tlc_data(mvm, mvmsta, tid, curr_tbl,
+ -				    lq_rate.index,
+++				    tx_resp_rate.index,
+  				    info->status.ampdu_len,
+  				    info->status.ampdu_ack_len);
+  
+@@@ -1348,11 -1394,11 +1394,11 @@@
+  				continue;
+  
+  			rs_collect_tpc_data(mvm, lq_sta, tmp_tbl,
+ -					    lq_rate.index, 1,
+ +					    tx_resp_rate.index, 1,
+  					    i < retries ? 0 : legacy_success,
+  					    reduced_txp);
+- 			rs_collect_tlc_data(mvm, lq_sta, tmp_tbl,
++ 			rs_collect_tlc_data(mvm, mvmsta, tid, tmp_tbl,
+ -					    lq_rate.index, 1,
+ +					    tx_resp_rate.index, 1,
+  					    i < retries ? 0 : legacy_success);
+  		}
+  
