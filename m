@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pv35p12im-ztdg05031101.me.com ([17.133.186.213]:46393 "EHLO
-        pv35p12im-ztdg05031101.me.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754113AbdHWPAN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 11:00:13 -0400
-Received: from process-dkim-sign-daemon.pv35p12im-ztdg05031101.me.com by
- pv35p12im-ztdg05031101.me.com
- (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
- 2017)) id <0OV500M0078S3Q00@pv35p12im-ztdg05031101.me.com> for
- linux-wireless@vger.kernel.org; Wed, 23 Aug 2017 15:00:13 +0000 (GMT)
-Received: from icloud.com ([127.0.0.1]) by pv35p12im-ztdg05031101.me.com
- (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
- 2017)) with ESMTPSA id <0OV500HNV8C8ZY40@pv35p12im-ztdg05031101.me.com> for
- linux-wireless@vger.kernel.org; Wed, 23 Aug 2017 15:00:11 +0000 (GMT)
-From: =?utf-8?Q?H=C3=A5vard_Rabbe?= <hrabbe@me.com>
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: How can I get WDS to work? I need some help
-Message-id: <6B96DBC1-F290-4853-BC5F-F884727BF591@me.com> (sfid-20170823_170017_289214_D6D7BDC5)
-Date: Wed, 23 Aug 2017 17:00:08 +0200
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754478AbdHYCa5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:30:57 -0400
+From: igor.mitsyanko.os@quantenna.com
 To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 12/27] qtnfmac: let wifi card handle channel switch request to the same chan
+Date: Thu, 24 Aug 2017 19:30:09 -0700
+Message-Id: <20170825023024.10565-13-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043139_652206_AC578D59)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Im trying to get wds working. I haven=E2=80=99t found much documentation =
-on this topic. This is what i have found: =
-https://wireless.wiki.kernel.org/en/users/documentation/iw#setting_up_a_wd=
-s_peer
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-I have configured two machines with hostapd with the same config. Its =
-also the same wifi card WLE200NX using the AR9280 chipset.
-
-After APs is running I have used this commands on both AP=E2=80=99s with =
-the other APs wifi mac address:
-
-iw phy phy0 interface add wds0 type wds
-iw dev wds0 set peer <MAC address>
-
-then wds0 interface is showing up
-
-------------------
-wds0      IEEE 802.11abgn  Mode:Repeater  Access Point: Not-Associated  =20=
-
-          Tx-Power=3D20 dBm  =20
-          Retry short limit:7   RTS thr:off   Fragment thr:off
-          Power Management:off
----------------------
-
-
-But it says Access Point: Not-Associated
-
-
-I have no clue what to do next.
-
-Is there anyone who know something about this?
-
-Thank you for any help
-
-
-Best Regards,
-
-H=C3=A5vard Rabbe=
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 501ece3..062189b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -760,11 +760,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (cfg80211_chandef_identical(&params->chandef, &mac->chandef)) {
+-		pr_err("%s: switch request to the same channel\n", dev->name);
+-		return -EALREADY;
+-	}
+-
+ 	ret = qtnf_cmd_send_chan_switch(mac, params);
+ 	if (ret)
+ 		pr_warn("%s: failed to switch to channel (%u)\n",
+-- 
+2.9.5
