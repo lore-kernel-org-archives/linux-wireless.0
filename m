@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0087.outbound.protection.outlook.com ([104.47.34.87]:43184
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751241AbdH2PpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 11:45:16 -0400
-Date: Tue, 29 Aug 2017 18:44:56 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 14/27] qtnfmac: do not cache CSA chandef info
-Message-ID: <20170829154455.j2qrxcu35mwkwzcl@bars> (sfid-20170829_174521_379703_C9AE7083)
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43218 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932218AbdHYNiC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Aug 2017 09:38:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-08-25
+Date: Fri, 25 Aug 2017 16:37:57 +0300
+Message-ID: <87zianvkcq.fsf@kamboji.qca.qualcomm.com> (sfid-20170825_153832_669481_22D26B2D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am ok with removal of CSA chandef info. It was kept mainly to warn
-about channel switch to the frequency that differs from original
-CSA request.
+Hi Dave,
 
-> -	if (vif->vifid != 0) {
-> -		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
-> -			return -EOPNOTSUPP;
-> -
-> -		if (!cfg80211_chandef_identical(&params->chandef,
-> -						&mac->csa_chandef))
-> -			return -EINVAL;
-> -
-> -		return 0;
-> -	}
+here's pull request to net tree for 4.13, more info in the signed tag
+below. Please let me know if there are any problems.
 
+Kalle
 
-This particular CSA_ACTIVE status check was introduced for compatibility with
-hostapd behaviour. Currently hostapd goes through all the virtual interfaces
-and sends CSA for each of them. So the idea was to send CSA for primary
-interface and confirm success for the others. If this snipped is dropped
-then we end up in multiple identical CSA requests queued in firmware.
+The following changes since commit e9bf53ab1ee34bb05c104bbfd2b77c844773f8e6:
 
-I suggest to remove chandef_identical check, but to keep the logic for
-secondary virtual interface handling.
+  brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices (2017-08-14 11:09:30 +0300)
 
-Regards,
-Sergey
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-08-25
+
+for you to fetch changes up to 10a54d8196d11f6cc0db2f71249f93854cb9fe55:
+
+  iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc() (2017-08-24 16:49:00 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.13
+
+Only one iwlwifi patch this time.
+
+iwlwifi
+
+* fix multiple times reported lockdep warning found by new locking
+  annotation introduced in v4.13-rc1
+
+----------------------------------------------------------------
+Luca Coelho (1):
+      iwlwifi: pcie: move rx workqueue initialization to iwl_trans_pcie_alloc()
+
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 10 +---------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  9 +++++++++
+ 3 files changed, 12 insertions(+), 9 deletions(-)
