@@ -1,38 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51704 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751880AbdHHLxW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:53:22 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] rtlwifi: constify rate_control_ops structure
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1502082051-4904-1-git-send-email-bhumirks@gmail.com>
-References: <1502082051-4904-1-git-send-email-bhumirks@gmail.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bhumika Goyal <bhumirks@gmail.com>
-Message-Id: <20170808115322.4155160209@smtp.codeaurora.org> (sfid-20170808_135341_349589_CEF4A7C9)
-Date: Tue,  8 Aug 2017 11:53:22 +0000 (UTC)
+Received: from mout02.posteo.de ([185.67.36.142]:44401 "EHLO mout02.posteo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756578AbdHYOt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Aug 2017 10:49:56 -0400
+Message-ID: <1503672591.22413.3.camel@embedded.rocks> (sfid-20170825_165025_957548_B620B869)
+Subject: Re: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of
+ the brcm43430 chip
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Hans de Goede <hdegoede@redhat.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Jelle van der Waa <jelle@vdwaa.nl>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Date: Fri, 25 Aug 2017 16:49:51 +0200
+In-Reply-To: <c851671c-1147-94cc-cf98-d0b20b051b3b@redhat.com>
+References: <20170616131449.12108-1-hdegoede@redhat.com>
+         <20170616131449.12108-2-hdegoede@redhat.com>
+         <1503669327.8480.3.camel@embedded.rocks>
+         <c851671c-1147-94cc-cf98-d0b20b051b3b@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhumika Goyal <bhumirks@gmail.com> wrote:
+Hi Hans,
 
-> rate_control_ops structure is only passed as an argument to the
-> function ieee80211_rate_control_{register/unregister}. This argument
-> is of type const, so declare the structure as const.
+On Fri, 2017-08-25 at 16:03 +0200, Hans de Goede wrote:
+> Hi,
 > 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> On 25-08-17 15:55, Jörg Krause wrote:
+> > Hi,
+> > 
+> > On Fri, 2017-06-16 at 15:14 +0200, Hans de Goede wrote:
+> > > The brcm43430 chip needs different firmware files for chip revision 0
+> > > and 1. The file currently in linux-firmware is for revision 1 only.
+> > > 
+> > > This commit makes brcmfmac request brcmfmac43430a0-sdio.bin instead
+> > > of brcmfmac43430-sdio.bin for revision 0 chips.
+> > > 
+> > > Note that the behavior for revision 1 chips is not changed, ideally those
+> > > would load brcmfmac43430a1-sdio.bin, but that will break existing setups.
+> > > 
+> > > Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> > > ---
+> > >   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++--
+> > >   1 file changed, 5 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > > index 4ed40c94bda9..5125aeeb5310 100644
+> > > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> > > @@ -612,7 +612,9 @@ BRCMF_FW_NVRAM_DEF(43340, "brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
+> > >   BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt");
+> > >   BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.txt");
+> > >   BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
+> > > -BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+> > > +BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin", "brcmfmac43430a0-sdio.txt");
+> > > +/* Note the names are not postfixed with a1 for backward compatibility */
+> > > +BRCMF_FW_NVRAM_DEF(43430A1, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+> > >   BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
+> > >   BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
+> > >   BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
+> > > @@ -630,7 +632,8 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+> > >   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
+> > >   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+> > >   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+> > > -	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
+> > > +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+> > > +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
+> > >   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
+> > >   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+> > >   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
+> > 
+> > Unfortunately, there is no "brcmfmac43430a0-sdio.bin" in linux-
+> > firmware. Therefore, my custom board fails:
+> > 
+> > # [   24.894241] brcmfmac mmc0:0001:1: Direct firmware load for
+> > brcm/brcmfmac43430a0-sdio.bin failed with error -2
+> > [   25.914322] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> > clkctl 0x50
+> > [   26.934186] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> > clkctl 0x50
+> > 
+> > Can someone provide the firmware file, please?
+> 
+> I've put all the versions I've been able to find here:
+> 
+> http://jwrdegoede.danny.cz/brcm-firmware/
+> 
+> Note that the 7.x.y.z version does not seem to have any useful meaning,
+> higher is not necessarily newer :|
+> 
+> [hans@shalem brcm-firmware]$ for i in brcmfmac43430a0-sdio.bin*; do echo $i && strings $i | tail -n 1; done
+> brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020
+> 43430a0-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-lpc-wl11u-rcc-fmc-wepso-ccx-okc-fbt-noccxaka-txpwr-ampduhostreorder-clm_43xx_lg-ndoe Version: 7.10.1.244 CRC: 73c82137 Date: Fri 2016-07-01 18:03:15 KST Ucode Ver: 940.1020 FWID: 01-bae8afee
+> brcmfmac43430a0-sdio.bin.7.10.226.49.no_ucode_version
+> 43430a0-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-lpc-wl11u-rcc-fmc-wepso-ccx-okc-fbt-noccxaka-txpwr-ampduhostreorder-clm_43xx_lg Version: 7.10.226.49 CRC: bf92cb0b Date: Fri 2014-06-06 14:55:15 KST FWID 01-8962686a
+> brcmfmac43430a0-sdio.bin.7.10.68.5.ucode997.0
+> 43430a0-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-ampduhostreorder-lpc-wl11u-rcc-fmc-wepso-ccx-okc-anqpo-ltecx-sr-ndoe Version: 7.10.68.5 CRC: 5168922 Date: Thu 2015-04-30 04:20:43 PDT Ucode Ver: 997.0 FWID: 01-2bde7d77
+> 
+> So date wise brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020 is the newest
+> and IIRC that one works well for me.
+> 
+> ucode version wise, brcmfmac43430a0-sdio.bin.7.10.68.5.ucode997.0 is newer,
+> but the .0 in 997.0 makes it feel like an unproven release to me.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Thanks for the files!
 
-cb1b82625de7 rtlwifi: constify rate_control_ops structure
+I've tested with brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020 and
+brcmfmac is happy:
 
--- 
-https://patchwork.kernel.org/patch/9884393/
+brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul  1 2016
+18:02:40 version 7.10.1 (A0 Station/P2P feature) FWID 01-bae8afee
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Where did you got the firmware files from?
+
+@Broadcom: Is there any "official" firmware?
+
+Jörg
