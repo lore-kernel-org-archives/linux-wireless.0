@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb3-smtp-cloud9.xs4all.net ([194.109.24.30]:53761 "EHLO
-        lb3-smtp-cloud9.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751334AbdH3MCV (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45740 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754926AbdHYI1j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 08:02:21 -0400
-Date: Wed, 30 Aug 2017 14:02:18 +0200
-From: Antony Antony <antony@phenome.org>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: Antony Antony <antony@phenome.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Icenowy Zheng <icenowy@aosc.io>,
-        devicetree <devicetree@vger.kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Maxime Ripard <maxime.ripard@free-electrons.com>
-Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add
- bcm43430-fmac
-Message-ID: <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local> (sfid-20170830_140225_243687_89563AFC)
-References: <20170829214309.34466-1-antony@phenome.org>
- <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
+        Fri, 25 Aug 2017 04:27:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 25 Aug 2017 11:27:29 +0300
+Message-Id: <20170825082730.31388-2-luca@coelho.fi> (sfid-20170825_102746_063498_7C523478)
+In-Reply-To: <20170825082730.31388-1-luca@coelho.fi>
+References: <20170825082730.31388-1-luca@coelho.fi>
+Subject: [PATCH 1/2] iwlwifi: fix long debug print
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-On Wed, Aug 30, 2017 at 10:28:20AM +0800, Chen-Yu Tsai wrote:
-> On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
+There is a debug print that sometimes reaches over
+110 chars, thus generating a warning in those cases.
+Split the print into two to prevent these cases.
 
-> > a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > @@ -6,7 +6,9 @@ connects the device to the system.
-> >
-> >  Required properties:
-> >
-> > - - compatible : Should be "brcm,bcm4329-fmac".
-> > + - compatible : should be one of the following:
-> > +       * "brcm,bcm4329-fmac"
-> > +       * "brcm,bcm43430-fmac"
-> 
-> You updated the bindings, but not the driver. So it's not actually
-> going to work. More specifically, OOB interrupts won't work.
->
+Fixes: 92b0f7b26b31 ("iwlwifi: split the regulatory rules when the bandwidth flags require it")
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-understood, ignore this patch for now. Thanks Chen-Yu.
-
-> IIRC, The compatible string for this particular case, as it was
-> originally proposed, only serves as a placeholder for the driver
-> to check against. None of the instances in sunxi device trees
-> match the actual chip model. Actual model matching is done
-> through SDIO, as you've already seen.
-
-yes it seems SDIO driveer code is smarter, once it initialize 
-brcm,bcm4329-fmac it ignore the DT info and read the chip details to locate 
-firmware file.
-
-I also noticed other boards using bcm4329-fmac in similar situations.
-https://patchwork.kernel.org/patch/9739181/
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/amlogic/meson-gxbb-nanopi-k2.dts?h=v4.13-rc7
-
-I will resend "NanoPi NEO Plus2" dts with "brcm,bcm4329-fmac" and see where 
-it goes. 
-
-regards,
--antony
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index b46796944cf2..3014beef4873 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -915,7 +915,7 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		prev_reg_rule_flags = reg_rule_flags;
+ 
+ 		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+-			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x) reg_flags 0x%x: %s\n",
++			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x)\n",
+ 			      center_freq,
+ 			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
+ 			      CHECK_AND_PRINT_I(VALID),
+@@ -930,7 +930,12 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 			      CHECK_AND_PRINT_I(80MHZ),
+ 			      CHECK_AND_PRINT_I(160MHZ),
+ 			      CHECK_AND_PRINT_I(DC_HIGH),
+-			      ch_flags, reg_rule_flags,
++			      ch_flags);
++		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
++			      "Ch. %d [%sGHz] reg_flags 0x%x: %s\n",
++			      center_freq,
++			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
++			      reg_rule_flags,
+ 			      ((ch_flags & NVM_CHANNEL_ACTIVE) &&
+ 			       !(ch_flags & NVM_CHANNEL_RADAR))
+ 					 ? "Ad-Hoc" : "");
+-- 
+2.14.1
