@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59338 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751545AbdHKKaq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 06:30:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for-4.13] brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices
-References: <1502446056-30035-1-git-send-email-arend.vanspriel@broadcom.com>
-Date: Fri, 11 Aug 2017 13:30:41 +0300
-In-Reply-To: <1502446056-30035-1-git-send-email-arend.vanspriel@broadcom.com>
-        (Arend van Spriel's message of "Fri, 11 Aug 2017 11:07:36 +0100")
-Message-ID: <87378yflbi.fsf@kamboji.qca.qualcomm.com> (sfid-20170811_123052_181771_BC1E6B4F)
+Received: from mx1.redhat.com ([209.132.183.28]:28909 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756886AbdHYOxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Aug 2017 10:53:12 -0400
+Subject: Re: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of the
+ brcm43430 chip
+To: =?UTF-8?Q?J=c3=b6rg_Krause?= <joerg.krause@embedded.rocks>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Jelle van der Waa <jelle@vdwaa.nl>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <20170616131449.12108-1-hdegoede@redhat.com>
+ <20170616131449.12108-2-hdegoede@redhat.com>
+ <1503669327.8480.3.camel@embedded.rocks>
+ <c851671c-1147-94cc-cf98-d0b20b051b3b@redhat.com>
+ <1503672591.22413.3.camel@embedded.rocks>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <63fa22df-4268-12b9-9b4d-c60235130dde@redhat.com> (sfid-20170825_165338_641546_991053E9)
+Date: Fri, 25 Aug 2017 16:53:08 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1503672591.22413.3.camel@embedded.rocks>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Hi,
 
-> The firmware feature check introduced for multi-scheduled scan turned out
-> to be failing for bcm4343{0,1,8} devices resulting in a firmware crash.
-> The reason for this crash has not yet been root cause so this patch avoids
-> the feature check for those device as a short-term fix.
->
-> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Reported-by: Ian Molton <ian@mnementh.co.uk>
-> Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan feature")
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+On 25-08-17 16:49, Jörg Krause wrote:
 
-So the first release for 9fe929aaace6 was v4.13-rc1 so no stable tag
-needed.
+<snip>
 
-(This is mostly to remind myself about this :)
+> Thanks for the files!
+> 
+> I've tested with brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020 and
+> brcmfmac is happy:
+> 
+> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul  1 2016
+> 18:02:40 version 7.10.1 (A0 Station/P2P feature) FWID 01-bae8afee
+> 
+> Where did you got the firmware files from?
 
--- 
-Kalle Valo
+ From various Android x86 images and from:
+https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/
+
+Regards,
+
+Hans
