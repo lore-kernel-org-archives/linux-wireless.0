@@ -1,93 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44450 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751593AbdHRPtd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:49:33 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:01 +0300
-Message-Id: <20170818154922.2904-4-luca@coelho.fi> (sfid-20170818_174942_252467_85ACB7FC)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 03/24] iwlwifi: call iwl_remove_notification from iwl_wait_notification
+Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:63780
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754480AbdHYCbF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:31:05 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 19/27] qtnfmac: initialize HT/VHT caps "can override" masks
+Date: Thu, 24 Aug 2017 19:30:16 -0700
+Message-Id: <20170825023024.10565-20-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043111_384016_D1CFDD81)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-The iwl_wait_notification() function removes the wait entry from the
-list.  To make it clearer that it's doing the same thing as
-iwl_remove_notification(), call the latter instead of having duplicate
-code.
+Information on which HT/VHT capabilities can be overridden is reported
+per-MAC by wireless device.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c | 25 +++++++++++-----------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 ++
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 7 ++++---
+ drivers/net/wireless/quantenna/qtnfmac/core.h     | 4 ++--
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 8 ++++----
+ 4 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
-index 29bb92e3df59..1096c945a68b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2015 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -32,6 +32,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -161,6 +162,15 @@ iwl_init_notification_wait(struct iwl_notif_wait_data *notif_wait,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 28612da..d6780f42 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -913,6 +913,8 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+ 	wiphy->available_antennas_rx = mac->macinfo.num_rx_chain;
+ 
+ 	wiphy->max_ap_assoc_sta = mac->macinfo.max_ap_assoc_sta;
++	wiphy->ht_capa_mod_mask = &mac->macinfo.ht_cap_mod_mask;
++	wiphy->vht_capa_mod_mask = &mac->macinfo.vht_cap_mod_mask;
+ 
+ 	ether_addr_copy(wiphy->perm_addr, mac->macaddr);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 065a93f..b26cd01 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1108,9 +1108,10 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
+ 			qlink_chan_width_mask_to_nl(le16_to_cpu(
+ 					resp_info->radar_detect_widths));
+ 
+-	memcpy(&mac_info->ht_cap, &resp_info->ht_cap, sizeof(mac_info->ht_cap));
+-	memcpy(&mac_info->vht_cap, &resp_info->vht_cap,
+-	       sizeof(mac_info->vht_cap));
++	memcpy(&mac_info->ht_cap_mod_mask, &resp_info->ht_cap_mod_mask,
++	       sizeof(mac_info->ht_cap_mod_mask));
++	memcpy(&mac_info->vht_cap_mod_mask, &resp_info->vht_cap_mod_mask,
++	       sizeof(mac_info->vht_cap_mod_mask));
  }
- IWL_EXPORT_SYMBOL(iwl_init_notification_wait);
  
-+void iwl_remove_notification(struct iwl_notif_wait_data *notif_wait,
-+			     struct iwl_notification_wait *wait_entry)
-+{
-+	spin_lock_bh(&notif_wait->notif_wait_lock);
-+	list_del(&wait_entry->list);
-+	spin_unlock_bh(&notif_wait->notif_wait_lock);
-+}
-+IWL_EXPORT_SYMBOL(iwl_remove_notification);
-+
- int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
- 			  struct iwl_notification_wait *wait_entry,
- 			  unsigned long timeout)
-@@ -171,9 +181,7 @@ int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
- 				 wait_entry->triggered || wait_entry->aborted,
- 				 timeout);
- 
--	spin_lock_bh(&notif_wait->notif_wait_lock);
--	list_del(&wait_entry->list);
--	spin_unlock_bh(&notif_wait->notif_wait_lock);
-+	iwl_remove_notification(notif_wait, wait_entry);
- 
- 	if (wait_entry->aborted)
- 		return -EIO;
-@@ -184,12 +192,3 @@ int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
- 	return 0;
- }
- IWL_EXPORT_SYMBOL(iwl_wait_notification);
--
--void iwl_remove_notification(struct iwl_notif_wait_data *notif_wait,
--			     struct iwl_notification_wait *wait_entry)
--{
--	spin_lock_bh(&notif_wait->notif_wait_lock);
--	list_del(&wait_entry->list);
--	spin_unlock_bh(&notif_wait->notif_wait_lock);
--}
--IWL_EXPORT_SYMBOL(iwl_remove_notification);
+ static void qtnf_cmd_resp_band_fill_htcap(const u8 *info,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 44a2cbb..3e74736 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -103,8 +103,8 @@ struct qtnf_mac_info {
+ 	u8 sretry_limit;
+ 	u8 coverage_class;
+ 	u8 radar_detect_widths;
+-	struct ieee80211_ht_cap ht_cap;
+-	struct ieee80211_vht_cap vht_cap;
++	struct ieee80211_ht_cap ht_cap_mod_mask;
++	struct ieee80211_vht_cap vht_cap_mod_mask;
+ 	struct ieee80211_iface_limit *limits;
+ 	size_t n_limits;
+ };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index de0e5b9..a9f410b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -627,8 +627,8 @@ struct qlink_resp {
+  *	specified WMAC).
+  * @num_tx_chain: Number of transmit chains used by WMAC.
+  * @num_rx_chain: Number of receive chains used by WMAC.
+- * @vht_cap: VHT capabilities.
+- * @ht_cap: HT capabilities.
++ * @vht_cap_mod_mask: mask specifying which VHT capabilities can be altered.
++ * @ht_cap_mod_mask: mask specifying which HT capabilities can be altered.
+  * @bands_cap: wireless bands WMAC can operate in, bitmap of &enum qlink_band.
+  * @phymode_cap: PHY modes WMAC can operate in, bitmap of &enum qlink_phy_mode.
+  * @max_ap_assoc_sta: Maximum number of associations supported by WMAC.
+@@ -640,8 +640,8 @@ struct qlink_resp_get_mac_info {
+ 	u8 dev_mac[ETH_ALEN];
+ 	u8 num_tx_chain;
+ 	u8 num_rx_chain;
+-	struct ieee80211_vht_cap vht_cap;
+-	struct ieee80211_ht_cap ht_cap;
++	struct ieee80211_vht_cap vht_cap_mod_mask;
++	struct ieee80211_ht_cap ht_cap_mod_mask;
+ 	u8 bands_cap;
+ 	u8 phymode_cap;
+ 	__le16 max_ap_assoc_sta;
 -- 
-2.14.1
+2.9.5
