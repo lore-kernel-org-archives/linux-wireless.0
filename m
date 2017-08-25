@@ -1,117 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752435AbdHBSqZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 14:46:25 -0400
-Message-ID: <1501699577.15969.23.camel@coelho.fi> (sfid-20170802_204628_568510_89AA9991)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Date: Wed, 02 Aug 2017 21:46:17 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-6dnofEqN9mRnrS5cLxFw"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2017-08-02
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754438AbdHYCa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:30:56 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 11/27] qtnfmac: make encryption info a part of "connect" command.
+Date: Thu, 24 Aug 2017 19:30:08 -0700
+Message-Id: <20170825023024.10565-12-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043141_408840_B916A8E6)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
---=-6dnofEqN9mRnrS5cLxFw
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Encryption info is a constant part of STA settings, no point
+to pass it as an optional TLV.
+Remove QTN_TLV_ID_CRYPTO type as it's not used anymore.
 
-Hi Kalle,
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 42 ++++++++++-------------
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  5 +--
+ 2 files changed, 22 insertions(+), 25 deletions(-)
 
-Here is my second batch of fixes for 4.13.  More details in the tag descrip=
-tion.
-
-I have sent this out before and kbuildbot didn't find any issues.=20
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 5f5d03143de5e0c593da4ab18fc6393c2815e108=
-:
-
-  brcmfmac: fix memleak due to calling brcmf_sdiod_sgtable_alloc() twice (2=
-017-07-27 14:03:14 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2017-08-02
-
-for you to fetch changes up to 558f479f687aca6a336e13309424a7c3afd32721:
-
-  iwlwifi: add the new 9000 series PCI IDs (2017-08-01 12:26:17 +0300)
-
-----------------------------------------------------------------
-Some fixes in iwlwifi for 4.13
-
-* Some simple PCI HW ID fix-ups and additions for family 9000;
-* A couple of bugzilla fixes:
-  - Remove a bogus warning message with new FWs (196915)
-  - Don't allow illegal channel options to be used (195299)
-* A fix for checksum offload in family 9000;
-* A fix serious throughput degradation in 11ac with multiple streams;
-* An old bug in SMPS where the firmware was not aware of SMPS changes;
-
-----------------------------------------------------------------
-Emmanuel Grumbach (3):
-      iwlwifi: mvm: fix TCP CSUM offload with WEP and A000 series
-      iwlwifi: add TLV for MLME offload firmware capability
-      iwlwifi: split the regulatory rules when the bandwidth flags require =
-it
-
-Gregory Greenman (2):
-      iwlwifi: mvm: set A-MPDU bit upon empty BA notification from FW
-      iwlwifi: mvm: rs: fix TLC statistics collection
-
-Haim Dreyfuss (1):
-      iwlwifi: fix fw_pre_next_step to apply also for C step
-
-Naftali Goldstein (1):
-      iwlwifi: mvm: set the RTS_MIMO_PROT bit in flag mask when sending sta=
- to fw
-
-Tzipi Peres (1):
-      iwlwifi: add the new 9000 series PCI IDs
-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      | 14 +++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |  2 ++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  5 +++--
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 19 +++++++++++-------=
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 65eee2b..195b777 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2036,7 +2036,7 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ {
+ 	struct sk_buff *cmd_skb;
+ 	struct qlink_cmd_connect *cmd;
+-	struct qlink_auth_encr aen;
++	struct qlink_auth_encr *aen;
+ 	u16 res_code = QLINK_CMD_RESULT_OK;
+ 	int ret;
+ 	int i;
+@@ -2048,8 +2048,6 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 	if (unlikely(!cmd_skb))
+ 		return -ENOMEM;
+ 
+-	qtnf_bus_lock(vif->mac->bus);
 -
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 12 ++++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      | 20 ++++++++++++++++++=
-++
- 9 files changed, 63 insertions(+), 28 deletions(-)
---=-6dnofEqN9mRnrS5cLxFw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlmCHfkACgkQoUecoho8
-xfrD0hAAiViM0u7kt9baWsJ8TymGPq4NMMgsMmqgIeHi/KDI1Kqe3OtpbJOXklzd
-Bpky/MbpvetQaqJzZeYYheNxvXk97AHRtFXBz5/mA6JgLX4sNPYhXdOarx4QPxtu
-n17nSsCehB5rSABJOAE9Cw+hh43MsLQ+IbrojFFRwT/M0sKvuqeyRgMfs+NbtF7X
-Fl4P1OdPPSsOufkeMI8m88DOr+z35+2govgGNNYCg8dIlv2Spkfh4TOAvDaQ5qwg
-+aslm2NwGJl60P3j5wKVd6C69Kn9aFevrt/LPVtLx8vG2soQuT+LdIzFeXjUWvza
-l5We5TlRd9qmoWBwcMjrFJgZXY/rJlnIhUkvrZLeAxQhK3MgXqs3JzfsTqJYMPIV
-IQ4pC6yCHpbEs9oAGO94AQLtVEMfUeo6qTQjDVNJ2Bu64E6kANlCzyZdOk7okCrU
-0HuPe9rUxjYi9UWcTX3IhbaaOpOK16cKXHlyxMM3HPYtCI7Yf+sEOibVMUXsRK6J
-yG5b2Osq8PPk/Myefd5jRLjFBiq+t6kucrEkNZDZob6p3Ah3rN2oiSPvsdDgkipS
-J4tZmN3jo1tA8TCpLHVYgNY348mLttZFtPXg03CswAS9r4nI90/g+VqZGOVTqmXf
-v2J9TDcq7/tjxkx0RbOPbccF/9v3jBNvt2fdiBEpDWjXEOiYsA8=
-=APZe
------END PGP SIGNATURE-----
-
---=-6dnofEqN9mRnrS5cLxFw--
+ 	cmd = (struct qlink_cmd_connect *)cmd_skb->data;
+ 
+ 	ether_addr_copy(cmd->bssid, vif->bssid);
+@@ -2076,41 +2074,39 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 
+ 	cmd->flags = cpu_to_le32(connect_flags);
+ 
+-	memset(&aen, 0, sizeof(aen));
+-	aen.auth_type = sme->auth_type;
+-	aen.privacy = !!sme->privacy;
+-	aen.mfp = sme->mfp;
+-	aen.wpa_versions = cpu_to_le32(sme->crypto.wpa_versions);
+-	aen.cipher_group = cpu_to_le32(sme->crypto.cipher_group);
+-	aen.n_ciphers_pairwise = cpu_to_le32(
+-		sme->crypto.n_ciphers_pairwise);
++	aen = &cmd->aen;
++	aen->auth_type = sme->auth_type;
++	aen->privacy = !!sme->privacy;
++	aen->mfp = sme->mfp;
++	aen->wpa_versions = cpu_to_le32(sme->crypto.wpa_versions);
++	aen->cipher_group = cpu_to_le32(sme->crypto.cipher_group);
++	aen->n_ciphers_pairwise = cpu_to_le32(sme->crypto.n_ciphers_pairwise);
+ 
+ 	for (i = 0; i < QLINK_MAX_NR_CIPHER_SUITES; i++)
+-		aen.ciphers_pairwise[i] = cpu_to_le32(
+-			sme->crypto.ciphers_pairwise[i]);
++		aen->ciphers_pairwise[i] =
++			cpu_to_le32(sme->crypto.ciphers_pairwise[i]);
+ 
+-	aen.n_akm_suites = cpu_to_le32(sme->crypto.n_akm_suites);
++	aen->n_akm_suites = cpu_to_le32(sme->crypto.n_akm_suites);
+ 
+ 	for (i = 0; i < QLINK_MAX_NR_AKM_SUITES; i++)
+-		aen.akm_suites[i] = cpu_to_le32(
+-			sme->crypto.akm_suites[i]);
++		aen->akm_suites[i] = cpu_to_le32(sme->crypto.akm_suites[i]);
+ 
+-	aen.control_port = sme->crypto.control_port;
+-	aen.control_port_no_encrypt =
++	aen->control_port = sme->crypto.control_port;
++	aen->control_port_no_encrypt =
+ 		sme->crypto.control_port_no_encrypt;
+-	aen.control_port_ethertype = cpu_to_le16(be16_to_cpu(
+-		sme->crypto.control_port_ethertype));
++	aen->control_port_ethertype =
++		cpu_to_le16(be16_to_cpu(sme->crypto.control_port_ethertype));
+ 
+ 	qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, sme->ssid,
+-		sme->ssid_len);
+-	qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_CRYPTO, (u8 *)&aen,
+-				 sizeof(aen));
++				 sme->ssid_len);
+ 
+ 	if (sme->ie_len != 0)
+ 		qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_IE_SET,
+ 					 sme->ie,
+ 					 sme->ie_len);
+ 
++	qtnf_bus_lock(vif->mac->bus);
++
+ 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
+ 
+ 	if (unlikely(ret))
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 641d252..7b313d3 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -417,8 +417,9 @@ enum qlink_sta_connect_flags {
+  * struct qlink_cmd_connect - data for QLINK_CMD_CONNECT command
+  *
+  * @flags: for future use.
+- * @freq: center frequence of a channel which should be used to connect.
++ * @channel: channel which should be used to connect.
+  * @bg_scan_period: period of background scan.
++ * @aen: authentication information.
+  * @bssid: BSSID of the BSS to connect to.
+  * @payload: variable portion of connection request.
+  */
+@@ -427,6 +428,7 @@ struct qlink_cmd_connect {
+ 	__le32 flags;
+ 	__le16 channel;
+ 	__le16 bg_scan_period;
++	struct qlink_auth_encr aen;
+ 	u8 bssid[ETH_ALEN];
+ 	u8 payload[0];
+ } __packed;
+@@ -950,7 +952,6 @@ enum qlink_tlv_id {
+ 	QTN_TLV_ID_STA_GENERIC_INFO	= 0x0301,
+ 	QTN_TLV_ID_KEY			= 0x0302,
+ 	QTN_TLV_ID_SEQ			= 0x0303,
+-	QTN_TLV_ID_CRYPTO		= 0x0304,
+ 	QTN_TLV_ID_IE_SET		= 0x0305,
+ };
+ 
+-- 
+2.9.5
