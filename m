@@ -1,60 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38639 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752122AbdHGMcF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Aug 2017 08:32:05 -0400
-Received: by mail-wm0-f41.google.com with SMTP id m85so5869519wma.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Aug 2017 05:32:04 -0700 (PDT)
-Subject: Re: [PATCH 29/34] brcmfmac: stabilise the value of ->sbwad in use for
- some xfer routines.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-30-ian@mnementh.co.uk>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59885DC2.6040600@broadcom.com> (sfid-20170807_143208_621620_5449C2CE)
-Date: Mon, 7 Aug 2017 14:32:02 +0200
+Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:63780
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754471AbdHYCbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:31:06 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 20/27] qtnfmac: get rid of PHYMODE capabilities flags
+Date: Thu, 24 Aug 2017 19:30:17 -0700
+Message-Id: <20170825023024.10565-21-igor.mitsyanko.os@quantenna.com> (sfid-20170825_044309_747986_A385437A)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <20170726202557.15632-30-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So now I jump to this patch
-On 7/26/2017 10:25 PM, Ian Molton wrote:
-> The IO functions operate within the Chipcommon IO window. Explicitly
-> set this, rather than relying on the last initialisation IO access to
-> leave it set to the right value by chance.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
->   3 files changed, 10 insertions(+), 4 deletions(-)
->
+Supported WiFi operation modes are now identified per-band based on
+HT/VHT capabilities of each band.
 
-[...]
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  3 ---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c |  1 -
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  1 -
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 11 ++---------
+ 4 files changed, 2 insertions(+), 14 deletions(-)
 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-> index fb4f24dfc99d..1ab95011adb0 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-> @@ -178,6 +178,7 @@ struct brcmf_sdio_dev {
->   	struct sdio_func *func[SDIO_MAX_FUNCS];
->   	u8 num_funcs;			/* Supported funcs on client */
->   	u32 sbwad;			/* Save backplane window address */
-> +	struct brcmf_core *cc_core;	/* chipcommon core info struct */
-
-We actually just need the chipcommon base address so why not have that 
-here, ie.:
-+	u32 cc_base;
-
-Another option is to simple use SI_ENUM_BASE as the chipcommon base 
-address will always be 0x18000000 for the SDIO chips.
-
->   	struct brcmf_sdio *bus;
->   	struct device *dev;
->   	struct brcmf_bus *bus_if;
->
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index d6780f42..3faac7a 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -879,9 +879,6 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+ 	if (ret)
+ 		goto out;
+ 
+-	pr_info("MAC%u: phymode=%#x radar=%#x\n", mac->macid,
+-		mac->macinfo.phymode_cap, mac->macinfo.radar_detect_widths);
+-
+ 	wiphy->frag_threshold = mac->macinfo.frag_thr;
+ 	wiphy->rts_threshold = mac->macinfo.rts_thr;
+ 	wiphy->retry_short = mac->macinfo.sretry_limit;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index b26cd01..79a3e75 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1088,7 +1088,6 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
+ 	mac_info = &mac->macinfo;
+ 
+ 	mac_info->bands_cap = resp_info->bands_cap;
+-	mac_info->phymode_cap = resp_info->phymode_cap;
+ 	memcpy(&mac_info->dev_mac, &resp_info->dev_mac,
+ 	       sizeof(mac_info->dev_mac));
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 3e74736..72d4298 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -92,7 +92,6 @@ struct qtnf_vif {
+ 
+ struct qtnf_mac_info {
+ 	u8 bands_cap;
+-	u8 phymode_cap;
+ 	u8 dev_mac[ETH_ALEN];
+ 	u8 num_tx_chain;
+ 	u8 num_rx_chain;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index a9f410b..e4d3e7f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -65,12 +65,6 @@ enum qlink_hw_capab {
+ 	QLINK_HW_SUPPORTS_REG_UPDATE	= BIT(0),
+ };
+ 
+-enum qlink_phy_mode {
+-	QLINK_PHYMODE_BGN	= BIT(0),
+-	QLINK_PHYMODE_AN	= BIT(1),
+-	QLINK_PHYMODE_AC	= BIT(2),
+-};
+-
+ enum qlink_iface_type {
+ 	QLINK_IFTYPE_AP		= 1,
+ 	QLINK_IFTYPE_STATION	= 2,
+@@ -630,7 +624,6 @@ struct qlink_resp {
+  * @vht_cap_mod_mask: mask specifying which VHT capabilities can be altered.
+  * @ht_cap_mod_mask: mask specifying which HT capabilities can be altered.
+  * @bands_cap: wireless bands WMAC can operate in, bitmap of &enum qlink_band.
+- * @phymode_cap: PHY modes WMAC can operate in, bitmap of &enum qlink_phy_mode.
+  * @max_ap_assoc_sta: Maximum number of associations supported by WMAC.
+  * @radar_detect_widths: bitmask of channels BW for which WMAC can detect radar.
+  * @var_info: variable-length WMAC info data.
+@@ -642,10 +635,10 @@ struct qlink_resp_get_mac_info {
+ 	u8 num_rx_chain;
+ 	struct ieee80211_vht_cap vht_cap_mod_mask;
+ 	struct ieee80211_ht_cap ht_cap_mod_mask;
+-	u8 bands_cap;
+-	u8 phymode_cap;
+ 	__le16 max_ap_assoc_sta;
+ 	__le16 radar_detect_widths;
++	u8 bands_cap;
++	u8 rsvd[1];
+ 	u8 var_info[0];
+ } __packed;
+ 
+-- 
+2.9.5
