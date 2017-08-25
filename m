@@ -1,46 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51686 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932638AbdHVNAq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 09:00:46 -0400
-From: Colin King <colin.king@canonical.com>
-To: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Joe Perches <joe@perches.com>,
-        yuan linyu <Linyu.Yuan@alcatel-sbell.com.cn>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8821ae: fix spelling mistake: "faill" -> "failed"
-Date: Tue, 22 Aug 2017 13:59:04 +0100
-Message-Id: <20170822125904.13292-1-colin.king@canonical.com> (sfid-20170822_150104_558165_FE950B9E)
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754480AbdHYCa7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:30:59 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 14/27] qtnfmac: do not cache CSA chandef info
+Date: Thu, 24 Aug 2017 19:30:11 -0700
+Message-Id: <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043107_012331_11318708)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Trivial fix to spelling mistake in RT_TRACE message
+It is never used for anything useful, and all logic is handled by
+either WiFi card or higher layers.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 12 ------------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c |  2 --
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  1 -
+ drivers/net/wireless/quantenna/qtnfmac/event.c    |  8 +-------
+ 4 files changed, 1 insertion(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index b84b4fa7b71c..f2b2c549e5b2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -98,7 +98,7 @@ static int _rtl8821ae_fw_free_to_go(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index b33c4fc..8542c16 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -736,7 +736,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			       struct cfg80211_csa_settings *params)
+ {
+-	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
+ 	int ret;
  
- 	if (counter >= FW_8821AE_POLLING_TIMEOUT_COUNT) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
-+			 "chksum report fail! REG_MCUFWDL:0x%08x .\n",
- 			  value32);
- 		goto exit;
- 	}
+@@ -744,17 +743,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		 params->chandef.chan->hw_value, params->count,
+ 		 params->radar_required, params->block_tx);
+ 
+-	if (vif->vifid != 0) {
+-		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
+-			return -EOPNOTSUPP;
+-
+-		if (!cfg80211_chandef_identical(&params->chandef,
+-						&mac->csa_chandef))
+-			return -EINVAL;
+-
+-		return 0;
+-	}
+-
+ 	if (!cfg80211_chandef_valid(&params->chandef)) {
+ 		pr_err("%s: invalid channel\n", dev->name);
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index cfbb636..7a616f9 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2347,8 +2347,6 @@ int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
+ 
+ 	switch (res_code) {
+ 	case QLINK_CMD_RESULT_OK:
+-		memcpy(&mac->csa_chandef, &params->chandef,
+-		       sizeof(mac->csa_chandef));
+ 		mac->status |= QTNF_MAC_CSA_ACTIVE;
+ 		ret = 0;
+ 		break;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index aa1a92f..5997915 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -132,7 +132,6 @@ struct qtnf_wmac {
+ 	struct qtnf_vif iflist[QTNF_MAX_INTF];
+ 	struct cfg80211_scan_request *scan_req;
+ 	struct cfg80211_chan_def chandef;
+-	struct cfg80211_chan_def csa_chandef;
+ 	struct mutex mac_lock;	/* lock during wmac speicific ops */
+ 	struct timer_list scan_timeout;
+ };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 7435986..b9ceeed 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -368,13 +368,7 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+ 		 mac->macid, chdef.chan->hw_value, chdef.center_freq1,
+ 		 chdef.center_freq2, chdef.width);
+ 
+-	if (mac->status & QTNF_MAC_CSA_ACTIVE) {
+-		mac->status &= ~QTNF_MAC_CSA_ACTIVE;
+-		if (chdef.chan->hw_value != mac->csa_chandef.chan->hw_value)
+-			pr_warn("unexpected switch to %u during CSA to %u\n",
+-				chdef.chan->hw_value,
+-				mac->csa_chandef.chan->hw_value);
+-	}
++	mac->status &= ~QTNF_MAC_CSA_ACTIVE;
+ 
+ 	memcpy(&mac->chandef, &chdef, sizeof(mac->chandef));
+ 
 -- 
-2.14.1
+2.9.5
