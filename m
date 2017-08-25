@@ -1,186 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36219 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753217AbdHKNp5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 09:45:57 -0400
-Received: by mail-pg0-f67.google.com with SMTP id y129so3183285pgy.3
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:45:56 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 02/11] rsi: add interface changes for ap mode
-Date: Fri, 11 Aug 2017 19:11:20 +0530
-Message-Id: <1502458889-9690-3-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154610_759287_71EC683A)
-In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+Received: from mail-cys01nam02on0086.outbound.protection.outlook.com ([104.47.37.86]:38784
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754191AbdHYCak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:30:40 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 00/27] qtnfmac: allow to configure channel, BW, HT/VHT caps
+Date: Thu, 24 Aug 2017 19:29:57 -0700
+Message-Id: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043059_895723_F2BC0058)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-AP mode is handled in add_interface callback of mac80211.
-Also for AP mode, sending rx filter frame to disallow beacons
-to host is added. Station structures are initialized to NULL.
+This patchset has a goal to make operational parameters (channel, BW,
+HT/VHT capabilities) configuration possible for qtnfmac driver.
+Basically the idea is to make driver level as thin as possible, and let
+everything to be handled by userspace/nl80211 and wireless device itself.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 43 +++++++++++++++++++++++------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  5 ++--
- drivers/net/wireless/rsi/rsi_main.h         |  3 ++
- drivers/net/wireless/rsi/rsi_mgmt.h         |  6 ++--
- 4 files changed, 44 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 2da5493..edcba56 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -342,25 +342,51 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	enum opmode intf_mode;
- 	int ret = -EOPNOTSUPP;
- 
- 	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
- 	mutex_lock(&common->mutex);
-+
-+	if (adapter->sc_nvifs > 1) {
-+		mutex_unlock(&common->mutex);
-+		return -EOPNOTSUPP;
-+	}
-+
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!adapter->sc_nvifs) {
--			++adapter->sc_nvifs;
--			adapter->vifs[0] = vif;
--			ret = rsi_set_vap_capabilities(common,
--						       STA_OPMODE,
--						       VAP_ADD);
--		}
-+		rsi_dbg(INFO_ZONE, "Station Mode");
-+		intf_mode = STA_OPMODE;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		rsi_dbg(INFO_ZONE, "AP Mode");
-+		intf_mode = AP_OPMODE;
- 		break;
- 	default:
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Interface type %d not supported\n", __func__,
- 			vif->type);
-+		goto out;
- 	}
-+
-+	adapter->vifs[adapter->sc_nvifs++] = vif;
-+	ret = rsi_set_vap_capabilities(common, intf_mode, common->mac_addr,
-+				       0, VAP_ADD);
-+	if (ret) {
-+		rsi_dbg(ERR_ZONE, "Failed to set VAP capabilities\n");
-+		goto out;
-+	}
-+
-+	if (vif->type == NL80211_IFTYPE_AP) {
-+		int i;
-+
-+		rsi_send_rx_filter_frame(common, DISALLOW_BEACONS);
-+		common->min_rate = RSI_RATE_AUTO;
-+		for (i = 0; i < common->max_stations; i++)
-+			common->stations[i].sta = NULL;
-+	}
-+
-+out:
- 	mutex_unlock(&common->mutex);
- 
- 	return ret;
-@@ -383,7 +409,8 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&common->mutex);
- 	if (vif->type == NL80211_IFTYPE_STATION) {
- 		adapter->sc_nvifs--;
--		rsi_set_vap_capabilities(common, STA_OPMODE, VAP_DELETE);
-+		rsi_set_vap_capabilities(common, STA_OPMODE, vif->addr,
-+					 0, VAP_DELETE);
- 	}
- 
- 	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index f93499d0..233a418 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -624,6 +624,8 @@ static int rsi_program_bb_rf(struct rsi_common *common)
-  */
- int rsi_set_vap_capabilities(struct rsi_common *common,
- 			     enum opmode mode,
-+			     u8 *mac_addr,
-+			     u8 vap_id,
- 			     u8 vap_status)
- {
- 	struct sk_buff *skb = NULL;
-@@ -632,7 +634,6 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
- 	struct ieee80211_hw *hw = adapter->hw;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	u16 frame_len = sizeof(struct rsi_vap_caps);
--	u16 vap_id = 0;
- 
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending VAP capabilities frame\n", __func__);
- 
-@@ -656,7 +657,7 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
- 	vap_caps->radioid_macid = ((common->mac_id & 0xf) << 4) |
- 				   (common->radio_id & 0xf);
- 
--	memcpy(vap_caps->mac_addr, common->mac_addr, IEEE80211_ADDR_LEN);
-+	memcpy(vap_caps->mac_addr, mac_addr, IEEE80211_ADDR_LEN);
- 	vap_caps->keep_alive_period = cpu_to_le16(90);
- 	vap_caps->frag_threshold = cpu_to_le16(IEEE80211_MAX_FRAG_THRESHOLD);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 0077888..9f5f33f 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -90,6 +90,7 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define IEEE80211_MGMT_FRAME            0x00
- #define IEEE80211_CTL_FRAME             0x04
- 
-+#define RSI_MAX_ASSOC_STAS		32
- #define IEEE80211_QOS_TID               0x0f
- #define IEEE80211_NONQOS_TID            16
- 
-@@ -262,6 +263,8 @@ struct rsi_common {
- 	u8 dtim_cnt;
- 
- 	/* AP mode parameters */
-+	struct rsi_sta stations[RSI_MAX_ASSOC_STAS + 1];
-+	int num_stations;
- 	int max_stations;
- };
- 
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 201a465..9093ba6 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -188,8 +188,8 @@
- 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
- 
- enum opmode {
--	STA_OPMODE = 1,
--	AP_OPMODE = 2
-+	AP_OPMODE = 0,
-+	STA_OPMODE,
- };
- 
- enum vap_status {
-@@ -591,7 +591,7 @@ static inline void rsi_set_len_qno(__le16 *addr, u16 len, u8 qno)
- 
- int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
- int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
--			     u8 vap_status);
-+			     u8 *mac_addr, u8 vap_id, u8 vap_status);
- int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
- 				      u16 ssn, u8 buf_size, u8 event);
- int rsi_hal_load_key(struct rsi_common *common, u8 *data, u16 key_len,
+Tested by trying various parameters combinations in hostapd.conf.
+
+Set channel=36, bw=20, HT=0, VHT=0:
+  hw_mode=a
+  channel=36
+Set channel=36, bw=20, HT=1, VHT=0:
+  ieee80211n=1
+Set channel=36, bw=40 with secondary channel above, HT=1, VHT=0:
+  ieee80211n=1
+  ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40][MAX-AMSDU-7935]
+Set channel=36, bw=40 with secondary channel below, HT=1, VHT=0:
+  channel=40
+  ieee80211n=1
+  ht_capab=[HT40-][SHORT-GI-20][SHORT-GI-40][MAX-AMSDU-7935]
+Set channel=36, bw=40, HT=1, VHT=1:
+  ieee80211n=1
+  ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40][MAX-AMSDU-7935]
+  ieee80211ac=1
+  vht_capab=[SHORT-GI-80][MAX-MPDU-11454][MAX-A-MPDU-LEN-EXP-7][SU-BEAMFORMER][SU-BEAMFORMEE]
+  vht_oper_chwidth=0
+Set channel=36, bw=80, HT=1, VHT=1:
+  ieee80211ac=1
+  vht_capab=[SHORT-GI-80][MAX-MPDU-11454][MAX-A-MPDU-LEN-EXP-7][SU-BEAMFORMER][SU-BEAMFORMEE]
+  vht_oper_chwidth=1
+  vht_oper_centr_freq_seg0_idx=42
+
+
+Igor Mitsyanko (27):
+  qtnfmac: qlink: convert channel width from bitfiled to simple enum
+  qtnfmac: make "Channel change" event report full channel info
+  qtnfmac: retreive current channel info from EP
+  qtnfmac: do not cache AP settings in driver structures
+  qtnfmac: pass all AP settings to wireless card for processing
+  qtnfmac: pass full channel definition to device on start_ap command
+  qtnfmac: get rid of QTNF_STATE_AP_CONFIG
+  qtnfmac: get rid of QTNF_STATE_AP_START usage
+  qtnfmac: do not cache BSS state in per-VIF structure
+  qtnfmac: do not cache channel info from "connect" command
+  qtnfmac: make encryption info a part of "connect" command.
+  qtnfmac: let wifi card handle channel switch request to the same chan
+  qtnfmac: pass VIF info to SendChannel command
+  qtnfmac: do not cache CSA chandef info
+  qtnfmac: remove unused mac::status field
+  qtnfmac: stop using private driver info about current channel
+  qtnfmac: do not report channel changes until wiphy is registered
+  qtnfmac: use per-band HT/VHT info from wireless device
+  qtnfmac: initialize HT/VHT caps "can override" masks
+  qtnfmac: get rid of PHYMODE capabilities flags
+  qtnfmac: extend "IE set" TLV to include frame type info
+  qtnfmac: SCAN results: retreive frame type information from "IE set"
+    TLV
+  qtnfmac: convert "Append IEs" command to QTN_TLV_ID_IE_SET usage
+  qtnfmac: configure and start AP interface with a single command
+  nl80211: look for HT/VHT capabilities in beacon's tail
+  qtnfmac: include HTCAP and VHTCAP into config AP command
+  qtnfmac: pass all CONNECT cmd params to wireless card for processing
+
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  | 234 ++--------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c  | 470 ++++++++++++++-------
+ drivers/net/wireless/quantenna/qtnfmac/commands.h  |  11 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.c      |   3 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.h      |  35 +-
+ drivers/net/wireless/quantenna/qtnfmac/event.c     | 134 +++---
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 265 ++++++++----
+ .../net/wireless/quantenna/qtnfmac/qlink_util.c    | 113 ++++-
+ .../net/wireless/quantenna/qtnfmac/qlink_util.h    |   7 +
+ net/wireless/nl80211.c                             |   4 +-
+ 10 files changed, 709 insertions(+), 567 deletions(-)
+
 -- 
-2.7.4
+2.9.5
