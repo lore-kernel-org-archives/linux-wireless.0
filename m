@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35038 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932468AbdHVILl (ORCPT
+Received: from sonic305-35.consmr.mail.ir2.yahoo.com ([77.238.177.97]:35164
+        "EHLO sonic305-35.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754777AbdHYVFb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 04:11:41 -0400
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH] drivers: net: wireless: atmel: check memory allocation failure
-Date: Tue, 22 Aug 2017 13:41:21 +0530
-Message-Id: <1503389481-4988-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170822_101249_863198_F6F58380)
+        Fri, 25 Aug 2017 17:05:31 -0400
+Date: Fri, 25 Aug 2017 21:05:27 +0000 (UTC)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: Hin-Tak Leung <htl10@users.sourceforge.net>
+To: <kvalo@codeaurora.org>, <herton@canonical.com>,
+        <Larry.Finger@lwfinger.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <1571555159.3124994.1503695127129@mail.yahoo.com> (sfid-20170825_230550_436433_67BE946A)
+Subject: Re: [PATCH 31/35] wireless: realtek: rtl8187: constify
+ usb_device_id
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1571555159.3124994.1503695127129.ref@mail.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check memory allocation failure and return -ENOMEM if failure
-occurs.
 
-Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
----
- drivers/net/wireless/atmel/at76c50x-usb.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+--------------------------------------------
+On Tue, 8/8/17, Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index 09defbc..73f0924 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -940,7 +940,7 @@ static void at76_dump_mib_mac_addr(struct at76_priv *priv)
- 					 GFP_KERNEL);
+ Subject: [PATCH 31/35] wireless: realtek: rtl8187: constify usb_device_id
+ To: kvalo@codeaurora.org, herton@canonical.com, htl10@users.sourceforge.net, Larry.Finger@lwfinger.net
+ Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+ Date: Tuesday, 8 August, 2017, 17:04
  
- 	if (!m)
--		return;
-+		return -ENOMEM;
+> usb_device_id are not supposed to change at
+> runtime. All functions
+> working with usb_device_id provided by
+> <linux/usb.h> work with
+> const usb_device_id. So mark the
+> non-const structs as const.
  
- 	ret = at76_get_mib(priv->udev, MIB_MAC_ADDR, m,
- 			   sizeof(struct mib_mac_addr));
-@@ -969,7 +969,7 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
- 	struct mib_mac_wep *m = kmalloc(sizeof(struct mib_mac_wep), GFP_KERNEL);
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
  
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC_WEP, m,
- 			   sizeof(struct mib_mac_wep));
-@@ -1006,7 +1006,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 					 GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC_MGMT, m,
- 			   sizeof(struct mib_mac_mgmt));
-@@ -1043,7 +1043,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 	struct mib_mac *m = kmalloc(sizeof(struct mib_mac), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MAC, m, sizeof(struct mib_mac));
- 	if (ret < 0) {
-@@ -1080,7 +1080,7 @@ static void at76_dump_mib_phy(struct at76_priv *priv)
- 	struct mib_phy *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_PHY, m, sizeof(struct mib_phy));
- 	if (ret < 0) {
-@@ -1113,7 +1113,7 @@ static void at76_dump_mib_local(struct at76_priv *priv)
- 	struct mib_local *m = kmalloc(sizeof(*m), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_LOCAL, m, sizeof(*m));
- 	if (ret < 0) {
-@@ -1138,7 +1138,7 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
- 	struct mib_mdomain *m = kmalloc(sizeof(struct mib_mdomain), GFP_KERNEL);
- 
- 	if (!m)
--		return;
-+		return -ENOMEM;
- 
- 	ret = at76_get_mib(priv->udev, MIB_MDOMAIN, m,
- 			   sizeof(struct mib_mdomain));
--- 
-2.7.4
+Acked-by: htl10@users.sourceforge.net
