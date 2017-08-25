@@ -1,502 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44436 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751243AbdHRPtc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:49:32 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:48:59 +0300
-Message-Id: <20170818154922.2904-2-luca@coelho.fi> (sfid-20170818_174935_485419_19180D68)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 01/24] iwlwifi: mvm: remove the corunning support
+Received: from mout02.posteo.de ([185.67.36.142]:53354 "EHLO mout02.posteo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756272AbdHYNzo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Aug 2017 09:55:44 -0400
+Message-ID: <1503669339.8480.4.camel@embedded.rocks> (sfid-20170825_155549_080948_96A61824)
+Subject: Re: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of
+ the brcm43430 chip
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Hans de Goede <hdegoede@redhat.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Jelle van der Waa <jelle@vdwaa.nl>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Date: Fri, 25 Aug 2017 15:55:39 +0200
+In-Reply-To: <20170616131449.12108-2-hdegoede@redhat.com>
+References: <20170616131449.12108-1-hdegoede@redhat.com>
+         <20170616131449.12108-2-hdegoede@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi,
 
-The corunning block was supposed to help in coex scenarios.
-It required the driver to configure the firmware based on
-the coupling between the two antennas of the devices.
-This was never in use and the configuration sent by the
-driver has always been blank.
-Remove all that code.
+On Fri, 2017-06-16 at 15:14 +0200, Hans de Goede wrote:
+> The brcm43430 chip needs different firmware files for chip revision 0
+> and 1. The file currently in linux-firmware is for revision 1 only.
+> 
+> This commit makes brcmfmac request brcmfmac43430a0-sdio.bin instead
+> of brcmfmac43430-sdio.bin for revision 0 chips.
+> 
+> Note that the behavior for revision 1 chips is not changed, ideally those
+> would load brcmfmac43430a1-sdio.bin, but that will break existing setups.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index 4ed40c94bda9..5125aeeb5310 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -612,7 +612,9 @@ BRCMF_FW_NVRAM_DEF(43340, "brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
+>  BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt");
+>  BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.txt");
+>  BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
+> -BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+> +BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin", "brcmfmac43430a0-sdio.txt");
+> +/* Note the names are not postfixed with a1 for backward compatibility */
+> +BRCMF_FW_NVRAM_DEF(43430A1, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+>  BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
+>  BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
+>  BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
+> @@ -630,7 +632,8 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+> -	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
+> +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+> +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+>  	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/coex.h   |  13 -
- .../net/wireless/intel/iwlwifi/fw/api/commands.h   |  12 -
- drivers/net/wireless/intel/iwlwifi/fw/api/config.h |   8 -
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c      | 268 ---------------------
- drivers/net/wireless/intel/iwlwifi/mvm/constants.h |   1 -
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   5 -
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   9 -
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   4 -
- 8 files changed, 320 deletions(-)
+Unfortunately, there is no "brcmfmac43430a0-sdio.bin" in linux-
+firmware. Therefore, my custom board fails:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-index df4ecec59b40..2ba3ea4fa999 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-@@ -76,7 +76,6 @@ enum iwl_bt_coex_lut_type {
- 	BT_COEX_INVALID_LUT = 0xff,
- }; /* BT_COEX_DECISION_LUT_INDEX_API_E_VER_1 */
- 
--#define BT_COEX_CORUN_LUT_SIZE (32)
- #define BT_REDUCED_TX_POWER_BIT BIT(7)
- 
- enum iwl_bt_coex_mode {
-@@ -106,18 +105,6 @@ struct iwl_bt_coex_cmd {
- 	__le32 enabled_modules;
- } __packed; /* BT_COEX_CMD_API_S_VER_6 */
- 
--/**
-- * struct iwl_bt_coex_corun_lut_update - bt coex update the corun lut
-- * @corun_lut20: co-running 20 MHz LUT configuration
-- * @corun_lut40: co-running 40 MHz LUT configuration
-- *
-- * The structure is used for the BT_COEX_UPDATE_CORUN_LUT command.
-- */
--struct iwl_bt_coex_corun_lut_update_cmd {
--	__le32 corun_lut20[BT_COEX_CORUN_LUT_SIZE];
--	__le32 corun_lut40[BT_COEX_CORUN_LUT_SIZE];
--} __packed; /* BT_COEX_UPDATE_CORUN_LUT_API_S_VER_1 */
--
- /**
-  * struct iwl_bt_coex_reduced_txp_update_cmd
-  * @reduced_txp: bit BT_REDUCED_TX_POWER_BIT to enable / disable, rest of the
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-index 0eb35b119ae9..074868394427 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-@@ -135,12 +135,6 @@ enum iwl_legacy_cmds {
- 	 */
- 	DBG_CFG = 0x9,
- 
--	/**
--	 * @ANTENNA_COUPLING_NOTIFICATION:
--	 * Antenna coupling data, &struct iwl_mvm_antenna_coupling_notif
--	 */
--	ANTENNA_COUPLING_NOTIFICATION = 0xa,
--
- 	/**
- 	 * @SCAN_ITERATION_COMPLETE_UMAC:
- 	 * Firmware indicates a scan iteration completed, using
-@@ -523,12 +517,6 @@ enum iwl_legacy_cmds {
- 	 */
- 	BT_CONFIG = 0x9b,
- 
--	/**
--	 * @BT_COEX_UPDATE_CORUN_LUT:
--	 * &struct iwl_bt_coex_corun_lut_update_cmd
--	 */
--	BT_COEX_UPDATE_CORUN_LUT = 0x5b,
--
- 	/**
- 	 * @BT_COEX_UPDATE_REDUCED_TXP:
- 	 * &struct iwl_bt_coex_reduced_txp_update_cmd
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/config.h b/drivers/net/wireless/intel/iwlwifi/fw/api/config.h
-index ee1bd45b7021..7f645b62804e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/config.h
-@@ -181,12 +181,4 @@ struct iwl_dc2dc_config_resp {
- 	__le32 dc2dc_freq_tune1;
- } __packed; /* DC2DC_CONFIG_RESP_API_S_VER_1 */
- 
--/**
-- * struct iwl_mvm_antenna_coupling_notif - antenna coupling notification
-- * @isolation: antenna isolation value
-- */
--struct iwl_mvm_antenna_coupling_notif {
--	__le32 isolation;
--} __packed;
--
- #endif /* __iwl_fw_api_config_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index 0b4486114ddc..890dbfff3a06 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -148,215 +148,6 @@ static const __le64 iwl_ci_mask[][3] = {
- 	},
- };
- 
--struct corunning_block_luts {
--	u8 range;
--	__le32 lut20[BT_COEX_CORUN_LUT_SIZE];
--};
--
--/*
-- * Ranges for the antenna coupling calibration / co-running block LUT:
-- *		LUT0: [ 0, 12[
-- *		LUT1: [12, 20[
-- *		LUT2: [20, 21[
-- *		LUT3: [21, 23[
-- *		LUT4: [23, 27[
-- *		LUT5: [27, 30[
-- *		LUT6: [30, 32[
-- *		LUT7: [32, 33[
-- *		LUT8: [33, - [
-- */
--static const struct corunning_block_luts antenna_coupling_ranges[] = {
--	{
--		.range = 0,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 12,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 20,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 21,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 23,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 27,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 30,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 32,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--	{
--		.range = 33,
--		.lut20 = {
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
--		},
--	},
--};
--
- static enum iwl_bt_coex_lut_type
- iwl_get_coex_type(struct iwl_mvm *mvm, const struct ieee80211_vif *vif)
- {
-@@ -437,9 +228,6 @@ int iwl_mvm_send_bt_init_conf(struct iwl_mvm *mvm)
- 		bt_cmd.enabled_modules |=
- 			cpu_to_le32(BT_COEX_SYNC2SCO_ENABLED);
- 
--	if (iwl_mvm_bt_is_plcr_supported(mvm))
--		bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_CORUN_ENABLED);
--
- 	if (iwl_mvm_is_mplut_supported(mvm))
- 		bt_cmd.enabled_modules |= cpu_to_le32(BT_COEX_MPLUT_ENABLED);
- 
-@@ -908,59 +696,3 @@ void iwl_mvm_bt_coex_vif_change(struct iwl_mvm *mvm)
- {
- 	iwl_mvm_bt_coex_notif_handle(mvm);
- }
--
--void iwl_mvm_rx_ant_coupling_notif(struct iwl_mvm *mvm,
--				   struct iwl_rx_cmd_buffer *rxb)
--{
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_mvm_antenna_coupling_notif *notif = (void *)pkt->data;
--	u32 ant_isolation = le32_to_cpu(notif->isolation);
--	struct iwl_bt_coex_corun_lut_update_cmd cmd = {};
--	u8 __maybe_unused lower_bound, upper_bound;
--	u8 lut;
--
--	if (!iwl_mvm_bt_is_plcr_supported(mvm))
--		return;
--
--	lockdep_assert_held(&mvm->mutex);
--
--	/* Ignore updates if we are in force mode */
--	if (unlikely(mvm->bt_force_ant_mode != BT_FORCE_ANT_DIS))
--		return;
--
--	if (ant_isolation ==  mvm->last_ant_isol)
--		return;
--
--	for (lut = 0; lut < ARRAY_SIZE(antenna_coupling_ranges) - 1; lut++)
--		if (ant_isolation < antenna_coupling_ranges[lut + 1].range)
--			break;
--
--	lower_bound = antenna_coupling_ranges[lut].range;
--
--	if (lut < ARRAY_SIZE(antenna_coupling_ranges) - 1)
--		upper_bound = antenna_coupling_ranges[lut + 1].range;
--	else
--		upper_bound = antenna_coupling_ranges[lut].range;
--
--	IWL_DEBUG_COEX(mvm, "Antenna isolation=%d in range [%d,%d[, lut=%d\n",
--		       ant_isolation, lower_bound, upper_bound, lut);
--
--	mvm->last_ant_isol = ant_isolation;
--
--	if (mvm->last_corun_lut == lut)
--		return;
--
--	mvm->last_corun_lut = lut;
--
--	/* For the moment, use the same LUT for 20GHz and 40GHz */
--	memcpy(&cmd.corun_lut20, antenna_coupling_ranges[lut].lut20,
--	       sizeof(cmd.corun_lut20));
--
--	memcpy(&cmd.corun_lut40, antenna_coupling_ranges[lut].lut20,
--	       sizeof(cmd.corun_lut40));
--
--	if (iwl_mvm_send_cmd_pdu(mvm, BT_COEX_UPDATE_CORUN_LUT, 0,
--				 sizeof(cmd), &cmd))
--		IWL_ERR(mvm,
--			"failed to send BT_COEX_UPDATE_CORUN_LUT command\n");
--}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index a922a351c916..753d4138e30f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -95,7 +95,6 @@
- #define IWL_MVM_BT_COEX_EN_RED_TXP_THRESH	62
- #define IWL_MVM_BT_COEX_DIS_RED_TXP_THRESH	65
- #define IWL_MVM_BT_COEX_SYNC2SCO		1
--#define IWL_MVM_BT_COEX_CORUNNING		0
- #define IWL_MVM_BT_COEX_MPLUT			1
- #define IWL_MVM_BT_COEX_RRC			1
- #define IWL_MVM_BT_COEX_TTC			1
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index ba2745a3b537..3d7b5bd7a6b7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -565,9 +565,6 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 	pos += scnprintf(buf + pos,
- 			 bufsz - pos, "bt_activity_grading = %d\n",
- 			 le32_to_cpu(notif->bt_activity_grading));
--	pos += scnprintf(buf + pos, bufsz - pos,
--			 "antenna isolation = %d CORUN LUT index = %d\n",
--			 mvm->last_ant_isol, mvm->last_corun_lut);
- 	pos += scnprintf(buf + pos, bufsz - pos, "bt_rrc = %d\n",
- 			 notif->rrc_status & 0xF);
- 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ttc = %d\n",
-@@ -577,8 +574,6 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 			 IWL_MVM_BT_COEX_SYNC2SCO);
- 	pos += scnprintf(buf + pos, bufsz - pos, "mplut = %d\n",
- 			 IWL_MVM_BT_COEX_MPLUT);
--	pos += scnprintf(buf + pos, bufsz - pos, "corunning = %d\n",
--			 IWL_MVM_BT_COEX_CORUNNING);
- 
- 	mutex_unlock(&mvm->mutex);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 8ff74fbb2562..54e5c8c6736b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -924,8 +924,6 @@ struct iwl_mvm {
- 	struct iwl_bt_coex_profile_notif last_bt_notif;
- 	struct iwl_bt_coex_ci_cmd last_bt_ci_cmd;
- 
--	u32 last_ant_isol;
--	u8 last_corun_lut;
- 	u8 bt_tx_prio;
- 	enum iwl_bt_force_ant_mode bt_force_ant_mode;
- 
-@@ -1175,13 +1173,6 @@ static inline bool iwl_mvm_is_wifi_mcc_supported(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC);
- }
- 
--static inline bool iwl_mvm_bt_is_plcr_supported(struct iwl_mvm *mvm)
--{
--	return fw_has_capa(&mvm->fw->ucode_capa,
--			   IWL_UCODE_TLV_CAPA_BT_COEX_PLCR) &&
--		IWL_MVM_BT_COEX_CORUNNING;
--}
--
- static inline bool iwl_mvm_bt_is_rrc_supported(struct iwl_mvm *mvm)
- {
- 	return fw_has_capa(&mvm->fw->ucode_capa,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 29a21a11c7f8..640881c8d703 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -256,8 +256,6 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 		   RX_HANDLER_ASYNC_LOCKED),
- 	RX_HANDLER(STATISTICS_NOTIFICATION, iwl_mvm_rx_statistics,
- 		   RX_HANDLER_ASYNC_LOCKED),
--	RX_HANDLER(ANTENNA_COUPLING_NOTIFICATION,
--		   iwl_mvm_rx_ant_coupling_notif, RX_HANDLER_ASYNC_LOCKED),
- 
- 	RX_HANDLER(BA_WINDOW_STATUS_NOTIFICATION_ID,
- 		   iwl_mvm_window_status_notif, RX_HANDLER_SYNC),
-@@ -325,7 +323,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(INIT_COMPLETE_NOTIF),
- 	HCMD_NAME(PHY_CONTEXT_CMD),
- 	HCMD_NAME(DBG_CFG),
--	HCMD_NAME(ANTENNA_COUPLING_NOTIFICATION),
- 	HCMD_NAME(SCAN_CFG_CMD),
- 	HCMD_NAME(SCAN_REQ_UMAC),
- 	HCMD_NAME(SCAN_ABORT_UMAC),
-@@ -357,7 +354,6 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(SCAN_OFFLOAD_ABORT_CMD),
- 	HCMD_NAME(HOT_SPOT_CMD),
- 	HCMD_NAME(SCAN_OFFLOAD_PROFILES_QUERY_CMD),
--	HCMD_NAME(BT_COEX_UPDATE_CORUN_LUT),
- 	HCMD_NAME(BT_COEX_UPDATE_REDUCED_TXP),
- 	HCMD_NAME(BT_COEX_CI),
- 	HCMD_NAME(PHY_CONFIGURATION_CMD),
--- 
-2.14.1
+# [   24.894241] brcmfmac mmc0:0001:1: Direct firmware load for
+brcm/brcmfmac43430a0-sdio.bin failed with error -2
+[   25.914322] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+clkctl 0x50
+[   26.934186] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+clkctl 0x50
+
+Can someone provide the firmware file, please?
+
+Best regards,
+Jörg Krause
