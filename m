@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36420 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751101AbdHAJKW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2017 05:10:22 -0400
-Received: by mail-pf0-f193.google.com with SMTP id t83so1589475pfj.3
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 02:10:22 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: [PATCH 6/8] rsi: buffer full check optimization
-Date: Tue,  1 Aug 2017 14:35:50 +0530
-Message-Id: <1501578352-10795-7-git-send-email-amitkarwar@gmail.com> (sfid-20170801_111025_438781_2618DBBE)
-In-Reply-To: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
-References: <1501578352-10795-1-git-send-email-amitkarwar@gmail.com>
+Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:63780
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754484AbdHYCbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:31:11 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 25/27] nl80211: look for HT/VHT capabilities in beacon's tail
+Date: Thu, 24 Aug 2017 19:30:22 -0700
+Message-Id: <20170825023024.10565-26-igor.mitsyanko.os@quantenna.com> (sfid-20170825_044309_360193_919D6EFC)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karun Eagalapati <karun256@gmail.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-We get buffer full event from firmware whenever Tx queue is full
-Host should stop writing packets after this and resume after
-buffer free event.
-Buffer status checking is optimized for once in 4 times if
-BUFF_FULL condition is not set, otherwise once for every
-packet.
+There are no HT/VHT capabilities in cfg80211_ap_settings::beacon_ies,
+these should be looked for in beacon's tail instead.
 
-Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 16 +++++++++++++++-
- drivers/net/wireless/rsi/rsi_sdio.h         |  1 +
- 2 files changed, 16 insertions(+), 1 deletion(-)
+ net/wireless/nl80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 9b94ba7..94a9fcd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -271,6 +271,7 @@ void rsi_interrupt_handler(struct rsi_hw *adapter)
- 					"%s: ==> BUFFER_AVAILABLE <==\n",
- 					__func__);
- 				dev->rx_info.buf_available_counter++;
-+				dev->buff_status_updated = true;
- 				break;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8ce8542..0df8023 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3791,8 +3791,8 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
+ static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
+ {
+ 	const struct cfg80211_beacon_data *bcn = &params->beacon;
+-	size_t ies_len = bcn->beacon_ies_len;
+-	const u8 *ies = bcn->beacon_ies;
++	size_t ies_len = bcn->tail_len;
++	const u8 *ies = bcn->tail;
+ 	const u8 *rates;
+ 	const u8 *cap;
  
- 			case FIRMWARE_ASSERT_IND:
-@@ -333,7 +334,14 @@ int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num)
- 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
- 	u8 buf_status = 0;
- 	int status = 0;
-+	static int counter = 4;
- 
-+	if (!dev->buff_status_updated && counter) {
-+		counter--;
-+		goto out;
-+	}
-+
-+	dev->buff_status_updated = false;
- 	status = rsi_sdio_read_register(common->priv,
- 					RSI_DEVICE_BUFFER_STATUS_REGISTER,
- 					&buf_status);
-@@ -368,10 +376,16 @@ int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num)
- 		dev->rx_info.semi_buffer_full = false;
- 	}
- 
-+	if (dev->rx_info.mgmt_buffer_full || dev->rx_info.buf_full_counter)
-+		counter = 1;
-+	else
-+		counter = 4;
-+
-+out:
- 	if ((q_num == MGMT_SOFT_Q) && (dev->rx_info.mgmt_buffer_full))
- 		return QUEUE_FULL;
- 
--	if (dev->rx_info.buffer_full)
-+	if ((q_num < MGMT_SOFT_Q) && (dev->rx_info.buffer_full))
- 		return QUEUE_FULL;
- 
- 	return QUEUE_NOT_FULL;
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index 9239fbe..95e4bed 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -114,6 +114,7 @@ struct rsi_91x_sdiodev {
- 	u8 prev_desc[16];
- 	u16 tx_blk_size;
- 	u8 write_fail;
-+	bool buff_status_updated;
- };
- 
- void rsi_interrupt_handler(struct rsi_hw *adapter);
 -- 
-2.7.4
+2.9.5
