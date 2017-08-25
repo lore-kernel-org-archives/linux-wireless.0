@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36240 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751552AbdHPO5V (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:17794 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755012AbdHYIoT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 10:57:21 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: Re: [PATCH v2 2/2] rtlwifi: btcoex: Use seq_file to dump btcoex status
-References: <20170810164744.9336-1-Larry.Finger@lwfinger.net>
-        <20170810164744.9336-3-Larry.Finger@lwfinger.net>
-Date: Wed, 16 Aug 2017 17:57:17 +0300
-In-Reply-To: <20170810164744.9336-3-Larry.Finger@lwfinger.net> (Larry Finger's
-        message of "Thu, 10 Aug 2017 11:47:44 -0500")
-Message-ID: <87a82ztvaq.fsf@purkki.adurom.net> (sfid-20170816_165725_040670_4D3BEDBC)
+        Fri, 25 Aug 2017 04:44:19 -0400
+Date: Fri, 25 Aug 2017 11:43:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 1/2] rsi: missing unlocks on error paths
+Message-ID: <20170825082645.z2hiotefhzizb7sr@mwanda> (sfid-20170825_104442_452225_F5C12C9F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+There is a missing unlock if rsi_find_sta() fails in
+rsi_mac80211_ampdu_action() or if we hit the -EINVAL path in
+rsi_mac80211_sta_add().
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> We use seq_file to replace RT_TRACE to dump status, then we can use 'cat'
-> to access btcoex's status through debugfs.
-> (i.e. /sys/kernel/debug/rtlwifi/00-11-22-33-44-55-66/btcoex)
-> Other related changes are
-> 1. implement btc_disp_dbg_msg() to access btcoex's common status.
-> 2. remove obsolete field bt_exist
->
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+Fixes: 3528608f3a79 ("rsi: handle station connection in AP mode")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-[...]
-
-> +static void halbtc_display_wifi_status(struct btc_coexist *btcoexist,
-> +				       struct seq_file *m)
-> +{
-> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> +	s32	wifi_rssi = 0, bt_hs_rssi = 0;
-> +	bool	scan = false, link = false, roam = false, wifi_busy = false,
-> +		wifi_under_b_mode = false,
-> +		wifi_under_5g = false;
-> +	u32	wifi_bw = BTC_WIFI_BW_HT20,
-> +		wifi_traffic_dir = BTC_WIFI_TRAFFIC_TX,
-> +		wifi_freq = BTC_FREQ_2_4G;
-> +	u32	wifi_link_status = 0x0;
-> +	bool	bt_hs_on = false, under_ips = false, under_lps = false,
-> +		low_power = false, dc_mode = false;
-> +	u8	wifi_chnl = 0, wifi_hs_chnl = 0, fw_ps_state;
-> +	u8	ap_num = 0;
-
-The indetation here is weird.
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 8b983d03f2da..25331aa16e8e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -906,7 +906,8 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+ 		rsta = rsi_find_sta(common, sta->addr);
+ 		if (!rsta) {
+ 			rsi_dbg(ERR_ZONE, "No station mapped\n");
+-			return 0;
++			status = 0;
++			goto unlock;
+ 		}
+ 		sta_id = rsta->sta_id;
+ 	}
+@@ -974,6 +975,7 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
+ 		break;
+ 	}
+ 
++unlock:
+ 	mutex_unlock(&common->mutex);
+ 	return status;
+ }
+@@ -1202,6 +1204,7 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+ 	struct rsi_common *common = adapter->priv;
+ 	bool sta_exist = false;
+ 	struct rsi_sta *rsta;
++	int status = 0;
+ 
+ 	rsi_dbg(INFO_ZONE, "Station Add: %pM\n", sta->addr);
+ 
+@@ -1215,8 +1218,8 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+ 		/* Check if max stations reached */
+ 		if (common->num_stations >= common->max_stations) {
+ 			rsi_dbg(ERR_ZONE, "Reject: Max Stations exists\n");
+-			mutex_unlock(&common->mutex);
+-			return -EOPNOTSUPP;
++			status = -EOPNOTSUPP;
++			goto unlock;
+ 		}
+ 		for (cnt = 0; cnt < common->max_stations; cnt++) {
+ 			rsta = &common->stations[cnt];
+@@ -1241,7 +1244,8 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+ 			rsi_dbg(ERR_ZONE,
+ 				"%s: Some problem reaching here...\n",
+ 				__func__);
+-			return -EINVAL;
++			status = -EINVAL;
++			goto unlock;
+ 		}
+ 		rsta = &common->stations[sta_idx];
+ 		rsta->sta = sta;
+@@ -1289,9 +1293,10 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++unlock:
+ 	mutex_unlock(&common->mutex);
+ 
+-	return 0;
++	return status;
+ }
+ 
+ /**
