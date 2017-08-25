@@ -1,64 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38039 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751972AbdHJMZt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Aug 2017 08:25:49 -0400
-Date: Thu, 10 Aug 2017 15:23:04 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: karun256@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] rsi: add support for U-APSD power save
-Message-ID: <20170809201232.ylzsprsmx2haju6u@mwanda> (sfid-20170810_142554_448534_7687CB22)
+Received: from mx1.redhat.com ([209.132.183.28]:57494 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755310AbdHYOD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Aug 2017 10:03:56 -0400
+Subject: Re: [PATCH 2/2] brcmfmac: Use separate firmware for revision 0 of the
+ brcm43430 chip
+To: =?UTF-8?Q?J=c3=b6rg_Krause?= <joerg.krause@embedded.rocks>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Jelle van der Waa <jelle@vdwaa.nl>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <20170616131449.12108-1-hdegoede@redhat.com>
+ <20170616131449.12108-2-hdegoede@redhat.com>
+ <1503669327.8480.3.camel@embedded.rocks>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <c851671c-1147-94cc-cf98-d0b20b051b3b@redhat.com> (sfid-20170825_160407_215144_7D6C7CCB)
+Date: Fri, 25 Aug 2017 16:03:52 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503669327.8480.3.camel@embedded.rocks>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Karun Eagalapati,
+Hi,
 
-The patch db07971d085f: "rsi: add support for U-APSD power save" from
-Aug 3, 2017, leads to the following static checker warning:
+On 25-08-17 15:55, Jörg Krause wrote:
+> Hi,
+> 
+> On Fri, 2017-06-16 at 15:14 +0200, Hans de Goede wrote:
+>> The brcm43430 chip needs different firmware files for chip revision 0
+>> and 1. The file currently in linux-firmware is for revision 1 only.
+>>
+>> This commit makes brcmfmac request brcmfmac43430a0-sdio.bin instead
+>> of brcmfmac43430-sdio.bin for revision 0 chips.
+>>
+>> Note that the behavior for revision 1 chips is not changed, ideally those
+>> would load brcmfmac43430a1-sdio.bin, but that will break existing setups.
+>>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++--
+>>   1 file changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>> index 4ed40c94bda9..5125aeeb5310 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>> @@ -612,7 +612,9 @@ BRCMF_FW_NVRAM_DEF(43340, "brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
+>>   BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt");
+>>   BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.txt");
+>>   BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
+>> -BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+>> +BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin", "brcmfmac43430a0-sdio.txt");
+>> +/* Note the names are not postfixed with a1 for backward compatibility */
+>> +BRCMF_FW_NVRAM_DEF(43430A1, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
+>>   BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
+>>   BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
+>>   BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
+>> @@ -630,7 +632,8 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
+>>   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
+>>   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
+>>   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
+>> -	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
+>> +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
+>> +	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
+>>   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
+>>   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
+>>   	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
+> 
+> Unfortunately, there is no "brcmfmac43430a0-sdio.bin" in linux-
+> firmware. Therefore, my custom board fails:
+> 
+> # [   24.894241] brcmfmac mmc0:0001:1: Direct firmware load for
+> brcm/brcmfmac43430a0-sdio.bin failed with error -2
+> [   25.914322] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [   26.934186] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> 
+> Can someone provide the firmware file, please?
 
-	drivers/net/wireless/rsi/rsi_91x_mac80211.c:575 rsi_mac80211_bss_info_changed()
-	warn: inconsistent indenting
+I've put all the versions I've been able to find here:
 
-drivers/net/wireless/rsi/rsi_91x_mac80211.c
-   555          mutex_lock(&common->mutex);
-   556          if (changed & BSS_CHANGED_ASSOC) {
-   557                  rsi_dbg(INFO_ZONE, "%s: Changed Association status: %d\n",
-   558                          __func__, bss_conf->assoc);
-   559                  if (bss_conf->assoc) {
-   560                          /* Send the RX filter frame */
-   561                          rx_filter_word = (ALLOW_DATA_ASSOC_PEER |
-   562                                            ALLOW_CTRL_ASSOC_PEER |
-   563                                            ALLOW_MGMT_ASSOC_PEER);
-   564                          rsi_send_rx_filter_frame(common, rx_filter_word);
-   565                  }
-   566                  rsi_inform_bss_status(common,
-   567                                        bss_conf->assoc,
-   568                                        bss_conf->bssid,
-   569                                        bss_conf->qos,
-   570                                        bss_conf->aid);
-   571                  adapter->ps_info.dtim_interval_duration = bss->dtim_period;
-   572                  adapter->ps_info.listen_interval = conf->listen_interval;
-   573  
-   574          /* If U-APSD is updated, send ps parameters to firmware */
-   575          if (bss->assoc) {
+http://jwrdegoede.danny.cz/brcm-firmware/
 
-Is this supposed to be inside the if BSS_CHANGED_ASSOC if statement or
-after?
+Note that the 7.x.y.z version does not seem to have any useful meaning,
+higher is not necessarily newer :|
 
-   576                  if (common->uapsd_bitmap) {
-   577                          rsi_dbg(INFO_ZONE, "Configuring UAPSD\n");
-   578                          rsi_conf_uapsd(adapter);
-   579                  }
-   580          } else {
-   581                  common->uapsd_bitmap = 0;
-   582          }
-   583          }
-   584  
-   585          if (changed & BSS_CHANGED_CQM) {
+[hans@shalem brcm-firmware]$ for i in brcmfmac43430a0-sdio.bin*; do echo $i && strings $i | tail -n 1; done
+brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020
+43430a0-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-lpc-wl11u-rcc-fmc-wepso-ccx-okc-fbt-noccxaka-txpwr-ampduhostreorder-clm_43xx_lg-ndoe Version: 7.10.1.244 CRC: 73c82137 Date: Fri 2016-07-01 18:03:15 KST Ucode Ver: 940.1020 FWID: 01-bae8afee
+brcmfmac43430a0-sdio.bin.7.10.226.49.no_ucode_version
+43430a0-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-lpc-wl11u-rcc-fmc-wepso-ccx-okc-fbt-noccxaka-txpwr-ampduhostreorder-clm_43xx_lg Version: 7.10.226.49 CRC: bf92cb0b Date: Fri 2014-06-06 14:55:15 KST FWID 01-8962686a
+brcmfmac43430a0-sdio.bin.7.10.68.5.ucode997.0
+43430a0-roml/sdio-g-pool-p2p-pno-pktfilter-keepalive-aoe-mchan-proptxstatus-ampduhostreorder-lpc-wl11u-rcc-fmc-wepso-ccx-okc-anqpo-ltecx-sr-ndoe Version: 7.10.68.5 CRC: 5168922 Date: Thu 2015-04-30 04:20:43 PDT Ucode Ver: 997.0 FWID: 01-2bde7d77
 
-regards,
-dan carpenter
+So date wise brcmfmac43430a0-sdio.bin.7.10.1.244.ucode940.1020 is the newest
+and IIRC that one works well for me.
+
+ucode version wise, brcmfmac43430a0-sdio.bin.7.10.68.5.ucode997.0 is newer,
+but the .0 in 997.0 makes it feel like an unproven release to me.
+
+Regards,
+
+Hans
