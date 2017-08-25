@@ -1,64 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42418 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752592AbdHESrw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 14:47:52 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 21:47:42 +0300
-Message-Id: <20170805184743.23650-3-luca@coelho.fi> (sfid-20170805_205041_015611_4E44DCD1)
-In-Reply-To: <20170805184743.23650-1-luca@coelho.fi>
-References: <20170805184743.23650-1-luca@coelho.fi>
-Subject: [PATCH 2/3] iwlwifi: mvm: start mac queues when deferred tx frames are purged
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754438AbdHYCbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:31:01 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 16/27] qtnfmac: stop using private driver info about current channel
+Date: Thu, 24 Aug 2017 19:30:13 -0700
+Message-Id: <20170825023024.10565-17-igor.mitsyanko.os@quantenna.com> (sfid-20170825_043142_663895_749BC74F)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Under DQA, when tx is deferred because a queue needs to be allocated,
-the mac queue for that TID is stopped until the new stream is added.
-If at this point the station that this stream belongs to is removed,
-all the deferred tx frames are purged, but the mac queue is not
-restarted. As a result, all following tx on this queue will not be
-transmitted.
+Linux Wireless device structure already has required info.
+Since driver's info is not used anymore, remove it.
 
-Fix this by starting the relevant mac queues when the deferred tx
-frames are purged.
-
-Fixes: 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 7 ++-----
+ drivers/net/wireless/quantenna/qtnfmac/core.h     | 1 -
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index c7b1e58e3384..ce901be5fba8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2597,8 +2597,18 @@ static void iwl_mvm_purge_deferred_tx_frames(struct iwl_mvm *mvm,
- 	spin_lock_bh(&mvm_sta->lock);
- 	for (i = 0; i <= IWL_MAX_TID_COUNT; i++) {
- 		tid_data = &mvm_sta->tid_data[i];
--		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames)))
-+
-+		while ((skb = __skb_dequeue(&tid_data->deferred_tx_frames))) {
-+			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+			/*
-+			 * The first deferred frame should've stopped the MAC
-+			 * queues, so we should never get a second deferred
-+			 * frame for the RA/TID.
-+			 */
-+			iwl_mvm_start_mac_queues(mvm, info->hw_queue);
- 			ieee80211_free_txskb(mvm->hw, skb);
-+		}
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 8542c16..5ee3345 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -630,15 +630,15 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ 		 int idx, struct survey_info *survey)
+ {
+ 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct ieee80211_supported_band *sband;
+-	struct cfg80211_chan_def *chandef;
++	const struct cfg80211_chan_def *chandef = &wdev->chandef;
+ 	struct ieee80211_channel *chan;
+ 	struct qtnf_chan_stats stats;
+ 	struct qtnf_vif *vif;
+ 	int ret;
+ 
+ 	vif = qtnf_netdev_get_priv(dev);
+-	chandef = &mac->chandef;
+ 
+ 	sband = wiphy->bands[NL80211_BAND_2GHZ];
+ 	if (sband && idx >= sband->n_channels) {
+@@ -705,7 +705,6 @@ static int
+ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		 struct cfg80211_chan_def *chandef)
+ {
+-	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct net_device *ndev = wdev->netdev;
+ 	struct qtnf_vif *vif;
+ 	int ret;
+@@ -727,8 +726,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		ret = -ENODATA;
  	}
- 	spin_unlock_bh(&mvm_sta->lock);
+ 
+-	memcpy(&mac->chandef, chandef, sizeof(mac->chandef));
+-
+ out:
+ 	return ret;
  }
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 5234a9e..44a2cbb 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -126,7 +126,6 @@ struct qtnf_wmac {
+ 	struct qtnf_mac_info macinfo;
+ 	struct qtnf_vif iflist[QTNF_MAX_INTF];
+ 	struct cfg80211_scan_request *scan_req;
+-	struct cfg80211_chan_def chandef;
+ 	struct mutex mac_lock;	/* lock during wmac speicific ops */
+ 	struct timer_list scan_timeout;
+ };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index db7e475..9befc9f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -368,8 +368,6 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+ 		 mac->macid, chdef.chan->hw_value, chdef.center_freq1,
+ 		 chdef.center_freq2, chdef.width);
+ 
+-	memcpy(&mac->chandef, &chdef, sizeof(mac->chandef));
+-
+ 	for (i = 0; i < QTNF_MAX_INTF; i++) {
+ 		vif = &mac->iflist[i];
+ 		if (vif->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED)
 -- 
-2.13.2
+2.9.5
