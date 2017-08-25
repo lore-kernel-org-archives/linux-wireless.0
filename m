@@ -1,84 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:59216 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751611AbdHOIYJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 04:24:09 -0400
-Subject: [PATCH 6/6] ath10k: add memory dump support QCA988X
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Tue, 15 Aug 2017 11:23:59 +0300
-Message-ID: <150278543889.22482.337673352002345856.stgit@potku.adurom.net> (sfid-20170815_102413_411126_6E66B0EE)
-In-Reply-To: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
-References: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:61440
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754463AbdHYCa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Aug 2017 22:30:58 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [PATCH 13/27] qtnfmac: pass VIF info to SendChannel command
+Date: Thu, 24 Aug 2017 19:30:10 -0700
+Message-Id: <20170825023024.10565-14-igor.mitsyanko.os@quantenna.com> (sfid-20170825_044309_058347_64607BE2)
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Copy two regions of registers and bigger DRAM region to the dump file.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/ath/ath10k/coredump.c |   40 ++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 +-
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 5 +++--
+ drivers/net/wireless/quantenna/qtnfmac/commands.h | 2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
-index d61a36911558..644e01361df8 100644
---- a/drivers/net/wireless/ath/ath10k/coredump.c
-+++ b/drivers/net/wireless/ath/ath10k/coredump.c
-@@ -667,6 +667,39 @@ static const struct ath10k_mem_region qca6174_hw30_mem_regions[] = {
- 	},
- };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 062189b..b33c4fc 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -760,7 +760,7 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EINVAL;
+ 	}
  
-+static const struct ath10k_mem_region qca988x_hw20_mem_regions[] = {
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_DRAM,
-+		.start = 0x400000,
-+		.len = 0x50000,
-+		.name = "DRAM",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_REG,
-+		.start = 0x4000,
-+		.len = 0x2000,
-+		.name = "REG_PART1",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_REG,
-+		.start = 0x8000,
-+		.len = 0x58000,
-+		.name = "REG_PART2",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+};
-+
- static const struct ath10k_hw_mem_layout hw_mem_layouts[] = {
- 	{
- 		.hw_id = QCA6174_HW_1_0_VERSION,
-@@ -717,6 +750,13 @@ static const struct ath10k_hw_mem_layout hw_mem_layouts[] = {
- 			.size = ARRAY_SIZE(qca6174_hw30_mem_regions),
- 		},
- 	},
-+	{
-+		.hw_id = QCA988X_HW_2_0_VERSION,
-+		.region_table = {
-+			.regions = qca988x_hw20_mem_regions,
-+			.size = ARRAY_SIZE(qca988x_hw20_mem_regions),
-+		},
-+	},
- };
+-	ret = qtnf_cmd_send_chan_switch(mac, params);
++	ret = qtnf_cmd_send_chan_switch(vif, params);
+ 	if (ret)
+ 		pr_warn("%s: failed to switch to channel (%u)\n",
+ 			dev->name, params->chandef.chan->hw_value);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 195b777..cfbb636 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2316,15 +2316,16 @@ int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
+ 	return ret;
+ }
  
- static u32 ath10k_coredump_get_ramdump_size(struct ath10k *ar)
+-int qtnf_cmd_send_chan_switch(struct qtnf_wmac *mac,
++int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
+ 			      struct cfg80211_csa_settings *params)
+ {
++	struct qtnf_wmac *mac = vif->mac;
+ 	struct qlink_cmd_chan_switch *cmd;
+ 	struct sk_buff *cmd_skb;
+ 	u16 res_code = QLINK_CMD_RESULT_OK;
+ 	int ret;
+ 
+-	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, 0x0,
++	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, vif->vifid,
+ 					    QLINK_CMD_CHAN_SWITCH,
+ 					    sizeof(*cmd));
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+index 634b057..e87c4a4 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+@@ -74,7 +74,7 @@ int qtnf_cmd_send_updown_intf(struct qtnf_vif *vif,
+ int qtnf_cmd_reg_notify(struct qtnf_bus *bus, struct regulatory_request *req);
+ int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
+ 			    struct qtnf_chan_stats *stats);
+-int qtnf_cmd_send_chan_switch(struct qtnf_wmac *mac,
++int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
+ 			      struct cfg80211_csa_settings *params);
+ int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef);
+ 
+-- 
+2.9.5
