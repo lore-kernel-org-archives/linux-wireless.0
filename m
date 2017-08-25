@@ -1,125 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:37761 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752519AbdHICbv (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:54564 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754632AbdHYMli (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 22:31:51 -0400
-Received: by mail-pg0-f66.google.com with SMTP id 83so4635428pgb.4
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 19:31:51 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: uap: enable 11d based on userspace configruation
-Date: Wed,  9 Aug 2017 02:31:43 +0000
-Message-Id: <1502245903-22246-1-git-send-email-huxinming820@gmail.com> (sfid-20170809_043155_239938_CBA0BBB1)
+        Fri, 25 Aug 2017 08:41:38 -0400
+Date: Fri, 25 Aug 2017 14:15:08 +0200
+From: Daniel Golle <daniel@makrotopia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2800: fix TX_PIN_CFG setting for non MT7620 chips
+Message-ID: <20170825121508.GA1159@makrotopia.org> (sfid-20170825_144141_224778_13FB4812)
+References: <20170825113828.GA3959@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170825113828.GA3959@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Hi Stanislaw,
 
-This patch check whether userspace beacon data include country
-ie, if so then download command to enable 11d setup in firmeare
-accordingly.
+On Fri, Aug 25, 2017 at 01:38:29PM +0200, Stanislaw Gruszka wrote:
+> Since commit 41977e86c984 ("rt2x00: add support for MT7620") we do not
+> initialize TX_PIN_CFG setting. This cause breakage at least on some
+> RT3573 devices. To fix the problem patch restores previous behaviour
+> for non MT7620 chips.
+> 
+> Fixes: 41977e86c984 ("rt2x00: add support for MT7620")
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1480829
+> Reported-and-tested-by: Jussi Eloranta <jussi.eloranta@csun.edu>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> index d11c7b2..5672aec 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> @@ -3699,7 +3699,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>  	if (rt2x00_rt(rt2x00dev, RT3572))
+>  		rt2800_rfcsr_write(rt2x00dev, 8, 0);
+>  
+> -	rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
+> +	if (rt2x00_rt(rt2x00dev, RT6352))
+> +		rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c |  2 ++
- drivers/net/wireless/marvell/mwifiex/main.h     |  3 +++
- drivers/net/wireless/marvell/mwifiex/uap_cmd.c  | 34 ++++++++++++++++---------
- 3 files changed, 27 insertions(+), 12 deletions(-)
+should be
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index c4382d0..2aa5adc 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2018,6 +2018,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		priv->state_11h.is_11h_active = false;
- 	}
- 
-+	mwifiex_config_uap_11d(priv, &params->beacon);
-+
- 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "Failed to start AP\n");
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 84be38e..ee8876a 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1565,6 +1565,9 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- void mwifiex_uap_del_sta_data(struct mwifiex_private *priv,
- 			      struct mwifiex_sta_node *node);
- 
-+void mwifiex_config_uap_11d(struct mwifiex_private *priv,
-+			    struct cfg80211_beacon_data *beacon_data);
-+
- void mwifiex_init_11h_params(struct mwifiex_private *priv);
- int mwifiex_is_11h_active(struct mwifiex_private *priv);
- int mwifiex_11h_activate(struct mwifiex_private *priv, bool flag);
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-index 477c29c..18f7d9b 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-@@ -444,6 +444,28 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
- 	return;
- }
- 
-+/* This function enable 11D if userspace set the country IE.
-+ */
-+void mwifiex_config_uap_11d(struct mwifiex_private *priv,
-+			    struct cfg80211_beacon_data *beacon_data)
-+{
-+	enum state_11d_t state_11d;
-+	const u8 *country_ie;
-+
-+	country_ie = cfg80211_find_ie(WLAN_EID_COUNTRY, beacon_data->tail,
-+				      beacon_data->tail_len);
-+	if (country_ie) {
-+		/* Send cmd to FW to enable 11D function */
-+		state_11d = ENABLE_11D;
-+		if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
-+				     HostCmd_ACT_GEN_SET, DOT11D_I,
-+				     &state_11d, true)) {
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "11D: failed to enable 11D\n");
-+		}
-+	}
-+}
-+
- /* This function parses BSS related parameters from structure
-  * and prepares TLVs. These TLVs are appended to command buffer.
- */
-@@ -848,8 +870,6 @@ void mwifiex_uap_set_channel(struct mwifiex_private *priv,
- int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 			     struct mwifiex_uap_bss_param *bss_cfg)
- {
--	enum state_11d_t state_11d;
--
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_SYS_CONFIG,
- 			     HostCmd_ACT_GEN_SET,
- 			     UAP_BSS_PARAMS_I, bss_cfg, true)) {
-@@ -858,16 +878,6 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- 		return -1;
- 	}
- 
--	/* Send cmd to FW to enable 11D function */
--	state_11d = ENABLE_11D;
--	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
--			     HostCmd_ACT_GEN_SET, DOT11D_I,
--			     &state_11d, true)) {
--		mwifiex_dbg(priv->adapter, ERROR,
--			    "11D: failed to enable 11D\n");
--		return -1;
--	}
--
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
- 			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
--- 
-1.9.1
+	tx_pin = rt2800_register_read(rt2x00dev, TX_PIN_CFG);
+
+since the calling convention of rt2800_register_read was changed in
+commit eebd68e782 rt2x00: convert rt2800_register_read return type.
+Probably you based the patch on an outdated tree...?
+
+
+> +	else
+> +		tx_pin = 0;
+>  
+>  	switch (rt2x00dev->default_ant.tx_chain_num) {
+>  	case 3:
+> -- 
+> 2.7.5
+> 
