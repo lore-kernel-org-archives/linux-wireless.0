@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:33736 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750941AbdH3TkC (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:37870 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750737AbdHZGZ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:40:02 -0400
-MIME-Version: 1.0
-Reply-To: kerolasa@gmail.com
-In-Reply-To: <alpine.LNX.2.20.1707010956520.7939@imuri>
-References: <alpine.LNX.2.20.1706251339500.25762@imuri> <1498745040.3141.6.camel@sipsolutions.net>
- <CAG27Bk0tKzqxkm6qqjGO6GJE7vxReRAQbvYGexjp+PBLo+RK_A@mail.gmail.com>
- <20170630074729.s3gknfobabgepk4h@ws.net.home> <alpine.LNX.2.20.1707010956520.7939@imuri>
-From: Sami Kerola <kerolasa@iki.fi>
-Date: Wed, 30 Aug 2017 20:40:01 +0100
-Message-ID: <CAG27Bk0u8C4u3PnT1g_B8MeFBkou+dYdpp9Rdn7z87gd-XskBQ@mail.gmail.com> (sfid-20170830_214006_887451_0521BB93)
-Subject: Re: rfkill(8) move and improvements
-To: Karel Zak <kzak@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless@vger.kernel.org,
-        util-linux <util-linux@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 26 Aug 2017 02:25:59 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: sameo@linux.intel.com, gregkh@linuxfoundation.org,
+        tomas.winkler@intel.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] nfc: microread: mei: constify mei_cl_device_id
+Date: Sat, 26 Aug 2017 11:55:41 +0530
+Message-Id: <27f776943a6fd60e938b53673fba7562241ba1bd.1503728505.git.arvind.yadav.cs@gmail.com> (sfid-20170826_082630_439721_544A7658)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 July 2017 at 10:06, Sami Kerola <kerolasa@iki.fi> wrote:
-> I did couple last minute changes to my remote branch, that should now be
-> ready for final review.
->
-> git://github.com/kerolasa/lelux-utiliteetit.git rfkill
+mei_cl_device_id are not supposed to change at runtime.
+mei driver is working with const 'id_table'. So mark
+the non-const mei_cl_device_id structs as const.
 
-Hello,
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/nfc/microread/mei.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It's been a while. I did not get any review feedback, so I assume changes
-were ok. Would it be possible to move forward with the merge to
-util-linux upstream?
-
+diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
+index eb5eddf..70bf7a1 100644
+--- a/drivers/nfc/microread/mei.c
++++ b/drivers/nfc/microread/mei.c
+@@ -66,7 +66,7 @@ static int microread_mei_remove(struct mei_cl_device *cldev)
+ 	return 0;
+ }
+ 
+-static struct mei_cl_device_id microread_mei_tbl[] = {
++static const struct mei_cl_device_id microread_mei_tbl[] = {
+ 	{ MICROREAD_DRIVER_NAME, MEI_NFC_UUID, MEI_CL_VERSION_ANY},
+ 
+ 	/* required last entry */
 -- 
-Sami Kerola
-http://www.iki.fi/kerolasa/
+2.7.4
