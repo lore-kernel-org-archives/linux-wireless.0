@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:35690 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbdH3TAD (ORCPT
+Received: from mail-lf0-f52.google.com ([209.85.215.52]:38662 "EHLO
+        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752318AbdH1IjL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:00:03 -0400
-Received: by mail-wm0-f41.google.com with SMTP id a80so15658271wma.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:00:03 -0700 (PDT)
-Subject: Re: [PATCH 03/30] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-4-ian@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <91172916-24b6-a52a-8ef2-ab891fcce5a0@broadcom.com> (sfid-20170830_210007_645014_7CE98417)
-Date: Wed, 30 Aug 2017 20:59:59 +0200
+        Mon, 28 Aug 2017 04:39:11 -0400
+Date: Mon, 28 Aug 2017 10:39:12 +0200
+From: Johan Hovold <johan@kernel.org>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Ben Hutchings <ben.hutchings@codethink.co.uk>
+Subject: Re: [PATCH] NFC: fix device-allocation error return
+Message-ID: <20170828083912.GB20634@localhost> (sfid-20170828_103931_657940_251A8F5E)
+References: <20170709110858.20331-1-johan@kernel.org>
+ <20170722133228.GE2729@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-4-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170722133228.GE2729@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
-> 	This large function is concealing a LOT of obscure logic about
-> how the hardware functions. Time to split it up.
+Samuel or David,
 
-Again the tab. Guess it is your default ;-)
+On Sat, Jul 22, 2017 at 03:32:28PM +0200, Johan Hovold wrote:
+> On Sun, Jul 09, 2017 at 01:08:58PM +0200, Johan Hovold wrote:
+> > A recent change fixing NFC device allocation itself introduced an
+> > error-handling bug by returning an error pointer in case device-id
+> > allocation failed. This is clearly broken as the callers still expected
+> > NULL to be returned on errors as detected by Dan's static checker.
+> > 
+> > Fix this up by returning NULL in the event that we've run out of memory
+> > when allocating a new device id.
+> > 
+> > Note that the offending commit is marked for stable (3.8) so this fix
+> > needs to be backported along with it.
+> > 
+> > Fixes: 20777bc57c34 ("NFC: fix broken device allocation")
+> > Cc: stable <stable@vger.kernel.org>	# 3.8
+> > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > Signed-off-by: Johan Hovold <johan@kernel.org>
 
-> This first patch splits the function into two pieces - read and write,
-> doing away with the rw flag in the process.
->
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
->   .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
->   1 file changed, 73 insertions(+), 21 deletions(-)
+> Could you apply this follow-up fix so that it can be backported along
+> with the offending commit (which was just added to the stable queues)?
 > 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index 2b441ce91d5f..1ee0f91b6c50 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
->   	return ret;
->   }
->   
-> -static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
-> -				   u8 regsz, void *data, bool write)
-> +static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
-> +				 u8 regsz, void *data)
+> We would only hit this error path if an ida allocation fails due to OOM;
+> so while this is not critical, it would still be nice to get it fixed.
 
-Thought I mentioned this before, but the indentation should be aligned 
-to opening bracket.
+Another reminder about this one; can you apply it so we can get it into
+4.14-rc1?
 
->   {
->   	u8 func;
->   	s32 retry = 0;
+Note that the offending commit has now been backported to the stable
+trees and we really want this trivial follow-up fix to be backported as
+well.
 
-[...]
+Let me know if you want me to resend the patch.
 
-> +
-> +static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
-> +				u8 regsz, void *data)
-
-dito here.
-
-Regards,
-Arend
+Thanks,
+Johan
