@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42176 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752554AbdHBJhG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:37:06 -0400
-Date: Wed, 2 Aug 2017 11:35:52 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Michael Skeffington <mike@astro.ai>
-Subject: Re: [PATCH] mac80211: remove mic_fail_no_key label
-Message-ID: <20170802093551.GA4777@redhat.com> (sfid-20170802_113710_163695_112CEE25)
-References: <20170802090431.GB2790@redhat.com>
- <598196F3.9070208@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <598196F3.9070208@broadcom.com>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751241AbdH1TTC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Aug 2017 15:19:02 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 4/7] wil6210: move pre-FW configuration to separate function
+Date: Mon, 28 Aug 2017 22:18:44 +0300
+Message-Id: <1503947927-18877-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211914_416888_788E7A3C)
+In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 02, 2017 at 11:10:11AM +0200, Arend van Spriel wrote:
-> On 8/2/2017 11:04 AM, Stanislaw Gruszka wrote:
-> >For historic reasons we have separate cases for mic_fail and
-> >mic_fail_no_key. But with current code we can merge those cases,
-> >as we already have NULL key check since:
-> >
-> >commit a66b98db570a638afd909459e1e6bfa272344bd3
-> >Author: Arik Nemtsov <arik@wizery.com>
-> >Date:   Thu Jun 23 00:00:24 2011 +0300
-> >
-> >     mac80211: fix rx->key NULL dereference during mic failure
-> 
-> Maybe better to use:
-> ... since commit a66b98db570a ("mac80211: fix rx->key NULL
-> dereference during mic failure").
-> 
-> as it is the preferred method to reference git commits.
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Is easier for me to just copy-paste commit in form the git log/show
-command provides, so I use that form. Is there tool or git log/show
-option to get commit log in the preferred form, so I do not have to
-change it manually?
+Re-arrange the code to have dedicated function for device configuration
+which takes place before FW starts running.
 
-Thanks
-Stanislaw
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 40 ++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e2ea490..927e332 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -930,6 +930,27 @@ int wil_ps_update(struct wil6210_priv *wil, enum wmi_ps_profile_type ps_profile)
+ 	return rc;
+ }
+ 
++static void wil_pre_fw_config(struct wil6210_priv *wil)
++{
++	/* Mark FW as loaded from host */
++	wil_s(wil, RGF_USER_USAGE_6, 1);
++
++	/* clear any interrupts which on-card-firmware
++	 * may have set
++	 */
++	wil6210_clear_irq(wil);
++	/* CAF_ICR - clear and mask */
++	/* it is W1C, clear by writing back same value */
++	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
++	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
++
++	if (wil->fw_calib_result > 0) {
++		__le32 val = cpu_to_le32(wil->fw_calib_result |
++						(CALIB_RESULT_SIGNATURE << 8));
++		wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
++	}
++}
++
+ /*
+  * We reset all the structures, and we reset the UMAC.
+  * After calling this routine, you're expected to reload
+@@ -1023,24 +1044,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		if (rc)
+ 			return rc;
+ 
+-		/* Mark FW as loaded from host */
+-		wil_s(wil, RGF_USER_USAGE_6, 1);
+-
+-		/* clear any interrupts which on-card-firmware
+-		 * may have set
+-		 */
+-		wil6210_clear_irq(wil);
+-		/* CAF_ICR - clear and mask */
+-		/* it is W1C, clear by writing back same value */
+-		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+-		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+-
+-		if (wil->fw_calib_result > 0) {
+-			__le32 val = cpu_to_le32(wil->fw_calib_result |
+-						 (CALIB_RESULT_SIGNATURE << 8));
+-			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
+-		}
+-
++		wil_pre_fw_config(wil);
+ 		wil_release_cpu(wil);
+ 	}
+ 
+-- 
+1.9.1
