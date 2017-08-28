@@ -1,277 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33839 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752703AbdHKNqP (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751192AbdH1TTI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 09:46:15 -0400
-Received: by mail-pf0-f196.google.com with SMTP id t86so3539408pfe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:46:15 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Mon, 28 Aug 2017 15:19:08 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 05/11] rsi: handle station connection in AP mode
-Date: Fri, 11 Aug 2017 19:11:23 +0530
-Message-Id: <1502458889-9690-6-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154720_980162_512686C8)
-In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 7/7] wil6210: ensure P2P device is stopped before removing interface
+Date: Mon, 28 Aug 2017 22:18:47 +0300
+Message-Id: <1503947927-18877-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211911_564672_3CBCDB9C)
+In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Station structures are maintained in driver with required
-fields. When mac80211 callback sta_add is called, driver
-iterates through list of connected stations to check available
-index and assigns station id which is important for further
-communication to that station. Then peer notify frame is send
-to firmware to inform the firmware about new station connection.
+User space can remove the P2P management interface while it is active
+(for example, while listen/search is active) and this can cause
+a crash. Ensure the P2P device is fully stopped before removing.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 79 ++++++++++++++++++++++++++---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 49 +++++++++++-------
- drivers/net/wireless/rsi/rsi_mgmt.h         |  9 +++-
- 3 files changed, 111 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 57 +++++++++++++++--------------
+ 1 file changed, 29 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 6038a2f..cf86162 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -626,10 +626,12 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
- 			rsi_send_rx_filter_frame(common, rx_filter_word);
- 		}
- 		rsi_inform_bss_status(common,
-+				      STA_OPMODE,
- 				      bss_conf->assoc,
- 				      bss_conf->bssid,
- 				      bss_conf->qos,
--				      bss_conf->aid);
-+				      bss_conf->aid,
-+				      NULL, 0);
- 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
- 		adapter->ps_info.listen_interval = conf->listen_interval;
- 
-@@ -1157,18 +1159,81 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	bool sta_exist = false;
-+	struct rsi_sta *rsta;
-+
-+	print_hex_dump(KERN_INFO, "Station add: ", DUMP_PREFIX_OFFSET,
-+		       16, 1, sta->addr, ETH_ALEN, 0);
- 
- 	mutex_lock(&common->mutex);
- 
--	rsi_set_min_rate(hw, sta, common);
-+	if (vif->type == NL80211_IFTYPE_AP) {
-+		u8 cnt;
-+		int sta_idx = -1;
-+		int free_index = -1;
-+
-+		/* Check if max stations reached */
-+		if (common->num_stations >= common->max_stations) {
-+			rsi_dbg(ERR_ZONE, "Reject: Max Stations exists\n");
-+			mutex_unlock(&common->mutex);
-+			return -EOPNOTSUPP;
-+		}
-+		for (cnt = 0; cnt < common->max_stations; cnt++) {
-+			rsta = &common->stations[cnt];
- 
--	if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ||
--	    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)) {
--		common->vif_info[0].sgi = true;
-+			if (!rsta->sta) {
-+				if (free_index < 0)
-+					free_index = cnt;
-+				continue;
-+			}
-+			if (!memcmp(rsta->sta->addr, sta->addr, ETH_ALEN)) {
-+				rsi_dbg(INFO_ZONE, "Station exists\n");
-+				sta_idx = cnt;
-+				sta_exist = true;
-+				break;
-+			}
-+		}
-+		if (!sta_exist) {
-+			if (free_index >= 0)
-+				sta_idx = free_index;
-+		}
-+		if (sta_idx < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Some problem reaching here...\n",
-+				__func__);
-+			return -EINVAL;
-+		}
-+		rsta = &common->stations[sta_idx];
-+		rsta->sta = sta;
-+		rsta->sta_id = sta_idx;
-+		for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
-+			rsta->start_tx_aggr[cnt] = false;
-+		for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
-+			rsta->seq_start[cnt] = 0;
-+		if (!sta_exist) {
-+			rsi_dbg(INFO_ZONE, "New Station\n");
-+
-+			/* Send peer notify to device */
-+			rsi_dbg(INFO_ZONE, "Indicate bss status to device\n");
-+			rsi_inform_bss_status(common, AP_OPMODE, 1, sta->addr,
-+					      sta->wme, sta->aid, sta, sta_idx);
-+
-+			common->num_stations++;
-+		}
- 	}
- 
--	if (sta->ht_cap.ht_supported)
--		ieee80211_start_tx_ba_session(sta, 0, 0);
-+	if (vif->type == NL80211_IFTYPE_STATION) {
-+		rsi_set_min_rate(hw, sta, common);
-+		if (sta->ht_cap.ht_supported) {
-+			common->vif_info[0].is_ht = true;
-+			common->bitrate_mask[NL80211_BAND_2GHZ] =
-+					sta->supp_rates[NL80211_BAND_2GHZ];
-+			if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ||
-+			    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
-+				common->vif_info[0].sgi = true;
-+			ieee80211_start_tx_ba_session(sta, 0, 0);
-+		}
-+	}
- 
- 	mutex_unlock(&common->mutex);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index e47fc0d..7c0f27a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -455,12 +455,14 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
-  * Return: status: 0 on success, corresponding negative error code on failure.
-  */
- static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
--					 u8 opmode,
-+					 enum opmode opmode,
- 					 u8 notify_event,
- 					 const unsigned char *bssid,
- 					 u8 qos_enable,
--					 u16 aid)
-+					 u16 aid,
-+					 u16 sta_id)
- {
-+	struct ieee80211_vif *vif = common->priv->vifs[0];
- 	struct sk_buff *skb = NULL;
- 	struct rsi_peer_notify *peer_notify;
- 	u16 vap_id = 0;
-@@ -480,7 +482,10 @@ static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
- 	memset(skb->data, 0, frame_len);
- 	peer_notify = (struct rsi_peer_notify *)skb->data;
- 
--	peer_notify->command = cpu_to_le16(opmode << 1);
-+	if (opmode == STA_OPMODE)
-+		peer_notify->command = cpu_to_le16(PEER_TYPE_AP << 1);
-+	else if (opmode == AP_OPMODE)
-+		peer_notify->command = cpu_to_le16(PEER_TYPE_STA << 1);
- 
- 	switch (notify_event) {
- 	case STA_CONNECTED:
-@@ -502,13 +507,15 @@ static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
- 			(frame_len - FRAME_DESC_SZ),
- 			RSI_WIFI_MGMT_Q);
- 	peer_notify->desc.desc_dword0.frame_type = PEER_NOTIFY;
-+	peer_notify->desc.desc_dword3.qid_tid = sta_id;
- 	peer_notify->desc.desc_dword3.sta_id = vap_id;
- 
- 	skb_put(skb, frame_len);
- 
- 	status = rsi_send_internal_mgmt_frame(common, skb);
- 
--	if (!status && qos_enable) {
-+	if ((vif->type == NL80211_IFTYPE_STATION) &&
-+	    (!status && qos_enable)) {
- 		rsi_set_contention_vals(common);
- 		status = rsi_load_radio_caps(common);
- 	}
-@@ -1279,32 +1286,40 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
-  * Return: None.
-  */
- void rsi_inform_bss_status(struct rsi_common *common,
-+			   enum opmode opmode,
- 			   u8 status,
--			   const unsigned char *bssid,
-+			   const u8 *addr,
- 			   u8 qos_enable,
--			   u16 aid)
-+			   u16 aid,
-+			   struct ieee80211_sta *sta,
-+			   u16 sta_id)
- {
- 	if (status) {
--		common->hw_data_qs_blocked = true;
-+		if (opmode == STA_OPMODE)
-+			common->hw_data_qs_blocked = true;
- 		rsi_hal_send_sta_notify_frame(common,
--					      RSI_IFTYPE_STATION,
-+					      opmode,
- 					      STA_CONNECTED,
--					      bssid,
-+					      addr,
- 					      qos_enable,
--					      aid);
-+					      aid, sta_id);
- 		if (common->min_rate == 0xffff)
- 			rsi_send_auto_rate_request(common);
--		if (!rsi_send_block_unblock_frame(common, false))
--			common->hw_data_qs_blocked = false;
-+		if (opmode == STA_OPMODE) {
-+			if (!rsi_send_block_unblock_frame(common, false))
-+				common->hw_data_qs_blocked = false;
-+		}
- 	} else {
--		common->hw_data_qs_blocked = true;
-+		if (opmode == STA_OPMODE)
-+			common->hw_data_qs_blocked = true;
- 		rsi_hal_send_sta_notify_frame(common,
--					      RSI_IFTYPE_STATION,
-+					      opmode,
- 					      STA_DISCONNECTED,
--					      bssid,
-+					      addr,
- 					      qos_enable,
--					      aid);
--		rsi_send_block_unblock_frame(common, true);
-+					      aid, sta_id);
-+		if (opmode == STA_OPMODE)
-+			rsi_send_block_unblock_frame(common, true);
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 0712a89..85d5c04 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -382,6 +382,34 @@ static int wil_cfg80211_dump_station(struct wiphy *wiphy,
+ 	return rc;
  }
  
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index a00aa10..a2e377f 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -209,6 +209,10 @@ enum vap_status {
- 	VAP_UPDATE = 3
- };
++static int wil_cfg80211_start_p2p_device(struct wiphy *wiphy,
++					 struct wireless_dev *wdev)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++
++	wil_dbg_misc(wil, "start_p2p_device: entered\n");
++	wil->p2p.p2p_dev_started = 1;
++	return 0;
++}
++
++static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
++					 struct wireless_dev *wdev)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	struct wil_p2p_info *p2p = &wil->p2p;
++
++	if (!p2p->p2p_dev_started)
++		return;
++
++	wil_dbg_misc(wil, "stop_p2p_device: entered\n");
++	mutex_lock(&wil->mutex);
++	mutex_lock(&wil->p2p_wdev_mutex);
++	wil_p2p_stop_radio_operations(wil);
++	p2p->p2p_dev_started = 0;
++	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->mutex);
++}
++
+ static struct wireless_dev *
+ wil_cfg80211_add_iface(struct wiphy *wiphy, const char *name,
+ 		       unsigned char name_assign_type,
+@@ -430,6 +458,7 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
  
-+enum peer_type {
-+	PEER_TYPE_AP,
-+	PEER_TYPE_STA,
-+};
- extern struct ieee80211_rate rsi_rates[12];
- extern const u16 rsi_mcsrates[8];
++	wil_cfg80211_stop_p2p_device(wiphy, wdev);
+ 	wil_p2p_wdev_free(wil);
  
-@@ -611,8 +615,9 @@ int rsi_set_channel(struct rsi_common *common,
- 		    struct ieee80211_channel *channel);
- int rsi_send_vap_dynamic_update(struct rsi_common *common);
- int rsi_send_block_unblock_frame(struct rsi_common *common, bool event);
--void rsi_inform_bss_status(struct rsi_common *common, u8 status,
--			   const u8 *bssid, u8 qos_enable, u16 aid);
-+void rsi_inform_bss_status(struct rsi_common *common, enum opmode opmode,
-+			   u8 status, const u8 *addr, u8 qos_enable, u16 aid,
-+			   struct ieee80211_sta *sta, u16 sta_id);
- void rsi_indicate_pkt_to_os(struct rsi_common *common, struct sk_buff *skb);
- int rsi_mac80211_attach(struct rsi_common *common);
- void rsi_indicate_tx_status(struct rsi_hw *common, struct sk_buff *skb,
+ 	return 0;
+@@ -1661,34 +1690,6 @@ static int wil_cfg80211_change_bss(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
+-static int wil_cfg80211_start_p2p_device(struct wiphy *wiphy,
+-					 struct wireless_dev *wdev)
+-{
+-	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-
+-	wil_dbg_misc(wil, "start_p2p_device: entered\n");
+-	wil->p2p.p2p_dev_started = 1;
+-	return 0;
+-}
+-
+-static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
+-					 struct wireless_dev *wdev)
+-{
+-	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-	struct wil_p2p_info *p2p = &wil->p2p;
+-
+-	if (!p2p->p2p_dev_started)
+-		return;
+-
+-	wil_dbg_misc(wil, "stop_p2p_device: entered\n");
+-	mutex_lock(&wil->mutex);
+-	mutex_lock(&wil->p2p_wdev_mutex);
+-	wil_p2p_stop_radio_operations(wil);
+-	p2p->p2p_dev_started = 0;
+-	mutex_unlock(&wil->p2p_wdev_mutex);
+-	mutex_unlock(&wil->mutex);
+-}
+-
+ static int wil_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       bool enabled, int timeout)
 -- 
-2.7.4
+1.9.1
