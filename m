@@ -1,65 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34011 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751097AbdHaEmW (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751192AbdH1TSy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 00:42:22 -0400
-Subject: Re: [PATCH] rtlwifi: rtl8723be: fix duplicated code for different
- branches
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20170830170424.GA19424@embeddedgus>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <d26873ed-3c1e-f47c-0aab-e8e670c8ced5@lwfinger.net> (sfid-20170831_064238_499575_3A91287A)
-Date: Wed, 30 Aug 2017 23:42:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170830170424.GA19424@embeddedgus>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 28 Aug 2017 15:18:54 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 1/7] wil6210: ratelimit errors in TX/RX interrupts
+Date: Mon, 28 Aug 2017 22:18:41 +0300
+Message-Id: <1503947927-18877-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211858_661762_725F710A)
+In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/30/2017 12:04 PM, Gustavo A. R. Silva wrote:
-> Refactor code in order to avoid identical code for different branches.
-> 
-> Addresses-Coverity-ID: 1248728
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-According to Realtek, this change is OK.
+Sometimes there is a firmware crash but the hardware
+is not fully stopped and continue to send TX/RX interrupts.
+This can cause an overload of messages which can bring the
+host down. Add ratelimit to these error messages to fix this.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-Thanks,
-
-Larry
-
-> ---
-> This issue was reported by Coverity and it was tested by compilation only.
-> Please, verify if this is not a copy/paste error.
-> Also, notice this code has been there since 2014.
-> 
->   drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c | 8 ++------
->   1 file changed, 2 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> index 131c0d1..15c117e 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-> @@ -883,12 +883,8 @@ static void rtl8723be_dm_txpower_tracking_callback_thermalmeter(
->   	if ((rtldm->power_index_offset[RF90_PATH_A] != 0) &&
->   	    (rtldm->txpower_track_control)) {
->   		rtldm->done_txpower = true;
-> -		if (thermalvalue > rtlefuse->eeprom_thermalmeter)
-> -			rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
-> -							     index_for_channel);
-> -		else
-> -			rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
-> -							     index_for_channel);
-> +		rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
-> +						      index_for_channel);
->   
->   		rtldm->swing_idx_cck_base = rtldm->swing_idx_cck;
->   		rtldm->swing_idx_ofdm_base[RF90_PATH_A] =
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index cad8a95..59def4f 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -244,7 +244,7 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
+ 	wil_dbg_irq(wil, "ISR RX 0x%08x\n", isr);
+ 
+ 	if (unlikely(!isr)) {
+-		wil_err(wil, "spurious IRQ: RX\n");
++		wil_err_ratelimited(wil, "spurious IRQ: RX\n");
+ 		return IRQ_NONE;
+ 	}
+ 
+@@ -269,11 +269,12 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
+ 				need_unmask = false;
+ 				napi_schedule(&wil->napi_rx);
+ 			} else {
+-				wil_err(wil,
++				wil_err_ratelimited(
++					wil,
+ 					"Got Rx interrupt while stopping interface\n");
+ 			}
+ 		} else {
+-			wil_err(wil, "Got Rx interrupt while in reset\n");
++			wil_err_ratelimited(wil, "Got Rx interrupt while in reset\n");
+ 		}
+ 	}
+ 
+@@ -302,7 +303,7 @@ static irqreturn_t wil6210_irq_tx(int irq, void *cookie)
+ 	wil_dbg_irq(wil, "ISR TX 0x%08x\n", isr);
+ 
+ 	if (unlikely(!isr)) {
+-		wil_err(wil, "spurious IRQ: TX\n");
++		wil_err_ratelimited(wil, "spurious IRQ: TX\n");
+ 		return IRQ_NONE;
+ 	}
+ 
+@@ -318,12 +319,13 @@ static irqreturn_t wil6210_irq_tx(int irq, void *cookie)
+ 			need_unmask = false;
+ 			napi_schedule(&wil->napi_tx);
+ 		} else {
+-			wil_err(wil, "Got Tx interrupt while in reset\n");
++			wil_err_ratelimited(wil, "Got Tx interrupt while in reset\n");
+ 		}
+ 	}
+ 
+ 	if (unlikely(isr))
+-		wil_err(wil, "un-handled TX ISR bits 0x%08x\n", isr);
++		wil_err_ratelimited(wil, "un-handled TX ISR bits 0x%08x\n",
++				    isr);
+ 
+ 	/* Tx IRQ will be enabled when NAPI processing finished */
+ 
+-- 
+1.9.1
