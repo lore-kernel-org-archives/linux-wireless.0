@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42288 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751436AbdHEIpX (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751192AbdH1TTE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 04:45:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sharon Dvir <sharon.dvir@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 11:44:30 +0300
-Message-Id: <20170805084438.12550-3-luca@coelho.fi> (sfid-20170805_104553_468869_73884A64)
-In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
-References: <20170805084438.12550-1-luca@coelho.fi>
-Subject: [PATCH 02/10] mac80211: shorten debug prints using ht_dbg() to avoid warning
+        Mon, 28 Aug 2017 15:19:04 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 5/7] wil6210: clear PAL_UNIT_ICR part of device reset
+Date: Mon, 28 Aug 2017 22:18:45 +0300
+Message-Id: <1503947927-18877-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211907_839412_7C01C8C7)
+In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sharon Dvir <sharon.dvir@intel.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-Invoking ht_dbg() with too long of a string will print a warning.
-Shorten the messages while retaining the printed patameters.
+When FW starts running it can get D0 to D3 interrupt that is a leftover
+from previous system suspend while FW was not running.
+As this interrupt is not relevant anymore, clear it part of device reset
+procedure.
 
-Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- net/mac80211/agg-tx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c    | 2 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index cbd48762256c..420486b5a1d9 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -436,7 +436,7 @@ static void sta_addba_resp_timer_expired(unsigned long data)
- 	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
- 		rcu_read_unlock();
- 		ht_dbg(sta->sdata,
--		       "timer expired on %pM tid %d but we are not (or no longer) expecting addBA response there\n",
-+		       "timer expired on %pM tid %d not expecting addBA response\n",
- 		       sta->sta.addr, tid);
- 		return;
- 	}
-@@ -639,7 +639,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
- 			HT_AGG_RETRIES_PERIOD)) {
- 		ht_dbg(sdata,
--		       "BA request denied - waiting a grace period after %d failed requests on %pM tid %u\n",
-+		       "BA request denied - %d failed requests on %pM tid %u\n",
- 		       sta->ampdu_mlme.addba_req_num[tid], sta->sta.addr, tid);
- 		ret = -EBUSY;
- 		goto err_unlock_sta;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 927e332..bac829a 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -943,6 +943,8 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ 	/* it is W1C, clear by writing back same value */
+ 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
++	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
++	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 
+ 	if (wil->fw_calib_result > 0) {
+ 		__le32 val = cpu_to_le32(wil->fw_calib_result |
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index a8c2680..315ec8b 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -268,6 +268,7 @@ struct RGF_ICR {
+ 	#define BIT_DMA_PSEUDO_CAUSE_MISC	BIT(2)
+ 
+ #define RGF_HP_CTRL			(0x88265c)
++#define RGF_PAL_UNIT_ICR		(0x88266c) /* struct RGF_ICR */
+ #define RGF_PCIE_LOS_COUNTER_CTL	(0x882dc4)
+ 
+ /* MAC timer, usec, for packet lifetime */
 -- 
-2.13.2
+1.9.1
