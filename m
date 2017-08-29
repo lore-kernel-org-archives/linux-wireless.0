@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:54420 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbdHaRdH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 13:33:07 -0400
-Date: Thu, 31 Aug 2017 10:33:05 -0700 (PDT)
-Message-Id: <20170831.103305.1809212990680774811.davem@davemloft.net> (sfid-20170831_193323_517071_C7977C80)
-To: pavel@ucw.cz
-Cc: kvalo@codeaurora.org, torvalds@linux-foundation.org,
-        xiyou.wangcong@gmail.com, akpm@linux-foundation.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: add a missing spin_lock_init()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170831144743.GA21261@amd>
-References: <20170831065204.GA17812@amd>
-        <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com>
-        <20170831144743.GA21261@amd>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:55935
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751236AbdH2MRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 08:17:07 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 1/5] qtnfmac: drop -D__CHECK_ENDIAN from cflags
+Date: Tue, 29 Aug 2017 15:16:19 +0300
+Message-Id: <20170829121623.24761-2-sergey.matyukevich.os@quantenna.com> (sfid-20170829_141715_924177_A686CEB2)
+In-Reply-To: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
+References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pavel Machek <pavel@ucw.cz>
-Date: Thu, 31 Aug 2017 16:47:43 +0200
+Flag -D__CHECK_ENDIAN was wrong: it should be -D__CHECK_ENDIAN__ instead.
+However now this flag is enabled by default, so it can be removed.
 
-> Dave, Linus -- can you still take the patch?
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/Makefile | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Pavel, please do not bypass maintainers like this.
-
-It's really rude, and if you do things like that instead of
-trying to work properly with us, your relationship with
-these maintainers will suffer in the long term.
-
-Thank you.
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/Makefile b/drivers/net/wireless/quantenna/qtnfmac/Makefile
+index 0d618e5e5f5b..f236b7dc2be3 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/Makefile
++++ b/drivers/net/wireless/quantenna/qtnfmac/Makefile
+@@ -25,7 +25,3 @@ qtnfmac_pearl_pcie-objs += \
+ 	pearl/pcie.o
+ 
+ qtnfmac_pearl_pcie-$(CONFIG_DEBUG_FS) += debug.o
+-
+-#
+-
+-ccflags-y += -D__CHECK_ENDIAN
+-- 
+2.11.0
