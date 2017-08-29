@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47226 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752148AbdHNIJr (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:36588 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751223AbdH2SFX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 04:09:47 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [for-4.13] brcmfmac: feature check for multi-scheduled scan fails
- on bcm4343x devices
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1502446056-30035-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1502446056-30035-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170814080947.1671560350@smtp.codeaurora.org> (sfid-20170814_100951_671452_4E0B0660)
-Date: Mon, 14 Aug 2017 08:09:47 +0000 (UTC)
+        Tue, 29 Aug 2017 14:05:23 -0400
+Date: Tue, 29 Aug 2017 11:05:22 -0700 (PDT)
+Message-Id: <20170829.110522.1436661088715199000.davem@davemloft.net> (sfid-20170829_200540_545751_31E234D2)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-08-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87val8ujvp.fsf@kamboji.qca.qualcomm.com>
+References: <87val8ujvp.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 28 Aug 2017 12:22:34 +0300
 
-> The firmware feature check introduced for multi-scheduled scan turned out
-> to be failing for bcm4343{0,1,8} devices resulting in a firmware crash.
-> The reason for this crash has not yet been root cause so this patch avoids
-> the feature check for those device as a short-term fix.
+> here's a pull request to net-next for 4.14. Because I pulled
+> wireless-drivers (at least that's my suspicion) the diffstat was wrong
+> again and I created it manually. I recall Linus somewhere saying that in
+> certain cases this is normal and it's ok to create the diffstat
+> manually, so I don't worry about this anymore.
+
+Yeah, that's fine.
+
+> In this pull request we also add SDIO_DEVICE_ID_CYPRESS_4373 to
+> include/linux/mmc/sdio_ids.h which stands out in the diffstat.
 > 
-> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Reported-by: Ian Molton <ian@mnementh.co.uk>
-> Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan feature")
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Please let me know if there are any problems.
 
-Patch applied to wireless-drivers.git, thanks.
-
-e9bf53ab1ee3 brcmfmac: feature check for multi-scheduled scan fails on bcm4343x devices
-
--- 
-https://patchwork.kernel.org/patch/9895411/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pulled, thanks!
