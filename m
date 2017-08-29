@@ -1,85 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0057.outbound.protection.outlook.com ([104.47.42.57]:27724
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:55935
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751827AbdH2OcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Aug 2017 10:32:00 -0400
-Date: Tue, 29 Aug 2017 17:31:47 +0300
+        id S1753323AbdH2MRK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 08:17:10 -0400
 From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 02/27] qtnfmac: make "Channel change" event report full
- channel info
-Message-ID: <20170829143146.ersgkofruzdpta6y@bars> (sfid-20170829_163204_748844_F8D3069A)
-References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
- <20170825023024.10565-3-igor.mitsyanko.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 3/5] qtnfmac: modify qtnf_map_bar not to return NULL
+Date: Tue, 29 Aug 2017 15:16:21 +0300
+Message-Id: <20170829121623.24761-4-sergey.matyukevich.os@quantenna.com> (sfid-20170829_141715_520603_AE121B52)
+In-Reply-To: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
+References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170825023024.10565-3-igor.mitsyanko.os@quantenna.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  static int
->  qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
-> @@ -358,41 +359,36 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
->  			      u16 len)
->  {
->  	struct wiphy *wiphy = priv_to_wiphy(mac);
-> -	struct cfg80211_chan_def chandef;
-> -	struct ieee80211_channel *chan;
-> +	struct cfg80211_chan_def chdef;
->  	struct qtnf_vif *vif;
-> -	int freq;
->  	int i;
+NULL is not a special type of success here but a error pointer.
+So it makes sense to check against NULL in qtnf_map_bar
+and return error code.
 
-Original variable name 'chandef' was easier to spell on the phone :)
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-...
-
-> +	qlink_chandef_q2cfg(wiphy, &data->chan, &chdef);
-> +
-> +	if (!cfg80211_chandef_valid(&chdef)) {
-> +		pr_err("MAC%u: bad channel freq1=%u bw=%u\n", mac->macid,
-> +		       chdef.center_freq1, chdef.width);
->  		return -EINVAL;
->  	}
-
-Lets keep both freq1 and freq2 in error message.
-
-...
-
-> +void qlink_chandef_q2cfg(struct wiphy *wiphy,
-> +			 const struct qlink_chandef *qch,
-> +			 struct cfg80211_chan_def *chdef)
-> +{
-> +	chdef->center_freq1 = le16_to_cpu(qch->center_freq1);
-> +	chdef->center_freq2 = le16_to_cpu(qch->center_freq2);
-> +	chdef->width = qlink_chanwidth_to_nl(qch->width);
-> +
-> +	switch (chdef->width) {
-> +	case NL80211_CHAN_WIDTH_20_NOHT:
-> +	case NL80211_CHAN_WIDTH_20:
-> +	case NL80211_CHAN_WIDTH_5:
-> +	case NL80211_CHAN_WIDTH_10:
-> +		chdef->chan = ieee80211_get_channel(wiphy, chdef->center_freq1);
-> +		break;
-> +	case NL80211_CHAN_WIDTH_40:
-> +	case NL80211_CHAN_WIDTH_80:
-> +	case NL80211_CHAN_WIDTH_80P80:
-> +	case NL80211_CHAN_WIDTH_160:
-> +		chdef->chan = ieee80211_get_channel(wiphy,
-> +						    chdef->center_freq1 - 10);
-
-Do we have the same formula for 40MHz and 80MHz center frequency ?
-I thought we should be using the channel number for the left-most 20MHz band.
-
-> +		break;
-> +	default:
-> +		chdef->chan = NULL;
-> +		break;
-> +	}
-> +}
-
-Regards,
-Sergey
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index fd552d64f943..bfbcd0bf75bf 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -184,8 +184,10 @@ static void __iomem *qtnf_map_bar(struct qtnf_pcie_bus_priv *priv, u8 index)
+ 		return IOMEM_ERR_PTR(ret);
+ 
+ 	busaddr = pci_resource_start(priv->pdev, index);
+-	vaddr = pcim_iomap_table(priv->pdev)[index];
+ 	len = pci_resource_len(priv->pdev, index);
++	vaddr = pcim_iomap_table(priv->pdev)[index];
++	if (!vaddr)
++		return IOMEM_ERR_PTR(-ENOMEM);
+ 
+ 	pr_debug("BAR%u vaddr=0x%p busaddr=%pad len=%u\n",
+ 		 index, vaddr, &busaddr, (int)len);
+@@ -248,19 +250,19 @@ static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_priv *priv)
+ 	int ret = -ENOMEM;
+ 
+ 	priv->sysctl_bar = qtnf_map_bar(priv, QTN_SYSCTL_BAR);
+-	if (IS_ERR_OR_NULL(priv->sysctl_bar)) {
++	if (IS_ERR(priv->sysctl_bar)) {
+ 		pr_err("failed to map BAR%u\n", QTN_SYSCTL_BAR);
+ 		return ret;
+ 	}
+ 
+ 	priv->dmareg_bar = qtnf_map_bar(priv, QTN_DMA_BAR);
+-	if (IS_ERR_OR_NULL(priv->dmareg_bar)) {
++	if (IS_ERR(priv->dmareg_bar)) {
+ 		pr_err("failed to map BAR%u\n", QTN_DMA_BAR);
+ 		return ret;
+ 	}
+ 
+ 	priv->epmem_bar = qtnf_map_bar(priv, QTN_SHMEM_BAR);
+-	if (IS_ERR_OR_NULL(priv->epmem_bar)) {
++	if (IS_ERR(priv->epmem_bar)) {
+ 		pr_err("failed to map BAR%u\n", QTN_SHMEM_BAR);
+ 		return ret;
+ 	}
+-- 
+2.11.0
