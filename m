@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33690 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751158AbdHCOc7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 10:32:59 -0400
-Received: by mail-pg0-f67.google.com with SMTP id u185so1673064pgb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 07:32:58 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 0/8] rsi driver enhancements
-Date: Thu,  3 Aug 2017 19:58:56 +0530
-Message-Id: <1501770544-6746-1-git-send-email-amitkarwar@gmail.com> (sfid-20170803_163305_685961_370D7794)
+Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:55552
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753623AbdH2OmR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 10:42:17 -0400
+Date: Tue, 29 Aug 2017 17:42:06 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net,
+        Igor Mitsyanko <igor.mitsyanko@quantenna.com>
+Subject: Re: [PATCH 03/27] qtnfmac: retreive current channel info from EP
+Message-ID: <20170829144206.3zri6qpacy7cklkt@bars> (sfid-20170829_164221_080960_C8BD1119)
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <20170825023024.10565-4-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170825023024.10565-4-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-This patch series brings in few enhancements in rsi driver
-like rfkill support, U-APSD and Legacy power save support,
-antenna and RTS threshold configuration, improvements in
-reading SDIO buffer status.
+Typo in commit title: retrieve
 
-Changes in v2:
-  1/8: Pavani's name was in incorrect format. Fixed this(Kalle)
-  3/8: Used the same licence information for newly added files.
-       Removed redundant comments for functions (Kalle)
+...
 
-Karun Eagalapati (6):
-  rsi: add support for legacy power save
-  rsi: add support for U-APSD power save
-  rsi: rename sdio_read_buffer_status_register
-  rsi: buffer full check optimization
-  rsi: buffer available interrupt handling
-  rsi: RTS threshold configuration
+> -	if (!cfg80211_chandef_valid(&mac->chandef)) {
+> -		pr_err("invalid channel settings on %s\n", ndev->name);
+> -		return -ENODATA;
+> +	if (!cfg80211_chandef_valid(chandef)) {
+> +		pr_err("%s: bad chan freq1=%u bw=%u\n", ndev->name,
+> +		       chandef->center_freq1, chandef->width);
+> +		ret = -ENODATA;
+>  	}
 
-Pavani Muthyala (2):
-  rsi: add support for rf-kill functionality
-  rsi: update set_antenna command frame
+Lets keep both center_freq1 and center_freq2 in error message.
 
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_hal.c      |   7 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  71 +++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_main.c     |   2 +
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 104 ++++++++++++++++++--
- drivers/net/wireless/rsi/rsi_91x_ps.c       | 146 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  40 +++++---
- drivers/net/wireless/rsi/rsi_main.h         |  11 ++-
- drivers/net/wireless/rsi/rsi_mgmt.h         |  52 ++++++++++
- drivers/net/wireless/rsi/rsi_ps.h           |  64 ++++++++++++
- drivers/net/wireless/rsi/rsi_sdio.h         |   3 +-
- 12 files changed, 474 insertions(+), 29 deletions(-)
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_ps.c
- create mode 100644 drivers/net/wireless/rsi/rsi_ps.h
-
--- 
-2.7.4
+Regards,
+Sergey
