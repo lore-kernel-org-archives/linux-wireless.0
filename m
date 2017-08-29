@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751872AbdHCTIj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34274 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbdH2IWp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:39 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v4 06/10] wil6210: notify wiphy on wowlan support
-Date: Thu,  3 Aug 2017 22:08:18 +0300
-Message-Id: <1501787302-22885-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210843_667686_EE5ED29F)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 29 Aug 2017 04:22:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 2/2] iwlwifi: mvm: Avoid deffering non bufferable frames
+References: <20170825082730.31388-1-luca@coelho.fi>
+        <20170825082730.31388-3-luca@coelho.fi>
+Date: Tue, 29 Aug 2017 11:22:41 +0300
+In-Reply-To: <20170825082730.31388-3-luca@coelho.fi> (Luca Coelho's message of
+        "Fri, 25 Aug 2017 11:27:30 +0300")
+Message-ID: <87efruvl4e.fsf@kamboji.qca.qualcomm.com> (sfid-20170829_102251_331774_A6E740ED)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set wowlan to indicate that 11ad device can wake-up
-on any trigger and disconnect.
+Luca Coelho <luca@coelho.fi> writes:
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+> From: David Spinadel <david.spinadel@intel.com>
+>
+> Use bcast station for all non bufferable frames on AP and AD-HOC.
+>
+> The host is no longer aware of STAs PS status because of buffer
+> station offload, so we can't rely on mac80211 to toggle on
+> IEEE80211_TX_CTL_NO_PS_BUFFER bit.
+>
+> A possible issue with buffering such frames, beside the obvious spec
+> violation, is when a station disconnects while in PS but the AP isn't
+> aware of that. In such scenarios the AP won't be able to send probe
+> responses or auth frames so the STA won't be able to reconnect and
+> the AP will have a queue hang.
+>
+> Fixes: 3e56eadfb6a1 ("iwlwifi: mvm: implement AP/GO uAPSD support")
+> Signed-off-by: David Spinadel <david.spinadel@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index c860c0c..61e872c 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -34,6 +34,12 @@
- module_param(scan_timeout, uint, 0644);
- MODULE_PARM_DESC(scan_timeout, " Scan timeout (seconds)");
- 
-+#ifdef CONFIG_PM
-+static struct wiphy_wowlan_support wil_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_ANY | WIPHY_WOWLAN_DISCONNECT,
-+};
-+#endif
-+
- #define CHAN60G(_channel, _flags) {				\
- 	.band			= NL80211_BAND_60GHZ,		\
- 	.center_freq		= 56160 + (2160 * (_channel)),	\
-@@ -1819,6 +1825,10 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- 
- 	wiphy->n_vendor_commands = ARRAY_SIZE(wil_nl80211_vendor_commands);
- 	wiphy->vendor_commands = wil_nl80211_vendor_commands;
-+
-+#ifdef CONFIG_PM
-+	wiphy->wowlan = &wil_wowlan_support;
-+#endif
- }
- 
- struct wireless_dev *wil_cfg80211_init(struct device *dev)
+"deffering"? Should it be deferring?
+
 -- 
-1.9.1
+Kalle Valo
