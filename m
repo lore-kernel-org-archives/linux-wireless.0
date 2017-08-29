@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32784 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751144AbdHCNJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 09:09:33 -0400
-Date: Thu, 3 Aug 2017 15:09:29 +0200 (CEST)
-From: Jiri Kosina <jikos@kernel.org>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "Zhang, Rui" <rui.zhang@intel.com>,
-        "edubezval@gmail.com" <edubezval@gmail.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "Weinehall, David" <david.weinehall@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Sharon, Sara" <sara.sharon@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [linuxwifi] x86/thermal: AB-BA dependency between mvm->mutex
- and tz->lock
-In-Reply-To: <alpine.LSU.2.20.1708031330570.30597@cbobk.fhfr.pm>
-Message-ID: <alpine.LSU.2.20.1708031507290.30597@cbobk.fhfr.pm> (sfid-20170803_150948_048027_BFD41A01)
-References: <alpine.LSU.2.20.1707311300440.4705@cbobk.fhfr.pm>  <alpine.LSU.2.20.1708031107230.30597@cbobk.fhfr.pm>  <1501753405.15969.43.camel@intel.com>  <87vam5nf4w.fsf@kamboji.qca.qualcomm.com> <1501759724.15969.49.camel@intel.com>
- <alpine.LSU.2.20.1708031330570.30597@cbobk.fhfr.pm>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:38715 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751215AbdH2RcM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 13:32:12 -0400
+Received: by mail-yw0-f196.google.com with SMTP id e9so2484428ywh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Aug 2017 10:32:12 -0700 (PDT)
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: rtlwifi handling of sequence numbers with aggregation
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+References: <17ea196f-2f77-5110-8f33-4a25765ad34e@gmail.com>
+ <a258b2fa-c960-88db-5934-af4c0f4b6435@lwfinger.net>
+ <a1d2f17d-dca5-d6c1-f489-74f69e0f146b@lwfinger.net>
+Message-ID: <57ffe7af-6ed0-01f3-1722-c722e4a099bd@gmail.com> (sfid-20170829_193215_507753_EEDF76A7)
+Date: Tue, 29 Aug 2017 13:32:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <a1d2f17d-dca5-d6c1-f489-74f69e0f146b@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 3 Aug 2017, Jiri Kosina wrote:
-
-> > I see the workqueue allocation you mentioned.  I'll try to move this 
-> > allocation out of the mutex and see how it goes.
+On 08/29/2017 10:18 AM, Larry Finger wrote:
+> On 08/25/2017 09:15 PM, Larry Finger wrote:
+>> Based on my prejudices, I would suspect the USB driver before that of 
+>> the PCI version. I have BCc'd my contact at Realtek to see what he has 
+>> to say on the issue.
 > 
-> I have been briefly looking into this as well -- it'll basically have to 
-> be moved out of the trans_pcie->mutex context, but
-> 
-> (a) I'm not sure whether that's actually safe
-> (b) iwl_pcie_rx_reuse_rbd() (which is where corresponding work is being 
->     queued) is not a proper context either (it's atomic context)
+> My contact at Realtek replies that the PCI code is correct. He further 
+> states that "Since mac80211 uses ieee80211_tx_next_seq() to store next 
+> sequence number in sta->tid_seq[tid] and fill the sequence number in 
+> AMPDU parameters, I think driver doesn't need to maintain the seq_number 
+> anymore. So, let's remove 'u16 seq_number' from 'struct rtl_tid_data', 
+> please refer to attachment." I have not had a chance to test his patch, 
+> but I trust his analysis.
 
-Actually moving it out of trans_pcie->mutex is likely not to be enough, 
-the dependency would still be there, just the graph will have one vertex 
-less, with the dependency going directly from mvm mutex to 
-cpu_hotplug_lock.
+I don't see any attachment, but I'm happy with a correct solution if 
+you'll work with them on getting that pushed in.
 
--- 
-Jiri Kosina
-SUSE Labs
+Cheers,
+Jes
