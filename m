@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:36093 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751774AbdHWVE6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 17:04:58 -0400
-Received: by mail-io0-f170.google.com with SMTP id p141so4609419iop.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2017 14:04:58 -0700 (PDT)
-Date: Wed, 23 Aug 2017 16:04:55 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Chen-Yu Tsai <wens@csie.org>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wireless-regdb: Update regulatory document
- references for Taiwan (TW)
-Message-ID: <20170823210455.3pxj4pzuuvshtsnn@ubuntu-xps13> (sfid-20170823_230502_091505_91BB241A)
-References: <20170808033804.6053-1-wens@csie.org>
+Received: from mail-by2nam01on0087.outbound.protection.outlook.com ([104.47.34.87]:43184
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751241AbdH2PpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 11:45:16 -0400
+Date: Tue, 29 Aug 2017 18:44:56 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH 14/27] qtnfmac: do not cache CSA chandef info
+Message-ID: <20170829154455.j2qrxcu35mwkwzcl@bars> (sfid-20170829_174521_379703_C9AE7083)
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170808033804.6053-1-wens@csie.org>
+In-Reply-To: <20170825023024.10565-15-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 08, 2017 at 11:38:03AM +0800, Chen-Yu Tsai wrote:
-> Taiwan's Ministry of Transportation and Communications updated its
-> frequency allocation rules again on 2017/02/22. The amended articles
-> are not related to this database, but the link should be kept up to
-> date, as the old one is no longer accessible.
-> 
-> Taiwan's regulatory body, NCC, published its updated technical
-> regulatory standard for low-power radio frequency devices, LP0002.
-> The URL has not changed. The new standard opens up more bandwidth
-> for 5g U-NII WiFi and 60g WiGig devices. Transmission power for
-> 5.25 ~ 5.35 GHz is also increased, but this was already covered
-> in commit 9a618d9b5fb2 ("wireless-regdb: Update 5 GHz rules for
-> Taiwan (TW) to follow US").
-> 
-> This patch updates the link and comments for the rules and standards,
-> and also adds inline comments referencing the governing section of the
-> LP0002 standard for each band.
-> 
-> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+I am ok with removal of CSA chandef info. It was kept mainly to warn
+about channel switch to the frequency that differs from original
+CSA request.
 
-Applied both patches, thanks!
+> -	if (vif->vifid != 0) {
+> -		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
+> -			return -EOPNOTSUPP;
+> -
+> -		if (!cfg80211_chandef_identical(&params->chandef,
+> -						&mac->csa_chandef))
+> -			return -EINVAL;
+> -
+> -		return 0;
+> -	}
+
+
+This particular CSA_ACTIVE status check was introduced for compatibility with
+hostapd behaviour. Currently hostapd goes through all the virtual interfaces
+and sends CSA for each of them. So the idea was to send CSA for primary
+interface and confirm success for the others. If this snipped is dropped
+then we end up in multiple identical CSA requests queued in firmware.
+
+I suggest to remove chandef_identical check, but to keep the logic for
+secondary virtual interface handling.
+
+Regards,
+Sergey
