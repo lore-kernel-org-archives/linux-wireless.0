@@ -1,140 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42274 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751422AbdHEIpW (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:32895 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750758AbdH3TLc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 04:45:22 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 11:44:31 +0300
-Message-Id: <20170805084438.12550-4-luca@coelho.fi> (sfid-20170805_104531_733279_62624B85)
-In-Reply-To: <20170805084438.12550-1-luca@coelho.fi>
-References: <20170805084438.12550-1-luca@coelho.fi>
-Subject: [PATCH 03/10] mac80211: extend ieee80211_ie_split to support EXTENSION
+        Wed, 30 Aug 2017 15:11:32 -0400
+Received: by mail-wm0-f52.google.com with SMTP id r202so3670059wmd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:11:31 -0700 (PDT)
+Subject: Re: [PATCH 13/30] brcmfmac: Clarify if using braces.
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-14-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <78917893-6b3d-9cfc-1f32-e27226ae6189@broadcom.com> (sfid-20170830_211135_911653_32653151)
+Date: Wed, 30 Aug 2017 21:11:29 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170822112550.60311-14-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On 22-08-17 13:25, Ian Molton wrote:
+> Whilst this if () statement is technically correct, it lacks clarity.
 
-Current ieee80211_ie_split() implementation doesn't
-account for elements that are sub-elements of the
-EXTENSION IE. To extend support to these IEs as well,
-treat the WLAN_EID_EXTENSION ids in the %ids array
-as indicating that the next id in the array is a
-sub-element of the EXTENSION IE.
+I don't see the unclarity here. In my opinion people reading the code 
+should have a good level in C language and a decent level of curiosity 
+when they come across a function/macro like skb_queue_walk().
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h |  6 ++++--
- net/wireless/util.c    | 54 ++++++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 50 insertions(+), 10 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f12fa5245a45..aa9d993e519a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5934,7 +5934,8 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
-  * @ies: the IE buffer
-  * @ielen: the length of the IE buffer
-  * @ids: an array with element IDs that are allowed before
-- *	the split
-+ *	the split. A WLAN_EID_EXTENSION value means that the next
-+ *	EID in the list is a sub-element of the EXTENSION IE.
-  * @n_ids: the size of the element ID array
-  * @after_ric: array IE types that come after the RIC element
-  * @n_after_ric: size of the @after_ric array
-@@ -5965,7 +5966,8 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
-  * @ies: the IE buffer
-  * @ielen: the length of the IE buffer
-  * @ids: an array with element IDs that are allowed before
-- *	the split
-+ *	the split. A WLAN_EID_EXTENSION value means that the next
-+ *	EID in the list is a sub-element of the EXTENSION IE.
-  * @n_ids: the size of the element ID array
-  * @offset: offset where to start splitting in the buffer
-  *
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index bcb1284c3415..4aab793c2f00 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1367,13 +1367,29 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
- }
- EXPORT_SYMBOL(cfg80211_get_p2p_attr);
- 
--static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
-+static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id, bool id_ext)
- {
- 	int i;
- 
--	for (i = 0; i < n_ids; i++)
--		if (ids[i] == id)
-+	/* Make sure array values are legal */
-+	if (WARN_ON(ids[n_ids - 1] == WLAN_EID_EXTENSION))
-+		return false;
-+
-+	i = 0;
-+	while (i < n_ids) {
-+		if (ids[i] == WLAN_EID_EXTENSION) {
-+			if (id_ext && (ids[i + 1] == id))
-+				return true;
-+
-+			i += 2;
-+			continue;
-+		}
-+
-+		if (ids[i] == id && !id_ext)
- 			return true;
-+
-+		i++;
-+	}
- 	return false;
- }
- 
-@@ -1403,14 +1419,36 @@ size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
- {
- 	size_t pos = offset;
- 
--	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
-+	while (pos < ielen) {
-+		u8 ext = 0;
-+
-+		if (ies[pos] == WLAN_EID_EXTENSION)
-+			ext = 2;
-+		if ((pos + ext) >= ielen)
-+			break;
-+
-+		if (!ieee80211_id_in_list(ids, n_ids, ies[pos + ext],
-+					  ies[pos] == WLAN_EID_EXTENSION))
-+			break;
-+
- 		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
- 			pos = skip_ie(ies, ielen, pos);
- 
--			while (pos < ielen &&
--			       !ieee80211_id_in_list(after_ric, n_after_ric,
--						     ies[pos]))
--				pos = skip_ie(ies, ielen, pos);
-+			while (pos < ielen) {
-+				if (ies[pos] == WLAN_EID_EXTENSION)
-+					ext = 2;
-+				else
-+					ext = 0;
-+
-+				if ((pos + ext) >= ielen)
-+					break;
-+
-+				if (!ieee80211_id_in_list(after_ric,
-+							  n_after_ric,
-+							  ies[pos + ext],
-+							  ext == 2))
-+					pos = skip_ie(ies, ielen, pos);
-+			}
- 		} else {
- 			pos = skip_ie(ies, ielen, pos);
- 		}
--- 
-2.13.2
+Regards,
+Arend
