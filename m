@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46910 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750950AbdHOID1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 04:03:27 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "imitsyanko@quantenna.com" <imitsyanko@quantenna.com>,
-        "avinashp@quantenna.com" <avinashp@quantenna.com>,
-        "smatyukevich@quantenna.com" <smatyukevich@quantenna.com>,
-        "jouni@qca.qualcomm.com" <jouni@qca.qualcomm.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
-Date: Tue, 15 Aug 2017 08:03:22 +0000
-Message-ID: <1502784202.8162.7.camel@intel.com> (sfid-20170815_100336_043368_76C74778)
-References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
-         <87lgmmt6l7.fsf@purkki.adurom.net> <1502734400.3282.4.camel@intel.com>
-         <8760dpb8se.fsf@kamboji.qca.qualcomm.com>
-         <1502783395.8162.5.camel@intel.com>
-In-Reply-To: <1502783395.8162.5.camel@intel.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38078 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbdH3NLk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 09:11:40 -0400
+Date: Wed, 30 Aug 2017 15:11:43 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org, sparmaintainer@unisys.com,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>, devel@linuxdriverproject.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v1 3/6] staging: unisys: Switch to use new generic UUID
+ API
+Message-ID: <20170830131143.GB12924@kroah.com> (sfid-20170830_151155_040729_242C93F4)
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+ <20170719182857.73693-4-andriy.shevchenko@linux.intel.com>
+ <1501063301.29303.247.camel@linux.intel.com>
+ <20170730153224.GA31755@kroah.com>
+ <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
+ <20170730173725.GA20606@kroah.com>
+ <1501521625.29303.308.camel@linux.intel.com>
+ <20170830123845.lw4vkjbcvivi5hpi@infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170830123845.lw4vkjbcvivi5hpi@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTA4LTE1IGF0IDEwOjQ5ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
-ZToNCj4gT24gVHVlLCAyMDE3LTA4LTE1IGF0IDEwOjE2ICswMzAwLCBLYWxsZSBWYWxvIHdyb3Rl
-Og0KPiA+ICJHcnVtYmFjaCwgRW1tYW51ZWwiIDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+
-IHdyaXRlczoNCj4gPiANCj4gPiA+IE9uIE1vbiwgMjAxNy0wOC0xNCBhdCAyMDoxNCArMDMwMCwg
-S2FsbGUgVmFsbyB3cm90ZToNCj4gPiA+ID4gRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdy
-dW1iYWNoQGludGVsLmNvbT4gd3JpdGVzOg0KPiA+ID4gPiANCj4gPiA+ID4gPiBVc2VyIHNwYWNl
-IGNhbiBub3cgYWxsb3cgdGhlIGtlcm5lbCB0byBhc3NvY2lhdGUgdG8gYW4gQVANCj4gPiA+ID4g
-PiB0aGF0IHJlcXVpcmVzIE1GUCBvciB0aGF0IGRvZXNuJ3QgaGF2ZSBNRlAgZW5hYmxlZCBpbiB0
-aGUNCj4gPiA+ID4gPiBzYW1lIE5MODAyMTFfQ01EX0NPTk5FQ1QgY29tbWFuZC4NCj4gPiA+ID4g
-PiBUaGUgZHJpdmVyIC8gZmlybXdhcmUgd2lsbCBkZWNpZGUgd2hldGhlciB0byB1c2UgaXQgb3Ig
-bm90Lg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdydW1i
-YWNoIDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20NCj4gPiA+ID4gPiA+DQo+ID4gDQo+ID4g
-Wy4uLl0NCj4gPiANCj4gPiA+ID4gPiAtLS0gYS9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jDQo+ID4g
-PiA+ID4gKysrIGIvbmV0L3dpcmVsZXNzL25sODAyMTEuYw0KPiA+ID4gPiA+IEBAIC05MTE1LDYg
-KzkxMTUsNyBAQCBzdGF0aWMgaW50IG5sODAyMTFfY29ubmVjdChzdHJ1Y3QNCj4gPiA+ID4gPiBz
-a19idWZmDQo+ID4gPiA+ID4gKnNrYiwgc3RydWN0IGdlbmxfaW5mbyAqaW5mbykNCj4gPiA+ID4g
-PiDCoAlpZiAoaW5mby0+YXR0cnNbTkw4MDIxMV9BVFRSX1VTRV9NRlBdKSB7DQo+ID4gPiA+ID4g
-wqAJCWNvbm5lY3QubWZwID0gbmxhX2dldF91MzIoaW5mby0NCj4gPiA+ID4gPiA+IGF0dHJzW05M
-ODAyMTFfQVRUUl9VU0VfTUZQXSk7DQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gwqAJCWlmIChjb25u
-ZWN0Lm1mcCAhPSBOTDgwMjExX01GUF9SRVFVSVJFRCAmJg0KPiA+ID4gPiA+ICsJCcKgwqDCoMKg
-Y29ubmVjdC5tZnAgIT0gTkw4MDIxMV9NRlBfT1BUSU9OQUwgJiYNCj4gPiA+ID4gPiDCoAkJwqDC
-oMKgwqBjb25uZWN0Lm1mcCAhPSBOTDgwMjExX01GUF9OTykNCj4gPiA+ID4gPiDCoAkJCXJldHVy
-biAtRUlOVkFMOw0KPiA+ID4gPiA+IMKgCX0gZWxzZSB7DQo+ID4gPiA+IA0KPiA+ID4gPiBJIGd1
-ZXNzIEknbSBtaXNzaW5nIHNvbWV0aGluZywgYnV0IGhvdyBpcyBiYWNrd2FyZHMNCj4gPiA+ID4g
-Y29tcGF0aWJpbGl0eQ0KPiA+ID4gPiBzdXBwb3NlZCB0byB3b3JrIGZyb20gdXNlciBzcGFjZSBw
-b2ludCBvZiB2aWV3PyBJZiB1c2VyIHNwYWNlDQo+ID4gPiA+IHVzZXMNCj4gPiA+ID4gTkw4MDIx
-MV9NRlBfT1BUSU9OQUwgd2l0aCBhbiBvbGQga2VybmVsLCB0aGUga2VybmVsIHdpbGwgcmVqZWN0
-DQo+ID4gPiA+IHRoZQ0KPiA+ID4gPiBjb21tYW5kIHdpdGggLUVJTlZBTCBhbmQgdXNlciBzcGFj
-ZSB3aWxsIHRyeSBhZ2FpbiB3aXRob3V0DQo+ID4gPiA+IE5MODAyMTFfTUZQX09QVElPTkFMPw0K
-PiA+ID4gDQo+ID4gPiBObyB5b3UgYXJlIG5vdC4gSSBzaW1wbHkgZm9yZ290IHRoYXQgcG9pbnQu
-IEkgZ3Vlc3MgdGhhdCB0aGlzDQo+ID4gPiB3b3VsZA0KPiA+ID4gYmUNCj4gPiA+IHRoZSBiZWhh
-dmlvciwgeWVzLi4uDQo+ID4gDQo+ID4gSSBkb24ndCB0aGluayB0aGF0J3MgdmVyeSByb2J1c3Qu
-IEhvdyB3b3VsZCB1c2VyIHNwYWNlDQo+ID4gKHdwYXN1cHBsaWNhbnQpDQo+ID4ga25vdyBpZiB0
-aGUgdGhlIEVJTlZBTCBpcyBiZWNhdXNlIE5MODAyMTFfTUZQX09QVElPTkFMIGlzIG5vdA0KPiA+
-IHN1cHBvcnRlZA0KPiA+IGJ5IHRoZSBrZXJuZWwgb3IgYmVjYXVzZSBvZiBzb21lIG90aGVyIGVy
-cm9yPw0KPiANCj4gSSBoZWFyLCBJIGhlYXIuIFRoaXMgaXMgbm90IGFuIG9wdGlvbiwgeW91IGFy
-ZSByaWdodC4NCj4gDQo+ID4gDQo+ID4gPiBUaGlzIGlzIHJlbGV2YW50IGZvciBhcF9zY2FuPTIg
-d3BhX3MgY29uZmlndXJhdGlvbiBvbmx5IHdoaWNoDQo+ID4gPiBtYWtlcw0KPiA+ID4gaXQNCj4g
-PiA+IG5vdCByZWFsbHkgY29tbW9uLCBidXQgc3RpbGwsIHlvdSBhcmUgcmlnaHQuIE5vdCBzdXJl
-IGhvdyBlYXN5IGl0DQo+ID4gPiB3aWxsDQo+ID4gPiBiZSB0byB3cml0ZSB0aGlzIGxvZ2ljIGlu
-IHRoZSBzdXBwbGljYW50IHRob3VnaC4uLiBVbmxlc3Mgd2UgYWRkDQo+ID4gPiBhbg0KPiA+ID4g
-bmw4MDIxMSBmZWF0dXJlIGJpdCBidXQgSSBmZWVsIGl0J2QgYmUgYSBiaXQgb2YgYSB3YXN0ZS4N
-Cj4gPiANCj4gPiBJIGRvbid0IGZlZWwgdGhhdCBhZGRpbmcgYSBmZWF0dXJlIGJpdCBpcyB3YXN0
-ZSwgSSByYXRoZXIgdXNlIGENCj4gPiBmZWF0dXJlDQo+ID4gZmxhZyB0aGFuIG1ha2luZyB1Z2x5
-IGhhY2tzIHRvIHVzZXIgc3BhY2UuIEJ1dCBvZiBjb3Vyc2UgdGhpcyBpcyB1cA0KPiA+IHRvDQo+
-ID4gSm91bmkgYW5kIEpvaGFubmVzLg0KPiANCj4gTXkgbGF0ZXN0IHBvaW50IGlzIHRoYXQgaXQg
-d291bGRuJ3QgaGVscCBzaW5jZSB0aGUgdXNlZnVsIHVzYWdlIHdhcw0KPiB3aXRoIGFwX3NjYW49
-MiBpbiB3aGljaCB3cGFfc3VwcGxpY2FudCBjYW4ndCByZWFsbHkga25vdyB3aGF0IHRvIHB1dA0K
-PiB0aGVyZS4gT3IuLi4gTm8uIEl0IF9jYW5fIHdvcmsuIFRoZSB1c2VyIHdvdWxkIGNvbmZpZ3Vy
-ZSBwbWY9b3B0aW9uYWwNCj4gaW4gdGhlIHdwYV9zdXBwbGljYW50IGNvbmZpZ3VyYXRpb24sIGFu
-ZCB3cGFfc3VwcGxpY2FudCBjYW4gY2hlY2sgaWYNCj4gdGhhdCB0aGUgdW5kZXJseWluZyBrZXJu
-ZWwgc3VwcG9ydHMgaXQgd2l0aCB0aGUgaGVscCBvZiB0aGUgZmVhdHVyZQ0KPiBmbGFnLg0KPiBT
-aW5jZSB0aGUgcG1mPW9wdGlvbmFsIGNvbmZpZ3VyYXRpb24gaW4gd3BhX3N1cHBsaWNhbnQgd2ls
-bCBjb21lIGZyb20NCj4gdGhlIHVzZXIgKHRoYXQgY29uZmlndXJlcyB0aGUgbmV0d29yayBpbnNp
-ZGUgd3BhX3N1cHBsaWNhbnQpLA0KPiB3cGFfc3VwcGxpY2FudCBjYW4gZG8gdGhpcyBjaGVjay4N
-Cj4gDQo+IEknbGwgYWRkIHRoaXMuDQo+IA0KDQpBbmQgdGhlbiwgdGhlIGNmZzgwMjExIGRyaXZl
-ciBjYW4gYWRkIHRoaXMgYnkgaXRzZWxmLCBzbyB0aGF0IHF1YW50ZW5uYQ0KZm9sa3MgZG9uJ3Qg
-aGF2ZSB0byBmZWFyIGdldHRpbmcgdGhlIG5ldyB2YWx1ZSBpbnRvIHRoZWlyIGZpcm13YXJlLA0K
-YWx0aG91Z2ggdGhleSBhbHJlYWR5IHJlcG9ydGVkIGl0J2Qgd29yayBmb3IgdGhlbS4=
+On Wed, Aug 30, 2017 at 02:38:45PM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 31, 2017 at 08:20:25PM +0300, Andy Shevchenko wrote:
+> > Yep! There are so many conflicts that would be better just to push
+> > through your tree.
+> > 
+> > I have just sent a v2 of this patch separately.
+> 
+> Greg, did you pick that patch up?
+
+Yes, it's already in my tree and in linux-next.
+
+thanks,
+
+greg k-h
