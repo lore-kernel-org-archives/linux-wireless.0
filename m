@@ -1,32 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60684 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbdHXFcN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 01:32:13 -0400
-Date: Wed, 23 Aug 2017 22:32:12 -0700 (PDT)
-Message-Id: <20170823.223212.2236765862347036476.davem@davemloft.net> (sfid-20170824_073230_784715_528D00E8)
-To: arvind.yadav.cs@gmail.com
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        kvalo@codeaurora.org, jon.maloy@ericsson.com,
-        ying.xue@windriver.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 3/3 v3] net: tipc: constify genl_ops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1503485540-22113-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503485540-22113-1-git-send-email-arvind.yadav.cs@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-dm3nam03on0046.outbound.protection.outlook.com ([104.47.41.46]:52803
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751463AbdH3SWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 14:22:24 -0400
+Subject: Re: [PATCH 00/27] qtnfmac: allow to configure channel, BW, HT/VHT
+ caps
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <87ziahni8p.fsf@purkki.adurom.net> <87val5nhyq.fsf@purkki.adurom.net>
+ <87r2vtnho6.fsf@purkki.adurom.net>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <874f62ce-f9e9-3248-56bf-fc67ddf74497@quantenna.com> (sfid-20170830_202228_640646_CE648DE8)
+Date: Wed, 30 Aug 2017 11:22:17 -0700
+MIME-Version: 1.0
+In-Reply-To: <87r2vtnho6.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Date: Wed, 23 Aug 2017 16:22:20 +0530
-
-> genl_ops are not supposed to change at runtime. All functions
-> working with genl_ops provided by <net/genetlink.h> work with
-> const genl_ops. So mark the non-const structs as const.
+On 08/30/2017 09:28 AM, Kalle Valo wrote:
 > 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> External Email
+> 
+> 
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>
+>>> igor.mitsyanko.os@quantenna.com writes:
+>>>
+>>>> This patchset has a goal to make operational parameters (channel, BW,
+>>>> HT/VHT capabilities) configuration possible for qtnfmac driver.
+>>>> Basically the idea is to make driver level as thin as possible, and let
+>>>> everything to be handled by userspace/nl80211 and wireless device itself.
+>>>
+>>> This patchset is just too big and pain to review. Preferably no more
+>>> than 10-12 patches per set, please. If the patches bigger then the limit
+>>> should be even lower.
+>>
+>> And I noticed that patch 25 didn't make it to patchwork:
+>>
+>> https://patchwork.kernel.org/project/linux-wireless/list/?state=*&q=qtnfmac
+> 
+> Actually it did but it was an nl80211 patch:
+> 
+> https://patchwork.kernel.org/patch/9921179/
+> 
+> Never ever hide mac80211 or cfg80211 patches within driver patches like
+> this. They need to be submitted separately so that everyone sees them.
+> 
+> In some cases it makes sense to submit the driver patches using the new
+> cfg80211/mac80211 feature at the same, but then do it so that you have
+> the cfg80211/mac80211 patches and the corresponding driver patches as
+> last. In that case I assign the whole patchset first to Johannes and
+> once he has applied the cfg80211/mac80211 patches he assigns the driver
+> patches to me.
 
-Applied.
+Ok, understood.
+
+> 
+> --
+> Kalle Valo
+> 
