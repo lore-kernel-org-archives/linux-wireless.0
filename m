@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:15643 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751079AbdHCFz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 01:55:26 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>
-CC: "pieter-paul.giesberts@broadcom.com"
-        <pieter-paul.giesberts@broadcom.com>,
-        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
-        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "alan@linux.intel.com" <alan@linux.intel.com>,
-        "moritz.fischer@ettus.com" <moritz.fischer@ettus.com>,
-        "pjones@redhat.com" <pjones@redhat.com>,
-        "wagi@monom.org" <wagi@monom.org>,
-        "pmladek@suse.com" <pmladek@suse.com>,
-        "atull@kernel.org" <atull@kernel.org>,
-        "yi1.li@linux.intel.com" <yi1.li@linux.intel.com>,
-        "wright.feng@cypress.com" <wright.feng@cypress.com>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "takahiro.akashi@linaro.org" <takahiro.akashi@linaro.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>,
-        "rafal@milecki.pl" <rafal@milecki.pl>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "tytso@mit.edu" <tytso@mit.edu>,
-        "dhowells@redhat.com" <dhowells@redhat.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "chi-hsien.lin@cypress.com" <chi-hsien.lin@cypress.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "franky.lin@broadcom.com" <franky.lin@broadcom.com>
-Subject: Re: [PATCH V5 1/2] firmware: add more flexible
- request_firmware_async function
-Date: Thu, 3 Aug 2017 05:55:18 +0000
-Message-ID: <1501739717.15969.26.camel@intel.com> (sfid-20170803_075547_034766_232DD40A)
-References: <20170731150945.8925-1-zajec5@gmail.com>
-         <20170802213010.GM18884@wotan.suse.de>
-         <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <878tj1ql6z.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:46192 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750835AbdH3HcO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 03:32:14 -0400
+Message-ID: <1504078330.31031.3.camel@coelho.fi> (sfid-20170830_093216_787473_CAFE026C)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>
+Date: Wed, 30 Aug 2017 10:32:10 +0300
+In-Reply-To: <87efruvl4e.fsf@kamboji.qca.qualcomm.com>
+References: <20170825082730.31388-1-luca@coelho.fi>
+         <20170825082730.31388-3-luca@coelho.fi>
+         <87efruvl4e.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 2/2] iwlwifi: mvm: Avoid deffering non bufferable frames
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE3LTA4LTAzIGF0IDA4OjIzICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiAi
-THVpcyBSLiBSb2RyaWd1ZXoiIDxtY2dyb2ZAa2VybmVsLm9yZz4gd3JpdGVzOg0KPiANCj4gPiA+
-ICtpbnQgcmVxdWVzdF9maXJtd2FyZV9ub3dhaXQoc3RydWN0IG1vZHVsZSAqbW9kdWxlLCBib29s
-IHVldmVudCwNCj4gPiA+ICsJCQkgICAgY29uc3QgY2hhciAqbmFtZSwgc3RydWN0IGRldmljZSAq
-ZGV2aWNlLCBnZnBfdCBnZnAsDQo+ID4gPiArCQkJICAgIHZvaWQgKmNvbnRleHQsDQo+ID4gPiAr
-CQkJICAgIHZvaWQgKCpjb250KShjb25zdCBzdHJ1Y3QgZmlybXdhcmUgKmZ3LCB2b2lkICpjb250
-ZXh0KSkNCj4gPiA+ICt7DQo+ID4gPiArCXVuc2lnbmVkIGludCBvcHRfZmxhZ3MgPSBGV19PUFRf
-RkFMTEJBQ0sgfA0KPiA+ID4gKwkJKHVldmVudCA/IEZXX09QVF9VRVZFTlQgOiBGV19PUFRfVVNF
-UkhFTFBFUik7DQo+ID4gPiArDQo+ID4gPiArCXJldHVybiBfX3JlcXVlc3RfZmlybXdhcmVfbm93
-YWl0KG1vZHVsZSwgb3B0X2ZsYWdzLCBuYW1lLCBkZXZpY2UsIGdmcCwNCj4gPiA+ICsJCQkJCSBj
-b250ZXh0LCBjb250KTsNCj4gPiA+ICt9DQo+ID4gPiAgRVhQT1JUX1NZTUJPTChyZXF1ZXN0X2Zp
-cm13YXJlX25vd2FpdCk7DQo+ID4gPiAgDQo+ID4gPiAraW50IF9fcmVxdWVzdF9maXJtd2FyZV9h
-c3luYyhzdHJ1Y3QgbW9kdWxlICptb2R1bGUsIGNvbnN0IGNoYXIgKm5hbWUsDQo+ID4gPiArCQkJ
-ICAgICBzdHJ1Y3QgZmlybXdhcmVfb3B0cyAqZndfb3B0cywgc3RydWN0IGRldmljZSAqZGV2LA0K
-PiA+ID4gKwkJCSAgICAgdm9pZCAqY29udGV4dCwNCj4gPiA+ICsJCQkgICAgIHZvaWQgKCpjb250
-KShjb25zdCBzdHJ1Y3QgZmlybXdhcmUgKmZ3LCB2b2lkICpjb250ZXh0KSkNCj4gPiA+ICt7DQo+
-ID4gPiArCXVuc2lnbmVkIGludCBvcHRfZmxhZ3MgPSBGV19PUFRfVUVWRU5UOw0KPiA+IA0KPiA+
-IFRoaXMgZXhwb3NlcyBhIGxvbmcgaXNzdWUuIFRoaW5rIC0tIHdoeSBkbyB3ZSB3YW50IHRoaXMg
-ZW5hYmxlZCBieSBkZWZhdWx0PyBJdHMNCj4gPiBhY3R1YWxseSBiZWNhdXNlIGV2ZW4gdGhvdWdo
-IHRoZSBmYWxsYmFjayBzdHVmZiBpcyBvcHRpb25hbCBhbmQgY2FuIGJlLCB0aGUgdWV2ZW50DQo+
-ID4gaW50ZXJuYWwgZmxhZyAqYWxzbyogcHJvdmlkZXMgY2FjaGluZyBzdXBwb3J0IGFzIGEgc2lk
-ZSBjb25zZXF1ZW5jZSBvbmx5LiBXZQ0KPiA+IGRvbid0IHdhbnQgdG8gYWRkIGEgbmV3IEFQSSB3
-aXRob3V0IGZpcnN0IGNsZWFuaW5nIHVwIHRoYXQgbWVzcy4NCj4gPiANCj4gPiBUaGlzIGlzIGEg
-c2xpcGVyeSBzbG9wZSBhbmQgYmVzdCB0byBjbGVhbiB0aGF0IHVwIGJlZm9yZSBhZGRpbmcgYW55
-IG5ldyBBUEkuDQo+ID4gDQo+ID4gVGhhdCBhbmQgYWxzbyBHcmVnIHJlY2VudGx5IHN0YXRlZCBo
-ZSB3b3VsZCBsaWtlIHRvIHNlZSBhdCBsZWFzdCAzIHVzZXJzIG9mDQo+ID4gYSBmZWF0dXJlIGJl
-Zm9yZSBhZGRpbmcgaXQuIEFsdGhvdWdoIEkgdGhpbmsgdGhhdCdzIHByZXR0eSBhcmJpdHJhcnks
-IGFuZA0KPiA+IGNvbnNpZGVyaW5nIHRoYXQgcmVxdWVzdF9maXJtd2FyZV9pbnRvX2J1ZigpIG9u
-bHkgaGFzICpvbmUqIHVzZXIgLS0gaXRzIHdoYXQNCj4gPiBoZSB3aXNoZXMuDQo+IA0KPiBhdGgx
-MGsgYXQgbGVhc3QgbmVlZHMgYSB3YXkgdG8gc2lsZW5jZSB0aGUgd2FybmluZyBmb3IgbWlzc2lu
-ZyBmaXJtd2FyZQ0KPiBhbmQgSSB0aGluayBpd2x3aWZpIGFsc28uDQoNClllcywgaXdsd2lmaSBu
-ZWVkcyB0byBzaWxlbmNlIHRoZSB3YXJuaW5nLiAgSXQgdGhlIGZlYXR1cmUgKG9ubHkgb25lLA0K
-cmVhbGx5KSB0aGF0IEkndmUgYmVlbiB3YWl0aW5nIGZvci4NCg0KLS0NCkx1Y2Eu
+On Tue, 2017-08-29 at 11:22 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > From: David Spinadel <david.spinadel@intel.com>
+> > 
+> > Use bcast station for all non bufferable frames on AP and AD-HOC.
+> > 
+> > The host is no longer aware of STAs PS status because of buffer
+> > station offload, so we can't rely on mac80211 to toggle on
+> > IEEE80211_TX_CTL_NO_PS_BUFFER bit.
+> > 
+> > A possible issue with buffering such frames, beside the obvious spec
+> > violation, is when a station disconnects while in PS but the AP isn't
+> > aware of that. In such scenarios the AP won't be able to send probe
+> > responses or auth frames so the STA won't be able to reconnect and
+> > the AP will have a queue hang.
+> > 
+> > Fixes: 3e56eadfb6a1 ("iwlwifi: mvm: implement AP/GO uAPSD support")
+> > Signed-off-by: David Spinadel <david.spinadel@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> "deffering"? Should it be deferring?
+
+Yeah, sorry, I'll fix it before sending the pull-req.
+
+--
+Cheers,
+Luca.
