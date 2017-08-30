@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51930 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751998AbdHHLxt (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:37733 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750757AbdH3Tmi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:53:49 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 30 Aug 2017 15:42:38 -0400
+Received: by mail-wm0-f48.google.com with SMTP id u26so16804877wma.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:42:37 -0700 (PDT)
+Subject: Re: [PATCH 20/30] brcmfmac: Remove repeated calls to
+ brcmf_chip_get_core()
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-21-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <7d9713d2-09d5-240b-288a-99c41e42e6c1@broadcom.com> (sfid-20170830_214240_801924_181BE711)
+Date: Wed, 30 Aug 2017 21:42:35 +0200
 MIME-Version: 1.0
-Subject: Re: [v3] rt2x00: Fix MMIC Countermeasures
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170807164736.20564-1-mike@astro.ai>
-References: <20170807164736.20564-1-mike@astro.ai>
-To: Michael Skeffington <mike@astro.ai>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, Michael Skeffingfon <mike@astro.ai>
-Message-Id: <20170808115349.938FA600E6@smtp.codeaurora.org> (sfid-20170808_135352_640122_45D5FB4E)
-Date: Tue,  8 Aug 2017 11:53:49 +0000 (UTC)
+In-Reply-To: <20170822112550.60311-21-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Skeffington <mike@astro.ai> wrote:
-
-> Set RX_FLAG_DECRYPTED in case of MMIC failure so that
-> ieee80211_rx_h_decrypt() doesnt drop the frame before getting to
-> ieee80211_rx_h_michael_mic_verify().
+On 22-08-17 13:25, Ian Molton wrote:
+> There is no need to repeatdly call brcmf_chip_get_core(), which
+> traverses a list of cores every time its called (including during
+> register access code!).
 > 
-> Signed-off-by: Michael Skeffington <mike@astro.ai>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Call it once, and store a pointer to the core structure. The existing
+> code does nto keep track of users of the cores anyway, and even so, this
+> will allow for easier refcounting in future.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-2db3aaba0a9f rt2x00: Fix MMIC Countermeasures
-
--- 
-https://patchwork.kernel.org/patch/9885839/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 25 +++++++++++++---------
+>   1 file changed, 15 insertions(+), 10 deletions(-)
