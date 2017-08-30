@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33848 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751309AbdH3QhJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:37:09 -0400
-Subject: Re: [PATCH] rtlwifi: btcoex: 23b 1ant: fix duplicated code for
- different branches
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Pkshih <pkshih@realtek.com>, Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20170830134223.GA13596@embeddedgus>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <eef42b52-ae7b-e574-237f-209ac8ec033c@lwfinger.net> (sfid-20170830_183739_068066_6D317FF7)
-Date: Wed, 30 Aug 2017 11:37:06 -0500
+Received: from mail-cys01nam02on0055.outbound.protection.outlook.com ([104.47.37.55]:27114
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751318AbdH3MfT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 08:35:19 -0400
+Date: Wed, 30 Aug 2017 15:35:06 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH 23/27] qtnfmac: convert "Append IEs" command to
+ QTN_TLV_ID_IE_SET usage
+Message-ID: <20170830123506.ijw5kiku6bhvpuvf@bars> (sfid-20170830_143524_350197_C0D15790)
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <20170825023024.10565-24-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <20170830134223.GA13596@embeddedgus>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170825023024.10565-24-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/30/2017 08:42 AM, Gustavo A. R. Silva wrote:
-> Refactor code in order to avoid identical code for different branches.
-> 
-> This issue was detected with the help of Coccinelle.
-> 
-> Addresses-Coverity-ID: 1226788
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
-> This issue was reported by Coverity and it was tested by compilation only.
-> I'm suspicious this may be a copy/paste error. Please, verify.
+> -	if (sizeof(*cmd) + len > QTNF_MAX_CMD_BUF_SIZE) {
+> +	if (len > QTNF_MAX_CMD_BUF_SIZE) {
+>  		pr_warn("VIF%u.%u: %u frame is too big: %zu\n", vif->mac->macid,
+>  			vif->vifid, frame_type, len);
+>  		return -E2BIG;
 
-I have referred this change to the engineers at Realtek. For the moment, please 
-hold this patch.
-
-Thanks for reporting the condition.
-
-Larry
+It looks like we need the following check here:
+	sizeof(struct qlink_tlv_ie_set) + len > QTNF_MAX_CMD_BUF_SIZE
