@@ -1,240 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44460 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751243AbdHRPte (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:37199 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdH3MHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:49:34 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Wed, 30 Aug 2017 08:07:14 -0400
+Received: by mail-pf0-f195.google.com with SMTP id a2so4189235pfj.4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 05:07:14 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:02 +0300
-Message-Id: <20170818154922.2904-5-luca@coelho.fi> (sfid-20170818_174945_459546_99D87CB5)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 04/24] iwlwifi: mvm: support new Coex firmware API
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Pavani Muthyala <pavani.muthyala@redpinesignals.com>
+Subject: [PATCH] rsi: add driver and firmware version info
+Date: Wed, 30 Aug 2017 17:32:15 +0530
+Message-Id: <1504094535-6680-1-git-send-email-amitkarwar@gmail.com> (sfid-20170830_140718_725166_803FF176)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
 
-The firmware now adds more information about time sharing
-with the Bluetooth core.
-Adapt the API structures and add the new fields in the
-debugfs hooks.
+We will dump information about driver and firmware versions,
+firmware file name and operating mode during initialization.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/coex.h | 31 ++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/file.h     |  3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c    | 33 +++++++++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 13 +++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  6 +++++
- 5 files changed, 77 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_debugfs.c | 20 +++++++-------------
+ drivers/net/wireless/rsi/rsi_91x_hal.c     | 13 +++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_main.c    | 29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_hal.h         |  3 +++
+ drivers/net/wireless/rsi/rsi_main.h        | 17 +++++++++++++----
+ 5 files changed, 65 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-index 2ba3ea4fa999..d9a74db01f90 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-@@ -178,6 +178,7 @@ enum iwl_bt_mxbox_dw3 {
- 	BT_MBOX(3, ACL_STATE, 3, 1),
- 	BT_MBOX(3, MSTR_STATE, 4, 1),
- 	BT_MBOX(3, OBX_STATE, 5, 1),
-+	BT_MBOX(3, A2DP_SRC, 6, 1),
- 	BT_MBOX(3, OPEN_CON_2, 8, 2),
- 	BT_MBOX(3, TRAFFIC_LOAD, 10, 2),
- 	BT_MBOX(3, CHL_SEQN_LSB, 12, 1),
-@@ -187,6 +188,11 @@ enum iwl_bt_mxbox_dw3 {
- 	BT_MBOX(3, UPDATE_REQUEST, 21, 1),
- };
- 
-+enum iwl_bt_mxbox_dw4 {
-+	BT_MBOX(4, ATS_BT_INTERVAL, 0, 7),
-+	BT_MBOX(4, ATS_BT_ACTIVE_MAX_TH, 7, 7),
-+};
-+
- #define BT_MBOX_MSG(_notif, _num, _field)				     \
- 	((le32_to_cpu((_notif)->mbox_msg[(_num)]) & BT_MBOX##_num##_##_field)\
- 	>> BT_MBOX##_num##_##_field##_POS)
-@@ -220,6 +226,31 @@ enum iwl_bt_ci_compliance {
-  * @reserved: reserved
-  */
- struct iwl_bt_coex_profile_notif {
-+	__le32 mbox_msg[8];
-+	__le32 msg_idx;
-+	__le32 bt_ci_compliance;
-+
-+	__le32 primary_ch_lut;
-+	__le32 secondary_ch_lut;
-+	__le32 bt_activity_grading;
-+	u8 ttc_status;
-+	u8 rrc_status;
-+	__le16 reserved;
-+} __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_5 */
-+
-+/**
-+ * struct iwl_bt_coex_profile_notif - notification about BT coex
-+ * @mbox_msg: message from BT to WiFi
-+ * @msg_idx: the index of the message
-+ * @bt_ci_compliance: enum %iwl_bt_ci_compliance
-+ * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
-+ * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
-+ * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
-+ * @ttc_status: is TTC enabled - one bit per PHY
-+ * @rrc_status: is RRC enabled - one bit per PHY
-+ * @reserved: reserved
-+ */
-+struct iwl_bt_coex_profile_notif_v4 {
- 	__le32 mbox_msg[4];
- 	__le32 msg_idx;
- 	__le32 bt_ci_compliance;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index d933aa324ffe..a1cd2f41b026 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -246,6 +246,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_STA_TYPE: This ucode supports station type assignement.
-  * @IWL_UCODE_TLV_API_NAN2_VER2: This ucode supports NAN API version 2
-  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
-+ * @IWL_UCODE_TLV_API_ATS_COEX_EXTERNAL: the coex notification is enlared to
-+ *	include information about ACL time sharing.
-  *
-  * @NUM_IWL_UCODE_TLV_API: number of bits used
-  */
-@@ -262,6 +264,7 @@ enum iwl_ucode_tlv_api {
- 	/* API Set 1 */
- 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
-+	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
- 
- 	NUM_IWL_UCODE_TLV_API
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index 890dbfff3a06..79c80f181f7d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2017        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2017        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -512,17 +514,36 @@ void iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_bt_coex_profile_notif *notif = (void *)pkt->data;
- 
-+	if (!iwl_mvm_has_new_ats_coex_api(mvm)) {
-+		struct iwl_bt_coex_profile_notif_v4 *v4 = (void *)pkt->data;
-+
-+		mvm->last_bt_notif.mbox_msg[0] = v4->mbox_msg[0];
-+		mvm->last_bt_notif.mbox_msg[1] = v4->mbox_msg[1];
-+		mvm->last_bt_notif.mbox_msg[2] = v4->mbox_msg[2];
-+		mvm->last_bt_notif.mbox_msg[3] = v4->mbox_msg[3];
-+		mvm->last_bt_notif.msg_idx = v4->msg_idx;
-+		mvm->last_bt_notif.bt_ci_compliance = v4->bt_ci_compliance;
-+		mvm->last_bt_notif.primary_ch_lut = v4->primary_ch_lut;
-+		mvm->last_bt_notif.secondary_ch_lut = v4->secondary_ch_lut;
-+		mvm->last_bt_notif.bt_activity_grading =
-+			v4->bt_activity_grading;
-+		mvm->last_bt_notif.ttc_status = v4->ttc_status;
-+		mvm->last_bt_notif.rrc_status = v4->rrc_status;
-+	} else {
-+		/* save this notification for future use: rssi fluctuations */
-+		memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
-+	}
-+
- 	IWL_DEBUG_COEX(mvm, "BT Coex Notification received\n");
--	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n", notif->bt_ci_compliance);
-+	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n",
-+		       mvm->last_bt_notif.bt_ci_compliance);
- 	IWL_DEBUG_COEX(mvm, "\tBT primary_ch_lut %d\n",
--		       le32_to_cpu(notif->primary_ch_lut));
-+		       le32_to_cpu(mvm->last_bt_notif.primary_ch_lut));
- 	IWL_DEBUG_COEX(mvm, "\tBT secondary_ch_lut %d\n",
--		       le32_to_cpu(notif->secondary_ch_lut));
-+		       le32_to_cpu(mvm->last_bt_notif.secondary_ch_lut));
- 	IWL_DEBUG_COEX(mvm, "\tBT activity grading %d\n",
--		       le32_to_cpu(notif->bt_activity_grading));
-+		       le32_to_cpu(mvm->last_bt_notif.bt_activity_grading));
- 
--	/* remember this notification for future use: rssi fluctuations */
--	memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
- 
- 	iwl_mvm_bt_coex_notif_handle(mvm);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 3d7b5bd7a6b7..c88a37397075 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -482,7 +482,8 @@ static ssize_t iwl_dbgfs_disable_power_off_write(struct iwl_mvm *mvm, char *buf,
- 					 true ? "\n" : ", ");
- 
- static
--int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
-+int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
-+			   struct iwl_bt_coex_profile_notif *notif, char *buf,
- 			   int pos, int bufsz)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_debugfs.c b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+index e98eb55..a1b5e28 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_debugfs.c
++++ b/drivers/net/wireless/rsi/rsi_91x_debugfs.c
+@@ -83,19 +83,13 @@ static int rsi_version_read(struct seq_file *seq, void *data)
  {
- 	pos += scnprintf(buf+pos, bufsz-pos, "MBOX dw0:\n");
-@@ -526,6 +527,7 @@ int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
- 	BT_MBOX_PRINT(3, SCO_STATE, false);
- 	BT_MBOX_PRINT(3, SNIFF_STATE, false);
- 	BT_MBOX_PRINT(3, A2DP_STATE, false);
-+	BT_MBOX_PRINT(3, A2DP_SRC, false);
- 	BT_MBOX_PRINT(3, ACL_STATE, false);
- 	BT_MBOX_PRINT(3, MSTR_STATE, false);
- 	BT_MBOX_PRINT(3, OBX_STATE, false);
-@@ -535,7 +537,12 @@ int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
- 	BT_MBOX_PRINT(3, INBAND_P, false);
- 	BT_MBOX_PRINT(3, MSG_TYPE_2, false);
- 	BT_MBOX_PRINT(3, SSN_2, false);
--	BT_MBOX_PRINT(3, UPDATE_REQUEST, true);
-+	BT_MBOX_PRINT(3, UPDATE_REQUEST, !iwl_mvm_has_new_ats_coex_api(mvm));
+ 	struct rsi_common *common = seq->private;
+ 
+-	common->driver_ver.major = 0;
+-	common->driver_ver.minor = 1;
+-	common->driver_ver.release_num = 0;
+-	common->driver_ver.patch_num = 0;
+-	seq_printf(seq, "Driver : %x.%d.%d.%d\nLMAC   : %d.%d.%d.%d\n",
+-		   common->driver_ver.major,
+-		   common->driver_ver.minor,
+-		   common->driver_ver.release_num,
+-		   common->driver_ver.patch_num,
+-		   common->fw_ver.major,
+-		   common->fw_ver.minor,
+-		   common->fw_ver.release_num,
+-		   common->fw_ver.patch_num);
++	seq_printf(seq, "Driver : %s\nLMAC   : %d.%d.%d.%d\n",
++		   common->driver_ver,
++		   common->lmac_ver.major,
++		   common->lmac_ver.minor,
++		   common->lmac_ver.release_num,
++		   common->lmac_ver.patch_num);
 +
-+	if (iwl_mvm_has_new_ats_coex_api(mvm)) {
-+		BT_MBOX_PRINT(4, ATS_BT_INTERVAL, false);
-+		BT_MBOX_PRINT(4, ATS_BT_ACTIVE_MAX_TH, true);
-+	}
- 
- 	return pos;
- }
-@@ -554,7 +561,7 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	pos += iwl_mvm_coex_dump_mbox(notif, buf, pos, bufsz);
-+	pos += iwl_mvm_coex_dump_mbox(mvm, notif, buf, pos, bufsz);
- 
- 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ci_compliance = %d\n",
- 			 notif->bt_ci_compliance);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 54e5c8c6736b..d58de9b80886 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1242,6 +1242,12 @@ static inline bool iwl_mvm_has_new_rx_stats_api(struct iwl_mvm *mvm)
- 			  IWL_UCODE_TLV_API_NEW_RX_STATS);
+ 	return 0;
  }
  
-+static inline bool iwl_mvm_has_new_ats_coex_api(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 7e8e5d4..71b02ad 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -769,6 +769,7 @@ static int auto_fw_upgrade(struct rsi_hw *adapter, u8 *flash_content,
+ 
+ static int rsi_load_firmware(struct rsi_hw *adapter)
+ {
++	struct rsi_common *common = adapter->priv;
+ 	struct rsi_host_intf_ops *hif_ops = adapter->host_intf_ops;
+ 	const struct firmware *fw_entry = NULL;
+ 	u32 regout_val = 0, content_size;
+@@ -844,6 +845,18 @@ static int rsi_load_firmware(struct rsi_hw *adapter)
+ 	content_size = fw_entry->size;
+ 	rsi_dbg(INFO_ZONE, "FW Length = %d bytes\n", content_size);
+ 
++	/* Get the firmware version */
++	common->lmac_ver.ver.info.fw_ver[0] =
++		flash_content[LMAC_VER_OFFSET] & 0xFF;
++	common->lmac_ver.ver.info.fw_ver[1] =
++		flash_content[LMAC_VER_OFFSET + 1] & 0xFF;
++	common->lmac_ver.major = flash_content[LMAC_VER_OFFSET + 2] & 0xFF;
++	common->lmac_ver.release_num =
++		flash_content[LMAC_VER_OFFSET + 3] & 0xFF;
++	common->lmac_ver.minor = flash_content[LMAC_VER_OFFSET + 4] & 0xFF;
++	common->lmac_ver.patch_num = 0;
++	rsi_print_version(common);
++
+ 	status = bl_write_header(adapter, flash_content, content_size);
+ 	if (status) {
+ 		rsi_dbg(ERR_ZONE,
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index b57bfdc..ed988b3 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -20,6 +20,7 @@
+ #include <linux/firmware.h>
+ #include "rsi_mgmt.h"
+ #include "rsi_common.h"
++#include "rsi_hal.h"
+ 
+ u32 rsi_zone_enabled = /* INFO_ZONE |
+ 			INIT_ZONE |
+@@ -56,6 +57,34 @@ void rsi_dbg(u32 zone, const char *fmt, ...)
+ }
+ EXPORT_SYMBOL_GPL(rsi_dbg);
+ 
++static char *opmode_str(int oper_mode)
 +{
-+	return fw_has_api(&mvm->fw->ucode_capa,
-+			  IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL);
++	switch (oper_mode) {
++	case RSI_DEV_OPMODE_WIFI_ALONE:
++		return "Wi-Fi alone";
++	}
++
++	return "Unknown";
 +}
 +
- static inline struct agg_tx_status *
- iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
- {
++void rsi_print_version(struct rsi_common *common)
++{
++	memcpy(common->driver_ver, DRV_VER, ARRAY_SIZE(DRV_VER));
++	common->driver_ver[ARRAY_SIZE(DRV_VER)] = '\0';
++
++	rsi_dbg(ERR_ZONE, "================================================\n");
++	rsi_dbg(ERR_ZONE, "================ RSI Version Info ==============\n");
++	rsi_dbg(ERR_ZONE, "================================================\n");
++	rsi_dbg(ERR_ZONE, "FW Version\t: %d.%d.%d\n",
++		common->lmac_ver.major, common->lmac_ver.minor,
++		common->lmac_ver.release_num);
++	rsi_dbg(ERR_ZONE, "Driver Version\t: %s", common->driver_ver);
++	rsi_dbg(ERR_ZONE, "Operating mode\t: %d [%s]",
++		common->oper_mode, opmode_str(common->oper_mode));
++	rsi_dbg(ERR_ZONE, "Firmware file\t: %s", common->priv->fw_file_name);
++	rsi_dbg(ERR_ZONE, "================================================\n");
++}
++
+ /**
+  * rsi_prepare_skb() - This function prepares the skb.
+  * @common: Pointer to the driver private structure.
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index ad0d653..a09d36b 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -101,6 +101,9 @@
+ 
+ #define BBP_INFO_40MHZ 0x6
+ 
++#define FW_FLASH_OFFSET			0x820
++#define LMAC_VER_OFFSET			(FW_FLASH_OFFSET + 0x200)
++
+ struct bl_header {
+ 	__le32 flags;
+ 	__le32 image_no;
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 34089ab..53343a3f 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -32,6 +32,8 @@ struct rsi_hw;
+ 
+ #include "rsi_ps.h"
+ 
++#define DRV_VER				"RS911X.NB0.NL.GNU.LNX.1.0"
++
+ #define ERR_ZONE                        BIT(0)  /* For Error Msgs             */
+ #define INFO_ZONE                       BIT(1)  /* For General Status Msgs    */
+ #define INIT_ZONE                       BIT(2)  /* For Driver Init Seq Msgs   */
+@@ -113,8 +115,13 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ struct version_info {
+ 	u16 major;
+ 	u16 minor;
+-	u16 release_num;
+-	u16 patch_num;
++	u8 release_num;
++	u8 patch_num;
++	union {
++		struct {
++			u8 fw_ver[8];
++		} info;
++	} ver;
+ } __packed;
+ 
+ struct skb_info {
+@@ -199,8 +206,8 @@ struct rsi_common {
+ 	struct vif_priv vif_info[RSI_MAX_VIFS];
+ 
+ 	bool mgmt_q_block;
+-	struct version_info driver_ver;
+-	struct version_info fw_ver;
++	char driver_ver[32];
++	struct version_info lmac_ver;
+ 
+ 	struct rsi_thread tx_thread;
+ 	struct sk_buff_head tx_queue[NUM_EDCA_QUEUES + 2];
+@@ -334,6 +341,8 @@ struct rsi_hw {
+ 	int (*determine_event_timeout)(struct rsi_hw *adapter);
+ };
+ 
++void rsi_print_version(struct rsi_common *common);
++
+ struct rsi_host_intf_ops {
+ 	int (*read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
+ 	int (*write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
 -- 
-2.14.1
+2.7.4
