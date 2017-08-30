@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35481 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751366AbdH3Svw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2017 14:51:52 -0400
-Received: by mail-wm0-f53.google.com with SMTP id a80so15539694wma.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 11:51:51 -0700 (PDT)
-Subject: Re: [PATCH 01/30] brcmfmac: Fix parameter order in
- brcmf_sdiod_f0_writeb()
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-2-ian@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <4a840cca-d07a-15a7-7d31-b8269bb9feb3@broadcom.com> (sfid-20170830_205155_155203_C59509B3)
-Date: Wed, 30 Aug 2017 20:51:49 +0200
+Received: from mail-bl2nam02on0088.outbound.protection.outlook.com ([104.47.38.88]:9969
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751393AbdH3NIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 09:08:14 -0400
+Date: Wed, 30 Aug 2017 16:07:57 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH 24/27] qtnfmac: configure and start AP interface with a
+ single command
+Message-ID: <20170830130757.vndc5ucyoreoxcht@bars> (sfid-20170830_150818_406096_527DB519)
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <20170825023024.10565-25-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-2-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170825023024.10565-25-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+> This separation would not allow to do a proper device configuration as
+> first stage needs to use information from IEs that are processed on
+> a second stage. Which means first and second stages have to be meged.
+> In that case there is no point anymore to keep third stage either, so
+> merge all three into a single command.
 
-On 22-08-17 13:25, Ian Molton wrote:
-> 	All the other IO functions are the other way round in this
-> driver. Make this one match.
+typo in commit message: 'meged'
 
-Sorry for being a nit, but not sure why the commit message starts with a 
-tab.
+> +	if (len > (sizeof(struct qlink_cmd) + QTNF_MAX_CMD_BUF_SIZE)) {
+> +		pr_err("VIF%u.%u: can not fit AP settings: %u\n",
+> +		       vif->mac->macid, vif->vifid, len);
+> +		return false;
+>  	}
 
-Other than that...
-
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
+Initial len value is sizeof(struct qlink_cmd_start_ap), qlink_cmd is a part
+of qlink_cmd_start_ap. So this check has to be fixed. It looks like the
+simplest option is only to check payload: set initial len value to 0
+and drop sizeof in comparison.
