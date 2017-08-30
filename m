@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44580 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751861AbdHRPwU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57732 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbdH3QTt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:52:20 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@gmail.com>,
-        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:12 +0300
-Message-Id: <20170818154922.2904-15-luca@coelho.fi> (sfid-20170818_175223_792283_C19A9F6D)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
+        Wed, 30 Aug 2017 12:19:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Subject: Re: pull-request: iwlwifi-next 2017-08-30
+References: <1504085929.31031.8.camel@coelho.fi>
+Date: Wed, 30 Aug 2017 19:19:43 +0300
+In-Reply-To: <1504085929.31031.8.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 30 Aug 2017 12:38:49 +0300")
+Message-ID: <87ziahrpsw.fsf@kamboji.qca.qualcomm.com> (sfid-20170830_181953_074281_7E836ECE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 14/24] iwlwifi: Demote messages about fw flags size to info
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: João Paulo Rechi Vita <jprvita@gmail.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-These messages are not reporting a real error, just the fact that the
-firmware knows about more flags than the driver.
+> Here's my fourth and final pull-request intended for v4.14.=C2=A0 It cont=
+ains
+> just a couple of small fixes and a FW API number bump.=C2=A0=C2=A0More de=
+tails in
+> the tag description.
+>
+> I have fixed the subject of one of the patches for the typo you reported
+> during review.
+>
+> I have sent this out before, and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit d081a16db80ef7a260fb178aa1199e01f74326=
+25:
+>
+>   net: bcmgenet: Do not return from void function (2017-08-29 22:39:51 -0=
+700)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
+tags/iwlwifi-next-for-kalle-2017-08-30
+>
+> for you to fetch changes up to d7a5b3e9e42ee95190742fef0d617bbde4f74d80:
+>
+>   iwlwifi: mvm: bump API to 34 for 8000 and up (2017-08-30 12:30:56 +0300)
+>
+> ----------------------------------------------------------------
+> Last set of iwlwifi patches for 4.14
+>
+> * Fix a queue hang problem due to 11w behavior
+> * Fix a warning caused by a too long debug print
+> * Bump API number to the latest version we support
+>
+> ----------------------------------------------------------------
 
-Currently these messages are presented to the user during boot if there
-is no bootsplash covering the console, even when booting the kernel with
-"quiet".
+Pulled, thanks.
 
-Demoting it to the warn level helps having a clean boot process.
-
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index cdb765656115..bd3902f888e0 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -487,9 +487,9 @@ static void iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
- 	int i;
- 
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_API, 32)) {
--		IWL_ERR(drv,
--			"api flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_WARN(drv,
-+			 "api flags index %d larger than supported by driver\n",
-+			 api_index);
- 		return;
- 	}
- 
-@@ -508,9 +508,9 @@ static void iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
- 	int i;
- 
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_CAPA, 32)) {
--		IWL_ERR(drv,
--			"capa flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_WARN(drv,
-+			 "capa flags index %d larger than supported by driver\n",
-+			 api_index);
- 		return;
- 	}
- 
--- 
-2.14.1
+--=20
+Kalle Valo
