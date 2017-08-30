@@ -1,65 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751897AbdHCTIq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:46 -0400
-Cc: Gidon Studinski <QCA_gidons@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 10/10] wil6210: make debugfs compilation optional
-Date: Thu,  3 Aug 2017 22:08:22 +0300
-Message-Id: <1501787302-22885-11-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210902_401725_929D15B3)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mail-by2nam03on0042.outbound.protection.outlook.com ([104.47.42.42]:15280
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751872AbdH3Bpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 21:45:44 -0400
+Subject: Re: [PATCH 02/27] qtnfmac: make "Channel change" event report full
+ channel info
+To: sergey.matyukevich.os@quantenna.com
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <20170825023024.10565-3-igor.mitsyanko.os@quantenna.com>
+ <20170829143146.ersgkofruzdpta6y@bars>
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <6e393e69-3297-4300-c82a-fea0243d6bcc@quantenna.com> (sfid-20170830_034549_265317_CFFAA694)
+Date: Tue, 29 Aug 2017 18:45:36 -0700
+MIME-Version: 1.0
+In-Reply-To: <20170829143146.ersgkofruzdpta6y@bars>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gidon Studinski <qca_gidons@qca.qualcomm.com>
+On 08/29/2017 07:31 AM, Sergey Matyukevich wrote:
+>>   static int
+>>   qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+>> @@ -358,41 +359,36 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+>>   			      u16 len)
+>>   {
+>>   	struct wiphy *wiphy = priv_to_wiphy(mac);
+>> -	struct cfg80211_chan_def chandef;
+>> -	struct ieee80211_channel *chan;
+>> +	struct cfg80211_chan_def chdef;
+>>   	struct qtnf_vif *vif;
+>> -	int freq;
+>>   	int i;
+> 
+> Original variable name 'chandef' was easier to spell on the phone :)
 
-Since debugfs is a kernel configuration option, enable the driver to
-compile without debugfs.
+Will return)
 
-Signed-off-by: Gidon Studinski <qca_gidons@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/Makefile  | 2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h | 6 ++++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+> 
+> ...
+> 
+>> +	qlink_chandef_q2cfg(wiphy, &data->chan, &chdef);
+>> +
+>> +	if (!cfg80211_chandef_valid(&chdef)) {
+>> +		pr_err("MAC%u: bad channel freq1=%u bw=%u\n", mac->macid,
+>> +		       chdef.center_freq1, chdef.width);
+>>   		return -EINVAL;
+>>   	}
+> 
+> Lets keep both freq1 and freq2 in error message.
 
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index 4ae21da..63a751a 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -4,7 +4,7 @@ wil6210-y := main.o
- wil6210-y += netdev.o
- wil6210-y += cfg80211.o
- wil6210-y += pcie_bus.o
--wil6210-y += debugfs.o
-+wil6210-$(CONFIG_DEBUG_FS) += debugfs.o
- wil6210-y += wmi.o
- wil6210-y += interrupt.o
- wil6210-y += txrx.o
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index cf20a8c..d7b1e03 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -940,8 +940,14 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 struct cfg80211_mgmt_tx_params *params,
- 			 u64 *cookie);
- 
-+#if defined(CONFIG_DEBUG_FS)
- int wil6210_debugfs_init(struct wil6210_priv *wil);
- void wil6210_debugfs_remove(struct wil6210_priv *wil);
-+#else
-+static inline int wil6210_debugfs_init(struct wil6210_priv *wil) { return 0; }
-+static inline void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
-+#endif
-+
- int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
- 		       struct station_info *sinfo);
- 
--- 
-1.9.1
+Ok
+
+> 
+> ...
+> 
+>> +void qlink_chandef_q2cfg(struct wiphy *wiphy,
+>> +			 const struct qlink_chandef *qch,
+>> +			 struct cfg80211_chan_def *chdef)
+>> +{
+>> +	chdef->center_freq1 = le16_to_cpu(qch->center_freq1);
+>> +	chdef->center_freq2 = le16_to_cpu(qch->center_freq2);
+>> +	chdef->width = qlink_chanwidth_to_nl(qch->width);
+>> +
+>> +	switch (chdef->width) {
+>> +	case NL80211_CHAN_WIDTH_20_NOHT:
+>> +	case NL80211_CHAN_WIDTH_20:
+>> +	case NL80211_CHAN_WIDTH_5:
+>> +	case NL80211_CHAN_WIDTH_10:
+>> +		chdef->chan = ieee80211_get_channel(wiphy, chdef->center_freq1);
+>> +		break;
+>> +	case NL80211_CHAN_WIDTH_40:
+>> +	case NL80211_CHAN_WIDTH_80:
+>> +	case NL80211_CHAN_WIDTH_80P80:
+>> +	case NL80211_CHAN_WIDTH_160:
+>> +		chdef->chan = ieee80211_get_channel(wiphy,
+>> +						    chdef->center_freq1 - 10);
+> 
+> Do we have the same formula for 40MHz and 80MHz center frequency ?
+> I thought we should be using the channel number for the left-most 20MHz band.
+
+Here it should be no difference which channel number we're using as long 
+as it falls within specified bandwidth. I mean, we can take (freq - 10), 
+(freq + 10) for 40MHz, or (freq - 30) (freq + 30) for 80 MHz etc.
+
+I don't see how we can identify which 20MHz channel is primary, with a 
+chandef structure.
+
+> 
+>> +		break;
+>> +	default:
+>> +		chdef->chan = NULL;
+>> +		break;
+>> +	}
+>> +}
+> 
+> Regards,
+> Sergey
+> 
