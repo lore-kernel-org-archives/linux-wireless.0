@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59614 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750790AbdHaLJS (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42658 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750757AbdH3TmV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 07:09:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 5/5] qtnfmac: implement 64-bit dma support
-References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
-        <20170829121623.24761-6-sergey.matyukevich.os@quantenna.com>
-        <87lgm1nh7j.fsf@purkki.adurom.net>
-        <20170831094812.utahi5ayz3ag7wrl@bars>
-Date: Thu, 31 Aug 2017 14:09:12 +0300
-In-Reply-To: <20170831094812.utahi5ayz3ag7wrl@bars> (Sergey Matyukevich's
-        message of "Thu, 31 Aug 2017 12:48:12 +0300")
-Message-ID: <87bmmwro2v.fsf@kamboji.qca.qualcomm.com> (sfid-20170831_130921_954537_84D1DC41)
+        Wed, 30 Aug 2017 15:42:21 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: notify cfg80211 about scan abort
+Date: Thu, 31 Aug 2017 01:08:35 +0530
+Message-ID: <1504121915-2063-1-git-send-email-gbhat@marvell.com> (sfid-20170830_214224_403057_24A3401F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Driver sends a series of scan commands to firmware to serve a
+user scan request. If an intermediate scan command fails, driver
+aborts the scan but it is not being informed to cfg80211. This
+will cause issues in applications performing periodic scans.
+Fix this by informing scan abort.
 
-> Hello Kalle,
->
->> > -     writel(QTN_HOST_LO32(paddr),
->> > -            PCIE_HDP_TX_HOST_Q_BASE_L(priv->pcie_reg_base));
->> > +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
->> >       writel(QTN_HOST_HI32(paddr),
->> >              PCIE_HDP_TX_HOST_Q_BASE_H(priv->pcie_reg_base));
->> > +#endif
->> 
->> Personally I detest ifdefs and try to write code like this using
->> IS_ENABLED():
->> 
->> if (IS_ENABLED(CONFIG_ARCH_DMA_ADDR_T_64BIT))
->>         writel(QTN_HOST_HI32(paddr),
->>                PCIE_HDP_TX_HOST_Q_BASE_H(priv->pcie_reg_base));
->> 
->> But up to you which style you prefer.
->
-> I agree that this way it looks better. But I am using the same ifdef in header
-> to define QTN_HOST_* macros. So in this particular case I would prefer to
-> keep the same notation in both source and header files.
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Ok. I'll try to get these to 4.14 still.
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 0fba5b1..1bd4e13 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -70,11 +70,7 @@
+ 		break;
+ 	case HostCmd_CMD_802_11_SCAN:
+ 	case HostCmd_CMD_802_11_SCAN_EXT:
+-		mwifiex_cancel_pending_scan_cmd(adapter);
+-
+-		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+-		adapter->scan_processing = false;
+-		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
++		mwifiex_cancel_scan(adapter);
+ 		break;
+ 
+ 	case HostCmd_CMD_MAC_CONTROL:
 -- 
-Kalle Valo
+1.9.1
