@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:58116 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S932655AbdHVLnR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 07:43:17 -0400
-From: Ian Molton <ian@mnementh.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: arend.vanspriel@broadcom.com
-Subject: [PATCH 17/30] brcmfamc: remove unnecessary call to brcmf_sdiod_set_backplane_window()
-Date: Tue, 22 Aug 2017 12:25:37 +0100
-Message-Id: <20170822112550.60311-18-ian@mnementh.co.uk> (sfid-20170822_134324_817845_0A965EC4)
-In-Reply-To: <20170822112550.60311-1-ian@mnementh.co.uk>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
+Received: from verein.lst.de ([213.95.11.211]:49933 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751318AbdH3N5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 09:57:53 -0400
+Date: Wed, 30 Aug 2017 15:57:51 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
+        devel@driverdev.osuosl.org,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org,
+        linux-efi <linux-efi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID
+        API
+Message-ID: <20170830135751.GA32713@lst.de> (sfid-20170830_155922_068771_1E5D5027)
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com> <6349641.0fe8FCM51k@aspire.rjw.lan> <20170830124141.oa32gzbgnafarkrh@infradead.org> <2441703.fLWibNLWr6@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2441703.fLWibNLWr6@aspire.rjw.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All functions that might require the window address changing call
-brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
-the window is not required.
+On Wed, Aug 30, 2017 at 03:46:34PM +0200, Rafael J. Wysocki wrote:
+> 3689d3d69072 ACPI: device property: Switch to use new generic UUID API
+> 
+> in my linux-next branch.  Isn't it this one?
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 0d37c68637f2..cabfab9a02a2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -721,11 +721,6 @@ brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 
- 	dev_kfree_skb(pkt);
- 
--	/* Return the window to backplane enumeration space for core access */
--	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
--		brcmf_err("FAILED to set window back to 0x%x\n",
--			  sdiodev->sbwad);
--
- 	sdio_release_host(sdiodev->func[1]);
- 
- 	return err;
--- 
-2.11.0
+Yes, that should be it.  Somehow my linux-next tree seems to be
+a mess through or my git log skills aren't what they used to be
+anymore.
