@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:37576 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751144AbdHCOab (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 10:30:31 -0400
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux@endlessm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH v2] iwlwifi: Demote messages about fw flags size to info
-Date: Thu,  3 Aug 2017 07:30:05 -0700
-Message-Id: <20170803143005.31379-1-jprvita@endlessm.com> (sfid-20170803_163052_059516_550548D8)
-In-Reply-To: <1501649208.2588.55.camel@coelho.fi>
-References: <1501649208.2588.55.camel@coelho.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:31259 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751330AbdH3NJJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 09:09:09 -0400
+Message-ID: <1504098543.25945.165.camel@linux.intel.com> (sfid-20170830_150926_250914_A9D49495)
+Subject: Re: [PATCH v1 3/6] staging: unisys: Switch to use new generic UUID
+ API
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org, sparmaintainer@unisys.com,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>, devel@linuxdriverproject.org,
+        Christoph Hellwig <hch@lst.de>
+Date: Wed, 30 Aug 2017 16:09:03 +0300
+In-Reply-To: <20170830123845.lw4vkjbcvivi5hpi@infradead.org>
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+         <20170719182857.73693-4-andriy.shevchenko@linux.intel.com>
+         <1501063301.29303.247.camel@linux.intel.com>
+         <20170730153224.GA31755@kroah.com>
+         <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
+         <20170730173725.GA20606@kroah.com>
+         <1501521625.29303.308.camel@linux.intel.com>
+         <20170830123845.lw4vkjbcvivi5hpi@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages are not reporting a real error, just the fact that the
-firmware knows about more flags then the driver.
+On Wed, 2017-08-30 at 14:38 +0200, Christoph Hellwig wrote:
+> On Mon, Jul 31, 2017 at 08:20:25PM +0300, Andy Shevchenko wrote:
+> > Yep! There are so many conflicts that would be better just to push
+> > through your tree.
+> > 
+> > I have just sent a v2 of this patch separately.
+> 
+> Greg, did you pick that patch up?
 
-Currently these messages are presented to the user during boot if there
-is no bootsplash covering the console, even when booting the kernel with
-"quiet".
+That patch in his tree.
 
-Demoting it to the warn level helps having a clean boot process.
-
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
-
-v2 changes:
- - Set to warn level instead of info
-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index be466a074c1d..c98a254bbd4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -461,9 +461,9 @@ static int iwl_set_ucode_api_flags(struct iwl_drv *drv, const u8 *data,
- 	int i;
- 
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_API, 32)) {
--		IWL_ERR(drv,
--			"api flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_WARN(drv,
-+			 "api flags index %d larger than supported by driver\n",
-+			 api_index);
- 		/* don't return an error so we can load FW that has more bits */
- 		return 0;
- 	}
-@@ -485,9 +485,9 @@ static int iwl_set_ucode_capabilities(struct iwl_drv *drv, const u8 *data,
- 	int i;
- 
- 	if (api_index >= DIV_ROUND_UP(NUM_IWL_UCODE_TLV_CAPA, 32)) {
--		IWL_ERR(drv,
--			"capa flags index %d larger than supported by driver\n",
--			api_index);
-+		IWL_WARN(drv,
-+			 "capa flags index %d larger than supported by driver\n",
-+			 api_index);
- 		/* don't return an error so we can load FW that has more bits */
- 		return 0;
- 	}
 -- 
-2.13.2
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
