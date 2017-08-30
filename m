@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:35749 "EHLO
-        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754746AbdHYRvh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33760 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751664AbdH3Q3C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Aug 2017 13:51:37 -0400
-Received: by mail-qk0-f171.google.com with SMTP id p67so2567068qkd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Aug 2017 10:51:36 -0700 (PDT)
-From: Jes Sorensen <jes.sorensen@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <larry.finger@lwfinger.net>
-Subject: rtlwifi handling of sequence numbers with aggregation
-Message-ID: <17ea196f-2f77-5110-8f33-4a25765ad34e@gmail.com> (sfid-20170825_195140_682800_02060257)
-Date: Fri, 25 Aug 2017 13:51:33 -0400
+        Wed, 30 Aug 2017 12:29:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org,
+        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH 00/27] qtnfmac: allow to configure channel, BW, HT/VHT caps
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+        <87ziahni8p.fsf@purkki.adurom.net> <87val5nhyq.fsf@purkki.adurom.net>
+Date: Wed, 30 Aug 2017 19:28:57 +0300
+In-Reply-To: <87val5nhyq.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
+        30 Aug 2017 19:22:37 +0300")
+Message-ID: <87r2vtnho6.fsf@purkki.adurom.net> (sfid-20170830_182905_740871_6CFC8A83)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Looking at some bits in rtlwifi I came across a discrepancy between the
-PCI and USB code.
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>
+>> igor.mitsyanko.os@quantenna.com writes:
+>>
+>>> This patchset has a goal to make operational parameters (channel, BW,
+>>> HT/VHT capabilities) configuration possible for qtnfmac driver.
+>>> Basically the idea is to make driver level as thin as possible, and let
+>>> everything to be handled by userspace/nl80211 and wireless device itself.
+>>
+>> This patchset is just too big and pain to review. Preferably no more
+>> than 10-12 patches per set, please. If the patches bigger then the limit
+>> should be even lower.
+>
+> And I noticed that patch 25 didn't make it to patchwork:
+>
+> https://patchwork.kernel.org/project/linux-wireless/list/?state=*&q=qtnfmac
 
-Consider the following code:
+Actually it did but it was an nl80211 patch:
 
-In rtl_pci_tx():
-	if (ieee80211_is_data_qos(fc)) {
-		tid = rtl_get_tid(skb);
-		if (sta) {
-			sta_entry = (struct rtl_sta_info *)sta->drv_priv;
-			seq_number = (le16_to_cpu(hdr->seq_ctrl) &
-				      IEEE80211_SCTL_SEQ) >> 4;
-			seq_number += 1;
+https://patchwork.kernel.org/patch/9921179/
 
-			if (!ieee80211_has_morefrags(hdr->frame_control))
-				sta_entry->tids[tid].seq_number = seq_number;
-		}
+Never ever hide mac80211 or cfg80211 patches within driver patches like
+this. They need to be submitted separately so that everyone sees them.
 
-In _rtl_usb_tx_preprocess():
-	if (ieee80211_is_data_qos(fc)) {
-		qc = ieee80211_get_qos_ctl(hdr);
-		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
-		seq_number = (le16_to_cpu(hdr->seq_ctrl) &
-			     IEEE80211_SCTL_SEQ) >> 4;
-		seq_number += 1;
-		seq_number <<= 4;
-	}
-[snip]
-	if (!ieee80211_has_morefrags(hdr->frame_control)) {
-		if (qc)
-			mac->tids[tid].seq_number = seq_number;
-	}
+In some cases it makes sense to submit the driver patches using the new
+cfg80211/mac80211 feature at the same, but then do it so that you have
+the cfg80211/mac80211 patches and the corresponding driver patches as
+last. In that case I assign the whole patchset first to Johannes and
+once he has applied the cfg80211/mac80211 patches he assigns the driver
+patches to me.
 
-The seq_number is picked up from ieee80211_ops->ampdu_action()
-which calls into rtl_tx_agg_start():
-	tid_data = &sta_entry->tids[tid];
-
-	RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG,
-		 "on ra = %pM tid = %d seq:%d\n", sta->addr, tid,
-		 tid_data->seq_number);
-
-	*ssn = tid_data->seq_number;
-
-My question here is why does the USB code shift seq_number << 4 while
-the PCI code doesn't? I assume one of these is wrong, but which one?
-
-Jes
+-- 
+Kalle Valo
