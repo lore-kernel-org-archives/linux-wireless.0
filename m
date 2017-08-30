@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60038 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752242AbdHDQHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Aug 2017 12:07:35 -0400
-Date: Fri, 4 Aug 2017 18:07:31 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, kvalo@codeaurora.org,
-        chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] wireless: move prism54 out to staging
-Message-ID: <20170804160731.GJ27873@wotan.suse.de> (sfid-20170804_180751_044913_3ECF6CD0)
-References: <20170803235937.8604-1-mcgrof@kernel.org>
- <20170803235937.8604-2-mcgrof@kernel.org>
- <20170804004215.GA26035@kroah.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55558 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751415AbdH3QQn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 12:16:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org,
+        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH 00/27] qtnfmac: allow to configure channel, BW, HT/VHT caps
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+Date: Wed, 30 Aug 2017 19:16:38 +0300
+In-Reply-To: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com> (igor
+        mitsyanko os's message of "Thu, 24 Aug 2017 19:29:57 -0700")
+Message-ID: <87ziahni8p.fsf@purkki.adurom.net> (sfid-20170830_181646_358871_767B3302)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170804004215.GA26035@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 05:42:15PM -0700, Greg KH wrote:
-> On Thu, Aug 03, 2017 at 04:59:36PM -0700, Luis R. Rodriguez wrote:
-> > prism54 is deprecated in favor of the p54pci device driver. Although
-> > only *one soul* had reported issues with it long ago Linux most Linux
-> > distributions these days just disable the device driver given the
-> > conflicts with the PCI IDs of p54pci and the *very* unlikely situation
-> > of folks really need this driver anymore.
-> > 
-> > Before trying to due away with prism54 once more stuff it into staging,
-> > which is our hospice for dying drivers.
-> > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> > ---
-> >  MAINTAINERS                                          |  4 ++--
-> >  drivers/net/wireless/intersil/Kconfig                | 20 --------------------
-> >  drivers/net/wireless/intersil/Makefile               |  1 -
-> >  drivers/staging/Kconfig                              |  2 ++
-> >  drivers/staging/Makefile                             |  1 +
-> 
-> Can I get a TODO file that says it will be deleted in a kernel release
-> or two so don't worry about touching anything in these files?
+igor.mitsyanko.os@quantenna.com writes:
 
-Sure, will respin with it.
+> This patchset has a goal to make operational parameters (channel, BW,
+> HT/VHT capabilities) configuration possible for qtnfmac driver.
+> Basically the idea is to make driver level as thin as possible, and let
+> everything to be handled by userspace/nl80211 and wireless device itself.
 
-  Luis
+This patchset is just too big and pain to review. Preferably no more
+than 10-12 patches per set, please. If the patches bigger then the limit
+should be even lower.
+
+-- 
+Kalle Valo
