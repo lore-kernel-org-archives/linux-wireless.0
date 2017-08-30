@@ -1,124 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42628 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752665AbdHETo6 (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:49553 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdH3Miw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:44:58 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:31 +0300
-Message-Id: <20170805194331.17426-20-luca@coelho.fi> (sfid-20170805_220252_657933_AAF63CB1)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 19/19] iwlwifi: mvm: fix the coex firmware API
+        Wed, 30 Aug 2017 08:38:52 -0400
+Date: Wed, 30 Aug 2017 14:38:45 +0200
+From: Christoph Hellwig <hch@infradead.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org, sparmaintainer@unisys.com,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>, devel@linuxdriverproject.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v1 3/6] staging: unisys: Switch to use new generic UUID
+ API
+Message-ID: <20170830123845.lw4vkjbcvivi5hpi@infradead.org> (sfid-20170830_143907_843077_F916CBF0)
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+ <20170719182857.73693-4-andriy.shevchenko@linux.intel.com>
+ <1501063301.29303.247.camel@linux.intel.com>
+ <20170730153224.GA31755@kroah.com>
+ <CAHp75Vf+Us5n2_u94sVGs7xuvfF-qoaG4tvmixvqRARo68TT7w@mail.gmail.com>
+ <20170730173725.GA20606@kroah.com>
+ <1501521625.29303.308.camel@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1501521625.29303.308.camel@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Jul 31, 2017 at 08:20:25PM +0300, Andy Shevchenko wrote:
+> Yep! There are so many conflicts that would be better just to push
+> through your tree.
+> 
+> I have just sent a v2 of this patch separately.
 
-The firmware API defined in the header files didn't match
-the structure that are actually passed by the firmware.
-The impact could be a decision for MIMO in Tx or Rx in
-coex scenarios.
-
-Fixes: 430a3bbafdc7 ("iwlwifi: mvm: BT Coex - new API")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/coex.h | 14 +++++---------
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c    |  7 +++----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c |  4 ++--
- 3 files changed, 10 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-index 583f4189f55e..df4ecec59b40 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-@@ -220,12 +220,6 @@ enum iwl_bt_ci_compliance {
- 	BT_CI_COMPLIANCE_BOTH		= 3,
- }; /* BT_COEX_CI_COMPLIENCE_E_VER_1 */
- 
--#define IWL_COEX_IS_TTC_ON(_ttc_rrc_status, _phy_id)	\
--		(_ttc_rrc_status & BIT(_phy_id))
--
--#define IWL_COEX_IS_RRC_ON(_ttc_rrc_status, _phy_id)	\
--		((_ttc_rrc_status >> 4) & BIT(_phy_id))
--
- /**
-  * struct iwl_bt_coex_profile_notif - notification about BT coex
-  * @mbox_msg: message from BT to WiFi
-@@ -234,7 +228,8 @@ enum iwl_bt_ci_compliance {
-  * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
-  * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
-  * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
-- * @ttc_rrc_status: is TTC or RRC enabled - one bit per PHY
-+ * @ttc_status: is TTC enabled - one bit per PHY
-+ * @rrc_status: is RRC enabled - one bit per PHY
-  * @reserved: reserved
-  */
- struct iwl_bt_coex_profile_notif {
-@@ -245,8 +240,9 @@ struct iwl_bt_coex_profile_notif {
- 	__le32 primary_ch_lut;
- 	__le32 secondary_ch_lut;
- 	__le32 bt_activity_grading;
--	u8 ttc_rrc_status;
--	u8 reserved[3];
-+	u8 ttc_status;
-+	u8 rrc_status;
-+	__le16 reserved;
- } __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_4 */
- 
- #endif /* __iwl_fw_api_coex_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index 6c5c6510428a..0b4486114ddc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -560,8 +560,7 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
- 	if (mvmvif->phy_ctxt &&
--	    IWL_COEX_IS_RRC_ON(mvm->last_bt_notif.ttc_rrc_status,
--			       mvmvif->phy_ctxt->id))
-+	    (mvm->last_bt_notif.rrc_status & BIT(mvmvif->phy_ctxt->id)))
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
- 	IWL_DEBUG_COEX(data->mvm,
-@@ -792,7 +791,7 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
- 	struct iwl_mvm_phy_ctxt *phy_ctxt = mvmvif->phy_ctxt;
- 	enum iwl_bt_coex_lut_type lut_type;
- 
--	if (IWL_COEX_IS_TTC_ON(mvm->last_bt_notif.ttc_rrc_status, phy_ctxt->id))
-+	if (mvm->last_bt_notif.ttc_status & BIT(phy_ctxt->id))
- 		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
- 
- 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
-@@ -816,7 +815,7 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
- 	struct iwl_mvm_phy_ctxt *phy_ctxt = mvmvif->phy_ctxt;
- 	enum iwl_bt_coex_lut_type lut_type;
- 
--	if (IWL_COEX_IS_TTC_ON(mvm->last_bt_notif.ttc_rrc_status, phy_ctxt->id))
-+	if (mvm->last_bt_notif.ttc_status & BIT(phy_ctxt->id))
- 		return true;
- 
- 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index ceb486610a56..ba2745a3b537 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -569,9 +569,9 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 			 "antenna isolation = %d CORUN LUT index = %d\n",
- 			 mvm->last_ant_isol, mvm->last_corun_lut);
- 	pos += scnprintf(buf + pos, bufsz - pos, "bt_rrc = %d\n",
--			 (notif->ttc_rrc_status >> 4) & 0xF);
-+			 notif->rrc_status & 0xF);
- 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ttc = %d\n",
--			 notif->ttc_rrc_status & 0xF);
-+			 notif->ttc_status & 0xF);
- 
- 	pos += scnprintf(buf + pos, bufsz - pos, "sync_sco = %d\n",
- 			 IWL_MVM_BT_COEX_SYNC2SCO);
--- 
-2.13.2
+Greg, did you pick that patch up?
