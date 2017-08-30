@@ -1,186 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36460 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751605AbdHPNRt (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33988 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751242AbdH3Jnp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:17:49 -0400
-Received: by mail-pf0-f196.google.com with SMTP id t83so1362761pfj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2017 06:17:49 -0700 (PDT)
+        Wed, 30 Aug 2017 05:43:45 -0400
+Received: by mail-pf0-f194.google.com with SMTP id p69so4008709pfk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 02:43:45 -0700 (PDT)
 From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
         Amitkumar Karwar <amit.karwar@redpinesignals.com>,
         Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 02/11] rsi: add interface changes for ap mode
-Date: Wed, 16 Aug 2017 18:43:09 +0530
-Message-Id: <1502889198-4478-3-git-send-email-amitkarwar@gmail.com> (sfid-20170816_151752_090808_8F8ADC0E)
-In-Reply-To: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
-References: <1502889198-4478-1-git-send-email-amitkarwar@gmail.com>
+Subject: [PATCH 5/8] rsi: tx and rx path enhancements for p2p mode
+Date: Wed, 30 Aug 2017 15:08:25 +0530
+Message-Id: <1504085908-2163-6-git-send-email-amitkarwar@gmail.com> (sfid-20170830_114412_659624_9383BEF1)
+In-Reply-To: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
+References: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-AP mode is handled in add_interface callback of mac80211.
-Also for AP mode, sending rx filter frame to disallow beacons
-to host is added. Station structures are initialized to NULL.
+Data descriptor is updated to include vap_id. TX command frame
+key config also updated to include vap_id.
 
 Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 43 +++++++++++++++++++++++------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  5 ++--
- drivers/net/wireless/rsi/rsi_main.h         |  3 ++
- drivers/net/wireless/rsi/rsi_mgmt.h         |  6 ++--
- 4 files changed, 44 insertions(+), 13 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  9 +++++++--
+ drivers/net/wireless/rsi/rsi_91x_hal.c      | 26 ++++++++++++++++++--------
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 23 +++++++++++++++++++----
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  4 ++--
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  3 ++-
+ 5 files changed, 48 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 432d6eb..bc18a19 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -95,6 +95,8 @@ static u32 rsi_get_num_pkts_dequeue(struct rsi_common *common, u8 q_num)
+ 	s16 txop = common->tx_qinfo[q_num].txop * 32;
+ 	__le16 r_txop;
+ 	struct ieee80211_rate rate;
++	struct ieee80211_hdr *wh;
++	struct ieee80211_vif *vif;
+ 
+ 	rate.bitrate = RSI_RATE_MCS0 * 5 * 10; /* Convert to Kbps */
+ 	if (q_num == VI_Q)
+@@ -106,8 +108,10 @@ static u32 rsi_get_num_pkts_dequeue(struct rsi_common *common, u8 q_num)
+ 		return 0;
+ 
+ 	do {
++		wh = (struct ieee80211_hdr *)skb->data;
++		vif = rsi_get_vif(adapter, wh->addr2);
+ 		r_txop = ieee80211_generic_frame_duration(adapter->hw,
+-							  adapter->vifs[0],
++							  vif,
+ 							  common->band,
+ 							  skb->len, &rate);
+ 		txop -= le16_to_cpu(r_txop);
+@@ -403,7 +407,8 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 		q_num = skb->priority;
+ 		tx_params->tid = tid;
+ 
+-		if ((vif->type == NL80211_IFTYPE_AP) &&
++		if (((vif->type == NL80211_IFTYPE_AP) ||
++		     (vif->type == NL80211_IFTYPE_P2P_GO)) &&
+ 		    (!is_broadcast_ether_addr(wh->addr1)) &&
+ 		    (!is_multicast_ether_addr(wh->addr1))) {
+ 			rsta = rsi_find_sta(common, wh->addr1);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index d0b119e..7e8e5d4 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -157,7 +157,8 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	u16 seq_num;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+-	bss = &info->control.vif->bss_conf;
++	vif = info->control.vif;
++	bss = &vif->bss_conf;
+ 	tx_params = (struct skb_info *)info->driver_data;
+ 
+ 	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
+@@ -181,7 +182,6 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
+ 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
+ 	seq_num = IEEE80211_SEQ_TO_SN(le16_to_cpu(wh->seq_ctrl));
+-	vif = adapter->vifs[0];
+ 
+ 	data_desc->xtend_desc_size = header_size - FRAME_DESC_SZ;
+ 
+@@ -190,7 +190,8 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 		data_desc->mac_flags |= cpu_to_le16(RSI_QOS_ENABLE);
+ 	}
+ 
+-	if ((vif->type == NL80211_IFTYPE_STATION) &&
++	if (((vif->type == NL80211_IFTYPE_STATION) ||
++	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
+ 	    (adapter->ps_state == PS_ENABLED))
+ 		wh->frame_control |= cpu_to_le16(RSI_SET_PS_ENABLE);
+ 
+@@ -246,17 +247,23 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 		data_desc->frame_info |= cpu_to_le16(RSI_BROADCAST_PKT);
+ 		data_desc->sta_id = vap_id;
+ 
+-		if (vif->type == NL80211_IFTYPE_AP) {
++		if ((vif->type == NL80211_IFTYPE_AP) ||
++		    (vif->type == NL80211_IFTYPE_P2P_GO)) {
+ 			if (common->band == NL80211_BAND_5GHZ)
+ 				data_desc->rate_info = cpu_to_le16(RSI_RATE_6);
+ 			else
+ 				data_desc->rate_info = cpu_to_le16(RSI_RATE_1);
+ 		}
+ 	}
+-	if ((vif->type == NL80211_IFTYPE_AP) &&
++	if (((vif->type == NL80211_IFTYPE_AP) ||
++	     (vif->type == NL80211_IFTYPE_P2P_GO)) &&
+ 	    (ieee80211_has_moredata(wh->frame_control)))
+ 		data_desc->frame_info |= cpu_to_le16(MORE_DATA_PRESENT);
+ 
++	data_desc->rate_info |=
++		cpu_to_le16((tx_params->vap_id << RSI_DESC_VAP_ID_OFST) &
++			    RSI_DESC_VAP_ID_MASK);
++
+ 	return 0;
+ }
+ 
+@@ -264,7 +271,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+-	struct ieee80211_vif *vif = adapter->vifs[0];
++	struct ieee80211_vif *vif;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_bss_conf *bss;
+ 	int status = -EINVAL;
+@@ -277,9 +284,12 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	info = IEEE80211_SKB_CB(skb);
+ 	if (!info->control.vif)
+ 		goto err;
+-	bss = &info->control.vif->bss_conf;
++	vif = info->control.vif;
++	bss = &vif->bss_conf;
+ 
+-	if ((vif->type == NL80211_IFTYPE_STATION) && (!bss->assoc))
++	if (((vif->type == NL80211_IFTYPE_STATION) ||
++	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
++	    (!bss->assoc))
+ 		goto err;
+ 
+ 	status = rsi_prepare_data_desc(common, skb);
 diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 2da5493..edcba56 100644
+index ce2f911..b1550bc 100644
 --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
 +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -342,25 +342,51 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
+@@ -879,7 +879,8 @@ static int rsi_hal_key_config(struct ieee80211_hw *hw,
+ 						  RSI_PAIRWISE_KEY,
+ 						  key->keyidx,
+ 						  key->cipher,
+-						  sta_id);
++						  sta_id,
++						  vif);
+ 			if (status)
+ 				return status;
+ 		}
+@@ -891,7 +892,8 @@ static int rsi_hal_key_config(struct ieee80211_hw *hw,
+ 				key_type,
+ 				key->keyidx,
+ 				key->cipher,
+-				sta_id);
++				sta_id,
++				vif);
+ }
+ 
+ /**
+@@ -1165,7 +1167,9 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ 			       struct rsi_common *common,
+ 			       struct ieee80211_rx_status *rxs)
  {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	enum opmode intf_mode;
- 	int ret = -EOPNOTSUPP;
+-	struct ieee80211_bss_conf *bss = &common->priv->vifs[0]->bss_conf;
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_vif *vif;
++	struct ieee80211_bss_conf *bss = NULL;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct skb_info *rx_params = (struct skb_info *)info->driver_data;
+ 	struct ieee80211_hdr *hdr;
+@@ -1173,6 +1177,7 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ 	u8 hdrlen = 0;
+ 	u8 channel = rx_params->channel;
+ 	s32 freq;
++	int i;
  
- 	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
- 	mutex_lock(&common->mutex);
-+
-+	if (adapter->sc_nvifs > 1) {
-+		mutex_unlock(&common->mutex);
-+		return -EOPNOTSUPP;
-+	}
-+
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!adapter->sc_nvifs) {
--			++adapter->sc_nvifs;
--			adapter->vifs[0] = vif;
--			ret = rsi_set_vap_capabilities(common,
--						       STA_OPMODE,
--						       VAP_ADD);
--		}
-+		rsi_dbg(INFO_ZONE, "Station Mode");
-+		intf_mode = STA_OPMODE;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		rsi_dbg(INFO_ZONE, "AP Mode");
-+		intf_mode = AP_OPMODE;
- 		break;
- 	default:
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Interface type %d not supported\n", __func__,
- 			vif->type);
-+		goto out;
- 	}
-+
-+	adapter->vifs[adapter->sc_nvifs++] = vif;
-+	ret = rsi_set_vap_capabilities(common, intf_mode, common->mac_addr,
-+				       0, VAP_ADD);
-+	if (ret) {
-+		rsi_dbg(ERR_ZONE, "Failed to set VAP capabilities\n");
-+		goto out;
-+	}
-+
-+	if (vif->type == NL80211_IFTYPE_AP) {
-+		int i;
-+
-+		rsi_send_rx_filter_frame(common, DISALLOW_BEACONS);
-+		common->min_rate = RSI_RATE_AUTO;
-+		for (i = 0; i < common->max_stations; i++)
-+			common->stations[i].sta = NULL;
-+	}
-+
-+out:
- 	mutex_unlock(&common->mutex);
- 
- 	return ret;
-@@ -383,7 +409,8 @@ static void rsi_mac80211_remove_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&common->mutex);
- 	if (vif->type == NL80211_IFTYPE_STATION) {
- 		adapter->sc_nvifs--;
--		rsi_set_vap_capabilities(common, STA_OPMODE, VAP_DELETE);
-+		rsi_set_vap_capabilities(common, STA_OPMODE, vif->addr,
-+					 0, VAP_DELETE);
+ 	hdr = ((struct ieee80211_hdr *)(skb->data));
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+@@ -1201,6 +1206,15 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ 		rxs->flag |= RX_FLAG_IV_STRIPPED;
  	}
  
- 	if (!memcmp(adapter->vifs[0], vif, sizeof(struct ieee80211_vif)))
++	for (i = 0; i < RSI_MAX_VIFS; i++) {
++		vif = adapter->vifs[i];
++		if (!vif)
++			continue;
++		if (vif->type == NL80211_IFTYPE_STATION)
++			bss = &vif->bss_conf;
++	}
++	if (!bss)
++		return;
+ 	/* CQM only for connected AP beacons, the RSSI is a weighted avg */
+ 	if (bss->assoc && !(memcmp(bss->bssid, hdr->addr2, ETH_ALEN))) {
+ 		if (ieee80211_is_beacon(hdr->frame_control))
+@@ -1363,7 +1377,8 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+ 							 RSI_PAIRWISE_KEY,
+ 							 key->keyidx,
+ 							 key->cipher,
+-							 sta_idx);
++							 sta_idx,
++							 vif);
+ 			}
+ 
+ 			common->num_stations++;
 diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index f93499d0..233a418 100644
+index 428369b..4e50cfd 100644
 --- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
 +++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -624,6 +624,8 @@ static int rsi_program_bb_rf(struct rsi_common *common)
-  */
- int rsi_set_vap_capabilities(struct rsi_common *common,
- 			     enum opmode mode,
-+			     u8 *mac_addr,
-+			     u8 vap_id,
- 			     u8 vap_status)
+@@ -716,9 +716,9 @@ int rsi_hal_load_key(struct rsi_common *common,
+ 		     u8 key_type,
+ 		     u8 key_id,
+ 		     u32 cipher,
+-		     s16 sta_id)
++		     s16 sta_id,
++		     struct ieee80211_vif *vif)
  {
+-	struct ieee80211_vif *vif = common->priv->vifs[0];
  	struct sk_buff *skb = NULL;
-@@ -632,7 +634,6 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
- 	struct ieee80211_hw *hw = adapter->hw;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	u16 frame_len = sizeof(struct rsi_vap_caps);
--	u16 vap_id = 0;
- 
- 	rsi_dbg(MGMT_TX_ZONE, "%s: Sending VAP capabilities frame\n", __func__);
- 
-@@ -656,7 +657,7 @@ int rsi_set_vap_capabilities(struct rsi_common *common,
- 	vap_caps->radioid_macid = ((common->mac_id & 0xf) << 4) |
- 				   (common->radio_id & 0xf);
- 
--	memcpy(vap_caps->mac_addr, common->mac_addr, IEEE80211_ADDR_LEN);
-+	memcpy(vap_caps->mac_addr, mac_addr, IEEE80211_ADDR_LEN);
- 	vap_caps->keep_alive_period = cpu_to_le16(90);
- 	vap_caps->frag_threshold = cpu_to_le16(IEEE80211_MAX_FRAG_THRESHOLD);
- 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 0077888..9f5f33f 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -90,6 +90,7 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define IEEE80211_MGMT_FRAME            0x00
- #define IEEE80211_CTL_FRAME             0x04
- 
-+#define RSI_MAX_ASSOC_STAS		32
- #define IEEE80211_QOS_TID               0x0f
- #define IEEE80211_NONQOS_TID            16
- 
-@@ -262,6 +263,8 @@ struct rsi_common {
- 	u8 dtim_cnt;
- 
- 	/* AP mode parameters */
-+	struct rsi_sta stations[RSI_MAX_ASSOC_STAS + 1];
-+	int num_stations;
- 	int max_stations;
- };
- 
+ 	struct rsi_set_key *set_key;
+ 	u16 key_descriptor = 0;
 diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 201a465..9093ba6 100644
+index a82552cf..331d64b 100644
 --- a/drivers/net/wireless/rsi/rsi_mgmt.h
 +++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -188,8 +188,8 @@
- 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
- 
- enum opmode {
--	STA_OPMODE = 1,
--	AP_OPMODE = 2
-+	AP_OPMODE = 0,
-+	STA_OPMODE,
- };
- 
- enum vap_status {
-@@ -591,7 +591,7 @@ static inline void rsi_set_len_qno(__le16 *addr, u16 len, u8 qno)
- 
- int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
- int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
--			     u8 vap_status);
-+			     u8 *mac_addr, u8 vap_id, u8 vap_status);
- int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
- 				      u16 ssn, u8 buf_size, u8 event);
+@@ -618,7 +618,8 @@ int rsi_send_aggregation_params_frame(struct rsi_common *common, u16 tid,
+ 				      u16 ssn, u8 buf_size, u8 event,
+ 				      u8 sta_id);
  int rsi_hal_load_key(struct rsi_common *common, u8 *data, u16 key_len,
+-		     u8 key_type, u8 key_id, u32 cipher, s16 sta_id);
++		     u8 key_type, u8 key_id, u32 cipher, s16 sta_id,
++		     struct ieee80211_vif *vif);
+ int rsi_set_channel(struct rsi_common *common,
+ 		    struct ieee80211_channel *channel);
+ int rsi_send_vap_dynamic_update(struct rsi_common *common);
 -- 
 2.7.4
