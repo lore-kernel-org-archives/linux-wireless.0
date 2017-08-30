@@ -1,94 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:37268 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751700AbdHCOdD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 10:33:03 -0400
-Received: by mail-pg0-f68.google.com with SMTP id 83so1661959pgb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 07:33:03 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-Subject: [v2 1/8] rsi: add support for rf-kill functionality
-Date: Thu,  3 Aug 2017 19:58:57 +0530
-Message-Id: <1501770544-6746-2-git-send-email-amitkarwar@gmail.com> (sfid-20170803_163307_744837_8CA8AA6A)
-In-Reply-To: <1501770544-6746-1-git-send-email-amitkarwar@gmail.com>
-References: <1501770544-6746-1-git-send-email-amitkarwar@gmail.com>
+Received: from mail-bl2nam02on0077.outbound.protection.outlook.com ([104.47.38.77]:48736
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751302AbdH3MHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 08:07:32 -0400
+Date: Wed, 30 Aug 2017 15:07:19 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH 21/27] qtnfmac: extend "IE set" TLV to include frame type
+ info
+Message-ID: <20170830120635.62m2eupefizpgcto@bars> (sfid-20170830_140736_526721_E05C8DB3)
+References: <20170825023024.10565-1-igor.mitsyanko.os@quantenna.com>
+ <20170825023024.10565-22-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170825023024.10565-22-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
+> -		if (tlv_full_len > payload_len) {
+> -			pr_warn("VIF%u.%u: malformed TLV 0x%.2X; LEN: %u\n",
+> -				mac->macid, vif->vifid, tlv_type,
+> -				tlv_value_len);
+> +		if (tlv_full_len > payload_len)
+>  			return -EINVAL;
+> -		}
 
-This patch implements rfkill_poll handler. Also, necessary changes
-are done in interface up and down handler to support rfkill
-functionality.
+Why drop this sanity check ?
 
-Signed-off-by: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+>  		if (tlv_type == QTN_TLV_ID_IE_SET) {
+> -			sinfo.assoc_req_ies = tlv->val;
+> -			sinfo.assoc_req_ies_len = tlv_value_len;
+> +			const struct qlink_tlv_ie_set *ie_set;
+> +			unsigned int ie_len;
+> +
+> +			if (payload_len < sizeof(*ie_set))
+> +				return -EINVAL;
+> +
+> +			ie_set = (const struct qlink_tlv_ie_set *)tlv;
+> +			ie_len = tlv_value_len -
+> +				(sizeof(*ie_set) - sizeof(ie_set->hdr));
+> +
+> +			if (ie_set->type == QLINK_IE_SET_ASSOC_REQ && ie_len) {
+> +				sinfo.assoc_req_ies = ie_set->ie_data;
+> +				sinfo.assoc_req_ies_len = ie_len;
+> +			}
+>  		}
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index c91d6ef..193f922 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -279,11 +279,12 @@ static int rsi_mac80211_start(struct ieee80211_hw *hw)
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
- 
-+	rsi_dbg(ERR_ZONE, "===> Interface UP <===\n");
- 	mutex_lock(&common->mutex);
- 	common->iface_down = false;
--	mutex_unlock(&common->mutex);
--
-+	wiphy_rfkill_start_polling(hw->wiphy);
- 	rsi_send_rx_filter_frame(common, 0);
-+	mutex_unlock(&common->mutex);
- 
- 	return 0;
- }
-@@ -299,8 +300,10 @@ static void rsi_mac80211_stop(struct ieee80211_hw *hw)
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
- 
-+	rsi_dbg(ERR_ZONE, "===> Interface DOWN <===\n");
- 	mutex_lock(&common->mutex);
- 	common->iface_down = true;
-+	wiphy_rfkill_stop_polling(hw->wiphy);
- 
- 	/* Block all rx frames */
- 	rsi_send_rx_filter_frame(common, 0xffff);
-@@ -1214,6 +1217,19 @@ static void rsi_reg_notify(struct wiphy *wiphy,
- 	mutex_unlock(&common->mutex);
- }
- 
-+static void rsi_mac80211_rfkill_poll(struct ieee80211_hw *hw)
-+{
-+	struct rsi_hw *adapter = hw->priv;
-+	struct rsi_common *common = adapter->priv;
-+
-+	mutex_lock(&common->mutex);
-+	if (common->fsm_state != FSM_MAC_INIT_DONE)
-+		wiphy_rfkill_set_hw_state(hw->wiphy, true);
-+	else
-+		wiphy_rfkill_set_hw_state(hw->wiphy, false);
-+	mutex_unlock(&common->mutex);
-+}
-+
- static struct ieee80211_ops mac80211_ops = {
- 	.tx = rsi_mac80211_tx,
- 	.start = rsi_mac80211_start,
-@@ -1232,6 +1248,7 @@ static struct ieee80211_ops mac80211_ops = {
- 	.sta_remove = rsi_mac80211_sta_remove,
- 	.set_antenna = rsi_mac80211_set_antenna,
- 	.get_antenna = rsi_mac80211_get_antenna,
-+	.rfkill_poll = rsi_mac80211_rfkill_poll,
- };
- 
- /**
--- 
-2.7.4
+Does it make sense to keep QTN_TLV_ID_IE_SET here at all ?
+Maybe replace it completely by qlink_tlv_ie_set with
+QLINK_IE_SET_ASSOC_REQ type ? Also see the comment below
+for the similar snippet in qtnf_event_handle_scan_results.
+
+...
+
+> -		if (tlv_full_len > payload_len) {
+> -			pr_warn("VIF%u.%u: malformed TLV 0x%.2X; LEN: %u\n",
+> -				vif->mac->macid, vif->vifid, tlv_type,
+> -				tlv_value_len);
+> +		if (tlv_full_len > payload_len)
+>  			return -EINVAL;
+> -		}
+
+ditto
+
+...
+
+>  		if (tlv_type == QTN_TLV_ID_IE_SET) {
+> -			ies = tlv->val;
+> -			ies_len = tlv_value_len;
+> +			const struct qlink_tlv_ie_set *ie_set;
+> +			unsigned int ie_len;
+> +
+> +			if (payload_len < sizeof(*ie_set))
+> +				return -EINVAL;
+> +
+> +			ie_set = (const struct qlink_tlv_ie_set *)tlv;
+> +			ie_len = tlv_value_len -
+> +				(sizeof(*ie_set) - sizeof(ie_set->hdr));
+> +
+> +			if (ie_len) {
+> +				ies = ie_set->ie_data;
+> +				ies_len = ie_len;
+> +			}
+>  		}
+>  	}
+
+Two points here. First, it looks like there is a problem here inherited
+from the existing implementation. We go through payload, but in fact we
+pass to cfg80211_inform_bss only the last QTN_TLV_ID_IE_SET element.
+Second, it looks like QTN_TLV_ID_IE_SET here should be treated in
+the same way as in qtnf_event_handle_sta_assoc, to avoid confusion.
+In other words, either we use only QTN_TLV_ID_IE_SET in both cases,
+or switch to specific qlink_tlv_ie_set elements.
+
+Thoughts ? Comments ?
+
+Regards,
+Sergey
