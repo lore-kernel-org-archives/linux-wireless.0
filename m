@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64390 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752270AbdHCLhY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 07:37:24 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-by2nam03on0047.outbound.protection.outlook.com ([104.47.42.47]:25312
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750761AbdH3Uwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 16:52:32 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com
+Subject: [PATCH] nl80211: look for HT/VHT capabilities in beacon's tail
+Date: Wed, 30 Aug 2017 13:52:25 -0700
+Message-Id: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com> (sfid-20170830_225237_473549_D1647CAE)
 MIME-Version: 1.0
-Subject: Re: [PATCHv2,
- 1/3] ath10k: extend wmi service map to accommodate new services
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1500379094-2373-2-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1500379094-2373-2-git-send-email-mpubbise@qti.qualcomm.com>
-To: <mpubbise@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <13b5ffdef43a4561b3cd123114cd0b8f@euamsexm01a.eu.qualcomm.com> (sfid-20170803_133728_575678_AC1BE6C1)
-Date: Thu, 3 Aug 2017 13:37:18 +0200
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mpubbise@qti.qualcomm.com wrote:
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-> Though there is room to accommodate 512 services in wmi service
-> ready event, target uses only first 4-bits of each 32-bit word for
-> advertising wmi services thereby limiting max wmi services to 64.
-> 
-> TDLS implementation for 10.4 firmwares introduces new wmi services by
-> making use of remaining unused bits of each 32-bit word, therefore the
-> wmi service mapping in host needs to be extended.
-> 
-> This patch adds the logic to extend the wmi SVCMAP to accommodate new
-> wmi services.
-> 
-> Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+There are no HT/VHT capabilities in cfg80211_ap_settings::beacon_ies,
+these should be looked for in beacon's tail instead.
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
 
-810fe818d6a1 ath10k: extend wmi service map to accommodate new services
-add6cd8d5ab7 ath10k: add tdls support for 10.4 firmwares
-be5b4f4002a6 ath10k: push peer type to target for TDLS peers
+This is true for hostapd (at least the one in mainline): it does not
+include HT/VHT caps and WLAN_EID_SUPP_RATES into beacon_ies.
+But worth noting that there is no clear documentation that I could find
+on what IEs could and could not be included into beacon_ies.
 
+ net/wireless/nl80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8ce8542..0df8023 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3791,8 +3791,8 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
+ static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
+ {
+ 	const struct cfg80211_beacon_data *bcn = &params->beacon;
+-	size_t ies_len = bcn->beacon_ies_len;
+-	const u8 *ies = bcn->beacon_ies;
++	size_t ies_len = bcn->tail_len;
++	const u8 *ies = bcn->tail;
+ 	const u8 *rates;
+ 	const u8 *cap;
+ 
 -- 
-https://patchwork.kernel.org/patch/9848157/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.5
