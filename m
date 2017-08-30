@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35987 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752673AbdHIQbx (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:60946 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdH3Mlp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:31:53 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org, dsd@gentoo.org, kune@deine-taler.de
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 20/20] zd1211rw: constify usb_device_id
-Date: Wed,  9 Aug 2017 22:01:42 +0530
-Message-Id: <1502296302-21828-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183218_159033_706A6555)
+        Wed, 30 Aug 2017 08:41:45 -0400
+Date: Wed, 30 Aug 2017 14:41:41 +0200
+From: Christoph Hellwig <hch@infradead.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        devel@linuxdriverproject.org, sparmaintainer@unisys.com,
+        devel@driverdev.osuosl.org,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org,
+        linux-efi <linux-efi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 6/6] device property: Switch to use new generic UUID
+ API
+Message-ID: <20170830124141.oa32gzbgnafarkrh@infradead.org> (sfid-20170830_144200_707493_925544E4)
+References: <20170719182857.73693-1-andriy.shevchenko@linux.intel.com>
+ <2908341.aERReitNcd@aspire.rjw.lan>
+ <CAHp75Vd6KenS3vQBgTJL=iE790Rrtzj11gvPK=KLE98bjcPm6w@mail.gmail.com>
+ <6349641.0fe8FCM51k@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6349641.0fe8FCM51k@aspire.rjw.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+On Wed, Jul 26, 2017 at 02:27:44AM +0200, Rafael J. Wysocki wrote:
+> > >> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> > >> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > >>
+> > >> Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > >
+> > > OK
+> > >
+> > > Andy, do you want me to apply this?
+> > 
+> > If you would like to.
+> > 
+> > The patch is now pretty independent since necessary stuff made v4.13-rc1.
+> 
+> OK
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
-changes in v2:
-              Re-submitting wireless separately.
-
- drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-index 01ca1d5..c30bf11 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
-@@ -35,7 +35,7 @@
- #include "zd_mac.h"
- #include "zd_usb.h"
- 
--static struct usb_device_id usb_ids[] = {
-+static const struct usb_device_id usb_ids[] = {
- 	/* ZD1211 */
- 	{ USB_DEVICE(0x0105, 0x145f), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x0586, 0x3401), .driver_info = DEVICE_ZD1211 },
--- 
-2.7.4
+This didn't seem to make it into linux-next so far, though.
