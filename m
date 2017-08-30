@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:3881 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754591AbdHVHM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2017 03:12:29 -0400
-Subject: Re: ath9k driver - is it possible to disable tx/rx radio chains?
-To: =?UTF-8?Q?H=c3=a5vard_Rabbe?= <hrabbe@me.com>,
-        linux-wireless@vger.kernel.org
-References: <0DB9FDCC-490C-438E-AA50-1C751565A9AE@me.com>
- <8cf52994-eda4-d88f-a236-2b74c085bf3f@neratec.com>
- <73CCFF27-AA9B-4F1C-BAAF-EA38C5CC31C2@me.com>
-From: Matthias May <matthias.may@neratec.com>
-Message-ID: <f21749c9-21bc-e9cf-b3d8-c2632b577e09@neratec.com> (sfid-20170822_091232_794585_42CFBC45)
-Date: Tue, 22 Aug 2017 09:12:25 +0200
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43158 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751127AbdH3Tyw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Aug 2017 15:54:52 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v7UJsUc4006997
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:54:51 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2cnt3m3r6t-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:54:51 -0700
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 0/2] mwifiex: address URB submission failure
+Date: Thu, 31 Aug 2017 01:21:12 +0530
+Message-ID: <1504122674-3379-1-git-send-email-gbhat@marvell.com> (sfid-20170830_215454_961828_5E3FA34C)
 MIME-Version: 1.0
-In-Reply-To: <73CCFF27-AA9B-4F1C-BAAF-EA38C5CC31C2@me.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/08/17 23:04, Håvard Rabbe wrote:
-> Hi
-> Thank you so much. You made my day!
-> The command works. Im looking forward to test it out :-)
-> 
-> 
-> I also have two of these card. they don’t have the same bitmap, but I assume they work the same way?
-> 
-> qca9882 chipset with 2 chains available using ath10k driver:
-> 	Available Antennas: TX 0x3 RX 0x3
-> 	Configured Antennas: TX 0x3 RX 0x3
-> 
-> qca9880 chipset with 3 chains available using ath10k driver:
-> 	Available Antennas: TX 0x3 RX 0x3
-> 	Configured Antennas: TX 0x3 RX 0x3
-> 
-> 
+This patch series fixes a driver issue with USB interface. When
+URB submission fails due to skb allocation, it is retried in
+main thread.
 
-The bitmap is always the same.
-0x1 for chain 0
-0x3 for chain 0 and 1
-0x7 for chain 0, 1 and 2
-0xf for chain 0, 1, 2 and 3
+Ganapathi Bhat (1):
+  mwifiex: print URB submit failure error after threshold attemtps
 
-Are you sure that your qca9880 card has 3 chains?
-Because the "Available Antennas: TX 0x3 RX 0x3" says there are only 2 chains available.
-It could be that the card physically has 3 chains, but the 3rd is disabled in eeprom.
+James Cao (1):
+  mwifiex: resubmit failed to submit RX URBs in main thread
 
-BR
-Matthias
+ drivers/net/wireless/marvell/mwifiex/main.c | 11 +++++++++++
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 11 +++++++++--
+ drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
+ 3 files changed, 22 insertions(+), 2 deletions(-)
+
+-- 
+1.9.1
