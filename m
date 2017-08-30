@@ -1,58 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:41188 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1750812AbdHWVxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 17:53:50 -0400
-Subject: Re: [PATCH 17/30] brcmfamc: remove unnecessary call to
- brcmf_sdiod_set_backplane_window()
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-18-ian@mnementh.co.uk>
- <CAGRGNgWUFx=cXjMZdTAkYoXTa=V-6Uty6+ccoXwO7WJA9udQRQ@mail.gmail.com>
- <71fdb0e7-f31d-fa98-c3c6-92ebe2f1a047@broadcom.com>
- <CAGRGNgXWg6Gj4ND+BrfziX9Je5=b8Ovv=6fafYmg1CiSh6m9Mw@mail.gmail.com>
- <2ef60e61-1a55-21c9-744e-39bb5dadfa66@mnementh.co.uk>
- <CAGRGNgW4a5Ld0=HZ4AfBMzKoD2PvCJR=wfuAz3pxXupfbBw7YA@mail.gmail.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <3b32ed07-71ee-4267-4ef8-4a09e1164c79@mnementh.co.uk> (sfid-20170823_235353_875769_8558D8AD)
-Date: Wed, 23 Aug 2017 22:53:45 +0100
+Received: from mail-cys01nam02on0088.outbound.protection.outlook.com ([104.47.37.88]:17394
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751669AbdH3COK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Aug 2017 22:14:10 -0400
+Subject: Re: [PATCH 3/5] qtnfmac: modify qtnf_map_bar not to return NULL
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Avinash Patil <avinashp@quantenna.com>
+References: <20170829121623.24761-1-sergey.matyukevich.os@quantenna.com>
+ <20170829121623.24761-4-sergey.matyukevich.os@quantenna.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <424b7b13-0113-90ed-795c-b087d4610efa@quantenna.com> (sfid-20170830_041413_425346_89B5D7C4)
+Date: Tue, 29 Aug 2017 19:14:02 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgW4a5Ld0=HZ4AfBMzKoD2PvCJR=wfuAz3pxXupfbBw7YA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20170829121623.24761-4-sergey.matyukevich.os@quantenna.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23/08/17 13:36, Julian Calaby wrote:
-> Hi Ian,
+On 08/29/2017 05:16 AM, Sergey Matyukevich wrote:
+> NULL is not a special type of success here but a error pointer.
+> So it makes sense to check against NULL in qtnf_map_bar
+> and return error code.
 > 
-> On Wed, Aug 23, 2017 at 10:27 PM, Ian Molton <ian@mnementh.co.uk> wrote:
->> On 23/08/17 11:09, Julian Calaby wrote:
->>> I don't think I explained my point well.
->>>
->>> The description of this patch implies that this method
->>> brcmf_sdiod_ramrw(), now relies on the window being set elsewhere
->>> before it's called.
->>
->> I don't think it does.
-> 
-> "Resetting" can mean both changing it back after setting it to
-> something or changing it from some other state to a known one. I read
-> it as the latter.
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> ---
 
-True
-
->>> I'm asking why we can't move the setting of the window inside this
->>> function and remove any redundant calls to
->>> brcmf_sdiod_set_backplane_window() outside of it.
->>
->> We do call brcmf_sdiod_set_backplane_window() in this function. We just
->> dont need to call it a second time to restore the original window.
-> 
-> Ah, I do not have the full code in front of me, so I couldn't see
-> that, therefore my point is invalid.
-
-No worries.
-
--Ian
+On a first glance not immediately obvious what is logically changed 
+here, is it so that pr_debug() would not print NULL pointer?
