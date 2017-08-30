@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:33568 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752059AbdHHSVC (ORCPT
+Received: from lb3-smtp-cloud9.xs4all.net ([194.109.24.30]:53761 "EHLO
+        lb3-smtp-cloud9.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751334AbdH3MCV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 14:21:02 -0400
-Received: by mail-qt0-f171.google.com with SMTP id a18so24441808qta.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2017 11:21:02 -0700 (PDT)
+        Wed, 30 Aug 2017 08:02:21 -0400
+Date: Wed, 30 Aug 2017 14:02:18 +0200
+From: Antony Antony <antony@phenome.org>
+To: Chen-Yu Tsai <wens@csie.org>
+Cc: Antony Antony <antony@phenome.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Icenowy Zheng <icenowy@aosc.io>,
+        devicetree <devicetree@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>
+Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add
+ bcm43430-fmac
+Message-ID: <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local> (sfid-20170830_140225_243687_89563AFC)
+References: <20170829214309.34466-1-antony@phenome.org>
+ <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
 MIME-Version: 1.0
-From: Jacobo Pantoja <jacobopantoja@gmail.com>
-Date: Tue, 8 Aug 2017 20:20:40 +0200
-Message-ID: <CAO18KQjGKEf5wn2B5MLptyZN12+XpKxfHfL9Q1Jz-3pMpTgU+Q@mail.gmail.com> (sfid-20170808_202106_773323_84FA72FC)
-Subject: RTS threshold not being obeyed
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+hi,
 
-I'm having a hard time to figure out why RTS/CTS are happening in my network.
-In a nutshell, I'm using two identical OpenWRT routers to stablish a
-WDS link (4address mode) in 5GHz, with no other client nor AP in 5GHz.
-The problem is, a great amount of bandwidth is being consumed by
-RTS/CTSs.
+On Wed, Aug 30, 2017 at 10:28:20AM +0800, Chen-Yu Tsai wrote:
+> On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
 
-The point is, I'm pretty sure RTS threshold is disabled (set to -1);
-I've checked in hostapd configuration, as well as in the debugfs of
-the phy itself, being reported as -1.
+> > a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> > @@ -6,7 +6,9 @@ connects the device to the system.
+> >
+> >  Required properties:
+> >
+> > - - compatible : Should be "brcm,bcm4329-fmac".
+> > + - compatible : should be one of the following:
+> > +       * "brcm,bcm4329-fmac"
+> > +       * "brcm,bcm43430-fmac"
+> 
+> You updated the bindings, but not the driver. So it's not actually
+> going to work. More specifically, OOB interrupts won't work.
+>
 
-The device in question is TPLINK WDR4300, radio device AR9582
-(168c:0033, subsystem 168c:a120), using driver ath9k. I'm using
-current LEDE 17.01.2, r3435-65eec8bd5f, kernel 4.4.71.
+understood, ignore this patch for now. Thanks Chen-Yu.
 
-I'm able to see RTS/CTS over the air (using Wireshark in a third
-device), but i can as well see an increasing number in
-/sys/kernel/debug/ieee80211/phy1/statistics/dot11RTSSuccessCount
-If I set RTS threshold (using iw, checking its value in debugfs) to a
-very low number (e.g. 50) I can see the counter increasing quite
-faster.
+> IIRC, The compatible string for this particular case, as it was
+> originally proposed, only serves as a placeholder for the driver
+> to check against. None of the instances in sunxi device trees
+> match the actual chip model. Actual model matching is done
+> through SDIO, as you've already seen.
 
-I'm not sure if this is the expected behaviour (e.g. the underlying
-hardware is deciding by its own to do some RTS/CTS) or it is a bug.
+yes it seems SDIO driveer code is smarter, once it initialize 
+brcm,bcm4329-fmac it ignore the DT info and read the chip details to locate 
+firmware file.
 
-Can I make some further testing to clarify this?
+I also noticed other boards using bcm4329-fmac in similar situations.
+https://patchwork.kernel.org/patch/9739181/
 
-Thanks!
-JPantoja
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/amlogic/meson-gxbb-nanopi-k2.dts?h=v4.13-rc7
+
+I will resend "NanoPi NEO Plus2" dts with "brcm,bcm4329-fmac" and see where 
+it goes. 
+
+regards,
+-antony
