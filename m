@@ -1,115 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751192AbdH1TTI (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:33516 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751978AbdH3RDI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 15:19:08 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 7/7] wil6210: ensure P2P device is stopped before removing interface
-Date: Mon, 28 Aug 2017 22:18:47 +0300
-Message-Id: <1503947927-18877-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211911_564672_3CBCDB9C)
-In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 30 Aug 2017 13:03:08 -0400
+Received: by mail-oi0-f48.google.com with SMTP id r203so56130841oih.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 10:03:08 -0700 (PDT)
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: RT2870 failure in kernel 4.12.8
+Message-ID: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net> (sfid-20170830_190312_433048_1CDD4B29)
+Date: Wed, 30 Aug 2017 12:03:06 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+Stanislaw and Helmut,
 
-User space can remove the P2P management interface while it is active
-(for example, while listen/search is active) and this can cause
-a crash. Ensure the P2P device is fully stopped before removing.
+In a bug report at https://bugzilla.suse.com/show_bug.cgi?id=1055826, the OP 
+reports that his RT3572 fails to work after an upgrade from the openSUSE 
+Tumbleweed kernel 4.12.7 to 4.12.8. I checked the kernel configuration and did 
+not see any problems.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 57 +++++++++++++++--------------
- 1 file changed, 29 insertions(+), 28 deletions(-)
+Are you aware of anyone reporting problems with rt2800usb in 4.12.8 kernels?
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 0712a89..85d5c04 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -382,6 +382,34 @@ static int wil_cfg80211_dump_station(struct wiphy *wiphy,
- 	return rc;
- }
- 
-+static int wil_cfg80211_start_p2p_device(struct wiphy *wiphy,
-+					 struct wireless_dev *wdev)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+
-+	wil_dbg_misc(wil, "start_p2p_device: entered\n");
-+	wil->p2p.p2p_dev_started = 1;
-+	return 0;
-+}
-+
-+static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
-+					 struct wireless_dev *wdev)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	struct wil_p2p_info *p2p = &wil->p2p;
-+
-+	if (!p2p->p2p_dev_started)
-+		return;
-+
-+	wil_dbg_misc(wil, "stop_p2p_device: entered\n");
-+	mutex_lock(&wil->mutex);
-+	mutex_lock(&wil->p2p_wdev_mutex);
-+	wil_p2p_stop_radio_operations(wil);
-+	p2p->p2p_dev_started = 0;
-+	mutex_unlock(&wil->p2p_wdev_mutex);
-+	mutex_unlock(&wil->mutex);
-+}
-+
- static struct wireless_dev *
- wil_cfg80211_add_iface(struct wiphy *wiphy, const char *name,
- 		       unsigned char name_assign_type,
-@@ -430,6 +458,7 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
-+	wil_cfg80211_stop_p2p_device(wiphy, wdev);
- 	wil_p2p_wdev_free(wil);
- 
- 	return 0;
-@@ -1661,34 +1690,6 @@ static int wil_cfg80211_change_bss(struct wiphy *wiphy,
- 	return 0;
- }
- 
--static int wil_cfg80211_start_p2p_device(struct wiphy *wiphy,
--					 struct wireless_dev *wdev)
--{
--	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
--
--	wil_dbg_misc(wil, "start_p2p_device: entered\n");
--	wil->p2p.p2p_dev_started = 1;
--	return 0;
--}
--
--static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
--					 struct wireless_dev *wdev)
--{
--	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
--	struct wil_p2p_info *p2p = &wil->p2p;
--
--	if (!p2p->p2p_dev_started)
--		return;
--
--	wil_dbg_misc(wil, "stop_p2p_device: entered\n");
--	mutex_lock(&wil->mutex);
--	mutex_lock(&wil->p2p_wdev_mutex);
--	wil_p2p_stop_radio_operations(wil);
--	p2p->p2p_dev_started = 0;
--	mutex_unlock(&wil->p2p_wdev_mutex);
--	mutex_unlock(&wil->mutex);
--}
--
- static int wil_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       bool enabled, int timeout)
--- 
-1.9.1
+Thanks,
+
+Larry
