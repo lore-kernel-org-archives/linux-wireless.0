@@ -1,82 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41756 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751816AbdHRWtk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43166 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751506AbdH3Qtj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 18:49:40 -0400
-Subject: Re: [POC/GIT] mac80211 multicast rate selection (help wanted!)
-To: David Lamparter <equinox@diac24.net>,
-        linux-wireless@vger.kernel.org
-References: <20170818222910.GT773745@eidolon>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <eb338f20-9829-9848-bb27-448261ff528d@candelatech.com> (sfid-20170819_004945_474639_07F8C7DA)
-Date: Fri, 18 Aug 2017 15:49:39 -0700
+        Wed, 30 Aug 2017 12:49:39 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170818222910.GT773745@eidolon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [2/2] rsi: update some comments
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170825084037.gxgsieknkb5hxdfs@mwanda>
+References: <20170825084037.gxgsieknkb5hxdfs@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20170830164938.CBEEF60209@smtp.codeaurora.org> (sfid-20170830_184943_135055_FAC18E41)
+Date: Wed, 30 Aug 2017 16:49:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/18/2017 03:29 PM, David Lamparter wrote:
-> Hello Linux Wireless hackers,
->
->
-> I've taken up an hacking endeavour in trying to improve multicast on
-> wifi, specifically to get it off the stupid 1 MBit rate.  Before anyone
-> yells "that's not allowed by the spec" - it actually is, please refer to
-> section 9.7.5 of 802.11-2012. ("... using one of the rates included in
-> the BSSBasicRateSet parameter ...")  Also, Cisco and Aruba are doing
-> this in their enterprise APs, and it's rather nice.
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-For ath10k, at least, rate-ctrl is controlled in the firmware.
-But, the driver can set the multicast rate to a fixed value.
+> These functions don't return -1 on failure.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> index 25331aa16e8e..e78e87e99804 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> @@ -754,7 +754,7 @@ static int rsi_mac80211_conf_tx(struct ieee80211_hw *hw,
+>   * @vif: Pointer to the ieee80211_vif structure.
+>   * @key: Pointer to the ieee80211_key_conf structure.
+>   *
+> - * Return: status: 0 on success, -1 on failure.
+> + * Return: status: 0 on success, negative error codes on failure.
+>   */
+>  static int rsi_hal_key_config(struct ieee80211_hw *hw,
+>  			      struct ieee80211_vif *vif,
+> @@ -1194,7 +1194,7 @@ static void rsi_set_min_rate(struct ieee80211_hw *hw,
+>   * @vif: Pointer to the ieee80211_vif structure.
+>   * @sta: Pointer to the ieee80211_sta structure.
+>   *
+> - * Return: 0 on success, -1 on failure.
+> + * Return: 0 on success, negative error codes on failure.
+>   */
+>  static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+>  				struct ieee80211_vif *vif,
+> @@ -1306,7 +1306,7 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
+>   * @vif: Pointer to the ieee80211_vif structure.
+>   * @sta: Pointer to the ieee80211_sta structure.
+>   *
+> - * Return: 0 on success, -1 on failure.
+> + * Return: 0 on success, negative error codes on failure.
+>   */
+>  static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
+>  				   struct ieee80211_vif *vif,
+> @@ -1426,7 +1426,7 @@ static int rsi_mac80211_set_antenna(struct ieee80211_hw *hw,
+>   * @tx_ant: Bitmap for tx antenna
+>   * @rx_ant: Bitmap for rx antenna
+>   * 
+> - * Return: 0 on success, -1 on failure.
+> + * Return: 0 on success, negative error codes on failure.
+>   */
+>  static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
+>  				    u32 *tx_ant, u32 *rx_ant)
+> @@ -1533,7 +1533,7 @@ static struct ieee80211_ops mac80211_ops = {
+>   * rsi_mac80211_attach() - This function is used to initialize Mac80211 stack.
+>   * @common: Pointer to the driver private structure.
+>   *
+> - * Return: 0 on success, -1 on failure.
+> + * Return: 0 on success, negative error codes on failure.
+>   */
+>  int rsi_mac80211_attach(struct rsi_common *common)
+>  {
 
-I am pretty sure this works on stock firmware, maybe with some driver
-tweaks.  It definitely works on my ath10k-ct driver/firmware (tested on
-the wave-1 stuff, not sure anyone has tested on the wave-2 stuff yet).
+2 patches applied to wireless-drivers-next.git, thanks.
 
-My api is through the ath10k debugfs API, so a kludge at best, but it could
-be wired into a better API with some work.
-
-I'll read through your stuff when I get a chance.
-
-Thanks,
-Ben
-
->
-> So, from some completely unrelated datacenter work, I have hacked up the
-> bridge to hand back down to the driver detailed info on multicast
-> receivers.  Then I took this and fudged around in the minstrel_ht code
-> and, well, it gave me 9 MBit/s ;)
->
-> Now, I have pretty little no clue about the Linux wireless stack, so I'd
-> appreciate if someone could tell me how massively wrong I'm doing this
-> and which places in particular are the wrongest!
->
-> You can find the code here:
-> https://github.com/eqvinox/vpls-linux-kernel/commits/mdb-hack
-> https://github.com/eqvinox/vpls-iproute2/tree/mdb-hack
->
-> Please note that all of this is proof-of-concept level, it probably
-> leaks tons of memory, has great race conditions and eats your cat for
-> breakfast.  It also contains some debug printks like this:
-> [ 9006.253504] mac80211_hwsim hwsim0 wlan0: multi-dst TX: 02:00:00:00:02:00 02:00:00:00:01:00
-> [ 9006.255007] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:02:00 => rate #1
-> [ 9006.256095] mac80211_hwsim hwsim0 wlan0: rc 02:00:00:00:01:00 => rate #12
-> [ 9006.257186] mac80211_hwsim hwsim0 wlan0: result rate #1
->
->
-> Cheers,
->
-> -David
->
->
-> P.S.: yes, I know about unicast conversion.  But that's not helpful
-> when, for example, you want to get a 10 MBit multicast TV livestream to
-> 5 simultaneous wifi clients...
->
-
+fc4386729491 rsi: update some comments
+0270639e899e rsi: missing unlocks on error paths
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://patchwork.kernel.org/patch/9921425/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
