@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:37526 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752726AbdHIQbd (ORCPT
+Received: from gateway24.websitewelcome.com ([192.185.51.202]:11857 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752341AbdH3R2J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2017 12:31:33 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 19/20] zd1201: constify usb_device_id
-Date: Wed,  9 Aug 2017 22:01:24 +0530
-Message-Id: <1502296284-21779-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170809_183222_136440_CE05F466)
+        Wed, 30 Aug 2017 13:28:09 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id AD153790E
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:04:25 -0500 (CDT)
+Date: Wed, 30 Aug 2017 12:04:24 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] rtlwifi: rtl8723be: fix duplicated code for different
+ branches
+Message-ID: <20170830170424.GA19424@embeddedgus> (sfid-20170830_192817_340095_96F9CFC6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+Refactor code in order to avoid identical code for different branches.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Addresses-Coverity-ID: 1248728
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
-changes in v2:
-              Re-submitting wireless separately.
+This issue was reported by Coverity and it was tested by compilation only.
+Please, verify if this is not a copy/paste error.
+Also, notice this code has been there since 2014.
 
- drivers/net/wireless/zydas/zd1201.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/zydas/zd1201.c b/drivers/net/wireless/zydas/zd1201.c
-index 7f586d7..581e857 100644
---- a/drivers/net/wireless/zydas/zd1201.c
-+++ b/drivers/net/wireless/zydas/zd1201.c
-@@ -25,7 +25,7 @@
- #include <linux/firmware.h>
- #include "zd1201.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
+index 131c0d1..15c117e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
+@@ -883,12 +883,8 @@ static void rtl8723be_dm_txpower_tracking_callback_thermalmeter(
+ 	if ((rtldm->power_index_offset[RF90_PATH_A] != 0) &&
+ 	    (rtldm->txpower_track_control)) {
+ 		rtldm->done_txpower = true;
+-		if (thermalvalue > rtlefuse->eeprom_thermalmeter)
+-			rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
+-							     index_for_channel);
+-		else
+-			rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
+-							     index_for_channel);
++		rtl8723be_dm_tx_power_track_set_power(hw, BBSWING, 0,
++						      index_for_channel);
  
--static struct usb_device_id zd1201_table[] = {
-+static const struct usb_device_id zd1201_table[] = {
- 	{USB_DEVICE(0x0586, 0x3400)}, /* Peabird Wireless USB Adapter */
- 	{USB_DEVICE(0x0ace, 0x1201)}, /* ZyDAS ZD1201 Wireless USB Adapter */
- 	{USB_DEVICE(0x050d, 0x6051)}, /* Belkin F5D6051 usb  adapter */
+ 		rtldm->swing_idx_cck_base = rtldm->swing_idx_cck;
+ 		rtldm->swing_idx_ofdm_base[RF90_PATH_A] =
 -- 
-2.7.4
+2.5.0
