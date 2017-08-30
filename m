@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52889 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751601AbdHQFdv (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:32922 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbdH3TFJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2017 01:33:51 -0400
-From: Jay Vosburgh <jay.vosburgh@canonical.com>
-To: Dan Williams <dcbw@redhat.com>
-cc: David Miller <davem@davemloft.net>, james@nurealm.net,
-        futur.andy@googlemail.com, kvalo@codeaurora.org,
-        arend.vanspriel@broadcom.com, maheshb@google.com,
-        andy@greyhouse.net, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, greearb@candelatech.com
-Subject: Re: Regression: Bug 196547 - Since 4.12 - bonding module not working with wireless drivers
-In-reply-to: <1502935907.30484.4.camel@redhat.com>
-References: <CADps9UCgqeUh41iHxCM+CTJh=Tffn-tiSYL2Q+NBb_8EppqRMA@mail.gmail.com> <2b6fd91a-f7cd-c2bf-6394-060d9b1f5d23@nurealm.net> <1502918561.30484.1.camel@redhat.com> <20170816.143116.1172751167543812070.davem@davemloft.net> <1502935907.30484.4.camel@redhat.com>
+        Wed, 30 Aug 2017 15:05:09 -0400
+Received: by mail-wm0-f52.google.com with SMTP id r202so3634673wmd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2017 12:05:08 -0700 (PDT)
+Subject: Re: [PATCH 12/30] brcmfmac: Whitespace fixes.
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-13-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <17496ac5-2186-d111-73ac-f7532b9e107e@broadcom.com> (sfid-20170830_210512_396428_1D2DC1E4)
+Date: Wed, 30 Aug 2017 21:05:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Wed, 16 Aug 2017 22:33:41 -0700
-Message-ID: <28296.1502948021@famine> (sfid-20170817_073357_529213_6EF2901D)
+In-Reply-To: <20170822112550.60311-13-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@redhat.com> wrote:
-[...]
->You'll probably say "aim for the 75% case" or something like that,
->which is fine, but then you're depending on your 75% case to be (a)
->single AP, (b) never move (eg, only bond wifi + ethernet), (c) little
->radio interference.  I'm not sure I'd buy that.  If I've put words in
->your mouth, forgive me.
+On 22-08-17 13:25, Ian Molton wrote:
 
-	The primary use case that I'm aware of for bonding with wireless
-devices is in active-backup mode, paired with an ethernet adapter set as
-the bonding "primary" device.  I think this is the case that absolutely
-should just work.  I don't think bonding cares (or should care) about
-(a) - (c) for this use.
+Maybe mention the function you are making whitespace changes in as it 
+involves only one here.
 
-	Your point (b) suggests that there are use cases other than the
-above; I'm unfamiliar with any use other than wifi + ethernet, can you
-elaborate?
-
-	-J
-
----
-	-Jay Vosburgh, jay.vosburgh@canonical.com
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> index 916f75e5e7a1..d5d2b2222cc1 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -713,6 +713,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+>   	int err;
+>   
+>   	mypkt = brcmu_pkt_buf_get_skb(nbytes);
+> +
+>   	if (!mypkt) {
+>   		brcmf_err("brcmu_pkt_buf_get_skb failed: len %d\n",
+>   			  nbytes);
+> @@ -727,8 +728,8 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+>   		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+>   
+>   	brcmu_pkt_buf_free_skb(mypkt);
+> -	return err;
+>   
+> +	return err;
+>   }
+>   
+>   int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+> 
