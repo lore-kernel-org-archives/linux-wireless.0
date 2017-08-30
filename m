@@ -1,117 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35424 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751162AbdHCJHG (ORCPT
+Received: from smtp.csie.ntu.edu.tw ([140.112.30.61]:45430 "EHLO
+        smtp.csie.ntu.edu.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751297AbdH3C2t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 05:07:06 -0400
-Received: by mail-pg0-f68.google.com with SMTP id l64so947654pge.2
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Aug 2017 02:07:06 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
+        Tue, 29 Aug 2017 22:28:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170829214309.34466-1-antony@phenome.org>
+References: <20170829214309.34466-1-antony@phenome.org>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Wed, 30 Aug 2017 10:28:20 +0800
+Message-ID: <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com> (sfid-20170830_042853_046342_BA6207B7)
+Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add bcm43430-fmac
+To: Antony Antony <antony@phenome.org>
 Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: add module parameter to disable 40MHZ support in 2.4G band
-Date: Thu,  3 Aug 2017 09:06:55 +0000
-Message-Id: <1501751215-12742-1-git-send-email-huxinming820@gmail.com> (sfid-20170803_110710_912989_6295A8A2)
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Icenowy Zheng <icenowy@aosc.io>,
+        devicetree <devicetree@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Chen-Yu Tsai <wens@csie.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Hi,
 
-This patch provide a new module parameter disable_2g4_40m, with
-which driver will not report 40M capability for 2.4GHZ to cfg80211.
+On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
+> Add device tree binding documentation for Broadcom BCM43430
+> AMPAK AP6212A has this chip.
+>
+> e.g
+> compatible = "brcm,bcm43430-fmac";
+>
+> NanoPi NEO Plus2 has an AMPAK AP6212A WiFi module
+> with BCM43430 rev=1 inside.
+> brcmf_chip_recognition found AXI chip: BCM43430, rev=1
+> brcmf_ops_sdio_probe sdio vendor ID: 0x02d0
+> brcmf_ops_sdio_probe sdio device ID: 0xa9a6
+>
+> Signed-off-by: Antony Antony <antony@phenome.org>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>  NanoPi Neo Plus2 Kernel DT propsed patch
+>  https://patchwork.kernel.org/patch/9925387/
+>
+> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> index 590f622..9107e1a 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> @@ -6,7 +6,9 @@ connects the device to the system.
+>
+>  Required properties:
+>
+> - - compatible : Should be "brcm,bcm4329-fmac".
+> + - compatible : should be one of the following:
+> +       * "brcm,bcm4329-fmac"
+> +       * "brcm,bcm43430-fmac"
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+You updated the bindings, but not the driver. So it's not actually
+going to work. More specifically, OOB interrupts won't work.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 2be7817..820475a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -25,6 +25,10 @@
- static char *reg_alpha2;
- module_param(reg_alpha2, charp, 0);
- 
-+static bool disable_2g4_40m;
-+module_param(disable_2g4_40m, bool, 0000);
-+MODULE_PARM_DESC(disable_2g4_40m, "2.4G 40M support disable:1, enable:0");
-+
- static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
- 	{
- 		.max = 3, .types = BIT(NL80211_IFTYPE_STATION) |
-@@ -2755,7 +2759,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
-  */
- static void
- mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
--		      struct mwifiex_private *priv)
-+		      struct mwifiex_private *priv, int disable_40m)
- {
- 	int rx_mcs_supp;
- 	struct ieee80211_mcs_info mcs_set;
-@@ -2769,7 +2773,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
- 
- 	/* Fill HT capability information */
--	if (ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap))
-+	if (ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap) && !disable_40m)
- 		ht_info->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-@@ -2779,7 +2783,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_20;
- 
--	if (ISSUPP_SHORTGI40(adapter->hw_dot_11n_dev_cap))
-+	if (ISSUPP_SHORTGI40(adapter->hw_dot_11n_dev_cap) && !disable_40m)
- 		ht_info->cap |= IEEE80211_HT_CAP_SGI_40;
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_40;
-@@ -2799,7 +2803,8 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_GRN_FLD;
- 
--	if (ISENABLED_40MHZ_INTOLERANT(adapter->hw_dot_11n_dev_cap))
-+	if (ISENABLED_40MHZ_INTOLERANT(adapter->hw_dot_11n_dev_cap) &&
-+	    !disable_40m)
- 		ht_info->cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
- 	else
- 		ht_info->cap &= ~IEEE80211_HT_CAP_40MHZ_INTOLERANT;
-@@ -2819,7 +2824,7 @@ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
- 	memset(&mcs[rx_mcs_supp], 0,
- 	       sizeof(struct ieee80211_mcs_info) - rx_mcs_supp);
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
--	    ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap))
-+	    (ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap) && !disable_40m))
- 		/* Set MCS32 for infra mode or ad-hoc mode with 40MHz support */
- 		SETHT_MCS32(mcs_set.rx_mask);
- 
-@@ -2974,14 +2979,15 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	if (ret)
- 		goto err_sta_init;
- 
--	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
--	if (adapter->is_hw_11ac_capable)
-+	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv,
-+			      disable_2g4_40m);
-+	if (adapter->is_hw_11ac_capable && !disable_2g4_40m)
- 		mwifiex_setup_vht_caps(
- 			&wiphy->bands[NL80211_BAND_2GHZ]->vht_cap, priv);
- 
- 	if (adapter->config_bands & BAND_A)
- 		mwifiex_setup_ht_caps(
--			&wiphy->bands[NL80211_BAND_5GHZ]->ht_cap, priv);
-+			&wiphy->bands[NL80211_BAND_5GHZ]->ht_cap, priv, 0);
- 
- 	if ((adapter->config_bands & BAND_A) && adapter->is_hw_11ac_capable)
- 		mwifiex_setup_vht_caps(
--- 
-1.9.1
+IIRC, The compatible string for this particular case, as it was
+originally proposed, only serves as a placeholder for the driver
+to check against. None of the instances in sunxi device trees
+match the actual chip model. Actual model matching is done
+through SDIO, as you've already seen.
+
+ChenYu
+
+
+>
+>  Optional properties:
+>   - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+> --
+> 2.9.3
+>
