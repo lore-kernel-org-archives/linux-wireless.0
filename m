@@ -1,109 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0071.outbound.protection.outlook.com ([104.47.37.71]:39472
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751856AbdIUVfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 17:35:07 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V3 7/9] qtnfmac: do not cache CSA chandef info
-Date: Thu, 21 Sep 2017 14:34:35 -0700
-Message-Id: <20170921213437.27457-8-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233514_875142_E52FC53B)
-In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:32839 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752072AbdHaXtp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 19:49:45 -0400
+Received: by mail-wr0-f175.google.com with SMTP id k94so2746441wrc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2017 16:49:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BY1PR0201MB0904426CF17EF719FA343B1C839D0@BY1PR0201MB0904.namprd02.prod.outlook.com>
+References: <BY1PR0201MB0904426CF17EF719FA343B1C839D0@BY1PR0201MB0904.namprd02.prod.outlook.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Thu, 31 Aug 2017 16:49:43 -0700
+Message-ID: <CALLGbRKbKWdo7BeDWUi24iP4OJDh-3WGdxEVBJCuYQ44==pE7g@mail.gmail.com> (sfid-20170901_015000_645771_3574F748)
+Subject: Re: [PATCH] Correctly fail to suspend when SDIO does not support
+ power on suspend
+To: Eric Bentley <Eric.Bentley@lairdtech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On Thu, Aug 31, 2017 at 4:44 PM, Eric Bentley
+<Eric.Bentley@lairdtech.com> wrote:
+> -       if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags))
+> +       if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags)) (
 
-It is never used for anything useful, and all logic is handled by
-either WiFi card or higher layers.
+Hi Eric,
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 12 ------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  2 --
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  1 -
- drivers/net/wireless/quantenna/qtnfmac/event.c    |  8 +-------
- 4 files changed, 1 insertion(+), 22 deletions(-)
+Shouldn't that be a '{' instead of '('?  Maybe I'm missing some
+context, but that doesn't look compilable.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 30f8be5..262e8cf 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -809,7 +809,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 			       struct cfg80211_csa_settings *params)
- {
--	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 	int ret;
- 
-@@ -830,17 +829,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (vif->vifid != 0) {
--		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
--			return -EOPNOTSUPP;
--
--		if (!cfg80211_chandef_identical(&params->chandef,
--						&mac->csa_chandef))
--			return -EINVAL;
--
--		return 0;
--	}
--
- 	if (!cfg80211_chandef_valid(&params->chandef)) {
- 		pr_err("%s: invalid channel\n", dev->name);
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 0138dad..42f7e1d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2337,8 +2337,6 @@ int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
- 
- 	switch (res_code) {
- 	case QLINK_CMD_RESULT_OK:
--		memcpy(&mac->csa_chandef, &params->chandef,
--		       sizeof(mac->csa_chandef));
- 		mac->status |= QTNF_MAC_CSA_ACTIVE;
- 		ret = 0;
- 		break;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 066fcd1..521ce09 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -147,7 +147,6 @@ struct qtnf_wmac {
- 	struct qtnf_vif iflist[QTNF_MAX_INTF];
- 	struct cfg80211_scan_request *scan_req;
- 	struct cfg80211_chan_def chandef;
--	struct cfg80211_chan_def csa_chandef;
- 	struct mutex mac_lock;	/* lock during wmac speicific ops */
- 	struct timer_list scan_timeout;
- };
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index df58e83..77563b0 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -381,13 +381,7 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 		 mac->macid, chandef.chan->hw_value, chandef.center_freq1,
- 		 chandef.center_freq2, chandef.width);
- 
--	if (mac->status & QTNF_MAC_CSA_ACTIVE) {
--		mac->status &= ~QTNF_MAC_CSA_ACTIVE;
--		if (chandef.chan->hw_value != mac->csa_chandef.chan->hw_value)
--			pr_warn("unexpected switch to %u during CSA to %u\n",
--				chandef.chan->hw_value,
--				mac->csa_chandef.chan->hw_value);
--	}
-+	mac->status &= ~QTNF_MAC_CSA_ACTIVE;
- 
- 	memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
- 
--- 
-2.9.5
+:)
+
+- Steve
