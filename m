@@ -1,59 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:56782 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750761AbdIQEIb (ORCPT
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:36169 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751966AbdHaXaG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Sep 2017 00:08:31 -0400
-Received: by mail-pg0-f48.google.com with SMTP id 7so3412809pgd.13
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 21:08:31 -0700 (PDT)
-From: Kevin Cernekee <cernekee@chromium.org>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: [PATCH V3 1/3] brcmfmac: Avoid possible out-of-bounds read
-Date: Sat, 16 Sep 2017 21:08:22 -0700
-Message-Id: <20170917040824.22237-1-cernekee@chromium.org> (sfid-20170917_060836_561432_5F3A3885)
+        Thu, 31 Aug 2017 19:30:06 -0400
+Received: by mail-pg0-f47.google.com with SMTP id r133so3120241pgr.3
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2017 16:30:06 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>,
+        Krzysztof Halasa <khc@pm.waw.pl>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jens Axboe <axboe@fb.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 13/31] timer: Remove meaningless .data/.function assignments
+Date: Thu, 31 Aug 2017 16:29:25 -0700
+Message-Id: <1504222183-61202-14-git-send-email-keescook@chromium.org> (sfid-20170901_013308_422685_90D0849B)
+In-Reply-To: <1504222183-61202-1-git-send-email-keescook@chromium.org>
+References: <1504222183-61202-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
-the length of rxframe is validated.  This could lead to uninitialized
-data being accessed (but not printed).  Since we already have a
-perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
-and ch.chspec is not modified by decchspec(), avoid the extra
-assignment and use ch.chspec in the debug print.
+Several timer users needlessly reset their .function/.data fields during
+their timer callback, but nothing else changes them. Some users do not
+use their .data field at all. Each instance is removed here.
 
-Suggested-by: Mattias Nissler <mnissler@chromium.org>
-Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>
+Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/block/amiflop.c                           | 3 +--
+ drivers/net/wan/hdlc_cisco.c                      | 2 --
+ drivers/net/wan/hdlc_fr.c                         | 2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
+ 4 files changed, 2 insertions(+), 9 deletions(-)
 
-
-V2->V3: No change
-
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 2ce675ab40ef..1c450c0727cb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1853,7 +1853,6 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
- 	struct brcmf_cfg80211_vif *vif = ifp->vif;
- 	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
--	u16 chanspec = be16_to_cpu(rxframe->chanspec);
- 	struct brcmu_chan ch;
- 	u8 *mgmt_frame;
- 	u32 mgmt_frame_len;
-@@ -1906,7 +1905,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0);
+diff --git a/drivers/block/amiflop.c b/drivers/block/amiflop.c
+index c4b1cba27178..6680d75bc857 100644
+--- a/drivers/block/amiflop.c
++++ b/drivers/block/amiflop.c
+@@ -323,7 +323,7 @@ static void fd_deselect (int drive)
  
- 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
--		  mgmt_frame_len, e->datalen, chanspec, freq);
-+		  mgmt_frame_len, e->datalen, ch.chspec, freq);
- 
- 	return 0;
  }
+ 
+-static void motor_on_callback(unsigned long nr)
++static void motor_on_callback(unsigned long ignored)
+ {
+ 	if (!(ciaa.pra & DSKRDY) || --on_attempts == 0) {
+ 		complete_all(&motor_on_completion);
+@@ -344,7 +344,6 @@ static int fd_motor_on(int nr)
+ 		fd_select(nr);
+ 
+ 		reinit_completion(&motor_on_completion);
+-		motor_on_timer.data = nr;
+ 		mod_timer(&motor_on_timer, jiffies + HZ/2);
+ 
+ 		on_attempts = 10;
+diff --git a/drivers/net/wan/hdlc_cisco.c b/drivers/net/wan/hdlc_cisco.c
+index c696d42f4502..6c98d85f2773 100644
+--- a/drivers/net/wan/hdlc_cisco.c
++++ b/drivers/net/wan/hdlc_cisco.c
+@@ -276,8 +276,6 @@ static void cisco_timer(unsigned long arg)
+ 	spin_unlock(&st->lock);
+ 
+ 	st->timer.expires = jiffies + st->settings.interval * HZ;
+-	st->timer.function = cisco_timer;
+-	st->timer.data = arg;
+ 	add_timer(&st->timer);
+ }
+ 
+diff --git a/drivers/net/wan/hdlc_fr.c b/drivers/net/wan/hdlc_fr.c
+index de42faca076a..7da2424c28a4 100644
+--- a/drivers/net/wan/hdlc_fr.c
++++ b/drivers/net/wan/hdlc_fr.c
+@@ -644,8 +644,6 @@ static void fr_timer(unsigned long arg)
+ 			state(hdlc)->settings.t391 * HZ;
+ 	}
+ 
+-	state(hdlc)->timer.function = fr_timer;
+-	state(hdlc)->timer.data = arg;
+ 	add_timer(&state(hdlc)->timer);
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 68fd5b3b8b2d..2fca2b017093 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -275,7 +275,7 @@ static void update_scan_time(void)
+ 		last_scanned_shadow[i].time_scan = jiffies;
+ }
+ 
+-static void remove_network_from_shadow(unsigned long arg)
++static void remove_network_from_shadow(unsigned long unused)
+ {
+ 	unsigned long now = jiffies;
+ 	int i, j;
+@@ -296,7 +296,6 @@ static void remove_network_from_shadow(unsigned long arg)
+ 	}
+ 
+ 	if (last_scanned_cnt != 0) {
+-		hAgingTimer.data = arg;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 	}
+ }
+@@ -313,7 +312,6 @@ static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
+ 	int i;
+ 
+ 	if (last_scanned_cnt == 0) {
+-		hAgingTimer.data = (unsigned long)user_void;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 		state = -1;
+ 	} else {
 -- 
-2.14.1.690.gbb1197296e-goog
+2.7.4
