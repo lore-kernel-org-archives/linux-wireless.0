@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36839 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753634AbdHWKJC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2017 06:09:02 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: davem@davemloft.net, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        jon.maloy@ericsson.com, ying.xue@windriver.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH 3/3 v2] net: netlink: constify genl_ops
-Date: Wed, 23 Aug 2017 15:38:43 +0530
-Message-Id: <1503482923-21640-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170823_120945_590739_07A18D84)
+Received: from [217.148.43.144] ([217.148.43.144]:46676 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751040AbdHaPTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 11:19:30 -0400
+Subject: Re: [PATCH 03/30] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-4-ian@mnementh.co.uk>
+ <91172916-24b6-a52a-8ef2-ab891fcce5a0@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <205352a4-9548-e6aa-994c-633391c2e873@mnementh.co.uk> (sfid-20170831_171933_438077_F7783658)
+Date: Thu, 31 Aug 2017 16:19:28 +0100
+MIME-Version: 1.0
+In-Reply-To: <91172916-24b6-a52a-8ef2-ab891fcce5a0@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-genl_ops are not supposed to change at runtime. All functions
-working with genl_ops provided by <net/genetlink.h> work with
-const genl_ops. So mark the non-const structs as const.
+On 30/08/17 19:59, Arend van Spriel wrote:
+>> +static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32
+>> addr,
+>> +                 u8 regsz, void *data)
+> 
+> Thought I mentioned this before, but the indentation should be aligned
+> to opening bracket.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
-Changes in v2:
-             Patch Subject was wrong.
+I checked this locally, and its fine. I suspect its getting mangled
+somewhere along the way.
 
- net/tipc/netlink_compat.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It looks fine in my original email - I see 4 tabs and a space.
 
-diff --git a/net/tipc/netlink_compat.c b/net/tipc/netlink_compat.c
-index 750949d..e48f0b2 100644
---- a/net/tipc/netlink_compat.c
-+++ b/net/tipc/netlink_compat.c
-@@ -1217,7 +1217,7 @@ static int tipc_nl_compat_recv(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
--static struct genl_ops tipc_genl_compat_ops[] = {
-+static const struct genl_ops tipc_genl_compat_ops[] = {
- 	{
- 		.cmd		= TIPC_GENL_CMD,
- 		.doit		= tipc_nl_compat_recv,
--- 
-1.9.1
+-Ian
