@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:46676 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751040AbdHaPTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 11:19:30 -0400
-Subject: Re: [PATCH 03/30] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-4-ian@mnementh.co.uk>
- <91172916-24b6-a52a-8ef2-ab891fcce5a0@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <205352a4-9548-e6aa-994c-633391c2e873@mnementh.co.uk> (sfid-20170831_171933_438077_F7783658)
-Date: Thu, 31 Aug 2017 16:19:28 +0100
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:8851 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750938AbdHaMPs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 08:15:48 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <91172916-24b6-a52a-8ef2-ab891fcce5a0@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Subject: Re: ath10k: activate user space firmware loading again
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170824210641.19595-1-hauke@hauke-m.de>
+References: <20170824210641.19595-1-hauke@hauke-m.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Hauke Mehrtens" <hauke@hauke-m.de>,
+        Michal Kazior <michal.kazior@tieto.com>
+Message-ID: <9a6c90a6d5dd431d8e940f619baf7b0c@euamsexm01a.eu.qualcomm.com> (sfid-20170831_141551_299578_BDA5E62C)
+Date: Thu, 31 Aug 2017 14:15:41 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30/08/17 19:59, Arend van Spriel wrote:
->> +static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32
->> addr,
->> +                 u8 regsz, void *data)
+Hauke Mehrtens <hauke@hauke-m.de> wrote:
+
+> In commit 9f5bcfe93315 ("ath10k: silence firmware file probing
+> warnings") the firmware loading was changed from request_firmware() to
+> request_firmware_direct() to silence some warnings in case it fails.
+> request_firmware_direct() directly searches in the file system only and
+> does not send a hotplug event to user space in case it could not find
+> the firmware directly.
+> In LEDE we use a user space script to extract the calibration data from
+> the flash memory which gets triggered by the hotplug event. This way the
+> firmware gets extracted from some vendor specific partition when the
+> driver requests this firmware. This mechanism does not work any more
+> after this change.
 > 
-> Thought I mentioned this before, but the indentation should be aligned
-> to opening bracket.
+> Fixes: 9f5bcfe93315 ("ath10k: silence firmware file probing warnings")
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-I checked this locally, and its fine. I suspect its getting mangled
-somewhere along the way.
+Patch applied to ath-next branch of ath.git, thanks.
 
-It looks fine in my original email - I see 4 tabs and a space.
+c0cc00f250e1 ath10k: activate user space firmware loading again
 
--Ian
+-- 
+https://patchwork.kernel.org/patch/9920973/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
