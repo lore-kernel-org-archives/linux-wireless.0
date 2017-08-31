@@ -1,83 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:38806 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751040AbdHaPZc (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37642 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750757AbdHaKKg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2017 11:25:32 -0400
-Subject: Re: [PATCH] rtlwifi: refactor code in halbtcoutsrc module
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20170830164602.GA16413@embeddedgus>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <08aeadde-8a44-c49f-bc64-5b91226d4cec@lwfinger.net> (sfid-20170831_172543_379110_B20FCC30)
-Date: Thu, 31 Aug 2017 10:25:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170830164602.GA16413@embeddedgus>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 31 Aug 2017 06:10:36 -0400
+Received: by mail-wm0-f65.google.com with SMTP id x189so4403846wmg.4
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2017 03:10:36 -0700 (PDT)
+From: Simon Dinkin <simondinkin@gmail.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: Simon Dinkin <simon.dinkin@tandemg.com>
+Subject: [PATCH] mac80211: fix incorrect assignment of reassoc value
+Date: Thu, 31 Aug 2017 13:09:36 +0300
+Message-Id: <1504174176-13419-1-git-send-email-simon.dinkin@tandemg.com> (sfid-20170831_121040_077462_AA49702B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/30/2017 11:46 AM, Gustavo A. R. Silva wrote:
-> Function halbtc_get_wifi_rssi always returns rtlpriv->dm.undec_sm_pwdb.
-> So this function can be removed and the value of
-> rtlpriv->dm.undec_sm_pwdb assigned to *s32_tmp directly.
-> 
-> This issue was first reported by Coverity as "identical code for different
-> branches" in function halbtc_get_wifi_rssi.
-> 
-> Addresses-Coverity-ID: 1226793
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
-> This code was reported by Coverity and it was tested by compilation only.
-> Chances are this may be a copy/paste error in function
-> halbtc_get_wifi_rssi. Please, verify.
-> Also, notice this code has been there since 2014.
+this fix minor issue in the log message.
+in ieee80211_rx_mgmt_assoc_resp function, when assigning the
+reassoc value from the mgmt frame control:
+ieee80211_is_reassoc_resp function need to be used, instead of
+ieee80211_is_reassoc_req function.
 
-The value of *s32_tmp is not dependent on the link state, thus this patch is 
-correct, but I request that it be changed. Future developments will modify 
-halbtc_get_wifi_rssi() making it more complicated and not as easily inlined as 
-this patch. In short, if you remove it here, we will have to add it later.
+Signed-off-by: Simon Dinkin <simon.dinkin@tandemg.com>
+---
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-Larrt
-
-> 
->   .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 13 +------------
->   1 file changed, 1 insertion(+), 12 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index c1eacd8..2a47b97 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -373,17 +373,6 @@ u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
->   	return ret_val;
->   }
->   
-> -static s32 halbtc_get_wifi_rssi(struct rtl_priv *rtlpriv)
-> -{
-> -	int undec_sm_pwdb = 0;
-> -
-> -	if (rtlpriv->mac80211.link_state >= MAC80211_LINKED)
-> -		undec_sm_pwdb = rtlpriv->dm.undec_sm_pwdb;
-> -	else /* associated entry pwdb */
-> -		undec_sm_pwdb = rtlpriv->dm.undec_sm_pwdb;
-> -	return undec_sm_pwdb;
-> -}
-> -
->   static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
->   {
->   	struct btc_coexist *btcoexist = (struct btc_coexist *)void_btcoexist;
-> @@ -479,7 +468,7 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
->   		*bool_tmp = false;
->   		break;
->   	case BTC_GET_S4_WIFI_RSSI:
-> -		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
-> +		*s32_tmp = rtlpriv->dm.undec_sm_pwdb;
->   		break;
->   	case BTC_GET_S4_HS_RSSI:
->   		*s32_tmp = 0;
-> 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7be7917..0467f9f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3159,7 +3159,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	if (len < 24 + 6)
+ 		return;
+ 
+-	reassoc = ieee80211_is_reassoc_req(mgmt->frame_control);
++	reassoc = ieee80211_is_reassoc_resp(mgmt->frame_control);
+ 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
+ 	status_code = le16_to_cpu(mgmt->u.assoc_resp.status_code);
+ 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
+-- 
+2.7.4
