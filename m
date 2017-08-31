@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f177.google.com ([209.85.128.177]:37797 "EHLO
-        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751067AbdHUHLo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46328 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750769AbdHaIZg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2017 03:11:44 -0400
-Received: by mail-wr0-f177.google.com with SMTP id z91so89253393wrc.4
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2017 00:11:43 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: kvalo@codeaurora.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-        ext.waldemar.rymarkiewicz@tieto.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Aeolus Yang <aeolus@qti.qualcomm.com>,
-        Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [PATCH 2/2] ath10k: search DT for qcom,ath10k-calibration-variant
-Date: Mon, 21 Aug 2017 09:11:40 +0200
-Message-ID: <3114796.44GtYcDsBs@bentobox> (sfid-20170821_091154_048582_E499CF3D)
-In-Reply-To: <3853747.Q0JJmSnsYM@debian64>
-References: <20170310080615.22958-1-sven.eckelmann@openmesh.com> <20170310080615.22958-2-sven.eckelmann@openmesh.com> <3853747.Q0JJmSnsYM@debian64>
+        Thu, 31 Aug 2017 04:25:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RT2870 failure in kernel 4.12.8
+References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+        <20170831075514.GA12340@redhat.com>
+Date: Thu, 31 Aug 2017 11:25:32 +0300
+In-Reply-To: <20170831075514.GA12340@redhat.com> (Stanislaw Gruszka's message
+        of "Thu, 31 Aug 2017 09:55:15 +0200")
+Message-ID: <87h8wonnyb.fsf@purkki.adurom.net> (sfid-20170831_102541_741193_F473924F)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart12028771.XzEh3oFhZC"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart12028771.XzEh3oFhZC
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-On Freitag, 10. M=E4rz 2017 19:20:54 CEST Christian Lamparter wrote:
-[...]
-> @Aeolus Yang / Kalle / QCA: Would it be possible to assign a variant stri=
-ng to
-> the Asus RT-AC58U?
->=20
-> I've attached the necessary bmi-board-id=3D16 and bmi-board-id=3D17 board=
-=20
-> files to this mail as well. So, all that needs to be done is to add
-> them to the board-2.bin on your codeaurora / ath10k-firmware project.
->=20
-> Kalle: Can you please update the board-2.bin for the IPQ40XX on your
-> ath10k-firmware project on github?
->=20
-> https://source.codeaurora.org/quic/qsdk/oss/firmware/ath10k-firmware/plai=
-n/ath10k/QCA40XX/hw1.0/board-2.bin
-> It looks like this board-2.bin has support for a few more boards.
+> On Wed, Aug 30, 2017 at 12:03:06PM -0500, Larry Finger wrote:
+>> Stanislaw and Helmut,
+>> 
+>> In a bug report at https://bugzilla.suse.com/show_bug.cgi?id=1055826, the OP
+>> reports that his RT3572 fails to work after an upgrade from the openSUSE
+>> Tumbleweed kernel 4.12.7 to 4.12.8. I checked the kernel configuration and
+>> did not see any problems.
+>> 
+>> Are you aware of anyone reporting problems with rt2800usb in 4.12.8 kernels?
+>
+> I think it is the issue addressed by this 4.12 patch:
+> https://marc.info/?l=linux-wireless&m=150366111408179&w=2 
+>
+> Patch for 4.13+ kernels is here:
+> https://marc.info/?l=linux-wireless&m=150367345912061&w=2
 
-Any updates on that?
+And the commit is here:
 
-Kind regards,
-	Sven
---nextPart12028771.XzEh3oFhZC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=83ec489193894e52bd395eec470f4f7c4286d4a5
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlmah6wACgkQXYcKB8Em
-e0a5fA/7BWyQh0lltWysUHy37ocXfu6fLIzEop3yiJAx1FMPVVYbrDR3dMbYLvE8
-02RPipu5O7W1+VV5ugnyGUJ/DaJCrN5SngrWrjGT7GGZX5Kkpk3fqb1/UArpTAlD
-xb5/ubbwK59rXUqsa1AkOC+UP1ltm9HcPkVVROA4FcMcjZXvCVKOfLd+spW5uGXc
-5o5mPHG7pTpfCR+qIcOrjM72vT5mdyvZtVg5UTb/2Tuq2qyLWEcCs/H0/NXWzp9x
-O6R9L0cr68JuSoUhee+20SZ8KvsNAliAEqskvlzD+5GFyNTNNxOdSo5NaPeTUs1n
-Ik+X3Ie3hH1qTUrf7ue4hpvCmvyfg5wJZnF3hoYJLCI9y0HXRmEgjAoBpCD0ENP5
-Nrjg03ETJ2sDCDuG3lSAtcEVB7qerowkd4RRk2tObTXshoPFLAGXUrevMnS6qouj
-mAdDhpY6/VZ8MhiDFTcYg5rf5qxY553Q19V65GVKwGXJNUN+iO2H/P4SFeKutVpv
-xFobADPor9NXL+rWwHrIlqdRnZFu+byE0D/o9WhO/p/MbfDSXJs9s6XuToNkBK0d
-hpqKbkFfMVNwvDRtW8zo7Toa4pQrygyoLga1UgRwDSoEQznnXOFtcYJoWjGaxuBT
-Bn5iyQMD4r6nYHoVoqkyqWDHTBh+p2fKrsyFiarjluiz821jnRY=
-=NqWy
------END PGP SIGNATURE-----
-
---nextPart12028771.XzEh3oFhZC--
+-- 
+Kalle Valo
