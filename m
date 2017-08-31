@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34563 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752700AbdHHQGh (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:56546 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751205AbdHaT0q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:06:37 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        Thu, 31 Aug 2017 15:26:46 -0400
+Date: Thu, 31 Aug 2017 12:26:45 -0700 (PDT)
+Message-Id: <20170831.122645.872320547726000124.davem@davemloft.net> (sfid-20170831_212707_146057_42500479)
+To: pavel@ucw.cz
+Cc: kvalo@codeaurora.org, torvalds@linux-foundation.org,
+        xiyou.wangcong@gmail.com, akpm@linux-foundation.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 34/35] wireless: zydas: zd1201: constify usb_device_id
-Date: Tue,  8 Aug 2017 21:36:21 +0530
-Message-Id: <1502208381-12497-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20170808_180717_410730_695A0D1B)
+Subject: Re: [PATCH] wl1251: add a missing spin_lock_init()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170831185718.GA31245@amd>
+References: <20170831144743.GA21261@amd>
+        <20170831.103305.1809212990680774811.davem@davemloft.net>
+        <20170831185718.GA31245@amd>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_device_id are not supposed to change at runtime. All functions
-working with usb_device_id provided by <linux/usb.h> work with
-const usb_device_id. So mark the non-const structs as const.
+From: Pavel Machek <pavel@ucw.cz>
+Date: Thu, 31 Aug 2017 20:57:19 +0200
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/net/wireless/zydas/zd1201.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi!
+> 
+>> From: Pavel Machek <pavel@ucw.cz>
+>> Date: Thu, 31 Aug 2017 16:47:43 +0200
+>> 
+>> > Dave, Linus -- can you still take the patch?
+>> 
+>> Pavel, please do not bypass maintainers like this.
+>> 
+>> It's really rude, and if you do things like that instead of
+>> trying to work properly with us, your relationship with
+>> these maintainers will suffer in the long term.
+> 
+> Do you mean I'm being rude to Kalle, or rude to you?
 
-diff --git a/drivers/net/wireless/zydas/zd1201.c b/drivers/net/wireless/zydas/zd1201.c
-index 7f586d7..581e857 100644
---- a/drivers/net/wireless/zydas/zd1201.c
-+++ b/drivers/net/wireless/zydas/zd1201.c
-@@ -25,7 +25,7 @@
- #include <linux/firmware.h>
- #include "zd1201.h"
- 
--static struct usb_device_id zd1201_table[] = {
-+static const struct usb_device_id zd1201_table[] = {
- 	{USB_DEVICE(0x0586, 0x3400)}, /* Peabird Wireless USB Adapter */
- 	{USB_DEVICE(0x0ace, 0x1201)}, /* ZyDAS ZD1201 Wireless USB Adapter */
- 	{USB_DEVICE(0x050d, 0x6051)}, /* Belkin F5D6051 usb  adapter */
--- 
-2.7.4
+He said "to David", not "David and Linus".
