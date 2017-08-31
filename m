@@ -1,159 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:49050 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751872AbdHCTIh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 15:08:37 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v4 05/10] wil6210: add statistics for suspend time
-Date: Thu,  3 Aug 2017 22:08:17 +0300
-Message-Id: <1501787302-22885-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170803_210840_420444_1016A21B)
-In-Reply-To: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1501787302-22885-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52952 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750733AbdHaHzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 03:55:17 -0400
+Date: Thu, 31 Aug 2017 09:55:15 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RT2870 failure in kernel 4.12.8
+Message-ID: <20170831075514.GA12340@redhat.com> (sfid-20170831_095520_786063_BEC3116A)
+References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add statistics for total, min and max suspend time, that
-calculates the time the 11ad device was in suspend.
-Those statistics will help to estimate the power impact
-of d3hot feature.
+On Wed, Aug 30, 2017 at 12:03:06PM -0500, Larry Finger wrote:
+> Stanislaw and Helmut,
+> 
+> In a bug report at https://bugzilla.suse.com/show_bug.cgi?id=1055826, the OP
+> reports that his RT3572 fails to work after an upgrade from the openSUSE
+> Tumbleweed kernel 4.12.7 to 4.12.8. I checked the kernel configuration and
+> did not see any problems.
+> 
+> Are you aware of anyone reporting problems with rt2800usb in 4.12.8 kernels?
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 +++++++++++++++--
- drivers/net/wireless/ath/wil6210/main.c    |  2 ++
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 +++++
- 4 files changed, 40 insertions(+), 4 deletions(-)
+I think it is the issue addressed by this 4.12 patch:
+https://marc.info/?l=linux-wireless&m=150366111408179&w=2 
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 21b6611..d4e8865 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1617,6 +1617,8 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
-+	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1628,18 +1630,27 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
-+	unsigned long long stats_collection_time =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n"
-+		     "total suspend time:%lld min suspend time:%lld\n"
-+		     "max suspend time:%lld stats collection time: %lld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device);
-+		     wil->suspend_stats.rejected_by_device,
-+		     wil->suspend_stats.total_suspend_time,
-+		     wil->suspend_stats.min_suspend_time,
-+		     wil->suspend_stats.max_suspend_time,
-+		     stats_collection_time);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1795,6 +1806,8 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
-+	wil->suspend_stats.collection_start = ktime_get();
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index daf944a..8968c2c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -578,6 +578,8 @@ int wil_priv_init(struct wil6210_priv *wil)
- 
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
-+	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
-+	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 4548829..820ed17 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -300,6 +300,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
-+	if (!rc)
-+		wil->suspend_stats.suspend_start_time = ktime_get();
-+
- 	return rc;
- }
- 
-@@ -309,6 +312,7 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	bool keep_radio_on = ndev->flags & IFF_UP &&
- 			     wil->keep_radio_on_during_sleep;
-+	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -326,8 +330,20 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
-+	if (rc)
-+		goto out;
-+
-+	suspend_time_usec =
-+		ktime_to_us(ktime_sub(ktime_get(),
-+				      wil->suspend_stats.suspend_start_time));
-+	wil->suspend_stats.total_suspend_time += suspend_time_usec;
-+	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
-+		wil->suspend_stats.min_suspend_time = suspend_time_usec;
-+	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
-+		wil->suspend_stats.max_suspend_time = suspend_time_usec;
-+
- out:
--	wil_dbg_pm(wil, "resume: %s => %d\n",
--		   is_runtime ? "runtime" : "system", rc);
-+	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
-+		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
- 	return rc;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ac32284..724ad59 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -90,6 +90,11 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
-+	unsigned long long total_suspend_time;
-+	unsigned long long min_suspend_time;
-+	unsigned long long max_suspend_time;
-+	ktime_t collection_start;
-+	ktime_t suspend_start_time;
- };
- 
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
--- 
-1.9.1
+Patch for 4.13+ kernels is here:
+https://marc.info/?l=linux-wireless&m=150367345912061&w=2
+
+Thanks
+Stanislaw
