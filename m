@@ -1,192 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44672 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751695AbdHRPxE (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4950 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750895AbdHaMU5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:53:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 18 Aug 2017 18:49:20 +0300
-Message-Id: <20170818154922.2904-23-luca@coelho.fi> (sfid-20170818_175307_252294_57BF5A73)
-In-Reply-To: <20170818154922.2904-1-luca@coelho.fi>
-References: <20170818154922.2904-1-luca@coelho.fi>
-Subject: [PATCH 22/24] iwlwifi: mvm: remove useless argument in iwl_nvm_init()
+        Thu, 31 Aug 2017 08:20:57 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/7] wil6210: ratelimit errors in TX/RX interrupts
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1503947927-18877-2-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1503947927-18877-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Lior David <qca_liord@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <14f9ca73ace149dda4d2f0ca465946b8@euamsexm01a.eu.qualcomm.com> (sfid-20170831_142100_757528_112D4095)
+Date: Thu, 31 Aug 2017 14:20:49 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
 
-We always call iwl_nvm_init() with read_nvm_from_nic == true, so this
-argument is useless.  Remove it.
+> Sometimes there is a firmware crash but the hardware
+> is not fully stopped and continue to send TX/RX interrupts.
+> This can cause an overload of messages which can bring the
+> host down. Add ratelimit to these error messages to fix this.
+> 
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  |  5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 98 ++++++++++++++--------------
- 3 files changed, 51 insertions(+), 54 deletions(-)
+7 patches applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 90ae50f7768a..3d65ab49a8a6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -388,7 +388,7 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 	}
- 
- 	if (IWL_MVM_PARSE_NVM && read_nvm) {
--		ret = iwl_nvm_init(mvm, true);
-+		ret = iwl_nvm_init(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
- 			goto error;
-@@ -486,8 +486,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 
- 	/* Read the NVM only at driver load time, no need to do this twice */
- 	if (read_nvm) {
--		/* Read nvm */
--		ret = iwl_nvm_init(mvm, true);
-+		ret = iwl_nvm_init(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
- 			goto remove_notif;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 74fdd33fd9fb..83303bac0e4b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1373,7 +1373,7 @@ int iwl_mvm_request_statistics(struct iwl_mvm *mvm, bool clear);
- void iwl_mvm_accu_radio_stats(struct iwl_mvm *mvm);
- 
- /* NVM */
--int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic);
-+int iwl_nvm_init(struct iwl_mvm *mvm);
- int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm);
- int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index 08020386c3d4..5a6916f0b9ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -546,7 +546,7 @@ int iwl_mvm_load_nvm_to_nic(struct iwl_mvm *mvm)
- 	return ret;
- }
- 
--int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
-+int iwl_nvm_init(struct iwl_mvm *mvm)
- {
- 	int ret, section;
- 	u32 size_read = 0;
-@@ -557,63 +557,61 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
- 		return -EINVAL;
- 
- 	/* load NVM values from nic */
--	if (read_nvm_from_nic) {
--		/* Read From FW NVM */
--		IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from NVM\n");
--
--		nvm_buffer = kmalloc(mvm->cfg->base_params->eeprom_size,
--				     GFP_KERNEL);
--		if (!nvm_buffer)
--			return -ENOMEM;
--		for (section = 0; section < NVM_MAX_NUM_SECTIONS; section++) {
--			/* we override the constness for initial read */
--			ret = iwl_nvm_read_section(mvm, section, nvm_buffer,
--						   size_read);
--			if (ret < 0)
--				continue;
--			size_read += ret;
--			temp = kmemdup(nvm_buffer, ret, GFP_KERNEL);
--			if (!temp) {
--				ret = -ENOMEM;
--				break;
--			}
-+	/* Read From FW NVM */
-+	IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from NVM\n");
-+
-+	nvm_buffer = kmalloc(mvm->cfg->base_params->eeprom_size,
-+			     GFP_KERNEL);
-+	if (!nvm_buffer)
-+		return -ENOMEM;
-+	for (section = 0; section < NVM_MAX_NUM_SECTIONS; section++) {
-+		/* we override the constness for initial read */
-+		ret = iwl_nvm_read_section(mvm, section, nvm_buffer,
-+					   size_read);
-+		if (ret < 0)
-+			continue;
-+		size_read += ret;
-+		temp = kmemdup(nvm_buffer, ret, GFP_KERNEL);
-+		if (!temp) {
-+			ret = -ENOMEM;
-+			break;
-+		}
- 
--			iwl_mvm_nvm_fixups(mvm, section, temp, ret);
-+		iwl_mvm_nvm_fixups(mvm, section, temp, ret);
- 
--			mvm->nvm_sections[section].data = temp;
--			mvm->nvm_sections[section].length = ret;
-+		mvm->nvm_sections[section].data = temp;
-+		mvm->nvm_sections[section].length = ret;
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
--			switch (section) {
--			case NVM_SECTION_TYPE_SW:
--				mvm->nvm_sw_blob.data = temp;
--				mvm->nvm_sw_blob.size  = ret;
--				break;
--			case NVM_SECTION_TYPE_CALIBRATION:
--				mvm->nvm_calib_blob.data = temp;
--				mvm->nvm_calib_blob.size  = ret;
--				break;
--			case NVM_SECTION_TYPE_PRODUCTION:
--				mvm->nvm_prod_blob.data = temp;
--				mvm->nvm_prod_blob.size  = ret;
--				break;
--			case NVM_SECTION_TYPE_PHY_SKU:
--				mvm->nvm_phy_sku_blob.data = temp;
--				mvm->nvm_phy_sku_blob.size  = ret;
-+		switch (section) {
-+		case NVM_SECTION_TYPE_SW:
-+			mvm->nvm_sw_blob.data = temp;
-+			mvm->nvm_sw_blob.size  = ret;
-+			break;
-+		case NVM_SECTION_TYPE_CALIBRATION:
-+			mvm->nvm_calib_blob.data = temp;
-+			mvm->nvm_calib_blob.size  = ret;
-+			break;
-+		case NVM_SECTION_TYPE_PRODUCTION:
-+			mvm->nvm_prod_blob.data = temp;
-+			mvm->nvm_prod_blob.size  = ret;
-+			break;
-+		case NVM_SECTION_TYPE_PHY_SKU:
-+			mvm->nvm_phy_sku_blob.data = temp;
-+			mvm->nvm_phy_sku_blob.size  = ret;
-+			break;
-+		default:
-+			if (section == mvm->cfg->nvm_hw_section_num) {
-+				mvm->nvm_hw_blob.data = temp;
-+				mvm->nvm_hw_blob.size = ret;
- 				break;
--			default:
--				if (section == mvm->cfg->nvm_hw_section_num) {
--					mvm->nvm_hw_blob.data = temp;
--					mvm->nvm_hw_blob.size = ret;
--					break;
--				}
- 			}
--#endif
- 		}
--		if (!size_read)
--			IWL_ERR(mvm, "OTP is blank\n");
--		kfree(nvm_buffer);
-+#endif
- 	}
-+	if (!size_read)
-+		IWL_ERR(mvm, "OTP is blank\n");
-+	kfree(nvm_buffer);
- 
- 	/* Only if PNVM selected in the mod param - load external NVM  */
- 	if (mvm->nvm_file_name) {
+40cbd88be702 wil6210: ratelimit errors in TX/RX interrupts
+5f591dac9f20 wil6210: make debugfs compilation optional
+761f8e4d463e wil6210: align to latest auto generated wmi.h
+1490846d256a wil6210: move pre-FW configuration to separate function
+7086d861753b wil6210: clear PAL_UNIT_ICR part of device reset
+d83ad4c4fd78 wil6210: increase connect timeout
+69fecf599f48 wil6210: ensure P2P device is stopped before removing interface
+
 -- 
-2.14.1
+https://patchwork.kernel.org/patch/9926041/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
