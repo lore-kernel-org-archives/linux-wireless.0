@@ -1,112 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2655 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751855AbdHOGMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2017 02:12:53 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "igor.mitsyanko.os@quantenna.com" <igor.mitsyanko.os@quantenna.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "avinashp@quantenna.com" <avinashp@quantenna.com>,
-        "sergey.matyukevich.os@quantenna.com"
-        <sergey.matyukevich.os@quantenna.com>
-Subject: Re: [PATCH] nl80211: add an option to allow MFP without requiring it
-Date: Tue, 15 Aug 2017 06:12:42 +0000
-Message-ID: <1502777560.8162.3.camel@intel.com> (sfid-20170815_081258_042439_158C2B2B)
-References: <20170814134911.20869-1-emmanuel.grumbach@intel.com>
-         <a35aea64-b391-2719-c8cb-92ef9c9288c7@broadcom.com>
-         <1723b617-2272-330e-958c-bb988aa504d5@quantenna.com>
-         <1502741597.8162.1.camel@intel.com>
-         <ac8bfacb-9b2c-c3e5-12df-a5f7b4711bce@quantenna.com>
-In-Reply-To: <ac8bfacb-9b2c-c3e5-12df-a5f7b4711bce@quantenna.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from shards.monkeyblade.net ([184.105.139.130]:54420 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751622AbdHaRdH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 13:33:07 -0400
+Date: Thu, 31 Aug 2017 10:33:05 -0700 (PDT)
+Message-Id: <20170831.103305.1809212990680774811.davem@davemloft.net> (sfid-20170831_193323_517071_C7977C80)
+To: pavel@ucw.cz
+Cc: kvalo@codeaurora.org, torvalds@linux-foundation.org,
+        xiyou.wangcong@gmail.com, akpm@linux-foundation.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wl1251: add a missing spin_lock_init()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170831144743.GA21261@amd>
+References: <20170831065204.GA17812@amd>
+        <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com>
+        <20170831144743.GA21261@amd>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE3LTA4LTE0IGF0IDEzOjM2IC0wNzAwLCBJZ29yIE1pdHN5YW5rbyB3cm90ZToN
-Cj4gT24gMDgvMTQvMjAxNyAwMToxMyBQTSwgR3J1bWJhY2gsIEVtbWFudWVsIHdyb3RlOg0KPiA+
-ID4gSXQgaXMga2luZCBvZiBub3QgY2xlYXIgcmlnaHQgbm93IGZvciBkcml2ZXJzIHdoZXJlIHRv
-IGdldA0KPiA+ID4gaW5mb3JtYXRpb24gZnJvbToNCj4gPiA+IC0gTkwgYXR0cmlidXRlcyBwYXNz
-ZWQgZnJvbSB1c2Vyc3BhY2UgYW5kIGZvcndhcmRlZCB0byBhIGRyaXZlcg0KPiA+IA0KPiA+IFNp
-bmNlIHRob3NlIGV4aXN0LCBpdCBzZWVtcyB0byBtYWtlIG1vcmUgc2Vuc2UgdG8gbWUgdG8gdXNl
-IHRob3NlDQo+ID4gcmF0aGVyIHRoYW4gYW55IGluLWRyaXZlciBkZWNpZGVkIHBvbGljeS4gVXN1
-YWxseSwgZGVjaWRpbmcgdXBvbg0KPiA+IHBvbGljaWVzIGZyb20gbG93ZXIgbGV2ZWxzIGlzIGZy
-b3duZWQgdXBvbiBJJ2Qgc2F5Lg0KPiANCj4gSSBhZ3JlZSwgd2hhdCBJIG1lYW4gaXMgdGhhdCBk
-cml2ZXJzIHNob3VsZCBrbm93IHdoZXJlIHRvIHRha2UgdGhpc8KgDQo+IGluZm9ybWF0aW9uIGZy
-b20sIGlmIHRoZXJlIGFyZSBtdWx0aXBsZSBzb3VyY2VzLg0KPiANCj4gQW4gZXhhbXBsZSBhcmUg
-SFQvVkhUIGNhcGFiaWxpdGllcyBmb3Igc3RhcnRfYXAgY29tbWFuZDogdGhleSBjYW4gYmXCoA0K
-PiBwYXJzZWQgZGlyZWN0bHkgYnkgZHJpdmVycyBieSBsb29raW5nIGF0IGJlYWNvbidzIElFcyBp
-bsKgDQo+ICJjZmc4MDIxMV9hcF9zZXR0aW5ncyIuIEF0IHRoZSBzYW1lIHRpbWUgdGhvc2UgYXJl
-IGFsc28gcGFyc2VkIGJ5wqANCj4gbmw4MDIxMSB3aGljaCBmaWxscyBjZmc4MDIxMV9hcF9zZXR0
-aW5nczo6aHRfY2FwLMKgDQo+IGNmZzgwMjExX2FwX3NldHRpbmdzOjp2aHRfY2FwLg0KPiBXaHkg
-SFQvVkhUIGNhcHMgYXJlIG5vdCBwYXNzZWQgZGlyZWN0bHkgZnJvbSB1c2VzcGFjZSBhcyBvbmUg
-b2YgTkzCoA0KPiBhdHRyaWJ1dGVzPyBJIGd1ZXNzIGJlY2F1c2UgdGhlcmUgaXMgbm90IG11Y2gg
-cG9pbnQgaW4gaXQgc2luY2XCoA0KPiB1c2Vyc3BhY2UgcGFzc2VzIGVudGlyZSBJRSBzZXQgYW55
-d2F5LCB3aGljaCBjYW4gYmUgdXNlZCBieSBsb3dlcg0KPiBsZXZlbHMuDQoNCkkgdW5kZXJzdGFu
-ZCB5b3VyIHBvaW50IGFib3V0IHRoZSBpbmZvcm1hdGlvbiBiZWluZyBjb252ZXllZCB0byB0aGUN
-Cmtlcm5lbCB0aHJvdWdoIG11bHRpcGxlIHBpcGVzLiBCdXQgbm90ZSB0aGF0IGZvciBIVC9WSFQg
-aW4gQVAgbW9kZSwgdGhlDQpkZWNpc2lvbiBtYWtlciBpcyB0aGUgdXNlciBzcGFjZS4gVXNlciBz
-cGFjZSBjYW4gZ2V0IGl0IGZyb20gYSB0aGUgdXNlcg0KaGltc2VsZiAoaG9zdGFwZC5jb25mKSBv
-ciBmcm9tIGludGVybmFsIGtub3dsZWRnZSAoT0JTUyBwYXJhbWV0ZXJzIGluDQpBUCBtb2RlIHRo
-YXQgYXJlIGhhbmRsZWQgaW50ZXJuYWxseSBpbiBob3N0YXBkKSwgYnV0IGl0IGVzc2VudGlhbGx5
-DQpkb2Vzbid0IG1hdHRlci4gVGhlIGtlcm5lbCBkb2VzIG5vdGhpbmcgZWxzZSBidXQgaW1wbGVt
-ZW50aW5nIHRoZQ0KcG9saWN5IGRlY2lkZWQgYnkgdGhlIHVzZXIgc3BhY2UuDQoNCldoZW4geW91
-IHN0YXJ0IHRoaW5raW5nIGFib3V0IGZpcm13YXJlcyB3aXRoIG1vcmUgbG9naWMsIHRoZSBwaWN0
-dXJlIGlzDQpkaWZmZXJlbnQuIFdoZW4gSm91bmkgYWRkZWQgTUZQIHN1cHBvcnQgaW4gdGhlIGtl
-cm5lbCBpbiAyMDA5IGhlIHdyb3RlOg0KDQogIFNpbmNlIHdlIGFyZSBjdXJyZW50bHkgdXNpbmcg
-bmw4MDIxMSBmb3IgTUZQIG9ubHkgd2l0aCBkcml2ZXJzIHRoYXQNCsKgwqB1c2UgdXNlciBzcGFj
-ZSBTTUUsIG9ubHkgTUZQIGRpc2FibGVkIGFuZCByZXF1aXJlZCB2YWx1ZXMgYXJlDQrCoMKgdXNl
-ZC4gSG93ZXZlciwgdGhlIE5MODAyMTFfQVRUUl9VU0VfTUZQIGF0dHJpYnV0ZSBpcyBhbiBlbnVt
-IHRoYXQgY2FuDQrCoMKgYmUgZXh0ZW5kZWQgd2l0aCBNRlAgb3B0aW9uYWwgaW4gdGhlIGZ1dHVy
-ZSwgaWYgdGhhdCBpcyBuZWVkZWQgd2l0aA0KwqDCoHNvbWUgZHJpdmVycyAoZS5nLiwgaWYgdGhl
-IFJTTiBJRSBpcyBnZW5lcmF0ZWQgYnkgdGhlIGRyaXZlcikuDQoNCihTZWUgY29tbWl0IGRjNjM4
-MmNlZDA3ZDZiYWQ2MWQwYjU5MWZiMTJhYjVkYTdjYTYzMmMpLg0KDQpIZXJlIGlzIHRoZSB0aGlu
-ZzogdW50aWwgbm93LCBNRlAgd2FzIHN1cHBvcnRlZCBvbmx5IGZvciBkcml2ZXJzIHRoYXQNCnVz
-ZSB1c2VyIHNwYWNlIFNNRSwgbWVhbmluZyBkcml2ZXJzIHRoYXQgbGV0IHRoZSB1c2VyIHNwYWNl
-IGRlY2lkZQ0KYWJvdXQgcHJldHR5IG11Y2ggZXZlcnl0aGluZzogaXQgc2VuZHMgdGhlIEFzc29j
-IFJlcXVlc3Qgd2hpY2ggbWVhbnMNCnRoYXQgaXQga25vd3MgX2V2ZXJ5dGhpbmdfIGFib3V0IHRo
-ZSBBUCBpdCBjb25uZWN0cyB0by4gV2hlbiB5b3UgZG9uJ3QNCnVzZSB1c2VyIHNwYWNlIFNNRSAo
-bWVhbmluZyB5b3UgdXNlIE5MODAyMTFfQ01EX0NPTk5FQ1QgYW5kIG5vdA0KTkw4MDIxMV9DTURf
-e0FVVEhFTlRJQ0FURSxBU1NPQ0lBVEV9KSwgdGhlIHVzZXIgc3BhY2UgbWF5IG5vdCBrbm93IG11
-Y2gNCmFib3V0IHRoZSBBUCBpbmNsdWRpbmcgbm90IGl0cyBSU04gY2Fwcy4gRXNzZW50aWFsbHks
-IHRoZSB1c2VyIHNwYWNlIGlzDQpzZW5kaW5nIGEgc3VwcGxpY2FudCdzIG5ldHdvcmsgYmxvY2sg
-dG8gdGhlIGtlcm5lbCBhbmQgYXNrcyB0aGUga2VybmVsDQp0byBjb25uZWN0IHRvIHRoYXQgdGhp
-bmcuIFRoZSB1c2VyIHNwYWNlIG1heSBub3QgZXZlbiBrbm93IHRoYXQgdGhpcw0KbmV0d29yayBp
-cyBpbiB0aGUgdmljaW5pdHkgKHdoaWNoIGlzIHdoYXQgYXBfc2Nhbj0yIGluIHRoZSB3cGFfcyBt
-ZWFucw0KSUlVQykuDQoNClNvIHdoYXQgSSBhbSB0cnlpbmcgdG8gZG8gaGVyZSB0byBzaGlmdCB0
-aGUgcG93ZXIgb2YgdGhlIGRlY2lzaW9uIGZyb20NCnRoZSB1c2VyIHNwYWNlIHRvIHRoZSBrZXJu
-ZWwgaW4gY2VydGFpbiBjYXNlcywgb3IgYXQgbGVhc3QgdG8gYWxsb3cgdGhlDQp1c2VyIHNwYWNl
-IHRvIHRlbGwgdGhlIGtlcm5lbCBob3cgdG8gYmVoYXZlIGluIHNldmVyYWwgc2NlbmFyaW9zIHNp
-bmNlDQp0aGUgdXNlciBzcGFjZSBkb2Vzbid0IGhhdmUgYWxsIHRoZSBpbmZvcm1hdGlvbiBpbiBo
-YW5kLg0KDQpOTDgwMjExX01GUF9OTyBpcyBjbGVhcjogeW91IGNhbid0IGFzc29jaWF0ZSB0byBh
-biBBUCB0aGF0IGhhcyBNRlBDPTENCk1GUFI9MQ0KTkw4MDIxMV9NRlBfUkVRVUlSRUQgaXMgY2xl
-YXI6IHlvdSBjYW4ndCBhc3NvY2lhdGUgdG8gYW4gQVAgdGhhdCBoYXMNCk1GUEM9MCBNRlBSPTAN
-Cg0KVGhpcyBpcyBwb3NzaWJsZSB3aGVuIHRoZSB1c2VyIHNwYWNlIGtub3dzIGhvdyB0aGUgUlNO
-IElFIG9mIHRoZSBBUA0KbG9va3MgbGlrZS4gSWYgaXQgZG9lc24ndCwgdGhlbiBpdCdkIG1lYW4g
-dGhhdCB0aGUgdXNlciBzcGFjZSBoYXMgbm8NCndheSB0byBzYXk6IEkgd2FudCB0byB1c2UgTUZQ
-IGlmIHJlcXVpcmVkIGJ5IHRoZSBBUCwgYnV0IGRvbid0IGNhcmUgYWxsDQp0aGF0IG11Y2ggaWYg
-dGhlIEFQIGRvZXNuJ3Qgc3VwcG9ydCBpdCwgYW5kIHRoaXMgaXMgZXhhY3RseSB3aGF0IHRoZQ0K
-Tkw4MDIxMV9NRlBfT1BUSU9OQUwgY29tZXMgdG8gYWRkLg0KDQpJIHdyb3RlIHRoaXMgdG8gZXhw
-bGFpbiB0aGF0IEkgY2FuJ3QgdXNlIHRoZSBJRXMgZm9yIHRoaXMgc2luY2UgSSBhbQ0KYWRkaW5n
-IE5MODAyMTFfTUZQX09QVElPTkFMIHByZWNpc2VseSBiZWNhdXNlIHRoZSB1c2VyIHNwYWNlIGRv
-ZXNuJ3QNCmhhdmUgdGhlIElFcy4NCg0KUmVnYXJkaW5nIHRoZSBiYWNrd2FyZCBjb21wYXRpYmls
-aXR5LCB0aGlzIGlzIGEgcmVhbCBwcm9ibGVtLiBJIGFtIG5vdA0KZXZlbiBzdXJlIHRoYXQgYWRk
-aW5nIGEgZmVhdHVyZSBmbGFnIHdpbGwgaGVscCBzaW5jZSBpbiBjYXNlIHdwYV9zDQpkb2Vzbid0
-IGtub3cgdGhlIElFcyBvZiB0aGUgQVAsIGl0IGNhbid0IHJlYWxseSBrbm93IHdoYXQgTUZQDQpw
-YXJhbWV0ZXJzIHRvIHNlbmQgKFJFUSBvciBOTyBhc3N1bWluZyB3cGFfcyBkZXRlY3RlZCB0aGF0
-IHRoZSBrZXJuZWwNCndvdWxkbid0IHN1cHBvcnQgT1BUSU9OQUwpLiBOb3RlIHRoYXQgYWxsIHRo
-aXMgaXMgcmVhbGx5IHJlbGV2YW50IG9ubHkNCmZvciBhcF9zY2FuPTIgY29uZmlndXJhdGlvbiBp
-biB3cGFfcyB3aGljaCBpcyBub3QgcmVhbGx5IHN1cHBvcnRlZCB3ZWxsDQppbiBubDgwMjExIGRy
-aXZlciByaWdodCBub3cgKGF0IGxlYXN0IGJhc2VkIG9uIHRoZSBjb21tZW50cyBpbiB0aGUNCndw
-YV9zIGNvZGUpLiBBc2tpbmcgd2h5IEkgYW0gYWRkaW5nIHRoaXMgaW4gbmw4MDIxMSBrZXJuZWwg
-c2lkZSBpZiB0aGUNCm9ubHkgdXNlciB3b3VsZCBiZSB3cGFfcyB3aXRoIG5sODAyMTEgYW5kIGFw
-X3NjYW49MiAod2hpY2ggaXMNCnJlcG9ydGVkbHkgbm90IHJlYWxseSB3b3JraW5nKSBpcyBhIGZh
-aXIgcXVlc3Rpb24gOikNCkkgYW0gYmFzaWNhbGx5IHdvcmtpbmcgaW4gdGhlIGNvbnRleHQgb2Yg
-YSBmaXJtd2FyZSB0aGF0IGRvZXMgdGhlIHNjYW4NCmJlZm9yZSBjb25uZWN0IGludGVybmFsbHku
-DQoNCj4gDQo+IA0KPiA+IA0KPiA+ID4gLSBJRXMgcGFzc2VkIGZyb20gdXNlcnNwYWNlLCBwYXJz
-ZWQgYnkgbmw4MDIxMSBhbmQgZm9yd2FyZGVkIHRvIGENCj4gPiA+IGRyaXZlcg0KPiA+ID4gLSBJ
-RXMgdGhhdCBhcmUgcGFzc2VkIGZyb20gdXNlcnNwYWNlIGFuZCBwYXJzZWQgYnkgZHJpdmVycw0K
-PiA+ID4gZGlyZWN0bHkNCj4gPiA+IA0KPiA+ID4gPiANCj4gPiA+ID4gVGhhbmtzLA0KPiA+ID4g
-PiBBcmVuZA0KPiA+ID4gDQo+ID4gPiANCj4g
+From: Pavel Machek <pavel@ucw.cz>
+Date: Thu, 31 Aug 2017 16:47:43 +0200
+
+> Dave, Linus -- can you still take the patch?
+
+Pavel, please do not bypass maintainers like this.
+
+It's really rude, and if you do things like that instead of
+trying to work properly with us, your relationship with
+these maintainers will suffer in the long term.
+
+Thank you.
