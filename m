@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35750 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751133AbdHCJME (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2017 05:12:04 -0400
-Date: Thu, 3 Aug 2017 11:10:49 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: mike@hellotwist.com
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: Fix MMIC countermeasures.
-Message-ID: <20170803091048.GA2769@redhat.com> (sfid-20170803_111207_583109_D1E225EA)
-References: <CAKXXJEw72EYHJpdwoWhudmOmFF=w+u_JG3vrp=-TCfR3zhANZw@mail.gmail.com>
- <20170802070117.GA2790@redhat.com>
- <1501676470.11126.2.camel@sipsolutions.net>
- <87h8xqrso6.fsf@kamboji.qca.qualcomm.com>
- <CAKXXJEwT0EK=dmswxP90WNJQcSM1sUAE3E46AzZ8Pd9a2XXtxg@mail.gmail.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:46827 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbdHaMOr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 08:14:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKXXJEwT0EK=dmswxP90WNJQcSM1sUAE3E46AzZ8Pd9a2XXtxg@mail.gmail.com>
+Subject: Re: [v2] ath10k: sdio: remove unused struct member
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1503516778-5835-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1503516778-5835-1-git-send-email-erik.stromdahl@gmail.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+        "Erik Stromdahl" <erik.stromdahl@gmail.com>
+Message-ID: <6796e78b3c3c42aba8799767cf21694f@euamsexm01a.eu.qualcomm.com> (sfid-20170831_141450_254077_BE8D3E18)
+Date: Thu, 31 Aug 2017 14:14:40 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 02, 2017 at 10:36:52AM -0400, Michael Skeffington wrote:
-> I traced through this code during MMIC failure and
-> ieee80211_rx_h_decrypt() drops the frame before getting to
-> ieee80211_rx_h_michael_mic_verify().  Johannes suggested this change
-> to me in response to a previous thread and I am offering this patch
-> after having conducted the proper testing on it.
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 
-Ok, please repost the patch without mangling it i.e. using
-git-send-email.
+> irq_wq in struct ath10k_sdio is a remnant from an earlier
+> version of the sdio patchset.
+> 
+> Its use was removed as a result of Kalle's review, but somehow
+> the struct member survived.
+> 
+> It is not used and can therefore safely be removed.
+> 
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Thanks
-Stanislaw
+Patch applied to ath-next branch of ath.git, thanks.
+
+30b83fff6d97 ath10k: sdio: remove unused struct member
+
+-- 
+https://patchwork.kernel.org/patch/9918195/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
