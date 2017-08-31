@@ -1,38 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33410 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752133AbdHNVTt (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:54454 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751285AbdHaT7f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2017 17:19:49 -0400
-Received: by mail-oi0-f66.google.com with SMTP id e124so10446978oig.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2017 14:19:48 -0700 (PDT)
-Subject: Re: [PATCH v2 09/10] rtlwifi: use debugfs to debug.
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Joe Perches <joe@perches.com>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-References: <20170625154344.19213-1-Larry.Finger@lwfinger.net>
- <20170625154344.19213-10-Larry.Finger@lwfinger.net>
- <1502736968.8295.22.camel@perches.com>
- <02ab7fe7-9e82-3aae-1273-321c26129196@broadcom.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <862f3c86-91fd-e72d-734d-df2f0b0100c0@lwfinger.net> (sfid-20170814_231951_938213_5B4F9394)
-Date: Mon, 14 Aug 2017 16:19:47 -0500
+        Thu, 31 Aug 2017 15:59:35 -0400
+Date: Thu, 31 Aug 2017 21:59:33 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: David Miller <davem@davemloft.net>
+Cc: kvalo@codeaurora.org, torvalds@linux-foundation.org,
+        xiyou.wangcong@gmail.com, akpm@linux-foundation.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wl1251: add a missing spin_lock_init()
+Message-ID: <20170831195933.GA2788@amd> (sfid-20170831_215953_194299_D2EDFDB5)
+References: <20170831144743.GA21261@amd>
+ <20170831.103305.1809212990680774811.davem@davemloft.net>
+ <20170831185718.GA31245@amd>
+ <20170831.122645.872320547726000124.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <02ab7fe7-9e82-3aae-1273-321c26129196@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+In-Reply-To: <20170831.122645.872320547726000124.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/14/2017 02:08 PM, Arend van Spriel wrote:
-> On 14-08-17 20:56, Joe Perches wrote:
->> On Sun, 2017-06-25 at 10:43 -0500, Larry Finger wrote:
->>> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Also the subject line is kinda generic. At least it made me smile ;-p
 
-Subject now changed to "rtlwifi: Use debugfs to improve debugging"
+--dDRMvlgZJXvWKvBx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+Hi!
+
+On Thu 2017-08-31 12:26:45, David Miller wrote:
+> From: Pavel Machek <pavel@ucw.cz>
+> Date: Thu, 31 Aug 2017 20:57:19 +0200
+>=20
+> > Hi!
+> >=20
+> >> From: Pavel Machek <pavel@ucw.cz>
+> >> Date: Thu, 31 Aug 2017 16:47:43 +0200
+> >>=20
+> >> > Dave, Linus -- can you still take the patch?
+> >>=20
+> >> Pavel, please do not bypass maintainers like this.
+> >>=20
+> >> It's really rude, and if you do things like that instead of
+> >> trying to work properly with us, your relationship with
+> >> these maintainers will suffer in the long term.
+> >=20
+> > Do you mean I'm being rude to Kalle, or rude to you?
+>=20
+> He said "to David", not "David and Linus".
+
+Ok. If I knew you would be replying so quickly, I'd acted
+differently. I did not want to be rude.
+
+But I'd still like to get the patch in. Do you plan to send another
+pull request to Linus, and can you take the patch, please?
+
+Thanks,
+								Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--dDRMvlgZJXvWKvBx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlmoaqUACgkQMOfwapXb+vKDsQCfS+k/79ig5tuk9NcT1L2TXedC
+QKEAn2YfG+rXCyYpX7ZX54P+JwYUM9ND
+=9eTa
+-----END PGP SIGNATURE-----
+
+--dDRMvlgZJXvWKvBx--
