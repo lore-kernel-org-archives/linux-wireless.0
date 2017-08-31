@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751241AbdH1TTC (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28019 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750942AbdHaMxB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 15:19:02 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 4/7] wil6210: move pre-FW configuration to separate function
-Date: Mon, 28 Aug 2017 22:18:44 +0300
-Message-Id: <1503947927-18877-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211914_416888_788E7A3C)
-In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 31 Aug 2017 08:53:01 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v3,1/2] ath10k: add the PCI PM core suspend/resume ops
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
+References: <1503438455-6133-1-git-send-email-ryanhsu@qti.qualcomm.com>
+To: <ryanhsu@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <ryanhsu@qti.qualcomm.com>
+Message-ID: <f4652c401e1f462d89b4611afe9bd623@euamsexm01a.eu.qualcomm.com> (sfid-20170831_145304_939567_72F339CD)
+Date: Thu, 31 Aug 2017 14:52:54 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+ryanhsu@qti.qualcomm.com wrote:
 
-Re-arrange the code to have dedicated function for device configuration
-which takes place before FW starts running.
+> The actual PCI suspend/resume in ath10k has been handled in wow.c,
+> but in the case of the device doesn't support remote wakeup,
+> the .hif_suspend() and .hif_resume() will never be handled.
+> 
+>   ath10k_wow_op_suspend()
+>   {
+> 	if (WARN_ON(!test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
+> 		    ar->running_fw->fw_file.fw_features))) {
+> 		ret = 1;
+> 		goto exit;
+> 	}
+> 
+> 	....
+> 
+> 	ret = ath10k_hif_suspend(ar);
+>   }
+> 
+> So register the PCI PM core to support the suspend/resume if the device
+> doesn't support remote wakeup.
+> 
+> Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 40 ++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 18 deletions(-)
+This had a warning:
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e2ea490..927e332 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -930,6 +930,27 @@ int wil_ps_update(struct wil6210_priv *wil, enum wmi_ps_profile_type ps_profile)
- 	return rc;
- }
- 
-+static void wil_pre_fw_config(struct wil6210_priv *wil)
-+{
-+	/* Mark FW as loaded from host */
-+	wil_s(wil, RGF_USER_USAGE_6, 1);
-+
-+	/* clear any interrupts which on-card-firmware
-+	 * may have set
-+	 */
-+	wil6210_clear_irq(wil);
-+	/* CAF_ICR - clear and mask */
-+	/* it is W1C, clear by writing back same value */
-+	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
-+	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
-+
-+	if (wil->fw_calib_result > 0) {
-+		__le32 val = cpu_to_le32(wil->fw_calib_result |
-+						(CALIB_RESULT_SIGNATURE << 8));
-+		wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
-+	}
-+}
-+
- /*
-  * We reset all the structures, and we reset the UMAC.
-  * After calling this routine, you're expected to reload
-@@ -1023,24 +1044,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		if (rc)
- 			return rc;
- 
--		/* Mark FW as loaded from host */
--		wil_s(wil, RGF_USER_USAGE_6, 1);
--
--		/* clear any interrupts which on-card-firmware
--		 * may have set
--		 */
--		wil6210_clear_irq(wil);
--		/* CAF_ICR - clear and mask */
--		/* it is W1C, clear by writing back same value */
--		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
--		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
--
--		if (wil->fw_calib_result > 0) {
--			__le32 val = cpu_to_le32(wil->fw_calib_result |
--						 (CALIB_RESULT_SIGNATURE << 8));
--			wil_w(wil, RGF_USER_FW_CALIB_RESULT, (u32 __force)val);
--		}
--
-+		wil_pre_fw_config(wil);
- 		wil_release_cpu(wil);
- 	}
- 
+drivers/net/wireless/ath/ath10k/pci.c:3651:1: warning: symbol 'ath10k_pci_pm_ops' was not declared. Should it be static?
+
+I fixed it in the pending branch by making it static:
+
+static SIMPLE_DEV_PM_OPS(ath10k_pci_pm_ops,
+			 ath10k_pci_pm_suspend,
+			 ath10k_pci_pm_resume);
+
+Please review.
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9916215/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
