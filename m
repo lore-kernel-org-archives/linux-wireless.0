@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [217.148.43.144] ([217.148.43.144]:44564 "EHLO mnementh.co.uk"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1751626AbdHSUjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Aug 2017 16:39:24 -0400
-Subject: Re: [PATCH 34/34] brcmfmac: Reduce the noise from repeatedly
- dereferencing common pointers
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com
-References: <20170726202557.15632-1-ian@mnementh.co.uk>
- <20170726202557.15632-35-ian@mnementh.co.uk>
- <3fcfb0c3-7cb3-78f0-bc50-c6b7fa4d5ff4@broadcom.com>
-From: Ian Molton <ian@mnementh.co.uk>
-Message-ID: <9f05fd96-5ed0-1212-192b-aca01ec3c5f4@mnementh.co.uk> (sfid-20170819_223927_949382_B848537C)
-Date: Sat, 19 Aug 2017 21:39:22 +0100
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:32877 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751346AbdHaUVv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 16:21:51 -0400
+Received: by mail-pg0-f51.google.com with SMTP id t3so2114804pgt.0
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2017 13:21:51 -0700 (PDT)
+Date: Thu, 31 Aug 2017 13:21:47 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
+Message-ID: <20170831202146.GA27509@google.com> (sfid-20170831_222158_192791_1FCC01AA)
+References: <1504118818-1749-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <3fcfb0c3-7cb3-78f0-bc50-c6b7fa4d5ff4@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1504118818-1749-1-git-send-email-gbhat@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/17 13:29, Arend van Spriel wrote:
->>  int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep)
->>  {
->> +	struct brcmf_sdio_dev *sdiodev = bus->sdiodev;
->> +	struct sdio_func *func1 = sdiodev->func1;
->
-> Actually only wanted to explicitly mention this one. Probably the
-> compiler is smart enough to keep sdiodev from the stack, but I would say
-> it is a variable you do not really need and also in terms of readability
-> it seems clear enough to do it in one assignment.
+On Thu, Aug 31, 2017 at 12:16:58AM +0530, Ganapathi Bhat wrote:
+> If driver is loaded with 'mfg_mode' enabled, then the sending
+> commands are not allowed. So, when mwifiex_send_cmd fails in
+> mwifiex_add_virtual_intf, driver must check for 'mfg_mode' before
+> returning error.
+> 
+> Fixes: 7311ea850079 ("mwifiex: fix AP start problem for newly added interface")
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index ffada17..1856205 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -2967,11 +2967,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+>  
+>  	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
+>  			       HostCmd_ACT_GEN_SET, 0, NULL, true);
+> -	if (ret)
+> +	if (ret && !adapter->mfg_mode)
 
-Yeah, it could be - but as you say, the compiler *will* be smart enough,
-and doing it in this manner makes it consistent with all the other code :-)
+It doesn't feel like ignoring errors is the best approach here,
+especially when it's only a single command that we could easily just
+skip.
 
-I'm looking at your other comments atm. :)
+So, why don't you just skip it, like this?
 
--Ian
+	if (!adapter->mfg_mode) {
+		ret = mwifiex_send_cmd(...);
+		if (ret)
+			goto err_set_bss_mode;
+	}
 
->>  	int ret;
->>  
->> -	sdio_claim_host(bus->sdiodev->func1);
->> +	sdio_claim_host(func1);
->>  	ret = brcmf_sdio_bus_sleep(bus, sleep, false);
->> -	sdio_release_host(bus->sdiodev->func1);
->> +	sdio_release_host(func1);
->>  
+>  		goto err_set_bss_mode;
+>  
+>  	ret = mwifiex_sta_init_cmd(priv, false, false);
+> -	if (ret)
+> +	if (ret && !adapter->mfg_mode)
+>  		goto err_sta_init;
+
+Same here; I think it's safe to just completely skip
+mwifiex_sta_init_cmd(), no?
+
+Brian
+
+>  
+>  	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
+> -- 
+> 1.9.1
+> 
