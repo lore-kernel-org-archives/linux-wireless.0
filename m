@@ -1,104 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33890 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753332AbdHKNq2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59640 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750863AbdHaLum (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Aug 2017 09:46:28 -0400
-Received: by mail-pf0-f194.google.com with SMTP id t86so3539848pfe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Aug 2017 06:46:28 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 08/11] rsi: use common descriptor for auto rate frame
-Date: Fri, 11 Aug 2017 19:11:26 +0530
-Message-Id: <1502458889-9690-9-git-send-email-amitkarwar@gmail.com> (sfid-20170811_154636_934248_42EAE464)
-In-Reply-To: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
-References: <1502458889-9690-1-git-send-email-amitkarwar@gmail.com>
+        Thu, 31 Aug 2017 07:50:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: David Miller <davem@davemloft.net>, xiyou.wangcong@gmail.com,
+        torvalds@linux-foundation.org, akpm@linux-foundation.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [GIT] Networking
+References: <87pobdt8qc.fsf@kamboji.qca.qualcomm.com>
+        <20170830.101143.2305098064824357647.davem@davemloft.net>
+        <87val5rmh8.fsf@kamboji.qca.qualcomm.com>
+        <20170830.105447.125174575140677062.davem@davemloft.net>
+        <87fuc8s5v9.fsf@kamboji.qca.qualcomm.com> <20170831065204.GA17812@amd>
+Date: Thu, 31 Aug 2017 14:50:28 +0300
+In-Reply-To: <20170831065204.GA17812@amd> (Pavel Machek's message of "Thu, 31
+        Aug 2017 08:52:04 +0200")
+Message-ID: <87y3q0q7ln.fsf@kamboji.qca.qualcomm.com> (sfid-20170831_135129_101998_DF4F1149)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+(Adding linux-wireless)
 
-TX command frame auto rate request is modified to use common
-descriptor struture.
+Pavel Machek <pavel@ucw.cz> writes:
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 18 +++++++-----------
- drivers/net/wireless/rsi/rsi_mgmt.h     |  2 +-
- 2 files changed, 8 insertions(+), 12 deletions(-)
+> On Thu 2017-08-31 07:44:58, Kalle Valo wrote:
+>> David Miller <davem@davemloft.net> writes:
+>> 
+>> > From: Kalle Valo <kvalo@codeaurora.org>
+>> > Date: Wed, 30 Aug 2017 20:31:31 +0300
+>> >
+>> >> AFAICS the bug was introduced by 9df86e2e702c6 back in 2010. If the bug
+>> >> has been there for 7 years so waiting for a few more weeks should not
+>> >> hurt.
+>> >
+>> > As a maintainer you have a right to handle bug fixing in that way, but
+>> > certainly that is not how I would handle this.
+>> >
+>> > It's easy to validate this fix, it's extremely unlikely to cause
+>> > a regression, and fixes a problem someone actually was able to
+>> > trigger.
+>> >
+>> > Deferring to -next only has the side effect of making people wait
+>> > longer for the fix.
+>> 
+>> Yeah, you are right there. I did actually ponder which I tree should
+>> commit it back in July but due to various reasons decided differently.
+>
+> Can we still get the fix to v4.13-final? :-).
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 7c0f27a..c5d48cd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1164,8 +1164,9 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	u32 rate_bitmap = common->bitrate_mask[band];
- 
- 	u16 *selected_rates, min_rate;
-+	u16 frame_len = sizeof(struct rsi_auto_rate);
- 
--	skb = dev_alloc_skb(sizeof(struct rsi_auto_rate));
-+	skb = dev_alloc_skb(frame_len);
- 	if (!skb) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
- 			__func__);
-@@ -1180,8 +1181,6 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 		return -ENOMEM;
- 	}
- 
--	memset(skb->data, 0, sizeof(struct rsi_auto_rate));
--
- 	auto_rate = (struct rsi_auto_rate *)skb->data;
- 
- 	auto_rate->aarf_rssi = cpu_to_le16(((u16)3 << 6) | (u16)(18 & 0x3f));
-@@ -1190,10 +1189,10 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 	auto_rate->initial_boundary = cpu_to_le16(3);
- 	auto_rate->max_threshold_limt = cpu_to_le16(27);
- 
--	auto_rate->desc_word[1] = cpu_to_le16(AUTO_RATE_IND);
-+	auto_rate->desc.desc_dword0.frame_type = AUTO_RATE_IND;
- 
- 	if (common->channel_width == BW_40MHZ)
--		auto_rate->desc_word[7] |= cpu_to_le16(1);
-+		auto_rate->desc.desc_dword3.qid_tid = BW_40MHZ;
- 
- 	if (band == NL80211_BAND_2GHZ) {
- 		min_rate = RSI_RATE_1;
-@@ -1259,15 +1258,12 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 
- 	auto_rate->num_supported_rates = cpu_to_le16(num_supported_rates * 2);
- 	auto_rate->moderate_rate_inx = cpu_to_le16(num_supported_rates / 2);
--	auto_rate->desc_word[7] |= cpu_to_le16(0 << 8);
- 	num_supported_rates *= 2;
- 
--	auto_rate->desc_word[0] = cpu_to_le16((sizeof(*auto_rate) -
--					       FRAME_DESC_SZ) |
--					       (RSI_WIFI_MGMT_Q << 12));
-+	rsi_set_len_qno(&auto_rate->desc.desc_dword0.len_qno,
-+			(frame_len - FRAME_DESC_SZ), RSI_WIFI_MGMT_Q);
- 
--	skb_put(skb,
--		sizeof(struct rsi_auto_rate));
-+	skb_put(skb, frame_len);
- 	kfree(selected_rates);
- 
- 	return rsi_send_internal_mgmt_frame(common, skb);
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 9c59250..c50153d 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -425,7 +425,7 @@ struct rsi_set_key {
- } __packed;
- 
- struct rsi_auto_rate {
--	__le16 desc_word[8];
-+	struct rsi_cmd_desc desc;
- 	__le16 failure_limit;
- 	__le16 initial_boundary;
- 	__le16 max_threshold_limt;
+I'm not planning to submit pull requests to 4.13 anymore. If you think
+this is so important that it needs to be applied in the last minute (I
+don't) you could always try to convince Dave to take it directly.
+
+Or better yet, push it to the stable tree. If the merge window opens on
+Sunday I suspect that the commit will be in Linus' tree sometime next
+week. Then you can submit the request to the stable team to take it.
+
 -- 
-2.7.4
+Kalle Valo
