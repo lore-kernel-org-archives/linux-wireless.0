@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:41752 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751192AbdH1TTG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46442 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750757AbdHaGLs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2017 15:19:06 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 6/7] wil6210: increase connect timeout
-Date: Mon, 28 Aug 2017 22:18:46 +0300
-Message-Id: <1503947927-18877-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170828_211909_932286_7A84FD3D)
-In-Reply-To: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1503947927-18877-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 31 Aug 2017 02:11:48 -0400
+Message-ID: <1504159902.31031.11.camel@coelho.fi> (sfid-20170831_081204_250562_1E6AEBFA)
+From: Luca Coelho <luca@coelho.fi>
+To: David Weinehall <david.weinehall@linux.intel.com>
+Cc: jikos@kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linuxwifi@intel.com,
+        rui.zhang@intel.com, edubezval@gmail.com, linux-pm@vger.kernel.org,
+        david.weinehall@intel.com, johannes.berg@intel.com,
+        kvalo@codeaurora.org, sara.sharon@intel.com,
+        emmanuel.grumbach@intel.com
+Date: Thu, 31 Aug 2017 09:11:42 +0300
+In-Reply-To: <20170830145726.eq7qs4jtdsqa74lu@boom>
+References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>
+         <20170822073729.4856-1-luca@coelho.fi>
+         <20170830145726.eq7qs4jtdsqa74lu@boom>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to
+ iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+On Wed, 2017-08-30 at 17:57 +0300, David Weinehall wrote:
+> On Tue, Aug 22, 2017 at 10:37:29AM +0300, Luca Coelho wrote:
+> > From: Luca Coelho <luciano.coelho@intel.com>
+> > 
+> > Work queues cannot be allocated when a mutex is held because the mutex
+> > may be in use and that would make it sleep.  Doing so generates the
+> > following splat with 4.13+:
+> > 
+> > [   19.513298] ======================================================
+> > [   19.513429] WARNING: possible circular locking dependency detected
+> > [   19.513557] 4.13.0-rc5+ #6 Not tainted
+> > [   19.513638] ------------------------------------------------------
+> > [   19.513767] cpuhp/0/12 is trying to acquire lock:
+> > [   19.513867]  (&tz->lock){+.+.+.}, at: [<ffffffff924afebb>] thermal_zone_get_temp+0x5b/0xb0
+> > [   19.514047]
+> > [   19.514047] but task is already holding lock:
+> > [   19.514166]  (cpuhp_state){+.+.+.}, at: [<ffffffff91cc4baa>] cpuhp_thread_fun+0x3a/0x210
+> > [   19.514338]
+> > [   19.514338] which lock already depends on the new lock.
+> > 
+> > This lock dependency already existed with previous kernel versions,
+> > but it was not detected until commit 49dfe2a67797 ("cpuhotplug: Link
+> > lock stacks for hotplug callbacks") was introduced.
+> > 
+> > Reported-by: David Weinehall <david.weinehall@intel.com>
+> > Reported-by: Jiri Kosina <jikos@kernel.org>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> With this patch I no longer get the lockdep warning,
+> and the driver seems to work just as well as before.
 
-Connect can take longer than current timeout in some scenarios,
-for example with long-range antenna array. Increase the timeout
-to support these scenarios.
+Great! Thanks for reporting and testing, David!
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 9b529ea..0712a89 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -811,7 +811,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 		wil->bss = bss;
- 		/* Connect can take lots of time */
- 		mod_timer(&wil->connect_timer,
--			  jiffies + msecs_to_jiffies(2000));
-+			  jiffies + msecs_to_jiffies(5000));
- 	} else {
- 		clear_bit(wil_status_fwconnecting, wil->status);
- 	}
--- 
-1.9.1
+> Thanks!
+> 
+> Tested-by: David Weinehall <david.weinehall@linux.intel.com>
+
+Thanks for this too, but unfortunately it's too late to add it, since
+the patch is already in net tree.
+
+--
+Cheers,
+Luca.
