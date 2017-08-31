@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:34210 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751154AbdHBF5k (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2017 01:57:40 -0400
-Received: by mail-qt0-f194.google.com with SMTP id i19so3714442qte.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Aug 2017 22:57:40 -0700 (PDT)
+Received: from [217.148.43.144] ([217.148.43.144]:42060 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751532AbdHaPfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 11:35:31 -0400
+Subject: Re: [PATCH 13/30] brcmfmac: Clarify if using braces.
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-14-ian@mnementh.co.uk>
+ <78917893-6b3d-9cfc-1f32-e27226ae6189@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <0423e0d1-9ba5-5b06-31fc-e03a656e11b3@mnementh.co.uk> (sfid-20170831_173533_926718_C6B127A2)
+Date: Thu, 31 Aug 2017 16:35:28 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170801110449.5pddqqml32qqlvrn@mwanda>
-References: <20170801110449.5pddqqml32qqlvrn@mwanda>
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Date: Wed, 2 Aug 2017 11:27:39 +0530
-Message-ID: <CAC_mnDmNtiobgxuDENjh2kkc_TfMxg2Msc0jpJrSYKe5GrH0oQ@mail.gmail.com> (sfid-20170802_075744_133735_BD2E363A)
-Subject: Re: [bug report] rsi: immediate wakeup bit and priority for TX
- command packets
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <78917893-6b3d-9cfc-1f32-e27226ae6189@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On 30/08/17 20:11, Arend van Spriel wrote:
+>> Whilst this if () statement is technically correct, it lacks clarity.
+> 
+> I don't see the unclarity here. In my opinion people reading the code
+> should have a good level in C language and a decent level of curiosity
+> when they come across a function/macro like skb_queue_walk().
 
-Sorry for the mistake. I will send a new patch to fix this issue and
-make sure no such things happen again.
+I thought it to be part of the general codingstyle for the kernel that
+multi-line ifs and elses should be in braces, although I accept that
+technically the if-clause is a single block-level statement.
 
-Thanks,
-Prameela
+Having said that, *this* specific example falls into a grey area in the
+codingstyle, which covers multi-statement, multi-line if() clauses and
+single-statement, single-line ones. It does not cover single-statement,
+multi-line examples such as the one here.
 
-On Tue, Aug 1, 2017 at 4:34 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> Hello Prameela Rani Garnepudi,
->
-> The patch 9a629fafe7d8: "rsi: immediate wakeup bit and priority for
-> TX command packets" from Jul 10, 2017, leads to the following static
-> checker warning:
->
->         drivers/net/wireless/rsi/rsi_91x_mgmt.c:277 rsi_send_internal_mgmt_frame()
->         error: potentially dereferencing uninitialized 'desc'.
->
-> drivers/net/wireless/rsi/rsi_91x_mgmt.c
->    267  static int rsi_send_internal_mgmt_frame(struct rsi_common *common,
->    268                                          struct sk_buff *skb)
->    269  {
->    270          struct skb_info *tx_params;
->    271          struct rsi_cmd_desc *desc;
->                                      ^^^^
->    272
->    273          if (skb == NULL) {
->    274                  rsi_dbg(ERR_ZONE, "%s: Unable to allocate skb\n", __func__);
->    275                  return -ENOMEM;
->    276          }
->    277          desc->desc_dword0.len_qno |= cpu_to_le16(DESC_IMMEDIATE_WAKEUP);
->                 ^^^^^^
->
->    278          skb->priority = MGMT_SOFT_Q;
->    279          tx_params = (struct skb_info *)&IEEE80211_SKB_CB(skb)->driver_data;
->    280          tx_params->flags |= INTERNAL_MGMT_PKT;
->    281          skb_queue_tail(&common->tx_queue[MGMT_SOFT_Q], skb);
->    282          rsi_set_event(&common->tx_thread.event);
->    283          return 0;
->    284  }
->
-> regards,
-> dan carpenter
+Whilst I can't therefore definitively justify my position, I can show,
+for example, line 999 in net/mac80211/iface.c where a for() statement
+uses braces around the skb_queue_walk()
+
+for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+        skb_queue_walk_safe(&local->pending[i], skb, tmp) {
+                struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+                if (info->control.vif == &sdata->vif) {
+                        __skb_unlink(skb, &local->pending[i]);
+                        ieee80211_free_txskb(&local->hw, skb);
+                }
+        }
+}
 
 
+And the following in ath9k_htc_tx_cleanup_queue()
 
--- 
-G. Prameela Rani (M.Tech,CSE)
+if (process) {
+        skb_queue_walk_safe(&queue, skb, tmp) {
+                __skb_unlink(skb, &queue);
+                ath9k_htc_tx_process(priv, skb, NULL);
+        }
+}
+
+So I feel that we should do the same.
+
+-Ian
