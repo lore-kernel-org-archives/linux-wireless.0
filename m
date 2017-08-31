@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:37136 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753411AbdHXWCg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2017 18:02:36 -0400
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH] cfg80211: Use tabs for identation
-Date: Fri, 25 Aug 2017 03:32:08 +0530
-Message-Id: <1503612128-28782-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170825_000252_147308_FF46F68A)
+Received: from [217.148.43.144] ([217.148.43.144]:43814 "EHLO mnementh.co.uk"
+        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1751276AbdHaPRX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 11:17:23 -0400
+Subject: Re: [PATCH 01/30] brcmfmac: Fix parameter order in
+ brcmf_sdiod_f0_writeb()
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-2-ian@mnementh.co.uk>
+ <4a840cca-d07a-15a7-7d31-b8269bb9feb3@broadcom.com>
+From: Ian Molton <ian@mnementh.co.uk>
+Message-ID: <8cfefbe3-6654-5752-4dcd-c6ab7666a151@mnementh.co.uk> (sfid-20170831_171726_854433_07BF5E0B)
+Date: Thu, 31 Aug 2017 16:17:20 +0100
+MIME-Version: 1.0
+In-Reply-To: <4a840cca-d07a-15a7-7d31-b8269bb9feb3@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removed whitespaces and added necessary tabs conforming to coding style.
-Issue found using checkpatch.pl
+On 30/08/17 19:51, Arend van Spriel wrote:
+> On 22-08-17 13:25, Ian Molton wrote:
+>>     All the other IO functions are the other way round in this
+>> driver. Make this one match.
+> 
+> Sorry for being a nit, but not sure why the commit message starts with a
+> tab.
 
-Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
----
- net/wireless/chan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Not a problem - I don't mind nits being pointed out. Not at all.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index b8aa5a7..13c95e5 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -984,9 +984,9 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 
- void
- cfg80211_get_chan_state(struct wireless_dev *wdev,
--		        struct ieee80211_channel **chan,
--		        enum cfg80211_chan_mode *chanmode,
--		        u8 *radar_detect)
-+			struct ieee80211_channel **chan,
-+			enum cfg80211_chan_mode *chanmode,
-+			u8 *radar_detect)
- {
- 	int ret;
- 
--- 
-2.7.4
+> Other than that...
+
+Will update it in the next (hopefully last!) rev.
+
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+
+Ta :)
+
+>> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
+>>   1 file changed, 4 insertions(+), 4 deletions(-)
+
+-Ian
