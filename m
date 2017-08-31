@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42496 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752158AbdHETnl (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35247 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750867AbdHaEsm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Aug 2017 15:43:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  5 Aug 2017 22:43:18 +0300
-Message-Id: <20170805194331.17426-7-luca@coelho.fi> (sfid-20170805_214403_979792_AB08C62C)
-In-Reply-To: <20170805194331.17426-1-luca@coelho.fi>
-References: <20170805194331.17426-1-luca@coelho.fi>
-Subject: [PATCH 06/19] iwlwifi: fix a few instances of misaligned kerneldoc parameters
+        Thu, 31 Aug 2017 00:48:42 -0400
+Subject: Re: [PATCH] rtlwifi: btcoex: 23b 1ant: fix duplicated code for
+ different branches
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20170830134223.GA13596@embeddedgus>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <ae09e952-112e-9616-735a-b86ba01ad398@lwfinger.net> (sfid-20170831_064902_919995_99B37E31)
+Date: Wed, 30 Aug 2017 23:48:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170830134223.GA13596@embeddedgus>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 08/30/2017 08:42 AM, Gustavo A. R. Silva wrote:
+> Refactor code in order to avoid identical code for different branches.
+> 
+> This issue was detected with the help of Coccinelle.
+> 
+> Addresses-Coverity-ID: 1226788
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+> This issue was reported by Coverity and it was tested by compilation only.
+> I'm suspicious this may be a copy/paste error. Please, verify.
+> 
+>   .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c   | 10 ++--------
+>   1 file changed, 2 insertions(+), 8 deletions(-)
 
-There are a few places where we don't have a space between the * and
-the @ in the parameter description.  Also, in one case, the @ had
-trailing space before the parameter name.
+This change is not correct. When bt_link_info->sco_exist is true, the call should be
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+				halbtc8723b1ant_limited_rx(btcoexist,
+							   NORMAL_EXEC, true,
+							   false, 0x5);
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 95dbed609f3e..2909d1ed89cf 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -421,7 +421,7 @@ enum iwl_tx_status {
-  *	occur if tx failed for this frame when it was a member of a previous
-  *	aggregation block). If rate scaling is used, retry count indicates the
-  *	rate table entry used for all frames in the new agg.
-- *@ AGG_TX_STATE_SEQ_NUM_MSK: Command ID and sequence number of Tx command for
-+ * @AGG_TX_STATE_SEQ_NUM_MSK: Command ID and sequence number of Tx command for
-  *	this frame
-  *
-  * TODO: complete documentation
--- 
-2.13.2
+NACK
+
+I will push the correct patch.
+
+Larry
