@@ -1,136 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from store.laptop.org ([18.85.44.157]:41072 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751536AbdINJ1p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 05:27:45 -0400
-Date: Thu, 14 Sep 2017 19:27:39 +1000
-From: James Cameron <quozl@laptop.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: rtl8821ae keep alive not set, connection lost
-Message-ID: <20170914092738.GG20283@us.netrek.org> (sfid-20170914_112749_257471_CD5E683D)
-References: <20170912220916.GB32211@us.netrek.org>
- <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
- <20170913214649.GC20283@us.netrek.org>
- <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net>
+Received: from lb2-smtp-cloud9.xs4all.net ([194.109.24.26]:39834 "EHLO
+        lb2-smtp-cloud9.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752367AbdIAUkg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 16:40:36 -0400
+Date: Fri, 1 Sep 2017 22:40:30 +0200
+From: Antony Antony <antony@phenome.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Rob Herring <robh@kernel.org>, Antony Antony <antony@phenome.org>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Icenowy Zheng <icenowy@aosc.io>,
+        devicetree <devicetree@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>
+Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add
+ bcm43430-fmac
+Message-ID: <20170901204030.2zpsoa4i53tdegs3@AntonyAntony.local> (sfid-20170901_224039_757329_13405B15)
+References: <20170829214309.34466-1-antony@phenome.org>
+ <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
+ <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local>
+ <20170901164911.aiu5ej5u546z5kow@rob-hp-laptop>
+ <bb53a79e-8045-3c9b-8c98-8d4815c3b57a@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net>
+In-Reply-To: <bb53a79e-8045-3c9b-8c98-8d4815c3b57a@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 13, 2017 at 07:39:35PM -0500, Larry Finger wrote:
-> On 09/13/2017 04:46 PM, James Cameron wrote:
-> >
-> >I'll give it some more testing and let you know, but it seems as
-> >capable of keeping a connection as 4.13 plus my earlier revert.
-> >
-
-Testing went well; removing the call to enable ASPM was as good as
-changing the DBI read back to 16-bit width.
-
-> The change I sent earlier should be as good as reverting the change
-> to write_byte in your reversion.
-
-Yes, that would be the hope.
-
-But with the 16-bit DBI read, the register REG_DBI_CTRL+0 is being
-read as well, in the first read in _rtl8821ae_enable_aspm_back_door,
-so perhaps reading that register has an unexpected side-effect.
-
-Is there any documentation for that register?  I see other code writes
-to REG_DBI_CTRL+3, in _rtl8821ae_check_pcie_dma_hang
-
-Evidence of read from REG_DBI_CTRL was captured with an instrumented
-kernel; git diff http://dev.laptop.org/~quozl/y/1dsQ6B.txt yielding
-these dmesg lines;
-
-[    6.010255] rtl_pci: _rtl_pci_update_default_setting const_amdpci_aspm=03
-[    6.010338] rtl_pci: rtl_pci_enable_aspm
-[    6.034295] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[    6.034806] rtlwifi: rtlwifi: wireless switch is on
-[    6.196958] rtl8821ae 0000:02:00.0 wlp2s0: renamed from wlan0
-[    7.979186] rtl_pci: rtl_pci_disable_aspm
-[    7.979306] rtl8821ae: _rtl8821ae_check_pcie_dma_hang
-[    8.295360] rtl8821ae: _rtl8821ae_enable_aspm_back_door
-[    8.295437] rtl8821ae: _rtl8821ae_dbi_read  070f -> ffff (@034f)
-[    8.295449] rtl8821ae: _rtl8821ae_dbi_write 070f <- ff (@870c)
-[    8.295462] rtl8821ae: _rtl8821ae_dbi_read  0719 -> 0200 (@034d)
-[    8.295474] rtl8821ae: _rtl8821ae_dbi_write 0719 <- 18 (@2718)
-[    8.295477] rtl_pci: rtl_pci_enable_aspm
-[    8.469734] rtl_pci: rtl_pci_disable_aspm
-[    8.469857] rtl8821ae: _rtl8821ae_check_pcie_dma_hang
-[    8.686955] rtl8821ae: _rtl8821ae_enable_aspm_back_door
-[    8.687013] rtl8821ae: _rtl8821ae_dbi_read  070f -> ffff (@034f)
-[    8.687025] rtl8821ae: _rtl8821ae_dbi_write 070f <- ff (@870c)
-[    8.687038] rtl8821ae: _rtl8821ae_dbi_read  0719 -> 0218 (@034d)
-[    8.687050] rtl8821ae: _rtl8821ae_dbi_write 0719 <- 18 (@2718)
-[    8.687053] rtl_pci: rtl_pci_enable_aspm
-
-Observe how the windowed read of DBI register 0x70f causes a read of
-16-bits at 0x34f, which includes first 8-bits of 0x350 REG_DBI_CTRL.
-
-By the way, the cold boot value of DBI register 0x719 is 0x00, and
-the warm boot value is 0x18, so I'm confident there isn't a
-comprehensive register reset.  It means that BIOS has relevance; and
-this BIOS is outside my control.  BIOS variation may explain
-difficulty reproducing.
-
-> There has been a report (in Russian unfortunately) at
-> https://www.linux.org.ru/forum/desktop/12620193 of delays in ARP
-> handling.
-
-Thanks.  I've considered and excluded ARP handling delay.  Though ARP
-renewal is typical reason for device sleep to end.
-
-With the call to enable ASPM disabled, instead of changing the DBI
-read to 16-bit width, what happens is that the device stops accepting
-data from the access point, packets are buffered there, and are
-transmitted as soon as the device makes the next transmission.
-
-http://dev.laptop.org/~quozl/z/1dsQBf.txt has the ping and IP tcpdump
-to confirm this.
-
-I've a monitor mode tcpdump I can send by private mail if required.
-In that the burst of packets shows ICMP echo requests were buffered by
-the access point.
-
-> According to Google translate is as follows:
+On Fri, Sep 01, 2017 at 09:10:41PM +0200, Arend van Spriel wrote:
+> On 01-09-17 18:49, Rob Herring wrote:
+> > On Wed, Aug 30, 2017 at 02:02:18PM +0200, Antony Antony wrote:
+> > > hi,
+> > > 
+> > > On Wed, Aug 30, 2017 at 10:28:20AM +0800, Chen-Yu Tsai wrote:
+> > > > On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
+> > > 
+> > > > > a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> > > > > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> > > > > @@ -6,7 +6,9 @@ connects the device to the system.
+> > > > > 
+> > > > >   Required properties:
+> > > > > 
+> > > > > - - compatible : Should be "brcm,bcm4329-fmac".
+> > > > > + - compatible : should be one of the following:
+> > > > > +       * "brcm,bcm4329-fmac"
+> > > > > +       * "brcm,bcm43430-fmac"
+> > > > 
+> > > > You updated the bindings, but not the driver. So it's not actually
+> > > > going to work. More specifically, OOB interrupts won't work.
+> > > > 
+> > > 
+> > > understood, ignore this patch for now. Thanks Chen-Yu.
+> > > 
+> > > > IIRC, The compatible string for this particular case, as it was
+> > > > originally proposed, only serves as a placeholder for the driver
+> > > > to check against. None of the instances in sunxi device trees
+> > > > match the actual chip model. Actual model matching is done
+> > > > through SDIO, as you've already seen.
+> > > 
+> > > yes it seems SDIO driveer code is smarter, once it initialize
+> > > brcm,bcm4329-fmac it ignore the DT info and read the chip details to locate
+> > > firmware file.
+> > > 
+> > > I also noticed other boards using bcm4329-fmac in similar situations.
+> > > https://patchwork.kernel.org/patch/9739181/
+> > > 
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/amlogic/meson-gxbb-nanopi-k2.dts?h=v4.13-rc7
+> > > 
+> > > I will resend "NanoPi NEO Plus2" dts with "brcm,bcm4329-fmac" and see where
+> > > it goes.
+> > 
+> > Adding the compatible or instead of? The former would be better. You
+> > should still have the actual chip in case you do have some difference to
+> > handle.
 > 
-> ============================================================
-> Periodically, Wi-Fi networker rtl8821ae ceases to respond to ARP,
-> which causes the Internet to end. Wireshark looks quite interesting:
-> ARP replays can be sent by one large packet a few seconds after
-> receiving the requests, ie. they seem to be buffered somewhere.
-
-Yes, buffering at access point.
-
-> I need to explore that ENOBUFS return code.
-
-I've seen ENOBUFS up at the application level with ping too, when the
-original problem happens with v4.10 plus stable.
-
-> Your case where the device is unresponsive to pings from another NIC
-> until the device transmits may also be an ARP problem.
+> Hi Rob,
 > 
-> For completeness, are you using the 2.4 of 5 GHz band? What is the
-> make/model your AP? If possible for you to determine, what firmware
-> is it running?
+> Actually the Broadcom wifi chips themselves are discoverable. So once the
+> driver has access to the register space of the device it can determine the
+> actual chip, its revision, and exactly what cores (and their revision) are
+> present in the chip. Hence there is a single compatible string as there is
+> no need to convey the same information through device tree data.
 
-2.4 GHz and 5 GHz reproduces the problem.
+In my expereince this how it seems to work.
 
-Open or WPA reproduces the problem.
+I jsut discovered s/brcm,bcm4329-fmac/brcm/ can load the broadcom driver.
 
-Netgear WNDR3800 OpenWrt 12.09-beta, r33312.
+brcmf: wifi@1 {
+	reg = <1>;
+	compatible = "brcm";
+}; 
 
-Several other access points reproduce the problem, including a
-customer's TP-Link TL-WR1042ND with unknown firmware version.
+This looks better to me. Maxime, Would this work? 
 
-No access point as yet does not reproduce the problem.
-
-Hope that helps, thanks for your ideas.
-
--- 
-James Cameron
-http://quozl.netrek.org/
+regards,
+-antony
