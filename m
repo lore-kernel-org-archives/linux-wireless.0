@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50230 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751423AbdINRut (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 13:50:49 -0400
-Message-ID: <1505411442.31630.11.camel@sipsolutions.net> (sfid-20170914_195052_153071_66BB528F)
-Subject: Re: iwlwifi firmware load broken in current -git
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Srinath Mannam <srinath.mannam@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
+Received: from mail-cys01nam02on0134.outbound.protection.outlook.com ([104.47.37.134]:40224
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751778AbdIANAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 09:00:39 -0400
+From: Eric Bentley <Eric.Bentley@lairdtech.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Steve deRosier <derosier@gmail.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 14 Sep 2017 19:50:42 +0200
-In-Reply-To: <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com> (sfid-20170914_194402_921163_AF6959E0)
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
-         <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
-         <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
-         <1505246657.1974.11.camel@sipsolutions.net>
-         <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
-         <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
-         <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
-         <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
-         <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
-         <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com>
-         (sfid-20170914_194402_921163_AF6959E0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH v2] brcmfmac: Correctly fail to suspend when SDIO does not
+ support power on suspend
+Date: Fri, 1 Sep 2017 13:00:36 +0000
+Message-ID: <AC37C967-209B-4BC3-9AF2-9CC4C27391C0@lairdtech.com> (sfid-20170901_150042_942250_8A9108F4)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-09-14 at 23:14 +0530, Srinath Mannam wrote:
-> 
-> atomic_inc_return(&dev->enable_cnt) in function
-> pci_enable_device_flags enables passed pcie device.
-> !pci_is_enabled(bridge) check in "if (bridge &&
-> !pci_is_enabled(bridge))"  checks for bridge device of previous pcie
-> device.
-> So it will not stop bus_master of bridge device.
-
-It also doesn't *enable* it though, does it?
-
-johannes
+UmV0dXJuIGVycm9yIHdoZW4gZmFpbGluZyB0byBzZXQgcG93ZXIgbWFuYWdlbWVudCBjYXBhYmls
+aXRpZXMgZmxhZy4gIFRoaXMgd2lsbA0KY2F1c2UgdGhlIHN1c3BlbmQgdG8gZmFpbCBidXQgdGhl
+IHJhZGlvIHdpbGwgY29udGludWUgdG8gb3BlcmF0ZS4gIEFsbG93aW5nIHRoaXMNCnRvIGZhaWwg
+d2l0aG91dCByZXBvcnRpbmcgZXJyb3Igd2lsbCBjYXVzZSB0aGUgcmFkaW8gdG8gYmUgbm9uLWZ1
+bmN0aW9uYWwgb24gDQpyZXN1bWUgYXMgaXQgd2lsbCBoYXZlIGxvc3QgcG93ZXIuDQoNClNpZ25l
+ZC1vZmYtYnk6IEVyaWMgQmVudGxleSBlcmljLmJlbnRsZXlAbGFpcmR0ZWNoLmNvbQ0KLS0tDQp2
+MjogY29ycmVjdGVkIGVycmFudCAoIHdpdGggew0KLS0tDQpkcml2ZXJzL25ldC93aXJlbGVzcy9i
+cm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2RoLmMgfCA0ICsrKy0NCjEgZmlsZSBjaGFu
+Z2VkLCAzIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9iY21zZGguYyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9iY21zZGguYw0K
+aW5kZXggNzIxMzliNS4uMmY3ZDAzZiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9iY21zZGguYw0KKysrIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2JjbXNkaC5jDQpAQCAtMTI2NCw4
+ICsxMjY0LDEwIEBAIHN0YXRpYyBpbnQgYnJjbWZfb3BzX3NkaW9fc3VzcGVuZChzdHJ1Y3QgZGV2
+aWNlICpkZXYpDQogICAgICAgICAgICAgICAgIGVsc2UNCiAgICAgICAgICAgICAgICAgICAgICAg
+ICBzZGlvX2ZsYWdzIHw9IE1NQ19QTV9XQUtFX1NESU9fSVJROw0KICAgICAgICAgfQ0KLSAgICAg
+ICBpZiAoc2Rpb19zZXRfaG9zdF9wbV9mbGFncyhzZGlvZGV2LT5mdW5jWzFdLCBzZGlvX2ZsYWdz
+KSkNCisgICAgICAgaWYgKHNkaW9fc2V0X2hvc3RfcG1fZmxhZ3Moc2Rpb2Rldi0+ZnVuY1sxXSwg
+c2Rpb19mbGFncykpIHsNCiAgICAgICAgICAgICAgICAgYnJjbWZfZXJyKCJGYWlsZWQgdG8gc2V0
+IHBtX2ZsYWdzICV4XG4iLCBzZGlvX2ZsYWdzKTsNCisgICAgICAgICAgICAgICByZXR1cm4gLUVJ
+TlZBTDsNCisgICAgICAgfQ0KICAgICAgICAgcmV0dXJuIDA7DQp9DQotLQ0KMi42LjAuR0lUDQoN
+Cg==
