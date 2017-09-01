@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37140 "EHLO sipsolutions.net"
+Received: from inx.pm.waw.pl ([91.202.125.194]:34618 "EHLO inx.pm.waw.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755752AbdIHOql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 10:46:41 -0400
-Message-ID: <1504881999.20347.6.camel@sipsolutions.net> (sfid-20170908_164712_139783_CC15F89B)
-Subject: Re: [RFC 4/4] mac80211_hwsim: add radio idx param to netlink
- callback of radio creation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 08 Sep 2017 16:46:39 +0200
-In-Reply-To: <5635378a-1d80-99f6-0538-9a9c9a7bc0fe@uni-rostock.de>
-References: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
-         <c6eda3a2-ad9b-4c33-b3c8-ddc36199ea3e@MAIL1.uni-rostock.de>
-         <1504880886.20347.4.camel@sipsolutions.net>
-         <5635378a-1d80-99f6-0538-9a9c9a7bc0fe@uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750955AbdIASFn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 14:05:43 -0400
+From: Krzysztof Halasa <khc@pm.waw.pl>
+To: Kees Cook <keescook@chromium.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jens Axboe <axboe@fb.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 13/31] timer: Remove meaningless .data/.function assignments
+References: <1504222183-61202-1-git-send-email-keescook@chromium.org>
+        <1504222183-61202-14-git-send-email-keescook@chromium.org>
+Date: Fri, 01 Sep 2017 19:59:02 +0200
+In-Reply-To: <1504222183-61202-14-git-send-email-keescook@chromium.org> (Kees
+        Cook's message of "Thu, 31 Aug 2017 16:29:25 -0700")
+Message-ID: <m34lsmb8rd.fsf@pm.waw.pl> (sfid-20170901_200604_262505_3A83794F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uh. Is there anything you can do not to mangle your replies? I don't
-even know what you're replying to etc.
+Kees Cook <keescook@chromium.org> writes:
 
-> AFAIK, you can change the MAC-Address of an interface on
-> the phy, but not the perm address of the phy. But for frames sent to
-> a wmediumd always the perm address is used to identify the sender and
-> receiver. It is really annoying to additionally keep a translation
-> table in userspace to manage between random ids/mac-addresses to them
-> you use in a simulation for this.
+> Several timer users needlessly reset their .function/.data fields during
+> their timer callback, but nothing else changes them. Some users do not
+> use their .data field at all. Each instance is removed here.
 
-I think we tried to fix that once, but that caused more problems ...
+For *wan/hdlc*
+Acked-by: Krzysztof Halasa <khc@pm.waw.pl>
 
-I'd rather allow you to then specify the MAC address though - the
-index/address mapping doesn't need to be the identity, after all.
+> --- a/drivers/net/wan/hdlc_cisco.c
+> +++ b/drivers/net/wan/hdlc_cisco.c
+> @@ -276,8 +276,6 @@ static void cisco_timer(unsigned long arg)
+>  	spin_unlock(&st->lock);
+>  
+>  	st->timer.expires = jiffies + st->settings.interval * HZ;
+> -	st->timer.function = cisco_timer;
+> -	st->timer.data = arg;
+>  	add_timer(&st->timer);
+>  }
+>  
+> diff --git a/drivers/net/wan/hdlc_fr.c b/drivers/net/wan/hdlc_fr.c
+> index de42faca076a..7da2424c28a4 100644
+> --- a/drivers/net/wan/hdlc_fr.c
+> +++ b/drivers/net/wan/hdlc_fr.c
+> @@ -644,8 +644,6 @@ static void fr_timer(unsigned long arg)
+>  			state(hdlc)->settings.t391 * HZ;
+>  	}
+>  
+> -	state(hdlc)->timer.function = fr_timer;
+> -	state(hdlc)->timer.data = arg;
+>  	add_timer(&state(hdlc)->timer);
+>  }
 
-johannes
+-- 
+Krzysztof Halasa
