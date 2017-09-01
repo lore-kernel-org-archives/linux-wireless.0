@@ -1,70 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57576 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751217AbdILHrG (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:36401 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752566AbdIAWBq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 03:47:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kevin Cernekee <cernekee@chromium.org>, franky.lin@broadcom.com,
-        brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: Re: [PATCH V2 1/3] brcmfmac: Avoid possible out-of-bounds read
-References: <20170909193020.19061-1-cernekee@chromium.org>
-        <deff51ff-40f0-ffa4-afd0-b95465c66a8e@broadcom.com>
-        <87tw08mpq1.fsf@purkki.adurom.net> <59B78E94.5040909@broadcom.com>
-Date: Tue, 12 Sep 2017 10:47:01 +0300
-In-Reply-To: <59B78E94.5040909@broadcom.com> (Arend van Spriel's message of
-        "Tue, 12 Sep 2017 09:36:52 +0200")
-Message-ID: <87o9qgicju.fsf@kamboji.qca.qualcomm.com> (sfid-20170912_094717_699844_C5E4AAAF)
+        Fri, 1 Sep 2017 18:01:46 -0400
+Received: by mail-wm0-f50.google.com with SMTP id f127so8502275wmf.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Sep 2017 15:01:45 -0700 (PDT)
+Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add
+ bcm43430-fmac
+To: Rob Herring <robh@kernel.org>
+Cc: Antony Antony <antony@phenome.org>, Chen-Yu Tsai <wens@csie.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Icenowy Zheng <icenowy@aosc.io>,
+        devicetree <devicetree@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>
+References: <20170829214309.34466-1-antony@phenome.org>
+ <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
+ <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local>
+ <20170901164911.aiu5ej5u546z5kow@rob-hp-laptop>
+ <bb53a79e-8045-3c9b-8c98-8d4815c3b57a@broadcom.com>
+ <CAL_JsqLsnXYfyix3KLkEYguWAe-Wqcb9Nd22jM8HM2dnw4Frog@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <73188868-3809-b94e-d08b-56b83b981558@broadcom.com> (sfid-20170902_000148_846098_578769A9)
+Date: Sat, 2 Sep 2017 00:01:43 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAL_JsqLsnXYfyix3KLkEYguWAe-Wqcb9Nd22jM8HM2dnw4Frog@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> On 9/12/2017 7:48 AM, Kalle Valo wrote:
->> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->>
->>> On 09-09-17 21:30, Kevin Cernekee wrote:
->>>> In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
->>>> the length of rxframe is validated.  This could lead to uninitialized
->>>> data being accessed (but not printed).  Since we already have a
->>>> perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
->>>> and ch.chspec is not modified by decchspec(), avoid the extra
->>>> assignment and use ch.chspec in the debug print.
->>>>
->>>> Suggested-by: Mattias Nissler <mnissler@chromium.org>
->>>> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
->>>> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>> ---
->>>>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
->>>>    1 file changed, 1 insertion(+), 2 deletions(-)
->>>>
->>>>
->>>> V1->V2: Clarify changelog re: whether the uninitialized data is printed.
+
+On 01-09-17 23:38, Rob Herring wrote:
+> On Fri, Sep 1, 2017 at 2:10 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 01-09-17 18:49, Rob Herring wrote:
 >>>
->>> This patch and the others in this series look fine to me.
+>>> On Wed, Aug 30, 2017 at 02:02:18PM +0200, Antony Antony wrote:
+>>>>
+>>>> hi,
+>>>>
+>>>> On Wed, Aug 30, 2017 at 10:28:20AM +0800, Chen-Yu Tsai wrote:
+>>>>>
+>>>>> On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org>
+>>>>> wrote:
+>>>>
+>>>>
+>>>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>> +++
+>>>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>> @@ -6,7 +6,9 @@ connects the device to the system.
+>>>>>>
+>>>>>>    Required properties:
+>>>>>>
+>>>>>> - - compatible : Should be "brcm,bcm4329-fmac".
+>>>>>> + - compatible : should be one of the following:
+>>>>>> +       * "brcm,bcm4329-fmac"
+>>>>>> +       * "brcm,bcm43430-fmac"
+>>>>>
+>>>>>
+>>>>> You updated the bindings, but not the driver. So it's not actually
+>>>>> going to work. More specifically, OOB interrupts won't work.
+>>>>>
+>>>>
+>>>> understood, ignore this patch for now. Thanks Chen-Yu.
+>>>>
+>>>>> IIRC, The compatible string for this particular case, as it was
+>>>>> originally proposed, only serves as a placeholder for the driver
+>>>>> to check against. None of the instances in sunxi device trees
+>>>>> match the actual chip model. Actual model matching is done
+>>>>> through SDIO, as you've already seen.
+>>>>
+>>>>
+>>>> yes it seems SDIO driveer code is smarter, once it initialize
+>>>> brcm,bcm4329-fmac it ignore the DT info and read the chip details to
+>>>> locate
+>>>> firmware file.
+>>>>
+>>>> I also noticed other boards using bcm4329-fmac in similar situations.
+>>>> https://patchwork.kernel.org/patch/9739181/
+>>>>
+>>>>
+>>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/amlogic/meson-gxbb-nanopi-k2.dts?h=v4.13-rc7
+>>>>
+>>>> I will resend "NanoPi NEO Plus2" dts with "brcm,bcm4329-fmac" and see
+>>>> where
+>>>> it goes.
+>>>
+>>>
+>>> Adding the compatible or instead of? The former would be better. You
+>>> should still have the actual chip in case you do have some difference to
+>>> handle.
 >>
->> Should these go to v4.14?
->
-> I have no strong opinion. These are certainly improvements, but it
-> does not seem an -rc fix to me. Within this series I would say patch
-> 3/3 adds an additional sanity check in the event processing against an
-> attack so you may consider adding just that one to v4.14
+>>
+>> Hi Rob,
+>>
+>> Actually the Broadcom wifi chips themselves are discoverable. So once the
+>> driver has access to the register space of the device it can determine the
+>> actual chip, its revision, and exactly what cores (and their revision) are
+>> present in the chip. Hence there is a single compatible string as there is
+>> no need to convey the same information through device tree data.
+> 
+> So if a chip has different power on/off sequencing you can discover that?
+> 
+> I realize that most often you don't need it, but a more specific
+> compatible is there in case you do and so it doesn't require a DTB
+> update to handle some difference. But you can keep using one
+> compatible because I can't really enforce any of that.
 
-Ok, I'll queue patch 3 to v4.14.
+For SDIO chips the power sequencing is defined by power-seq-* in 
+bindings/mmc and handled by the MMC stack itself. So the wifi driver is 
+not dealing with that.
 
-> and tag it for stable, ie.:
->
-> Cc: stable@vger.kernel.org # v3.8.x
-
-But why v3.8.x? I admit that I haven't fully figured out the stable tags
-yet, but doesn't that mean that it will be only applied to v3.8.x and
-nothing else? I was expecting it to be:
-
-Cc: stable@vger.kernel.org # v3.8+
-
--- 
-Kalle Valo
+Regards,
+Arend
