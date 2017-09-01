@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57892 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933656AbdIYIGZ (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:28317 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbdIAGov (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 04:06:25 -0400
+        Fri, 1 Sep 2017 02:44:51 -0400
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20170901064450epoutp0150cc22a7adcf823eb7320dd0be48899e~gKdmnhOab1723017230epoutp01n
+        for <linux-wireless@vger.kernel.org>; Fri,  1 Sep 2017 06:44:50 +0000 (GMT)
+Mime-Version: 1.0
+Subject: [PATCH] iw: Null check before accessing n_mcs variable
+Reply-To: amit.khatri@samsung.com
+From: Amit Khatri <amit.khatri@samsung.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Nitin Jhanwar <nitin.j@samsung.com>
+Message-ID: <20170901061008epcms5p5fdd787910f9698c511e01a134afe90ea@epcms5p5> (sfid-20170901_084455_772384_82CA09A1)
+Date: Fri, 01 Sep 2017 06:10:08 +0000
 Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8821ae: Fix connection lost problem
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
-References: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20170925080624.04C9960618@smtp.codeaurora.org> (sfid-20170925_104606_105870_6D27B04A)
-Date: Mon, 25 Sep 2017 08:06:23 +0000 (UTC)
+References: <CGME20170901061008epcms5p5fdd787910f9698c511e01a134afe90ea@epcms5p5>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+From: Amit Khatri <amit.khatri@samsung.com>
+Date: Thu, 24 Aug 2017 00:16:26 -0700
+Subject: [PATCH] iw: Null check before accessing n_mcs variable
 
-> In commit 40b368af4b75 ("rtlwifi: Fix alignment issues"), the read
-> of REG_DBI_READ was changed from 16 to 8 bits. For unknown reasonsi
-> this change results in reduced stability for the wireless connection.
-> This regression was located using bisection.
-> 
-> Fixes: 40b368af4b75 ("rtlwifi: Fix alignment issues")
-> Reported-and-tested-by: James Cameron <quozl@laptop.org>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> # 4.11+
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+If all cases will fail n_mcs variable fail to get any assignement
+and remain NULL. so better to check NULL before dereference.
+Signed-off-by: Amit Khatri <amit.khatri@samsung.com>
+---
+ bitrate.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Should I queue this for 4.14?
-
-(The first commit was v4.11-rc1.)
-
+diff --git a/bitrate.c b/bitrate.c
+index 4a026a4..3e58337 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -185,7 +185,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 				return 1;
+ 			if (tmpl < 0 || tmpl > 255)
+ 				return 1;
+-			mcs[(*n_mcs)++] = tmpl;
++			if(n_mcs!=NULL)
++				mcs[(*n_mcs)++] = tmpl;
+ 			break;
+ 		case S_VHT:
+ 			if (*vht_argc >= VHT_ARGC_MAX)
 -- 
-https://patchwork.kernel.org/patch/9962615/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
