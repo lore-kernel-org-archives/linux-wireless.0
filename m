@@ -1,77 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51598 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751585AbdINTWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 15:22:47 -0400
-Message-ID: <1505416964.31630.17.camel@sipsolutions.net> (sfid-20170914_212253_198432_74CAECB6)
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35447 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750955AbdIACG5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Aug 2017 22:06:57 -0400
+Received: by mail-oi0-f53.google.com with SMTP id n18so7813460oig.2
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2017 19:06:57 -0700 (PDT)
+Subject: Re: RT2870 failure in kernel 4.12.8
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
         linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 14 Sep 2017 21:22:44 +0200
-In-Reply-To: <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com> (sfid-20170914_210836_116060_CBC37968)
-References: <1505378361.31630.2.camel@sipsolutions.net>
-         <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
-         <1505414172.31630.13.camel@sipsolutions.net>
-         <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
-         (sfid-20170914_210836_116060_CBC37968)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+ <20170831075514.GA12340@redhat.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <4a9136ca-3e06-a7c1-e973-287d08249faa@lwfinger.net> (sfid-20170901_040702_044639_04542754)
+Date: Thu, 31 Aug 2017 21:06:55 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170831075514.GA12340@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> Yep, but I seem to recall there was some vague language that said the
-> AP would delete the PMKSA if the client disconnected.
-
-Ok, not sure about that. But even if the AP does, we could try to send
-it and it just can't use it :)
-
-> operstates.txt states that for new connections, operstate should be 
-> dormant until 802.1x is complete & successful.  So the !eapol-over-
-> nl condition would violate that, no?
-
-As I just wrote in my other email, I think I'm totally confused
-regarding this, and the supplicant already does it correctly - and you
-can ignore the whole "!eapol-over-nl" conditions, and just read it like
-what I thought we could only do in the eapol-over-nl case.
-
-No idea how I ended up with the idea that you could only send data
-frames when the netdev was IF_OPER_UP - that doesn't seem to have any
-basis in reality.
-
-> > > >        - initialize 1X state machines/timeouts
-> > > >      - 1X handshake
-> > > >      - send PMK to device for 4-way-HS
-> > > >      - AUTHORIZED event
-> > > >        - [if eapol-over-nl: toggle oper state up]
-> > > > 
+On 08/31/2017 02:55 AM, Stanislaw Gruszka wrote:
+> On Wed, Aug 30, 2017 at 12:03:06PM -0500, Larry Finger wrote:
+>> Stanislaw and Helmut,
+>>
+>> In a bug report at https://bugzilla.suse.com/show_bug.cgi?id=1055826, the OP
+>> reports that his RT3572 fails to work after an upgrade from the openSUSE
+>> Tumbleweed kernel 4.12.7 to 4.12.8. I checked the kernel configuration and
+>> did not see any problems.
+>>
+>> Are you aware of anyone reporting problems with rt2800usb in 4.12.8 kernels?
 > 
-> Given your explanation above, should this be [if !eapol-over-nl ..?
+> I think it is the issue addressed by this 4.12 patch:
+> https://marc.info/?l=linux-wireless&m=150366111408179&w=2
+> 
+> Patch for 4.13+ kernels is here:
+> https://marc.info/?l=linux-wireless&m=150367345912061&w=2
 
+That patch did fix the problem. Thanks for the help.
 
-> So I agree that OPERSTATE_UP should not change on a roam.  I think
-> we're both in agreement here.
-
-Great.
-
-> My earlier point is that software roams need to have the exact same 
-> behavior as well.  And my understanding is that when we try to 
-> Fast-Transition (e.g. issue a CMD_ASSOCIATE), operstate is no longer
-> UP.
-
-I'm not sure - I don't know what the state machine in wpa_s goes
-through here. Probably easier to test than try to reason about the
-code...
-
-> At the very least there's lots of confusion with what is supposed to 
-> happen with operstate and when.  So if we can work out & document a 
-> consistent behavior, I'm all for it.
-
-:-)
-
-johannes
+Larry
