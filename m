@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55998 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49466 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752743AbdIRMwB (ORCPT
+        with ESMTP id S1751000AbdIAFad (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 08:52:01 -0400
+        Fri, 1 Sep 2017 01:30:33 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
-        <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
-        <1505724068.13691.0.camel@sipsolutions.net>
-        <20170918095713.mfn76hkdbo73k4fu@bars>
-Date: Mon, 18 Sep 2017 15:51:57 +0300
-In-Reply-To: <20170918095713.mfn76hkdbo73k4fu@bars> (Sergey Matyukevich's
-        message of "Mon, 18 Sep 2017 12:57:13 +0300")
-Message-ID: <87shfkkw42.fsf@purkki.adurom.net> (sfid-20170918_145205_358775_21A0330A)
+To: Eric Bentley <Eric.Bentley@lairdtech.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "arend.vanspriel\@broadcom.com" <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH v2] Correctly fail to suspend when SDIO does not support power on suspend
+References: <F895C8CD-1D0E-46CB-9C12-5B4775E76217@lairdtech.com>
+Date: Fri, 01 Sep 2017 08:30:28 +0300
+In-Reply-To: <F895C8CD-1D0E-46CB-9C12-5B4775E76217@lairdtech.com> (Eric
+        Bentley's message of "Fri, 1 Sep 2017 00:04:51 +0000")
+Message-ID: <873787nfyj.fsf@purkki.adurom.net> (sfid-20170901_073048_531224_4DEC51BD)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Eric Bentley <Eric.Bentley@lairdtech.com> writes:
 
-> By the way, is it ok to send corrected single patch in reply to this
-> discussion ? Or the appropriate way is to resend the whole patch set ?
+> Return error when failing to set power management capabilities flag.  This will cause the suspend to fail but the radio
+> will continue to operate.  Allowing this to fail without reporting error will cause the radio to be non-functional on 
+> resume as it will have lost power.
+>
+> Signed-off-by: Eric Bentley eric.bentley@lairdtech.com
 
-This has been a common question so I documented it:
+Word wrap the commit log to 72 chars (or so) per line. Also add a prefix
+to the title:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#resubmit_the_whole_patchset
-
-I leave it as an exercise to the reader to find the answer, even though
-the URL even spoils it ;)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_title_is_wrong
 
 -- 
 Kalle Valo
