@@ -1,121 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:47301 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751289AbdILMdn (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:34564 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750955AbdIAUCv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 08:33:43 -0400
-Date: Tue, 12 Sep 2017 05:33:41 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Kevin Cernekee <cernekee@chromium.org>,
-        franky.lin@broadcom.com, brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: Re: [PATCH V2 1/3] brcmfmac: Avoid possible out-of-bounds read
-Message-ID: <20170912123341.GA19179@kroah.com> (sfid-20170912_143347_359392_FD4852C1)
-References: <20170909193020.19061-1-cernekee@chromium.org>
- <deff51ff-40f0-ffa4-afd0-b95465c66a8e@broadcom.com>
- <87tw08mpq1.fsf@purkki.adurom.net>
- <59B78E94.5040909@broadcom.com>
- <87o9qgicju.fsf@kamboji.qca.qualcomm.com>
- <59B793C9.2030103@broadcom.com>
- <87k214ibps.fsf@kamboji.qca.qualcomm.com>
- <59B79838.6090408@broadcom.com>
+        Fri, 1 Sep 2017 16:02:51 -0400
+Received: by mail-wm0-f45.google.com with SMTP id 137so2730270wmj.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Sep 2017 13:02:50 -0700 (PDT)
+Subject: Re: [PATCH v2] brcmfmac: Correctly fail to suspend when SDIO does not
+ support power on suspend
+To: Eric Bentley <Eric.Bentley@lairdtech.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Steve deRosier <derosier@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <AC37C967-209B-4BC3-9AF2-9CC4C27391C0@lairdtech.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <eacde476-6130-6ab1-ea09-ceb2d3a58aaa@broadcom.com> (sfid-20170901_220255_860314_117184D7)
+Date: Fri, 1 Sep 2017 22:02:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <59B79838.6090408@broadcom.com>
+In-Reply-To: <AC37C967-209B-4BC3-9AF2-9CC4C27391C0@lairdtech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 12, 2017 at 10:18:00AM +0200, Arend van Spriel wrote:
-> + Greg KH
-> 
-> On 9/12/2017 10:05 AM, Kalle Valo wrote:
-> > Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> > 
-> > > On 9/12/2017 9:47 AM, Kalle Valo wrote:
-> > > > Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> > > > 
-> > > > > On 9/12/2017 7:48 AM, Kalle Valo wrote:
-> > > > > > Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> > > > > > 
-> > > > > > > On 09-09-17 21:30, Kevin Cernekee wrote:
-> > > > > > > > In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
-> > > > > > > > the length of rxframe is validated.  This could lead to uninitialized
-> > > > > > > > data being accessed (but not printed).  Since we already have a
-> > > > > > > > perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
-> > > > > > > > and ch.chspec is not modified by decchspec(), avoid the extra
-> > > > > > > > assignment and use ch.chspec in the debug print.
-> > > > > > > > 
-> > > > > > > > Suggested-by: Mattias Nissler <mnissler@chromium.org>
-> > > > > > > > Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
-> > > > > > > > Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> > > > > > > > ---
-> > > > > > > >      drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
-> > > > > > > >      1 file changed, 1 insertion(+), 2 deletions(-)
-> > > > > > > > 
-> > > > > > > > 
-> > > > > > > > V1->V2: Clarify changelog re: whether the uninitialized data is printed.
-> > > > > > > 
-> > > > > > > This patch and the others in this series look fine to me.
-> > > > > > 
-> > > > > > Should these go to v4.14?
-> > > > > 
-> > > > > I have no strong opinion. These are certainly improvements, but it
-> > > > > does not seem an -rc fix to me. Within this series I would say patch
-> > > > > 3/3 adds an additional sanity check in the event processing against an
-> > > > > attack so you may consider adding just that one to v4.14
-> > > > 
-> > > > Ok, I'll queue patch 3 to v4.14.
-> > > > 
-> > > > > and tag it for stable, ie.:
-> > > > > 
-> > > > > Cc: stable@vger.kernel.org # v3.8.x
-> > > > 
-> > > > But why v3.8.x? I admit that I haven't fully figured out the stable tags
-> > > > yet, but doesn't that mean that it will be only applied to v3.8.x and
-> > > > nothing else? I was expecting it to be:
-> > > > 
-> > > > Cc: stable@vger.kernel.org # v3.8+
-> > > > 
-> > > 
-> > > It is actually in the stable-kernel-rules documentation [1]:
-> > > 
-> > > """
-> > > Also, some patches may have kernel version prerequisites.  This can be
-> > > specified in the following format in the sign-off area:
-> > > 
-> > > .. code-block:: none
-> > > 
-> > >       Cc: <stable@vger.kernel.org> # 3.3.x
-> > > 
-> > > The tag has the meaning of:
-> > > 
-> > > .. code-block:: none
-> > > 
-> > >       git cherry-pick <this commit>
-> > > 
-> > > For each "-stable" tree starting with the specified version.
-> > > """
-> > 
-> > Yeah, but it says "starting with" which I interpret as "starting with
-> > string '3.3'". For example the commit here would be applied to 3.3.1,
-> > 3.3.2 and 3.3.3 etc but _not_ to 3.4, 3.4.1, 3.5 or any later release.
-> > 
-> > Of course I can be way off here, wouldn't be the first :)
-> 
-> Dito. I interpret "each -stable tree" as each stable branch in the stable
-> repository. Would Greg know?
+On 01-09-17 15:00, Eric Bentley wrote:
+> Return error when failing to set power management capabilities flag.  This will
+> cause the suspend to fail but the radio will continue to operate.  Allowing this
+> to fail without reporting error will cause the radio to be non-functional on
+> resume as it will have lost power.
 
-"# 3.8+" and "# 3.8" mean the same thing to me, we would never backport
-something to only a very specific kernel version, and leave newer kernel
-versions to not have that fix.  That would be crazy, and would break our
-"no regressions" rule (i.e. newer kernels should always work as good as
-older kernels.)
+There is more to this story to tell. Initially, the suspend callback did 
+return an error upon failing to set the flags. This was dropped by 
+commit 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.") as 
+it set the flags only for wowl and that wowl would only be enabled if 
+the host supports the capability flags:
 
-Don't get hung up on the semantics here people, it's not all that
-complicated, and I do it all by hand anyway :)
++#ifdef CONFIG_PM_SLEEP
++       /* wowl can be supported when KEEP_POWER is true and (WAKE_SDIO_IRQ
++        * is true or when platform data OOB irq is true).
++        */
++       if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
++           ((sdio_get_host_pm_caps(sdiodev->func[1]) & 
+MMC_PM_WAKE_SDIO_IRQ) ||
++            (sdiodev->pdata->oob_irq_supported)))
++               bus_if->wowl_supported = true;
++#endif
 
-thanks,
+However, MMC_PM_KEEP_POWER is also needed for the non-wowl case. I 
+restored that in commit bdf1340cf20f ("brcmfmac: fix sdio suspend and 
+resume"), but overlooked the error code return also needed to be restored.
 
-greg k-h
+Also note that the wifi chip (the term "radio" does not quite cover it) 
+has not really lost power. It is quite common that it is not powered 
+through the SDIO bus. With the power-sequence support in the MMC stack 
+these days the suspend may result in loss of power. Otherwise, it is 
+just the bus that loses power (and clock) and the flags affect what 
+tricks the MMC stack tries to pull to get the device accessible again 
+upon resume.
+
+Maybe you can incorporate some of this in the commit message, but you 
+should at least add:
+
+Fixes: 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
+Fixes: bdf1340cf20f ("brcmfmac: fix sdio suspend and resume")
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Eric Bentley eric.bentley@lairdtech.com
+> ---
+> v2: corrected errant ( with {
+> ---
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 +++-
+> 1 file changed, 3 insertions(+), 1 deletion(-)
