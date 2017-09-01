@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36503 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752557AbdI2TsP (ORCPT
+Received: from smtprelay0225.hostedemail.com ([216.40.44.225]:34471 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750707AbdIAEFb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 15:48:15 -0400
-Received: by mail-oi0-f68.google.com with SMTP id a74so288447oib.3
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:15 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 08/10] rtlwifi: Remove BAND_NUM and related fields
-Date: Fri, 29 Sep 2017 14:47:58 -0500
-Message-Id: <20170929194800.15617-9-Larry.Finger@lwfinger.net> (sfid-20170929_214820_942326_1A1DDCEA)
-In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+        Fri, 1 Sep 2017 00:05:31 -0400
+Message-ID: <1504238727.2361.1.camel@perches.com> (sfid-20170901_060534_501709_7DF15A2A)
+Subject: Re: [PATCH 2/2] mwifiex: print URB submit failure error after
+ threshold attemtps
+From: Joe Perches <joe@perches.com>
+To: Ganapathi Bhat <gbhat@marvell.com>, linux-wireless@vger.kernel.org
+Cc: Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Date: Thu, 31 Aug 2017 21:05:27 -0700
+In-Reply-To: <1504122674-3379-3-git-send-email-gbhat@marvell.com>
+References: <1504122674-3379-1-git-send-email-gbhat@marvell.com>
+         <1504122674-3379-3-git-send-email-gbhat@marvell.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Thu, 2017-08-31 at 01:21 +0530, Ganapathi Bhat wrote:
+> Current driver prints dev_alloc_skb failures everytime while
+> submitting RX URBs. This failure might be frequent in some
+> low resource platforms. So, wait for a threshold failure
+> count before start priting the error. This change is a follow
+> up for the 'commit 7b368e3d15c3
+> ("mwifiex: resubmit failed to submit RX URBs in main thread")'
 
-These fields are unused, and we will define them in phydm later.
+[]
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 16 ----------------
- 1 file changed, 16 deletions(-)
+> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+[]
+> @@ -300,9 +300,16 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
+>  	if (card->rx_cmd_ep != ctx->ep) {
+>  		ctx->skb = dev_alloc_skb(size);
+>  		if (!ctx->skb) {
+> -			mwifiex_dbg(adapter, ERROR,
+> -				    "%s: dev_alloc_skb failed\n", __func__);
+> +			if (++card->rx_urb_failure_count >
+> +			    MWIFIEX_RX_URB_FAILURE_THRESHOLD) {
+> +				mwifiex_dbg(adapter, ERROR,
+> +					    "%s: dev_alloc_skb failed, failure count = %u\n",
+> +					    __func__,
+> +					    card->rx_urb_failure_count);
+> +			}
+>  			return -ENOMEM;
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 5843aee5c921..6705f863f152 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -172,7 +172,6 @@ enum rtl8192c_h2c_cmd {
- #define BUFDESC_SEG_NUM		1 /* 0:2 seg, 1: 4 seg, 2: 8 seg */
- 
- #define DEL_SW_IDX_SZ		30
--#define BAND_NUM			3
- 
- /* For now, it's just for 8192ee
-  * but not OK yet, keep it 0
-@@ -1748,21 +1747,6 @@ struct rtl_dm {
- 	s8	swing_diff_2g;
- 	s8	swing_diff_5g;
- 
--	u8 delta_swing_table_idx_24gccka_p[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24gccka_n[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24gcckb_p[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24gcckb_n[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24ga_p[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24ga_n[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24gb_p[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24gb_n[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_5ga_p[BAND_NUM][DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_5ga_n[BAND_NUM][DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_5gb_p[BAND_NUM][DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_5gb_n[BAND_NUM][DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24ga_p_8188e[DEL_SW_IDX_SZ];
--	u8 delta_swing_table_idx_24ga_n_8188e[DEL_SW_IDX_SZ];
--
- 	/* DMSP */
- 	bool supp_phymode_switch;
- 
--- 
-2.13.5
+Why not use a ratelimit?
