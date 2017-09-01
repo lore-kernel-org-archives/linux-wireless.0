@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:46468 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751846AbdINTor (ORCPT
+Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:54114 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751443AbdIAIV0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 15:44:47 -0400
-Received: by mail-lf0-f54.google.com with SMTP id m199so392495lfe.3
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 12:44:46 -0700 (PDT)
-Received: from [172.28.2.212] (static-213-115-247-2.sme.bredbandsbolaget.se. [213.115.247.2])
-        by smtp.gmail.com with ESMTPSA id x28sm1280289lje.30.2017.09.14.12.44.44
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Sep 2017 12:44:44 -0700 (PDT)
-From: Joel B <maxxflow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi: ToF usage
-Message-ID: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com> (sfid-20170914_214450_543811_977A8C9B)
-Date: Thu, 14 Sep 2017 21:44:44 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 1 Sep 2017 04:21:26 -0400
+Message-ID: <1504254083.2361.7.camel@perches.com> (sfid-20170901_102131_460359_CB2B4330)
+Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>
+Date: Fri, 01 Sep 2017 01:21:23 -0700
+In-Reply-To: <87k21irg1g.fsf@kamboji.qca.qualcomm.com>
+References: <20170825082730.31388-1-luca@coelho.fi>
+         <20170825082730.31388-2-luca@coelho.fi>
+         <1504216665.2786.48.camel@perches.com>
+         <1504244238.31031.24.camel@coelho.fi> <1504246520.2361.3.camel@perches.com>
+         <87k21irg1g.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2017-09-01 at 11:15 +0300, Kalle Valo wrote:
+> Joe Perches <joe@perches.com> writes:
+> > On Fri, 2017-09-01 at 08:37 +0300, Luca Coelho wrote:
+> > > On Thu, 2017-08-31 at 14:57 -0700, Joe Perches wrote:
+> > > > On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
+> > > > > From: Liad Kaufman <liad.kaufman@intel.com>
+> > > > > There is a debug print that sometimes reaches over
+> > > > > 110 chars, thus generating a warning in those cases.
+[]
+> > It might make sense to add a comment to describe these
+> > trace events coming from TRACE_EVENT(iwlwifi_dbg,
+> > 
+> > All the IWL_DEBUG_<foo> use this trace message maximum.
+> 
+> Unfortunately the patch is already commited to wireless-drivers-next so
+> we can't change the commit log anymore.
 
-Starting to play around with the FTM/ToF support in iwlwifi, but 
-documentation is (understandably) scarce at this point. Using a pair of 
-8260:s I had lying around.
-
-Can someone give me some hints on how to work the debugfs API for a 
-successful measurement?
-
-I've set up one card as AP with hostapd (with ftm_responder=1 and 
-ftm_initiator=1 in hostapd.conf), the other as a STA.
-
- From the STA, I've played with 'tof_range_request' in debugfs. Writing 
-send_range_request=1, which it doesn't choke on or anything, but nothing 
-seems to happen. Guess I need to set things up a bit first, but how?
-
-If it's possible to get this to work at all at this stage, some hints on 
-how to do it would be great.
-
-
-Thanks,
-Joel
+No worries about the commit.
+It'd be useful to add a comment to the code.
