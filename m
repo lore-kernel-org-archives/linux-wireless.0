@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33392 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753326AbdIFM0e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:26:34 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mac80211: always update the PM state of a peer on MGMT
- / DATA frames
-Date: Wed, 6 Sep 2017 12:26:29 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3FF7DB582@HASMSX112.ger.corp.intel.com> (sfid-20170906_142643_622178_802F7F20)
-References: <20170906122523.17333-1-emmanuel.grumbach@intel.com>
-In-Reply-To: <20170906122523.17333-1-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:37173 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751863AbdIAQtO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 12:49:14 -0400
+Date: Fri, 1 Sep 2017 11:49:11 -0500
+From: Rob Herring <robh@kernel.org>
+To: Antony Antony <antony@phenome.org>
+Cc: Chen-Yu Tsai <wens@csie.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Icenowy Zheng <icenowy@aosc.io>,
+        devicetree <devicetree@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>
+Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add
+ bcm43430-fmac
+Message-ID: <20170901164911.aiu5ej5u546z5kow@rob-hp-laptop> (sfid-20170901_184917_527828_6021F033)
+References: <20170829214309.34466-1-antony@phenome.org>
+ <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
+ <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 30, 2017 at 02:02:18PM +0200, Antony Antony wrote:
+> hi,
 > 
-> The 2016 version of the spec is more generic about when the AP should
-> update the power management state of the peer:
-> the AP shall update the state based on any management or data frames. This
-> means that even non-bufferable management frames should be looked at to
-> update to maintain the power management state of the peer.
+> On Wed, Aug 30, 2017 at 10:28:20AM +0800, Chen-Yu Tsai wrote:
+> > On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
 > 
-> This can avoid problematic cases for example if a station disappears while
-> being asleep and then re-appears. The AP would remember it as in power
-> save, but the Authentication frame couldn't be used to set the peer as
-> awake again.
-> Note that this issues wasn't really critical since at some point (after the
-> association) we would have removed the station and created another one
-> with all the states cleared.
+> > > a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> > > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> > > @@ -6,7 +6,9 @@ connects the device to the system.
+> > >
+> > >  Required properties:
+> > >
+> > > - - compatible : Should be "brcm,bcm4329-fmac".
+> > > + - compatible : should be one of the following:
+> > > +       * "brcm,bcm4329-fmac"
+> > > +       * "brcm,bcm43430-fmac"
+> > 
+> > You updated the bindings, but not the driver. So it's not actually
+> > going to work. More specifically, OOB interrupts won't work.
+> >
 > 
-> type=feature
-> ticket=none
+> understood, ignore this patch for now. Thanks Chen-Yu.
 > 
-> Change-Id: Iae1fbbd502d64f0c31db3e0f2d81224b29acb5af
+> > IIRC, The compatible string for this particular case, as it was
+> > originally proposed, only serves as a placeholder for the driver
+> > to check against. None of the instances in sunxi device trees
+> > match the actual chip model. Actual model matching is done
+> > through SDIO, as you've already seen.
+> 
+> yes it seems SDIO driveer code is smarter, once it initialize 
+> brcm,bcm4329-fmac it ignore the DT info and read the chip details to locate 
+> firmware file.
+> 
+> I also noticed other boards using bcm4329-fmac in similar situations.
+> https://patchwork.kernel.org/patch/9739181/
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/amlogic/meson-gxbb-nanopi-k2.dts?h=v4.13-rc7
+> 
+> I will resend "NanoPi NEO Plus2" dts with "brcm,bcm4329-fmac" and see where 
+> it goes. 
 
-Looks like I forgot to remove a few things here :)
-And to put this as an RFC..
+Adding the compatible or instead of? The former would be better. You 
+should still have the actual chip in case you do have some difference to 
+handle.
 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->  net/mac80211/rx.c | 17 +++++------------
->  1 file changed, 5 insertions(+), 12 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c index
-> fdf616811865..89db6b11af8a 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1749,23 +1749,16 @@ ieee80211_rx_h_sta_process(struct
-> ieee80211_rx_data *rx)
-> 
->  	/*
->  	 * Change STA power saving mode only at the end of a frame
-> -	 * exchange sequence.
-> +	 * exchange sequence, and only for a data or management
-> +	 * frame as specified in ieee80211-2016 11.2.3.2
->  	 */
->  	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
->  	    !ieee80211_has_morefrags(hdr->frame_control) &&
-> -	    !ieee80211_is_back_req(hdr->frame_control) &&
-> +	    (ieee80211_is_mgmt(hdr->frame_control) ||
-> +	     ieee80211_is_data(hdr->frame_control)) &&
->  	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
->  	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
-> -	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
-> -	    /*
-> -	     * PM bit is only checked in frames where it isn't reserved,
-> -	     * in AP mode it's reserved in non-bufferable management frames
-> -	     * (cf. IEEE 802.11-2012 8.2.4.1.7 Power Management field)
-> -	     * BAR frames should be ignored as specified in
-> -	     * IEEE 802.11-2012 10.2.1.2.
-> -	     */
-> -	    (!ieee80211_is_mgmt(hdr->frame_control) ||
-> -	     ieee80211_is_bufferable_mmpdu(hdr->frame_control))) {
-> +	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
->  		if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
->  			if (!ieee80211_has_pm(hdr->frame_control))
->  				sta_ps_end(sta);
-> --
-> 2.9.3
+Rob
