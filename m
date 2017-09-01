@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59032 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754539AbdIHGyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 02:54:10 -0400
-Message-ID: <1504853647.6177.8.camel@sipsolutions.net> (sfid-20170908_085613_103214_43E8A9AD)
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 08 Sep 2017 08:54:07 +0200
-In-Reply-To: <20170907154744.28357-1-rschuetz@uni-koblenz.de> (sfid-20170907_175508_102149_80D1890A)
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-         (sfid-20170907_175508_102149_80D1890A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:36759 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751715AbdIAUHf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 16:07:35 -0400
+Received: by mail-pf0-f179.google.com with SMTP id r187so3269853pfr.3
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Sep 2017 13:07:35 -0700 (PDT)
+Subject: Re: [PATCH 13/31] timer: Remove meaningless .data/.function
+ assignments
+To: Kees Cook <keescook@chromium.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+References: <1504222183-61202-1-git-send-email-keescook@chromium.org>
+ <1504222183-61202-14-git-send-email-keescook@chromium.org>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <a0462e18-5eae-95e0-21af-e9709729abb1@kernel.dk> (sfid-20170901_220755_128991_CF7ACE81)
+Date: Fri, 1 Sep 2017 14:07:32 -0600
+MIME-Version: 1.0
+In-Reply-To: <1504222183-61202-14-git-send-email-keescook@chromium.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
-> According to IEEE Std 802.11-2016 (16.2.3.4 Long PHY SIGNAL field)
-> all of
-> the following rates are mandatory for a HR/DSSS PHY: 1 Mb/s, 2 Mb/s,
-> 5.5 Mb/s and 11 Mb/s. Set IEEE80211_RATE_MANDATORY_B flag for all of
-> these instead of just 1 Mb/s to correctly reflect this.
+On 08/31/2017 05:29 PM, Kees Cook wrote:
+> Several timer users needlessly reset their .function/.data fields during
+> their timer callback, but nothing else changes them. Some users do not
+> use their .data field at all. Each instance is removed here.
 
-Hmm, I guess technically you're correct, since 11b added what's now
-Clause 16 (was Clause 18 at the time), and that has all of them
-mandatory? But perhaps this was actually intended for Clause 15
-compatibility?
+For amiflop:
 
-johannes
+Acked-by: Jens Axboe <axboe@kernel.dk>
+
+-- 
+Jens Axboe
