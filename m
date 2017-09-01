@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36327 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750748AbdIEJtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 05:49:35 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
-In-Reply-To: <1504603125.12380.7.camel@sipsolutions.net>
-References: <20170622102030.9795-1-johannes@sipsolutions.net> <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk> <1504517620.9797.3.camel@sipsolutions.net> <87mv6a35lb.fsf@toke.dk> <1504594708.6667.1.camel@sipsolutions.net> <8760cx34cm.fsf@toke.dk> <1504603125.12380.7.camel@sipsolutions.net>
-Date: Tue, 05 Sep 2017 11:49:31 +0200
-Message-ID: <87zia91nmc.fsf@toke.dk> (sfid-20170905_114938_533186_A59FC10B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:56349 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751014AbdIAGPY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 02:15:24 -0400
+Message-ID: <1504246520.2361.3.camel@perches.com> (sfid-20170901_081631_378871_3CBAFDF6)
+Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
+From: Joe Perches <joe@perches.com>
+To: Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>
+Date: Thu, 31 Aug 2017 23:15:20 -0700
+In-Reply-To: <1504244238.31031.24.camel@coelho.fi>
+References: <20170825082730.31388-1-luca@coelho.fi>
+         <20170825082730.31388-2-luca@coelho.fi>
+         <1504216665.2786.48.camel@perches.com>
+         <1504244238.31031.24.camel@coelho.fi>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, 2017-09-01 at 08:37 +0300, Luca Coelho wrote:
+> On Thu, 2017-08-31 at 14:57 -0700, Joe Perches wrote:
+> > On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
+> > > From: Liad Kaufman <liad.kaufman@intel.com>
+> > > 
+> > > There is a debug print that sometimes reaches over
+> > > 110 chars, thus generating a warning in those cases.
+> > 
+> > What emits a warning here?
+> 
+> We have a WARN_ON in iwl-devtrace-msg.h:
+> 
+> #define MAX_MSG_LEN	110
 
-> On Tue, 2017-09-05 at 11:02 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>=20
->> > I'm not sure. However, I think it's less bad than one might guess
->> > since it really should only affect multicast frames, right? All
->> > unicast frames should go directly to the per-STA TXQ.
->>=20
->> Ah, right, that is the interface txq that is being purged. Gotcha.
->>=20
->> But, erm, what happens with unicast traffic sent on the VLAN
->> interface when it goes down? Shouldn't that be purged from the per-
->> station TXQs as well?
->
-> Well, those entire TXQs are destroyed with the station :)
+OK, thanks for the hint.
 
-Ah, so the station is attached to the VLAN interface, not the parent
-interface?
+The commit message is a bit obscure.
 
-I guess that the only case where there is likely to be any significant
-effects of dropping the whole queue is if someone is sending large
-amounts of multicast traffic (live video streaming? is that even
-feasible over WiFi?) while reconfiguring their VLAN setup. That is
-probably not a terribly common combination...
+It might make sense to add a comment to describe these
+trace events coming from TRACE_EVENT(iwlwifi_dbg,
 
--Toke
+All the IWL_DEBUG_<foo> use this trace message maximum.
