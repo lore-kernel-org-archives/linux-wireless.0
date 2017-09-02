@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:24033 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933676AbdIYLrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 07:47:08 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "trivial@kernel.org" <trivial@kernel.org>,
-        "christoph@boehmwalder.at" <christoph@boehmwalder.at>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH RESEND] wireless: iwlwifi: fix minor code style issues
-Date: Mon, 25 Sep 2017 11:47:04 +0000
-Message-ID: <1506340012.3276.17.camel@intel.com> (sfid-20170925_134727_369652_ABFF5B2B)
-References: <912deca9-79b6-7a44-6859-dbe532d90fed@boehmwalder.at>
-In-Reply-To: <912deca9-79b6-7a44-6859-dbe532d90fed@boehmwalder.at>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751424AbdIBBpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 21:45:08 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 9/9] qtnfmac: do not report channel changes until wiphy is registered
+Date: Fri,  1 Sep 2017 18:44:51 -0700
+Message-Id: <20170902014451.17766-10-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034512_087008_602F2016)
+In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE3LTA5LTI1IGF0IDEzOjM3ICswMjAwLCBDaHJpc3RvcGggQsO2aG13YWxkZXIg
-d3JvdGU6DQo+IEZpeGVzIHRocmVlIHRyaXZpYWwgaXNzdWVzIGFzIHJlcG9ydGVkIGJ5IGNoZWNr
-cGF0Y2gucGwsIG5hbWVseSB0d28NCnN3aXRjaC9jYXNlIGluZGVudGF0aW9uIGlzc3VlcyBhbmQg
-b25lIGFsaWdubWVudCBpc3N1ZSBpbiBhIG11bHRpbGluZQ0KY29tbWVudC4NCg0KU2lnbmVkLW9m
-Zi1ieTogQ2hyaXN0b3BoIELDtmhtd2FsZGVyIDxjaHJpc3RvcGhAYm9laG13YWxkZXIuYXQ+DQot
-LS0NCg0KV2h5IGFyZSB5b3UgYWxyZWFkeSByZXNlbmRpbmcgdGhpcz8gWW91IHNlbnQgdGhlIGZp
-cnN0IGVtYWlsIDIgZGF5cyBhZ28sDQp5b3UgY2FuJ3QgZXhwZWN0IHRoYXQgYSBub24tY3JpdGlj
-YWwgcGF0Y2ggYmUgbWVyZ2VkIGluIHN1Y2ggYSBzaG9ydA0KdGltZSAoZXNwZWNpYWxseSBkdXJp
-bmcgdGhlIHdlZWtlbmQpLg0KDQotLQ0KQ2hlZXJzLA0KTHVjYQ==
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index b1acc24..7481d5b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -368,6 +368,9 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
++	if (!wiphy->registered)
++		return 0;
++
+ 	qlink_chandef_q2cfg(wiphy, &data->chan, &chandef);
+ 
+ 	if (!cfg80211_chandef_valid(&chandef)) {
+-- 
+2.9.5
