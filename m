@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48550 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753515AbdIDNTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 09:19:36 -0400
-Message-ID: <1504531173.27801.0.camel@sipsolutions.net> (sfid-20170904_151939_808944_368D7918)
-Subject: Re: Incorrect mesh path seq num
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@eero.com>, Greg Maitz <ghh19622@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 Sep 2017 15:19:33 +0200
-In-Reply-To: <CADjYELxyuT74Ms30Ohu_a6Ymg6RLctf6mehRmw-poLgLMZWiwQ@mail.gmail.com> (sfid-20170901_220755_362447_35ACB724)
-References: <CAG5S3ZTRe52qSWt6WEe6K78brrQqc7+HgN_8OQ+RKC9k1WUMCw@mail.gmail.com>
-         <CADjYELxyuT74Ms30Ohu_a6Ymg6RLctf6mehRmw-poLgLMZWiwQ@mail.gmail.com>
-         (sfid-20170901_220755_362447_35ACB724)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:46820 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751838AbdIBINw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Sep 2017 04:13:52 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: dan.carpenter@oracle.com
+Cc: shaul.triebitz@intel.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Sep 2017 11:13:38 +0300
+Message-Id: <20170902081338.19494-1-luca@coelho.fi> (sfid-20170902_101356_769802_4869D0EF)
+In-Reply-To: <20170901083022.t6e2zlrqfyebrf5t@mwanda>
+References: <20170901083022.t6e2zlrqfyebrf5t@mwanda>
+Subject: [PATCH] iwlwifi: mvm: initialize status in iwl_mvm_add_int_sta_common()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-01 at 13:07 -0700, Thomas Pedersen wrote:
-> On Thu, Aug 31, 2017 at 11:30 PM, Greg Maitz <ghh19622@gmail.com>
-> wrote:
-> > Hi guys,
-> > 
-> > I'm seeing a problem when I work on the wireless mesh between two
-> > linux devices. The root node has 3.18 kernel while the next hop
-> > station runs 2.6.37 kernel. I found the mpath->sn value is
-> > incorrect
-> > most of the time on the device having 2.6.37 kernel. After
-> > examining
-> > the code, in function hwmp_route_info_get [mesh_hwmp.c], after
-> > mesh_path_lookup, the sequence number (i.e, mpath->sn) is
-> > incorrect.
-> > For instance, I see mpath->sn having value 0x30950000. It should be
-> > 0x9530, while the orig_sn is having value 0x9531.
-> 
-> Looks like an endianess bug. Are you testing on two platforms of
-> different endianess?
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Even if that's the case, wouldn't it mean some kind of conversion is
-missing somewhere?
+We always need to initialize the status argument to the success case
+before calling iwl_mvm_send_cmd_status() or
+iwl_mvm_send_cmd_pdu_status() (which calls the former) otherwise we
+may get an uninitialized value back.  In this case, we use
+ADD_STA_SUCCESS as success.
 
-johannes
+Fixes: 732d06e9d9cf ("iwlwifi: mvm: add station before allocating a queue")
+Reported by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 411a2055dc45..b476c365d9b4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1285,7 +1285,7 @@ static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_add_sta_cmd cmd;
+ 	int ret;
+-	u32 status;
++	u32 status = ADD_STA_SUCCESS;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-- 
+2.14.1
