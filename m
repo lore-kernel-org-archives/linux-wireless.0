@@ -1,65 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:52722 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751531AbdIUH0w (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 03:26:52 -0400
-Received: by mail-qt0-f182.google.com with SMTP id o52so5069762qtc.9
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 00:26:51 -0700 (PDT)
-Subject: Re: AP6335 with mainline kernel
-To: Vanessa Ayumi Maegima <van.ayumi@gmail.com>,
-        linux-wireless@vger.kernel.org
-Cc: embed3d@gmail.com, joerg.krause@embedded.rocks,
-        Vanessa Maegima <vanessa.maegima@nxp.com>
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <e9fe560a-fba3-aaa8-8c0a-b3c6f5ce1a74@broadcom.com> (sfid-20170921_092656_670525_B585AD57)
-Date: Thu, 21 Sep 2017 09:26:47 +0200
+Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750941AbdIBBo7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 21:44:59 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 1/9] qtnfmac: qlink: convert channel width from bitfiled to simple enum
+Date: Fri,  1 Sep 2017 18:44:43 -0700
+Message-Id: <20170902014451.17766-2-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034506_101462_999A6781)
+In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20-09-17 21:33, Vanessa Ayumi Maegima wrote:
-> Hi,
-> 
-> I am trying to enable Wifi on imx7d-pico using mainline kernel. imx7d-pico
-> has an AP6335 chip.
-> 
-> I am facing some issues related to the nvram file. I am using the firmware
-> provided by Buildroot (brcmfmac4339-sdio.bin). I get the following error:
-> 
-> [    8.630380] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
-> clkctl 0x50
-> 
-> I have tried to use the firmware and nvram provided by TechNexion but I get
-> the same error.
-> 
-> Is there anyone that could enable Wifi on AP6335 using kernel mainline?
-> What nvram file was used?
-> 
-> I am able to use Wifi on the board if I use the firmware, nvram file and kernel
-> provided by TechNexion. They use a 4.1 kernel from NXP with the bcmdhd
-> driver.
-> 
-> So I know that the hardware is functional.
-> 
-> Any suggestions as how to get it working with a 4.13 and brcmfmac driver is
-> appreciated.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-So the nvram file is specific to the wifi chipset on your platform so 
-best to stick with the provided one. The "HT Avail timeout" most often 
-is an indication that the firmware crashed. So getting more debug output 
-would help us understand how it ended up like that. Can you build the 
-brcmfmac with CONFIG_BRCMDBG and load the driver using:
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h      | 16 ++++++++--------
+ drivers/net/wireless/quantenna/qtnfmac/qlink_util.c | 16 ++++++++--------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
-$ insmod brcmfmac.ko debug=0x1416
-
-Regards,
-Arend
-> Thanks!
-> 
-> Regards,
-> Vanessa
-> 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index a8242f6..a69fd470 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -108,14 +108,14 @@ enum qlink_sta_flags {
+ };
+ 
+ enum qlink_channel_width {
+-	QLINK_CHAN_WIDTH_5		= BIT(0),
+-	QLINK_CHAN_WIDTH_10		= BIT(1),
+-	QLINK_CHAN_WIDTH_20_NOHT	= BIT(2),
+-	QLINK_CHAN_WIDTH_20		= BIT(3),
+-	QLINK_CHAN_WIDTH_40		= BIT(4),
+-	QLINK_CHAN_WIDTH_80		= BIT(5),
+-	QLINK_CHAN_WIDTH_80P80		= BIT(6),
+-	QLINK_CHAN_WIDTH_160		= BIT(7),
++	QLINK_CHAN_WIDTH_5 = 0,
++	QLINK_CHAN_WIDTH_10,
++	QLINK_CHAN_WIDTH_20_NOHT,
++	QLINK_CHAN_WIDTH_20,
++	QLINK_CHAN_WIDTH_40,
++	QLINK_CHAN_WIDTH_80,
++	QLINK_CHAN_WIDTH_80P80,
++	QLINK_CHAN_WIDTH_160,
+ };
+ 
+ /* QLINK Command messages related definitions
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
+index cf024c9..369b77d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
+@@ -49,28 +49,28 @@ u8 qlink_chan_width_mask_to_nl(u16 qlink_mask)
+ {
+ 	u8 result = 0;
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_5)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_5))
+ 		result |= BIT(NL80211_CHAN_WIDTH_5);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_10)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_10))
+ 		result |= BIT(NL80211_CHAN_WIDTH_10);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_20_NOHT)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_20_NOHT))
+ 		result |= BIT(NL80211_CHAN_WIDTH_20_NOHT);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_20)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_20))
+ 		result |= BIT(NL80211_CHAN_WIDTH_20);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_40)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_40))
+ 		result |= BIT(NL80211_CHAN_WIDTH_40);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_80)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_80))
+ 		result |= BIT(NL80211_CHAN_WIDTH_80);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_80P80)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_80P80))
+ 		result |= BIT(NL80211_CHAN_WIDTH_80P80);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_160)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_160))
+ 		result |= BIT(NL80211_CHAN_WIDTH_160);
+ 
+ 	return result;
+-- 
+2.9.5
