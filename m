@@ -1,50 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53045 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752681AbdIESRC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 14:17:02 -0400
-From: Colin King <colin.king@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] b43legacy: fix unitialized reads of ret by initializing the array to zero
-Date: Tue,  5 Sep 2017 19:16:58 +0100
-Message-Id: <20170905181658.23893-1-colin.king@canonical.com> (sfid-20170905_201733_301115_7BC37DE1)
+Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750855AbdIBBpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Sep 2017 21:45:03 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 4/9] qtnfmac: do not cache channel info from "connect" command
+Date: Fri,  1 Sep 2017 18:44:46 -0700
+Message-Id: <20170902014451.17766-5-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034521_121750_4D6870A7)
+In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-The u8 char array ret is not being initialized and elements outside
-the range start to end contain just garbage values from the stack.
-This results in a later scan of the array to read potentially
-uninitialized values.  Fix this by initializing the array to zero.
-This seems to have been an issue since the very first commit.
+This makes no sense because real operational channel is choosen based
+on AP operation, not on what STA is configured to.
 
-Detected by CoverityScan CID#139653 ("Uninitialized scalar variable")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/broadcom/b43legacy/radio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 15 +--------------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++++--
+ 2 files changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/radio.c b/drivers/net/wireless/broadcom/b43legacy/radio.c
-index 9501420340a9..eab1c9387846 100644
---- a/drivers/net/wireless/broadcom/b43legacy/radio.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/radio.c
-@@ -280,7 +280,7 @@ u8 b43legacy_radio_aci_detect(struct b43legacy_wldev *dev, u8 channel)
- u8 b43legacy_radio_aci_scan(struct b43legacy_wldev *dev)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 0ef1285..17b323e 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -613,8 +613,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	     struct cfg80211_connect_params *sme)
  {
- 	struct b43legacy_phy *phy = &dev->phy;
--	u8 ret[13];
-+	u8 ret[13] = { 0 };
- 	unsigned int channel = phy->channel;
- 	unsigned int i;
- 	unsigned int j;
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
+-	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+-	struct cfg80211_chan_def chandef;
+ 	struct qtnf_bss_config *bss_cfg;
+ 	int ret;
+ 
+@@ -627,18 +625,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	bss_cfg = &vif->bss_cfg;
+ 	memset(bss_cfg, 0, sizeof(*bss_cfg));
+ 
+-	if (sme->channel) {
+-		/* FIXME: need to set proper nl80211_channel_type value */
+-		cfg80211_chandef_create(&chandef, sme->channel,
+-					NL80211_CHAN_HT20);
+-		/* fall-back to minimal safe chandef description */
+-		if (!cfg80211_chandef_valid(&chandef))
+-			cfg80211_chandef_create(&chandef, sme->channel,
+-						NL80211_CHAN_HT20);
+-
+-		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
+-	}
+-
+ 	bss_cfg->ssid_len = sme->ssid_len;
+ 	memcpy(&bss_cfg->ssid, sme->ssid, bss_cfg->ssid_len);
+ 	bss_cfg->auth_type = sme->auth_type;
+@@ -663,6 +649,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		bss_cfg->connect_flags |= QLINK_STA_CONNECT_USE_RRM;
+ 
+ 	memcpy(&bss_cfg->crypto, &sme->crypto, sizeof(bss_cfg->crypto));
++
+ 	if (sme->bssid)
+ 		ether_addr_copy(bss_cfg->bssid, sme->bssid);
+ 	else
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 806b88b..c55bae1 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2055,8 +2055,10 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 
+ 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
+ 
+-	if (vif->mac->chandef.chan)
+-		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
++	if (sme->channel)
++		cmd->channel = cpu_to_le16(sme->channel->hw_value);
++	else
++		cmd->channel = 0;
+ 
+ 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
+ 
 -- 
-2.14.1
+2.9.5
