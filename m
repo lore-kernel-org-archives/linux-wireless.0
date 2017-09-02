@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:43076 "EHLO
-        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753944AbdIIXEQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Sep 2017 19:04:16 -0400
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:46326 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752150AbdIBIa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Sep 2017 04:30:58 -0400
+Date: Sat, 2 Sep 2017 10:30:55 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Nishank aggarwal <nishank.aggarwal89@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: Sequence Number Issue for QoS frames in 3352 SOC
+Message-ID: <20170902083055.GB11293@redhat.com> (sfid-20170902_103101_967272_47917D87)
+References: <CAGb8t=s+KYFnCxgMbyhGS9trujA+xdAiEwLNVEZyocHSSb-PNg@mail.gmail.com>
 MIME-Version: 1.0
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-CC: akpm@linux-foundation.org,
-        "Johannes Berg" <johannes@sipsolutions.net>,
-        "Johannes Berg" <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>
-Date: Sat, 09 Sep 2017 22:47:15 +0100
-Message-ID: <lsq.1504993635.208015375@decadent.org.uk> (sfid-20170910_011025_840039_0E8AC244)
-Subject: [PATCH 3.16 191/233] mac80211/wpa: use constant time memory
- comparison for MACs
-In-Reply-To: <lsq.1504993633.197134470@decadent.org.uk>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGb8t=s+KYFnCxgMbyhGS9trujA+xdAiEwLNVEZyocHSSb-PNg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.16.48-rc1 review patch.  If anyone has any objections, please let me know.
+On Fri, Sep 01, 2017 at 04:18:36PM +0530, Nishank aggarwal wrote:
+> *This is Nishank Aggarwal having 4 years of Experience in Linux Device
+> Driver Development . I would like to discuss one issue i am facing in my
+> current project related to WLAN 802.11 e Qos data frame.*
+> *We are using 3352 SOC openwrt where i am getting one issue " STA
+> re-transmitting the frames with incremented sequence number.
+> <https://github.com/VivintInnovationJDM/ges-openwrt/issues/33>"*
 
-------------------
+This link seems to be wrong.
 
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+> *for Qos data frame, I paste some of the examples of sniffer logs captured.*
+> 
+> 226269	2017-07-04 11
+> <callto:226269%202017-07-04%2011>:46:42.358904	3c:4f:2d:6c:a9:e7	Netgear_3d:d5:cd	QoS
+> Data, SN=15, FN=0, Flags=.p..TC	15
+> 
+> 226272	2017-07-04 11
+> <callto:226272%202017-07-04%2011>:46:42.358904	3c:4f:2d:6c:a9:e7	Netgear_3d:d5:cd	QoS
+> Data, SN=16, FN=0, Flags=.p..R..TC	16	Frame is being
+> retransmitted226279	2017-07-04 11
+> <callto:226279%202017-07-04%2011>:46:42.366403	3c:4f:2d:6c:a9:e7	Netgear_3d:d5:cd	QoS
+> Data, SN=17, FN=0, Flags=.p..R..TC	17	Frame is being retransmitted
+> 
+> *I know QoS data  frames are generated in mac layer but i am not aware
+> about where re-transmission of  QoS data  frames is taken care. I would
+> like to know how the re-transmission frame are generated for the QoS data
+> in the 3352 SOC. *
 
-commit 98c67d187db7808b1f3c95f2110dd4392d034182 upstream.
+Data frames are retransmitted by the hardware. If sequence numbers
+are incorrectly increased, it can be hardware or firmware bug,
+but is also possible that some HW register is not correctly
+programmed by the driver.
 
-Otherwise, we enable all sorts of forgeries via timing attack.
-
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[bwh: Backported to 3.16: drop changes in
- ieee80211_crypto_aes_{cmac_256,mac}_decrypt()]
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- net/mac80211/wpa.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -16,6 +16,7 @@
- #include <asm/unaligned.h>
- #include <net/mac80211.h>
- #include <crypto/aes.h>
-+#include <crypto/algapi.h>
- 
- #include "ieee80211_i.h"
- #include "michael.h"
-@@ -147,7 +148,7 @@ ieee80211_rx_h_michael_mic_verify(struct
- 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
- 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
- 	michael_mic(key, hdr, data, data_len, mic);
--	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-+	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
- 		goto mic_fail;
- 
- 	/* remove Michael MIC from payload */
-@@ -768,7 +769,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct
- 		bip_aad(skb, aad);
- 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
- 				   skb->data + 24, skb->len - 24, mic);
--		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
-+		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
- 			key->u.aes_cmac.icverrors++;
- 			return RX_DROP_UNUSABLE;
- 		}
+Stanislaw
