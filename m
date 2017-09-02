@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:53335 "EHLO mga04.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42914 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965054AbdIZH7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 03:59:31 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: linuxwifi <linuxwifi@intel.com>,
-        "gavinli@thegavinli.com" <gavinli@thegavinli.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "git@thegavinli.com" <git@thegavinli.com>
-Subject: Re: [PATCH v2] iwlwifi: mvm: allow monitor mode capture in STA mode
-Date: Tue, 26 Sep 2017 07:59:25 +0000
-Message-ID: <1506412757.3276.63.camel@intel.com> (sfid-20170926_100125_155272_F9D702A3)
-References: <20170915051148.2566-1-gavinli@thegavinli.com>
-In-Reply-To: <20170915051148.2566-1-gavinli@thegavinli.com>
-Content-Type: text/plain; charset="utf-8"
+        id S1751510AbdIBIW1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Sep 2017 04:22:27 -0400
+Date: Sat, 2 Sep 2017 10:22:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RT2870 failure in kernel 4.12.8
+Message-ID: <20170902082223.GA11293@redhat.com> (sfid-20170902_102238_417818_872DC675)
+References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+ <20170831075514.GA12340@redhat.com>
+ <26ef3184-a19e-1bb7-7aa4-4e8647210763@lwfinger.net>
+ <20170901085738.GA18397@redhat.com>
+ <87y3pymqw2.fsf@purkki.adurom.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y3pymqw2.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgR2F2aW4sDQoNCk9uIFRodSwgMjAxNy0wOS0xNCBhdCAyMjoxMSAtMDcwMCwgZ2F2aW5saUB0
-aGVnYXZpbmxpLmNvbSB3cm90ZToNCj4gRnJvbTogR2F2aW4gTGkgPGdpdEB0aGVnYXZpbmxpLmNv
-bT4NCj4NCj4gT3BlbiB1cCB0aGUgZmlsdGVyIGlmIHRoZXJlIGlzIGEgbW9uaXRvciBpbnRlcmZh
-Y2UgY29uZmlndXJlZDsgdGhpcw0KPiBhbGxvd3MgYWxsIHBhY2tldHMgb24gdGhlIGNoYW5uZWwg
-dG8gYmUgY2FwdHVyZWQgZXZlbiBpZiB0aGUgZGV2aWNlIGlzDQo+IGluIFNUQSBtb2RlIGFuZCBh
-c3NvY2lhdGVkIHRvIGEgQlNTLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogR2F2aW4gTGkgPGdpdEB0
-aGVnYXZpbmxpLmNvbT4NCj4gLS0tDQoNClNvcnJ5IGZvciB0aGUgZGVsYXkgaW4gcmVzcG9uZGlu
-Zywgd2Ugd2VyZSBkaXNjdXNzaW5nIHRoaXMgcGF0Y2gNCmludGVybmFsbHkuDQoNClVuZm9ydHVu
-YXRlbHkgdGhpcyBpcyBub3Qgc29tZXRoaW5nIHRoYXQgb3VyIGZpcm13YXJlIG9mZmljaWFsbHkN
-CnN1cHBvcnRzLCBzbyB3ZSBjYW5ub3QgYWxsb3cgaXQgaW4gdGhlIGRyaXZlci4gIFRoZSBmaXJt
-d2FyZSBkb2Vzbid0DQoqYmxvY2sqIHRoaXMgZnJvbSB3b3JraW5nLCBidXQgdGhlcmUgYXJlIG5v
-IGd1YXJhbnRlZXMgdGhhdCBpdCB3aWxsIHdvcmsNCmFuZCB0aGF0IHRoZXJlIHdpbGwgbm90IGJl
-IGFueSBzaWRlLWVmZmVjdHMuDQoNCklmIHRoaXMgd29ya3MgZm9yIHlvdSwgZmVlbCBmcmVlIHRv
-IHVzZSBpdCAodGhhdCdzIG9uZSBvZiB0aGUgYmVhdXRpZXMNCm9mIG9wZW4gc291cmNlKSwgYnV0
-IEkgd29uJ3QgYXBwbHkgaXQgaW4gdGhlIG1haW5saW5lIGRyaXZlci4NCg0KDQotLQ0KQ2hlZXJz
-LA0KTHVjYS4=
+On Fri, Sep 01, 2017 at 05:31:57PM +0300, Kalle Valo wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> 
+> > On Thu, Aug 31, 2017 at 10:33:28AM -0500, Larry Finger wrote:
+> >> Should the patch to wireless-drivers be annotated with a Stable reference so
+> >> that it is added to 4.12 and 4.13?
+> >
+> > According to Documentation/networking/netdev-FAQ.txt networking patches
+> > should not be marked cc:stable, instead a decent commit log should
+> > be written describing a bugfix. Which I believe it is done for
+> > this patch.
+> 
+> But that's for net and net-next trees, not for wireless trees. With
+> wireless patches we use "Cc: stable@..." references.
+
+Oh, ok. I was confused by below part of
+Documentation/process/stable-kernel-rules.rst 
+(because wireless drivers are located in drivers/net/)
+
+ - If the patch covers files in net/ or drivers/net please follow netdev stable
+   submission guidelines as described in
+   Documentation/networking/netdev-FAQ.txt
+
+Thanks
+Stanislaw
