@@ -1,172 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nsmtp.uni-koblenz.de ([141.26.64.14]:36233 "EHLO
-        nsmtp.uni-koblenz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754751AbdIHIxl (ORCPT
+Received: from www17.your-server.de ([213.133.104.17]:34267 "EHLO
+        www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751611AbdICMab (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 04:53:41 -0400
-Subject: Re: [PATCH 2/2] wireless: return correct mandatory rates
-From: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
- <20170907154744.28357-2-rschuetz@uni-koblenz.de>
- <1504853740.6177.10.camel@sipsolutions.net>
- <5aed0ea0-f127-bd1e-ca06-db7edbf56680@uni-koblenz.de>
-Message-ID: <1f7e466e-2a68-b97a-ee2e-21c3e74a9fc5@uni-koblenz.de> (sfid-20170908_105346_648220_43C09DB7)
-Date: Fri, 8 Sep 2017 10:53:37 +0200
-MIME-Version: 1.0
-In-Reply-To: <5aed0ea0-f127-bd1e-ca06-db7edbf56680@uni-koblenz.de>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms050800080808050200050607"
+        Sun, 3 Sep 2017 08:30:31 -0400
+Subject: [PATCH 8/10] ath9k: Use ARRAY_SIZE macro
+From: Thomas Meyer <thomas@m3y3r.de>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-ID: <1504439110050-1887263060-8-diffsplit-thomas@m3y3r.de> (sfid-20170903_143316_794266_C95F3651)
+References: <1504439110050-939061377-0-diffsplit-thomas@m3y3r.de>
+In-Reply-To: <1504439110050-939061377-0-diffsplit-thomas@m3y3r.de>
+Date: Sun, 03 Sep 2017 14:19:31 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+Use ARRAY_SIZE macro, rather than explicitly coding some variant of it
+yourself.
+Found with: find -type f -name "*.c" -o -name "*.h" | xargs perl -p -i -e
+'s/\bsizeof\s*\(\s*(\w+)\s*\)\s*\ /\s*sizeof\s*\(\s*\1\s*\[\s*0\s*\]\s*\)
+/ARRAY_SIZE(\1)/g' and manual check/verification.
 
---------------ms050800080808050200050607
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+---
 
-Am 08.09.2017 um 10:43 schrieb Richard Sch=C3=BCtz:
-> Am 08.09.2017 um 08:55 schrieb Johannes Berg:
->> On Thu, 2017-09-07 at 17:47 +0200, Richard Sch=C3=BCtz wrote:
->>> Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B
->>> for comparison to get all mandatory rates in 2.4 GHz band. It is safe=
-
->>> to do so because ERP mandatory rates are a superset of HR/DSSS
->>> mandatory rates.
->> This I don't understand - what "comparison" are you talking about?
->=20
-> Sorry, I meant the condition that checks for the presence of=20
-> mandatory_flag at the bottom of the function.
->=20
->>> Also force IEEE80211_RATE_MANDATORY_A for 10 MHz and 5 MHz channels
->>> as they use "half-clocked" respectively "quarter-clocked" operation
->>> of the OFDM rates (IEEE Std 802.11-2016, 17.1.1).
->> I don't think this is correct - the way the flags are used, anything o=
-n
->> 2.4 GHz would never bother to check the MANDATORY_A flag.
->=20
-> Do we actually allow 10 MHz and 5 MHz operation in the 2.4 GHz band? As=
-=20
-> far as I can tell that has only been specified for OFDM PHYs, which use=
-=20
-> the 5 GHz band and are covered by IEEE80211_RATE_MANDATORY_A, but I am =
-
-> not a hundred per cent sure about that. Cc'ing Simon Wunderlich who=20
-> originally implemented checking of scan_width here.
-
-Looks like the old address is invalid now. New try.
-
-> The main intention of this patch series is to fix mandatory rates=20
-> returned for normal operation in 2.4 GHz band. Currently only 1 Mb/s is=
-=20
-> returned here, which is wrong for both HR/DSSS and ERP PHYs.
-
---=20
-Richard
-
-
---------------ms050800080808050200050607
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
-D8IwggTVMIIDvaADAgECAghQTsb1PRG0ZDANBgkqhkiG9w0BAQsFADBxMQswCQYDVQQGEwJE
-RTEcMBoGA1UEChMTRGV1dHNjaGUgVGVsZWtvbSBBRzEfMB0GA1UECxMWVC1UZWxlU2VjIFRy
-dXN0IENlbnRlcjEjMCEGA1UEAxMaRGV1dHNjaGUgVGVsZWtvbSBSb290IENBIDIwHhcNMTQw
-NzIyMTIwODI2WhcNMTkwNzA5MjM1OTAwWjBaMQswCQYDVQQGEwJERTETMBEGA1UEChMKREZO
-LVZlcmVpbjEQMA4GA1UECxMHREZOLVBLSTEkMCIGA1UEAxMbREZOLVZlcmVpbiBQQ0EgR2xv
-YmFsIC0gRzAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6ZvDZ4X5Da71jVTD
-llA1PWLpbkztlNcAW5UidNQg6zSP1uzAMQQLmYHiphTSUqAoI4SLdIkEXlvg4njBeMsWyyg1
-OXstkEXQ7aAAeny/Sg4bAMOG6VwrMRF7DPOCJEOMHDiLamgAmu7cT3ir0sYTm3at7t4m6O8B
-r3QPwQmi9mvOvdPNFDBP9eXjpMhim4IaAycwDQJlYE3t0QkjKpY1WCfTdsZxtpAdxO3/NYZ9
-bzOz2w/FEcKKg6GUXUFr2NIQ9Uz9ylGs2b3vkoO72uuLFlZWQ8/h1RM9ph8nMM1JVNvJEzSa
-cXXFbOqnC5j5IZ0nrz6jOTlIaoytyZn7wxLyvQIDAQABo4IBhjCCAYIwDgYDVR0PAQH/BAQD
-AgEGMB0GA1UdDgQWBBRJt8bP6D0ff+pEexMp9/EKcD7eZDAfBgNVHSMEGDAWgBQxw3kbuvVT
-1xfgiXotF2wKsyudMzASBgNVHRMBAf8ECDAGAQH/AgECMGIGA1UdIARbMFkwEQYPKwYBBAGB
-rSGCLAEBBAICMBEGDysGAQQBga0hgiwBAQQDADARBg8rBgEEAYGtIYIsAQEEAwEwDwYNKwYB
-BAGBrSGCLAEBBDANBgsrBgEEAYGtIYIsHjA+BgNVHR8ENzA1MDOgMaAvhi1odHRwOi8vcGtp
-MDMzNi50ZWxlc2VjLmRlL3JsL0RUX1JPT1RfQ0FfMi5jcmwweAYIKwYBBQUHAQEEbDBqMCwG
-CCsGAQUFBzABhiBodHRwOi8vb2NzcDAzMzYudGVsZXNlYy5kZS9vY3NwcjA6BggrBgEFBQcw
-AoYuaHR0cDovL3BraTAzMzYudGVsZXNlYy5kZS9jcnQvRFRfUk9PVF9DQV8yLmNlcjANBgkq
-hkiG9w0BAQsFAAOCAQEAYyAo/ZwhhnK+OUZZOTIlvKkBmw3Myn1BnIZtCm4ssxNZdbEzkhth
-Jxb/w7LVNYL7hCoBSb1mu2YvssIGXW4/buMBWlvKQ2NclbbhMacf1QdfTeZlgk4y+cN8ekvN
-TVx07iHydQLsUj7SyWrTkCNuSWc1vn9NVqTszC/Pt6GXqHI+ybxA1lqkCD3WvILDt7cyjrEs
-jmpttzUCGc/1OURYY6ckABCwu/xOr24vOLulV0k/2G5QbyyXltwdRpplic+uzPLl2Z9Tsz6h
-L5Kp2AvGhB8Exuse6J99tXulAvEkxSRjETTMWpMgKnmIOiVCkKllO3yG0xIVIyn8LNrMOVtU
-FzCCBV4wggRGoAMCAQICBxeZn9pX17IwDQYJKoZIhvcNAQELBQAwWjELMAkGA1UEBhMCREUx
-EzARBgNVBAoTCkRGTi1WZXJlaW4xEDAOBgNVBAsTB0RGTi1QS0kxJDAiBgNVBAMTG0RGTi1W
-ZXJlaW4gUENBIEdsb2JhbCAtIEcwMTAeFw0xNDA1MTkxNTI0NThaFw0xOTA3MDkyMzU5MDBa
-MIGCMQswCQYDVQQGEwJERTE5MDcGA1UEChMwUmVnaW9uYWxlcyBIb2Noc2NodWxyZWNoZW56
-ZW50cnVtIEthaXNlcnNsYXV0ZXJuMRYwFAYDVQQDEw1SSFJLLUNBIC0gRzAyMSAwHgYJKoZI
-hvcNAQkBFhFjYUByaHJrLnVuaS1rbC5kZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAK5AQx3SBrbZDsO1mHSdgYrDp4rh5SQj3qf9KVHk2/UBS2Wqa6HXnkZupBYsdlxpd4eI
-pi7u3RsLbvKEUaRnGerZt4tlUqcNc8cZPblFdrDIkRyth1ZDd6lhcKv0QToDxGlTYXReYTM+
-0GY2a3V7VzjOCxhvJAWag++UPlNJm7Q2oDi9TSMLSbmN2Kpy/+h76bW+Bd9EQ1VJ2JobFlV/
-kQjWjLzta1PYBxzjSAhL/AAD9VykV+C+5Qe+8A6TWS+giJj6fsTx8m51OnvfEI02tyJzuNBP
-LAinIV61n6SnrsFvIl0k8IxKe87oUt/aAz8B5jWMzyxBeDTtS0lCitTzRbMCAwEAAaOCAf4w
-ggH6MBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYDVR0PAQH/BAQDAgEGMBEGA1UdIAQKMAgwBgYE
-VR0gADAdBgNVHQ4EFgQUL90TmGNcC8NvuO2G4AMnwW+6tgIwHwYDVR0jBBgwFoAUSbfGz+g9
-H3/qRHsTKffxCnA+3mQwHAYDVR0RBBUwE4ERY2FAcmhyay51bmkta2wuZGUwgYgGA1UdHwSB
-gDB+MD2gO6A5hjdodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1Yi9j
-cmwvY2FjcmwuY3JsMD2gO6A5hjdodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1yb290
-LWNhL3B1Yi9jcmwvY2FjcmwuY3JsMIHXBggrBgEFBQcBAQSByjCBxzAzBggrBgEFBQcwAYYn
-aHR0cDovL29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEcGCCsGAQUFBzAChjto
-dHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1Yi9jYWNlcnQvY2FjZXJ0
-LmNydDBHBggrBgEFBQcwAoY7aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9vdC1j
-YS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBAN6x/u6FvA4+Sb0t
-4oylgwcj8UKWYrKQkQ/7Udycf8K/9s+QejYqMyCO7gL3fa7mcARv1+LZm9rvu9hbMplyUtRP
-on3zCXtfC7ElJhNsAutWvzhYp0MlXc9hiSRvk+fchGQEbxIfokb2mrF/KMdI/NCUdpg8I50i
-stcwWM5Ox4N4HYAo6gH31rdCPwbIlfph3Tlhv7m5Y7fo+47AqgaG1IsXNcBF8Es80qvrDuV5
-+zKrLaU9jvSZLglXMYXClRAwKurxKxKbyS2n8JHeY/pZFGqpz0FPJeOPfgpUV5UXEFEu38tw
-tc6YtokdUcHlDKMm6r+/+x+kVN4PnC4hYLLHPH0wggWDMIIEa6ADAgECAgcZC9sQLaUdMA0G
-CSqGSIb3DQEBCwUAMIGCMQswCQYDVQQGEwJERTE5MDcGA1UEChMwUmVnaW9uYWxlcyBIb2No
-c2NodWxyZWNoZW56ZW50cnVtIEthaXNlcnNsYXV0ZXJuMRYwFAYDVQQDEw1SSFJLLUNBIC0g
-RzAyMSAwHgYJKoZIhvcNAQkBFhFjYUByaHJrLnVuaS1rbC5kZTAeFw0xNTAyMjQxMTE2MTZa
-Fw0xODAyMjMxMTE2MTZaME0xCzAJBgNVBAYTAkRFMSQwIgYDVQQKDBtVbml2ZXJzaXRhZXQg
-S29ibGVuei1MYW5kYXUxGDAWBgNVBAMMD1JpY2hhcmQgU2NodWV0ejCCASIwDQYJKoZIhvcN
-AQEBBQADggEPADCCAQoCggEBALdWe1Esw12YrgfQSh+dKsUMX5meXwEKxu9oqS8eaYv0P4ek
-O7SXwWvgAK14AdaK2iFg1zi+hd09WnT781OltZsGPNNZpwZXBKRyrb3Vgyq8BsZl3elHU/+N
-bl/cS9wd7+Wgpe0frrk66MmwkczryYiBHZZXI/ie0xQfStNaDvq03EyUUzNJTgxn50OoCLnW
-ph8La2CF/3bfMKOTP2NGbM3118EBRhbdUFOelCwDyURKF4ugeyvAEZSKILCxsNsfjPVBzGOp
-hgjPjQSoO9x09+TjqlwWLB662pjluwX2FvhaCstqo8ZHcJTO1Cpb4OIqu2Sf2x36uph4Wev4
-8KzuszkCAwEAAaOCAjAwggIsMEAGA1UdIAQ5MDcwEQYPKwYBBAGBrSGCLAEBBAMDMBEGDysG
-AQQBga0hgiwCAQQDATAPBg0rBgEEAYGtIYIsAQEEMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgXg
-MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQU+zdVfJim3QSF43tF
-/Ss+uG+Sn9AwHwYDVR0jBBgwFoAUL90TmGNcC8NvuO2G4AMnwW+6tgIwIgYDVR0RBBswGYEX
-cnNjaHVldHpAdW5pLWtvYmxlbnouZGUwfQYDVR0fBHYwdDA4oDagNIYyaHR0cDovL2NkcDEu
-cGNhLmRmbi5kZS9yaHJrLWNhL3B1Yi9jcmwvZ19jYWNybC5jcmwwOKA2oDSGMmh0dHA6Ly9j
-ZHAyLnBjYS5kZm4uZGUvcmhyay1jYS9wdWIvY3JsL2dfY2FjcmwuY3JsMIHNBggrBgEFBQcB
-AQSBwDCBvTAzBggrBgEFBQcwAYYnaHR0cDovL29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZl
-ci9PQ1NQMEIGCCsGAQUFBzAChjZodHRwOi8vY2RwMS5wY2EuZGZuLmRlL3JocmstY2EvcHVi
-L2NhY2VydC9nX2NhY2VydC5jcnQwQgYIKwYBBQUHMAKGNmh0dHA6Ly9jZHAyLnBjYS5kZm4u
-ZGUvcmhyay1jYS9wdWIvY2FjZXJ0L2dfY2FjZXJ0LmNydDANBgkqhkiG9w0BAQsFAAOCAQEA
-DJCaWXmnyYqAsqvmyoQgns1ntUjqTQk9oyg/eNmH+PZU46UzDbMaSXO6zbfO9nzy015Q+JJ4
-9z3nQ2rwk8CM6SobdzQ+d7ZcMKCoLVSjgvta2Ie5yNIQhaCADh/cbg8Fld3sodx2RTyoowDD
-taa58N6lrEVRUVwKfkthfmDI3azHfj+lkPNYjw/5LaAC7SKWe0ZDkX0vzGQCtXiJqB0LL1wp
-craFWXvDN6BFxzYueecvcRDocu+fgo14nW73hu5tZyfLcQ8pcZxLaq4cB7TPP9E2f2lwOJxn
-DOTHiqYF4fqqYH/eQRoHeNrrEcVCgAn3eoetdGa4Y/+fJaCwKPZreTGCA9swggPXAgEBMIGO
-MIGCMQswCQYDVQQGEwJERTE5MDcGA1UEChMwUmVnaW9uYWxlcyBIb2Noc2NodWxyZWNoZW56
-ZW50cnVtIEthaXNlcnNsYXV0ZXJuMRYwFAYDVQQDEw1SSFJLLUNBIC0gRzAyMSAwHgYJKoZI
-hvcNAQkBFhFjYUByaHJrLnVuaS1rbC5kZQIHGQvbEC2lHTANBglghkgBZQMEAgEFAKCCAh0w
-GAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTcwOTA4MDg1MzM3
-WjAvBgkqhkiG9w0BCQQxIgQgc/wItxr1IiaKMGbm/n410EdeK15a0RpWlboVdYKLnDIwbAYJ
-KoZIhvcNAQkPMV8wXTALBglghkgBZQMEASowCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMA4G
-CCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCB
-nwYJKwYBBAGCNxAEMYGRMIGOMIGCMQswCQYDVQQGEwJERTE5MDcGA1UEChMwUmVnaW9uYWxl
-cyBIb2Noc2NodWxyZWNoZW56ZW50cnVtIEthaXNlcnNsYXV0ZXJuMRYwFAYDVQQDEw1SSFJL
-LUNBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUByaHJrLnVuaS1rbC5kZQIHGQvbEC2lHTCB
-oQYLKoZIhvcNAQkQAgsxgZGggY4wgYIxCzAJBgNVBAYTAkRFMTkwNwYDVQQKEzBSZWdpb25h
-bGVzIEhvY2hzY2h1bHJlY2hlbnplbnRydW0gS2Fpc2Vyc2xhdXRlcm4xFjAUBgNVBAMTDVJI
-UkstQ0EgLSBHMDIxIDAeBgkqhkiG9w0BCQEWEWNhQHJocmsudW5pLWtsLmRlAgcZC9sQLaUd
-MA0GCSqGSIb3DQEBAQUABIIBAAQiYpwIrOcWJ8fBTdROEDdoLJNybyUuNjRO34eowoJNjYjZ
-0yPoISUTkaR+3RXe7Rr8J/FdEqiqj6EhngSsU0TAkslIe2JZLLGlM2JReSk6UXWmtU7Eh4g0
-+QyHg3RedX7E7go0WRBFbqy00WwLiqnioI8IieANGzyashNDvCLPmc6qMcNHMZd8icNnA77D
-S3PPJgZD+CdlCnNsu34J5TPaEPc2N+YuXSW6DOLXB148t3EN0ciIZDW4aoM1QLqc9WI94s3X
-RyudHKMGhgklybQWg5ppyQ3IEm4vi5yEO/1oEqTcP4LynbTOKzQKEWDdXny1caK62WXPh/dI
-zQNVuxIAAAAAAAA=
---------------ms050800080808050200050607--
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 3dbfd86ebe36..c2e210c0a770 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <asm/unaligned.h>
++#include <linux/kernel.h>
+ #include "hw.h"
+ #include "ar9003_phy.h"
+ #include "ar9003_eeprom.h"
+@@ -2946,14 +2947,12 @@ static const struct ar9300_eeprom *ar9300_eep_templates[] = {
+ 
+ static const struct ar9300_eeprom *ar9003_eeprom_struct_find_by_id(int id)
+ {
+-#define N_LOOP (sizeof(ar9300_eep_templates) / sizeof(ar9300_eep_templates[0]))
+ 	int it;
+ 
+-	for (it = 0; it < N_LOOP; it++)
++	for (it = 0; it < ARRAY_SIZE(ar9300_eep_templates); it++)
+ 		if (ar9300_eep_templates[it]->templateVersion == id)
+ 			return ar9300_eep_templates[it];
+ 	return NULL;
+-#undef N_LOOP
+ }
+ 
+ static int ath9k_hw_ar9300_check_eeprom(struct ath_hw *ah)
