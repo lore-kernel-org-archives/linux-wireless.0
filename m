@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33155 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934198AbdIZGlw (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:60013 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751949AbdIDHa2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 02:41:52 -0400
-From: AceLan Kao <acelan.kao@canonical.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
-Date: Tue, 26 Sep 2017 14:41:35 +0800
-Message-Id: <1506408099-18488-2-git-send-email-acelan.kao@canonical.com> (sfid-20170926_084502_373030_2A7D8250)
-In-Reply-To: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
-References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+        Mon, 4 Sep 2017 03:30:28 -0400
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com
+Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH] brcmfmac: return -EPERM when getting error in vendor command handler
+Date: Mon,  4 Sep 2017 15:34:33 +0800
+Message-Id: <1504510473-13549-1-git-send-email-wright.feng@cypress.com> (sfid-20170904_093037_992402_23CA2602)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some platform(BIOS) blocks legacy interrupts (INTx), and only allows MSI
-for WLAN device. So adding a quirk to list those machines and set
-use_msi automatically.
-Adding Dell Inspiron 24-3460 to the quirk.
+Firmware returns proprietary error code when getting error in
+fil_cmd_data_set or fil_cmd_data_get. The vendor tools or
+utilities which uses libnl may stuck in some commands when wl is down.
+For example, issue "scan" command after issuing "down" command, the
+"scan" command will be the blocking call and stuck as no response from
+libnl. It is caused by that firmware returns BCME_NOTUP(-4) when wl
+is down, but the -4 is -EINTR in Linux kernel, so libnl catches the error
+and not passes to upper layer.
+Because of that, the driver should return Linux error code instead of the
+proprietary error code, and the tools or utilities need to get the real
+firmware error code by command "bcmerror" or "bcmerrorstr" after receiving
+the error.
 
-Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b6b7a35..1667949 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -23,6 +23,7 @@
- #include <linux/of.h>
- #include <linux/of_net.h>
- #include <linux/relay.h>
-+#include <linux/dmi.h>
- #include <net/ieee80211_radiotap.h>
- 
- #include "ath9k.h"
-@@ -96,6 +97,24 @@ static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
- };
- #endif
- 
-+static int __init set_use_msi(const struct dmi_system_id *dmi)
-+{
-+	ath9k_use_msi = 1;
-+	return 1;
-+}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
+index 8eff275..2b88ba1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
+@@ -80,8 +80,12 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 	else
+ 		ret = brcmf_fil_cmd_data_get(ifp, cmdhdr->cmd, dcmd_buf,
+ 					     ret_len);
+-	if (ret != 0)
 +
-+static const struct dmi_system_id ath9k_quirks[] __initconst = {
-+	{
-+		.callback = set_use_msi,
-+		.ident = "Dell Inspiron 24-3460",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 24-3460"),
-+		},
-+	},
-+	{}
-+};
-+
- static void ath9k_deinit_softc(struct ath_softc *sc);
++	if (ret != 0) {
++		brcmf_dbg(INFO, "error(%d), return -EPERM\n", ret);
++		ret = -EPERM;
+ 		goto exit;
++	}
  
- static void ath9k_op_ps_wakeup(struct ath_common *common)
-@@ -1104,6 +1123,8 @@ static int __init ath9k_init(void)
- 		goto err_pci_exit;
- 	}
- 
-+	dmi_check_system(ath9k_quirks);
-+
- 	return 0;
- 
-  err_pci_exit:
+ 	wr_pointer = dcmd_buf;
+ 	while (ret_len > 0) {
 -- 
-2.7.4
+1.9.1
