@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46326 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752150AbdIBIa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Sep 2017 04:30:58 -0400
-Date: Sat, 2 Sep 2017 10:30:55 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Nishank aggarwal <nishank.aggarwal89@gmail.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:38379 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753987AbdIDRvw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Sep 2017 13:51:52 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: Sequence Number Issue for QoS frames in 3352 SOC
-Message-ID: <20170902083055.GB11293@redhat.com> (sfid-20170902_103101_967272_47917D87)
-References: <CAGb8t=s+KYFnCxgMbyhGS9trujA+xdAiEwLNVEZyocHSSb-PNg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGb8t=s+KYFnCxgMbyhGS9trujA+xdAiEwLNVEZyocHSSb-PNg@mail.gmail.com>
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>,
+        Steven Ting <steventing@realtek.com>,
+        Stable <stable@vger.kernel.org>
+Subject: [PATCH 1/2] rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
+Date: Mon,  4 Sep 2017 12:51:33 -0500
+Message-Id: <20170904175134.8331-2-Larry.Finger@lwfinger.net> (sfid-20170904_195156_988694_9AED416B)
+In-Reply-To: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
+References: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 01, 2017 at 04:18:36PM +0530, Nishank aggarwal wrote:
-> *This is Nishank Aggarwal having 4 years of Experience in Linux Device
-> Driver Development . I would like to discuss one issue i am facing in my
-> current project related to WLAN 802.11 e Qos data frame.*
-> *We are using 3352 SOC openwrt where i am getting one issue " STA
-> re-transmitting the frames with incremented sequence number.
-> <https://github.com/VivintInnovationJDM/ges-openwrt/issues/33>"*
+In commit bcd37f4a0831 ("rtlwifi: btcoex: 23b 2ant: let bt transmit when
+hw initialisation done"), there is an additional error when the module
+parameter ant_sel is used to select the auxilary antenna. The error is
+that the antenna selection is not checked when writing the antenna
+selection register.
 
-This link seems to be wrong.
+Fixes: bcd37f4a0831 ("rtlwifi: btcoex: 23b 2ant: let bt transmit when hw initialisation done")
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+Cc: Stable <stable@vger.kernel.org> # 4.12+
+---
 
-> *for Qos data frame, I paste some of the examples of sniffer logs captured.*
-> 
-> 226269	2017-07-04 11
-> <callto:226269%202017-07-04%2011>:46:42.358904	3c:4f:2d:6c:a9:e7	Netgear_3d:d5:cd	QoS
-> Data, SN=15, FN=0, Flags=.p..TC	15
-> 
-> 226272	2017-07-04 11
-> <callto:226272%202017-07-04%2011>:46:42.358904	3c:4f:2d:6c:a9:e7	Netgear_3d:d5:cd	QoS
-> Data, SN=16, FN=0, Flags=.p..R..TC	16	Frame is being
-> retransmitted226279	2017-07-04 11
-> <callto:226279%202017-07-04%2011>:46:42.366403	3c:4f:2d:6c:a9:e7	Netgear_3d:d5:cd	QoS
-> Data, SN=17, FN=0, Flags=.p..R..TC	17	Frame is being retransmitted
-> 
-> *I know QoS data  frames are generated in mac layer but i am not aware
-> about where re-transmission of  QoS data  frames is taken care. I would
-> like to know how the re-transmission frame are generated for the QoS data
-> in the 3352 SOC. *
+Kalle,
 
-Data frames are retransmitted by the hardware. If sequence numbers
-are incorrectly increased, it can be hardware or firmware bug,
-but is also possible that some HW register is not correctly
-programmed by the driver.
+This material is intended for kernel 4.14.
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Stanislaw
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 31965f0ef69d..e8f07573aed9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1183,7 +1183,10 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
+ 		}
+ 
+ 		/* fixed internal switch S1->WiFi, S0->BT */
+-		btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
++		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
++			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
++		else
++			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
+ 
+ 		switch (antpos_type) {
+ 		case BTC_ANT_WIFI_AT_MAIN:
+-- 
+2.12.3
