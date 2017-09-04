@@ -1,40 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42896 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750907AbdI2Hy0 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32963 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753997AbdIDRvx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 03:54:26 -0400
-Date: Fri, 29 Sep 2017 10:52:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 2/2] rtlwifi: silence underflow warning
-Message-ID: <20170929075234.dgyuiwbowu3jq6r4@mwanda> (sfid-20170929_095430_129424_A0C9DBCE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170929075117.cno3vnrebea32upt@mwanda>
+        Mon, 4 Sep 2017 13:51:53 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>,
+        Steven Ting <steventing@realtek.com>,
+        Stable <stable@vger.kernel.org>
+Subject: [PATCH 2/2] rtlwifi: btcoexist: Fix antenna selection code
+Date: Mon,  4 Sep 2017 12:51:34 -0500
+Message-Id: <20170904175134.8331-3-Larry.Finger@lwfinger.net> (sfid-20170904_195214_936898_D3043F06)
+In-Reply-To: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
+References: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My static checker complains that we have an upper bound but no lower
-bound.  I suspect neither are really required but it doesn't hurt to add
-a check for negatives.
+In commit 87d8a9f35202 ("rtlwifi: btcoex: call bind to setup btcoex"),
+the code turns on a call to exhalbtc_bind_bt_coex_withadapter(). This
+routine contains a bug that causes incorrect antenna selection for those
+HP laptops with only one antenna and an incorrectly programmed EFUSE.
+These boxes are the ones that need the ant_sel module parameter.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Fixes: 87d8a9f35202 ("rtlwifi: btcoex: call bind to setup btcoex")
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+Cc: Stable <stable@vger.kernel.org> # 4.13+
+---
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index c53cbf3d52bd..294a6b43d1bc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -453,7 +453,8 @@ static void _rtl_add_wowlan_patterns(struct ieee80211_hw *hw,
- 	for (i = 0; i < wow->n_patterns; i++) {
- 		memset(&rtl_pattern, 0, sizeof(struct rtl_wow_pattern));
- 		memset(mask, 0, MAX_WOL_BIT_MASK_SIZE);
--		if (patterns[i].pattern_len > MAX_WOL_PATTERN_SIZE) {
-+		if (patterns[i].pattern_len < 0 ||
-+		    patterns[i].pattern_len > MAX_WOL_PATTERN_SIZE) {
- 			RT_TRACE(rtlpriv, COMP_POWER, DBG_WARNING,
- 				 "Pattern[%d] is too long\n", i);
- 			continue;
+Kalle,
+
+This patch is intended for kernel 4.14.
+
+Thanks,
+
+Larry
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 23 +++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index c1eacd8352a2..b5e9877d935c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -173,6 +173,16 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
+ 
+ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ {
++	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
++
++	/* override ant_num / ant_path */
++	if (mod_params->ant_sel) {
++		rtlpriv->btcoexist.btc_info.ant_num =
++			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
++
++		rtlpriv->btcoexist.btc_info.single_ant_path =
++			(mod_params->ant_sel == 1 ? 0 : 1);
++	}
+ 	return rtlpriv->btcoexist.btc_info.single_ant_path;
+ }
+ 
+@@ -183,6 +193,7 @@ u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+ 
+ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ {
++	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 	u8 num;
+ 
+ 	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
+@@ -190,6 +201,10 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ 	else
+ 		num = 1;
+ 
++	/* override ant_num / ant_path */
++	if (mod_params->ant_sel)
++		num = (mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1) + 1;
++
+ 	return num;
+ }
+ 
+@@ -876,7 +891,7 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+ {
+ 	struct btc_coexist *btcoexist = &gl_bt_coexist;
+ 	struct rtl_priv *rtlpriv = adapter;
+-	u8 ant_num = 2, chip_type, single_ant_path = 0;
++	u8 ant_num = 2, chip_type;
+ 
+ 	if (btcoexist->binded)
+ 		return false;
+@@ -911,12 +926,6 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+ 	ant_num = rtl_get_hwpg_ant_num(rtlpriv);
+ 	exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_PG, ant_num);
+ 
+-	/* set default antenna position to main  port */
+-	btcoexist->board_info.btdm_ant_pos = BTC_ANTENNA_AT_MAIN_PORT;
+-
+-	single_ant_path = rtl_get_hwpg_single_ant_path(rtlpriv);
+-	exhalbtc_set_single_ant_path(single_ant_path);
+-
+ 	if (rtl_get_hwpg_package_type(rtlpriv) == 0)
+ 		btcoexist->board_info.tfbga_package = false;
+ 	else if (rtl_get_hwpg_package_type(rtlpriv) == 1)
+-- 
+2.12.3
