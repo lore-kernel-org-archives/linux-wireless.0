@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vm.ouaza.com ([212.83.178.2]:37709 "EHLO mail.vm.ouaza.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751323AbdINOjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 10:39:06 -0400
-Date: Thu, 14 Sep 2017 16:31:34 +0200
-From: Raphael Hertzog <buxy@kali.org>
-To: linux-wireless@vger.kernel.org
-Cc: devel@kali.org, Ben Hutchings <ben@decadent.org.uk>
-Subject: Kernel developer to work on wifi injection in mainline
-Message-ID: <20170914143134.5ybcusoqu74wf6d7@home.ouaza.com> (sfid-20170914_163909_535476_CCD539AE)
+Received: from mx2.suse.de ([195.135.220.15]:38177 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753477AbdIDLnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Sep 2017 07:43:05 -0400
+Date: Mon, 4 Sep 2017 13:43:02 +0200 (CEST)
+From: Jiri Kosina <jikos@kernel.org>
+To: Luca Coelho <luca@coelho.fi>
+cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxwifi@intel.com, rui.zhang@intel.com, edubezval@gmail.com,
+        linux-pm@vger.kernel.org, david.weinehall@intel.com,
+        johannes.berg@intel.com, kvalo@codeaurora.org,
+        sara.sharon@intel.com, emmanuel.grumbach@intel.com
+Subject: Re: [PATCH v2] iwlwifi: pcie: move rx workqueue initialization to
+ iwl_trans_pcie_alloc()
+In-Reply-To: <1503604818.15969.433.camel@coelho.fi>
+Message-ID: <nycvar.YFH.7.76.1709041342130.18231@jbgna.fhfr.qr> (sfid-20170904_134323_344828_CAB9D8E1)
+References: <alpine.LSU.2.20.1708171537380.3581@cbobk.fhfr.pm>   <20170822073729.4856-1-luca@coelho.fi>  <1503554432.15969.415.camel@coelho.fi>  <alpine.LSU.2.20.1708242153000.3581@cbobk.fhfr.pm> <1503604818.15969.433.camel@coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Please keep-me in CC and use reply-to all)
+On Thu, 24 Aug 2017, Luca Coelho wrote:
 
-Hello everybody,
+> > looks like a correct fix to me, so feel free to add
+> > 
+> > 	Acked-by: Jiri Kosina <jkosina@suse.cz>
+> > 
+> > I'll be able to provide my Tested-by: eventually only in ~10 days.
+> 
+> 
+> Kalle already picked it up in wireless-drivers and this should make it's
+> way to 4.13-rc7 (we hope).
+> 
+> In any case, thanks for reporting and the help debugging it.
 
-I'm working for Kali Linux/Offensive Security. Pentesters rely on working
-wifi injection to do their work but support of this feature is sub-optimal
-in mainline Linux. This is why we carry a patch:
-http://git.kali.org/gitweb/?p=packages/linux.git;a=blob;f=debian/patches/features/all/kali-wifi-injection.patch;h=0b872f83f3ca09c967d9c0c520e11cf7d75dfd91;hb=refs/heads/kali/master
+I know it's pretty late for this to be added to the commit, but I don't 
+want this to be left in the void, so for the sake of completness:
 
-This feature also tends to break on various drivers from time to time
-as is currently the case with carl9170 and rt2800usb:
-https://bugs.kali.org/view.php?id=4220
+	Tested-by: Jiri Kosina <jkosina@suse.cz>
 
-Thus we are looking for a kernel developer that we could work with on a
-contractor basis to:
-- make wifi injection work on the current Kali kernel on various drivers
-  that we want to support
-- upstream as much as possible of changes needed for wifi injection to
-  work
-- ensure continued support of the feature in new Linux releases
+Thanks,
 
-I wonder whether there are non-technical hurdles that would prevent
-merging of wifi injection patches. Are there legal challenges to this for
-instance?
-
-Cheers,
-
-PS: We track new kernel release out of Debian Testing so we tend to
-use all releases for 2 months.
 -- 
-Raphaël Hertzog ◈ Kali Linux Developer ◈ Debian Developer
-
-Get the Debian Administrator's Handbook:
-→ https://debian-handbook.info/get/
+Jiri Kosina
+SUSE Labs
