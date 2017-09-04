@@ -1,98 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750941AbdIBBo7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 21:44:59 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 1/9] qtnfmac: qlink: convert channel width from bitfiled to simple enum
-Date: Fri,  1 Sep 2017 18:44:43 -0700
-Message-Id: <20170902014451.17766-2-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034506_101462_999A6781)
-In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:48550 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753515AbdIDNTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Sep 2017 09:19:36 -0400
+Message-ID: <1504531173.27801.0.camel@sipsolutions.net> (sfid-20170904_151939_808944_368D7918)
+Subject: Re: Incorrect mesh path seq num
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@eero.com>, Greg Maitz <ghh19622@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 Sep 2017 15:19:33 +0200
+In-Reply-To: <CADjYELxyuT74Ms30Ohu_a6Ymg6RLctf6mehRmw-poLgLMZWiwQ@mail.gmail.com> (sfid-20170901_220755_362447_35ACB724)
+References: <CAG5S3ZTRe52qSWt6WEe6K78brrQqc7+HgN_8OQ+RKC9k1WUMCw@mail.gmail.com>
+         <CADjYELxyuT74Ms30Ohu_a6Ymg6RLctf6mehRmw-poLgLMZWiwQ@mail.gmail.com>
+         (sfid-20170901_220755_362447_35ACB724)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On Fri, 2017-09-01 at 13:07 -0700, Thomas Pedersen wrote:
+> On Thu, Aug 31, 2017 at 11:30 PM, Greg Maitz <ghh19622@gmail.com>
+> wrote:
+> > Hi guys,
+> > 
+> > I'm seeing a problem when I work on the wireless mesh between two
+> > linux devices. The root node has 3.18 kernel while the next hop
+> > station runs 2.6.37 kernel. I found the mpath->sn value is
+> > incorrect
+> > most of the time on the device having 2.6.37 kernel. After
+> > examining
+> > the code, in function hwmp_route_info_get [mesh_hwmp.c], after
+> > mesh_path_lookup, the sequence number (i.e, mpath->sn) is
+> > incorrect.
+> > For instance, I see mpath->sn having value 0x30950000. It should be
+> > 0x9530, while the orig_sn is having value 0x9531.
+> 
+> Looks like an endianess bug. Are you testing on two platforms of
+> different endianess?
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/qlink.h      | 16 ++++++++--------
- drivers/net/wireless/quantenna/qtnfmac/qlink_util.c | 16 ++++++++--------
- 2 files changed, 16 insertions(+), 16 deletions(-)
+Even if that's the case, wouldn't it mean some kind of conversion is
+missing somewhere?
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index a8242f6..a69fd470 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -108,14 +108,14 @@ enum qlink_sta_flags {
- };
- 
- enum qlink_channel_width {
--	QLINK_CHAN_WIDTH_5		= BIT(0),
--	QLINK_CHAN_WIDTH_10		= BIT(1),
--	QLINK_CHAN_WIDTH_20_NOHT	= BIT(2),
--	QLINK_CHAN_WIDTH_20		= BIT(3),
--	QLINK_CHAN_WIDTH_40		= BIT(4),
--	QLINK_CHAN_WIDTH_80		= BIT(5),
--	QLINK_CHAN_WIDTH_80P80		= BIT(6),
--	QLINK_CHAN_WIDTH_160		= BIT(7),
-+	QLINK_CHAN_WIDTH_5 = 0,
-+	QLINK_CHAN_WIDTH_10,
-+	QLINK_CHAN_WIDTH_20_NOHT,
-+	QLINK_CHAN_WIDTH_20,
-+	QLINK_CHAN_WIDTH_40,
-+	QLINK_CHAN_WIDTH_80,
-+	QLINK_CHAN_WIDTH_80P80,
-+	QLINK_CHAN_WIDTH_160,
- };
- 
- /* QLINK Command messages related definitions
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-index cf024c9..369b77d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-@@ -49,28 +49,28 @@ u8 qlink_chan_width_mask_to_nl(u16 qlink_mask)
- {
- 	u8 result = 0;
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_5)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_5))
- 		result |= BIT(NL80211_CHAN_WIDTH_5);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_10)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_10))
- 		result |= BIT(NL80211_CHAN_WIDTH_10);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_20_NOHT)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_20_NOHT))
- 		result |= BIT(NL80211_CHAN_WIDTH_20_NOHT);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_20)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_20))
- 		result |= BIT(NL80211_CHAN_WIDTH_20);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_40)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_40))
- 		result |= BIT(NL80211_CHAN_WIDTH_40);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_80)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_80))
- 		result |= BIT(NL80211_CHAN_WIDTH_80);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_80P80)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_80P80))
- 		result |= BIT(NL80211_CHAN_WIDTH_80P80);
- 
--	if (qlink_mask & QLINK_CHAN_WIDTH_160)
-+	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_160))
- 		result |= BIT(NL80211_CHAN_WIDTH_160);
- 
- 	return result;
--- 
-2.9.5
+johannes
