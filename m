@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:32836 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755043AbdIHPY5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43044 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753599AbdIDM6U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 11:24:57 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rsi: fix a dereference on adapter before it has been null checked
-Date: Fri,  8 Sep 2017 16:24:52 +0100
-Message-Id: <20170908152452.3594-1-colin.king@canonical.com> (sfid-20170908_172529_022062_57F934A9)
+        Mon, 4 Sep 2017 08:58:20 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: stable-kernel-rules: wireless and netdev-FAQ
+References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
+        <20170831075514.GA12340@redhat.com>
+        <26ef3184-a19e-1bb7-7aa4-4e8647210763@lwfinger.net>
+        <20170901085738.GA18397@redhat.com> <87y3pymqw2.fsf@purkki.adurom.net>
+        <20170902082223.GA11293@redhat.com>
+Date: Mon, 04 Sep 2017 15:58:15 +0300
+In-Reply-To: <20170902082223.GA11293@redhat.com> (Stanislaw Gruszka's message
+        of "Sat, 2 Sep 2017 10:22:24 +0200")
+Message-ID: <87ziaaoc2g.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20170904_145848_456759_284465B1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+(adding netdev and lkml)
 
-The assignment of dev is dereferencing adapter before adapter has
-been null checked, potentially leading to a null pointer dereference.
-Fix this by simply moving the assignment of dev to a later point
-after the sanity null check of adapter.
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Detected by CoverityScan CID#1398383 ("Dereference before null check")
+> On Fri, Sep 01, 2017 at 05:31:57PM +0300, Kalle Valo wrote:
+>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>> 
+>> > On Thu, Aug 31, 2017 at 10:33:28AM -0500, Larry Finger wrote:
+>> >> Should the patch to wireless-drivers be annotated with a Stable reference so
+>> >> that it is added to 4.12 and 4.13?
+>> >
+>> > According to Documentation/networking/netdev-FAQ.txt networking patches
+>> > should not be marked cc:stable, instead a decent commit log should
+>> > be written describing a bugfix. Which I believe it is done for
+>> > this patch.
+>> 
+>> But that's for net and net-next trees, not for wireless trees. With
+>> wireless patches we use "Cc: stable@..." references.
+>
+> Oh, ok. I was confused by below part of
+> Documentation/process/stable-kernel-rules.rst 
+> (because wireless drivers are located in drivers/net/)
+>
+>  - If the patch covers files in net/ or drivers/net please follow netdev stable
+>    submission guidelines as described in
+>    Documentation/networking/netdev-FAQ.txt
 
-Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Yeah, that's confusing and should be clarified that wireless follows
+traditional stable process. IIRC bluetooth does the same so it's not
+just wireless.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 81df09dd2636..08730227cd18 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -73,8 +73,7 @@ static int rsi_write_multiple(struct rsi_hw *adapter,
- 			      u8 *data,
- 			      u32 count)
- {
--	struct rsi_91x_usbdev *dev =
--		(struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	struct rsi_91x_usbdev *dev;
- 
- 	if (!adapter)
- 		return -ENODEV;
-@@ -82,6 +81,7 @@ static int rsi_write_multiple(struct rsi_hw *adapter,
- 	if (endpoint == 0)
- 		return -EINVAL;
- 
-+	dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
- 	if (dev->write_fail)
- 		return -ENETDOWN;
- 
+Any volunteers to fix it? :)
+
 -- 
-2.14.1
+Kalle Valo
