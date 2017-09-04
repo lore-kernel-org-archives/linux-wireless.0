@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orcrist.hmeau.com ([104.223.48.154]:39288 "EHLO
-        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752885AbdIYE5U (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 00:57:20 -0400
-Date: Mon, 25 Sep 2017 12:56:41 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Xiang Gao <qasdfgtyuiop@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-crypto@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
-Message-ID: <20170925045641.GB22947@gondor.apana.org.au> (sfid-20170925_070739_188368_FA6D4B6C)
-References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com>
- <1506265531.2909.5.camel@sipsolutions.net>
- <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com>
- <1506274966.2909.7.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506274966.2909.7.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45866 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753359AbdIDJdn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Sep 2017 05:33:43 -0400
+Message-ID: <1504517620.9797.3.camel@sipsolutions.net> (sfid-20170904_113347_061271_8440EE3C)
+Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Mon, 04 Sep 2017 11:33:40 +0200
+In-Reply-To: <87378lvyfz.fsf@toke.dk>
+References: <20170622102030.9795-1-johannes@sipsolutions.net>
+         <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 24, 2017 at 07:42:46PM +0200, Johannes Berg wrote:
->
-> Unrelated to this, I'm not sure whose tree this should go through -
-> probably Herbert's (or DaveM's with his ACK? not sure if there's a
-> crypto tree?) or so?
+On Mon, 2017-08-21 at 15:32 +0200, Toke Høiland-Jørgensen wrote:
+> 
+> > +			struct ieee80211_vif *vif;
+> >  			struct ieee80211_key_conf *hw_key;
+> >  			u32 flags;
+> > -			/* 4 bytes free */
+> > +			codel_time_t enqueue_time;
+> 
+> A side effect of this is that enqueue_time will be valid in the
+> driver; which is good as far as I'm concerned (I've been thinking
+> about using it to make decisions about when to stop retrying a
+> frame).
 
-Since you're just rearranging code invoking the crypto API, rather
-than touching actual crypto API code, I think you should handle it
-as you do with any other wireless patch.
+Well, I think we need to do a lot more to allow that, but I guess
+ultimately it would be possible - though we have this as codel_time_t
+so the driver doesn't really know the reference etc. immediately.
 
-Thanks,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> If we want to save the four bytes, is there any reason we can't just
+> change the codel code to use skb->tstamp instead?
+
+I didn't really want to go into that.
+
+Any comments on the patch itself? I don't think I even merged this yet.
+
+johannes
