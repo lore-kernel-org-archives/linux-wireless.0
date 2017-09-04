@@ -1,119 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:56446
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752085AbdIRIFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 04:05:06 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
-Date: Mon, 18 Sep 2017 11:04:46 +0300
-Message-Id: <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com> (sfid-20170918_100515_833823_05EC3731)
-In-Reply-To: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:46908 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753219AbdIDHem (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Sep 2017 03:34:42 -0400
+Message-ID: <1504510477.5400.23.camel@coelho.fi> (sfid-20170904_093446_049083_9D45FD3F)
+From: Luca Coelho <luca@coelho.fi>
+To: Carl Myers <cmyers@cmyers.org>, linux-wireless@vger.kernel.org
+Cc: linuxwifi@intel.com
+Date: Mon, 04 Sep 2017 10:34:37 +0300
+In-Reply-To: <20170903191552.GE7829@cmyers.org>
+References: <20170903191552.GE7829@cmyers.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Bug Report for iwlwifi kernel module
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Abort active scans when wireless interface configuration is changed.
-The usecases include wireless interface mode change, interface down,
-AP stop, virtual interface removal.
+Hi Carl,
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 9 ++++++---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.h | 3 +++
- drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
- drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
- 4 files changed, 10 insertions(+), 6 deletions(-)
+On Sun, 2017-09-03 at 12:15 -0700, Carl Myers wrote:
+> Greetings all,
+> 
+> Apologies if any of this is wrong, this is my first attempt to report a bug in
+> the linux kernel =)
+> 
+> I got here by running the get_maintainer script on the iwlwifi directory of a
+> linux kernel checkout.
+> 
+> I am running debian stock kernel 4.8.15, and using the built in iwlwifi
+> driver
+> 
+> $⮀ uname -a
+> Linux powerhouse 4.8.0-2-amd64 #1 SMP Debian 4.8.15-2 (2017-01-04) x86_64 GNU/Linux
+> $⮀ dpkg -l | grep iwlwifi
+> ii  firmware-iwlwifi                      20160110-1~bpo8+1                 all          Binary firmware for Intel Wireless cards
+> 
+> I am on a slightly  older firmware and kernel due to the currently-outstanding bug:
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=849330
+> 
+> This is the newest combination of kernel/firmware I've been able to make work.
+> 
+> Here is the lspci -v output for my wifi:
+> 03:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
+>         Subsystem: Intel Corporation Wireless 8260
+>         Flags: bus master, fast devsel, latency 0, IRQ 136
+>         Memory at df200000 (64-bit, non-prefetchable) [size=8K]
+>         Capabilities: <access denied>
+>         Kernel driver in use: iwlwifi
+>         Kernel modules: iwlwifi
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 856fa6e8327e..a450bc6bc774 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -115,6 +115,8 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 
- 	vif = qtnf_netdev_get_priv(wdev->netdev);
- 
-+	qtnf_scan_done(vif->mac, true);
-+
- 	if (qtnf_cmd_send_del_intf(vif))
- 		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
- 		       vif->vifid);
-@@ -335,6 +337,8 @@ static int qtnf_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 	int ret;
- 
-+	qtnf_scan_done(vif->mac, true);
-+
- 	ret = qtnf_cmd_send_stop_ap(vif);
- 	if (ret) {
- 		pr_err("VIF%u.%u: failed to stop AP operation in FW\n",
-@@ -570,8 +574,6 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	    !qtnf_sta_list_lookup(&vif->sta_list, params->mac))
- 		return 0;
- 
--	qtnf_scan_done(vif->mac, true);
--
- 	ret = qtnf_cmd_send_del_sta(vif, params);
- 	if (ret)
- 		pr_err("VIF%u.%u: failed to delete STA %pM\n",
-@@ -1134,8 +1136,9 @@ void qtnf_virtual_intf_cleanup(struct net_device *ndev)
- 		}
- 
- 		vif->sta_state = QTNF_STA_DISCONNECTED;
--		qtnf_scan_done(mac, true);
- 	}
-+
-+	qtnf_scan_done(mac, true);
- }
- 
- void qtnf_cfg80211_vif_reset(struct qtnf_vif *vif)
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-index 6a4af52522b8..66db26613b1f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-@@ -34,6 +34,9 @@ static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
- 		.aborted = aborted,
- 	};
- 
-+	if (timer_pending(&mac->scan_timeout))
-+		del_timer_sync(&mac->scan_timeout);
-+
- 	mutex_lock(&mac->mac_lock);
- 
- 	if (mac->scan_req) {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index 5e60180482d1..7f83bedc0b88 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -68,9 +68,9 @@ static int qtnf_netdev_open(struct net_device *ndev)
-  */
- static int qtnf_netdev_close(struct net_device *ndev)
- {
--	netif_carrier_off(ndev);
- 	qtnf_virtual_intf_cleanup(ndev);
- 	qtnf_netdev_updown(ndev, 0);
-+	netif_carrier_off(ndev);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 0fc2814eafad..43d2e7fd6e02 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -345,8 +345,6 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
- 		return -EINVAL;
- 	}
- 
--	if (timer_pending(&mac->scan_timeout))
--		del_timer_sync(&mac->scan_timeout);
- 	qtnf_scan_done(mac, le32_to_cpu(status->flags) & QLINK_SCAN_ABORTED);
- 
- 	return 0;
--- 
-2.11.0
+First of all, what makes you think this is a bug in the iwlwifi driver
+module?
+
+
+> Recently, while testing a 2nd panda wifi card (trying to make a hotspot and use
+> the iwl card as a gateway device), I got a kernel panic.  Here is the relevant
+> excerpt from kern.log:
+> 
+> Sep  3 11:37:49 powerhouse kernel: [21394.510512] ------------[ cut here ]------------
+> Sep  3 11:37:49 powerhouse kernel: [21394.510514] kernel BUG at /build/linux-zDY19G/linux-4.8.15/kernel/module.c:890!
+> Sep  3 11:37:49 powerhouse kernel: [21394.510515] invalid opcode: 0000 [#1] SMP
+> Sep  3 11:37:49 powerhouse kernel: [21394.510516] Modules linked in: iwlmvm iwlwifi ipt_REJECT nf_reject_ipv4 xt_tcpudp nf_nat_h323 nf_conntrack_h323 nf_nat_pptp nf_nat_proto_gre nf_conntrack_pptp nf_conntrack_proto_gre nf_nat_tftp nf_conntrack_tftp nf_nat_sip nf_conntrack_sip nf_nat_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp hid_generic rt2800usb rt2x00usb rt2800lib rt2x00lib crc_ccitt ipt_MASQUERADE nf_nat_masquerade_ipv4 nf_conntrack_netlink nfnetlink xfrm_user xfrm_algo iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype xt_conntrack nf_nat nf_conntrack br_netfilter bridge stp overlay iptable_filter appletalk ax25 ipx p8023 p8022 psnap llc bnep snd_hda_codec_hdmi arc4 binfmt_misc nls_ascii nls_cp437 vfat fat mac80211 snd_hda_codec_realtek intel_rapl x86_pkg_temp_thermal mxm_wmi intel_powerclamp coretemp snd_hda_codec_generic kvm_intel kvm efi_pstore irqbypass snd_hda_intel intel_cstate snd_hda_codec uvcvideo videobuf2_vmalloc rtsx_pci_ms videobuf2_memops snd_hda_core videobuf2_v4l2 iTCO_wdt videobuf2_core snd_hwdep intel_uncore videodev joydev btusb intel_rapl_perf evdev media btrtl cfg80211 serio_raw pcspkr efivars memstick iTCO_vendor_support snd_pcm snd_timer mei_me hci_uart snd mei soundcore btbcm btqca btintel bluetooth rfkill wmi video intel_lpss_acpi intel_lpss shpchp battery acpi_pad ac tpm_tis button tpm_tis_core tpm nvidia_drm(POE) drm_kms_helper drm nvidia_modeset(POE) nvidia(POE) parport_pc ppdev lp parport efivarfs ip_tables x_tables autofs4 ext4 crc16 jbd2 crc32c_generic fscrypto ecb mbcache algif_skcipher af_alg dm_crypt dm_mod hid_logitech_hidpp hid_logitech_dj usbhid rtsx_pci_sdmmc mmc_core crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel aesni_intel ahci libahci aes_x86_64 lrw gf128mul glue_helper xhci_pci ablk_helper cryptd libata xhci_hcd psmouse usbcore nvme scsi_mod i2c_i801 nvme_core i2c_smbus rtsx_pci r8169 mii mfd_core usb_common thermal i2c_hid hid fjes [last unloaded: iwlwifi]
+> Sep  3 11:37:49 powerhouse kernel: [21394.510561] CPU: 4 PID: 8122 Comm: rmmod Tainted: P  R        OE   4.8.0-2-amd64 #1 Debian 4.8.15-2
+> Sep  3 11:37:49 powerhouse kernel: [21394.510562] Hardware name: System76, Inc. Oryx Pro/Oryx Pro, BIOS 1.05.09RSA1 11/16/2015
+> Sep  3 11:37:49 powerhouse kernel: [21394.510563] task: ffff8dec4a3e0000 task.stack: ffff8decf4cd4000
+> Sep  3 11:37:49 powerhouse kernel: [21394.510564] RIP: 0010:[<ffffffffbccf98b9>]  [<ffffffffbccf98b9>] SyS_delete_module+0x259/0x260
+> Sep  3 11:37:49 powerhouse kernel: [21394.510568] RSP: 0018:ffff8decf4cd7ef0  EFLAGS: 00010297
+> Sep  3 11:37:49 powerhouse kernel: [21394.510569] RAX: 00000000ffffffff RBX: ffffffffc1aa71c0 RCX: 0000000000000005
+> Sep  3 11:37:49 powerhouse kernel: [21394.510570] RDX: ffffffffc1aa74a0 RSI: ffffffffc1aa74c8 RDI: ffffffffc1aa71d8
+> Sep  3 11:37:49 powerhouse kernel: [21394.510571] RBP: 000055fb472021f0 R08: 0000000000000000 R09: 000000000000006d
+> Sep  3 11:37:49 powerhouse kernel: [21394.510572] R10: 000055fb472011c0 R11: 8080808080808080 R12: 0000000000000a00
+> Sep  3 11:37:49 powerhouse kernel: [21394.510572] R13: 0000000000000a00 R14: 00007fff6cd8d4f8 R15: 0000000000000000
+> Sep  3 11:37:49 powerhouse kernel: [21394.510573] FS:  00007f498ef22700(0000) GS:ffff8ded76500000(0000) knlGS:0000000000000000
+> Sep  3 11:37:49 powerhouse kernel: [21394.510574] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> Sep  3 11:37:49 powerhouse kernel: [21394.510575] CR2: 00007f498eacf801 CR3: 0000000fa99d0000 CR4: 00000000003406e0
+> Sep  3 11:37:49 powerhouse kernel: [21394.510576] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> Sep  3 11:37:49 powerhouse kernel: [21394.510576] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> Sep  3 11:37:49 powerhouse kernel: [21394.510577] Stack:
+> Sep  3 11:37:49 powerhouse kernel: [21394.510578]  00006d766d6c7769 0000000000000002 ffff8decf4cd4000 ffffffffbcc03290
+> Sep  3 11:37:49 powerhouse kernel: [21394.510579]  ffff8decf4cd7f58 ffff8decf4cd4000 0000000000000050 00000000520cd409
+> Sep  3 11:37:49 powerhouse kernel: [21394.510581]  00007fff6cd8d338 000055fb472021f0 00007fff6cd8d508 00007fff6cd8ebbb
+> Sep  3 11:37:49 powerhouse kernel: [21394.510582] Call Trace:
+> Sep  3 11:37:49 powerhouse kernel: [21394.510586]  [<ffffffffbcc03290>] ? exit_to_usermode_loop+0xa0/0xc0
+> Sep  3 11:37:49 powerhouse kernel: [21394.510588]  [<ffffffffbd1e8cb6>] ? system_call_fast_compare_end+0xc/0x96
+> Sep  3 11:37:49 powerhouse kernel: [21394.510588] Code: fe ff ff 41 f7 c4 00 02 00 00 48 c7 c5 f0 ff ff ff 0f 84 5c fe ff ff be 01 00 00 00 bf 03 00 00 00 e8 0c b3 f7 ff e9 b7 fe ff ff <0f> 0b e8 90 b4 f7 ff 0f 1f 44 00 00 31 c0 c3 0f 1f 84 00 00 00 
+> Sep  3 11:37:49 powerhouse kernel: [21394.510605] RIP  [<ffffffffbccf98b9>] SyS_delete_module+0x259/0x260
+> Sep  3 11:37:49 powerhouse kernel: [21394.510607]  RSP <ffff8decf4cd7ef0>
+> Sep  3 11:37:49 powerhouse kernel: [21394.510608] ---[ end trace 5b24b93b49e857eb ]---
+> Sep  3 11:37:49 powerhouse kernel: [21409.372738] ieee80211 phy3: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -110
+> Sep  3 11:38:05 powerhouse kernel: [21425.406196] INFO: rcu_sched detected stalls on CPUs/tasks:
+> Sep  3 11:38:20 powerhouse kernel: [21425.406201] 	4-...: (0 ticks this GP) idle=02d/140000000000000/0 softirq=277173/277173 fqs=8 
+> Sep  3 11:38:20 powerhouse kernel: [21425.406202] 	(detected by 7, t=7721 jiffies, g=246559, c=246558, q=936)
+> Sep  3 11:38:20 powerhouse kernel: [21425.406204] Task dump for CPU 4:
+> Sep  3 11:38:20 powerhouse kernel: [21425.406206] rmmod           R  running task        0  8122   8121 0x00000008
+> Sep  3 11:38:20 powerhouse kernel: [21425.406209]  0000000000000002 ffff8decf4cd7e48 ffffffffbd3df853 0000000000000000
+> Sep  3 11:38:20 powerhouse kernel: [21425.406211]  0000000000000000 ffffffffbcccc3d3 0000000000000246 000000000000000b
+> Sep  3 11:38:20 powerhouse kernel: [21425.406214]  ffffffffbcc289f8 0000000000000006 ffff8decf4cd7e48 0000000000000004
+> Sep  3 11:38:20 powerhouse kernel: [21425.406216] Call Trace:
+> Sep  3 11:38:20 powerhouse kernel: [21425.406222]  [<ffffffffbcccc3d3>] ? kmsg_dump+0x93/0xb0
+> Sep  3 11:38:20 powerhouse kernel: [21425.406225]  [<ffffffffbcc289f8>] ? oops_end+0x78/0xd0
+> Sep  3 11:38:20 powerhouse kernel: [21425.406228]  [<ffffffffbcc26446>] ? do_error_trap+0x86/0x100
+> Sep  3 11:38:20 powerhouse kernel: [21425.406976]  [<ffffffffbccf98b9>] ? SyS_delete_module+0x259/0x260
+> Sep  3 11:38:20 powerhouse kernel: [21425.406979]  [<ffffffffbcdda242>] ? kmem_cache_alloc+0x122/0x530
+> Sep  3 11:38:20 powerhouse kernel: [21425.406982]  [<ffffffffbd1e9a2e>] ? invalid_op+0x1e/0x30
+> Sep  3 11:38:20 powerhouse kernel: [21425.407276]  [<ffffffffbccf98b9>] ? SyS_delete_module+0x259/0x260
+> Sep  3 11:38:20 powerhouse kernel: [21425.407277] perf: interrupt took too long (8612 > 2500), lowering kernel.perf_event_max_sample_rate to 23000
+> Sep  3 11:3Sep  3 11:39:51 powerhouse kernel: [    0.000000] Linux version 4.8.0-2-amd64 (debian-kernel@lists.debian.org) (gcc version 5.4.1 20161202 (Debian 5.4.1-4) ) #1 SMP Debian 4.8.15-2 (2017-01-04)
+> Sep  3 11:39:51 powerhouse kernel: [    0.000000] Command line: BOOT_IMAGE=/vmlinuz-4.8.0-2-amd64 root=/dev/mapper/powerhouse--vg-root ro quiet
+> 
+> Obviously, I'm not certain the bug is in this kernel module or even has
+> anything to do with it, but I thought this was a good place to start.  Advice
+> welcome, happy to help however I can, I am a software engineer but not very
+> experienced at kernel hacking.
+
+The bug you're seeing is happening in the module removal code[1]. 
+Apparently the system is getting a bad value in refcnt and it's becoming
+negative, which should never happen.  Have you been trying to force-
+remove modules or something like that?
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/tree/kernel/module.c?h=linux-4.8.y#n890 
+
+In any case, this doesn't seem like a iwlwifi bug at all.
+
+HTH.
+
+--
+Cheers,
+Luca.
