@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:38379 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753987AbdIDRvw (ORCPT
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:37948 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753764AbdIDPlW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 13:51:52 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>,
-        Stable <stable@vger.kernel.org>
-Subject: [PATCH 1/2] rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
-Date: Mon,  4 Sep 2017 12:51:33 -0500
-Message-Id: <20170904175134.8331-2-Larry.Finger@lwfinger.net> (sfid-20170904_195156_988694_9AED416B)
-In-Reply-To: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
-References: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
+        Mon, 4 Sep 2017 11:41:22 -0400
+Received: by mail-pg0-f45.google.com with SMTP id v66so2139286pgb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Sep 2017 08:41:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87vakyobw9.fsf@kamboji.qca.qualcomm.com>
+References: <3cfcb175-8031-f5a8-da51-d81fa2d331c8@gmail.com>
+ <7481b892-511f-4696-bf3f-82b1bec50abf@broadcom.com> <CAFXWsS_c6kr8LyZi0x8j5d4gU0AU9JzhSrYxit10G2B7OC9F+A@mail.gmail.com>
+ <87vakyobw9.fsf@kamboji.qca.qualcomm.com>
+From: Ian W MORRISON <ianwmorrison@gmail.com>
+Date: Tue, 5 Sep 2017 01:41:21 +1000
+Message-ID: <CAFXWsS_EEnK9Y6DK5sBWdesgsTNasi3=dvKpVQKSeLLfXuOn+A@mail.gmail.com> (sfid-20170904_174126_195351_3EABA048)
+Subject: Re: [PATCH v2] brcmfmac: feature check for multi-scheduled scan fails
+ on bcm4345 devices
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit bcd37f4a0831 ("rtlwifi: btcoex: 23b 2ant: let bt transmit when
-hw initialisation done"), there is an additional error when the module
-parameter ant_sel is used to select the auxilary antenna. The error is
-that the antenna selection is not checked when writing the antenna
-selection register.
+On 4 September 2017 at 23:01, Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> I'll queue this for 4.14. And add a stable tag so that I goes to 4.13
+> stable releases:
+>
+> Cc: <stable@vger.kernel.org> # v4.13
+>
+> --
+> Kalle Valo
 
-Fixes: bcd37f4a0831 ("rtlwifi: btcoex: 23b 2ant: let bt transmit when hw initialisation done")
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
-Cc: Stable <stable@vger.kernel.org> # 4.12+
----
-
-Kalle,
-
-This material is intended for kernel 4.14.
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 31965f0ef69d..e8f07573aed9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1183,7 +1183,10 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
- 		}
- 
- 		/* fixed internal switch S1->WiFi, S0->BT */
--		btcoexist->btc_write_4byte(btcoexist, 0x948, 0x0);
-+		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
-+			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
-+		else
-+			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
- 
- 		switch (antpos_type) {
- 		case BTC_ANT_WIFI_AT_MAIN:
--- 
-2.12.3
+Thanks.
