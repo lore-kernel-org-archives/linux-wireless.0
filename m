@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48608 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754344AbdIGHwN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 03:52:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: torvalds@linux-foundation.org
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        kvalo@codeaurora.org, netdev@vger.kernel.org, davem@davemloft.net,
-        emmanuel.grumbach@intel.com, Luca Coelho <luciano.coelho@intel.com>
-Date: Thu,  7 Sep 2017 10:51:52 +0300
-Message-Id: <20170907075152.4522-1-luca@coelho.fi> (sfid-20170907_095401_623943_BAC8297F)
-In-Reply-To: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com>
-References: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com>
-Subject: [PATCH] iwlwifi: mvm: only send LEDS_CMD when the FW supports it
+Received: from s3.sipsolutions.net ([5.9.151.49]:48596 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753557AbdIDN0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Sep 2017 09:26:48 -0400
+Message-ID: <1504531606.27801.2.camel@sipsolutions.net> (sfid-20170904_152651_740840_004154B0)
+Subject: Re: How can I get WDS to work? I need some help
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?H=E5vard?= Rabbe <hrabbe@me.com>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 04 Sep 2017 15:26:46 +0200
+In-Reply-To: <6B96DBC1-F290-4853-BC5F-F884727BF591@me.com> (sfid-20170823_170017_289214_D6D7BDC5)
+References: <6B96DBC1-F290-4853-BC5F-F884727BF591@me.com>
+         (sfid-20170823_170017_289214_D6D7BDC5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Wed, 2017-08-23 at 17:00 +0200, Håvard Rabbe wrote:
+> Hi
+> 
+> Im trying to get wds working. I haven’t found much documentation on
+> this topic. This is what i have found: https://wireless.wiki.kernel.o
+> rg/en/users/documentation/iw#setting_up_a_wds_peer
+> 
+> I have configured two machines with hostapd with the same config. Its
+> also the same wifi card WLE200NX using the AR9280 chipset.
+> 
+> After APs is running I have used this commands on both AP’s with the
+> other APs wifi mac address:
+> 
+> iw phy phy0 interface add wds0 type wds
+> iw dev wds0 set peer <MAC address>
+> 
+> then wds0 interface is showing up
+> 
+> ------------------
+> wds0      IEEE 802.11abgn  Mode:Repeater  Access Point: Not-
+> Associated   
+>           Tx-Power=20 dBm   
+>           Retry short limit:7   RTS thr:off   Fragment thr:off
+>           Power Management:off
+> ---------------------
+> 
+> 
+> But it says Access Point: Not-Associated
+> 
+> 
+> I have no clue what to do next.
 
-The LEDS_CMD command is only supported in some newer FW versions
-(e.g. iwlwifi-8000C-31.ucode), so we can't send it to older versions
-(such as iwlwifi-8000C-27.ucode).
+I think you have to do something like "iw wds0 set peer <MAC addr>" but
+frankly, you're far better off using the 4-addr AP/client mode since
+that allows proper feature negotiation and can use HT/VHT etc.:
 
-To fix this, check for a new bit in the FW capabilities TLV that tells
-when the command is supported.
+https://wireless.wiki.kernel.org/en/users/documentation/iw#using_4-address_for_ap_and_client_mode
 
-Note that the current version of -31.ucode in linux-firmware.git
-(31.532993.0) does not have this capability bit set, so the LED won't
-work, even though this version should support it.  But we will update
-this firmware soon, so it won't be a problem anymore.
-
-Fixes: 7089ae634c50 ("iwlwifi: mvm: use firmware LED command where applicable")
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/file.h | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/led.c | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 887f6d8fc8a7..279248cd9cfb 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -378,6 +378,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG	= (__force iwl_ucode_tlv_capa_t)80,
- 	IWL_UCODE_TLV_CAPA_LQM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)81,
- 	IWL_UCODE_TLV_CAPA_TX_POWER_ACK			= (__force iwl_ucode_tlv_capa_t)84,
-+	IWL_UCODE_TLV_CAPA_LED_CMD_SUPPORT		= (__force iwl_ucode_tlv_capa_t)86,
- 	IWL_UCODE_TLV_CAPA_MLME_OFFLOAD			= (__force iwl_ucode_tlv_capa_t)96,
- 
- 	NUM_IWL_UCODE_TLV_CAPA
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-index 005e2e7278a5..b27269504a62 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-@@ -92,7 +92,8 @@ static void iwl_mvm_send_led_fw_cmd(struct iwl_mvm *mvm, bool on)
- 
- static void iwl_mvm_led_set(struct iwl_mvm *mvm, bool on)
- {
--	if (mvm->cfg->device_family >= IWL_DEVICE_FAMILY_8000) {
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_LED_CMD_SUPPORT)) {
- 		iwl_mvm_send_led_fw_cmd(mvm, on);
- 		return;
- 	}
--- 
-2.14.1
+johannes
