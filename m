@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56798 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:45644 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751872AbdIVKcj (ORCPT
+        with ESMTP id S1753680AbdIDNCC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 06:32:39 -0400
+        Mon, 4 Sep 2017 09:02:02 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Colin King <colin.king@canonical.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: iwlegacy:  make const array static to shink object code size Content-Type: text/plain; charset="utf-8" Content-Transfer-Encoding: 8bit
-References: <20170921225630.21916-1-colin.king@canonical.com>
-        <20170922095609.GA27551@redhat.com>
-Date: Fri, 22 Sep 2017 13:32:35 +0300
-In-Reply-To: <20170922095609.GA27551@redhat.com> (Stanislaw Gruszka's message
-        of "Fri, 22 Sep 2017 11:56:10 +0200")
-Message-ID: <87efqz81mk.fsf@kamboji.qca.qualcomm.com> (sfid-20170922_123447_341405_F5A256B4)
+To: Ian W MORRISON <ianwmorrison@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] brcmfmac: feature check for multi-scheduled scan fails on bcm4345 devices
+References: <3cfcb175-8031-f5a8-da51-d81fa2d331c8@gmail.com>
+        <7481b892-511f-4696-bf3f-82b1bec50abf@broadcom.com>
+        <CAFXWsS_c6kr8LyZi0x8j5d4gU0AU9JzhSrYxit10G2B7OC9F+A@mail.gmail.com>
+Date: Mon, 04 Sep 2017 16:01:58 +0300
+In-Reply-To: <CAFXWsS_c6kr8LyZi0x8j5d4gU0AU9JzhSrYxit10G2B7OC9F+A@mail.gmail.com>
+        (Ian W. MORRISON's message of "Sat, 2 Sep 2017 17:15:31 +1000")
+Message-ID: <87vakyobw9.fsf@kamboji.qca.qualcomm.com> (sfid-20170904_150206_415609_C3AA2355)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+Ian W MORRISON <ianwmorrison@gmail.com> writes:
 
-> On Thu, Sep 21, 2017 at 11:56:30PM +0100, Colin King wrote:
->> From: Colin Ian King <colin.king@canonical.com>
->> 
->> Don't populate const array ac_to_fifo on the stack in an inlined
->> function, instead make it static.  Makes the object code smaller
->> by over 800 bytes:
->> 
->>    text	   data	    bss	    dec	    hex	filename
->>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
->> 
->>    text	   data	    bss	    dec	    hex	filename
->>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
->> 
->> (gcc version 7.2.0 x86_64)
->> 
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> On 2 September 2017 at 06:04, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 31-08-17 00:51, Ian W MORRISON wrote:
+>>>
+>>> The firmware feature check introduced for multi-scheduled scan is also
+>>> failing for bcm4345 devices resulting in a firmware crash.
+>>> The reason for this crash has not yet been root cause so this patch avoids
+>>> the feature check for those device as a short-term fix.
+>>
+>>
+>> Thanks. This is one of the few devices that I actually do not have on my
+>> desk.
+>>
+>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>
+>>> Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan
+>>> feature")
+>>> Signed-off-by: Ian W MORRISON <ianwmorrison@gmail.com>
+>>> ---
+>>> v2: Fixed tabs being replaced by spaces in patch submission
+>>> Tested on MINIX NEO Z83-4 and MINIX NEO Z83-4 Pro devices.
+>>> ---
+>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 3 ++-
+>>>   1 file changed, 2 insertions(+), 1 deletion(-)
 >
-> Content type information was added at the end of the topic, but
-> I think Kalle can fix that when he will be committing the patch.
+> Thanks. This patch of course is required to fix the '4.13 REGRESSION'
+> for brcm4345 sdio wifi with 4.13-rc1 through 4.13-rc7 as v4.12.10 is
+> the last working release. If you want me to test anything specific on
+> this device let me know.
 
-Yeah, I'll fix that when I commit this. But very good that you pointed
-it out, I might miss stuff like this.
+I'll queue this for 4.14. And add a stable tag so that I goes to 4.13
+stable releases:
 
-I'll also remove the "wireless:" prefix from the title.
+Cc: <stable@vger.kernel.org> # v4.13
 
 -- 
 Kalle Valo
