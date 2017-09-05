@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:43704 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751277AbdINTyn (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37878 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753428AbdIEVVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 15:54:43 -0400
-Received: by mail-io0-f172.google.com with SMTP id k101so3394671iod.0
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 12:54:43 -0700 (PDT)
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <1505378361.31630.2.camel@sipsolutions.net>
- <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
- <1505414172.31630.13.camel@sipsolutions.net>
- <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
- <1505416964.31630.17.camel@sipsolutions.net>
- <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
- <1505418093.31630.21.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com> (sfid-20170914_215447_297497_FCC937FF)
-Date: Thu, 14 Sep 2017 14:54:41 -0500
+        Tue, 5 Sep 2017 17:21:23 -0400
+Received: by mail-wm0-f49.google.com with SMTP id u26so24143782wma.0
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:21:22 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH 25/30] brcmfmac: Remove func0 from function array
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-26-ian@mnementh.co.uk>
+Message-ID: <6169d65c-70c4-d103-af57-aa6cd2fe5e94@broadcom.com> (sfid-20170905_232126_265834_B91E58C2)
+Date: Tue, 5 Sep 2017 23:21:20 +0200
 MIME-Version: 1.0
-In-Reply-To: <1505418093.31630.21.camel@sipsolutions.net>
+In-Reply-To: <20170822112550.60311-26-ian@mnementh.co.uk>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-> Well I guess any time that the carrier does in fact go down, you'd also
-> reset oper state...
+On 22-08-17 13:25, Ian Molton wrote:
+> Linux doesnt pass you func0 as a function when probing - instead
+> providing specific access functions to read/write it.
 > 
-> And now that I think about it, that does in fact happen in
-> ieee80211_set_disassoc(), which we even go through for FT roaming.
+> This prepares for a patch to remove the actual array entry itself.
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
 > 
-> Sounds like something we should fix?
-> 
-
-If you want roaming to keep oper state UP in all cases, then yes.  Does 
-this work on full mac cards as well?
-
-E.g. if I CMD_CONNECT to AP1, then pre-authenticate to AP2 and issue a 
-CMD_CONNECT to AP2?
-
-Regards,
--Denis
+> # Conflicts:
+> #	drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  5 +----
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 10 +++++++---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 13 ++++++-------
+>   3 files changed, 14 insertions(+), 14 deletions(-)
