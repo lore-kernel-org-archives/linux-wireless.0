@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0050.outbound.protection.outlook.com ([104.47.37.50]:64032
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753614AbdIRJ51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 05:57:27 -0400
-Date: Mon, 18 Sep 2017 12:57:13 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:44407 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750703AbdIEIts (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 04:49:48 -0400
+Date: Tue, 5 Sep 2017 10:49:32 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
-Message-ID: <20170918095713.mfn76hkdbo73k4fu@bars> (sfid-20170918_115737_657708_65E639F2)
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
- <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
- <1505724068.13691.0.camel@sipsolutions.net>
+cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Christoph Hellwig <hch@lst.org>, keescook@chromium.org,
+        John Stultz <john.stultz@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/25] mac80211_hwsim: Replace hrtimer tasklet with
+ softirq hrtimer
+In-Reply-To: <1504594996.6667.2.camel@sipsolutions.net>
+Message-ID: <alpine.DEB.2.20.1709051047360.1900@nanos> (sfid-20170905_105003_742428_D03C9E73)
+References: <20170831105725.809317030@linutronix.de>  <20170831105827.172599262@linutronix.de> <1504594996.6667.2.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1505724068.13691.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 18, 2017 at 10:41:08AM +0200, Johannes Berg wrote:
-
-Hello Johannes,
-
-> On Mon, 2017-09-18 at 11:04 +0300, Sergey Matyukevich wrote:
-> >
-> >   */
-> >  static int qtnf_netdev_close(struct net_device *ndev)
-> >  {
-> > -     netif_carrier_off(ndev);
-> >       qtnf_virtual_intf_cleanup(ndev);
-> >       qtnf_netdev_updown(ndev, 0);
-> > +     netif_carrier_off(ndev);
-> >       return 0;
-> >  }
+On Tue, 5 Sep 2017, Johannes Berg wrote:
+> On Thu, 2017-08-31 at 12:23 +0000, Anna-Maria Gleixner wrote:
+> > From: Thomas Gleixner <tglx@linutronix.de>
+> > 
+> > Switch the timer to CLOCK_MONOTONIC_SOFT, which executed the timer
+> > callback in softirq context and remove the hrtimer_tasklet.
+> > 
+> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> > Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+> > Cc: Johannes Berg <johannes@sipsolutions.net>
+> > Cc: Kalle Valo <kvalo@codeaurora.org>
+> > Cc: linux-wireless@vger.kernel.org
+> > 
+> This looks fine to me,
 > 
-> This seems unrelated?
-
-Hmm... The idea was to make sure that scan is canceled before
-cfg80211_netdev_notifier_call throws WARN when state is changed
-to NETDEV_DOWN. However this is not needed if scans are properly
-canceled in cfg80211_ops handlers. Thanks for catching, will remove.
-
-> > -     if (timer_pending(&mac->scan_timeout))
-> > -             del_timer_sync(&mac->scan_timeout);
-> >       qtnf_scan_done(mac, le32_to_cpu(status->flags) &
-> > QLINK_SCAN_ABORTED);
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 > 
-> and that's related perhaps but not really explained in the changelog,
-> not sure?
+> Are you planning to integrate all patches in the series through some
+> other tree, perhaps to be able to get rid of the tasklet_hrtimer API,
+> or should I apply this?
 
-That was minor optimization: to remove pedning timer whenever scan
-is canceled. Sure, it worth mentioning in changelog, will do.
+The patch depends on the hrtimer core changes, so we either delay the
+removal for a release cycle or just take the whole lot through
+tip:timers/core and get rid of it in one go.
 
-By the way, is it ok to send corrected single patch in reply to this
-discussion ? Or the appropriate way is to resend the whole patch set ?
+Thanks,
 
-Regards,
-Sergey
+	tglx
