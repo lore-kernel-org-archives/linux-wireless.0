@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55354 "EHLO mx1.redhat.com"
+Received: from mga06.intel.com ([134.134.136.31]:17218 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750988AbdILWWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 18:22:01 -0400
-From: Vladis Dronov <vdronov@redhat.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Vladis Dronov <vdronov@redhat.com>,
-        "# v3 . 1-rc1" <stable@vger.kernel.org>
-Subject: [PATCH] nl80211: check for the required netlink attributes presence
-Date: Wed, 13 Sep 2017 00:21:21 +0200
-Message-Id: <20170912222121.5032-1-vdronov@redhat.com> (sfid-20170913_002218_399530_F8E75DF0)
+        id S1750858AbdIEQtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 12:49:41 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "luca@coelho.fi" <luca@coelho.fi>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Subject: Re: [PATCH 06/10] cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
+Date: Tue, 5 Sep 2017 16:49:37 +0000
+Message-ID: <1504630175.23076.5.camel@intel.com> (sfid-20170905_184952_864260_B2BA45BD)
+References: <20170805084438.12550-1-luca@coelho.fi>
+         <20170805084438.12550-7-luca@coelho.fi>
+         <1504621814.12380.23.camel@sipsolutions.net>
+In-Reply-To: <1504621814.12380.23.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nl80211_set_rekey_data() does not check if the required attributes
-NL80211_REKEY_DATA_{REPLAY_CTR,KEK,KCK} are present when processing
-NL80211_CMD_SET_REKEY_OFFLOAD request. This request can be issued by
-users with CAP_NET_ADMIN privilege and may result in NULL dereference
-and a system crash. Add a check for the required attributes presence.
-This patch is based on the patch by bo Zhang.
-
-This fixes CVE-2017-12153.
-
-References: https://bugzilla.redhat.com/show_bug.cgi?id=1491046
-Fixes: e5497d766ad ("cfg80211/nl80211: support GTK rekey offload")
-Cc: <stable@vger.kernel.org> # v3.1-rc1
-Reported-by: bo Zhang <zhangbo5891001@gmail.com>
-Signed-off-by: Vladis Dronov <vdronov@redhat.com>
----
- net/wireless/nl80211.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0df8023..fbd5593 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10903,6 +10903,9 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
-+	if (!tb[NL80211_REKEY_DATA_REPLAY_CTR] || !tb[NL80211_REKEY_DATA_KEK] ||
-+	    !tb[NL80211_REKEY_DATA_KCK])
-+		return -EINVAL;
- 	if (nla_len(tb[NL80211_REKEY_DATA_REPLAY_CTR]) != NL80211_REPLAY_CTR_LEN)
- 		return -ERANGE;
- 	if (nla_len(tb[NL80211_REKEY_DATA_KEK]) != NL80211_KEK_LEN)
--- 
-2.9.5
+T24gVHVlLCAyMDE3LTA5LTA1IGF0IDE2OjMwICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBTYXQsIDIwMTctMDgtMDUgYXQgMTE6NDQgKzAzMDAsIEx1Y2EgQ29lbGhvIHdyb3RlOg0K
+PiANCj4gPiArCXJlZ2QgPSBnZXRfd2lwaHlfcmVnZG9tKHdpcGh5KTsNCj4gPiArCWlmIChyZWdk
+KSB7DQo+ID4gKwkJY29uc3Qgc3RydWN0IGllZWU4MDIxMV9yZWdfcnVsZSAqcmVnX3J1bGUgPQ0K
+PiA+ICsJCQlmcmVxX3JlZ19pbmZvX3JlZ2QoTUhaX1RPX0tIWihjaGFubmVsLQ0KPiA+ID4gY2Vu
+dGVyX2ZyZXEpLA0KPiA+IA0KPiA+ICsJCQkJCcKgwqDCoHJlZ2QsIE1IWl9UT19LSFooMjApKTsN
+Cj4gPiANCj4gDQo+IFRoaXMgY291bGQgcmV0dXJuIGFuIGVycm9yLCBob3cgY2FuIHlvdSBiZSBz
+dXJlIGl0IGRvZXNuJ3Q/DQo+IA0KDQpIbS4uLiBzbyBJIGd1ZXNzIEkgY291bGQgY2hlY2sgdGhh
+dCBpdCBkaWRuJ3QgcmV0dXJuIGFueSBlcnJvciBhbmQgaWYNCml0IGRpZCwgdGhlbiBmbGFncyA9
+IDA/DQoNClNvbWV0aGluZyBsaWtlIHRoaXM/IChvbiB0b3Agb2YgdGhpcyBwYXRjaCk6DQoNCkBA
+IC0xNTA2LDE1ICsxNTA2LDE1IEBAIHN0YXRpYyB2b2lkIHJlZ19wcm9jZXNzX2h0X2ZsYWdzX2No
+YW5uZWwoc3RydWN0IHdpcGh5ICp3aXBoeSwNCiAgICAgICAgICAgICAgICAgICAgICAgIGNoYW5u
+ZWxfYWZ0ZXIgPSBjOw0KICAgICAgICB9DQogDQorICAgICAgIGZsYWdzID0gMDsNCiAgICAgICAg
+cmVnZCA9IGdldF93aXBoeV9yZWdkb20od2lwaHkpOw0KICAgICAgICBpZiAocmVnZCkgew0KICAg
+ICAgICAgICAgICAgIGNvbnN0IHN0cnVjdCBpZWVlODAyMTFfcmVnX3J1bGUgKnJlZ19ydWxlID0N
+CiAgICAgICAgICAgICAgICAgICAgICAgIGZyZXFfcmVnX2luZm9fcmVnZChNSFpfVE9fS0haKGNo
+YW5uZWwtPmNlbnRlcl9mcmVxKSwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICByZWdkLCBNSFpfVE9fS0haKDIwKSk7DQogDQotICAgICAgICAgICAgICAgZmxhZ3Mg
+PSByZWdfcnVsZS0+ZmxhZ3M7DQotICAgICAgIH0gZWxzZSB7DQotICAgICAgICAgICAgICAgZmxh
+Z3MgPSAwOw0KKyAgICAgICAgICAgICAgIGlmICghSVNfRVJSKHJlZ19ydWxlKSkNCisgICAgICAg
+ICAgICAgICAgICAgICAgIGZsYWdzID0gcmVnX3J1bGUtPmZsYWdzOw0KICAgICAgICB9DQogDQog
+ICAgICAgIC8q
