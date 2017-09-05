@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0048.outbound.protection.outlook.com ([104.47.32.48]:34496
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751915AbdIUICA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 04:02:00 -0400
-Date: Thu, 21 Sep 2017 11:01:48 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [v2,1/2] qtnfmac: lock access to h/w in tx path
-Message-ID: <20170921080147.tvcztifyfwy2lp7g@bars> (sfid-20170921_100207_297460_0361B879)
-References: <20170918122950.32612-2-sergey.matyukevich.os@quantenna.com>
- <20170920123553.7121D6070F@smtp.codeaurora.org>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:36474 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752408AbdIEVqy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 17:46:54 -0400
+Received: by mail-wm0-f49.google.com with SMTP id i145so23864708wmf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:46:54 -0700 (PDT)
+Subject: Re: [PATCH 30/30] brcmfmac: Reduce the noise from repeatedly
+ dereferencing common pointers
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-31-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9a9d7005-e11c-815b-806d-38df0c8a01c2@broadcom.com> (sfid-20170905_234706_014085_A15BDFAB)
+Date: Tue, 5 Sep 2017 23:46:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170920123553.7121D6070F@smtp.codeaurora.org>
+In-Reply-To: <20170822112550.60311-31-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Hello Kalle,
-
-> > Fix tx path regression. Lock should be held when queuing packets
-> > to h/w fifos in order to properly handle configurations with
-> > multiple enabled interfaces.
-> >
-> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+On 22-08-17 13:25, Ian Molton wrote:
+> This introduces no functional changes, but makes the code drastically more
+> readable, reducing the amount of dereferencing performed inside functions
+> throughout the SDIO core.
 > 
-> 2 patches applied to wireless-drivers.git, thanks.
-> 
-> 20da2ec06bfa qtnfmac: lock access to h/w in tx path
-> a715b3a0efe7 qtnfmac: cancel scans on wireless interface changes
+> For example, reduce:
+> 	sdio_release_host(bus->sdiodev->func1);
+> to:
+> 	sdio_release_host(func1);
 
-Could you please clarify a couple of points regarding wireless-drivers-next
-and wireless-drivers trees. I checked development process article at
-wireless.wiki.kernel.org, but it looks a bit outdated. So am I correct
-assuming the following:
-- these two fixes were applied to wireless-drivers because I asked to
-  to queue them to 4.14
-- these two fixes will show up in wireless-drivers-next at some point
-  in the future after you move wireless-drivers-next forward, rebasing
-  it on top of one of the upcoming "-rc"
+I still have problems with this change. The example above does not 
+convince me. I explained my rule of thumb regarding using dereferences 
+and will stick to that.
+
+> Fixup a few inconsistently named pointers whilst we are at it ie.
+> 
+> sdiod -> sdiodev
+> 
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 140 +++----
+>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 406 +++++++++++----------
+>   2 files changed, 293 insertions(+), 253 deletions(-)
+
+All I see is 40 more lines to read.
 
 Regards,
-Sergey
+Arend
