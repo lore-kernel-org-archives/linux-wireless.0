@@ -1,35 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34230 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932117AbdIYHpJ (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37099 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752248AbdIEVTD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 03:45:09 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 5 Sep 2017 17:19:03 -0400
+Received: by mail-wm0-f44.google.com with SMTP id u26so24126795wma.0
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:19:02 -0700 (PDT)
+Subject: Re: [PATCH 28/30] brcmfmac: Clean up interrupt macros
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-29-ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <22858f29-d0c5-6780-8ccb-ad9f00e1f8dc@broadcom.com> (sfid-20170905_231907_498615_446039FC)
+Date: Tue, 5 Sep 2017 23:19:00 +0200
 MIME-Version: 1.0
-Subject: Re: [1/1] wireless: broadcom: brcm80211: use setup_timer() helper
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
-References: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
-To: Allen <allen.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, Allen Pais <allen.lkml@gmail.com>
-Message-Id: <20170925074509.3E2626044E@smtp.codeaurora.org> (sfid-20170925_100027_676818_3507D3C5)
-Date: Mon, 25 Sep 2017 07:45:09 +0000 (UTC)
+In-Reply-To: <20170822112550.60311-29-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allen <allen.lkml@gmail.com> wrote:
+On 22-08-17 13:25, Ian Molton wrote:
+> Make it more obvious that this code acually enables interrupts, and
+> provide nice definitions for the bits in the register.
 
-> Use setup_timer function instead of initializing timer with the
->     function and data fields.
-> 
-> Signed-off-by: Allen Pais <allen.lkml@gmail.com>
-
-Also your name in patchwork is just "Allen", without your lastname. I can fix
-it this time, but please register to patchwork to fix your name. (Annoyingly
-patchwork takes the name from it's database, not from the "From:" header)
-
--- 
-https://patchwork.kernel.org/patch/9963851/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 8 +++++---
+>   2 files changed, 7 insertions(+), 4 deletions(-)
