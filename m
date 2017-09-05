@@ -1,89 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38925 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752346AbdIRG6r (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 02:58:47 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] mwifiex: avoid storing random_mac in private
-Date: Mon, 18 Sep 2017 12:25:02 +0530
-Message-ID: <1505717702-10342-1-git-send-email-gbhat@marvell.com> (sfid-20170918_085851_594465_85EBBBB9)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:32876 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751119AbdIEJSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 05:18:47 -0400
+Message-ID: <1504603125.12380.7.camel@sipsolutions.net> (sfid-20170905_111850_600512_16DD302B)
+Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Tue, 05 Sep 2017 11:18:45 +0200
+In-Reply-To: <8760cx34cm.fsf@toke.dk>
+References: <20170622102030.9795-1-johannes@sipsolutions.net>
+         <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk>
+         <1504517620.9797.3.camel@sipsolutions.net> <87mv6a35lb.fsf@toke.dk>
+         <1504594708.6667.1.camel@sipsolutions.net> <8760cx34cm.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Application will keep track of whether MAC address randomization
-is enabled or not during scan. But at present driver is storing
-'random_mac' in mwifiex_private which implies even after scan is
-done driver has some reference to the earlier 'scan request'. To
-avoid this, make use of 'mac_addr' variable in 'scan_request' to
-store 'random_mac'. This structure will be freed by cfg80211 once
-scan is done.
+On Tue, 2017-09-05 at 11:02 +0200, Toke Høiland-Jørgensen wrote:
+> 
+> > I'm not sure. However, I think it's less bad than one might guess
+> > since it really should only affect multicast frames, right? All
+> > unicast frames should go directly to the per-STA TXQ.
+> 
+> Ah, right, that is the interface txq that is being purged. Gotcha.
+> 
+> But, erm, what happens with unicast traffic sent on the VLAN
+> interface when it goes down? Shouldn't that be purged from the per-
+> station TXQs as well?
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 11 ++++-------
- drivers/net/wireless/marvell/mwifiex/main.h     |  1 -
- drivers/net/wireless/marvell/mwifiex/scan.c     |  3 ++-
- 3 files changed, 6 insertions(+), 9 deletions(-)
+Well, those entire TXQs are destroyed with the station :)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ad1ebd8..84c1518 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2529,15 +2529,12 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
- 	priv->scan_request = request;
- 
- 	if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
--		ether_addr_copy(priv->random_mac, request->mac_addr);
- 		for (i = 0; i < ETH_ALEN; i++) {
--			priv->random_mac[i] &= request->mac_addr_mask[i];
--			priv->random_mac[i] |= get_random_int() &
--					       ~(request->mac_addr_mask[i]);
-+			request->mac_addr[i] &= request->mac_addr_mask[i];
-+			request->mac_addr[i] |=
-+				get_random_int() & ~(request->mac_addr_mask[i]);
- 		}
--		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
--	} else {
--		eth_zero_addr(priv->random_mac);
-+		ether_addr_copy(user_scan_cfg->random_mac, request->mac_addr);
- 	}
- 
- 	user_scan_cfg->num_ssids = request->n_ssids;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index a76bd79..a34de85 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -680,7 +680,6 @@ struct mwifiex_private {
- 	struct mwifiex_user_scan_chan hidden_chan[MWIFIEX_USER_SCAN_CHAN_MAX];
- 	u8 assoc_resp_ht_param;
- 	bool ht_param_present;
--	u8 random_mac[ETH_ALEN];
- };
- 
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index c9d41ed..cddf412 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1948,7 +1948,8 @@ static void mwifiex_complete_scan(struct mwifiex_private *priv)
- 
- 	adapter->active_scan_triggered = true;
- 	if (priv->scan_request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR)
--		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
-+		ether_addr_copy(user_scan_cfg->random_mac,
-+				priv->scan_request->mac_addr);
- 	user_scan_cfg->num_ssids = priv->scan_request->n_ssids;
- 	user_scan_cfg->ssid_list = priv->scan_request->ssids;
- 
--- 
-1.9.1
+> One nit with the patch:
+> 
+> > -	tx.sdata = vif_to_sdata(info->control.vif);
+> > +	if (info->control.vif)
+> > +		tx.sdata = vif_to_sdata(info->control.vif);
+> 
+> Why the conditional assignment? The code below unconditionally
+> dereferences tx.sdata, so if info->control.vif is null it is going to
+> crash anyway?
+
+Yeah, I agree that makes no sense, I'll remove that piece again.
+
+johannes
