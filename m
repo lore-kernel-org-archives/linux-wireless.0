@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38136 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751872AbdIVK2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 06:28:44 -0400
-Message-ID: <1506076123.2048.11.camel@sipsolutions.net> (sfid-20170922_122848_998018_65B98667)
-Subject: Re: [PATCH v2 2/2] wireless: return correct mandatory rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 22 Sep 2017 12:28:43 +0200
-In-Reply-To: <63eebfc4-2622-87b1-699e-58a222715900@uni-koblenz.de>
-References: <20170907154744.28357-2-rschuetz@uni-koblenz.de>
-         <20170908160712.8765-1-rschuetz@uni-koblenz.de>
-         <1506001926.2048.5.camel@sipsolutions.net>
-         <63eebfc4-2622-87b1-699e-58a222715900@uni-koblenz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from Galois.linutronix.de ([146.0.238.70]:43981 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751721AbdIEHNB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 03:13:01 -0400
+Date: Tue, 5 Sep 2017 09:12:40 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: kernel test robot <fengguang.wu@intel.com>
+cc: LKP <lkp@01.org>, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        wfg@linux.intel.com
+Subject: Re: 915f3e3f76 ("mac80211_hwsim: Replace bogus hrtimer clockid"):
+ BUG: kernel reboot-without-warning in test stage
+In-Reply-To: <59ade247.WzhbxWeytBOa6Xu4%fengguang.wu@intel.com>
+Message-ID: <alpine.DEB.2.20.1709050910150.1900@nanos> (sfid-20170905_091654_162791_65170CC7)
+References: <59ade247.WzhbxWeytBOa6Xu4%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-22 at 12:09 +0200, Richard Schütz wrote:
+On Tue, 5 Sep 2017, kernel test robot wrote:
 
-> > The way I see it, this would make us assume that all 2.4 GHz
-> > clients support ERP in IBSS, which may not be true?
+> Greetings,
 > 
-> I disagree. On a HR/DSSS PHY this would still only return HR/DSSS
-> rates because there should not by any ERP rates present in sband-
-> >bitrates in the first place.
+> 0day kernel testing robot got the below dmesg and the first bad commit is
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
+> 
+> commit 915f3e3f76c05b2da93c4cc278eebc2d9219d9f4
+> Author:     Thomas Gleixner <tglx@linutronix.de>
+> AuthorDate: Sat Feb 25 11:27:37 2017 +0100
+> Commit:     Linus Torvalds <torvalds@linux-foundation.org>
+> CommitDate: Sat Feb 25 09:48:16 2017 -0800
+> 
+>     mac80211_hwsim: Replace bogus hrtimer clockid
+>     
+>     mac80211_hwsim initializes a hrtimer with clockid CLOCK_MONOTONIC_RAW.
+>     That's not supported.
+>     
+>     Use CLOCK_MONOTNIC instead.
 
-Sure, but that means that if you're an ERP PHY (which all users of this
-code are likely to be), you'd assume that *everyone else* you're
-talking to also is - and that's not necessarily desired.
+Sorry, no. That bisect is completely bogus. The commit in question merily
+replaces the unsupported clockid with a valid one.
 
-> The reason for suggesting this change is that the basic rate set for
-> a mesh STA is initialized with this function if not explicitly
-> configured beforehand.
+Thanks,
 
-Exactly! So if you mark all the rates as basic that are mandatory for
-you, you can never peer mesh with a HR/DSSS PHY. Now, that's probably
-unlikely to happen - but for IBSS I'd argue it's reasonable, and the
-same would happen there afaict.
-
-> IEEE Std 802.11-2016 (10.7.4 Basic rate set, basic HT-MCS set, and
-> basic VHT-MCS and NSS set for mesh STA) states: A mesh STA shall not
-> establish a mesh peering with a mesh STA using a different
-> BSSBasicRateSet (see 14.2.7 and 14.2.8). The SME of a Mesh STA should
-> use the mandatory PHY rates as the default BSSBasicRateSet in the
-> MLME-START.request primitive to reduce the risk that a candidate peer
-> mesh STA utilizes a different BSSBasicRateSet.
-
-"Should" isn't "shall"
-
-> Selecting only HR/DSSS mandatory rates for a mesh STA default basic
-> rate set on an ERP PHY violates this requirement in my opinion. 
-
-It does seem to violate the "should", but arguably that's just a
-configuration choice.
-
-> wpa_supplicant explicitly configures all ERP mandatory rates for ERP 
-> mesh points in its default configuration, whereas iw relies on the 
-> kernel to do the selection. This currently leaves us with the 
-> unfortunate situation that you can not join such a mesh BSS created
-> by wpa_supplicant using iw without further configuration and the
-> other way round.
-
-So now we've finally gotten to the bottom of why you're doing all this?
-
-Anyway, I disagree with the patch. I can get behind a patch changing
-the mesh code, but not in a way that affects the IBSS like this.
-
-johannes
+	tglx
