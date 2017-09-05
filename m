@@ -1,37 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:37948 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753764AbdIDPlW (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:33547 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752753AbdIEVVc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 11:41:22 -0400
-Received: by mail-pg0-f45.google.com with SMTP id v66so2139286pgb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Sep 2017 08:41:22 -0700 (PDT)
+        Tue, 5 Sep 2017 17:21:32 -0400
+Received: by mail-wm0-f47.google.com with SMTP id f145so13369612wme.0
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:21:31 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH 26/30] brcmfmac: More efficient and slightly easier to
+ read fixup for 4339 chips
+To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
+References: <20170822112550.60311-1-ian@mnementh.co.uk>
+ <20170822112550.60311-27-ian@mnementh.co.uk>
+Message-ID: <debb0614-e8a1-4e1e-b0c2-8bb5ce04a43f@broadcom.com> (sfid-20170905_232135_271427_7B670A29)
+Date: Tue, 5 Sep 2017 23:21:29 +0200
 MIME-Version: 1.0
-In-Reply-To: <87vakyobw9.fsf@kamboji.qca.qualcomm.com>
-References: <3cfcb175-8031-f5a8-da51-d81fa2d331c8@gmail.com>
- <7481b892-511f-4696-bf3f-82b1bec50abf@broadcom.com> <CAFXWsS_c6kr8LyZi0x8j5d4gU0AU9JzhSrYxit10G2B7OC9F+A@mail.gmail.com>
- <87vakyobw9.fsf@kamboji.qca.qualcomm.com>
-From: Ian W MORRISON <ianwmorrison@gmail.com>
-Date: Tue, 5 Sep 2017 01:41:21 +1000
-Message-ID: <CAFXWsS_EEnK9Y6DK5sBWdesgsTNasi3=dvKpVQKSeLLfXuOn+A@mail.gmail.com> (sfid-20170904_174126_195351_3EABA048)
-Subject: Re: [PATCH v2] brcmfmac: feature check for multi-scheduled scan fails
- on bcm4345 devices
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170822112550.60311-27-ian@mnementh.co.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 September 2017 at 23:01, Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> I'll queue this for 4.14. And add a stable tag so that I goes to 4.13
-> stable releases:
->
-> Cc: <stable@vger.kernel.org> # v4.13
->
-> --
-> Kalle Valo
+On 22-08-17 13:25, Ian Molton wrote:
+> Its more efficient to test the register we're interested in first,
+> potentially avoiding two more comparisons, and therefore always avoiding
+> one comparison per call on all other chips.
 
-Thanks.
+Efficiency is really not a big issue. The buscore callbacks are really 
+only used during chip recognition so this feels like change for sake of 
+change. Not my favorite.
+
+> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 9 ++++++---
+>   1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index 7ebe6460cb5c..8a730133db77 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -3766,15 +3766,18 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+>   	/* Force 4339 chips over rev2 to use the same ID */
+>   	/* This is borderline tolerable whilst there is only two exceptions */
+>   	/* But could be handled better */
+
+This is not correct way to do multi-line comment and the story is not 
+quite correct or maybe I do not understand what is written here.
+
+> -	if ((sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
+> -	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
+> -	     addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
+> +	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
+> +	    (sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
+> +	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
+> +
+>   		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
+> +
+>   		if (rev >= 2) {
+>   			val &= ~CID_ID_MASK;
+>   			val |= BRCM_CC_4339_CHIP_ID;
+>   		}
+>   	}
+> +
+>   	return val;
+>   }
+>   
+> 
