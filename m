@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50582 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33286 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752587AbdIFK1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 06:27:13 -0400
-Message-ID: <1504693631.13457.4.camel@sipsolutions.net> (sfid-20170906_122716_271615_6ED27E66)
-Subject: Re: [PATCH] wireless: allow send peer mac in rssi cqm notify
+        id S1750869AbdIEJy7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 05:54:59 -0400
+Message-ID: <1504605297.12380.8.camel@sipsolutions.net> (sfid-20170905_115513_319803_716F2FB9)
+Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, pradeep718@tamu.edu
-Date: Wed, 06 Sep 2017 12:27:11 +0200
-In-Reply-To: <1503435112-26204-1-git-send-email-pradeepc@codeaurora.org>
-References: <1503435112-26204-1-git-send-email-pradeepc@codeaurora.org>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name
+Date: Tue, 05 Sep 2017 11:54:57 +0200
+In-Reply-To: <87zia91nmc.fsf@toke.dk>
+References: <20170622102030.9795-1-johannes@sipsolutions.net>
+         <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk>
+         <1504517620.9797.3.camel@sipsolutions.net> <87mv6a35lb.fsf@toke.dk>
+         <1504594708.6667.1.camel@sipsolutions.net> <8760cx34cm.fsf@toke.dk>
+         <1504603125.12380.7.camel@sipsolutions.net> <87zia91nmc.fsf@toke.dk>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-08-22 at 13:51 -0700, Pradeep Kumar Chitrapu wrote:
-> Extend cqm rssi notifier apis to include peer mac address. Currently
-> netlink cqm msg already accepts the mac. With this change just
-> passing the mac address as an argument to cfg and mac80211 apis.
+On Tue, 2017-09-05 at 11:49 +0200, Toke Høiland-Jørgensen wrote:
+> 
+> Ah, so the station is attached to the VLAN interface, not the parent
+> interface?
 
-This probably somehow interacts with the other patches you sent in this
-area, like enabling the CQM stuff for AP mode, but that *really* needs
-to be more than three patches without any substantial commit log and
-documentation updates.
+Doesn't actually matter, but if the VLAN goes where the station belongs
+then either the station must've moved somewhere else or have been
+destroyed, you can't have the station pointing to a VLAN that no longer
+exists :)
 
-I'm not convinced that this makes sense at all.
+> I guess that the only case where there is likely to be any
+> significant effects of dropping the whole queue is if someone is
+> sending large amounts of multicast traffic (live video streaming? is
+> that even feasible over WiFi?) while reconfiguring their VLAN setup.
+> That is probably not a terribly common combination...
+
+Right.
+
+Anyway I've applied this with the pointless null check removed.
 
 johannes
