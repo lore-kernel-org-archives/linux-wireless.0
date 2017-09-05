@@ -1,42 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.newmedia-net.de ([185.84.6.166]:43650 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753566AbdIDOZD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 10:25:03 -0400
-To: linux-wireless@vger.kernel.org
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: current wireless-next mac80211 test result
-Message-ID: <e7efa293-0356-559d-fb19-78507ea21606@dd-wrt.com> (sfid-20170904_162507_298293_4BB9F6AF)
-Date: Mon, 4 Sep 2017 16:08:41 +0200
+Received: from bues.ch ([80.190.117.144]:48857 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753095AbdIEUut (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 16:50:49 -0400
+Date: Tue, 5 Sep 2017 22:18:28 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Colin King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] b43legacy: fix unitialized reads of ret by
+ initializing the array to zero
+Message-ID: <20170905221705.3a5c4ffa@wiggum> (sfid-20170905_225222_925786_DCA8A5DC)
+In-Reply-To: <20170905181658.23893-1-colin.king@canonical.com>
+References: <20170905181658.23893-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/rTL4C4h=cV3+DjO11=n_ZB9"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tested yesterday the current wireless-next tree with backports and 
-openwrt and also dd-wrt and ath10k
+--Sig_/rTL4C4h=cV3+DjO11=n_ZB9
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-after a few minutes the load was up to 50.0 . after downgrading just 
-mac80211 to the january version but still using latest ath10k
+On Tue,  5 Sep 2017 19:16:58 +0100
+Colin King <colin.king@canonical.com> wrote:
 
-with some small mods to fit to the api, everything was back to normal 
-again. since some ioctls i used for a special kernel driver deadlocked 
-at the same time
+> From: Colin Ian King <colin.king@canonical.com>
+>=20
+> The u8 char array ret is not being initialized and elements outside
+> the range start to end contain just garbage values from the stack.
+> This results in a later scan of the array to read potentially
+> uninitialized values.  Fix this by initializing the array to zero.
+> This seems to have been an issue since the very first commit.
+>=20
+> Detected by CoverityScan CID#139653 ("Uninitialized scalar variable")
+>=20
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/broadcom/b43legacy/radio.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/net/wireless/broadcom/b43legacy/radio.c b/drivers/ne=
+t/wireless/broadcom/b43legacy/radio.c
+> index 9501420340a9..eab1c9387846 100644
+> --- a/drivers/net/wireless/broadcom/b43legacy/radio.c
+> +++ b/drivers/net/wireless/broadcom/b43legacy/radio.c
+> @@ -280,7 +280,7 @@ u8 b43legacy_radio_aci_detect(struct b43legacy_wldev =
+*dev, u8 channel)
+>  u8 b43legacy_radio_aci_scan(struct b43legacy_wldev *dev)
+>  {
+>  	struct b43legacy_phy *phy =3D &dev->phy;
+> -	u8 ret[13];
+> +	u8 ret[13] =3D { 0 };
+>  	unsigned int channel =3D phy->channel;
+>  	unsigned int i;
+>  	unsigned int j;
 
-where the load was getting high, it seems for me like a deadlock problem 
-in mac802.11 using some big fat kernel lock. didnt had much time for 
-more research. just wanted to give that information to this group
 
--- 
-Mit freundlichen Grüssen / Regards
+This fix seems to be correct.
+Thanks for finding and fixing the issue.
 
-Sebastian Gottschall / CTO
+Reviewed-by: Michael Buesch <m@bues.ch>
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+
+
+--=20
+Michael
+
+--Sig_/rTL4C4h=cV3+DjO11=n_ZB9
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlmvBpUACgkQ9TK+HZCN
+iw7mcxAAuwPN4Hx9k9uBlKOS/Qdd4vDkyEBZ4NpLrTu8+8VcXgD/RWa0LACvQQEy
+zJN1IEeFD34yl8eX16+eRaeEzzDuDsmHUwZB8zyWu1KlUpXEGTf1Pkm1cwZTROL0
+8IAyUdmXt+jO0O/xOcb+9+p9LXGSL99R1PTPof1SK2y9zUd9UnadMWJXS2cc3NpM
+02v3J3r7fXVg7IDAt3YpZ7M5fH7Pri+2BiM2xkNinb7L1KIcBhSF2pEJJLtFk2Ww
+xO9wOwAwqCZkeT27C+jv8XQrwEZSL3/F+fzbBpKl8Bhj6LaptB3JRWio1n7fG9iM
+IUrXsgNJtLqPW3H5+e3O51zcyggMMw/Iyj5KdAayAkouvf7n880MC++9bbWnsZcz
+KBrhna9wrG5O5Qo1HiO1QgomtsWfsaZ45pH5AmK/MnVDlnVjI0f6w+FyYPwlSE5b
+mad3PyAfUD7ALG3+fxIgXe/GtuzZO/KTDB4G4zJPpZamdnl4s63Hei6K3YbtruTG
+SffWyZR2tsiEgJ8w/ABNCg1fOUIypEtuf6v6IW6kkjEqxyviuI6C1BtyRjhS7rfM
+gRs6SHzj9NsnXaYv7neTG6a9aPl6X149+YRmNLpj1pWSEoOofbLiKC0qvYQcugw6
+SZjt7kTNNRiyO+O2rxDfOI6uKnIWISFPZoNpVKyf9vc1j5ehuRc=
+=L1fw
+-----END PGP SIGNATURE-----
+
+--Sig_/rTL4C4h=cV3+DjO11=n_ZB9--
