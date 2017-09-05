@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33048 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754560AbdIHKMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 06:12:35 -0400
-Message-ID: <1504865553.6177.20.camel@sipsolutions.net> (sfid-20170908_121340_315983_C63A6CF1)
-Subject: Re: [PATCH 2/2] wireless: return correct mandatory rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
-Date: Fri, 08 Sep 2017 12:12:33 +0200
-In-Reply-To: <f9e34cbf-e0e1-3faa-39dd-58ad6968d276@uni-koblenz.de>
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-         <20170907154744.28357-2-rschuetz@uni-koblenz.de>
-         <1504853740.6177.10.camel@sipsolutions.net>
-         <5aed0ea0-f127-bd1e-ca06-db7edbf56680@uni-koblenz.de>
-         <1504861413.6177.16.camel@sipsolutions.net>
-         <f9e34cbf-e0e1-3faa-39dd-58ad6968d276@uni-koblenz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:53045 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752681AbdIESRC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Sep 2017 14:17:02 -0400
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] b43legacy: fix unitialized reads of ret by initializing the array to zero
+Date: Tue,  5 Sep 2017 19:16:58 +0100
+Message-Id: <20170905181658.23893-1-colin.king@canonical.com> (sfid-20170905_201733_301115_7BC37DE1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-08 at 12:10 +0200, Richard Schütz wrote:
-> 
-> This would leave us with 1, 2, 5.5 and 11 Mb/s for ERP PHYs again
-> when it really should be 1, 2, 5.5, 6, 11, 12 and 24 Mb/s.
-> 
+From: Colin Ian King <colin.king@canonical.com>
 
-Yes, you're right - I had thought about that but forgot. The places
-that check it would have to be amended to check both HR_DSSS and OFDM
-where they want ERP PHY operation.
+The u8 char array ret is not being initialized and elements outside
+the range start to end contain just garbage values from the stack.
+This results in a later scan of the array to read potentially
+uninitialized values.  Fix this by initializing the array to zero.
+This seems to have been an issue since the very first commit.
 
-johannes
+Detected by CoverityScan CID#139653 ("Uninitialized scalar variable")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/broadcom/b43legacy/radio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/b43legacy/radio.c b/drivers/net/wireless/broadcom/b43legacy/radio.c
+index 9501420340a9..eab1c9387846 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/radio.c
++++ b/drivers/net/wireless/broadcom/b43legacy/radio.c
+@@ -280,7 +280,7 @@ u8 b43legacy_radio_aci_detect(struct b43legacy_wldev *dev, u8 channel)
+ u8 b43legacy_radio_aci_scan(struct b43legacy_wldev *dev)
+ {
+ 	struct b43legacy_phy *phy = &dev->phy;
+-	u8 ret[13];
++	u8 ret[13] = { 0 };
+ 	unsigned int channel = phy->channel;
+ 	unsigned int i;
+ 	unsigned int j;
+-- 
+2.14.1
