@@ -1,53 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58820 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751009AbdISOt1 (ORCPT
+Received: from mail-io0-f180.google.com ([209.85.223.180]:36090 "EHLO
+        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750739AbdIFNHs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 10:49:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: Re: [PATCH] rsi: sdio suspend and resume support
-References: <1504102172-5262-1-git-send-email-amitkarwar@gmail.com>
-Date: Tue, 19 Sep 2017 17:49:22 +0300
-In-Reply-To: <1504102172-5262-1-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Wed, 30 Aug 2017 19:39:32 +0530")
-Message-ID: <87h8vylp59.fsf@purkki.adurom.net> (sfid-20170919_164932_200435_DD8293C5)
+        Wed, 6 Sep 2017 09:07:48 -0400
+Received: by mail-io0-f180.google.com with SMTP id z67so23676301iof.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Sep 2017 06:07:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170906144019.1c98a636@elisabeth>
+References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
+ <20170906144019.1c98a636@elisabeth>
+From: Matteo Croce <mcroce@redhat.com>
+Date: Wed, 6 Sep 2017 15:07:07 +0200
+Message-ID: <CAGnkfhxknRTFsfT=GoqQJUFx1p1QVNVCfqjb04Z2nbwnWkjuWA@mail.gmail.com> (sfid-20170906_150809_236253_95214BFF)
+Subject: Re: hung task in mac80211
+To: Stefano Brivio <sbrivio@redhat.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
-
-> From: Karun Eagalapati <karun256@gmail.com>
+On Wed, Sep 6, 2017 at 2:40 PM, Stefano Brivio <sbrivio@redhat.com> wrote:
+> On Wed, 6 Sep 2017 13:57:47 +0200
+> Matteo Croce <mcroce@redhat.com> wrote:
 >
-> SDIO suspend and resume handlers are implemented and verified
-> that device works after suspend/resume cycle.
+>> Hi,
+>>
+>> I have an hung task on vanilla 4.13 kernel which I haven't on 4.12.
+>> The problem is present both on my AP and on my notebook,
+>> so it seems it affects AP and STA mode as well.
+>> The generated messages are:
+>>
+>> INFO: task kworker/u16:6:120 blocked for more than 120 seconds.
+>>       Not tainted 4.13.0 #57
+>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>> kworker/u16:6   D    0   120      2 0x00000000
+>> Workqueue: phy0 ieee80211_ba_session_work [mac80211]
+>> Call Trace:
+>>  ? __schedule+0x174/0x5b0
+>>  ? schedule+0x31/0x80
+>>  ? schedule_preempt_disabled+0x9/0x10
+>>  ? __mutex_lock.isra.2+0x163/0x480
+>>  ? select_task_rq_fair+0xb9f/0xc60
+>>  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
+>>  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
 >
-> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> This is ugly and maybe wrong, but you could check perhaps...:
+>
+> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+> index c92df492e898..bd7512a656f2 100644
+> --- a/net/mac80211/ht.c
+> +++ b/net/mac80211/ht.c
+> @@ -320,28 +320,40 @@ void ieee80211_ba_session_work(struct work_struct *work)
+>
+>         mutex_lock(&sta->ampdu_mlme.mtx);
+>         for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
+> -               if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
+> +               if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired)) {
+> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
+>                         ___ieee80211_stop_rx_ba_session(
+>                                 sta, tid, WLAN_BACK_RECIPIENT,
+>                                 WLAN_REASON_QSTA_TIMEOUT, true);
+> +                       mutex_lock(&sta->ampdu_mlme.mtx);
+> +               }
+>
+>                 if (test_and_clear_bit(tid,
+> -                                      sta->ampdu_mlme.tid_rx_stop_requested))
+> +                                      sta->ampdu_mlme.tid_rx_stop_requested)) {
+> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
+>                         ___ieee80211_stop_rx_ba_session(
+>                                 sta, tid, WLAN_BACK_RECIPIENT,
+>                                 WLAN_REASON_UNSPECIFIED, true);
+> +                       mutex_lock(&sta->ampdu_mlme.mtx);
+> +               }
+>
+>                 if (test_and_clear_bit(tid,
+> -                                      sta->ampdu_mlme.tid_rx_manage_offl))
+> +                                      sta->ampdu_mlme.tid_rx_manage_offl)) {
+> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
+>                         __ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
+>                                                         IEEE80211_MAX_AMPDU_BUF,
+>                                                         false, true);
+> +                       mutex_lock(&sta->ampdu_mlme.mtx);
+> +               }
+>
+>                 if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
+> -                                      sta->ampdu_mlme.tid_rx_manage_offl))
+> +                                      sta->ampdu_mlme.tid_rx_manage_offl)) {
+> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
+>                         ___ieee80211_stop_rx_ba_session(
+>                                 sta, tid, WLAN_BACK_RECIPIENT,
+>                                 0, false);
+> +                       mutex_lock(&sta->ampdu_mlme.mtx);
+> +               }
+>
+>                 spin_lock_bh(&sta->lock);
+>
+> --
+> Stefano
+>
 
-[...]
-
-> +static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
-> +{
-> +	struct rsi_hw *adapter = sdio_get_drvdata(pfunc);
-> +	u8 isr_status = 0, data = 0;
-> +	int ret;
-> +
-> +	rsi_dbg(INFO_ZONE, "Waiting for interrupts to be cleared..");
-> +	do {
-> +		rsi_sdio_read_register(adapter, RSI_FN1_INT_REGISTER,
-> +				       &isr_status);
-> +		rsi_dbg(INFO_ZONE, ".");
-> +	} while (isr_status);
-
-Never ending loops in kernel are always a bad idea, better to add a
-reasonable timeout if/when something goes wrong.
+ACK, I have it running since 12 minutes.
+The hang usually appears shortly after boot as I set
+kernel.hung_task_timeout_secs=10
 
 -- 
-Kalle Valo
+Matteo Croce
+per aspera ad upstream
