@@ -1,154 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44640 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751251AbdILJWe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 05:22:34 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>
-Subject: [PATCH 2/7] brcmfmac: disable packet filtering in promiscuous mode
-Date: Tue, 12 Sep 2017 11:22:18 +0200
-Message-Id: <1505208143-30166-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112249_734572_CB7328CF)
-In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mga04.intel.com ([192.55.52.120]:10209 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751814AbdIFHwF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 03:52:05 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "luca@coelho.fi" <luca@coelho.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Subject: RE: [PATCH 06/10] cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
+Date: Wed, 6 Sep 2017 07:51:20 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3FF7DA58E@HASMSX112.ger.corp.intel.com> (sfid-20170906_095412_170103_E4F24ED7)
+References: <20170805084438.12550-1-luca@coelho.fi>
+         <20170805084438.12550-7-luca@coelho.fi>
+         <1504621814.12380.23.camel@sipsolutions.net>
+         <1504630175.23076.5.camel@intel.com>
+ <1504682981.12380.28.camel@sipsolutions.net>
+In-Reply-To: <1504682981.12380.28.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
-
-Disable arp and nd offload to allow all packets sending to host.
-
-Reported-by: Phil Elwell <phil@raspberrypi.org>
-Tested-by: Phil Elwell <phil@raspberrypi.org>
-Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 41 ----------------------
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 38 ++++++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
- 3 files changed, 39 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index aaed4ab..b249083 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -472,47 +472,6 @@ static void convert_key_from_CPU(struct brcmf_wsec_key *key,
- 	return err;
- }
- 
--static s32
--brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
--{
--	s32 err;
--	u32 mode;
--
--	if (enable)
--		mode = BRCMF_ARP_OL_AGENT | BRCMF_ARP_OL_PEER_AUTO_REPLY;
--	else
--		mode = 0;
--
--	/* Try to set and enable ARP offload feature, this may fail, then it  */
--	/* is simply not supported and err 0 will be returned                 */
--	err = brcmf_fil_iovar_int_set(ifp, "arp_ol", mode);
--	if (err) {
--		brcmf_dbg(TRACE, "failed to set ARP offload mode to 0x%x, err = %d\n",
--			  mode, err);
--		err = 0;
--	} else {
--		err = brcmf_fil_iovar_int_set(ifp, "arpoe", enable);
--		if (err) {
--			brcmf_dbg(TRACE, "failed to configure (%d) ARP offload err = %d\n",
--				  enable, err);
--			err = 0;
--		} else
--			brcmf_dbg(TRACE, "successfully configured (%d) ARP offload to 0x%x\n",
--				  enable, mode);
--	}
--
--	err = brcmf_fil_iovar_int_set(ifp, "ndoe", enable);
--	if (err) {
--		brcmf_dbg(TRACE, "failed to configure (%d) ND offload err = %d\n",
--			  enable, err);
--		err = 0;
--	} else
--		brcmf_dbg(TRACE, "successfully configured (%d) ND offload to 0x%x\n",
--			  enable, mode);
--
--	return err;
--}
--
- static void
- brcmf_cfg80211_update_proto_addr_mode(struct wireless_dev *wdev)
- {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 5cc3a07..9c7536d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -71,6 +71,43 @@ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx)
- 	return ifp;
- }
- 
-+void brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
-+{
-+	s32 err;
-+	u32 mode;
-+
-+	if (enable)
-+		mode = BRCMF_ARP_OL_AGENT | BRCMF_ARP_OL_PEER_AUTO_REPLY;
-+	else
-+		mode = 0;
-+
-+	/* Try to set and enable ARP offload feature, this may fail, then it  */
-+	/* is simply not supported and err 0 will be returned                 */
-+	err = brcmf_fil_iovar_int_set(ifp, "arp_ol", mode);
-+	if (err) {
-+		brcmf_dbg(TRACE, "failed to set ARP offload mode to 0x%x, err = %d\n",
-+			  mode, err);
-+	} else {
-+		err = brcmf_fil_iovar_int_set(ifp, "arpoe", enable);
-+		if (err) {
-+			brcmf_dbg(TRACE, "failed to configure (%d) ARP offload err = %d\n",
-+				  enable, err);
-+		} else {
-+			brcmf_dbg(TRACE, "successfully configured (%d) ARP offload to 0x%x\n",
-+				  enable, mode);
-+		}
-+	}
-+
-+	err = brcmf_fil_iovar_int_set(ifp, "ndoe", enable);
-+	if (err) {
-+		brcmf_dbg(TRACE, "failed to configure (%d) ND offload err = %d\n",
-+			  enable, err);
-+	} else {
-+		brcmf_dbg(TRACE, "successfully configured (%d) ND offload to 0x%x\n",
-+			  enable, mode);
-+	}
-+}
-+
- static void _brcmf_set_multicast_list(struct work_struct *work)
- {
- 	struct brcmf_if *ifp;
-@@ -134,6 +171,7 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 	if (err < 0)
- 		brcmf_err("Setting BRCMF_C_SET_PROMISC failed, %d\n",
- 			  err);
-+	brcmf_configure_arp_nd_offload(ifp, !cmd_value);
- }
- 
- #if IS_ENABLED(CONFIG_IPV6)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index a4dd313..1708571 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -203,6 +203,7 @@ struct brcmf_if {
- /* Return pointer to interface name */
- char *brcmf_ifname(struct brcmf_if *ifp);
- struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
-+void brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable);
- int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
- struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
- 			      bool is_p2pdev, const char *name, u8 *mac_addr);
--- 
-1.9.1
+PiANCj4gT24gVHVlLCAyMDE3LTA5LTA1IGF0IDE2OjQ5ICswMDAwLCBHcnVtYmFjaCwgRW1tYW51
+ZWwgd3JvdGU6DQo+ID4gT24gVHVlLCAyMDE3LTA5LTA1IGF0IDE2OjMwICswMjAwLCBKb2hhbm5l
+cyBCZXJnIHdyb3RlOg0KPiA+ID4gT24gU2F0LCAyMDE3LTA4LTA1IGF0IDExOjQ0ICswMzAwLCBM
+dWNhIENvZWxobyB3cm90ZToNCj4gPiA+DQo+ID4gPiA+ICsJcmVnZCA9IGdldF93aXBoeV9yZWdk
+b20od2lwaHkpOw0KPiA+ID4gPiArCWlmIChyZWdkKSB7DQo+ID4gPiA+ICsJCWNvbnN0IHN0cnVj
+dCBpZWVlODAyMTFfcmVnX3J1bGUgKnJlZ19ydWxlID0NCj4gPiA+ID4gKwkJCWZyZXFfcmVnX2lu
+Zm9fcmVnZChNSFpfVE9fS0haKGNoYW5uZWwtDQo+ID4gPiA+ID4gY2VudGVyX2ZyZXEpLA0KPiA+
+ID4gPg0KPiA+ID4gPiArCQkJCQnCoMKgwqByZWdkLA0KPiA+ID4gPiBNSFpfVE9fS0haKDIwKSk7
+DQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4gVGhpcyBjb3VsZCByZXR1cm4gYW4gZXJyb3IsIGhvdyBj
+YW4geW91IGJlIHN1cmUgaXQgZG9lc24ndD8NCj4gPiA+DQo+ID4NCj4gPiBIbS4uLiBzbyBJIGd1
+ZXNzIEkgY291bGQgY2hlY2sgdGhhdCBpdCBkaWRuJ3QgcmV0dXJuIGFueSBlcnJvciBhbmQgaWYN
+Cj4gPiBpdCBkaWQsIHRoZW4gZmxhZ3MgPSAwPw0KPiA+DQo+ID4gU29tZXRoaW5nIGxpa2UgdGhp
+cz8gKG9uIHRvcCBvZiB0aGlzIHBhdGNoKToNCj4gPiBbc25pcF0NCj4gDQo+IHllYWggdGhhdCdz
+IG9idmlvdXNseSB0aGUgZWFzeSB0aGluZyB0byBkbyAtIEkganVzdCB3YXNuJ3Qgc3VyZSB0aGF0
+IHlvdSBkaWRuJ3QNCj4gaGF2ZSBhIHJlYXNvbiB0byBiZWxpZXZlIGl0IGNvdWxkIG5ldmVyIGJl
+IGFuIEVSUl9QVFIgOikNCj4NClRCSCwgSSBkb24ndCByZWFsbHkga25vdy4uLiBJIGRvbid0IGtu
+b3cgaWYgKmFsbCogdGhlIGNoYW5uZWxzIGFyZSBjb3ZlcmVkIGJ5IHJ1bGVzLg0KRm9yIHN1cmUs
+IGlmIHRoZXJlIGlzIG5vIHJ1bGUsIEkgY2FuIGFzc3VtZSB0aGF0IHRoZSBIVDQweyssLX0gYXJl
+IG5vdCBzZXQuLi4gQnV0IEkgZG9uJ3Qga25vdyBpZiB0aGF0J3MgZXZlbiBwb3NzaWJsZS4NCg0K
