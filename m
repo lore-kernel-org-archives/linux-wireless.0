@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58862 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751971AbdITErE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 00:47:04 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [for-4.14,
- 1/2] brcmfmac: add length check in brcmf_cfg80211_escan_handler()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1505206074-28781-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1505206074-28781-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kevin Cernekee <cernekee@chromium.org>
-Message-Id: <20170920044704.1633360722@smtp.codeaurora.org> (sfid-20170920_064728_577395_F1FDC303)
-Date: Wed, 20 Sep 2017 04:47:04 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:50726 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752508AbdIFKde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 06:33:34 -0400
+Message-ID: <1504694012.13457.8.camel@sipsolutions.net> (sfid-20170906_123337_345891_610D17C6)
+Subject: Re: [PATCH 09/10] mac80211_hwsim: Add command to control rx status
+ RSSI
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, Beni Lev <beni.lev@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 06 Sep 2017 12:33:32 +0200
+In-Reply-To: <20170805084438.12550-10-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+         <20170805084438.12550-10-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-
-> Upon handling the firmware notification for scans the length was
-> checked properly and may result in corrupting kernel heap memory
-> due to buffer overruns. This fix addresses CVE-2017-0786.
+On Sat, 2017-08-05 at 11:44 +0300, Luca Coelho wrote:
 > 
-> Cc: stable@vger.kernel.org # v4.0.x
-> Cc: Kevin Cernekee <cernekee@chromium.org>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> +static int hwsim_fops_rx_rssi_write(void *dat, u64 val)
+> +{
+> +	struct mac80211_hwsim_data *data = dat;
+> +	int rssi = (int)val;
 
-2 patches applied to wireless-drivers.git, thanks.
+That cast is wrong - you should go to s64, do the range check, and only
+then restrict to int. Basically, just do
 
-17df6453d4be brcmfmac: add length check in brcmf_cfg80211_escan_handler()
-35f62727df0e brcmfmac: setup passive scan if requested by user-space
+s64 rssi = val;
 
--- 
-https://patchwork.kernel.org/patch/9948689/
+in this line instead.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+> +	debugfs_create_file("rx_rssi", 0666, data->debugfs, data,
+> +			    &hwsim_fops_rx_rssi);
+
+I also can't say I'm really happy with this, since there's no such
+thing as an "RX RSSI".
+
+Also, wmediumd already allows changing this - I'd rather people start
+using the infrastructure better than papering over more.
+
+IOW - do we really need this? Why can't you do the (simple) wmediumd
+setup? There's even a hwsim test in wpa_s with wmediumd, it's not all
+that difficult.
+
+johannes
