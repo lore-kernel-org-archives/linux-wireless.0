@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:24532 "EHLO mga05.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:33223 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751660AbdITMLl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:11:41 -0400
-Date: Wed, 20 Sep 2017 15:11:37 +0300
-From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+        id S1752639AbdIFMZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:25:26 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] mac80211: Add rcu read side critical sections
-Message-ID: <20170920121137.GZ4914@intel.com> (sfid-20170920_141144_539527_4A22A0FA)
-References: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
- <20170920101123.23312-1-ville.syrjala@linux.intel.com>
- <1505903964.3026.14.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1505903964.3026.14.camel@sipsolutions.net>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: always update the PM state of a peer on MGMT / DATA frames
+Date: Wed,  6 Sep 2017 15:25:23 +0300
+Message-Id: <20170906122523.17333-1-emmanuel.grumbach@intel.com> (sfid-20170906_142529_187654_5F3ACE15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 20, 2017 at 12:39:24PM +0200, Johannes Berg wrote:
-> On Wed, 2017-09-20 at 13:11 +0300, Ville Syrjala wrote:
-> 
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -1770,15 +1770,21 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
-> >  	struct ieee80211_tx_data tx;
-> >  	struct sk_buff *skb2;
-> >  
-> > -	if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP)
-> > +	rcu_read_lock();
-> 
-> The documentation says:
-> 
-> /**
->  * ieee80211_tx_prepare_skb - prepare an 802.11 skb for transmission
->  * @hw: pointer as obtained from ieee80211_alloc_hw()
->  * @vif: virtual interface
->  * @skb: frame to be sent from within the driver
->  * @band: the band to transmit on
->  * @sta: optional pointer to get the station to send the frame to
->  *
->  * Note: must be called under RCU lock
->  */
-> 
-> You can't even argue that it should be the function itself doing it,
-> because the (admittedly optional) sta pointer would otherwise not have
-> proper protection after you leave the function ... You can't pass out a
-> sta pointer that's RCU protected.
+The 2016 version of the spec is more generic about when the
+AP should update the power management state of the peer:
+the AP shall update the state based on any management or
+data frames. This means that even non-bufferable management
+frames should be looked at to update to maintain the power
+management state of the peer.
 
-Yeah, I suppose that would need rcu_handoff+some other mechanism to
-make sure it stays around after that.
+This can avoid problematic cases for example if a station
+disappears while being asleep and then re-appears. The AP
+would remember it as in power save, but the Authentication
+frame couldn't be used to set the peer as awake again.
+Note that this issues wasn't really critical since at some
+point (after the association) we would have removed the
+station and created another one with all the states cleared.
 
-> 
-> Side note: Perhaps some annotation should be there? not sure it's
-> possible - would have to be something like
-> 	struct ieee80211_sta * __rcu *sta;
-> 
-> I guess since the outer pointer isn't protected, only the inner ...
+type=feature
+ticket=none
 
-I think just the fact that even the pointers in ieee80211_tx_data don't
-have the __rcu annotation makes it rather hard to see what is really rcu
-protected and what isn't. If every user of those pointers would have to
-do the rcu_dereference() things would be rather more explicit.
+Change-Id: Iae1fbbd502d64f0c31db3e0f2d81224b29acb5af
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/rx.c | 17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
-> Therefore, this patch is wrong.
-
-OK, so the problem is in ath9k then.
-
-> I actually think the same is true for ieee80211_tx_dequeue(), but I'm
-> less sure about it - the sta pointer there clearly is somehow safely
-> passed in (even if it's w/o RCU, the driver can potentially make that
-> safe), but the key pointer seems unsafe in this case (as well) if
-> there's no outer RCU protection.
-
-Well, I think this is as far as I want to dig into the matter. I can
-respin the patch once more with just tx_dequeue() fix in there, if you
-want (not sure you do if you think it's wrong as well). After that I'll
-leave it to someone who actually knows what they're doing with mac80211 ;)
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fdf616811865..89db6b11af8a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1749,23 +1749,16 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 
+ 	/*
+ 	 * Change STA power saving mode only at the end of a frame
+-	 * exchange sequence.
++	 * exchange sequence, and only for a data or management
++	 * frame as specified in ieee80211-2016 11.2.3.2
+ 	 */
+ 	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
+ 	    !ieee80211_has_morefrags(hdr->frame_control) &&
+-	    !ieee80211_is_back_req(hdr->frame_control) &&
++	    (ieee80211_is_mgmt(hdr->frame_control) ||
++	     ieee80211_is_data(hdr->frame_control)) &&
+ 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
+ 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
+-	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+-	    /*
+-	     * PM bit is only checked in frames where it isn't reserved,
+-	     * in AP mode it's reserved in non-bufferable management frames
+-	     * (cf. IEEE 802.11-2012 8.2.4.1.7 Power Management field)
+-	     * BAR frames should be ignored as specified in
+-	     * IEEE 802.11-2012 10.2.1.2.
+-	     */
+-	    (!ieee80211_is_mgmt(hdr->frame_control) ||
+-	     ieee80211_is_bufferable_mmpdu(hdr->frame_control))) {
++	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
+ 		if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
+ 			if (!ieee80211_has_pm(hdr->frame_control))
+ 				sta_ps_end(sta);
 -- 
-Ville Syrjälä
-Intel OTC
+2.9.3
