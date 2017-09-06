@@ -1,88 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:49328 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751812AbdIOTVX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 15:21:23 -0400
-Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
-To: Zwindl <zwindl@protonmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "pkshih@realtek.com" <pkshih@realtek.com>,
-        "johannes.berg@intel.com" <johannes.berg@intel.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
- <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net>
- <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
- <1eb67d2e-dfbc-a2d0-8949-d4336191c07b@lwfinger.net>
- <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <35856452-c05c-d116-f91b-0964947ec8ae@lwfinger.net> (sfid-20170915_212257_269319_122C4B03)
-Date: Fri, 15 Sep 2017 14:21:21 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:56868 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932260AbdIFO1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 10:27:54 -0400
+Date: Wed, 6 Sep 2017 16:27:48 +0200
+From: Stefano Brivio <sbrivio@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: hung task in mac80211
+Message-ID: <20170906162748.071b040e@elisabeth> (sfid-20170906_162837_876017_44665EDC)
+In-Reply-To: <1504702728.13457.17.camel@sipsolutions.net>
+References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
+        <1504702728.13457.17.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2017 12:12 PM, Zwindl wrote:
-> Thanks for your patient and advice, I'll keep that in mind.
-> I do want help, and I got 1 day to build the system, but I can't recall how to 
-> compile it, The last time I compile kernel is 2013, so, maybe I'll ask you so 
-> many stupid questions during the build time.
-> ZWindL
+On Wed, 06 Sep 2017 14:58:48 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Building a new kernel is not difficult. In an average week, I make at least 10 
-new kernels. Many of them are done on slow machines that take many hours. At 
-least, your i5 CPU should do it in less that one hour.
+> +void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+> +				     u8 dialog_token, u16 timeout,
+> +				     u16 start_seq_num, u16 ba_policy, u16 tid,
+> +				     u16 buf_size, bool tx, bool auto_seq)
+> +{
+> +	mutex_lock(&sta->ampdu_mlme.mtx);
+> +	___ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
+> +					 start_seq_num, ba_policy, tid,
+> +					 buf_size, tx, auto_seq);
+> +	mutex_unlock(&sta->ampdu_mlme.mtx);
+> +}
+> +
 
-Step 1: Download the kernel sources using
+Sorry for the extended bothering :) but here, you're extending quite a
+bit the scope of the lock also when__ieee80211_start_rx_ba_session() is
+called by ieee80211_process_addba_request(). No idea what the hit can
+be, but we can't safely assume it's nothing either. What about simply
+introducing a 'ampdu_mlme_lock_held' argument instead? Something like:
 
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 2b36eff5d97e..35a9eff1ec66 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -248,7 +248,8 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
+ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 				     u8 dialog_token, u16 timeout,
+ 				     u16 start_seq_num, u16 ba_policy, u16 tid,
+-				     u16 buf_size, bool tx, bool auto_seq)
++				     u16 buf_size, bool tx, bool auto_seq,
++				     bool ampdu_mlme_lock_held)
+ {
+ 	struct ieee80211_local *local = sta->sdata->local;
+ 	struct tid_ampdu_rx *tid_agg_rx;
+@@ -311,7 +312,8 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	       buf_size, sta->sta.addr);
+ 
+ 	/* examine state machine */
+-	mutex_lock(&sta->ampdu_mlme.mtx);
++	if (!ampdu_mlme_lock_held)
++		mutex_lock(&sta->ampdu_mlme.mtx);
+ 
+ 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
+ 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
+@@ -415,7 +417,8 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
+ 		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
+ 	}
+-	mutex_unlock(&sta->ampdu_mlme.mtx);
++	if (!ampdu_mlme_lock_held)
++		mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+ end_no_lock:
+ 	if (tx)
+@@ -445,7 +448,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 
+ 	__ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
+ 					start_seq_num, ba_policy, tid,
+-					buf_size, true, false);
++					buf_size, true, false, false);
+ }
+ 
+ void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif,
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index c92df492e898..59ba67e8942f 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -335,7 +335,7 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 				       sta->ampdu_mlme.tid_rx_manage_offl))
+ 			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
+ 							IEEE80211_MAX_AMPDU_BUF,
+-							false, true);
++							false, true, true);
+ 
+ 		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
+ 				       sta->ampdu_mlme.tid_rx_manage_offl))
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2197c62a0a6e..5d494ac65853 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1759,7 +1759,8 @@ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 				     u8 dialog_token, u16 timeout,
+ 				     u16 start_seq_num, u16 ba_policy, u16 tid,
+-				     u16 buf_size, bool tx, bool auto_seq);
++				     u16 buf_size, bool tx, bool auto_seq,
++				     bool ampdu_mlme_lock_held);
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
+ 					 enum ieee80211_agg_stop_reason reason);
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
 
-If your system complains that the git command is unknown, then you will need to 
-install it with your package manager (pacman?).
-
-Step 2: "cd  linux" and copy the latest /boot/config-..... to the linux source 
-directory as ".config". Edit .config, find the line that says
-"# CONFIG_LOCALVERSION_AUTO is not set", and change the line to read 
-"CONFIG_LOCALVERSION_AUTO=y".
-
-Step 3: Build and install the latest version using
-
-make -j9
-sudo make modules_install install
-
-You will need to answer some configuration questions at the start of the first 
-make line. Answer with the default value, i.e. just use an ENTER. When the build 
-is complete, reboot. Grub should show an entry for something like 
-v4.13-12084-ged43e4d190d0. The numbers after the 4.13 will likely be different, 
-but the form will match. Check that the new kernel still has the fault. If not, 
-it has been fixed and we do not need to find it.
-
-It the problem is still in the latest version of the kernel, then we start the 
-bisection with the following:
-
-git bisect start
-git bisect bad v4.13
-git bisect good v4.12
-
-At this point, git will report the number of revisions to test, the likely 
-number of tries, and the SHA hash for the new kernel. Record the first 7 digits 
-of the hash, and repeat the make commands above. After the build is complete, 
-reboot into the kernel with the hash in the version name and test. Then enter 
-the command "git bisect xxx", where xxx is good or bad depending on the test. A 
-new trial will be generated by bisecting the appropriate half of the commits. 
-Record its hash and redo the build. Repeat until git tells you the bad commit.
-
-This process will generate a number of kernels that will take quite a bit of 
-disk space. If you run short, you can delete kernels that have already been 
-tested from /boot. You should also delete the corresponding modules from 
-/lib/modules.
-
-Good luck,
-
-Larry
+-- 
+Stefano
