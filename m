@@ -1,52 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:33086 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752062AbdIKA2u (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Sep 2017 20:28:50 -0400
-Subject: Re: Patch "rtlwifi: btcoexist: Fix antenna selection code" has been
- added to the 4.13-stable tree
-To: Sven Joachim <svenjoac@gmx.de>, gregkh@linuxfoundation.org
-Cc: birming@realtek.com, kvalo@codeaurora.org, pkshih@realtek.com,
-        shaofu@realtek.com, steventing@realtek.com, yhchuang@realtek.com,
-        stable@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <1505043448199217@kroah.com> <87bmmib812.fsf@turtle.gmx.de>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <2ba2d963-2db6-b889-aa1b-ea0a3bf340d6@lwfinger.net> (sfid-20170911_022903_839525_0545A9FF)
-Date: Sun, 10 Sep 2017 19:28:47 -0500
-MIME-Version: 1.0
-In-Reply-To: <87bmmib812.fsf@turtle.gmx.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:50606 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752485AbdIFK3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 06:29:31 -0400
+Message-ID: <1504693769.13457.6.camel@sipsolutions.net> (sfid-20170906_122934_412328_23ECB30E)
+Subject: Re: [PATCH 05/10] ieee80211: Add WFA TPC report element OUI type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 06 Sep 2017 12:29:29 +0200
+In-Reply-To: <20170805084438.12550-6-luca@coelho.fi>
+References: <20170805084438.12550-1-luca@coelho.fi>
+         <20170805084438.12550-6-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2017 03:42 PM, Sven Joachim wrote:
->> queue-4.13/rtlwifi-btcoexist-fix-antenna-selection-code.patch
+On Sat, 2017-08-05 at 11:44 +0300, Luca Coelho wrote:
+> From: Avraham Stern <avraham.stern@intel.com>
 > 
-> After applying these patches on top of 4.13.1 the WiFi on my laptop
-> works again (thanks, Larry!), but now rtl8723be needs the ant_sel=2
-> parameter which is a bit odd, because previously it had been working
-> (only) with ant_sel=1.  This looks like it has not been intended?
+> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-The changes in the BT coexistence are rather substantial, and I had no part in 
-those changes. That code is used in both Windows and Linux, and the Linux group 
-is presented with the package. The best we can do is divide their massive 
-changes into pieces that are small enough to be accepted by the Linux community.
+A commit log would be good :)
 
-One thing I can say is that when a single antenna is connected to port 2 on my 
-card, ant_sel=1 works. When it is connected to post 1, then ant_sel=0 works; 
-however, my card is encoded to use two antennas. As I do not know what value is 
-encoded in your EFUSE, I cannot predict what value should work for you.
-
-What I am reasonably certain is that if you were to open your computer and move 
-the single antenna lead to the other port, then you would not need to use any 
-ant_sel command as the new port would match the EFUSE value. According to 
-reports, that would break the Windows driver, but I do not have the setup 
-necessary to test that assertion.
-
-As I have stated before, this ant_sel code was implemented to provide a service 
-for Linux users that were screwed by their vendor. If I had known how much grief 
-this attempt would cause me, I would have told the affected users to complain to 
-that vendor. It is clearly true that no good deed goes unpunished!
-
-Larry
+johannes
