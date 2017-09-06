@@ -1,158 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36652 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752337AbdI2QqZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 12:46:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 19:44:17 +0300
-Message-Id: <20170929164423.23666-13-luca@coelho.fi> (sfid-20170929_200836_658804_04EDC19A)
-In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
-References: <20170929164423.23666-1-luca@coelho.fi>
-Subject: [PATCH 12/18] iwlwifi: acpi: make iwl_get_bios_mcc() use the common acpi functions
+Received: from s3.sipsolutions.net ([5.9.151.49]:54018 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932260AbdIFOaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 10:30:03 -0400
+Message-ID: <1504708200.23905.3.camel@sipsolutions.net> (sfid-20170906_163032_400195_9EA98853)
+Subject: Re: hung task in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefano Brivio <sbrivio@redhat.com>
+Cc: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 06 Sep 2017 16:30:00 +0200
+In-Reply-To: <20170906162748.071b040e@elisabeth>
+References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
+         <1504702728.13457.17.camel@sipsolutions.net>
+         <20170906162748.071b040e@elisabeth>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Wed, 2017-09-06 at 16:27 +0200, Stefano Brivio wrote:
+> 
+> Sorry for the extended bothering :) but here, you're extending quite
+> a bit the scope of the lock also
+> when__ieee80211_start_rx_ba_session() is called by
+> ieee80211_process_addba_request().
 
-The way iwl_get_bios_mcc() gets the WiFi package and checks for its
-integrity is almost identical to the new iwl_acpi_get_wifi_pkg()
-function.  Instead of having duplicate code, convert it to use the
-common code.
+I know, but it doesn't matter.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h       |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 66 +++++++---------------
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  7 ---
- 3 files changed, 20 insertions(+), 54 deletions(-)
+> No idea what the hit can be, but we can't safely assume it's
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index f5c8c856311a..a7deb62f3f86 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -85,6 +85,7 @@
- #define ACPI_EWRD_WIFI_DATA_SIZE	((ACPI_SAR_PROFILE_NUM - 1) * \
- 					 ACPI_SAR_TABLE_SIZE + 3)
- #define ACPI_WGDS_WIFI_DATA_SIZE	18
-+#define ACPI_WRDD_WIFI_DATA_SIZE	2
- #define ACPI_SPLC_WIFI_DATA_SIZE	2
- 
- #define ACPI_WGDS_NUM_BANDS		2
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 2ece3c531b88..d98318f93b9e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -945,64 +945,36 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- }
- IWL_EXPORT_SYMBOL(iwl_parse_nvm_mcc_info);
- 
--#ifdef CONFIG_ACPI
--static u32 iwl_wrdd_get_mcc(struct device *dev, union acpi_object *wrdd)
--{
--	union acpi_object *mcc_pkg, *domain_type, *mcc_value;
--	u32 i;
--
--	if (wrdd->type != ACPI_TYPE_PACKAGE ||
--	    wrdd->package.count < 2 ||
--	    wrdd->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    wrdd->package.elements[0].integer.value != 0) {
--		IWL_DEBUG_EEPROM(dev, "Unsupported wrdd structure\n");
--		return 0;
--	}
--
--	for (i = 1 ; i < wrdd->package.count ; ++i) {
--		mcc_pkg = &wrdd->package.elements[i];
--
--		if (mcc_pkg->type != ACPI_TYPE_PACKAGE ||
--		    mcc_pkg->package.count < 2 ||
--		    mcc_pkg->package.elements[0].type != ACPI_TYPE_INTEGER ||
--		    mcc_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
--			mcc_pkg = NULL;
--			continue;
--		}
--
--		domain_type = &mcc_pkg->package.elements[0];
--		if (domain_type->integer.value == ACPI_WIFI_DOMAIN)
--			break;
--
--		mcc_pkg = NULL;
--	}
--
--	if (mcc_pkg) {
--		mcc_value = &mcc_pkg->package.elements[1];
--		return mcc_value->integer.value;
--	}
--
--	return 0;
--}
--
- int iwl_get_bios_mcc(struct device *dev, char *mcc)
- {
--	union acpi_object *data;
-+	union acpi_object *wifi_pkg, *data;
- 	u32 mcc_val;
-+	int ret;
- 
- 	data = iwl_acpi_get_object(dev, ACPI_WRDD_METHOD);
- 	if (IS_ERR(data))
- 		return PTR_ERR(data);
- 
--	mcc_val = iwl_wrdd_get_mcc(dev, data);
--	kfree(data);
--	if (!mcc_val)
--		return -ENOENT;
-+	wifi_pkg = iwl_acpi_get_wifi_pkg(dev, data, ACPI_WRDD_WIFI_DATA_SIZE);
-+	if (IS_ERR(wifi_pkg)) {
-+		ret = PTR_ERR(wifi_pkg);
-+		goto out_free;
-+	}
-+
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
-+		ret = -EINVAL;
-+		goto out_free;
-+	}
-+
-+	mcc_val = wifi_pkg->package.elements[1].integer.value;
- 
- 	mcc[0] = (mcc_val >> 8) & 0xff;
- 	mcc[1] = mcc_val & 0xff;
- 	mcc[2] = '\0';
--	return 0;
-+
-+	ret = 0;
-+out_free:
-+	kfree(data);
-+	return ret;
- }
- IWL_EXPORT_SYMBOL(iwl_get_bios_mcc);
--#endif
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 2d1a24dd8410..a39bd5c17c26 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -109,7 +109,6 @@ struct ieee80211_regdomain *
- iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 		       int num_of_ch, __le32 *channels, u16 fw_mcc);
- 
--#ifdef CONFIG_ACPI
- /**
-  * iwl_get_bios_mcc - read MCC from BIOS, if available
-  *
-@@ -119,11 +118,5 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
-  * This function tries to read the current MCC from ACPI if available.
-  */
- int iwl_get_bios_mcc(struct device *dev, char *mcc);
--#else
--static inline int iwl_get_bios_mcc(struct device *dev, char *mcc)
--{
--	return -ENOENT;
--}
--#endif
- 
- #endif /* __iwl_nvm_parse_h__ */
--- 
-2.14.1
+> nothing either.   
+
+We don't really have to assume anything, we can read the code :-)
+
+Trust me, I probably wrote most of it. It's fine, just sanity checks.
+
+> What about simply introducing a 'ampdu_mlme_lock_held' argument
+> instead?
+
+Eww, no.
+
+johannes
