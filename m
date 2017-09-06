@@ -1,34 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37228 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751262AbdIOKSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 06:18:13 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1dsnhM-0006UH-6D
-        for linux-wireless@vger.kernel.org; Fri, 15 Sep 2017 12:18:12 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/4] cfg80211: in-kernel regulatory database
-Date: Fri, 15 Sep 2017 12:18:06 +0200
-Message-Id: <20170915101810.11435-1-johannes@sipsolutions.net> (sfid-20170915_121816_243861_053989BE)
+Received: from mout.kundenserver.de ([212.227.17.13]:61407 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754481AbdIFM7o (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:59:44 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Colin Ian King <colin.king@canonical.com>,
+        Bartosz Markowski <bartosz.markowski@tieto.com>,
+        Govind Singh <govinds@qti.qualcomm.com>,
+        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        Ben Greear <greearb@candelatech.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10: mark PM functions as __maybe_unused
+Date: Wed,  6 Sep 2017 14:58:53 +0200
+Message-Id: <20170906125904.2588620-1-arnd@arndb.de> (sfid-20170906_150038_618311_E069DC1D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been sitting on these patches for pretty much 2 years, waiting
-for the firmware loader to gain signature checking abilities. This
-hasn't happened, and even the suggested code from AKASHI Takahiro
-doesn't fulfill all requirements, notably having extra keys/keyring.
+When CONFIG_PM_SLEEP is disabled, we get a compile-time
+warning:
 
-I'm not sure building the keys into the module really is the best
-option, but then again, that's the same way it's done with crda.
+drivers/net/wireless/ath/ath10k/pci.c:3417:12: error: 'ath10k_pci_pm_resume' defined but not used [-Werror=unused-function]
+ static int ath10k_pci_pm_resume(struct device *dev)
+            ^~~~~~~~~~~~~~~~~~~~
+drivers/net/wireless/ath/ath10k/pci.c:3401:12: error: 'ath10k_pci_pm_suspend' defined but not used [-Werror=unused-function]
+ static int ath10k_pci_pm_suspend(struct device *dev)
 
-Additionally, we've not been able to extend the regulatory database
-format, and for even longer we've been wanting to do that, e.g. to
-add spectral density power limits and DFS configuration. Since the
-new database format is easily extensible (variable size on all of
-the structures used, with only the minimum size being required), the
-extensions can finally be done with this.
+Rather than fixing the #ifdef, this just marks both functions
+as __maybe_unused, which is a more robust way to do this.
 
-johannes
+Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index bc1633945a56..195dafb98131 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3396,9 +3396,7 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 
+ MODULE_DEVICE_TABLE(pci, ath10k_pci_id_table);
+ 
+-#ifdef CONFIG_PM
+-
+-static int ath10k_pci_pm_suspend(struct device *dev)
++static __maybe_unused int ath10k_pci_pm_suspend(struct device *dev)
+ {
+ 	struct ath10k *ar = dev_get_drvdata(dev);
+ 	int ret;
+@@ -3414,7 +3412,7 @@ static int ath10k_pci_pm_suspend(struct device *dev)
+ 	return ret;
+ }
+ 
+-static int ath10k_pci_pm_resume(struct device *dev)
++static __maybe_unused int ath10k_pci_pm_resume(struct device *dev)
+ {
+ 	struct ath10k *ar = dev_get_drvdata(dev);
+ 	int ret;
+@@ -3433,7 +3431,6 @@ static int ath10k_pci_pm_resume(struct device *dev)
+ static SIMPLE_DEV_PM_OPS(ath10k_pci_pm_ops,
+ 			 ath10k_pci_pm_suspend,
+ 			 ath10k_pci_pm_resume);
+-#endif
+ 
+ static struct pci_driver ath10k_pci_driver = {
+ 	.name = "ath10k_pci",
+-- 
+2.9.0
