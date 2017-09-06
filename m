@@ -1,75 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35648 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751069AbdI3Ri0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Sep 2017 13:38:26 -0400
-Received: by mail-pf0-f195.google.com with SMTP id i23so1765976pfi.2
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:26 -0700 (PDT)
-From: silexcommon@gmail.com
-To: ath10k@lists.infradead.org
+Received: from mga07.intel.com ([134.134.136.100]:43526 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752395AbdIFKpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 06:45:47 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        Alagu Sankar <alagusankar@silex-india.com>
-Subject: [PATCH 00/11] SDIO support for ath10k
-Date: Sat, 30 Sep 2017 23:07:37 +0530
-Message-Id: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193750_815485_2D12AEBA)
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2] cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
+Date: Wed,  6 Sep 2017 13:45:40 +0300
+Message-Id: <20170906104540.13842-1-emmanuel.grumbach@intel.com> (sfid-20170906_124551_225613_4C13C166)
+In-Reply-To: <20170805084438.12550-7-luca@coelho.fi>
+References: <20170805084438.12550-7-luca@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+Honor the NL80211_RRF_NO_HT40{MINUS,PLUS} flags in
+reg_process_ht_flags_channel. Not doing so leads can lead
+to a firmware assert in iwlwifi for example.
 
-This patchset, generated against master-pending branch, enables a fully
-functional SDIO interface driver for ath10k.  Patches have been verified on
-QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access Point
-and P2P modes.
+Fixes: b0d7aa59592b ("cfg80211: allow wiphy specific regdomain management")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+v2: check that regd is not ERR_PTR
+---
+ net/wireless/reg.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
-with the board data from respective SDIO card vendors. Receive performance
-matches the QCA reference driver when used with SDIO3.0 enabled platforms.
-iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
-
-This patchset differs from the previous high latency patches, specific to SDIO.
-HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instructs the
-firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Without
-this flag, the management frames are not sent out by the firmware. Possibility
-of management frames being sent via WMI and data frames through the reduced Tx
-completion needs to be probed further.
-
-Further improvements can be done on the transmit path by implementing packet
-bundle. Scatter Gather is another area of improvement for both Transmit and
-Receive, but may not work on all platforms
-
-Known issues: Surprise removal of the card, when the device is in connected
-state, delays sdio function remove due to delayed WMI command failures.
-Existing ath10k framework can not differentiate between a kernel module
-removal and the surprise removal of teh card.
-
-Alagu Sankar (11):
-  ath10k_sdio: sdio htt data transfer fixes
-  ath10k_sdio: wb396 reference card fix
-  ath10k_sdio: DMA bounce buffers for read write
-  ath10k_sdio: reduce transmit msdu count
-  ath10k_sdio: use clean packet headers
-  ath10k_sdio: high latency fixes for beacon buffer
-  ath10k_sdio: fix rssi indication
-  ath10k_sdio: common read write
-  ath10k_sdio: virtual scatter gather for receive
-  ath10k_sdio: enable firmware crash dump
-  ath10k_sdio: hif start once addition
-
- drivers/net/wireless/ath/ath10k/core.c    |  35 ++-
- drivers/net/wireless/ath/ath10k/debug.c   |   3 +
- drivers/net/wireless/ath/ath10k/htc.c     |   4 +-
- drivers/net/wireless/ath/ath10k/htc.h     |   1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |  19 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c  |  24 +-
- drivers/net/wireless/ath/ath10k/hw.c      |   2 +
- drivers/net/wireless/ath/ath10k/hw.h      |   1 +
- drivers/net/wireless/ath/ath10k/mac.c     |  31 ++-
- drivers/net/wireless/ath/ath10k/sdio.c    | 398 ++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath10k/sdio.h    |  10 +-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   2 +-
- 12 files changed, 403 insertions(+), 127 deletions(-)
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 405e14366b86..dda576f5cba6 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -4,6 +4,7 @@
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
++ * Copyright      2017  Intel Deutschland GmbH
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -1483,7 +1484,9 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_supported_band *sband = wiphy->bands[channel->band];
+ 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
++	const struct ieee80211_regdomain *regd;
+ 	unsigned int i;
++	u32 flags;
+ 
+ 	if (!is_ht40_allowed(channel)) {
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40;
+@@ -1503,17 +1506,30 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ 			channel_after = c;
+ 	}
+ 
++	flags = 0;
++	regd = get_wiphy_regdom(wiphy);
++	if (regd) {
++		const struct ieee80211_reg_rule *reg_rule =
++			freq_reg_info_regd(MHZ_TO_KHZ(channel->center_freq),
++					   regd, MHZ_TO_KHZ(20));
++
++		if (!IS_ERR(reg_rule))
++			flags = reg_rule->flags;
++	}
++
+ 	/*
+ 	 * Please note that this assumes target bandwidth is 20 MHz,
+ 	 * if that ever changes we also need to change the below logic
+ 	 * to include that as well.
+ 	 */
+-	if (!is_ht40_allowed(channel_before))
++	if (!is_ht40_allowed(channel_before) ||
++	    flags & NL80211_RRF_NO_HT40MINUS)
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
+ 	else
+ 		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
+ 
+-	if (!is_ht40_allowed(channel_after))
++	if (!is_ht40_allowed(channel_after) ||
++	    flags & NL80211_RRF_NO_HT40PLUS)
+ 		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
+ 	else
+ 		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
 -- 
-1.9.1
+2.9.3
