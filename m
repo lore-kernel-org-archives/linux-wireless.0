@@ -1,97 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55096 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48210 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753586AbdIFMk2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:40:28 -0400
-Date: Wed, 6 Sep 2017 14:40:19 +0200
-From: Stefano Brivio <sbrivio@redhat.com>
-To: Matteo Croce <mcroce@redhat.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: hung task in mac80211
-Message-ID: <20170906144019.1c98a636@elisabeth> (sfid-20170906_144115_600908_441D9559)
-In-Reply-To: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
-References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        id S1751675AbdIFH3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 03:29:43 -0400
+Message-ID: <1504682981.12380.28.camel@sipsolutions.net> (sfid-20170906_092950_317159_D68E1A08)
+Subject: Re: [PATCH 06/10] cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "luca@coelho.fi" <luca@coelho.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Date: Wed, 06 Sep 2017 09:29:41 +0200
+In-Reply-To: <1504630175.23076.5.camel@intel.com>
+References: <20170805084438.12550-1-luca@coelho.fi>
+         <20170805084438.12550-7-luca@coelho.fi>
+         <1504621814.12380.23.camel@sipsolutions.net>
+         <1504630175.23076.5.camel@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 6 Sep 2017 13:57:47 +0200
-Matteo Croce <mcroce@redhat.com> wrote:
-
-> Hi,
+On Tue, 2017-09-05 at 16:49 +0000, Grumbach, Emmanuel wrote:
+> On Tue, 2017-09-05 at 16:30 +0200, Johannes Berg wrote:
+> > On Sat, 2017-08-05 at 11:44 +0300, Luca Coelho wrote:
+> > 
+> > > +	regd = get_wiphy_regdom(wiphy);
+> > > +	if (regd) {
+> > > +		const struct ieee80211_reg_rule *reg_rule =
+> > > +			freq_reg_info_regd(MHZ_TO_KHZ(channel-
+> > > > center_freq),
+> > > 
+> > > +					   regd,
+> > > MHZ_TO_KHZ(20));
+> > > 
+> > 
+> > This could return an error, how can you be sure it doesn't?
+> > 
 > 
-> I have an hung task on vanilla 4.13 kernel which I haven't on 4.12.
-> The problem is present both on my AP and on my notebook,
-> so it seems it affects AP and STA mode as well.
-> The generated messages are:
+> Hm... so I guess I could check that it didn't return any error and if
+> it did, then flags = 0?
 > 
-> INFO: task kworker/u16:6:120 blocked for more than 120 seconds.
->       Not tainted 4.13.0 #57
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> kworker/u16:6   D    0   120      2 0x00000000
-> Workqueue: phy0 ieee80211_ba_session_work [mac80211]
-> Call Trace:
->  ? __schedule+0x174/0x5b0
->  ? schedule+0x31/0x80
->  ? schedule_preempt_disabled+0x9/0x10
->  ? __mutex_lock.isra.2+0x163/0x480
->  ? select_task_rq_fair+0xb9f/0xc60
->  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
->  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
+> Something like this? (on top of this patch):
+> [snip]
 
-This is ugly and maybe wrong, but you could check perhaps...:
+yeah that's obviously the easy thing to do - I just wasn't sure that
+you didn't have a reason to believe it could never be an ERR_PTR :)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c92df492e898..bd7512a656f2 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -320,28 +320,40 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 	for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
--		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
-+		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired)) {
-+			mutex_unlock(&sta->ampdu_mlme.mtx);
- 			___ieee80211_stop_rx_ba_session(
- 				sta, tid, WLAN_BACK_RECIPIENT,
- 				WLAN_REASON_QSTA_TIMEOUT, true);
-+			mutex_lock(&sta->ampdu_mlme.mtx);
-+		}
- 
- 		if (test_and_clear_bit(tid,
--				       sta->ampdu_mlme.tid_rx_stop_requested))
-+				       sta->ampdu_mlme.tid_rx_stop_requested)) {
-+			mutex_unlock(&sta->ampdu_mlme.mtx);
- 			___ieee80211_stop_rx_ba_session(
- 				sta, tid, WLAN_BACK_RECIPIENT,
- 				WLAN_REASON_UNSPECIFIED, true);
-+			mutex_lock(&sta->ampdu_mlme.mtx);
-+		}
- 
- 		if (test_and_clear_bit(tid,
--				       sta->ampdu_mlme.tid_rx_manage_offl))
-+				       sta->ampdu_mlme.tid_rx_manage_offl)) {
-+			mutex_unlock(&sta->ampdu_mlme.mtx);
- 			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
- 							IEEE80211_MAX_AMPDU_BUF,
- 							false, true);
-+			mutex_lock(&sta->ampdu_mlme.mtx);
-+		}
- 
- 		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
--				       sta->ampdu_mlme.tid_rx_manage_offl))
-+				       sta->ampdu_mlme.tid_rx_manage_offl)) {
-+			mutex_unlock(&sta->ampdu_mlme.mtx);
- 			___ieee80211_stop_rx_ba_session(
- 				sta, tid, WLAN_BACK_RECIPIENT,
- 				0, false);
-+			mutex_lock(&sta->ampdu_mlme.mtx);
-+		}
- 
- 		spin_lock_bh(&sta->lock);
- 
--- 
-Stefano
+johannes
