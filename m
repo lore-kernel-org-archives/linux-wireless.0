@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:45179 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752290AbdIVQvq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 12:51:46 -0400
-Received: by mail-wm0-f48.google.com with SMTP id q124so5566337wmb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Sep 2017 09:51:45 -0700 (PDT)
-Subject: Re: [PATCH] brcm80211: make const array ucode_ofdm_rates static,
- reduces object code size
-To: Colin King <colin.king@canonical.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170922140316.12768-1-colin.king@canonical.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <96caf646-a43c-9b78-a4a9-2becf7e74125@broadcom.com> (sfid-20170922_185238_929576_9872CF9A)
-Date: Fri, 22 Sep 2017 18:51:43 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170922140316.12768-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga03.intel.com ([134.134.136.65]:26968 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753087AbdIFMjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:39:49 -0400
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3] mac80211: Complete ampdu work schedule during session tear down
+Date: Wed,  6 Sep 2017 17:32:40 +0300
+Message-Id: <1504708360-28463-1-git-send-email-ilan.peer@intel.com> (sfid-20170906_144000_921943_4DF93185)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please use 'brcmsmac:' as prefix instead of 'brcm80211:'.
+Commit 7a7c0a6438b8 ("mac80211: fix TX aggregation start/stop callback race")
+added a cancellation of the ampdu work after the loop that stopped the
+Tx and Rx BA sessions. However, in some cases, e.g., during HW reconfig,
+the low level driver might call mac80211 APIs to complete the stopping
+of the BA sessions, which would queue the ampdu work to handle the actual
+completion. This work needs to be performed as otherwise mac80211 data
+structures would not be properly synced.
 
-On 22-09-17 16:03, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Don't populate const array ucode_ofdm_rates on the stack, instead make it
-> static. Makes the object code smaller by 100 bytes:
-> 
-> Before:
->     text	   data	    bss	    dec	    hex	filename
->    39482	    564	      0	  40046	   9c6e	phy_cmn.o
-> 
-> After
->     text	   data	    bss	    dec	    hex	filename
->    39326	    620	      0	  39946	   9c0a	phy_cmn.o
-> 
-> (gcc 6.3.0, x86-64)
+Fix this by checking if BA session STOP_CB bit is set after the BA session
+cancellation and properly clean the session.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-> index 1c4e9dd57960..3a13d176b221 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-> @@ -1916,7 +1916,7 @@ void wlc_phy_txpower_update_shm(struct brcms_phy *pi)
->   				     pi->hwpwr_txcur);
->   
->   		for (j = TXP_FIRST_OFDM; j <= TXP_LAST_OFDM; j++) {
-> -			const u8 ucode_ofdm_rates[] = {
-> +			static const u8 ucode_ofdm_rates[] = {
->   				0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6c
->   			};
->   			offset = wlapi_bmac_rate_shm_offset(
-> 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/mac80211/ht.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index c92df49..11d691c 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -300,6 +300,23 @@ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
+ 
+ 	/* stopping might queue the work again - so cancel only afterwards */
+ 	cancel_work_sync(&sta->ampdu_mlme.work);
++
++	/* In case the tear down is part of a reconfigure due to HW restart
++	 * request, it is possible that the low level driver requested to stop
++	 * the BA session, so handle it to properly clean tid_tx data.
++	 */
++	mutex_lock(&sta->ampdu_mlme.mtx);
++	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
++		struct tid_ampdu_tx *tid_tx =
++			rcu_dereference_protected_tid_tx(sta, i);
++
++		if (!tid_tx)
++			continue;
++
++		if (test_and_clear_bit(HT_AGG_STATE_STOP_CB, &tid_tx->state))
++			ieee80211_stop_tx_ba_cb(sta, i, tid_tx);
++	}
++	mutex_unlock(&sta->ampdu_mlme.mtx);
+ }
+ 
+ void ieee80211_ba_session_work(struct work_struct *work)
+-- 
+1.9.1
