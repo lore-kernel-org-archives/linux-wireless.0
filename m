@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45528 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934012AbdIYIZA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 04:25:00 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: make const array tos_to_ac static,
- reduces object code size
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170919210500.31330-1-colin.king@canonical.com>
-References: <20170919210500.31330-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+Received: from s3.sipsolutions.net ([5.9.151.49]:54376 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932657AbdIFPLy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 11:11:54 -0400
+Message-ID: <1504710711.23905.17.camel@sipsolutions.net> (sfid-20170906_171229_484861_A4392420)
+Subject: Re: hung task in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <mcroce@redhat.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Message-Id: <20170925082459.B18ED60719@smtp.codeaurora.org> (sfid-20170925_110027_638925_445ADCC0)
-Date: Mon, 25 Sep 2017 08:24:59 +0000 (UTC)
+Date: Wed, 06 Sep 2017 17:11:51 +0200
+In-Reply-To: <CAGnkfhyBMKT-Tf10NxjN40Znuj7OK2pSM3qLUidPSkQqh8gjwQ@mail.gmail.com> (sfid-20170906_170509_159201_9F9A1278)
+References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
+         <1504702728.13457.17.camel@sipsolutions.net>
+         <CAGnkfhyBMKT-Tf10NxjN40Znuj7OK2pSM3qLUidPSkQqh8gjwQ@mail.gmail.com>
+         (sfid-20170906_170509_159201_9F9A1278)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-
-> From: Colin Ian King <colin.king@canonical.com>
+On Wed, 2017-09-06 at 17:04 +0200, Matteo Croce wrote:
 > 
-> Don't populate the read-only const array tos_to_ac on the stack,
-> instead make it static. Makes the object code smaller by 250 bytes:
-> 
-> Before:
->    text	   data	    bss	    dec	    hex	filename
->   26104	   2720	    128	  28952	   7118	wmm.o
-> 
-> After:
->    text	   data	    bss	    dec	    hex	filename
->   25758	   2816	    128	  28702	   701e	wmm.o
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> I confirm that this patch fixes the hang too.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Cool, I'll go apply it.
 
-7dfb0ebd022b mwifiex: make const array tos_to_ac static, reduces object code size
+> I'm curious to see if there are noticeable performance differences
+> between the two solutions.
 
--- 
-https://patchwork.kernel.org/patch/9960331/
+Nope, you hit this code path essentially once.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
