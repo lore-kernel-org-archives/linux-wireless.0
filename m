@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35742 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750807AbdI2K44 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 06:56:56 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Karthik Ananthapadmanabha <karthida@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] mwifiex: Random MAC address during scanning
-Date: Fri, 29 Sep 2017 16:23:10 +0530
-Message-ID: <1506682390-27716-1-git-send-email-gbhat@marvell.com> (sfid-20170929_125702_066419_3953DE74)
+Received: from mx1.redhat.com ([209.132.183.28]:51215 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753237AbdIFNlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 09:41:03 -0400
+Date: Wed, 6 Sep 2017 15:40:57 +0200
+From: Stefano Brivio <sbrivio@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: hung task in mac80211
+Message-ID: <20170906154057.2de430a2@elisabeth> (sfid-20170906_154306_218987_8BAAF7C8)
+In-Reply-To: <1504704610.23905.1.camel@sipsolutions.net>
+References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
+        <20170906144019.1c98a636@elisabeth>
+        <1504702115.13457.16.camel@sipsolutions.net>
+        <20170906151922.4a320b1d@elisabeth>
+        <1504704060.13457.20.camel@sipsolutions.net>
+        <20170906152709.673f230d@elisabeth>
+        <1504704610.23905.1.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karthik Ananthapadmanabha <karthida@marvell.com>
+On Wed, 06 Sep 2017 15:30:10 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Driver will advertise RANDOM_MAC support only if the device
-supports this feature.
+> So for example replacing the loop of tid = 0..NUM_TIDS-1 with a
+> list_for_each_entry() would already be unsafe with the dropping if the
+> list were to require the mutex for locking.
 
-Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 ++++++----
- drivers/net/wireless/marvell/mwifiex/fw.h       |  1 +
- 2 files changed, 7 insertions(+), 4 deletions(-)
+Sure. Still, it would need another code change to break, but in general
+I do agree indeed. :)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 32c5074..f22f7b8 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -4306,10 +4306,12 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->features |= NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_INACTIVITY_TIMER |
- 			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
--			   NL80211_FEATURE_NEED_OBSS_SCAN |
--			   NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
--			   NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
--			   NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
-+			   NL80211_FEATURE_NEED_OBSS_SCAN;
-+
-+	if (ISSUPP_RANDOM_MAC(adapter->fw_cap_info))
-+		wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
-+				   NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
-+				   NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
- 
- 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
- 		wiphy->features |= NL80211_FEATURE_TDLS_CHANNEL_SWITCH;
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 9e75522..6b765f3 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -238,6 +238,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_DRCS_ENABLED(FwCapInfo) (FwCapInfo & BIT(15))
- #define ISSUPP_SDIO_SPA_ENABLED(FwCapInfo) (FwCapInfo & BIT(16))
- #define ISSUPP_ADHOC_ENABLED(FwCapInfo) (FwCapInfo & BIT(25))
-+#define ISSUPP_RANDOM_MAC(FwCapInfo) (FwCapInfo & BIT(27))
- 
- #define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
- 				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
--- 
-1.9.1
+
+--
+Stefano
