@@ -1,103 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:54266 "EHLO
-        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932817AbdIYJal (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 05:30:41 -0400
-Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
-        by mx08-00252a01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8P9SOLR012631
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 10:30:40 +0100
-Received: from mail-wm0-f71.google.com (mail-wm0-f71.google.com [74.125.82.71])
-        by mx08-00252a01.pphosted.com with ESMTP id 2d5c3f11qp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 10:30:40 +0100
-Received: by mail-wm0-f71.google.com with SMTP id u138so7952417wmu.2
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 02:30:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE_XsMJu9k=j=YSCK3SF7bptHc4+eKVhJdYZaQtbhuYqbx_AZg@mail.gmail.com>
-References: <1505208143-30166-2-git-send-email-arend.vanspriel@broadcom.com>
- <20170925081816.E31B560C6B@smtp.codeaurora.org> <CAE_XsMJu9k=j=YSCK3SF7bptHc4+eKVhJdYZaQtbhuYqbx_AZg@mail.gmail.com>
-From: James Hughes <james.hughes@raspberrypi.org>
-Date: Mon, 25 Sep 2017 10:30:38 +0100
-Message-ID: <CAE_XsMLpow8AT+uYq3WfN6tWw1TPcAbEMouguCgk6wU5fNi5hw@mail.gmail.com> (sfid-20170925_113051_736826_6B4F1CAF)
-Subject: Re: [1/7] brcmfmac: handle FWHALT mailbox indication
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52938 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754421AbdIFM6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 6 Sep 2017 08:58:50 -0400
+Message-ID: <1504702728.13457.17.camel@sipsolutions.net> (sfid-20170906_150010_012096_DEDAEAD3)
+Subject: Re: hung task in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 06 Sep 2017 14:58:48 +0200
+In-Reply-To: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com> (sfid-20170906_135833_735521_576001D5)
+References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
+         (sfid-20170906_135833_735521_576001D5)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 September 2017 at 10:26, James Hughes
-<james.hughes@raspberrypi.org> wrote:
-> On 25 September 2017 at 09:18, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>
->>> The firmware uses a mailbox to communicate to the host what is going
->>> on. In the driver we validate the bit received. Various people seen
->>> the following message:
->>>
->>>  brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
->>>
->>> Bit 4 is cause of this message, but this actually indicates the firmwar=
-e
->>> has halted. Handle this bit by giving a more meaningful error message.
->>>
->>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>
->> Failed to compile:
->>
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c: In function =E2=
-=80=98brcmf_p2p_escan=E2=80=99:
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c:695:23: error: =
-=E2=80=98BRCMF_SCANTYPE_ACTIVE=E2=80=99 undeclared (first use in this funct=
-ion)
->>   sparams->scan_type =3D BRCMF_SCANTYPE_ACTIVE;
->>                        ^
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c:695:23: note: eac=
-h undeclared identifier is reported only once for each function it appears =
-in
->> make[6]: *** [drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.o] Er=
-ror 1
->> make[6]: *** Waiting for unfinished jobs....
->> make[5]: *** [drivers/net/wireless/broadcom/brcm80211/brcmfmac] Error 2
->> make[4]: *** [drivers/net/wireless/broadcom/brcm80211] Error 2
->> make[3]: *** [drivers/net/wireless/broadcom] Error 2
->> make[2]: *** [drivers/net/wireless] Error 2
->> make[1]: *** [drivers/net] Error 2
->> make: *** [drivers] Error 2
->>
->> 7 patches set to Changes Requested.
->>
->> 9948825 [1/7] brcmfmac: handle FWHALT mailbox indication
->> 9948831 [2/7] brcmfmac: disable packet filtering in promiscuous mode
->> 9948829 [3/7] brcmfmac: cleanup brcmf_cfg80211_escan() function
->> 9948833 [4/7] brcmfmac: use msecs_to_jiffies() instead of calculation us=
-ing HZ
->> 9948827 [5/7] brcmfmac: get rid of brcmf_cfg80211_escan() function
->> 9948823 [6/7] brcmfmac: get rid of struct brcmf_cfg80211_info::active_sc=
-an field
->> 9948835 [7/7] brcmfmac: move configuration of probe request IEs
->>
->> --
->> https://patchwork.kernel.org/patch/9948825/
->>
->> https://wireless.wiki.kernel.org/en/developers/documentation/submittingp=
-atches
->>
->
-> We (Raspberry Pi) currently have an issue open with Cypress to try and
-> determine the cause of the firmware lockup which results in this
-> mailbox error, we have some custom firmware that has better firmware
-> diagnostics which we have been reporting back to Cypress. Not had any
-> progress so far as far as I know. Does this kernel side fix help our
-> users in any way or is it simply a better error message?
->
-> James
+On Wed, 2017-09-06 at 13:57 +0200, Matteo Croce wrote:
 
-Sorry, should have read the patch first, simply a change to the error
-reporting. I'll try and determine how far Cypress have got with the
-firmware.
+> I have an hung task on vanilla 4.13 kernel which I haven't on 4.12.
+> The problem is present both on my AP and on my notebook,
+> so it seems it affects AP and STA mode as well.
+> The generated messages are:
+> 
+> INFO: task kworker/u16:6:120 blocked for more than 120 seconds.
+>       Not tainted 4.13.0 #57
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+> message.
+> kworker/u16:6   D    0   120      2 0x00000000
+> Workqueue: phy0 ieee80211_ba_session_work [mac80211]
+> Call Trace:
+>  ? __schedule+0x174/0x5b0
+>  ? schedule+0x31/0x80
+>  ? schedule_preempt_disabled+0x9/0x10
+>  ? __mutex_lock.isra.2+0x163/0x480
+>  ? select_task_rq_fair+0xb9f/0xc60
+>  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
+>  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
+
+Yeah - obviously as Stefano found, both take &sta->ampdu_mlme.mtx.
+
+Can you try this?
+
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 2b36eff5d97e..d8d32776031e 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -245,10 +245,10 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+-				     u8 dialog_token, u16 timeout,
+-				     u16 start_seq_num, u16 ba_policy, u16 tid,
+-				     u16 buf_size, bool tx, bool auto_seq)
++void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
++				      u8 dialog_token, u16 timeout,
++				      u16 start_seq_num, u16 ba_policy, u16 tid,
++				      u16 buf_size, bool tx, bool auto_seq)
+ {
+ 	struct ieee80211_local *local = sta->sdata->local;
+ 	struct tid_ampdu_rx *tid_agg_rx;
+@@ -267,7 +267,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 		ht_dbg(sta->sdata,
+ 		       "STA %pM requests BA session on unsupported tid %d\n",
+ 		       sta->sta.addr, tid);
+-		goto end_no_lock;
++		goto end;
+ 	}
+ 
+ 	if (!sta->sta.ht_cap.ht_supported) {
+@@ -275,14 +275,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 		       "STA %pM erroneously requests BA session on tid %d w/o QoS\n",
+ 		       sta->sta.addr, tid);
+ 		/* send a response anyway, it's an error case if we get here */
+-		goto end_no_lock;
++		goto end;
+ 	}
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
+ 		ht_dbg(sta->sdata,
+ 		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
+ 		       sta->sta.addr, tid);
+-		goto end_no_lock;
++		goto end;
+ 	}
+ 
+ 	/* sanity check for incoming parameters:
+@@ -296,7 +296,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 		ht_dbg_ratelimited(sta->sdata,
+ 				   "AddBA Req with bad params from %pM on tid %u. policy %d, buffer size %d\n",
+ 				   sta->sta.addr, tid, ba_policy, buf_size);
+-		goto end_no_lock;
++		goto end;
+ 	}
+ 	/* determine default buffer size */
+ 	if (buf_size == 0)
+@@ -311,7 +311,6 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	       buf_size, sta->sta.addr);
+ 
+ 	/* examine state machine */
+-	mutex_lock(&sta->ampdu_mlme.mtx);
+ 
+ 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
+ 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
+@@ -415,15 +414,25 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
+ 		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
+ 	}
+-	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+-end_no_lock:
+ 	if (tx)
+ 		ieee80211_send_addba_resp(sta->sdata, sta->sta.addr, tid,
+ 					  dialog_token, status, 1, buf_size,
+ 					  timeout);
+ }
+ 
++void __ieee80211_start_rx_ba_session(struct sta_info *sta,
++				     u8 dialog_token, u16 timeout,
++				     u16 start_seq_num, u16 ba_policy, u16 tid,
++				     u16 buf_size, bool tx, bool auto_seq)
++{
++	mutex_lock(&sta->ampdu_mlme.mtx);
++	___ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
++					 start_seq_num, ba_policy, tid,
++					 buf_size, tx, auto_seq);
++	mutex_unlock(&sta->ampdu_mlme.mtx);
++}
++
+ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 				     struct sta_info *sta,
+ 				     struct ieee80211_mgmt *mgmt,
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index c92df492e898..198b2d3e56fd 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -333,9 +333,9 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 
+ 		if (test_and_clear_bit(tid,
+ 				       sta->ampdu_mlme.tid_rx_manage_offl))
+-			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
+-							IEEE80211_MAX_AMPDU_BUF,
+-							false, true);
++			___ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
++							 IEEE80211_MAX_AMPDU_BUF,
++							 false, true);
+ 
+ 		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
+ 				       sta->ampdu_mlme.tid_rx_manage_offl))
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2197c62a0a6e..9675814f64db 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1760,6 +1760,10 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 				     u8 dialog_token, u16 timeout,
+ 				     u16 start_seq_num, u16 ba_policy, u16 tid,
+ 				     u16 buf_size, bool tx, bool auto_seq);
++void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
++				      u8 dialog_token, u16 timeout,
++				      u16 start_seq_num, u16 ba_policy, u16 tid,
++				      u16 buf_size, bool tx, bool auto_seq);
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
+ 					 enum ieee80211_agg_stop_reason reason);
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+
+johannes
