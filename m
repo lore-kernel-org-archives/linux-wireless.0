@@ -1,365 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54460 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751323AbdIOMrY (ORCPT
+Received: from smtp1.cypress.com ([157.95.67.100]:55111 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750988AbdIGEc0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 08:47:24 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 15 Sep 2017 15:46:59 +0300
-Message-Id: <20170915124704.9032-6-luca@coelho.fi> (sfid-20170915_144730_050449_24A7D78D)
-In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
-References: <20170915124704.9032-1-luca@coelho.fi>
-Subject: [PATCH 05/10] iwlwifi: mvm: Add new quota command API
+        Thu, 7 Sep 2017 00:32:26 -0400
+Date: Wed, 6 Sep 2017 23:32:03 -0500
+From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH v5] brcmfmac: add CLM download support
+Message-ID: <20170907043203.GA49401@aremote01.aus.cypress.com> (sfid-20170907_063230_410741_B32186F5)
+References: <1503987821-6132-1-git-send-email-wright.feng@cypress.com>
+ <32126aa8-359f-a333-bcc0-ecc464c5c20a@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <32126aa8-359f-a333-bcc0-ecc464c5c20a@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+On Tue, Sep 05, 2017 at 10:03:45PM +0200, Arend van Spriel wrote:
+> On 29-08-17 08:23, Wright Feng wrote:
+> >From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+> >
+> >The firmware for brcmfmac devices includes information regarding
+> >regulatory constraints. For certain devices this information is kept
+> >separately in a binary form that needs to be downloaded to the device.
+> >This patch adds support to download this so-called CLM blob file. It
+> >uses the same naming scheme as the other firmware files with extension
+> >of .clm_blob.
+> >
+> >The CLM blob file is optional. If the file does not exist, the download
+> >process will be bypassed. It will not affect the driver loading.
+> 
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> >Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+> >---
+> >v2: Revise commit message to describe in more detail
+> >v3: Add error handling in brcmf_c_get_clm_name function
+> >v4: Correct the length of dload_buf in brcmf_c_download function
+> >v5: Remove unnecessary cast and alignment
+> >---
+> >  .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  10 ++
+> >  .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 160 +++++++++++++++++++++
+> >  .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   2 +
+> >  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
+> >  .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  31 ++++
+> >  .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  19 +++
+> >  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  19 +++
+> >  .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  18 +++
+> >  8 files changed, 261 insertions(+)
+> 
+> [...]
+> 
+> >diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> >index 7a2b495..f6268e0 100644
+> >--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> >+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> >@@ -18,6 +18,7 @@
+> >  #include <linux/string.h>
+> >  #include <linux/netdevice.h>
+> >  #include <linux/module.h>
+> >+#include <linux/firmware.h>
+> >  #include <brcmu_wifi.h>
+> >  #include <brcmu_utils.h>
+> >  #include "core.h"
+> >@@ -28,6 +29,7 @@
+> >  #include "tracepoint.h"
+> >  #include "common.h"
+> >  #include "of.h"
+> >+#include "firmware.h"
+> 
+> You are not calling anything in firmware.c from this source file so
+> I do not think you need to include firmware.h here. Or did I miss
+> something?
 
-New quota command adds a field indicating low latency
-direction per quota.
+Including firmware.h here is needed. BRCMF_FW_NAME_LEN, defined in
+firmware.h, is used in brcmf_c_get_clm_name() and
+brcmf_c_process_clm_blob().
 
-A TLV API bit was added to indicate the new API.
+> 
+> >  MODULE_AUTHOR("Broadcom Corporation");
+> >  MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
+> >@@ -104,12 +106,138 @@ void brcmf_c_set_joinpref_default(struct brcmf_if *ifp)
+> >  		brcmf_err("Set join_pref error (%d)\n", err);
+> >  }
+> 
+> [...]
+> 
+> >+static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+> >+{
+> >+	struct device *dev = ifp->drvr->bus_if->dev;
+> >+	struct brcmf_dload_data_le *chunk_buf;
+> >+	const struct firmware *clm = NULL;
+> >+	u8 clm_name[BRCMF_FW_NAME_LEN];
+> >+	u32 chunk_len;
+> >+	u32 datalen;
+> >+	u32 cumulative_len = 0;
+> >+	u16 dl_flag = DL_BEGIN;
+> >+	u32 status;
+> >+	s32 err;
+> >+
+> >+	brcmf_dbg(INFO, "Enter\n");
+> 
+> Please use TRACE level for function entry logging.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/api/binding.h    | 41 +++++++++++++--
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c        | 16 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 27 ++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/quota.c     | 59 +++++++++++++---------
- 5 files changed, 113 insertions(+), 33 deletions(-)
+Will do it.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h b/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
-index d2717fafdf5b..570f19026c91 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
-@@ -116,14 +116,14 @@ struct iwl_binding_cmd {
- #define IWL_MVM_MAX_QUOTA 128
- 
- /**
-- * struct iwl_time_quota_data - configuration of time quota per binding
-+ * struct iwl_time_quota_data_v1 - configuration of time quota per binding
-  * @id_and_color: ID and color of the relevant Binding,
-  *	&enum iwl_ctxt_id_and_color
-  * @quota: absolute time quota in TU. The scheduler will try to divide the
-  *	remainig quota (after Time Events) according to this quota.
-  * @max_duration: max uninterrupted context duration in TU
-  */
--struct iwl_time_quota_data {
-+struct iwl_time_quota_data_v1 {
- 	__le32 id_and_color;
- 	__le32 quota;
- 	__le32 max_duration;
-@@ -137,8 +137,43 @@ struct iwl_time_quota_data {
-  *	essentially zero.
-  *	On CDB the fourth one is a regular binding.
-  */
-+struct iwl_time_quota_cmd_v1 {
-+	struct iwl_time_quota_data_v1 quotas[MAX_BINDINGS];
-+} __packed; /* TIME_QUOTA_ALLOCATION_CMD_API_S_VER_1 */
-+
-+enum iwl_quota_low_latency {
-+	IWL_QUOTA_LOW_LATENCY_NONE = 0,
-+	IWL_QUOTA_LOW_LATENCY_TX = BIT(0),
-+	IWL_QUOTA_LOW_LATENCY_RX = BIT(1),
-+	IWL_QUOTA_LOW_LATENCY_TX_RX =
-+		IWL_QUOTA_LOW_LATENCY_TX | IWL_QUOTA_LOW_LATENCY_RX,
-+};
-+
-+/**
-+ * struct iwl_time_quota_data - configuration of time quota per binding
-+ * @id_and_color: ID and color of the relevant Binding.
-+ * @quota: absolute time quota in TU. The scheduler will try to divide the
-+ *	remainig quota (after Time Events) according to this quota.
-+ * @max_duration: max uninterrupted context duration in TU
-+ * @low_latency: low latency status, &enum iwl_quota_low_latency
-+ */
-+struct iwl_time_quota_data {
-+	__le32 id_and_color;
-+	__le32 quota;
-+	__le32 max_duration;
-+	__le32 low_latency;
-+} __packed; /* TIME_QUOTA_DATA_API_S_VER_2 */
-+
-+/**
-+ * struct iwl_time_quota_cmd - configuration of time quota between bindings
-+ * ( TIME_QUOTA_CMD = 0x2c )
-+ * Note: on non-CDB the fourth one is the auxilary mac and is essentially zero.
-+ * On CDB the fourth one is a regular binding.
-+ *
-+ * @quotas: allocations per binding
-+ */
- struct iwl_time_quota_cmd {
- 	struct iwl_time_quota_data quotas[MAX_BINDINGS];
--} __packed; /* TIME_QUOTA_ALLOCATION_CMD_API_S_VER_1 */
-+} __packed; /* TIME_QUOTA_ALLOCATION_CMD_API_S_VER_2 */
- 
- #endif /* __iwl_fw_api_binding_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 887f6d8fc8a7..7d794ad53e4b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -248,6 +248,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
-  * @IWL_UCODE_TLV_API_ATS_COEX_EXTERNAL: the coex notification is enlared to
-  *	include information about ACL time sharing.
-+ * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
-+ *	indicating low latency direction.
-  *
-  * @NUM_IWL_UCODE_TLV_API: number of bits used
-  */
-@@ -265,6 +267,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
- 	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
-+	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
- 
- 	NUM_IWL_UCODE_TLV_API
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 5de19ea10575..c5ea3fad8002 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -664,6 +664,7 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	int ret, i;
- 	struct iwl_binding_cmd binding_cmd = {};
- 	struct iwl_time_quota_cmd quota_cmd = {};
-+	struct iwl_time_quota_data *quota;
- 	u32 status;
- 	int size;
- 
-@@ -745,17 +746,20 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		return ret;
- 
- 	/* and some quota */
--	quota_cmd.quotas[0].id_and_color =
-+	quota = iwl_mvm_quota_cmd_get_quota(mvm, &quota_cmd, 0);
-+	quota->id_and_color =
- 		cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->phy_ctxt->id,
- 						mvmvif->phy_ctxt->color));
--	quota_cmd.quotas[0].quota = cpu_to_le32(IWL_MVM_MAX_QUOTA);
--	quota_cmd.quotas[0].max_duration = cpu_to_le32(IWL_MVM_MAX_QUOTA);
-+	quota->quota = cpu_to_le32(IWL_MVM_MAX_QUOTA);
-+	quota->max_duration = cpu_to_le32(IWL_MVM_MAX_QUOTA);
- 
--	for (i = 1; i < MAX_BINDINGS; i++)
--		quota_cmd.quotas[i].id_and_color = cpu_to_le32(FW_CTXT_INVALID);
-+	for (i = 1; i < MAX_BINDINGS; i++) {
-+		quota = iwl_mvm_quota_cmd_get_quota(mvm, &quota_cmd, i);
-+		quota->id_and_color = cpu_to_le32(FW_CTXT_INVALID);
-+	}
- 
- 	ret = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, 0,
--				   sizeof(quota_cmd), &quota_cmd);
-+				   iwl_mvm_quota_cmd_size(mvm), &quota_cmd);
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to send quota: %d\n", ret);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 83303bac0e4b..48cb08eea700 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1248,6 +1248,12 @@ static inline bool iwl_mvm_has_new_ats_coex_api(struct iwl_mvm *mvm)
- 			  IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL);
- }
- 
-+static inline bool iwl_mvm_has_quota_low_latency(struct iwl_mvm *mvm)
-+{
-+	return fw_has_api(&mvm->fw->ucode_capa,
-+			  IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY);
-+}
-+
- static inline struct agg_tx_status *
- iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
- {
-@@ -1486,6 +1492,27 @@ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- 
- /* Quota management */
-+static inline size_t iwl_mvm_quota_cmd_size(struct iwl_mvm *mvm)
-+{
-+	return iwl_mvm_has_quota_low_latency(mvm) ?
-+		sizeof(struct iwl_time_quota_cmd) :
-+		sizeof(struct iwl_time_quota_cmd_v1);
-+}
-+
-+static inline struct iwl_time_quota_data
-+*iwl_mvm_quota_cmd_get_quota(struct iwl_mvm *mvm,
-+			     struct iwl_time_quota_cmd *cmd,
-+			     int i)
-+{
-+	struct iwl_time_quota_data_v1 *quotas;
-+
-+	if (iwl_mvm_has_quota_low_latency(mvm))
-+		return &cmd->quotas[i];
-+
-+	quotas = (struct iwl_time_quota_data_v1 *)cmd->quotas;
-+	return (struct iwl_time_quota_data *)&quotas[i];
-+}
-+
- int iwl_mvm_update_quotas(struct iwl_mvm *mvm, bool force_upload,
- 			  struct ieee80211_vif *disabled_vif);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-index 2141db5bff82..b4a0264329b7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-@@ -7,7 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,7 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-- * Copyright(c) 2016        Intel Deutschland GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -164,9 +164,12 @@ static void iwl_mvm_adjust_quota_for_noa(struct iwl_mvm *mvm,
- 	beacon_int = mvm->noa_vif->bss_conf.beacon_int;
- 
- 	for (i = 0; i < MAX_BINDINGS; i++) {
--		u32 id_n_c = le32_to_cpu(cmd->quotas[i].id_and_color);
-+		struct iwl_time_quota_data *data =
-+					iwl_mvm_quota_cmd_get_quota(mvm, cmd,
-+								    i);
-+		u32 id_n_c = le32_to_cpu(data->id_and_color);
- 		u32 id = (id_n_c & FW_CTXT_ID_MSK) >> FW_CTXT_ID_POS;
--		u32 quota = le32_to_cpu(cmd->quotas[i].quota);
-+		u32 quota = le32_to_cpu(data->quota);
- 
- 		if (id != phy_id)
- 			continue;
-@@ -175,9 +178,9 @@ static void iwl_mvm_adjust_quota_for_noa(struct iwl_mvm *mvm,
- 		quota /= beacon_int;
- 
- 		IWL_DEBUG_QUOTA(mvm, "quota: adjust for NoA from %d to %d\n",
--				le32_to_cpu(cmd->quotas[i].quota), quota);
-+				le32_to_cpu(data->quota), quota);
- 
--		cmd->quotas[i].quota = cpu_to_le32(quota);
-+		data->quota = cpu_to_le32(quota);
- 	}
- #endif
- }
-@@ -194,6 +197,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 		.disabled_vif = disabled_vif,
- 	};
- 	struct iwl_time_quota_cmd *last = &mvm->last_quota_cmd;
-+	struct iwl_time_quota_data *qdata, *last_data;
- 	bool send = false;
- 
- 	lockdep_assert_held(&mvm->mutex);
-@@ -216,7 +220,8 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 	 */
- 	num_active_macs = 0;
- 	for (i = 0; i < MAX_BINDINGS; i++) {
--		cmd.quotas[i].id_and_color = cpu_to_le32(FW_CTXT_INVALID);
-+		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, i);
-+		qdata->id_and_color = cpu_to_le32(FW_CTXT_INVALID);
- 		num_active_macs += data.n_interfaces[i];
- 	}
- 
-@@ -265,14 +270,16 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 		if (data.colors[i] < 0)
- 			continue;
- 
--		cmd.quotas[idx].id_and_color =
-+		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, idx);
-+
-+		qdata->id_and_color =
- 			cpu_to_le32(FW_CMD_ID_AND_COLOR(i, data.colors[i]));
- 
- 		if (data.n_interfaces[i] <= 0)
--			cmd.quotas[idx].quota = cpu_to_le32(0);
-+			qdata->quota = cpu_to_le32(0);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 		else if (data.dbgfs_min[i])
--			cmd.quotas[idx].quota =
-+			qdata->quota =
- 				cpu_to_le32(data.dbgfs_min[i] * QUOTA_100 / 100);
- #endif
- 		else if (data.n_low_latency_bindings == 1 && n_non_lowlat &&
-@@ -283,24 +290,25 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 			 * the minimal required quota for the low latency
- 			 * binding.
- 			 */
--			cmd.quotas[idx].quota = cpu_to_le32(QUOTA_LOWLAT_MIN);
-+			qdata->quota = cpu_to_le32(QUOTA_LOWLAT_MIN);
- 		else
--			cmd.quotas[idx].quota =
-+			qdata->quota =
- 				cpu_to_le32(quota * data.n_interfaces[i]);
- 
--		WARN_ONCE(le32_to_cpu(cmd.quotas[idx].quota) > QUOTA_100,
-+		WARN_ONCE(le32_to_cpu(qdata->quota) > QUOTA_100,
- 			  "Binding=%d, quota=%u > max=%u\n",
--			  idx, le32_to_cpu(cmd.quotas[idx].quota), QUOTA_100);
-+			  idx, le32_to_cpu(qdata->quota), QUOTA_100);
- 
--		cmd.quotas[idx].max_duration = cpu_to_le32(0);
-+		qdata->max_duration = cpu_to_le32(0);
- 
- 		idx++;
- 	}
- 
- 	/* Give the remainder of the session to the first data binding */
- 	for (i = 0; i < MAX_BINDINGS; i++) {
--		if (le32_to_cpu(cmd.quotas[i].quota) != 0) {
--			le32_add_cpu(&cmd.quotas[i].quota, quota_rem);
-+		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, i);
-+		if (le32_to_cpu(qdata->quota) != 0) {
-+			le32_add_cpu(&qdata->quota, quota_rem);
- 			IWL_DEBUG_QUOTA(mvm,
- 					"quota: giving remainder of %d to binding %d\n",
- 					quota_rem, i);
-@@ -312,17 +320,19 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 
- 	/* check that we have non-zero quota for all valid bindings */
- 	for (i = 0; i < MAX_BINDINGS; i++) {
--		if (cmd.quotas[i].id_and_color != last->quotas[i].id_and_color)
-+		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, i);
-+		last_data = iwl_mvm_quota_cmd_get_quota(mvm, last, i);
-+		if (qdata->id_and_color != last_data->id_and_color)
- 			send = true;
--		if (cmd.quotas[i].max_duration != last->quotas[i].max_duration)
-+		if (qdata->max_duration != last_data->max_duration)
- 			send = true;
--		if (abs((int)le32_to_cpu(cmd.quotas[i].quota) -
--			(int)le32_to_cpu(last->quotas[i].quota))
-+		if (abs((int)le32_to_cpu(qdata->quota) -
-+			(int)le32_to_cpu(last_data->quota))
- 						> IWL_MVM_QUOTA_THRESHOLD)
- 			send = true;
--		if (cmd.quotas[i].id_and_color == cpu_to_le32(FW_CTXT_INVALID))
-+		if (qdata->id_and_color == cpu_to_le32(FW_CTXT_INVALID))
- 			continue;
--		WARN_ONCE(cmd.quotas[i].quota == 0,
-+		WARN_ONCE(qdata->quota == 0,
- 			  "zero quota on binding %d\n", i);
- 	}
- 
-@@ -334,7 +344,8 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 		return 0;
- 	}
- 
--	err = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, 0, sizeof(cmd), &cmd);
-+	err = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, 0,
-+				   iwl_mvm_quota_cmd_size(mvm), &cmd);
- 
- 	if (err)
- 		IWL_ERR(mvm, "Failed to send quota: %d\n", err);
--- 
-2.14.1
+> 
+> >+	memset(clm_name, 0, BRCMF_FW_NAME_LEN);
+> >+	err = brcmf_c_get_clm_name(ifp, clm_name);
+> >+	if (err) {
+> >+		brcmf_err("get CLM blob file name failed (%d)\n", err);
+> >+		return err;
+> >+	}
+> >+
+> >+	err = request_firmware(&clm, clm_name, dev);
+> >+	if (err) {
+> >+		if (err == -ENOENT)
+> >+			return 0;
+> 
+> This exit point is worth a comment or even a brcmf_dbg(INFO, ...) to
+> clarify what is happening here, ie. continue with CLM data currently
+> present in firmware.
+
+Will do it.
+
+> 
+> >+		brcmf_err("request CLM blob file failed (%d)\n", err);
+> >+		return err;
+> >+	}
+> >+
+> >+	datalen = clm->size;
+> 
+> move this initialization just before the do-while loop.
+
+Will do it.
+
+> 
+> >+	chunk_buf = kzalloc(sizeof(*chunk_buf) + MAX_CHUNK_LEN - 1, GFP_KERNEL);
+> >+	if (!chunk_buf) {
+> >+		err = -ENOMEM;
+> >+		goto done;
+> >+	}
+> 
+> initialize datalen and cumulative_len here.
+
+Will do it.
+
+> 
+> >+	do {
+> >+		if (datalen > MAX_CHUNK_LEN) {
+> >+			chunk_len = MAX_CHUNK_LEN;
+> >+		} else {
+> >+			chunk_len = datalen;
+> >+			dl_flag |= DL_END;
+> >+		}
+> >+		memcpy(chunk_buf->data, clm->data + cumulative_len, chunk_len);
+> >+
+> >+		err = brcmf_c_download(ifp, dl_flag, chunk_buf, chunk_len);
+> >+
+> >+		dl_flag &= ~DL_BEGIN;
+> >+
+> >+		cumulative_len += chunk_len;
+> >+		datalen -= chunk_len;
+> >+	} while ((datalen > 0) && (err == 0));
+> >+
+> >+	if (err) {
+> >+		brcmf_err("clmload (%d byte file) failed (%d); ",
+> >+			  (u32)clm->size, err);
+> 
+> Instead of casting clm->size it seems better to use the proper
+> format specifier, ie. %zu (see format_decode() [1]).
+
+Will do it.
+
+> 
+> >+		/* Retrieve clmload_status and print */
+> >+		err = brcmf_fil_iovar_int_get(ifp, "clmload_status", &status);
+> >+		if (err)
+> >+			brcmf_err("get clmload_status failed (%d)\n", err);
+> >+		else
+> >+			brcmf_dbg(INFO, "clmload_status=%d\n", status);
+> >+		err = -EIO;
+> >+	}
+> >+
+> >+	kfree(chunk_buf);
+> >+done:
+> >+	release_firmware(clm);
+> >+	return err;
+> >+}
+> >+
+
+---------------------------------------------------------------
+This message and any attachments may contain Cypress (or its
+subsidiaries) confidential information. If it has been received
+in error, please advise the sender and immediately delete this
+message.
+---------------------------------------------------------------
