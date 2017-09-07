@@ -1,174 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0126.outbound.protection.outlook.com ([104.47.0.126]:6416
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751906AbdI1NG5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Sep 2017 09:06:57 -0400
-Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: David Laight <David.Laight@aculab.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=c5=a1ka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-References: <20170922212930.620249-1-arnd@arndb.de>
- <20170922212930.620249-5-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
- <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
- <CAK8P3a37Ts5q7BvA2JWse87huyAp+=e18CUXEt8731RrBnB+Ow@mail.gmail.com>
- <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com>
- <CAK8P3a2C7DBTfQZvRi-QQfrfm1GXktFcXQRmXmzpF4SCa+BADA@mail.gmail.com>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <2631e8a6-03f2-69ea-d889-afd9a345e7ef@virtuozzo.com> (sfid-20170928_150706_081829_F0A0825A)
-Date: Thu, 28 Sep 2017 16:09:46 +0300
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:35291 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754807AbdIGJiG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Sep 2017 05:38:06 -0400
+Received: by mail-wr0-f172.google.com with SMTP id m18so1711677wrm.2
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Sep 2017 02:38:05 -0700 (PDT)
+Subject: Re: using vulnerability ids in patches
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <7415a11b-398c-69df-b39f-7b985f07112b@broadcom.com>
+ <1504774743.6177.0.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <7b09c3d4-a18a-6bc3-6445-8911c088258f@broadcom.com> (sfid-20170907_113843_301431_393DF380)
+Date: Thu, 7 Sep 2017 11:38:02 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a2C7DBTfQZvRi-QQfrfm1GXktFcXQRmXmzpF4SCa+BADA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1504774743.6177.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2017 04:26 PM, Arnd Bergmann wrote:
-> On Tue, Sep 26, 2017 at 9:49 AM, Andrey Ryabinin
-> <aryabinin@virtuozzo.com> wrote:
+On 07-09-17 10:59, Johannes Berg wrote:
+> On Thu, 2017-09-07 at 10:40 +0200, Arend van Spriel wrote:
+>> Hi Kalle,
 >>
->>
->> On 09/26/2017 09:47 AM, Arnd Bergmann wrote:
->>> On Mon, Sep 25, 2017 at 11:32 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> Due to recent events we were asked about some vulnerability fixes
+>> for
+>> brcmfmac. We already fixed a couple of things without referring to a
+>> so-called CVE-ID, which is what people are asking for. Do we have a
+>> upstream policy on that? I could not really find anything in the
+>> Documentation folder (but I may have overlooked it). Might be worth
+>> mentioning in the commit message like with the coverity ids.
 > 
->>> +       ret = __builtin_strlen(q);
->>
->>
->> I think this is not correct. Fortified strlen called here on purpose. If sizeof q is known at compile time
->> and 'q' contains not-null fortified strlen() will panic.
+> Sure.
 > 
-> Ok, got it.
+> git log --grep "CVE-"
 > 
->>>         if (size) {
->>>                 size_t len = (ret >= size) ? size - 1 : ret;
->>>                 if (__builtin_constant_p(len) && len >= p_size)
->>>
->>> The problem is apparently that the fortified strlcpy calls the fortified strlen,
->>> which in turn calls strnlen and that ends up calling the extern '__real_strnlen'
->>> that gcc cannot reduce to a constant expression for a constant input.
->>
->>
->> Per my observation, it's the code like this:
->>         if ()
->>                 fortify_panic(__func__);
->>
->>
->> somehow prevent gcc to merge several "struct i2c_board_info info;" into one stack slot.
->> With the hack bellow, stack usage reduced to ~1,6K:
-> 
-> 1.6k is also what I see with my patch, or any other approach I tried
-> that changes
-> string.h. With the split up em28xx_dvb_init() function (and without
-> changes to string.h),
-> I got down to a few hundred bytes for the largest handler.
-> 
->> ---
->>  include/linux/string.h | 4 ----
->>  1 file changed, 4 deletions(-)
->>
->> diff --git a/include/linux/string.h b/include/linux/string.h
->> index 54d21783e18d..9a96ff3ebf94 100644
->> --- a/include/linux/string.h
->> +++ b/include/linux/string.h
->> @@ -261,8 +261,6 @@ __FORTIFY_INLINE __kernel_size_t strlen(const char *p)
->>         if (p_size == (size_t)-1)
->>                 return __builtin_strlen(p);
->>         ret = strnlen(p, p_size);
->> -       if (p_size <= ret)
->> -               fortify_panic(__func__);
->>         return ret;
->>  }
->>
->> @@ -271,8 +269,6 @@ __FORTIFY_INLINE __kernel_size_t strnlen(const char *p, __kernel_size_t maxlen)
->>  {
->>         size_t p_size = __builtin_object_size(p, 0);
->>         __kernel_size_t ret = __real_strnlen(p, maxlen < p_size ? maxlen : p_size);
->> -       if (p_size <= ret && maxlen != ret)
->> -               fortify_panic(__func__);
->>         return ret;
-> 
-> I've reduced it further to this change:
-> 
-> --- a/include/linux/string.h
-> +++ b/include/linux/string.h
-> @@ -227,7 +227,7 @@ static inline const char *kbasename(const char *path)
->  #define __FORTIFY_INLINE extern __always_inline __attribute__((gnu_inline))
->  #define __RENAME(x) __asm__(#x)
-> 
-> -void fortify_panic(const char *name) __noreturn __cold;
-> +void fortify_panic(const char *name) __cold;
->  void __read_overflow(void) __compiletime_error("detected read beyond
-> size of object passed as 1st parameter");
->  void __read_overflow2(void) __compiletime_error("detected read beyond
-> size of object passed as 2nd parameter");
->  void __read_overflow3(void) __compiletime_error("detected read beyond
-> size of object passed as 3rd parameter");
-> 
-> I don't immediately see why the __noreturn changes the behavior here, any idea?
-> 
+> shows it being done frequently.
 
+Ok. So doing this I see a number of instances where the CVE-ID is 
+mentioned in the commit message, but there are also instances that use 
+the 'Fixes:' tag. Does it make sense to use that or does it serve 
+another purpose?
 
-At first I thought that this somehow might be related to __asan_handle_no_return(). GCC calls it
-before noreturn function. So I made patch to remove generation of these calls (we don't need them in the kernel anyway)
-but it didn't help. It must be something else than.
-
-
->>> Not sure if that change is the best fix, but it seems to address the problem in
->>> this driver and probably leads to better code in other places as well.
->>>
->>
->> Probably it would be better to solve this on the strlcpy side, but I haven't found the way to do this right.
->> Alternative solutions:
->>
->>  - use memcpy() instead of strlcpy(). All source strings are smaller than I2C_NAME_SIZE, so we could
->>    do something like this - memcpy(info.type, "si2168", sizeof("si2168"));
->>    Also this should be faster.
-> 
-> This would be very similar to the patch I posted at the start of this
-> thread to use strncpy(), right?
-
-Sure.
-
-> I was hoping that changing strlcpy() here could also improve other
-> users that might run into
-> the same situation, but stay below the 2048-byte stack frame limit.
-> 
->>  - Move code under different "case:" in the switch(dev->model) to the separate function should help as well.
->>    But it might be harder to backport into stables.
-> 
-> Agreed, I posted this in earlier versions of the patch series, see
-> https://patchwork.kernel.org/patch/9601025/
-> 
-> The new patch was a result of me trying to come up with a less
-> invasive version to
-> make it easier to backport, since I would like to backport the last
-> patch in the series
-> that depends on all the earlier ones.
-> 
->          Arnd
-> 
+Regards,
+Arend
