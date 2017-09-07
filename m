@@ -1,111 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:36090 "EHLO
-        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750739AbdIFNHs (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37690 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751884AbdIGUl0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 09:07:48 -0400
-Received: by mail-io0-f180.google.com with SMTP id z67so23676301iof.3
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Sep 2017 06:07:48 -0700 (PDT)
+        Thu, 7 Sep 2017 16:41:26 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
+Date: Thu, 7 Sep 2017 20:41:21 +0000
+Message-ID: <1eba28f4efc641399fcece4657e27ee3@SC-EXCH02.marvell.com> (sfid-20170907_224129_977988_C3865F88)
+References: <1504118818-1749-1-git-send-email-gbhat@marvell.com>
+ <20170831202146.GA27509@google.com>
+In-Reply-To: <20170831202146.GA27509@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20170906144019.1c98a636@elisabeth>
-References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
- <20170906144019.1c98a636@elisabeth>
-From: Matteo Croce <mcroce@redhat.com>
-Date: Wed, 6 Sep 2017 15:07:07 +0200
-Message-ID: <CAGnkfhxknRTFsfT=GoqQJUFx1p1QVNVCfqjb04Z2nbwnWkjuWA@mail.gmail.com> (sfid-20170906_150809_236253_95214BFF)
-Subject: Re: hung task in mac80211
-To: Stefano Brivio <sbrivio@redhat.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 6, 2017 at 2:40 PM, Stefano Brivio <sbrivio@redhat.com> wrote:
-> On Wed, 6 Sep 2017 13:57:47 +0200
-> Matteo Croce <mcroce@redhat.com> wrote:
->
->> Hi,
->>
->> I have an hung task on vanilla 4.13 kernel which I haven't on 4.12.
->> The problem is present both on my AP and on my notebook,
->> so it seems it affects AP and STA mode as well.
->> The generated messages are:
->>
->> INFO: task kworker/u16:6:120 blocked for more than 120 seconds.
->>       Not tainted 4.13.0 #57
->> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->> kworker/u16:6   D    0   120      2 0x00000000
->> Workqueue: phy0 ieee80211_ba_session_work [mac80211]
->> Call Trace:
->>  ? __schedule+0x174/0x5b0
->>  ? schedule+0x31/0x80
->>  ? schedule_preempt_disabled+0x9/0x10
->>  ? __mutex_lock.isra.2+0x163/0x480
->>  ? select_task_rq_fair+0xb9f/0xc60
->>  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
->>  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
->
-> This is ugly and maybe wrong, but you could check perhaps...:
->
-> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-> index c92df492e898..bd7512a656f2 100644
-> --- a/net/mac80211/ht.c
-> +++ b/net/mac80211/ht.c
-> @@ -320,28 +320,40 @@ void ieee80211_ba_session_work(struct work_struct *work)
->
->         mutex_lock(&sta->ampdu_mlme.mtx);
->         for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
-> -               if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
-> +               if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired)) {
-> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
->                         ___ieee80211_stop_rx_ba_session(
->                                 sta, tid, WLAN_BACK_RECIPIENT,
->                                 WLAN_REASON_QSTA_TIMEOUT, true);
-> +                       mutex_lock(&sta->ampdu_mlme.mtx);
-> +               }
->
->                 if (test_and_clear_bit(tid,
-> -                                      sta->ampdu_mlme.tid_rx_stop_requested))
-> +                                      sta->ampdu_mlme.tid_rx_stop_requested)) {
-> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
->                         ___ieee80211_stop_rx_ba_session(
->                                 sta, tid, WLAN_BACK_RECIPIENT,
->                                 WLAN_REASON_UNSPECIFIED, true);
-> +                       mutex_lock(&sta->ampdu_mlme.mtx);
-> +               }
->
->                 if (test_and_clear_bit(tid,
-> -                                      sta->ampdu_mlme.tid_rx_manage_offl))
-> +                                      sta->ampdu_mlme.tid_rx_manage_offl)) {
-> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
->                         __ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
->                                                         IEEE80211_MAX_AMPDU_BUF,
->                                                         false, true);
-> +                       mutex_lock(&sta->ampdu_mlme.mtx);
-> +               }
->
->                 if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
-> -                                      sta->ampdu_mlme.tid_rx_manage_offl))
-> +                                      sta->ampdu_mlme.tid_rx_manage_offl)) {
-> +                       mutex_unlock(&sta->ampdu_mlme.mtx);
->                         ___ieee80211_stop_rx_ba_session(
->                                 sta, tid, WLAN_BACK_RECIPIENT,
->                                 0, false);
-> +                       mutex_lock(&sta->ampdu_mlme.mtx);
-> +               }
->
->                 spin_lock_bh(&sta->lock);
->
-> --
-> Stefano
->
+Hi Brian,
 
-ACK, I have it running since 12 minutes.
-The hang usually appears shortly after boot as I set
-kernel.hung_task_timeout_secs=10
+> 
+> ----------------------------------------------------------------------
+> On Thu, Aug 31, 2017 at 12:16:58AM +0530, Ganapathi Bhat wrote:
+> > If driver is loaded with 'mfg_mode' enabled, then the sending
+> commands
+> > are not allowed. So, when mwifiex_send_cmd fails in
+> > mwifiex_add_virtual_intf, driver must check for 'mfg_mode' before
+> > returning error.
+> >
+> > Fixes: 7311ea850079 ("mwifiex: fix AP start problem for newly added
+> > interface")
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > index ffada17..1856205 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > @@ -2967,11 +2967,11 @@ struct wireless_dev
+> > *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+> >
+> >  	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
+> >  			       HostCmd_ACT_GEN_SET, 0, NULL, true);
+> > -	if (ret)
+> > +	if (ret && !adapter->mfg_mode)
+> 
+> It doesn't feel like ignoring errors is the best approach here,
+> especially when it's only a single command that we could easily just
+> skip.
+Got it.
+> 
+> So, why don't you just skip it, like this?
+> 
+> 	if (!adapter->mfg_mode) {
+Yes. This is better.
+> 		ret = mwifiex_send_cmd(...);
+> 		if (ret)
+> 			goto err_set_bss_mode;
+> 	}
+> 
+> >  		goto err_set_bss_mode;
+> >
+> >  	ret = mwifiex_sta_init_cmd(priv, false, false);
+> > -	if (ret)
+> > +	if (ret && !adapter->mfg_mode)
+> >  		goto err_sta_init;
+> 
+> Same here; I think it's safe to just completely skip
+> mwifiex_sta_init_cmd(), no?
+Yes. I have sent v2 of these changes.
+> 
+> Brian
+> 
+> >
+> >  	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap,
+> > priv);
+> > --
+> > 1.9.1
+> >
 
--- 
-Matteo Croce
-per aspera ad upstream
+Thanks,
+Ganapathi
