@@ -1,69 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:37374 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937278AbdIZR3g (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 13:29:36 -0400
-Received: by mail-wm0-f66.google.com with SMTP id f4so9672446wmh.4
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 10:29:35 -0700 (PDT)
-Received: from mail-wm0-f49.google.com (mail-wm0-f49.google.com. [74.125.82.49])
-        by smtp.gmail.com with ESMTPSA id t23sm6266565edb.33.2017.09.26.10.29.33
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 26 Sep 2017 10:29:33 -0700 (PDT)
-Received: by mail-wm0-f49.google.com with SMTP id b195so10259982wmb.5
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 10:29:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1506412757.3276.63.camel@intel.com>
-References: <20170915051148.2566-1-gavinli@thegavinli.com> <1506412757.3276.63.camel@intel.com>
-From: Gavin Li <gavinli@thegavinli.com>
-Date: Tue, 26 Sep 2017 10:29:32 -0700
-Message-ID: <CA+GxvY5ff6uFoYO=xis_gb5Zws+MWL-hG4uvupYrx13JXn78bw@mail.gmail.com> (sfid-20170926_193439_584521_88E824FE)
-Subject: Re: [PATCH v2] iwlwifi: mvm: allow monitor mode capture in STA mode
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: linuxwifi <linuxwifi@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "git@thegavinli.com" <git@thegavinli.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40654 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750742AbdIGHJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Sep 2017 03:09:43 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-09-07
+Date: Thu,  7 Sep 2017 09:09:38 +0200
+Message-Id: <20170907070939.3658-1-johannes@sipsolutions.net> (sfid-20170907_090950_595471_D24A273C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luciano,
+Hi Dave,
 
-Thanks for the update. I was hoping that it would be supported since I
-remember that iwldvm had no problem with it in the past.
+During my long absence some things have accumulated, but there wasn't
+actually all that much that could've gone into the last cycle, and a
+fix or two was taken care of by others.
 
-Best,
-Gavin
+The most important thing here is probably the deadlock fix that a few
+people have run into on 4.13, but that was only identified now, and
+perhaps the 40 MHz fix from Emmanuel that helps avoid iwlwifi firmware
+crashes.
 
-On Tue, Sep 26, 2017 at 12:59 AM, Coelho, Luciano
-<luciano.coelho@intel.com> wrote:
-> Hi Gavin,
->
-> On Thu, 2017-09-14 at 22:11 -0700, gavinli@thegavinli.com wrote:
->> From: Gavin Li <git@thegavinli.com>
->>
->> Open up the filter if there is a monitor interface configured; this
->> allows all packets on the channel to be captured even if the device is
->> in STA mode and associated to a BSS.
->>
->> Signed-off-by: Gavin Li <git@thegavinli.com>
->> ---
->
-> Sorry for the delay in responding, we were discussing this patch
-> internally.
->
-> Unfortunately this is not something that our firmware officially
-> supports, so we cannot allow it in the driver.  The firmware doesn't
-> *block* this from working, but there are no guarantees that it will work
-> and that there will not be any side-effects.
->
-> If this works for you, feel free to use it (that's one of the beauties
-> of open source), but I won't apply it in the mainline driver.
->
->
-> --
-> Cheers,
-> Luca.
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit 6d9c153a0b84392406bc77600aa7d3ea365de041:
+
+  net: dsa: loop: Do not unregister invalid fixed PHY (2017-09-03 20:18:25 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-09-07
+
+for you to fetch changes up to bde59c475e0883e4c4294bcd9b9c7e08ae18c828:
+
+  mac80211: fix deadlock in driver-managed RX BA session start (2017-09-06 15:22:02 +0200)
+
+----------------------------------------------------------------
+Back from a long absence, so we have a number of things:
+ * a remain-on-channel fix from Avi
+ * hwsim TX power fix from Beni
+ * null-PTR dereference with iTXQ in some rare configurations (Chunho)
+ * 40 MHz custom regdomain fixes (Emmanuel)
+ * look at right place in HT/VHT capability parsing (Igor)
+ * complete A-MPDU teardown properly (Ilan)
+ * Mesh ID Element ordering fix (Liad)
+ * avoid tracing warning in ht_dbg() (Sharon)
+ * fix print of assoc/reassoc (Simon)
+ * fix encrypted VLAN with iTXQ (myself)
+ * fix calling context of TX queue wake (myself)
+ * fix a deadlock with ath10k aggregation (myself)
+
+----------------------------------------------------------------
+Avraham Stern (1):
+      mac80211: flush hw_roc_start work before cancelling the ROC
+
+Beni Lev (1):
+      mac80211_hwsim: Use proper TX power
+
+Chunho Lee (1):
+      mac80211: Fix null pointer dereference with iTXQ support
+
+Emmanuel Grumbach (1):
+      cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
+
+Igor Mitsyanko (1):
+      nl80211: look for HT/VHT capabilities in beacon's tail
+
+Ilan peer (1):
+      mac80211: Complete ampdu work schedule during session tear down
+
+Johannes Berg (3):
+      mac80211: fix VLAN handling with TXQs
+      mac80211: agg-tx: call drv_wake_tx_queue in proper context
+      mac80211: fix deadlock in driver-managed RX BA session start
+
+Liad Kaufman (1):
+      mac80211: add MESH IE in the correct order
+
+Sharon Dvir (1):
+      mac80211: shorten debug prints using ht_dbg() to avoid warning
+
+Simon Dinkin (1):
+      mac80211: fix incorrect assignment of reassoc value
+
+ drivers/net/wireless/mac80211_hwsim.c |  2 --
+ include/net/mac80211.h                | 15 ++-------------
+ net/mac80211/agg-rx.c                 | 32 ++++++++++++++++++++-----------
+ net/mac80211/agg-tx.c                 |  8 ++++++--
+ net/mac80211/ht.c                     | 24 ++++++++++++++++++++---
+ net/mac80211/ieee80211_i.h            |  4 ++++
+ net/mac80211/iface.c                  | 20 ++++++++++++++++---
+ net/mac80211/mlme.c                   |  2 +-
+ net/mac80211/offchannel.c             |  2 ++
+ net/mac80211/tx.c                     | 36 ++++++++++++++++++++++++++++-------
+ net/mac80211/util.c                   |  2 +-
+ net/wireless/nl80211.c                |  4 ++--
+ net/wireless/reg.c                    | 20 +++++++++++++++++--
+ 13 files changed, 124 insertions(+), 47 deletions(-)
