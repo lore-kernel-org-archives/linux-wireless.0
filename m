@@ -1,145 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35682 "EHLO sipsolutions.net"
+Received: from mga05.intel.com ([192.55.52.43]:9381 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751002AbdIENpx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 09:45:53 -0400
-Message-ID: <1504619151.12380.16.camel@sipsolutions.net> (sfid-20170905_154707_931614_625FC941)
-Subject: Re: [PATCH 3/8] qtnfmac: implement AP_VLAN iftype support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Tue, 05 Sep 2017 15:45:51 +0200
-In-Reply-To: <20170620195517.18373-4-sergey.matyukevich.os@quantenna.com> (sfid-20170620_215603_912928_26F5E0B9)
-References: <20170620195517.18373-1-sergey.matyukevich.os@quantenna.com>
-         <20170620195517.18373-4-sergey.matyukevich.os@quantenna.com>
-         (sfid-20170620_215603_912928_26F5E0B9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750742AbdIGELl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Sep 2017 00:11:41 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: linuxwifi <linuxwifi@intel.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Subject: Re: [GIT] Networking
+Date: Thu, 7 Sep 2017 04:11:36 +0000
+Message-ID: <1504757495.5400.89.camel@intel.com> (sfid-20170907_061201_801740_35C84721)
+References: <20170905.214143.826912481689443792.davem@davemloft.net>
+         <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
+In-Reply-To: <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sergey, all,
-
-On Tue, 2017-06-20 at 22:55 +0300, Sergey Matyukevich wrote:
-> This patch implements AP_VLAN interface type support enabling
-> the use of dynamic VLAN mode in hostapd.
-
-My first thought here is that this is completely wrong.
-
-AP_VLAN interfaces have no relation to 802.1Q, but it seems that you're
-trying to use them as such.
-
-I'll comment a bit below, but I'd like to ask you to actually explain
-what you're trying to achieve, because then I think I can comment
-better on what you need to be doing.
-
-> Implementation notes.
-> 
-> 1. Passing dynamic VLAN tag to firmware
-
-There's no such thing as a "VLAN tag" with AP_VLAN interfaces. You want
-802.1Q, which can be done on top of them if needed, but it's an
-unrelated concept.
-
-> Currently there is no established way to pass VLAN tag assigned to
-> STA by Radius server to wireless driver. It is assumed that hostapd
-> is able to setup all the bridging and tagging on its own. 
-
-I don't even know if this is true? Does hostapd in fact set up 802.1Q
-tagging in any way? Can you say how to configure this?
-
-This might actually be your problem - what you *want* is doing 802.1Q
-tagging which hostapd doesn't support, and so you're actually doing
-client isolation which hostapd *does* support, instead?
-
-As far as I can tell hostapd only has the ability to put different
-types of clients into different AP_VLANs to achieve *over the air*
-isolation. It has no isolation over the backend (yet) - that's
-typically set up by putting the AP_VLAN interfaces into different
-bridges or whatever.
-
-
-> However qtnf firmware needs to know the assigned dynamic VLAN tags in
-> order to perform various internal tasks including group key
-> management, filtering, acceleration, and more.
-
-This doesn't make any sense - what does it need the *tag* for? I can
-understand it needing *a* tag, but not *the* tag that the RADIUS server
-gave it?
-
-IOW - I can understand it needing an identifier of the VLAN or
-something like that, but then why can't you just number the AP_VLAN
-interfaces 1,2,3,4,...?
-
-> Current implementation makes use of the following workaround.
-[snip]
-
-This really shouldn't be done.
-
-> 2. Packet routing to/from AP/VLAN interfaces
-> Firmware operates with tagged packets after dynamic VLAN mode is
-> configured. In particular, packets destined to STAs should be
-> properly tagged before they can be passed to firmware. Packets
-> received from STAs are properly tagged by firmware and then
-> passed to wireless driver. As a result, packet routing to AP/VLAN
-> interfaces is straightforward: it is enough to check VLAN tags.
-
-Ok, so here the whole tagging comes - a bit - into play. Technically
-you could, however, do the following:
-
- * assign "fake" tags as I suggested above
- * pack/unpack the 802.1Q header from the firmware (or put it into
-   metadata) in the driver and just tx/rx untagged packets into the
-   right interface
- * if the AP_VLAN has a real 802.1Q on top, then it's re-packed again
-   by the ethernet driver when the data goes out
-
-> Normally hostapd expects untagged packets from AP/VLAN interfaces.
-
-hostapd doesn't really expect anything there, does it?
-
-> Meanwhile firmware performs tagging using h/w acceleration. That
-> is why it makes sense to avoid untagging packets in driver if
-> they are supposed to by tagged again on host. To enable this
-> behavior a new module parameter 'dyn_vlan_tagged' has been
-> introduced:
-> 
-> - dyn_vlan_tagged = 0 (default)
-> In this case untagged packets are sent to and expected from AP/VLAN
-> interfaces.
-> Driver tags/untags packets going to/from firmware. This behaviour is
-> expected
-> by hostapd which is able to create bridges and VLAN interfaces
-> automatically
-> when hostapd is built with CONFIG_FULL_DYNAMIC_VLAN option enabled.
-> 
-> - dyn_vlan_tagged = 1
-> In this case tagged packets are sent to and expected from AP/VLAN
-> interfaces.
-> Hostapd build option CONFIG_FULL_DYNAMIC_VLAN should be disabled.
-> Setup of
-> networking topology on host is left up to the implementers.
-
-This is all very hacky, I really don't think we can accept that.
-
-Firewalling and similar things will likely not work correctly if
-there's an 802.1Q packet coming in that they don't expect, for example.
-We don't want to go around all the Linux infrastructure for something
-like this.
-
-In a way this feature seems mis-designed - you never have 802.1Q tags
-over the air, but you're inserting them on RX and stripping them on TX,
-probably in order to make bridging to ethernet easier and not have to
-have 802.1Q acceleration on the ethernet port, or - well - in order to
-have an ability to do this with an ethernet card that only has a single
-CPU port.
-
-
-In a way this is more like a switch or bridge feature, but I don't
-think we have any abstraction for this in Linux. I think this is
-something we should discuss over on netdev and perhaps in person at the
-wireless workshop/netdev conference?
-
-johannes
+T24gV2VkLCAyMDE3LTA5LTA2IGF0IDE2OjI3IC0wNzAwLCBMaW51cyBUb3J2YWxkcyB3cm90ZToN
+Cj4gVGhpcyBwdWxsIHJlcXVlc3QgY29tcGxldGVseSBicmVha3MgSW50ZWwgd2lyZWxlc3MgZm9y
+IG1lLg0KPiANCj4gVGhpcyBpcyBteSB0cnVzdHkgb2xkIFhQUyAxMyAoOTM1MCksIHVzaW5nIElu
+dGVsIFdpcmVsZXNzIDgyNjAgKHJldiAzYSkuDQo+IA0KPiBUaGF0IHJlbWFpbnMgYSB2ZXJ5IHN0
+YW5kYXJkIEludGVsIG1hY2hpbmUgd2l0aCBhYnNvbHV0ZWx5IHplcm8gb2RkDQo+IHRoaW5ncyBn
+b2luZyBvbi4NCj4gDQo+IFRoZSBmaXJtd2FyZSBpcyBpd2x3aWZpLTgwMDBDLTI4LnVjb2RlIGZy
+b20NCj4gaXdsNzI2MC1maXJtd2FyZS0yNS4zMC4xMy4wLTc1LmZjMjYubm9hcmNoLCBhbmQgdGhl
+IGtlcm5lbCByZXBvcnRzDQo+IA0KPiAgIGl3bHdpZmkgMDAwMDozYTowMC4wOiBsb2FkZWQgZmly
+bXdhcmUgdmVyc2lvbiAyNy40NTU0NzAuMCBvcF9tb2RlIGl3bG12bQ0KPiANCj4gdGhlIHRoaW5n
+IHN0YXJ0cyBhY3RpbmcgYmFkbHkgd2l0aCB0aGlzOg0KPiANCj4gICBpd2x3aWZpIDAwMDA6M2E6
+MDAuMDogRlcgRXJyb3Igbm90aWZpY2F0aW9uOiB0eXBlIDB4MDAwMDAwMDAgY21kX2lkIDB4MDQN
+Cj4gICBpd2x3aWZpIDAwMDA6M2E6MDAuMDogRlcgRXJyb3Igbm90aWZpY2F0aW9uOiBzZXEgMHgw
+MDAwIHNlcnZpY2UgMHgwMDAwMDAwNA0KPiAgIGl3bHdpZmkgMDAwMDozYTowMC4wOiBGVyBFcnJv
+ciBub3RpZmljYXRpb246IHRpbWVzdGFtcCAweCAgICAgICAgICAgIDVEODQNCj4gICBpd2x3aWZp
+IDAwMDA6M2E6MDAuMDogTWljcm9jb2RlIFNXIGVycm9yIGRldGVjdGVkLiAgUmVzdGFydGluZyAw
+eDIwMDAwMDAuDQo+ICAgaXdsd2lmaSAwMDAwOjNhOjAwLjA6IFN0YXJ0IElXTCBFcnJvciBMb2cg
+RHVtcDoNCj4gICBpd2x3aWZpIDAwMDA6M2E6MDAuMDogU3RhdHVzOiAweDAwMDAwMTAwLCBjb3Vu
+dDogNg0KPiAgIGl3bHdpZmkgMDAwMDozYTowMC4wOiBMb2FkZWQgZmlybXdhcmUgdmVyc2lvbjog
+MjcuNDU1NDcwLjANCj4gICBpd2x3aWZpIDAwMDA6M2E6MDAuMDogMHgwMDAwMDAzOCB8IEJBRF9D
+T01NQU5EDQo+ICAgaXdsd2lmaSAwMDAwOjNhOjAwLjA6IDB4MDBBMDAyRjAgfCB0cm1faHdfc3Rh
+dHVzMA0KPiAgIC4uLg0KPiAgIGl3bHdpZmkgMDAwMDozYTowMC4wOiAweDAwMDAwMDAwIHwgaXNy
+IHN0YXR1cyByZWcNCj4gICBpZWVlODAyMTEgcGh5MDogSGFyZHdhcmUgcmVzdGFydCB3YXMgcmVx
+dWVzdGVkDQo+ICAgaXdsd2lmaSAwMDAwOjNhOjAwLjA6IEZXIGVycm9yIGluIFNZTkMgQ01EIE1B
+Q19DT05URVhUX0NNRA0KDQpUaGlzIHNlZW1zIHRvIGJlIGEgcHJvYmxlbSB3aXRoIGJhY2t3YXJk
+cy1jb21wYXRpYmlsaXR5IHdpdGggRlcgdmVyc2lvbg0KMjcuICBXZSBhcmUgbm93IGluIHZlcnNp
+b24gMzFbMV0gYW5kIHVwZ3JhZGluZyB3aWxsIHByb2JhYmx5IGZpeCB0aGF0Lg0KDQpCdXQgb2J2
+aW91c2x5IHRoZSBkcml2ZXIgc2hvdWxkIG5vdCBmYWlsIG1pc2VyYWJseSBsaWtlIHRoaXMgd2l0
+aA0KdmVyc2lvbiAyNywgYmVjYXVzZSBpdCBjbGFpbXMgdG8gc3VwcG9ydCBpdCBzdGlsbC4NCg0K
+SSdtIGxvb2tpbmcgaW50byB0aGlzIG5vdyBhbmQgd2lsbCBwcm92aWRlIGEgZml4IGFzYXAuDQoN
+ClsxXSBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9maXJt
+d2FyZS9saW51eC1maXJtd2FyZS5naXQvdHJlZS9pd2x3aWZpLTgwMDBDLTMxLnVjb2RlDQoNCg0K
+LS0NCkNoZWVycywNCkx1Y2Eu
