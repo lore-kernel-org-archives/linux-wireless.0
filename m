@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55260 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750911AbdILGDa (ORCPT
+Received: from mail-it0-f42.google.com ([209.85.214.42]:37615 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752146AbdIGFqk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 02:03:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>, linux-wireless@vger.kernel.org,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>
-Subject: Re: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
-References: <1504816363-31015-1-git-send-email-gbhat@marvell.com>
-        <20170908194227.GA65107@google.com>
-Date: Tue, 12 Sep 2017 09:03:26 +0300
-In-Reply-To: <20170908194227.GA65107@google.com> (Brian Norris's message of
-        "Fri, 8 Sep 2017 12:42:28 -0700")
-Message-ID: <87poawmp1t.fsf@purkki.adurom.net> (sfid-20170912_080335_506150_CC29788F)
+        Thu, 7 Sep 2017 01:46:40 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1504762851.5400.93.camel@coelho.fi>
+References: <20170905.214143.826912481689443792.davem@davemloft.net>
+ <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
+ <1504757495.5400.89.camel@intel.com> <CA+55aFzECjnpFWo_ZfbV+vE-5zRst7JfDC0hxnoitCGN0rmE3Q@mail.gmail.com>
+ <1504760688.5400.91.camel@intel.com> <1504762851.5400.93.camel@coelho.fi>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 6 Sep 2017 22:46:39 -0700
+Message-ID: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com> (sfid-20170907_074657_280781_02BA6E25)
+Subject: Re: [GIT] Networking
+To: Luca Coelho <luca@coelho.fi>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+On Wed, Sep 6, 2017 at 10:40 PM, Luca Coelho <luca@coelho.fi> wrote:
+>
+> This patch is not very important (unless you really like blinking lights
+> -- maybe I'll change my mind when the holidays approach :P). so it is
+> fine if you just want to revert it for now.
+>
+> In any case, I'll send a patch fixing this problem soon.
 
-> Could have used a 'v2' in the subject, but hopefully that doesn't bother
-> Kalle too much.
+No need to revert if we can get this fixed quickly enough.
 
-It does create more work for me when sorting patches so please always
-try include the version in the subject. But no need to resend.
+I'll leave the fw-31 on my laptop, so that I can continue to use it for now.
 
--- 
-Kalle Valo
+Thanks,
+
+               Linus
