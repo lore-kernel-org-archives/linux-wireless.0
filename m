@@ -1,89 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:56446
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751961AbdIRIFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 04:05:04 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 1/2] qtnfmac: lock access to h/w in tx path
-Date: Mon, 18 Sep 2017 11:04:45 +0300
-Message-Id: <20170918080446.21763-2-sergey.matyukevich.os@quantenna.com> (sfid-20170918_100534_615605_2BA4F02D)
-In-Reply-To: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+Received: from mail-io0-f175.google.com ([209.85.223.175]:36124 "EHLO
+        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754958AbdIGQNB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Sep 2017 12:13:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <877exan0nq.fsf@kamboji.qca.qualcomm.com>
+References: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com>
+ <20170907075152.4522-1-luca@coelho.fi> <877exan0nq.fsf@kamboji.qca.qualcomm.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 7 Sep 2017 09:13:00 -0700
+Message-ID: <CA+55aFyeEwg7vd8FPHqG+4d7KbJ6ke4NDwhd+8y=_auRApyvmw@mail.gmail.com> (sfid-20170907_181325_917789_75367143)
+Subject: Re: [PATCH] iwlwifi: mvm: only send LEDS_CMD when the FW supports it
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Luca Coelho <luca@coelho.fi>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Network Development <netdev@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix tx path regression. Lock should be held when queuing packets
-to h/w fifos in order to properly handle configurations with
-multiple enabled interfaces.
+On Thu, Sep 7, 2017 at 5:39 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> Linus, do you want to apply this directly or should we take it via the
+> normal route (wireless-drivers -> net)? If your prefer the latter when
+> I'm planning to submit this to Dave in a day or two and expecting it to
+> get to your tree in about a week, depending of course what is Dave's
+> schedule.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c          | 9 ++++++++-
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h | 2 ++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+Since we have a workaround for the problem, let's just go through the
+regular channels. As long as I get the fix through David before the
+merge window closes, I'm happy.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index 502e72b7cdcc..69131965a298 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -661,14 +661,18 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
- 	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
- 	dma_addr_t txbd_paddr, skb_paddr;
- 	struct qtnf_tx_bd *txbd;
-+	unsigned long flags;
- 	int len, i;
- 	u32 info;
- 	int ret = 0;
- 
-+	spin_lock_irqsave(&priv->tx0_lock, flags);
-+
- 	if (!qtnf_tx_queue_ready(priv)) {
- 		if (skb->dev)
- 			netif_stop_queue(skb->dev);
- 
-+		spin_unlock_irqrestore(&priv->tx0_lock, flags);
- 		return NETDEV_TX_BUSY;
- 	}
- 
-@@ -717,8 +721,10 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
- 		dev_kfree_skb_any(skb);
- 	}
- 
--	qtnf_pcie_data_tx_reclaim(priv);
- 	priv->tx_done_count++;
-+	spin_unlock_irqrestore(&priv->tx0_lock, flags);
-+
-+	qtnf_pcie_data_tx_reclaim(priv);
- 
- 	return NETDEV_TX_OK;
- }
-@@ -1247,6 +1253,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	strcpy(bus->fwname, QTN_PCI_PEARL_FW_NAME);
- 	init_completion(&bus->request_firmware_complete);
- 	mutex_init(&bus->bus_lock);
-+	spin_lock_init(&pcie_priv->tx0_lock);
- 	spin_lock_init(&pcie_priv->irq_lock);
- 	spin_lock_init(&pcie_priv->tx_reclaim_lock);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-index e76a23716ee0..86ac1ccedb52 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-@@ -34,6 +34,8 @@ struct qtnf_pcie_bus_priv {
- 
- 	/* lock for tx reclaim operations */
- 	spinlock_t tx_reclaim_lock;
-+	/* lock for tx0 operations */
-+	spinlock_t tx0_lock;
- 	u8 msi_enabled;
- 	int mps;
- 
--- 
-2.11.0
+              Linus
