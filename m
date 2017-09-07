@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:54329 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031179AbdIZPFu (ORCPT
+Received: from gateway31.websitewelcome.com ([192.185.144.28]:43278 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752200AbdIGO45 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 11:05:50 -0400
-Received: by mail-wr0-f174.google.com with SMTP id g29so13493667wrg.11
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 08:05:49 -0700 (PDT)
-From: Andrey Konovalov <andreyknvl@google.com>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Thu, 7 Sep 2017 10:56:57 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id C09FDE1CF2
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2017 09:35:55 -0500 (CDT)
+Subject: Re: [PATCH] rtlwifi: btcoex: 23b 1ant: fix duplicated code for
+ different branches
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170830134223.GA13596@embeddedgus>
+ <ae09e952-112e-9616-735a-b86ba01ad398@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Cc: Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        Andrey Konovalov <andreyknvl@google.com>
-Subject: [PATCH] p54: don't unregister leds when they are inited
-Date: Tue, 26 Sep 2017 17:05:39 +0200
-Message-Id: <384966f3a79915b4617d808c40e63072aa8b868d.1506438160.git.andreyknvl@google.com> (sfid-20170926_170718_298486_4DFAC802)
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <02176aa2-9af5-c933-74e1-b2333c07c36b@embeddedor.com> (sfid-20170907_165700_496294_BA527818)
+Date: Thu, 7 Sep 2017 09:35:49 -0500
+MIME-Version: 1.0
+In-Reply-To: <ae09e952-112e-9616-735a-b86ba01ad398@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_register_hw() in p54_register_common() may fail and leds won't
-get initialized. Currently p54_unregister_common() doesn't check that and
-always calls p54_unregister_leds(). The fix is to check priv->registered
-flag before calling p54_unregister_leds().
+Hi Larry,
 
-Found by syzkaller.
+On 08/30/2017 11:48 PM, Larry Finger wrote:
+> On 08/30/2017 08:42 AM, Gustavo A. R. Silva wrote:
+>> Refactor code in order to avoid identical code for different branches.
+>>
+>> This issue was detected with the help of Coccinelle.
+>>
+>> Addresses-Coverity-ID: 1226788
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>> ---
+>> This issue was reported by Coverity and it was tested by compilation
+>> only.
+>> I'm suspicious this may be a copy/paste error. Please, verify.
+>>
+>>   .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c   | 10
+>> ++--------
+>>   1 file changed, 2 insertions(+), 8 deletions(-)
+>
+> This change is not correct. When bt_link_info->sco_exist is true, the
+> call should be
+>
+>                 halbtc8723b1ant_limited_rx(btcoexist,
+>                                NORMAL_EXEC, true,
+>                                false, 0x5);
+>
+> NACK
+>
+> I will push the correct patch.
+>
 
-INFO: trying to register non-static key.
-the code is fine but needs lockdep annotation.
-turning off the locking correctness validator.
-CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
-4.14.0-rc1-42251-gebb2c2437d80-dirty #205
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-Workqueue: usb_hub_wq hub_event
-Call Trace:
- __dump_stack lib/dump_stack.c:16
- dump_stack+0x292/0x395 lib/dump_stack.c:52
- register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
- __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
- lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
- flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
- __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
- cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
- p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
- p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
- p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
- usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
- __device_release_driver drivers/base/dd.c:861
- device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
- device_release_driver+0x1e/0x30 drivers/base/dd.c:918
- bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
- device_del+0x5c4/0xab0 drivers/base/core.c:1985
- usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
- usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
- hub_port_connect drivers/usb/core/hub.c:4754
- hub_port_connect_change drivers/usb/core/hub.c:5009
- port_event drivers/usb/core/hub.c:5115
- hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
- process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
- process_scheduled_works kernel/workqueue.c:2179
- worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
- kthread+0x3a1/0x470 kernel/kthread.c:231
- ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
+Great. Good to know.
 
-Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
----
- drivers/net/wireless/intersil/p54/main.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
-index d5a3bf91a03e..ab6d39e12069 100644
---- a/drivers/net/wireless/intersil/p54/main.c
-+++ b/drivers/net/wireless/intersil/p54/main.c
-@@ -852,12 +852,11 @@ void p54_unregister_common(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
- 
--#ifdef CONFIG_P54_LEDS
--	p54_unregister_leds(priv);
--#endif /* CONFIG_P54_LEDS */
--
- 	if (priv->registered) {
- 		priv->registered = false;
-+#ifdef CONFIG_P54_LEDS
-+		p54_unregister_leds(priv);
-+#endif /* CONFIG_P54_LEDS */
- 		ieee80211_unregister_hw(dev);
- 	}
- 
+Thanks
 -- 
-2.14.1.821.g8fa685d3b7-goog
+Gustavo A. R. Silva
