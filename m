@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32857 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932966AbdIYLGo (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:35515 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750742AbdIGE5u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 07:06:44 -0400
-Date: Mon, 25 Sep 2017 14:06:35 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: christophe.ricard@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] NFC: st21nfcb: Add support for secure element
-Message-ID: <20170925110635.i7lsjvzjzyffhfgo@mwanda> (sfid-20170925_130923_708137_DAB0C65F)
+        Thu, 7 Sep 2017 00:57:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1504757495.5400.89.camel@intel.com>
+References: <20170905.214143.826912481689443792.davem@davemloft.net>
+ <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com> <1504757495.5400.89.camel@intel.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 6 Sep 2017 21:57:48 -0700
+Message-ID: <CA+55aFzECjnpFWo_ZfbV+vE-5zRst7JfDC0hxnoitCGN0rmE3Q@mail.gmail.com> (sfid-20170907_065810_725844_CB8BE2A7)
+Subject: Re: [GIT] Networking
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "davem@davemloft.net" <davem@davemloft.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Christophe Ricard,
+On Wed, Sep 6, 2017 at 9:11 PM, Coelho, Luciano
+<luciano.coelho@intel.com> wrote:
+>
+> This seems to be a problem with backwards-compatibility with FW version
+> 27.  We are now in version 31[1] and upgrading will probably fix that.
 
-The patch 8ae01f796771: "NFC: st21nfcb: Add support for secure
-element" from Feb 1, 2015, leads to the following static checker
-warning:
+I can confirm that fw version 31 works.
 
-	drivers/nfc/st-nci/se.c:373 st_nci_hci_event_received()
-	warn: constraint overflow 'ndev->hci_dev->pipes' 127 <= 0-127
+> But obviously the driver should not fail miserably like this with
+> version 27, because it claims to support it still.
 
-drivers/nfc/st-nci/se.c
-   370  void st_nci_hci_event_received(struct nci_dev *ndev, u8 pipe,
-   371                                   u8 event, struct sk_buff *skb)
-   372  {
-   373          u8 gate = ndev->hci_dev->pipes[pipe].gate;
-   374          u8 host = ndev->hci_dev->pipes[pipe].host;
-   375  
-   376          switch (gate) {
-   377          case NCI_HCI_ADMIN_GATE:
-   378                  st_nci_hci_admin_event_received(ndev, event, skb);
-   379          break;
-   380          case ST_NCI_APDU_READER_GATE:
-   381                  st_nci_hci_apdu_reader_event_received(ndev, event, skb);
-   382          break;
-   383          case ST_NCI_CONNECTIVITY_GATE:
-   384                  st_nci_hci_connectivity_event_received(ndev, host, event, skb);
-   385          break;
-   386          }
-   387  }
-   388  EXPORT_SYMBOL_GPL(st_nci_hci_event_received);
+Not just "claims to support it", but if it's what is shipped with a
+fairly recent distro like an up-to-date version of F26, I would really
+hope that the driver can still work with it.
 
+> I'm looking into this now and will provide a fix asap.
 
-pipe comes from skb->data[].  The call tree is:
+Thanks,
 
-nci_hci_msg_rx_work  <-- gets pipe from skb->data[0]
-  -> nci_hci_hcp_message_rx
-     --> nci_hci_event_received
-         -->  st_nci_hci_event_received  <-- off by one
-
-regards,
-dan carpenter
+                  Linus
