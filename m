@@ -1,101 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33003 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752433AbdI2TsM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48502 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752775AbdIGFlA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 15:48:12 -0400
-Received: by mail-oi0-f68.google.com with SMTP id n129so297065oia.0
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:11 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/10] rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
-Date: Fri, 29 Sep 2017 14:47:54 -0500
-Message-Id: <20170929194800.15617-5-Larry.Finger@lwfinger.net> (sfid-20170929_214815_318959_3FFA33F1)
-In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+        Thu, 7 Sep 2017 01:41:00 -0400
+Message-ID: <1504762851.5400.93.camel@coelho.fi> (sfid-20170907_074117_097075_F9495D62)
+From: Luca Coelho <luca@coelho.fi>
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Date: Thu, 07 Sep 2017 08:40:51 +0300
+In-Reply-To: <1504760688.5400.91.camel@intel.com>
+References: <20170905.214143.826912481689443792.davem@davemloft.net>
+         <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
+         <1504757495.5400.89.camel@intel.com>
+         <CA+55aFzECjnpFWo_ZfbV+vE-5zRst7JfDC0hxnoitCGN0rmE3Q@mail.gmail.com>
+         <1504760688.5400.91.camel@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [GIT] Networking
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Thu, 2017-09-07 at 05:04 +0000, Coelho, Luciano wrote:
+> On Wed, 2017-09-06 at 21:57 -0700, Linus Torvalds wrote:
+> > On Wed, Sep 6, 2017 at 9:11 PM, Coelho, Luciano
+> > <luciano.coelho@intel.com> wrote:
+> > > 
+> > > This seems to be a problem with backwards-compatibility with FW version
+> > > 27.  We are now in version 31[1] and upgrading will probably fix that.
+> > 
+> > I can confirm that fw version 31 works.
+> 
+> Great, so I know for sure that this is a backwards-compatibility issue
+> with the FW API.
+> 
+> 
+> > > But obviously the driver should not fail miserably like this with
+> > > version 27, because it claims to support it still.
+> > 
+> > Not just "claims to support it", but if it's what is shipped with a
+> > fairly recent distro like an up-to-date version of F26, I would really
+> > hope that the driver can still work with it.
+> 
+> I totally agree, we support a bunch of older versions for that exact
+> reason.  We just don't really test all the supported versions very
+> often.  We should probably change that.
+> 
+> I'll make sure it still works with version 27.
 
-Originally, we get legacy rate only, so we extend to get HT and VHT rate.
+Okay, I found the offending patch:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 42 ++++++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 4 deletions(-)
+commit 7089ae634c50544b29b31faf1a751e8765c8de3b
+Author:     Johannes Berg <johannes.berg@intel.com>
+AuthorDate: Wed Jun 28 16:19:49 2017 +0200
+Commit:     Luca Coelho <luciano.coelho@intel.com>
+CommitDate: Wed Aug 9 09:15:32 2017 +0300
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index fcf6e31d0fb9..e37d4c765f87 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1099,6 +1099,42 @@ int rtlwifi_rate_mapping(struct ieee80211_hw *hw, bool isht, bool isvht,
- }
- EXPORT_SYMBOL(rtlwifi_rate_mapping);
- 
-+static u8 _rtl_get_tx_hw_rate(struct ieee80211_hw *hw,
-+			      struct ieee80211_tx_info *info)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ieee80211_tx_rate *r = &info->status.rates[0];
-+	struct ieee80211_rate *txrate;
-+	u8 hw_value = 0x0;
-+
-+	if (r->flags & IEEE80211_TX_RC_MCS) {
-+		/* HT MCS0-15 */
-+		hw_value = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS15] - 15 +
-+			   r->idx;
-+	} else if (r->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		/* VHT MCS0-9, NSS */
-+		if (ieee80211_rate_get_vht_nss(r) == 2)
-+			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_2SS_MCS9];
-+		else
-+			hw_value = rtlpriv->cfg->maps[RTL_RC_VHT_RATE_1SS_MCS9];
-+
-+		hw_value = hw_value - 9 + ieee80211_rate_get_vht_mcs(r);
-+	} else {
-+		/* legacy */
-+		txrate = ieee80211_get_tx_rate(hw, info);
-+
-+		if (txrate)
-+			hw_value = txrate->hw_value;
-+	}
-+
-+	/* check 5G band */
-+	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G &&
-+	    hw_value < rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M])
-+		hw_value = rtlpriv->cfg->maps[RTL_RC_OFDM_RATE6M];
-+
-+	return hw_value;
-+}
-+
- void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		      struct ieee80211_tx_info *info,
- 		      struct ieee80211_sta *sta,
-@@ -1107,12 +1143,10 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
- 	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
--	struct ieee80211_rate *txrate;
-+
- 	__le16 fc = rtl_get_fc(skb);
- 
--	txrate = ieee80211_get_tx_rate(hw, info);
--	if (txrate)
--		tcb_desc->hw_rate = txrate->hw_value;
-+	tcb_desc->hw_rate = _rtl_get_tx_hw_rate(hw, info);
- 
- 	if (rtl_is_tx_report_skb(hw, skb))
- 		tcb_desc->use_spe_rpt = 1;
--- 
-2.13.5
+    iwlwifi: mvm: use firmware LED command where applicable
+    
+    On devices starting from 8000 series, the host can no longer toggle
+    the LED through the CSR_LED_REG register, but must do it via the
+    firmware instead. Add support for this. Note that this means that
+    the LED cannot be turned on while the firmware is off, so using an
+    arbitrary LED trigger may not work as expected.
+    
+    Fixes: 503ab8c56ca0 ("iwlwifi: Add 8000 HW family support")
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+    Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+
+Reverting it solves the problem.  We introduced a new command to control
+the LED lights and assumed it was available in older FW versions as
+well, which turned out not to be the case.
+
+This patch is not very important (unless you really like blinking lights
+-- maybe I'll change my mind when the holidays approach :P). so it is
+fine if you just want to revert it for now.
+
+In any case, I'll send a patch fixing this problem soon.
+
+
+--
+Cheers,
+Luca.
