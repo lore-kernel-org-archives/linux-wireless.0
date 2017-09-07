@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0057.outbound.protection.outlook.com ([104.47.33.57]:13340
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751184AbdIOLxY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 07:53:24 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: [PATCH 0/2] qtnfmac: misc fixes intended for 4.14
-Date: Fri, 15 Sep 2017 14:52:58 +0300
-Message-Id: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com> (sfid-20170915_135333_761825_3FD5A22D)
+Received: from smtp.codeaurora.org ([198.145.29.96]:46662 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932097AbdIGMe5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 Sep 2017 08:34:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using vulnerability ids in patches
+References: <7415a11b-398c-69df-b39f-7b985f07112b@broadcom.com>
+Date: Thu, 07 Sep 2017 15:34:52 +0300
+In-Reply-To: <7415a11b-398c-69df-b39f-7b985f07112b@broadcom.com> (Arend van
+        Spriel's message of "Thu, 7 Sep 2017 10:40:41 +0200")
+Message-ID: <87bmmmn0ur.fsf@kamboji.qca.qualcomm.com> (sfid-20170907_143629_985636_A34AA6D5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle, Igor, and all
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Here are two patches intended for 4.14. The first patch fixes tx path
-regression. Lock should be held when queuing packets to h/w fifos in order to
-properly handle configurations with two enabled interfaces or multiple enabled
-mbss. The second patch fixes scan issues addressing a review comment
-from K.Valo regarding pending active scans upon device removal.
+> Due to recent events we were asked about some vulnerability fixes for
+> brcmfmac. We already fixed a couple of things without referring to a
+> so-called CVE-ID, which is what people are asking for. Do we have a
+> upstream policy on that? I could not really find anything in the
+> Documentation folder (but I may have overlooked it). Might be worth
+> mentioning in the commit message like with the coverity ids.
 
-Regards,
-Sergey
+Johannes already answered, but I'll just add that this is all I know
+about security patches:
 
-Sergey Matyukevich (2):
+  If you have a patch that fixes an exploitable security bug, send that
+  patch to security@kernel.org. For severe bugs, a short embargo may be
+  considered to allow distributors to get the patch out to users; in
+  such cases, obviously, the patch should not be sent to any public
+  lists.
 
-qtnfmac: lock access to h/w in tx path
-qtnfmac: abort scans on wireless interface changes
+  https://www.kernel.org/doc/html/latest/process/submitting-patches.html
 
-cfg80211.c            |    9 ++++++---
-cfg80211.h            |    3 +++
-core.c                |    2 +-
-event.c               |    2 --
-pearl/pcie.c          |    9 ++++++++-
-pearl/pcie_bus_priv.h |    2 ++
-6 files changed, 20 insertions(+), 7 deletions(-)
+I don't know if you should follow that in this case or not, just wanted
+to point out this.
+
+-- 
+Kalle Valo
