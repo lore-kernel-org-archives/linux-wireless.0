@@ -1,55 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42624 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751022AbdIAIPN (ORCPT
+Received: from nsmtp.uni-koblenz.de ([141.26.64.14]:59581 "EHLO
+        nsmtp.uni-koblenz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755161AbdIGPzE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 04:15:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joe Perches <joe@perches.com>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>
-Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
-References: <20170825082730.31388-1-luca@coelho.fi>
-        <20170825082730.31388-2-luca@coelho.fi>
-        <1504216665.2786.48.camel@perches.com>
-        <1504244238.31031.24.camel@coelho.fi>
-        <1504246520.2361.3.camel@perches.com>
-Date: Fri, 01 Sep 2017 11:15:07 +0300
-In-Reply-To: <1504246520.2361.3.camel@perches.com> (Joe Perches's message of
-        "Thu, 31 Aug 2017 23:15:20 -0700")
-Message-ID: <87k21irg1g.fsf@kamboji.qca.qualcomm.com> (sfid-20170901_101518_899688_E2A5B6E6)
+        Thu, 7 Sep 2017 11:55:04 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by nsmtp.uni-koblenz.de (Postfix) with ESMTP id 57BA5220502
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2017 17:47:52 +0200 (CEST)
+Received: from nsmtp.uni-koblenz.de ([127.0.0.1])
+        by localhost (nsmtp.uni-koblenz.de [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id TTlVAafVUWID for <linux-wireless@vger.kernel.org>;
+        Thu,  7 Sep 2017 17:47:52 +0200 (CEST)
+Received: from deliver.uni-koblenz.de (deliver.uni-koblenz.de [141.26.64.15])
+        by nsmtp.uni-koblenz.de (Postfix) with ESMTPS
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2017 17:47:52 +0200 (CEST)
+From: =?UTF-8?q?Richard=20Sch=C3=BCtz?= <rschuetz@uni-koblenz.de>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Richard=20Sch=C3=BCtz?= <rschuetz@uni-koblenz.de>
+Subject: [PATCH 1/2] wireless: set correct mandatory rate flags
+Date: Thu,  7 Sep 2017 17:47:43 +0200
+Message-Id: <20170907154744.28357-1-rschuetz@uni-koblenz.de> (sfid-20170907_175508_102149_80D1890A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+According to IEEE Std 802.11-2016 (16.2.3.4 Long PHY SIGNAL field) all of
+the following rates are mandatory for a HR/DSSS PHY: 1 Mb/s, 2 Mb/s,
+5.5 Mb/s and 11 Mb/s. Set IEEE80211_RATE_MANDATORY_B flag for all of these
+instead of just 1 Mb/s to correctly reflect this.
 
-> On Fri, 2017-09-01 at 08:37 +0300, Luca Coelho wrote:
->> On Thu, 2017-08-31 at 14:57 -0700, Joe Perches wrote:
->> > On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
->> > > From: Liad Kaufman <liad.kaufman@intel.com>
->> > > 
->> > > There is a debug print that sometimes reaches over
->> > > 110 chars, thus generating a warning in those cases.
->> > 
->> > What emits a warning here?
->> 
->> We have a WARN_ON in iwl-devtrace-msg.h:
->> 
->> #define MAX_MSG_LEN	110
->
-> OK, thanks for the hint.
->
-> The commit message is a bit obscure.
->
-> It might make sense to add a comment to describe these
-> trace events coming from TRACE_EVENT(iwlwifi_dbg,
->
-> All the IWL_DEBUG_<foo> use this trace message maximum.
+Signed-off-by: Richard Schütz <rschuetz@uni-koblenz.de>
+---
+ net/wireless/util.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
 
-Unfortunately the patch is already commited to wireless-drivers-next so
-we can't change the commit log anymore.
-
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index bcb1284c3415..c69b5c31caf8 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -157,32 +157,28 @@ static void set_mandatory_flags_band(struct ieee80211_supported_band *sband)
+ 	case NL80211_BAND_2GHZ:
+ 		want = 7;
+ 		for (i = 0; i < sband->n_bitrates; i++) {
+-			if (sband->bitrates[i].bitrate == 10) {
++			if (sband->bitrates[i].bitrate == 10 ||
++			    sband->bitrates[i].bitrate == 20 ||
++			    sband->bitrates[i].bitrate == 55 ||
++			    sband->bitrates[i].bitrate == 110) {
+ 				sband->bitrates[i].flags |=
+ 					IEEE80211_RATE_MANDATORY_B |
+ 					IEEE80211_RATE_MANDATORY_G;
+ 				want--;
++			} else {
++				sband->bitrates[i].flags |=
++					IEEE80211_RATE_ERP_G;
+ 			}
+ 
+-			if (sband->bitrates[i].bitrate == 20 ||
+-			    sband->bitrates[i].bitrate == 55 ||
+-			    sband->bitrates[i].bitrate == 110 ||
+-			    sband->bitrates[i].bitrate == 60 ||
++			if (sband->bitrates[i].bitrate == 60 ||
+ 			    sband->bitrates[i].bitrate == 120 ||
+ 			    sband->bitrates[i].bitrate == 240) {
+ 				sband->bitrates[i].flags |=
+ 					IEEE80211_RATE_MANDATORY_G;
+ 				want--;
+ 			}
+-
+-			if (sband->bitrates[i].bitrate != 10 &&
+-			    sband->bitrates[i].bitrate != 20 &&
+-			    sband->bitrates[i].bitrate != 55 &&
+-			    sband->bitrates[i].bitrate != 110)
+-				sband->bitrates[i].flags |=
+-					IEEE80211_RATE_ERP_G;
+ 		}
+-		WARN_ON(want != 0 && want != 3 && want != 6);
++		WARN_ON(want != 0 && want != 3);
+ 		break;
+ 	case NL80211_BAND_60GHZ:
+ 		/* check for mandatory HT MCS 1..4 */
 -- 
-Kalle Valo
+2.14.1
