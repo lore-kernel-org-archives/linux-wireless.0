@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35702 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752217AbdI3Ril (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48608 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754344AbdIGHwN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Sep 2017 13:38:41 -0400
-Received: by mail-pf0-f194.google.com with SMTP id i23so1766249pfi.2
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:41 -0700 (PDT)
-From: silexcommon@gmail.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Alagu Sankar <alagusankar@silex-india.com>
-Subject: [PATCH 07/11] ath10k_sdio: fix rssi indication
-Date: Sat, 30 Sep 2017 23:07:44 +0530
-Message-Id: <1506793068-27445-8-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193803_815759_5C872FEE)
-In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+        Thu, 7 Sep 2017 03:52:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: torvalds@linux-foundation.org
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        kvalo@codeaurora.org, netdev@vger.kernel.org, davem@davemloft.net,
+        emmanuel.grumbach@intel.com, Luca Coelho <luciano.coelho@intel.com>
+Date: Thu,  7 Sep 2017 10:51:52 +0300
+Message-Id: <20170907075152.4522-1-luca@coelho.fi> (sfid-20170907_095401_623943_BAC8297F)
+In-Reply-To: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com>
+References: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com>
+Subject: [PATCH] iwlwifi: mvm: only send LEDS_CMD when the FW supports it
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Receive descriptor of sdio device does not include the rssi. notify
-mac80211 accordingly. Without the fix, the rssi value indicated by
-iw changes between the actual value and -95.
+The LEDS_CMD command is only supported in some newer FW versions
+(e.g. iwlwifi-8000C-31.ucode), so we can't send it to older versions
+(such as iwlwifi-8000C-27.ucode).
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+To fix this, check for a new bit in the FW capabilities TLV that tells
+when the command is supported.
+
+Note that the current version of -31.ucode in linux-firmware.git
+(31.532993.0) does not have this capability bit set, so the LED won't
+work, even though this version should support it.  But we will update
+this firmware soon, so it won't be a problem anymore.
+
+Fixes: 7089ae634c50 ("iwlwifi: mvm: use firmware LED command where applicable")
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/file.h | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/led.c | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f025363..21adcad 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1646,9 +1646,16 @@ static bool ath10k_htt_rx_proc_rx_ind_hl(struct ath10k_htt *htt,
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	rx_status = IEEE80211_SKB_RXCB(skb);
- 	rx_status->chains |= BIT(0);
--	rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
--			    rx->ppdu.combined_rssi;
--	rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
-+
-+	if (ar->hif.bus == ATH10K_BUS_SDIO) {
-+		/* SDIO firmware does not provide signal */
-+		rx_status->signal = 0;
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
-+	} else {
-+		rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
-+			rx->ppdu.combined_rssi;
-+		rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
-+	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 887f6d8fc8a7..279248cd9cfb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -378,6 +378,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG	= (__force iwl_ucode_tlv_capa_t)80,
+ 	IWL_UCODE_TLV_CAPA_LQM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)81,
+ 	IWL_UCODE_TLV_CAPA_TX_POWER_ACK			= (__force iwl_ucode_tlv_capa_t)84,
++	IWL_UCODE_TLV_CAPA_LED_CMD_SUPPORT		= (__force iwl_ucode_tlv_capa_t)86,
+ 	IWL_UCODE_TLV_CAPA_MLME_OFFLOAD			= (__force iwl_ucode_tlv_capa_t)96,
  
- 	spin_lock_bh(&ar->data_lock);
- 	ch = ar->scan_channel;
+ 	NUM_IWL_UCODE_TLV_CAPA
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
+index 005e2e7278a5..b27269504a62 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
+@@ -92,7 +92,8 @@ static void iwl_mvm_send_led_fw_cmd(struct iwl_mvm *mvm, bool on)
+ 
+ static void iwl_mvm_led_set(struct iwl_mvm *mvm, bool on)
+ {
+-	if (mvm->cfg->device_family >= IWL_DEVICE_FAMILY_8000) {
++	if (fw_has_capa(&mvm->fw->ucode_capa,
++			IWL_UCODE_TLV_CAPA_LED_CMD_SUPPORT)) {
+ 		iwl_mvm_send_led_fw_cmd(mvm, on);
+ 		return;
+ 	}
 -- 
-1.9.1
+2.14.1
