@@ -1,31 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:37099 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752248AbdIEVTD (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:25249 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755092AbdIGLgJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 17:19:03 -0400
-Received: by mail-wm0-f44.google.com with SMTP id u26so24126795wma.0
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:19:02 -0700 (PDT)
-Subject: Re: [PATCH 28/30] brcmfmac: Clean up interrupt macros
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-29-ian@mnementh.co.uk>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <22858f29-d0c5-6780-8ccb-ad9f00e1f8dc@broadcom.com> (sfid-20170905_231907_498615_446039FC)
-Date: Tue, 5 Sep 2017 23:19:00 +0200
+        Thu, 7 Sep 2017 07:36:09 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Colin Ian King <colin.king@canonical.com>,
+        "bartosz.markowski@tieto.com" <bartosz.markowski@tieto.com>,
+        Govind Singh <govinds@qti.qualcomm.com>,
+        "Ryan Hsu" <ryanhsu@qti.qualcomm.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        Ben Greear <greearb@candelatech.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath10: mark PM functions as __maybe_unused
+Date: Thu, 7 Sep 2017 11:36:05 +0000
+Message-ID: <87o9qmn3kr.fsf@kamboji.qca.qualcomm.com> (sfid-20170907_133659_502924_C5DE524B)
+References: <20170906125904.2588620-1-arnd@arndb.de>
+In-Reply-To: <20170906125904.2588620-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 6 Sep 2017 14:58:53 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-29-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
-> Make it more obvious that this code acually enables interrupts, and
-> provide nice definitions for the bits in the register.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 8 +++++---
->   2 files changed, 7 insertions(+), 4 deletions(-)
+> When CONFIG_PM_SLEEP is disabled, we get a compile-time
+> warning:
+>
+> drivers/net/wireless/ath/ath10k/pci.c:3417:12: error: 'ath10k_pci_pm_resu=
+me' defined but not used [-Werror=3Dunused-function]
+>  static int ath10k_pci_pm_resume(struct device *dev)
+>             ^~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath10k/pci.c:3401:12: error: 'ath10k_pci_pm_susp=
+end' defined but not used [-Werror=3Dunused-function]
+>  static int ath10k_pci_pm_suspend(struct device *dev)
+>
+> Rather than fixing the #ifdef, this just marks both functions
+> as __maybe_unused, which is a more robust way to do this.
+>
+> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+Thanks. But the title should have "ath10k:", I'll fix that.
+
+--=20
+Kalle Valo=
