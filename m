@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:37860 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751629AbdIUOer (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:34:47 -0400
-Received: by mail-io0-f194.google.com with SMTP id 93so5592889iol.4
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 07:34:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87h8vylp59.fsf@purkki.adurom.net>
-References: <1504102172-5262-1-git-send-email-amitkarwar@gmail.com> <87h8vylp59.fsf@purkki.adurom.net>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Thu, 21 Sep 2017 20:04:46 +0530
-Message-ID: <CAEhWJFmJgWfxwWvRahz4vUQe6KQUv8RSTDgsRR=t3xM_U5dMVg@mail.gmail.com> (sfid-20170921_163450_239333_AB090E4E)
-Subject: Re: [PATCH] rsi: sdio suspend and resume support
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36822 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756173AbdIHO2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 10:28:08 -0400
+Message-ID: <1504880886.20347.4.camel@sipsolutions.net> (sfid-20170908_162853_629921_74255B08)
+Subject: Re: [RFC 4/4] mac80211_hwsim: add radio idx param to netlink
+ callback of radio creation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 08 Sep 2017 16:28:06 +0200
+In-Reply-To: <c6eda3a2-ad9b-4c33-b3c8-ddc36199ea3e@MAIL1.uni-rostock.de>
+References: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
+         <c6eda3a2-ad9b-4c33-b3c8-ddc36199ea3e@MAIL1.uni-rostock.de>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 19, 2017 at 8:19 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Karun Eagalapati <karun256@gmail.com>
->>
->> SDIO suspend and resume handlers are implemented and verified
->> that device works after suspend/resume cycle.
->>
->> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> [...]
->
->> +static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
->> +{
->> +     struct rsi_hw *adapter = sdio_get_drvdata(pfunc);
->> +     u8 isr_status = 0, data = 0;
->> +     int ret;
->> +
->> +     rsi_dbg(INFO_ZONE, "Waiting for interrupts to be cleared..");
->> +     do {
->> +             rsi_sdio_read_register(adapter, RSI_FN1_INT_REGISTER,
->> +                                    &isr_status);
->> +             rsi_dbg(INFO_ZONE, ".");
->> +     } while (isr_status);
->
-> Never ending loops in kernel are always a bad idea, better to add a
-> reasonable timeout if/when something goes wrong.
+On Fri, 2017-09-08 at 16:11 +0200, Benjamin Beichler wrote:
+> Since the radio index is already a valid NL attribute, this patch
+> simply
+> try to read it and create the radio specific to this index by the
+> previously used scheme.
+> 
+> Since this allows to create radios out of row, we need to search for
+> a
+> free index for a new radio, when the index is not present as
+> parameter.
 
-Thanks for the review. I have taken care of this in v2 patch.
+This seems like a bad idea, what's the point? You can always change the
+MAC address later if you want.
 
-Regards,
-Amitkumar Karwar
+Also, you don't seem to actually do what you said, with the -1.
+
+johannes
