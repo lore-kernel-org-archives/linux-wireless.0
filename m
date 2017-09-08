@@ -1,118 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32800 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752434AbdIHJyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 05:54:49 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use offsetofend()
-Date: Fri,  8 Sep 2017 11:54:46 +0200
-Message-Id: <20170908095446.5537-1-johannes@sipsolutions.net> (sfid-20170908_115452_788882_A841B0EB)
+Received: from paleale.coelho.fi ([176.9.41.70]:49686 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752634AbdIHJNp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 05:13:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  8 Sep 2017 12:12:56 +0300
+Message-Id: <20170908091256.25279-11-luca@coelho.fi> (sfid-20170908_111348_601856_C2D1FFC4)
+In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
+References: <20170908091256.25279-1-luca@coelho.fi>
+Subject: [PATCH 10/10] iwlwifi: mvm: fix reorder buffer for 9000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-This was created using the following spatch:
-    @find@
-    type S;
-    expression M, M2;
-    position p;
-    @@
-    offsetof(S, M) + sizeof(M2)@p
+The condition to check if reorder buffer ran out of
+space is faulty, as it takes into account only the
+NSSN.
+In case the head SN was too far behind the reorder
+buffer should move forward, regardless of the NSSN
+status.
+This caused the driver to release packets out of order
+in some scenarios.
 
-    @script:python@
-    m << find.M;
-    m2 << find.M2;
-    @@
-    if not m2.endswith('-> ' + m):
-            cocci.include_match(False)
-
-    @change@
-    type find.S;
-    expression find.M, find.M2;
-    position find.p;
-    @@
-    -offsetof(S, M) + sizeof(M2)@p
-    +offsetofend(S, M)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: b915c10174fb ("iwlwifi: mvm: add reorder buffer per queue")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mesh.c       | 3 +--
- net/mac80211/mesh_hwmp.c  | 8 ++++----
- net/mac80211/mesh_plink.c | 3 +--
- net/mac80211/util.c       | 4 ++--
- 4 files changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a550c707cd8a..7a76c4a6df30 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -675,8 +675,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	enum nl80211_band band;
- 	u8 *pos;
- 	struct ieee80211_sub_if_data *sdata;
--	int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
--		      sizeof(mgmt->u.beacon);
-+	int hdr_len = offsetofend(struct ieee80211_mgmt, u.beacon);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 67ffd9774712..77f77bc5d083 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -672,11 +672,12 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 	 * If there was a significant jump in the nssn - adjust.
+ 	 * If the SN is smaller than the NSSN it might need to first go into
+ 	 * the reorder buffer, in which case we just release up to it and the
+-	 * rest of the function will take of storing it and releasing up to the
+-	 * nssn
++	 * rest of the function will take care of storing it and releasing up to
++	 * the nssn
+ 	 */
+ 	if (!iwl_mvm_is_sn_less(nssn, buffer->head_sn + buffer->buf_size,
+-				buffer->buf_size)) {
++				buffer->buf_size) ||
++	    !ieee80211_sn_less(sn, buffer->head_sn + buffer->buf_size)) {
+ 		u16 min_sn = ieee80211_sn_less(sn, nssn) ? sn : nssn;
  
- 	sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
- 	rcu_read_lock();
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index d8bbd0d2225a..146ec6c0f12f 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -111,8 +111,8 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos, ie_len;
--	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.mesh_action) +
--		      sizeof(mgmt->u.action.u.mesh_action);
-+	int hdr_len = offsetofend(struct ieee80211_mgmt,
-+				  u.action.u.mesh_action);
- 
- 	skb = dev_alloc_skb(local->tx_headroom +
- 			    hdr_len +
-@@ -242,8 +242,8 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos, ie_len;
--	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.mesh_action) +
--		      sizeof(mgmt->u.action.u.mesh_action);
-+	int hdr_len = offsetofend(struct ieee80211_mgmt,
-+				  u.action.u.mesh_action);
- 
- 	if (time_before(jiffies, ifmsh->next_perr))
- 		return -EAGAIN;
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f69c6c38ca43..dc8e10f87207 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -220,8 +220,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	bool include_plid = false;
- 	u16 peering_proto = 0;
- 	u8 *pos, ie_len = 4;
--	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.self_prot) +
--		      sizeof(mgmt->u.action.u.self_prot);
-+	int hdr_len = offsetofend(struct ieee80211_mgmt, u.action.u.self_prot);
- 	int err = -ENOMEM;
- 
- 	skb = dev_alloc_skb(local->tx_headroom +
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 259698de569f..23c548b5b71e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2980,8 +2980,8 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_local *local = sdata->local;
- 	int freq;
--	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
--			       sizeof(mgmt->u.action.u.chan_switch);
-+	int hdr_len = offsetofend(struct ieee80211_mgmt,
-+				  u.action.u.chan_switch);
- 	u8 *pos;
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+ 		iwl_mvm_release_frames(mvm, sta, napi, buffer, min_sn);
 -- 
 2.14.1
