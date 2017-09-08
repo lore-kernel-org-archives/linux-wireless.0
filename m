@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:33448 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932578AbdIYHPa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 03:15:30 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [8/10] ath9k: Use ARRAY_SIZE macro
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1504439110050-1887263060-8-diffsplit-thomas@m3y3r.de>
-References: <1504439110050-1887263060-8-diffsplit-thomas@m3y3r.de>
-To: Thomas Meyer <thomas@m3y3r.de>
-CC: <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Message-ID: <27be6ac3227f4738abf6ebea6410c365@euamsexm01a.eu.qualcomm.com> (sfid-20170925_095441_462817_11073D90)
-Date: Mon, 25 Sep 2017 09:15:21 +0200
+Received: from s3.sipsolutions.net ([5.9.151.49]:59056 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754614AbdIHGzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 02:55:42 -0400
+Message-ID: <1504853740.6177.10.camel@sipsolutions.net> (sfid-20170908_085613_360648_DA28B60E)
+Subject: Re: [PATCH 2/2] wireless: return correct mandatory rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 08 Sep 2017 08:55:40 +0200
+In-Reply-To: <20170907154744.28357-2-rschuetz@uni-koblenz.de> (sfid-20170907_175517_817760_1C44F457)
+References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
+         <20170907154744.28357-2-rschuetz@uni-koblenz.de>
+         (sfid-20170907_175517_817760_1C44F457)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas Meyer <thomas@m3y3r.de> wrote:
+On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
+> Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B
+> for comparison to get all mandatory rates in 2.4 GHz band. It is safe
+> to do so because ERP mandatory rates are a superset of HR/DSSS
+> mandatory rates.
 
-> Use ARRAY_SIZE macro, rather than explicitly coding some variant of it
-> yourself.
-> Found with: find -type f -name "*.c" -o -name "*.h" | xargs perl -p -i -e
-> 's/\bsizeof\s*\(\s*(\w+)\s*\)\s*\ /\s*sizeof\s*\(\s*\1\s*\[\s*0\s*\]\s*\)
-> /ARRAY_SIZE(\1)/g' and manual check/verification.
-> 
-> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+This I don't understand - what "comparison" are you talking about?
 
-Patch applied to ath-next branch of ath.git, thanks.
+> Also force IEEE80211_RATE_MANDATORY_A for 10 MHz and 5 MHz channels
+> as they use "half-clocked" respectively "quarter-clocked" operation
+> of the OFDM rates (IEEE Std 802.11-2016, 17.1.1).
 
-896cbefadf62 ath9k: Use ARRAY_SIZE macro
+I don't think this is correct - the way the flags are used, anything on
+2.4 GHz would never bother to check the MANDATORY_A flag.
 
--- 
-https://patchwork.kernel.org/patch/9936271/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
