@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37878 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753428AbdIEVVX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 17:21:23 -0400
-Received: by mail-wm0-f49.google.com with SMTP id u26so24143782wma.0
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:21:22 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 25/30] brcmfmac: Remove func0 from function array
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-26-ian@mnementh.co.uk>
-Message-ID: <6169d65c-70c4-d103-af57-aa6cd2fe5e94@broadcom.com> (sfid-20170905_232126_265834_B91E58C2)
-Date: Tue, 5 Sep 2017 23:21:20 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-26-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:60506 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756279AbdIHI5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 04:57:05 -0400
+Message-ID: <1504861023.6177.14.camel@sipsolutions.net> (sfid-20170908_105710_262992_49A01A73)
+Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 08 Sep 2017 10:57:03 +0200
+In-Reply-To: <85930e91-2c1e-53a6-5b65-d796116295fa@uni-koblenz.de>
+References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
+         <1504853647.6177.8.camel@sipsolutions.net>
+         <85930e91-2c1e-53a6-5b65-d796116295fa@uni-koblenz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
-> Linux doesnt pass you func0 as a function when probing - instead
-> providing specific access functions to read/write it.
-> 
-> This prepares for a patch to remove the actual array entry itself.
+On Fri, 2017-09-08 at 10:43 +0200, Richard Schütz wrote:
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+> > Hmm, I guess technically you're correct, since 11b added what's now
+> > Clause 16 (was Clause 18 at the time), and that has all of them
+> > mandatory? But perhaps this was actually intended for Clause 15
+> > compatibility?
 > 
-> # Conflicts:
-> #	drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  5 +----
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 10 +++++++---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 13 ++++++-------
->   3 files changed, 14 insertions(+), 14 deletions(-)
+> Compatibility in what way?
+
+Well, realistically there are only three users of this information:
+
+ * ieee80211_mandatory_rates(), used for supported station rates if we
+   don't know anything better in IBSS (and OCB) and for basic rates in
+   mesh;
+ * basic rates in IBSS (__cfg80211_join_ibss);
+ * duration calculation in ieee80211_duration, but that's just a
+   fallback
+
+So I guess it's now pretty unlikely that anyone would have a pre-11b
+device, so it would make sense to actually make this change.
+
+johannes
