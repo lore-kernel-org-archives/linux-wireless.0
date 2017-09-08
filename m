@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:43710 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbdISH4Z (ORCPT
+Received: from mail-pg0-f41.google.com ([74.125.83.41]:37912 "EHLO
+        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756928AbdIHTOL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 03:56:25 -0400
-Received: by mail-wm0-f49.google.com with SMTP id a137so16944989wma.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 00:56:25 -0700 (PDT)
-Subject: Re: [TDLS PATCH V3 1/5] mac80211: Enable TDLS peer buffer STA feature
-To: yintang@qti.qualcomm.com, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <TDLS for ath10k patchset v3>
- <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
- <1505790913-28377-2-git-send-email-yintang@qti.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <db428527-cb2b-5136-24c2-be2fca9e2407@broadcom.com> (sfid-20170919_095629_313381_9836835D)
-Date: Tue, 19 Sep 2017 09:56:22 +0200
-MIME-Version: 1.0
-In-Reply-To: <1505790913-28377-2-git-send-email-yintang@qti.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 8 Sep 2017 15:14:11 -0400
+Received: by mail-pg0-f41.google.com with SMTP id v66so6247699pgb.5
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Sep 2017 12:14:10 -0700 (PDT)
+From: Kevin Cernekee <cernekee@chromium.org>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+Subject: [PATCH 1/3] brcmfmac: Avoid possible out-of-bounds read
+Date: Fri,  8 Sep 2017 12:13:40 -0700
+Message-Id: <20170908191342.28053-2-cernekee@chromium.org> (sfid-20170908_211422_918841_C8B9FC02)
+In-Reply-To: <20170908191342.28053-1-cernekee@chromium.org>
+References: <20170908191342.28053-1-cernekee@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-09-17 05:15, yintang@qti.qualcomm.com wrote:
-> From: Yingying Tang <yintang@qti.qualcomm.com>
-> 
-> Enable TDLS peer buffer STA feature.
-> Set extended capability bit to enable buffer STA when driver
-> support it.
-> 
-> Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
-> ---
->   include/net/cfg80211.h |    3 +++
->   net/mac80211/tdls.c    |    5 ++++-
->   2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index f12fa52..edefc25 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3249,6 +3249,8 @@ struct cfg80211_ops {
->    *	beaconing mode (AP, IBSS, Mesh, ...).
->    * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
->    *	before connection.
-> + * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA: Device support buffer STA when TDLS is
-> + *	established.
+In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
+the length of rxframe is validated.  This could lead to uninitialized
+data being printed in a debug message.  Since we already have a
+perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
+and ch.chspec is not modified by decchspec(), avoid the extra
+assignment and use ch.chspec in the debug print.
 
-If I am not mistaken no new wiphy flags are supposed to be added. 
-Although this might be something not reported to user-space, right? Have 
-a look at struct wiphy::ext_features.
+Suggested-by: Mattias Nissler <mnissler@chromium.org>
+Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 2ce675ab40ef..1c450c0727cb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -1853,7 +1853,6 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
+ 	struct brcmf_cfg80211_vif *vif = ifp->vif;
+ 	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
+-	u16 chanspec = be16_to_cpu(rxframe->chanspec);
+ 	struct brcmu_chan ch;
+ 	u8 *mgmt_frame;
+ 	u32 mgmt_frame_len;
+@@ -1906,7 +1905,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0);
+ 
+ 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
+-		  mgmt_frame_len, e->datalen, chanspec, freq);
++		  mgmt_frame_len, e->datalen, ch.chspec, freq);
+ 
+ 	return 0;
+ }
+-- 
+2.14.1.581.gf28d330327-goog
