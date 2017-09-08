@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41824 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751265AbdINOLZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48556 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751846AbdIHPuF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 10:11:25 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: RE: [EXT] Re: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
-Date: Thu, 14 Sep 2017 14:11:20 +0000
-Message-ID: <adde6e772d2b411c8e874d933463724e@SC-EXCH02.marvell.com> (sfid-20170914_161128_962001_1C618CDF)
-References: <1504816363-31015-1-git-send-email-gbhat@marvell.com>
-        <20170908194227.GA65107@google.com> <87poawmp1t.fsf@purkki.adurom.net>
-In-Reply-To: <87poawmp1t.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 8 Sep 2017 11:50:05 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-09-08
+Date: Fri, 08 Sep 2017 18:50:01 +0300
+Message-ID: <87o9qljil2.fsf@kamboji.qca.qualcomm.com> (sfid-20170908_175059_150132_FA1A4F58)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Hi Dave,
 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Tuesday, September 12, 2017 11:33 AM
-> To: Brian Norris
-> Cc: Ganapathi Bhat; linux-wireless@vger.kernel.org; Cathy Luo; Xinming
-> Hu; Zhiyuan Yang; James Cao; Mangesh Malusare
-> Subject: [EXT] Re: [PATCH] mwifiex: check for mfg_mode in
-> add_virtual_intf
-> 
-> External Email
-> 
-> ----------------------------------------------------------------------
-> Brian Norris <briannorris@chromium.org> writes:
-> 
-> > Could have used a 'v2' in the subject, but hopefully that doesn't
-> > bother Kalle too much.
-> 
-> It does create more work for me when sorting patches so please always
-> try include the version in the subject. But no need to resend.
-Sure. I will keep this in mind for future submits.
-> 
-> --
-> Kalle Valo
+few fixes to net tree for 4.14. Note that this pull request contains the
+iwlwifi fix Linus hopes to have by end of the merge window. Please let
+me know if there are any problems.
 
-Thanks,
-Ganapathi
+Kalle
+
+The following changes since commit 8e0deed92406d93ae0365cb8a6134db5721e7aca:
+
+  tipc: remove unnecessary call to dev_net() (2017-09-06 21:25:52 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-09-08
+
+for you to fetch changes up to f957dd3c8db2781c8a334b166800788feb618625:
+
+  brcmfmac: feature check for multi-scheduled scan fails on bcm4345 devices (2017-09-08 12:25:24 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.14
+
+Few fixes to regressions introduced in the last one or two releases.
+The iwlwifi fix is for a regression reported by Linus.
+
+rtlwifi
+
+* fix two antenna selection related bugs
+
+iwlwifi
+
+* fix regression with older firmwares
+
+brcmfmac
+
+* workaround firmware crash for bcm4345
+
+----------------------------------------------------------------
+Ian W MORRISON (1):
+      brcmfmac: feature check for multi-scheduled scan fails on bcm4345 devices
+
+Larry Finger (2):
+      rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
+      rtlwifi: btcoexist: Fix antenna selection code
+
+Luca Coelho (1):
+      iwlwifi: mvm: only send LEDS_CMD when the FW supports it
+
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/led.c       |  3 ++-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  5 ++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 23 +++++++++++++++-------
+ 5 files changed, 25 insertions(+), 10 deletions(-)
