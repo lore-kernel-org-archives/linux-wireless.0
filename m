@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:53850 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750761AbdIQEIc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50052 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752210AbdIHJZ6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Sep 2017 00:08:32 -0400
-Received: by mail-pg0-f43.google.com with SMTP id j70so3414220pgc.10
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 21:08:32 -0700 (PDT)
-From: Kevin Cernekee <cernekee@chromium.org>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: [PATCH V3 3/3] brcmfmac: Add check for short event packets
-Date: Sat, 16 Sep 2017 21:08:24 -0700
-Message-Id: <20170917040824.22237-3-cernekee@chromium.org> (sfid-20170917_060839_838573_AAE7A7B8)
-In-Reply-To: <20170917040824.22237-1-cernekee@chromium.org>
-References: <20170917040824.22237-1-cernekee@chromium.org>
+        Fri, 8 Sep 2017 05:25:58 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] brcmfmac: feature check for multi-scheduled scan fails on
+ bcm4345 devices
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <3cfcb175-8031-f5a8-da51-d81fa2d331c8@gmail.com>
+References: <3cfcb175-8031-f5a8-da51-d81fa2d331c8@gmail.com>
+To: Ian W MORRISON <ianwmorrison@gmail.com>
+Cc: arend.vanspriel@broadcom.com, ian@mnementh.co.uk,
+        linux-wireless@vger.kernel.org
+Message-Id: <20170908092558.0B31B601A0@smtp.codeaurora.org> (sfid-20170908_112602_270099_F64E47A4)
+Date: Fri,  8 Sep 2017 09:25:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The length of the data in the received skb is currently passed into
-brcmf_fweh_process_event() as packet_len, but this value is not checked.
-event_packet should be followed by DATALEN bytes of additional event
-data.  Ensure that the received packet actually contains at least
-DATALEN bytes of additional data, to avoid copying uninitialized memory
-into event->data.
+Ian W MORRISON <ianwmorrison@gmail.com> wrote:
 
-Suggested-by: Mattias Nissler <mnissler@chromium.org>
-Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> The firmware feature check introduced for multi-scheduled scan is also
+> failing for bcm4345 devices resulting in a firmware crash.
+> The reason for this crash has not yet been root cause so this patch avoids
+> the feature check for those device as a short-term fix.
+> 
+> Fixes: 9fe929aaace6 ("brcmfmac: add firmware feature detection for gscan feature")
+> Cc: <stable@vger.kernel.org> # v4.13
+> Signed-off-by: Ian W MORRISON <ianwmorrison@gmail.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
+Patch applied to wireless-drivers.git, thanks.
 
-V2->V3: Change '<' to '>' and retest
+f957dd3c8db2 brcmfmac: feature check for multi-scheduled scan fails on bcm4345 devices
 
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index 27e661fa356f..e7eaa57d11d9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -424,7 +424,8 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
- 	if (code != BRCMF_E_IF && !fweh->evt_handler[code])
- 		return;
- 
--	if (datalen > BRCMF_DCMD_MAXLEN)
-+	if (datalen > BRCMF_DCMD_MAXLEN ||
-+	    datalen + sizeof(*event_packet) > packet_len)
- 		return;
- 
- 	if (in_interrupt())
 -- 
-2.14.1.690.gbb1197296e-goog
+https://patchwork.kernel.org/patch/9930929/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
