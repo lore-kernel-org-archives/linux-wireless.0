@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:34752 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757119AbdIHTmd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49404 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751907AbdIHJNI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 15:42:33 -0400
-Received: by mail-pf0-f171.google.com with SMTP id e1so5981874pfk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Sep 2017 12:42:33 -0700 (PDT)
-Date: Fri, 8 Sep 2017 12:42:28 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>
-Subject: Re: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
-Message-ID: <20170908194227.GA65107@google.com> (sfid-20170908_214322_064064_13ED0F42)
-References: <1504816363-31015-1-git-send-email-gbhat@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1504816363-31015-1-git-send-email-gbhat@marvell.com>
+        Fri, 8 Sep 2017 05:13:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Matt Chen <matt.chen@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  8 Sep 2017 12:12:47 +0300
+Message-Id: <20170908091256.25279-2-luca@coelho.fi> (sfid-20170908_111312_474309_3417D120)
+In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
+References: <20170908091256.25279-1-luca@coelho.fi>
+Subject: [PATCH 01/10] iwlwifi: mvm: fix wowlan resume failed to load INIT ucode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Matt Chen <matt.chen@intel.com>
 
-Could have used a 'v2' in the subject, but hopefully that doesn't bother
-Kalle too much.
+If we set disconnect on wowlan and run suspend/resume, will run
+into:
+...snipped
+iwlwifi 0000:01:00.0: Failed to load firmware chunk!
+iwlwifi 0000:01:00.0: Could not load the [0] uCode section
+iwlwifi 0000:01:00.0: Failed to start INIT ucode: -110
+iwlwifi 0000:01:00.0: Failed to run INIT ucode: -110
+iwlwifi 0000:01:00.0: Failed to start RT ucode: -110
 
-On Fri, Sep 08, 2017 at 02:02:43AM +0530, Ganapathi Bhat wrote:
-> If driver is loaded with 'mfg_mode' enabled, then the sending
-> commands are not allowed. So, skip sending commands, to firmware
-> in mwifiex_add_virtual_intf if 'mfg_mode' is enabled.
-> 
-> Fixes: 7311ea850079 ("mwifiex: fix AP start problem for newly added interface")
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> ---
-> v2: addressed Brian's comments.
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 19 +++++++++++--------
->  1 file changed, 11 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index 32c5074..ad1ebd8 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -2959,18 +2959,21 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
->  	}
->  
->  	mwifiex_init_priv_params(priv, dev);
-> -	mwifiex_set_mac_address(priv, dev);
->  
->  	priv->netdev = dev;
->  
-> -	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
-> -			       HostCmd_ACT_GEN_SET, 0, NULL, true);
-> -	if (ret)
-> -		goto err_set_bss_mode;
-> +	if (!adapter->mfg_mode) {
-> +		mwifiex_set_mac_address(priv, dev);
->  
-> -	ret = mwifiex_sta_init_cmd(priv, false, false);
-> -	if (ret)
-> -		goto err_sta_init;
-> +		ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
-> +				       HostCmd_ACT_GEN_SET, 0, NULL, true);
-> +		if (ret)
-> +			goto err_set_bss_mode;
-> +
-> +		ret = mwifiex_sta_init_cmd(priv, false, false);
-> +		if (ret)
-> +			goto err_sta_init;
-> +	}
+It is because we still keep IWL_MVM_STATUS_IN_HW_RESTART in
+__iwl_mvm_resume.  When mac80211 starts the device as
+__iwl_mvm_mac_start(), we will miss iwl_mvm_restart_cleanup(mvm).
 
-Seems better to me.
+Signed-off-by: Matt Chen <matt.chen@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
->  
->  	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
->  	if (adapter->is_hw_11ac_capable)
-> -- 
-> 1.9.1
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 5de19ea10575..b205a7bfb828 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -2167,7 +2167,7 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 	 * 1. We are not using a unified image
+ 	 * 2. We are using a unified image but had an error while exiting D3
+ 	 */
+-	set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
++	set_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status);
+ 	set_bit(IWL_MVM_STATUS_D3_RECONFIG, &mvm->status);
+ 	/*
+ 	 * When switching images we return 1, which causes mac80211
+-- 
+2.14.1
