@@ -1,23 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:63883 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36742 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750847AbdI2CKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Sep 2017 22:10:15 -0400
-Date: Fri, 29 Sep 2017 10:12:20 +0800
-From: Philip Li <philip.li@intel.com>
-To: kbuild-all@01.org
-Subject: [0-Day CI notification] 0-Day kernel test service will be shut down
- from Sep 30 3PM to Oct 5
-Message-ID: <20170929021220.GA22640@intel.com> (sfid-20170929_041021_905584_B4502C00)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        id S1753183AbdIHOTW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 10:19:22 -0400
+Message-ID: <1504880360.20347.0.camel@sipsolutions.net> (sfid-20170908_161952_339051_D99DE475)
+Subject: Re: [RFC 3/4] mac80211_hwsim: explicitly set netlink parallel ops
+ to false
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 08 Sep 2017 16:19:20 +0200
+In-Reply-To: <593fec4f-fc0c-4610-b144-35760ee92102@MAIL1.uni-rostock.de>
+References: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
+         <593fec4f-fc0c-4610-b144-35760ee92102@MAIL1.uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all, this is Philip who maintains the 0-Day kernel test service. Thanks for
-subscribing to 0-Day kernel testing. We will have lab power down from Oct 1
-to Oct 5, so that the service will be shut down from Asia Pacific Time Sep 30 3PM
-and will recover from Oct 6 as soon as we can. Sorry for any inconvenience caused
-due to the service shut down.
+On Fri, 2017-09-08 at 16:11 +0200, Benjamin Beichler wrote:
+> The ops field is zero initialized, therefore parallel ops is already
+> false.
 
-Thanks
+Therefore this patch is completely pointless?
+
+johannes
