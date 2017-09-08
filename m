@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751424AbdIBBpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 21:45:08 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 9/9] qtnfmac: do not report channel changes until wiphy is registered
-Date: Fri,  1 Sep 2017 18:44:51 -0700
-Message-Id: <20170902014451.17766-10-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034512_087008_602F2016)
-In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:34536 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755036AbdIHMox (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 08:44:53 -0400
+Received: by mail-oi0-f51.google.com with SMTP id l74so9800772oih.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Sep 2017 05:44:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Cristian <caravena@gmail.com>
+Date: Fri, 8 Sep 2017 09:44:52 -0300
+Message-ID: <CABwnbUmUeWcRwB-AQtSOSma_jtuVMDq-kwBm_1h3bcSODzAgwg@mail.gmail.com> (sfid-20170908_144520_628584_2B1BD9D5)
+Subject: Update WiFi card by one that does not use _Private_ Firmware
+To: linux-wireless@vger.kernel.org
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+        "Carlos Rojas R." <crojas@computux.cl>, fcalvo@computux.cl,
+        Oscar Fernandez <ooscarr@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Hello,
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/event.c | 3 +++
- 1 file changed, 3 insertions(+)
+My name is Cristian Aravena Romero, [1]Free Software enthusiast in
+Chile. My _Notebook_ has a WiFi card [2]"Intel=C2=AE Centrino=C2=AE Advance=
+d-N
+6235" running from version 3.2 of the Linux kernel and above; and also
+occupies the firmware "iwlwifi-6000g2b-ucode-18.168.6.1.tgz". The
+complete technical information of this WiFi card is [3]here.
+[1] https://launchpad.net/~caravena
+[2] https://www.intel.la/content/www/xl/en/support/network-and-i-o/wireless=
+-networking/000005511.html
+[3] https://ark.intel.com/en/products/66890/Intel-Centrino-Advanced-N-6235-=
+Dual-Band
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index b1acc24..7481d5b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -368,6 +368,9 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 		return -EINVAL;
- 	}
- 
-+	if (!wiphy->registered)
-+		return 0;
-+
- 	qlink_chandef_q2cfg(wiphy, &data->chan, &chandef);
- 
- 	if (!cfg80211_chandef_valid(&chandef)) {
--- 
-2.9.5
+I am interested in buying on ebay.com or aliexpress.com a new WiFi
+card that supports Bluetooh, 802.11ac and most importantly, only use
+Free Software, without firmware *PRIVATIVE*
+
+I was reviewing the internet and found an [0]"Intel -> 8265AC", and
+found it on [2]aliexpress.com but Intel has a bad policy regarding its
+firmware. That is why in the first instance you will be discarding.
+[1] https://ark.intel.com/en/products/94150/Intel-Dual-Band-Wireless-AC-826=
+5
+[2] https://en.aliexpress.com/item/Fenvi-New-Dual-Band-laptop-Wlan-Wi-Fi-Ne=
+twork-For-Intel-Wireless-AC-8265-8265NGW-802/32756150183.html
+
+It's not what I'm looking for!!!...
+
+You could give me a link of a modern WiFi card that works as I said,
+with Bluetooh, 802.11ac and only use Free Software * I can buy on
+ebay.com or aliexpress.com?
+
+Thank you!
+
+Attentive to their requirements,
+-
+Cristian
