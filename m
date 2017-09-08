@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nsmtp.uni-koblenz.de ([141.26.64.14]:37881 "EHLO
-        nsmtp.uni-koblenz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750807AbdIHQHe (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49448 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752122AbdIHJNN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 12:07:34 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by nsmtp.uni-koblenz.de (Postfix) with ESMTP id 11E9F2205EA
-        for <linux-wireless@vger.kernel.org>; Fri,  8 Sep 2017 18:07:33 +0200 (CEST)
-Received: from nsmtp.uni-koblenz.de ([127.0.0.1])
-        by localhost (nsmtp.uni-koblenz.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id yPcP4VKHiWGB for <linux-wireless@vger.kernel.org>;
-        Fri,  8 Sep 2017 18:07:33 +0200 (CEST)
-Received: from deliver.uni-koblenz.de (deliver.uni-koblenz.de [141.26.64.15])
-        by nsmtp.uni-koblenz.de (Postfix) with ESMTPS
-        for <linux-wireless@vger.kernel.org>; Fri,  8 Sep 2017 18:07:32 +0200 (CEST)
-From: =?UTF-8?q?Richard=20Sch=C3=BCtz?= <rschuetz@uni-koblenz.de>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Richard=20Sch=C3=BCtz?= <rschuetz@uni-koblenz.de>
-Subject: [PATCH v2 2/2] wireless: return correct mandatory rates
-Date: Fri,  8 Sep 2017 18:07:12 +0200
-Message-Id: <20170908160712.8765-1-rschuetz@uni-koblenz.de> (sfid-20170908_180746_422254_8173A2C4)
-In-Reply-To: <20170907154744.28357-2-rschuetz@uni-koblenz.de>
-References: <20170907154744.28357-2-rschuetz@uni-koblenz.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Fri, 8 Sep 2017 05:13:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  8 Sep 2017 12:12:49 +0300
+Message-Id: <20170908091256.25279-4-luca@coelho.fi> (sfid-20170908_111317_138039_89718C06)
+In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
+References: <20170908091256.25279-1-luca@coelho.fi>
+Subject: [PATCH 03/10] iwlwifi: mvm: send all non-bufferable frames on the probe queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B to get
-all mandatory rates in 2.4 GHz band. It is safe to do so because ERP
-mandatory rates are a superset of HR/DSSS mandatory rates. Also limit to
-OFDM rates for 10 MHz and 5 MHz channels as originally intended by commit
-74608aca4d82e.
+From: Avraham Stern <avraham.stern@intel.com>
 
-Signed-off-by: Richard Schütz <rschuetz@uni-koblenz.de>
+AP interfaces now send all non-bufferable frames using the broadcast
+station. Thus allow them to use the probe queue and don't warn about
+it.
+
+Fixes: eb045e6e0389 ("iwlwifi: mvm: Avoid deferring non bufferable frames")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/util.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index c69b5c31caf8..386070e0035a 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -51,16 +51,17 @@ u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
- 	if (sband->band == NL80211_BAND_2GHZ) {
- 		if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
- 		    scan_width == NL80211_BSS_CHAN_WIDTH_10)
--			mandatory_flag = IEEE80211_RATE_MANDATORY_G;
-+			mandatory_flag = IEEE80211_RATE_MANDATORY_G |
-+					 IEEE80211_RATE_ERP_G;
- 		else
--			mandatory_flag = IEEE80211_RATE_MANDATORY_B;
-+			mandatory_flag = IEEE80211_RATE_MANDATORY_G;
- 	} else {
- 		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
- 	}
- 
- 	bitrates = sband->bitrates;
- 	for (i = 0; i < sband->n_bitrates; i++)
--		if (bitrates[i].flags & mandatory_flag)
-+		if ((bitrates[i].flags & mandatory_flag) == mandatory_flag)
- 			mandatory_rates |= BIT(i);
- 	return mandatory_rates;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 172b5e63d3fb..6f2e2af23219 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -564,8 +564,8 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_ADHOC:
+ 		/*
+-		 * Handle legacy hostapd as well, where station will be added
+-		 * only just before sending the association response.
++		 * Non-bufferable frames use the broadcast station, thus they
++		 * use the probe queue.
+ 		 * Also take care of the case where we send a deauth to a
+ 		 * station that we don't have, or similarly an association
+ 		 * response (with non-success status) for a station we can't
+@@ -573,9 +573,9 @@ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
+ 		 * Also, disassociate frames might happen, particular with
+ 		 * reason 7 ("Class 3 frame received from nonassociated STA").
+ 		 */
+-		if (ieee80211_is_probe_resp(fc) || ieee80211_is_auth(fc) ||
+-		    ieee80211_is_deauth(fc) || ieee80211_is_assoc_resp(fc) ||
+-		    ieee80211_is_disassoc(fc))
++		if (ieee80211_is_mgmt(fc) &&
++		    (!ieee80211_is_bufferable_mmpdu(fc) ||
++		     ieee80211_is_deauth(fc) || ieee80211_is_disassoc(fc)))
+ 			return mvm->probe_queue;
+ 		if (info->hw_queue == info->control.vif->cab_queue)
+ 			return mvmvif->cab_queue;
 -- 
 2.14.1
