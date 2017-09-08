@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:43981 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751721AbdIEHNB (ORCPT
+Received: from tartarus.angband.pl ([89.206.35.136]:56740 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752248AbdIHKaW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 03:13:01 -0400
-Date: Tue, 5 Sep 2017 09:12:40 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: kernel test robot <fengguang.wu@intel.com>
-cc: LKP <lkp@01.org>, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        wfg@linux.intel.com
-Subject: Re: 915f3e3f76 ("mac80211_hwsim: Replace bogus hrtimer clockid"):
- BUG: kernel reboot-without-warning in test stage
-In-Reply-To: <59ade247.WzhbxWeytBOa6Xu4%fengguang.wu@intel.com>
-Message-ID: <alpine.DEB.2.20.1709050910150.1900@nanos> (sfid-20170905_091654_162791_65170CC7)
-References: <59ade247.WzhbxWeytBOa6Xu4%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Fri, 8 Sep 2017 06:30:22 -0400
+From: Adam Borowski <kilobyte@angband.pl>
+To: Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Stefano Brivio <sbrivio@redhat.com>
+Cc: Adam Borowski <kilobyte@angband.pl>
+Date: Fri,  8 Sep 2017 12:30:00 +0200
+Message-Id: <20170908103000.6795-1-kilobyte@angband.pl> (sfid-20170908_123030_229638_220198E9)
+In-Reply-To: <20170908032706.1fa59da9@elisabeth>
+References: <20170908032706.1fa59da9@elisabeth>
+Subject: [PATCH v2] rtl8xxxu: Don't printk raw binary if serial number is not burned in.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 5 Sep 2017, kernel test robot wrote:
+I assume that a blank efuse comes with all ones, thus I did not bother
+recognizing other possible junk values.  This matches 100% of dongles
+I've seen (a single Gembird 8192eu).
 
-> Greetings,
-> 
-> 0day kernel testing robot got the below dmesg and the first bad commit is
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
-> 
-> commit 915f3e3f76c05b2da93c4cc278eebc2d9219d9f4
-> Author:     Thomas Gleixner <tglx@linutronix.de>
-> AuthorDate: Sat Feb 25 11:27:37 2017 +0100
-> Commit:     Linus Torvalds <torvalds@linux-foundation.org>
-> CommitDate: Sat Feb 25 09:48:16 2017 -0800
-> 
->     mac80211_hwsim: Replace bogus hrtimer clockid
->     
->     mac80211_hwsim initializes a hrtimer with clockid CLOCK_MONOTONIC_RAW.
->     That's not supported.
->     
->     Use CLOCK_MONOTNIC instead.
+Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+---
+v2: strncmp("goofy string") -> memchr_inv()
 
-Sorry, no. That bisect is completely bogus. The commit in question merily
-replaces the unsupported clockid with a valid one.
+Stefano Brivio wrote:
+> You might want to use memchr_inv():
+>
+>        if (memchr_inv(efuse->serial, 0xff, 11))
+>                dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
+>        ...
+>
+> Mostly cosmetic though.
 
-Thanks,
+This looks much better, thanks!
 
-	tglx
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index 80fee699f58a..38b2ba1ac6f8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -614,7 +614,10 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 
+ 	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
+ 	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
+-	dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
++	if (memchr_inv(efuse->serial, 0xff, 11))
++		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
++	else
++		dev_info(&priv->udev->dev, "Serial not available.\n");
+ 
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
+ 		unsigned char *raw = priv->efuse_wifi.raw;
+-- 
+2.14.1
