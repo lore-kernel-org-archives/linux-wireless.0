@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59626 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751561AbdITLnM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49624 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752634AbdIHJN1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 07:43:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja\@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [PATCH] mwifiex: add device specific ioctl handler
-References: <429692343ed64d759eef2aa014a87fbb@SC-EXCH02.marvell.com>
-Date: Wed, 20 Sep 2017 14:43:07 +0300
-In-Reply-To: <429692343ed64d759eef2aa014a87fbb@SC-EXCH02.marvell.com> (Xinming
-        Hu's message of "Wed, 20 Sep 2017 10:04:22 +0000")
-Message-ID: <87efr1a94k.fsf@kamboji.qca.qualcomm.com> (sfid-20170920_134315_954446_DD456AD8)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 8 Sep 2017 05:13:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  8 Sep 2017 12:12:55 +0300
+Message-Id: <20170908091256.25279-10-luca@coelho.fi> (sfid-20170908_111331_135964_3D5F0DD9)
+In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
+References: <20170908091256.25279-1-luca@coelho.fi>
+Subject: [PATCH 09/10] iwlwifi: mvm: set status before calling iwl_mvm_send_cmd_status()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxm@marvell.com> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
->> You could look at
->> nl80211 vendor commands, but that is also under scrutiny if common wifi
->> functionality is provided by it. I am pretty sure Kalle has his ideas about this :-)
->> 
->
-> Yes, the new utility should use nl80211 interface.
-> But we have lots of legacy utility based on ioctl, it will be helpful
-> to reduce massive work on refactoring.
+We always must set the status to what we consider success before
+calling iwl_mvm_send_cmd_status() (also iwl_mvm_send_cmd_pdu_status()
+which calls it).  Fix a few places where initialization is missing.
 
-That's not an excuse to implement bad interfaces. It's not really that
-hard to convert ioctl based tools to use nl80211 testmode command, I
-even have myself done that.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c   | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 50983615dce6..774122fed454 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -555,7 +555,7 @@ static int iwl_mvm_lmac_scan_abort(struct iwl_mvm *mvm)
+ 	struct iwl_host_cmd cmd = {
+ 		.id = SCAN_OFFLOAD_ABORT_CMD,
+ 	};
+-	u32 status;
++	u32 status = CAN_ABORT_STATUS;
+ 
+ 	ret = iwl_mvm_send_cmd_status(mvm, &cmd, &status);
+ 	if (ret)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 8876c2abc440..4d907f60bce9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -529,6 +529,7 @@ int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 state)
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	status = 0;
+ 	ret = iwl_mvm_send_cmd_pdu_status(mvm, WIDE_ID(PHY_OPS_GROUP,
+ 						       CTDP_CONFIG_CMD),
+ 					  sizeof(cmd), &cmd, &status);
 -- 
-Kalle Valo
+2.14.1
