@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35882 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:49564 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750715AbdI2MDP (ORCPT
+        with ESMTP id S1752524AbdIHJNW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 08:03:15 -0400
+        Fri, 8 Sep 2017 05:13:22 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 15:03:00 +0300
-Message-Id: <20170929120305.20551-1-luca@coelho.fi> (sfid-20170929_140319_204411_23DD99C5)
-Subject: [PATCH 0/5] iwlwifi: fixes intended for 4.14 2017-09-29
+Date: Fri,  8 Sep 2017 12:12:53 +0300
+Message-Id: <20170908091256.25279-8-luca@coelho.fi> (sfid-20170908_111326_697094_5D0D0F69)
+In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
+References: <20170908091256.25279-1-luca@coelho.fi>
+Subject: [PATCH 07/10] iwlwifi: mvm: handle FIF_ALLMULTI when setting multicast addresses
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Hi,
+We were ignoring the FIF_ALLMULTI flag when setting the multicast
+addresses with MCAST_FILTER_CMD.  Check if this flag is set and enable
+pass_all accordingly.  We also need to set the count to 0 if pass_all
+is enable so we don't pass addresses to the firmware when not needed
+(as doing so causes an assert).
 
-Another batch of fixes intended for 4.14.  This one is a bit smaller
-than the previous one.
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=196741
 
-These are the fixes:
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-* Fix support for 3168 device series;
-* Fix a potential crash when using FW debugging recording;
-* Improve channel flags parsing to avoid warnings on too long traces;
-* Return -ENODATA when the temperature is not available, since the
-  -EIO we were returning was causing fatal errors in userspace;
-* Avoid printing too many messages in dmesg when using monitor mode,
-  since this can become very noisy and completely flood the logs;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Chaya Rachel Ivgi (1):
-  iwlwifi: nvm: set the correct offsets to 3168 series
-
-Golan Ben Ami (1):
-  iwlwifi: stop dbgc recording before stopping DMA
-
-Johannes Berg (1):
-  iwlwifi: nvm-parse: unify channel flags printing
-
-Luca Coelho (1):
-  iwlwifi: mvm: return -ENODATA when reading the temperature with the FW
-    down
-
-Shaul Triebitz (1):
-  iwlwifi: mvm: do not print security error in monitor mode
-
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c      |   1 +
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |   2 +-
- .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    |   2 +
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c        |   7 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |  15 +++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  16 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 137 ++++++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   7 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |  21 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |   2 +-
- 15 files changed, 132 insertions(+), 95 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 635db63f972e..3bcaa82f59b2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1643,6 +1643,12 @@ static void iwl_mvm_configure_filter(struct ieee80211_hw *hw,
+ 	if (!cmd)
+ 		goto out;
+ 
++	if (changed_flags & FIF_ALLMULTI)
++		cmd->pass_all = !!(*total_flags & FIF_ALLMULTI);
++
++	if (cmd->pass_all)
++		cmd->count = 0;
++
+ 	iwl_mvm_recalc_multicast(mvm);
+ out:
+ 	mutex_unlock(&mvm->mutex);
 -- 
 2.14.1
