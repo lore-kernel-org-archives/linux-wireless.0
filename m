@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge01.uni-rostock.de ([139.30.8.12]:32077 "EHLO
-        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752955AbdIHOQp (ORCPT
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:34793 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756581AbdIHTOI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 10:16:45 -0400
-Content-Type: text/plain
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [RFC 3/4] mac80211_hwsim: explicitly set netlink parallel ops to false
-Date: Fri, 8 Sep 2017 16:11:36 +0200
-In-Reply-To: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
-References: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
-MIME-Version: 1.0
-Message-ID: <593fec4f-fc0c-4610-b144-35760ee92102@MAIL1.uni-rostock.de> (sfid-20170908_161758_882324_D8A75D23)
+        Fri, 8 Sep 2017 15:14:08 -0400
+Received: by mail-pg0-f47.google.com with SMTP id q68so6278460pgq.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Sep 2017 12:14:08 -0700 (PDT)
+From: Kevin Cernekee <cernekee@chromium.org>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+Subject: [PATCH 0/3] New brcmfmac bounds checks
+Date: Fri,  8 Sep 2017 12:13:39 -0700
+Message-Id: <20170908191342.28053-1-cernekee@chromium.org> (sfid-20170908_211422_537101_9C5A6EBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ops field is zero initialized, therefore parallel ops is already false. This implicates that the netlink callbacks are not
-processed in parallel. Maybe this could be utilized to reduce locking overhead or maybe also parallel ops could be implemented.
+These were suggested by the Chrome OS security team[1].  Compile-tested
+only.
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- 1 file changed, 1 insertion(+)
+[1] http://crosreview.com/656260
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 62c5a00a76c3..5dd4be2a8487 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3499,6 +3499,7 @@ static struct genl_family hwsim_genl_family __ro_after_init = {
- 	.n_ops = ARRAY_SIZE(hwsim_ops),
- 	.mcgrps = hwsim_mcgrps,
- 	.n_mcgrps = ARRAY_SIZE(hwsim_mcgrps),
-+	.parallel_ops = false
- };
- 
- static void destroy_radio(struct work_struct *work)
+Kevin Cernekee (3):
+  brcmfmac: Avoid possible out-of-bounds read
+  brcmfmac: Don't print out-of-bounds event data
+  brcmfmac: Add check for short event packets
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 13 +++++++------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c  |  3 +--
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
 -- 
-2.14.1
+2.14.1.581.gf28d330327-goog
