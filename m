@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:37190 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751131AbdINPNn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49556 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752245AbdIHJNW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 11:13:43 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f4so390821wmh.4
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 08:13:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170914143134.5ybcusoqu74wf6d7@home.ouaza.com>
-References: <20170914143134.5ybcusoqu74wf6d7@home.ouaza.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Thu, 14 Sep 2017 08:13:42 -0700
-Message-ID: <CALLGbRJj4=2FT6DDenDL-o2tk2dJT79-gBcdSToGTSti_ZnEag@mail.gmail.com> (sfid-20170914_171347_414641_E0EA5682)
-Subject: Re: Kernel developer to work on wifi injection in mainline
-To: Raphael Hertzog <buxy@kali.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, devel@kali.org,
-        Ben Hutchings <ben@decadent.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 8 Sep 2017 05:13:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
+Date: Fri,  8 Sep 2017 12:12:52 +0300
+Message-Id: <20170908091256.25279-7-luca@coelho.fi> (sfid-20170908_111326_059984_583BFF73)
+In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
+References: <20170908091256.25279-1-luca@coelho.fi>
+Subject: [PATCH 06/10] iwlwifi: mvm: use IWL_HCMD_NOCOPY for MCAST_FILTER_CMD
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Raphael,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-On Thu, Sep 14, 2017 at 7:31 AM, Raphael Hertzog <buxy@kali.org> wrote:
-> (Please keep-me in CC and use reply-to all)
->
-...
->
-> Thus we are looking for a kernel developer that we could work with on a
-> contractor basis to:
-> - make wifi injection work on the current Kali kernel on various drivers
->   that we want to support
-> - upstream as much as possible of changes needed for wifi injection to
->   work
-> - ensure continued support of the feature in new Linux releases
->
+The MCAST_FILTER_CMD can get quite large when we have many mcast
+addresses to set (we support up to 255).  So the command should be
+send as NOCOPY to prevent a warning caused by too-long commands:
 
-I do this sort of consulting work. While I kept this reply on the list
-due to your instructions, I'll send you information directly from my
-consulting address.
+WARNING: CPU: 0 PID: 9700 at /root/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/pcie/tx.c:1550 iwl_pcie_enqueue_hcmd+0x8c7/0xb40 [iwlwifi]
+Command MCAST_FILTER_CMD (0x1d0) is too large (328 bytes)
 
-> I wonder whether there are non-technical hurdles that would prevent
-> merging of wifi injection patches. Are there legal challenges to this for
-> instance?
->
+This fixes: https://bugzilla.kernel.org/show_bug.cgi?id=196743
 
-I don't think there would be a legal challenge provided the code is
-yours to sign-off on and isn't patent encumbered.
+Cc: stable@vger.kernel.org
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Personally, I think the biggest issue is interest of the Linux
-community as a whole. In other words, if you can convince maintainers
-that the change is:
-1. valuable to the Linux community members
-2. not harmful to the community as a whole
-3. worth maintaining (and in part will be responsible for maintaining)
-4. not purely based on closed business reasons
-then I think it'll be possible to get it upstream.
-
-I'm not that familiar with the patch(es) in question but from my quick
-look I don't see an obvious blocking issue with the concepts here.
-
-- Steve
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 3a6ce4222ff5..635db63f972e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1546,6 +1546,11 @@ static void iwl_mvm_mc_iface_iterator(void *_data, u8 *mac,
+ 	struct iwl_mvm_mc_iter_data *data = _data;
+ 	struct iwl_mvm *mvm = data->mvm;
+ 	struct iwl_mcast_filter_cmd *cmd = mvm->mcast_filter_cmd;
++	struct iwl_host_cmd hcmd = {
++		.id = MCAST_FILTER_CMD,
++		.flags = CMD_ASYNC,
++		.dataflags[0] = IWL_HCMD_DFL_NOCOPY,
++	};
+ 	int ret, len;
+ 
+ 	/* if we don't have free ports, mcast frames will be dropped */
+@@ -1560,7 +1565,10 @@ static void iwl_mvm_mc_iface_iterator(void *_data, u8 *mac,
+ 	memcpy(cmd->bssid, vif->bss_conf.bssid, ETH_ALEN);
+ 	len = roundup(sizeof(*cmd) + cmd->count * ETH_ALEN, 4);
+ 
+-	ret = iwl_mvm_send_cmd_pdu(mvm, MCAST_FILTER_CMD, CMD_ASYNC, len, cmd);
++	hcmd.len[0] = len;
++	hcmd.data[0] = cmd;
++
++	ret = iwl_mvm_send_cmd(mvm, &hcmd);
+ 	if (ret)
+ 		IWL_ERR(mvm, "mcast filter cmd error. ret=%d\n", ret);
+ }
+-- 
+2.14.1
