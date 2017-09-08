@@ -1,61 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tartarus.angband.pl ([89.206.35.136]:56740 "EHLO
-        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752248AbdIHKaW (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49390 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751907AbdIHJNG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 06:30:22 -0400
-From: Adam Borowski <kilobyte@angband.pl>
-To: Jes Sorensen <Jes.Sorensen@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Stefano Brivio <sbrivio@redhat.com>
-Cc: Adam Borowski <kilobyte@angband.pl>
-Date: Fri,  8 Sep 2017 12:30:00 +0200
-Message-Id: <20170908103000.6795-1-kilobyte@angband.pl> (sfid-20170908_123030_229638_220198E9)
-In-Reply-To: <20170908032706.1fa59da9@elisabeth>
-References: <20170908032706.1fa59da9@elisabeth>
-Subject: [PATCH v2] rtl8xxxu: Don't printk raw binary if serial number is not burned in.
+        Fri, 8 Sep 2017 05:13:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  8 Sep 2017 12:12:46 +0300
+Message-Id: <20170908091256.25279-1-luca@coelho.fi> (sfid-20170908_111310_915089_60117B15)
+Subject: [PATCH 00/10] iwlwifi: fixes intended for 4.14 2017-09-08
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I assume that a blank efuse comes with all ones, thus I did not bother
-recognizing other possible junk values.  This matches 100% of dongles
-I've seen (a single Gembird 8192eu).
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Adam Borowski <kilobyte@angband.pl>
----
-v2: strncmp("goofy string") -> memchr_inv()
+Hi,
 
-Stefano Brivio wrote:
-> You might want to use memchr_inv():
->
->        if (memchr_inv(efuse->serial, 0xff, 11))
->                dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
->        ...
->
-> Mostly cosmetic though.
+Here is my first batch of fixes intended for 4.14.  Since it is very
+early in the release process, I was a bit liberal with the fixes I'm
+sending, but they all fix real issues.
 
-This looks much better, thanks!
+These are the fixes:
+
+* A couple of bugzilla bugs related to multicast handling;
+* Two fixes for WoWLAN bugs that were causing queue hangs and
+  re-initialization problems;
+* Two fixes for potential uninitialized variable use reported by Dan
+  Carpenter in relation to a recently introduced patch;
+* A fix for buffer reordering in the newly supported 9000 device
+  family;
+* Fix a race when starting aggregation;
+* Small fix for a recent patch to wake mac80211 queues;
+* Send non-bufferable management frames in the generic queue so they
+  are not sent on queues that are under power-save;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
 
 
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Avraham Stern (2):
+  iwlwifi: mvm: send all non-bufferable frames on the probe queue
+  iwlwifi: mvm: wake the correct mac80211 queue
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index 80fee699f58a..38b2ba1ac6f8 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -614,7 +614,10 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
- 
- 	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
- 	dev_info(&priv->udev->dev, "Product: %.11s\n", efuse->device_name);
--	dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
-+	if (memchr_inv(efuse->serial, 0xff, 11))
-+		dev_info(&priv->udev->dev, "Serial: %.11s\n", efuse->serial);
-+	else
-+		dev_info(&priv->udev->dev, "Serial not available.\n");
- 
- 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
- 		unsigned char *raw = priv->efuse_wifi.raw;
+David Spinadel (1):
+  iwlwifi: mvm: Flush non STA TX queues
+
+Luca Coelho (4):
+  iwlwifi: mvm: use IWL_HCMD_NOCOPY for MCAST_FILTER_CMD
+  iwlwifi: mvm: handle FIF_ALLMULTI when setting multicast addresses
+  iwlwifi: mvm: initialize status in iwl_mvm_add_int_sta_common()
+  iwlwifi: mvm: set status before calling iwl_mvm_send_cmd_status()
+
+Matt Chen (1):
+  iwlwifi: mvm: fix wowlan resume failed to load INIT ucode
+
+Naftali Goldstein (1):
+  iwlwifi: mvm: change state when queueing agg start work
+
+Sara Sharon (1):
+  iwlwifi: mvm: fix reorder buffer for 9000 devices
+
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c       |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 62 +++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c       |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  7 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  8 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 10 ++--
+ 9 files changed, 80 insertions(+), 17 deletions(-)
+
 -- 
 2.14.1
