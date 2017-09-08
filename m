@@ -1,78 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f46.google.com ([74.125.83.46]:56550 "EHLO
-        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751565AbdITGCt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 02:02:49 -0400
-Received: by mail-pg0-f46.google.com with SMTP id 7so1140531pgd.13
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 23:02:49 -0700 (PDT)
-Date: Tue, 19 Sep 2017 23:02:45 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ganapathi Bhat <gbhat@marvell.com>, Joe Perches <joe@perches.com>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] mwifiex: print URB submit failure error after
- threshold attemtps
-Message-ID: <20170920060244.GA13616@google.com> (sfid-20170920_080253_128790_E9CFC92B)
-References: <1504122674-3379-1-git-send-email-gbhat@marvell.com>
- <1504122674-3379-3-git-send-email-gbhat@marvell.com>
- <1504238727.2361.1.camel@perches.com>
- <6dfc9cfaff734c12bc53ffcb063c4491@SC-EXCH02.marvell.com>
- <20170914215955.GA42289@google.com>
- <87bmm6yot6.fsf_-_@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87bmm6yot6.fsf_-_@purkki.adurom.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:60530 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754719AbdIHJDe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Sep 2017 05:03:34 -0400
+Message-ID: <1504861413.6177.16.camel@sipsolutions.net> (sfid-20170908_110339_798787_60095EDD)
+Subject: Re: [PATCH 2/2] wireless: return correct mandatory rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
+        linux-wireless@vger.kernel.org
+Cc: Simon Wunderlich <sw@simonwunderlich.de>
+Date: Fri, 08 Sep 2017 11:03:33 +0200
+In-Reply-To: <5aed0ea0-f127-bd1e-ca06-db7edbf56680@uni-koblenz.de>
+References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
+         <20170907154744.28357-2-rschuetz@uni-koblenz.de>
+         <1504853740.6177.10.camel@sipsolutions.net>
+         <5aed0ea0-f127-bd1e-ca06-db7edbf56680@uni-koblenz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-On Wed, Sep 20, 2017 at 07:30:29AM +0300, Kalle Valo wrote:
-> Brian Norris <briannorris@chromium.org> writes:
+On Fri, 2017-09-08 at 10:43 +0200, Richard Schütz wrote:
+> Am 08.09.2017 um 08:55 schrieb Johannes Berg:
+> > On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
+> > > Use IEEE80211_RATE_MANDATORY_G instead of
+> > > IEEE80211_RATE_MANDATORY_B
+> > > for comparison to get all mandatory rates in 2.4 GHz band. It is
+> > > safe
+> > > to do so because ERP mandatory rates are a superset of HR/DSSS
+> > > mandatory rates.
+> > 
+> > This I don't understand - what "comparison" are you talking about?
 > 
-> > Hi Ganapathi,
-> >
-> > On Thu, Sep 14, 2017 at 02:14:24PM +0000, Ganapathi Bhat wrote:
-> >> > On Thu, 2017-08-31 at 01:21 +0530, Ganapathi Bhat wrote:
+> Sorry, I meant the condition that checks for the presence of 
+> mandatory_flag at the bottom of the function.
 
-> >> > Why not use a ratelimit?
-> >> Since this is for receive, the packets are from AP side and we cannot
-> >> lower the rate from AP. On some low performance systems this change
-> >> will be helpful.
-> >
-> > I think Joe was referring to things like printk_ratelimited() or
-> > dev_err_ratelimited(). Those automatically ratelimit prints for you,
-> > using a static counter. You'd just need to make a small warpper for
-> > mwifiex_dbg() using __ratelimit().
-> >
-> > Those sort of rate limits are significantly different than yours though.
-> > You were looking to avoid printing errors when there are only a few
-> > failures in a row, whereas the existing rate-limiting infrastructure
-> > looks to avoid printing errors if too many happen in a row. Those are
-> > different goals.
-> 
-> Are you saying that this patch is good to take? Or should Ganapathi
-> submit v2?
+Ah, sorry, I got confused with the other patch.
 
-If you're asking me...
+> Do we actually allow 10 MHz and 5 MHz operation in the 2.4 GHz band?
+> As  far as I can tell that has only been specified for OFDM PHYs,
+> which use the 5 GHz band and are covered by
+> IEEE80211_RATE_MANDATORY_A, but I am not a hundred per cent sure
+> about that. Cc'ing Simon Wunderlich who originally implemented
+> checking of scan_width here.
 
-All I was saying was that I don't think Joe's suggestion will help
-Ganapathi. I'd expect Ganapathi could confirm/deny that part. (Or Joe
-could correct me if my interpretation is wrong.)
+Clearly we do allow that, since the existing check is:
 
-I'm also not familiar with how we expect dev_alloc_skb() failures to be
-handled. If that's a common expected failure mode in low-memory
-situations (seems reasonable?) and the driver handles these failure just
-fine (completely unreviewed by me, so far; I suspect it doesn't do this
-completely correctly), then sure, being less noisy about it as done in
-this patch should be fine.
+        if (sband->band == NL80211_BAND_2GHZ) {
+                if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
+                    scan_width == NL80211_BSS_CHAN_WIDTH_10)
+                        mandatory_flag = IEEE80211_RATE_MANDATORY_G;
 
-IOW, I don't have concrete feedback for Ganapathi to address, but I'm
-not exactly "ack"ing it myself.
+That wouldn't make any sense if we didn't have 5/10 MHz on 2.4 GHz.
 
-Brian
+> The main intention of this patch series is to fix mandatory rates 
+> returned for normal operation in 2.4 GHz band. Currently only 1 Mb/s
+> is returned here, which is wrong for both HR/DSSS and ERP PHYs.
+
+The patch is still wrong wrt. 5/10 MHz though.
+
+I think what you really wanted to do is the following:
+
+ * rename RATE_MANDATORY_B to RATE_MANDATORY_HR_DSSS
+ * combine RATE_MANDATORY_G/_A to RATE_MANDATORY_OFDM
+
+Then, what you need to do, is change the checks in
+ieee80211_mandatory_rates() to be
+
+        if (sband->band == NL80211_BAND_2GHZ) {
+                if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
+                    scan_width == NL80211_BSS_CHAN_WIDTH_10)
+                        mandatory_flag = IEEE80211_RATE_MANDATORY_OFDM;
+                else
+                        mandatory_flag = IEEE80211_RATE_MANDATORY_HR_DSSS;
+        } else {
+                mandatory_flag = IEEE80211_RATE_MANDATORY_OFDM;
+        }
+
+That would actually fix a bug in a way because right now the code
+treats HR/DSSS rates (1, 2, 5.5, 11) for 2.4 GHz narrow-band operation
+as mandatory, which seems wrong.
+
+johannes
