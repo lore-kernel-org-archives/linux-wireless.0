@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38286 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752699AbdIRKDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 06:03:09 -0400
-Message-ID: <1505728987.13691.2.camel@sipsolutions.net> (sfid-20170918_120312_809493_49EB62C0)
-Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Mon, 18 Sep 2017 12:03:07 +0200
-In-Reply-To: <20170918095713.mfn76hkdbo73k4fu@bars>
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
-         <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
-         <1505724068.13691.0.camel@sipsolutions.net>
-         <20170918095713.mfn76hkdbo73k4fu@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:37461 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750878AbdIITae (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Sep 2017 15:30:34 -0400
+Received: by mail-pg0-f54.google.com with SMTP id d8so9527772pgt.4
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Sep 2017 12:30:34 -0700 (PDT)
+From: Kevin Cernekee <cernekee@chromium.org>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+Subject: [PATCH V2 2/3] brcmfmac: Delete redundant length check
+Date: Sat,  9 Sep 2017 12:30:19 -0700
+Message-Id: <20170909193020.19061-2-cernekee@chromium.org> (sfid-20170909_213038_750594_15599EB9)
+In-Reply-To: <20170909193020.19061-1-cernekee@chromium.org>
+References: <20170909193020.19061-1-cernekee@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+brcmf_fweh_process_event() sets event->datalen to the
+endian-swapped value of event_packet->msg.datalen, which is the
+same as emsg.datalen.  This length is already validated in
+brcmf_fweh_process_event(), so there is no need to check it
+again upon dequeuing the event.
 
-> > >  static int qtnf_netdev_close(struct net_device *ndev)
-> > >  {
-> > > -     netif_carrier_off(ndev);
-> > >       qtnf_virtual_intf_cleanup(ndev);
-> > >       qtnf_netdev_updown(ndev, 0);
-> > > +     netif_carrier_off(ndev);
-> > >       return 0;
-> > >  }
-> > 
-> > This seems unrelated?
-> 
-> Hmm... The idea was to make sure that scan is canceled before
-> cfg80211_netdev_notifier_call throws WARN when state is changed
-> to NETDEV_DOWN. However this is not needed if scans are properly
-> canceled in cfg80211_ops handlers. Thanks for catching, will remove.
+Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Not sure how the carrier change is relevant though - that doesn't even
-notify cfg80211? Anyway, I don't really know, it just didn't seem
-related :)
 
-> > > -     if (timer_pending(&mac->scan_timeout))
-> > > -             del_timer_sync(&mac->scan_timeout);
-> > >       qtnf_scan_done(mac, le32_to_cpu(status->flags) &
-> > > QLINK_SCAN_ABORTED);
-> > 
-> > and that's related perhaps but not really explained in the
-> > changelog,
-> > not sure?
-> 
-> That was minor optimization: to remove pedning timer whenever scan
-> is canceled. Sure, it worth mentioning in changelog, will do.
+V1->V2: Delete the check instead of moving it.
 
-I realized (after sending my email) that it actually made a lot of
-sense, so yeah - and in fact I'm not sure it's just an optimisation,
-depends on where else you cancel the timer and if that could leave the
-timer running until after the interface is removed or something.
 
-Btw, I don't really see why you check pending first?
-
-> By the way, is it ok to send corrected single patch in reply to this
-> discussion ? Or the appropriate way is to resend the whole patch set
-> ?
-
-Good question. I think it's up to the specific maintainer, I know davem
-wants a full resend, but Kalle might have his own preference. I for one
-am willing to deal with both, though a full resend is somewhat easier.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 4eb1e1ce9ace..27e661fa356f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -257,11 +257,6 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
+ 		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
+ 				   min_t(u32, emsg.datalen, 64),
+ 				   "event payload, len=%d\n", emsg.datalen);
+-		if (emsg.datalen > event->datalen) {
+-			brcmf_err("event invalid length header=%d, msg=%d\n",
+-				  event->datalen, emsg.datalen);
+-			goto event_free;
+-		}
+ 
+ 		/* special handling of interface event */
+ 		if (event->code == BRCMF_E_IF) {
+-- 
+2.14.1.581.gf28d330327-goog
