@@ -1,92 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:37422 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751669AbdITT1q (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:43076 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753944AbdIIXEQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 15:27:46 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Andrey Konovalov <andreyknvl@google.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
-        Yong Zhang <yong.zhang0@gmail.com>
-Subject: Re: usb/net/p54: trying to register non-static key in p54_unregister_leds
-Date: Wed, 20 Sep 2017 21:27:42 +0200
-Message-ID: <2277141.bYDD1vAb9W@debian64> (sfid-20170920_212816_631524_D372B13F)
-In-Reply-To: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
-References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
+        Sat, 9 Sep 2017 19:04:16 -0400
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org,
+        "Johannes Berg" <johannes@sipsolutions.net>,
+        "Johannes Berg" <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>
+Date: Sat, 09 Sep 2017 22:47:15 +0100
+Message-ID: <lsq.1504993635.208015375@decadent.org.uk> (sfid-20170910_011025_840039_0E8AC244)
+Subject: [PATCH 3.16 191/233] mac80211/wpa: use constant time memory
+ comparison for MACs
+In-Reply-To: <lsq.1504993633.197134470@decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, September 20, 2017 8:37:08 PM CEST Andrey Konovalov wrote:
-> Hi!
-> 
-> I've got the following report while fuzzing the kernel with syzkaller.
-> 
-> On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
-> 
-> INFO: trying to register non-static key.
-> the code is fine but needs lockdep annotation.
-> turning off the locking correctness validator.
-> CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
-> 4.14.0-rc1-42251-gebb2c2437d80-dirty #205
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-> Workqueue: usb_hub_wq hub_event
-> Call Trace:
->  __dump_stack lib/dump_stack.c:16
->  dump_stack+0x292/0x395 lib/dump_stack.c:52
->  register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
->  __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
->  lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
->  flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
->  __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
->  cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
->  p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
->  p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
->  p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
->  usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
->  __device_release_driver drivers/base/dd.c:861
->  device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
->  device_release_driver+0x1e/0x30 drivers/base/dd.c:918
->  bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
->  device_del+0x5c4/0xab0 drivers/base/core.c:1985
->  usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
->  usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
->  hub_port_connect drivers/usb/core/hub.c:4754
->  hub_port_connect_change drivers/usb/core/hub.c:5009
->  port_event drivers/usb/core/hub.c:5115
->  hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
->  process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
->  process_scheduled_works kernel/workqueue.c:2179
->  worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
->  kthread+0x3a1/0x470 kernel/kthread.c:231
->  ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
-> 
+3.16.48-rc1 review patch.  If anyone has any objections, please let me know.
 
-It seems this is caused as a result of:
-    -> lock_map_acquire(&work->lockdep_map);
-	    lock_map_release(&work->lockdep_map);
+------------------
 
-    in flush_work() [0]
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
 
-This was added by:
+commit 98c67d187db7808b1f3c95f2110dd4392d034182 upstream.
 
-	commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
-	Author: Stephen Boyd <sboyd@codeaurora.org>
-	Date:   Fri Apr 20 17:28:50 2012 -0700
+Otherwise, we enable all sorts of forgeries via timing attack.
 
-	workqueue: Catch more locking problems with flush_work()
-    
-Looking at the Stephen's patch, it's clear that it was made
-with "static DECLARE_WORK(work, my_work)" in mind. However
-p54's led_work is "per-device", hence it is stored in the
-devices context p54_common, which is dynamically allocated.
-So, maybe revert Stephen's patch?
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[bwh: Backported to 3.16: drop changes in
+ ieee80211_crypto_aes_{cmac_256,mac}_decrypt()]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ net/mac80211/wpa.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-[0] <http://elixir.free-electrons.com/linux/latest/source/kernel/workqueue.c#L2853>
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -16,6 +16,7 @@
+ #include <asm/unaligned.h>
+ #include <net/mac80211.h>
+ #include <crypto/aes.h>
++#include <crypto/algapi.h>
+ 
+ #include "ieee80211_i.h"
+ #include "michael.h"
+@@ -147,7 +148,7 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++	if (crypto_memneq(mic, data + data_len, MICHAEL_MIC_LEN))
+ 		goto mic_fail;
+ 
+ 	/* remove Michael MIC from payload */
+@@ -768,7 +769,7 @@ ieee80211_crypto_aes_cmac_decrypt(struct
+ 		bip_aad(skb, aad);
+ 		ieee80211_aes_cmac(key->u.aes_cmac.tfm, aad,
+ 				   skb->data + 24, skb->len - 24, mic);
+-		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++		if (crypto_memneq(mic, mmie->mic, sizeof(mmie->mic))) {
+ 			key->u.aes_cmac.icverrors++;
+ 			return RX_DROP_UNUSABLE;
+ 		}
