@@ -1,95 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52056 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751054AbdILQgd (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:45866 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757224AbdIIIOq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 12:36:33 -0400
-Message-ID: <1505234187.5400.249.camel@coelho.fi> (sfid-20170912_183636_502105_F6C87C74)
-From: Luca Coelho <luca@coelho.fi>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-Cc: linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 12 Sep 2017 19:36:27 +0300
-In-Reply-To: <1505232673.5400.243.camel@intel.com>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
-         <1505232673.5400.243.camel@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi firmware load broken in current -git
+        Sat, 9 Sep 2017 04:14:46 -0400
+Received: by mail-wm0-f47.google.com with SMTP id f199so14645509wme.0
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Sep 2017 01:14:45 -0700 (PDT)
+Subject: Re: [PATCH 3/3] brcmfmac: Add check for short event packets
+To: Kevin Cernekee <cernekee@chromium.org>, franky.lin@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+References: <20170908191342.28053-1-cernekee@chromium.org>
+ <20170908191342.28053-4-cernekee@chromium.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <74c0eedb-f9b9-ad9a-a1ae-315cee7603d4@broadcom.com> (sfid-20170909_101555_550715_61069433)
+Date: Sat, 9 Sep 2017 10:14:44 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170908191342.28053-4-cernekee@chromium.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-09-12 at 16:11 +0000, Coelho, Luciano wrote:
-> Hi Jens,
-> 
-> On Tue, 2017-09-12 at 09:48 -0600, Jens Axboe wrote:
-> > Hi,
-> > 
-> > I have no wifi in current git (8fac2f96ab8), it simply fails with:
-> > 
-> > [    4.363481] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
-> > [    4.363733] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
-> > [    4.363744] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
-> > [    4.368077] iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
-> > [    4.461753] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-> > [ ... ]
-> > [    9.510570] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
-> > [    9.513903] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
-> > [    9.516201] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
-> > [    9.530842] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
-> > 
-> > I get the same thing with -27 of the firmware:
-> > 
-> > [   60.990831] Intel(R) Wireless WiFi driver for Linux                          
-> > [   60.990833] Copyright(c) 2003- 2015 Intel Corporation                        
-> > [   60.991936] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
-> > [   60.991941] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
-> > [   60.991946] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
-> > [   60.991957] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
-> > [   60.991964] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
-> > [   60.991969] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
-> > [   60.991975] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
-> > [   61.029852] iwlwifi 0000:04:00.0: loaded firmware version 27.541033.0 op_mode iwlmvm
-> > [   61.043660] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-> > [   66.070135] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
-> > [   66.070149] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
-> > [   66.070165] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
-> > [   66.083462] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
-> > 
-> > Things work fine in 4.13-rc7+, which was the last kernel I ran on my laptop.
-> 
-> This is strange, Linus has been running this same combination with -31
-> (with -27 we had a regression, but it was fixed recently and the fix is
-> in the current master).  I have also tried this combination with both
-> -27 and -31 after my fix and it works fine.
-> 
-> There are only a couple of other patches that may affect iwlwifi since
-> the previous net-next.git pull request...
-> 
-> I'll try this combination on my machine and see if I can reproduce the
-> problem.
+On 08-09-17 21:13, Kevin Cernekee wrote:
+> The length of the data in the received skb is currently passed into
+> brcmf_fweh_process_event() as packet_len, but this value is not checked.
+> event_packet should be followed by DATALEN bytes of additional event
+> data.  Ensure that the received packet actually contains at least
+> DATALEN bytes of additional data, to avoid copying uninitialized memory
+> into event->data.
 
-I just booted my machine with the latest linux.git/master (8fac2f96ab86)
-and it works without a problem:
+Franky made an almost identical change which I had queued up for 
+submission. So you beat us to it ;-)
 
-[    8.902174] Intel(R) Wireless WiFi driver for Linux
-[    8.902174] Copyright(c) 2003- 2015 Intel Corporation
-[    8.995112] iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
-[    8.995136] iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
-[    9.026455] iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
-[    9.348325] iwlwifi 0000:02:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
-[    9.369307] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-[    9.435915] iwlwifi 0000:02:00.0: base HW address: 34:13:e8:2d:65:ef
-[    9.509217] ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
-
-
-So this seems to be something that doesn't happen in all machines, maybe
-a PCIe problem?
-
-Is there any chance you could try to bisect this?
-
---
-Cheers,
-Luca.
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Suggested-by: Mattias Nissler <mnissler@chromium.org>
+> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
