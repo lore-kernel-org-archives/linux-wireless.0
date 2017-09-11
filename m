@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:43526 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752395AbdIFKpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 06:45:47 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
-Date: Wed,  6 Sep 2017 13:45:40 +0300
-Message-Id: <20170906104540.13842-1-emmanuel.grumbach@intel.com> (sfid-20170906_124551_225613_4C13C166)
-In-Reply-To: <20170805084438.12550-7-luca@coelho.fi>
-References: <20170805084438.12550-7-luca@coelho.fi>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:46213 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbdIKTJg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Sep 2017 15:09:36 -0400
+Received: by mail-wm0-f47.google.com with SMTP id i189so47040138wmf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2017 12:09:35 -0700 (PDT)
+Subject: Re: [PATCH 3/3] brcmfmac: Add check for short event packets
+To: Mattias Nissler <mnissler@chromium.org>,
+        Kevin Cernekee <cernekee@chromium.org>
+Cc: franky.lin@broadcom.com, brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org
+References: <20170908191342.28053-1-cernekee@chromium.org>
+ <20170908191342.28053-4-cernekee@chromium.org>
+ <CAKUbbx+=VpRC0nek=431yxjooun56hb6svSwRjH_faBhdEPf=g@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0960e44e-baa7-ac36-4906-cb2d0a39ac3e@broadcom.com> (sfid-20170911_210939_920329_39A12ED8)
+Date: Mon, 11 Sep 2017 21:09:32 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAKUbbx+=VpRC0nek=431yxjooun56hb6svSwRjH_faBhdEPf=g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Honor the NL80211_RRF_NO_HT40{MINUS,PLUS} flags in
-reg_process_ht_flags_channel. Not doing so leads can lead
-to a firmware assert in iwlwifi for example.
+On 11-09-17 11:19, Mattias Nissler wrote:
+> On Fri, Sep 8, 2017 at 9:13 PM, Kevin Cernekee <cernekee@chromium.org> wrote:
+>>
+>> The length of the data in the received skb is currently passed into
+>> brcmf_fweh_process_event() as packet_len, but this value is not checked.
+>> event_packet should be followed by DATALEN bytes of additional event
+>> data.  Ensure that the received packet actually contains at least
+>> DATALEN bytes of additional data, to avoid copying uninitialized memory
+>> into event->data.
+>>
+>> Suggested-by: Mattias Nissler <mnissler@chromium.org>
+>> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>> index 5aabdc9ed7e0..4cad1f0d2a82 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>> @@ -429,7 +429,8 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+>>          if (code != BRCMF_E_IF && !fweh->evt_handler[code])
+>>                  return;
+>>
+>> -       if (datalen > BRCMF_DCMD_MAXLEN)
+>> +       if (datalen > BRCMF_DCMD_MAXLEN ||
+>> +           datalen + sizeof(*event_packet) < packet_len)
+> 
+> Shouldn't this check be larger-than, i.e. we need the packet to be at
+> least sizeof(*event_packet) + its payload size?
 
-Fixes: b0d7aa59592b ("cfg80211: allow wiphy specific regdomain management")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-v2: check that regd is not ERR_PTR
----
- net/wireless/reg.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+That depends on how you formulate the requirement. packet_len here is 
+the length for the received skbuff. The event message (= 
+sizeof(*event_packet)) and its variable payload (= datalen) shall not 
+exceed length of received skbuff (= packet_len).
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 405e14366b86..dda576f5cba6 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -4,6 +4,7 @@
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-+ * Copyright      2017  Intel Deutschland GmbH
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -1483,7 +1484,9 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- {
- 	struct ieee80211_supported_band *sband = wiphy->bands[channel->band];
- 	struct ieee80211_channel *channel_before = NULL, *channel_after = NULL;
-+	const struct ieee80211_regdomain *regd;
- 	unsigned int i;
-+	u32 flags;
- 
- 	if (!is_ht40_allowed(channel)) {
- 		channel->flags |= IEEE80211_CHAN_NO_HT40;
-@@ -1503,17 +1506,30 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 			channel_after = c;
- 	}
- 
-+	flags = 0;
-+	regd = get_wiphy_regdom(wiphy);
-+	if (regd) {
-+		const struct ieee80211_reg_rule *reg_rule =
-+			freq_reg_info_regd(MHZ_TO_KHZ(channel->center_freq),
-+					   regd, MHZ_TO_KHZ(20));
-+
-+		if (!IS_ERR(reg_rule))
-+			flags = reg_rule->flags;
-+	}
-+
- 	/*
- 	 * Please note that this assumes target bandwidth is 20 MHz,
- 	 * if that ever changes we also need to change the below logic
- 	 * to include that as well.
- 	 */
--	if (!is_ht40_allowed(channel_before))
-+	if (!is_ht40_allowed(channel_before) ||
-+	    flags & NL80211_RRF_NO_HT40MINUS)
- 		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
- 	else
- 		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
- 
--	if (!is_ht40_allowed(channel_after))
-+	if (!is_ht40_allowed(channel_after) ||
-+	    flags & NL80211_RRF_NO_HT40PLUS)
- 		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
- 	else
- 		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
--- 
-2.9.3
+Regards,
+Arend
