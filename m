@@ -1,106 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40654 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750742AbdIGHJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 03:09:43 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-09-07
-Date: Thu,  7 Sep 2017 09:09:38 +0200
-Message-Id: <20170907070939.3658-1-johannes@sipsolutions.net> (sfid-20170907_090950_595471_D24A273C)
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36177 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbdIKMqV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Sep 2017 08:46:21 -0400
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: amitkarwar@gmail.com
+Cc: nishants@marvell.com, gbhat@marvell.com, huxm@marvell.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH] mwifiex: remove unnecessary call to memset
+Date: Mon, 11 Sep 2017 18:16:04 +0530
+Message-Id: <1505133964-376-1-git-send-email-himanshujha199640@gmail.com> (sfid-20170911_144627_749562_438ECFB2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+call to memset to assign 0 value immediately after allocating
+memory with kzalloc is unnecesaary as kzalloc allocates the memory
+filled with 0 value.
 
-During my long absence some things have accumulated, but there wasn't
-actually all that much that could've gone into the last cycle, and a
-fix or two was taken care of by others.
+Semantic patch used to resolve this issue:
 
-The most important thing here is probably the deadlock fix that a few
-people have run into on 4.13, but that was only identified now, and
-perhaps the 40 MHz fix from Emmanuel that helps avoid iwlwifi firmware
-crashes.
+@@
+expression e,e2; constant c;
+statement S;
+@@
 
-Please pull and let me know if there's any problem.
+  e = kzalloc(e2, c);
+  if(e == NULL) S
+- memset(e, 0, e2);
 
-Thanks,
-johannes
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-
-
-The following changes since commit 6d9c153a0b84392406bc77600aa7d3ea365de041:
-
-  net: dsa: loop: Do not unregister invalid fixed PHY (2017-09-03 20:18:25 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-09-07
-
-for you to fetch changes up to bde59c475e0883e4c4294bcd9b9c7e08ae18c828:
-
-  mac80211: fix deadlock in driver-managed RX BA session start (2017-09-06 15:22:02 +0200)
-
-----------------------------------------------------------------
-Back from a long absence, so we have a number of things:
- * a remain-on-channel fix from Avi
- * hwsim TX power fix from Beni
- * null-PTR dereference with iTXQ in some rare configurations (Chunho)
- * 40 MHz custom regdomain fixes (Emmanuel)
- * look at right place in HT/VHT capability parsing (Igor)
- * complete A-MPDU teardown properly (Ilan)
- * Mesh ID Element ordering fix (Liad)
- * avoid tracing warning in ht_dbg() (Sharon)
- * fix print of assoc/reassoc (Simon)
- * fix encrypted VLAN with iTXQ (myself)
- * fix calling context of TX queue wake (myself)
- * fix a deadlock with ath10k aggregation (myself)
-
-----------------------------------------------------------------
-Avraham Stern (1):
-      mac80211: flush hw_roc_start work before cancelling the ROC
-
-Beni Lev (1):
-      mac80211_hwsim: Use proper TX power
-
-Chunho Lee (1):
-      mac80211: Fix null pointer dereference with iTXQ support
-
-Emmanuel Grumbach (1):
-      cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
-
-Igor Mitsyanko (1):
-      nl80211: look for HT/VHT capabilities in beacon's tail
-
-Ilan peer (1):
-      mac80211: Complete ampdu work schedule during session tear down
-
-Johannes Berg (3):
-      mac80211: fix VLAN handling with TXQs
-      mac80211: agg-tx: call drv_wake_tx_queue in proper context
-      mac80211: fix deadlock in driver-managed RX BA session start
-
-Liad Kaufman (1):
-      mac80211: add MESH IE in the correct order
-
-Sharon Dvir (1):
-      mac80211: shorten debug prints using ht_dbg() to avoid warning
-
-Simon Dinkin (1):
-      mac80211: fix incorrect assignment of reassoc value
-
- drivers/net/wireless/mac80211_hwsim.c |  2 --
- include/net/mac80211.h                | 15 ++-------------
- net/mac80211/agg-rx.c                 | 32 ++++++++++++++++++++-----------
- net/mac80211/agg-tx.c                 |  8 ++++++--
- net/mac80211/ht.c                     | 24 ++++++++++++++++++++---
- net/mac80211/ieee80211_i.h            |  4 ++++
- net/mac80211/iface.c                  | 20 ++++++++++++++++---
- net/mac80211/mlme.c                   |  2 +-
- net/mac80211/offchannel.c             |  2 ++
- net/mac80211/tx.c                     | 36 ++++++++++++++++++++++++++++-------
- net/mac80211/util.c                   |  2 +-
- net/wireless/nl80211.c                |  4 ++--
- net/wireless/reg.c                    | 20 +++++++++++++++++--
- 13 files changed, 124 insertions(+), 47 deletions(-)
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index c9d41ed..8838b88 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1936,8 +1936,6 @@ mwifiex_active_scan_req_for_passive_chan(struct mwifiex_private *priv)
+ 	if (!user_scan_cfg)
+ 		return -ENOMEM;
+ 
+-	memset(user_scan_cfg, 0, sizeof(*user_scan_cfg));
+-
+ 	for (id = 0; id < MWIFIEX_USER_SCAN_CHAN_MAX; id++) {
+ 		if (!priv->hidden_chan[id].chan_number)
+ 			break;
+-- 
+2.7.4
