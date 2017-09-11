@@ -1,83 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:60774 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751251AbdILIsY (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:33086 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752062AbdIKA2u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 04:48:24 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kevin Cernekee <cernekee@chromium.org>
-Subject: [PATCH for-4.14 1/2] brcmfmac: add length check in brcmf_cfg80211_escan_handler()
-Date: Tue, 12 Sep 2017 10:47:53 +0200
-Message-Id: <1505206074-28781-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_104830_790320_4DBD362B)
-In-Reply-To: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sun, 10 Sep 2017 20:28:50 -0400
+Subject: Re: Patch "rtlwifi: btcoexist: Fix antenna selection code" has been
+ added to the 4.13-stable tree
+To: Sven Joachim <svenjoac@gmx.de>, gregkh@linuxfoundation.org
+Cc: birming@realtek.com, kvalo@codeaurora.org, pkshih@realtek.com,
+        shaofu@realtek.com, steventing@realtek.com, yhchuang@realtek.com,
+        stable@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <1505043448199217@kroah.com> <87bmmib812.fsf@turtle.gmx.de>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <2ba2d963-2db6-b889-aa1b-ea0a3bf340d6@lwfinger.net> (sfid-20170911_022903_839525_0545A9FF)
+Date: Sun, 10 Sep 2017 19:28:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <87bmmib812.fsf@turtle.gmx.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon handling the firmware notification for scans the length was
-checked properly and may result in corrupting kernel heap memory
-due to buffer overruns. This fix addresses CVE-2017-0786.
+On 09/10/2017 03:42 PM, Sven Joachim wrote:
+>> queue-4.13/rtlwifi-btcoexist-fix-antenna-selection-code.patch
+> 
+> After applying these patches on top of 4.13.1 the WiFi on my laptop
+> works again (thanks, Larry!), but now rtl8723be needs the ant_sel=2
+> parameter which is a bit odd, because previously it had been working
+> (only) with ant_sel=1.  This looks like it has not been intended?
 
-Cc: stable@vger.kernel.org # v4.0.x
-Cc: Kevin Cernekee <cernekee@chromium.org>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+The changes in the BT coexistence are rather substantial, and I had no part in 
+those changes. That code is used in both Windows and Linux, and the Linux group 
+is presented with the package. The best we can do is divide their massive 
+changes into pieces that are small enough to be accepted by the Linux community.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index aaed4ab..26a0de3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3162,6 +3162,7 @@ static void brcmf_escan_timeout(unsigned long data)
- 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	s32 status;
- 	struct brcmf_escan_result_le *escan_result_le;
-+	u32 escan_buflen;
- 	struct brcmf_bss_info_le *bss_info_le;
- 	struct brcmf_bss_info_le *bss = NULL;
- 	u32 bi_length;
-@@ -3181,11 +3182,23 @@ static void brcmf_escan_timeout(unsigned long data)
- 
- 	if (status == BRCMF_E_STATUS_PARTIAL) {
- 		brcmf_dbg(SCAN, "ESCAN Partial result\n");
-+		if (e->datalen < sizeof(*escan_result_le)) {
-+			brcmf_err("invalid event data length\n");
-+			goto exit;
-+		}
- 		escan_result_le = (struct brcmf_escan_result_le *) data;
- 		if (!escan_result_le) {
- 			brcmf_err("Invalid escan result (NULL pointer)\n");
- 			goto exit;
- 		}
-+		escan_buflen = le32_to_cpu(escan_result_le->buflen);
-+		if (escan_buflen > BRCMF_ESCAN_BUF_SIZE ||
-+		    escan_buflen > e->datalen ||
-+		    escan_buflen < sizeof(*escan_result_le)) {
-+			brcmf_err("Invalid escan buffer length: %d\n",
-+				  escan_buflen);
-+			goto exit;
-+		}
- 		if (le16_to_cpu(escan_result_le->bss_count) != 1) {
- 			brcmf_err("Invalid bss_count %d: ignoring\n",
- 				  escan_result_le->bss_count);
-@@ -3202,9 +3215,8 @@ static void brcmf_escan_timeout(unsigned long data)
- 		}
- 
- 		bi_length = le32_to_cpu(bss_info_le->length);
--		if (bi_length != (le32_to_cpu(escan_result_le->buflen) -
--					WL_ESCAN_RESULTS_FIXED_SIZE)) {
--			brcmf_err("Invalid bss_info length %d: ignoring\n",
-+		if (bi_length != escan_buflen -	WL_ESCAN_RESULTS_FIXED_SIZE) {
-+			brcmf_err("Ignoring invalid bss_info length: %d\n",
- 				  bi_length);
- 			goto exit;
- 		}
--- 
-1.9.1
+One thing I can say is that when a single antenna is connected to port 2 on my 
+card, ant_sel=1 works. When it is connected to post 1, then ant_sel=0 works; 
+however, my card is encoded to use two antennas. As I do not know what value is 
+encoded in your EFUSE, I cannot predict what value should work for you.
+
+What I am reasonably certain is that if you were to open your computer and move 
+the single antenna lead to the other port, then you would not need to use any 
+ant_sel command as the new port would match the EFUSE value. According to 
+reports, that would break the Windows driver, but I do not have the setup 
+necessary to test that assertion.
+
+As I have stated before, this ant_sel code was implemented to provide a service 
+for Linux users that were screwed by their vendor. If I had known how much grief 
+this attempt would cause me, I would have told the affected users to complain to 
+that vendor. It is clearly true that no good deed goes unpunished!
+
+Larry
