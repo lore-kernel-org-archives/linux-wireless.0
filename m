@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:45146 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbdIQEIb (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:60774 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751251AbdILIsY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Sep 2017 00:08:31 -0400
-Received: by mail-pg0-f42.google.com with SMTP id 188so3423843pgb.2
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 21:08:31 -0700 (PDT)
-From: Kevin Cernekee <cernekee@chromium.org>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: [PATCH V3 2/3] brcmfmac: Delete redundant length check
-Date: Sat, 16 Sep 2017 21:08:23 -0700
-Message-Id: <20170917040824.22237-2-cernekee@chromium.org> (sfid-20170917_060839_008063_A3DC271D)
-In-Reply-To: <20170917040824.22237-1-cernekee@chromium.org>
-References: <20170917040824.22237-1-cernekee@chromium.org>
+        Tue, 12 Sep 2017 04:48:24 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kevin Cernekee <cernekee@chromium.org>
+Subject: [PATCH for-4.14 1/2] brcmfmac: add length check in brcmf_cfg80211_escan_handler()
+Date: Tue, 12 Sep 2017 10:47:53 +0200
+Message-Id: <1505206074-28781-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_104830_790320_4DBD362B)
+In-Reply-To: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_fweh_process_event() sets event->datalen to the
-endian-swapped value of event_packet->msg.datalen, which is the
-same as emsg.datalen.  This length is already validated in
-brcmf_fweh_process_event(), so there is no need to check it
-again upon dequeuing the event.
+Upon handling the firmware notification for scans the length was
+checked properly and may result in corrupting kernel heap memory
+due to buffer overruns. This fix addresses CVE-2017-0786.
 
-Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+Cc: stable@vger.kernel.org # v4.0.x
+Cc: Kevin Cernekee <cernekee@chromium.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 5 -----
- 1 file changed, 5 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-
-V2->V3: No change
-
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index 4eb1e1ce9ace..27e661fa356f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -257,11 +257,6 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
- 		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
- 				   min_t(u32, emsg.datalen, 64),
- 				   "event payload, len=%d\n", emsg.datalen);
--		if (emsg.datalen > event->datalen) {
--			brcmf_err("event invalid length header=%d, msg=%d\n",
--				  event->datalen, emsg.datalen);
--			goto event_free;
--		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index aaed4ab..26a0de3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3162,6 +3162,7 @@ static void brcmf_escan_timeout(unsigned long data)
+ 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
+ 	s32 status;
+ 	struct brcmf_escan_result_le *escan_result_le;
++	u32 escan_buflen;
+ 	struct brcmf_bss_info_le *bss_info_le;
+ 	struct brcmf_bss_info_le *bss = NULL;
+ 	u32 bi_length;
+@@ -3181,11 +3182,23 @@ static void brcmf_escan_timeout(unsigned long data)
  
- 		/* special handling of interface event */
- 		if (event->code == BRCMF_E_IF) {
+ 	if (status == BRCMF_E_STATUS_PARTIAL) {
+ 		brcmf_dbg(SCAN, "ESCAN Partial result\n");
++		if (e->datalen < sizeof(*escan_result_le)) {
++			brcmf_err("invalid event data length\n");
++			goto exit;
++		}
+ 		escan_result_le = (struct brcmf_escan_result_le *) data;
+ 		if (!escan_result_le) {
+ 			brcmf_err("Invalid escan result (NULL pointer)\n");
+ 			goto exit;
+ 		}
++		escan_buflen = le32_to_cpu(escan_result_le->buflen);
++		if (escan_buflen > BRCMF_ESCAN_BUF_SIZE ||
++		    escan_buflen > e->datalen ||
++		    escan_buflen < sizeof(*escan_result_le)) {
++			brcmf_err("Invalid escan buffer length: %d\n",
++				  escan_buflen);
++			goto exit;
++		}
+ 		if (le16_to_cpu(escan_result_le->bss_count) != 1) {
+ 			brcmf_err("Invalid bss_count %d: ignoring\n",
+ 				  escan_result_le->bss_count);
+@@ -3202,9 +3215,8 @@ static void brcmf_escan_timeout(unsigned long data)
+ 		}
+ 
+ 		bi_length = le32_to_cpu(bss_info_le->length);
+-		if (bi_length != (le32_to_cpu(escan_result_le->buflen) -
+-					WL_ESCAN_RESULTS_FIXED_SIZE)) {
+-			brcmf_err("Invalid bss_info length %d: ignoring\n",
++		if (bi_length != escan_buflen -	WL_ESCAN_RESULTS_FIXED_SIZE) {
++			brcmf_err("Ignoring invalid bss_info length: %d\n",
+ 				  bi_length);
+ 			goto exit;
+ 		}
 -- 
-2.14.1.690.gbb1197296e-goog
+1.9.1
