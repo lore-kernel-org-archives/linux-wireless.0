@@ -1,48 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49594 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752524AbdIHJNZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34784 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751089AbdILIFM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 05:13:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  8 Sep 2017 12:12:54 +0300
-Message-Id: <20170908091256.25279-9-luca@coelho.fi> (sfid-20170908_111329_040944_DEBF021D)
-In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
-References: <20170908091256.25279-1-luca@coelho.fi>
-Subject: [PATCH 08/10] iwlwifi: mvm: initialize status in iwl_mvm_add_int_sta_common()
+        Tue, 12 Sep 2017 04:05:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kevin Cernekee <cernekee@chromium.org>, franky.lin@broadcom.com,
+        brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+Subject: Re: [PATCH V2 1/3] brcmfmac: Avoid possible out-of-bounds read
+References: <20170909193020.19061-1-cernekee@chromium.org>
+        <deff51ff-40f0-ffa4-afd0-b95465c66a8e@broadcom.com>
+        <87tw08mpq1.fsf@purkki.adurom.net> <59B78E94.5040909@broadcom.com>
+        <87o9qgicju.fsf@kamboji.qca.qualcomm.com>
+        <59B793C9.2030103@broadcom.com>
+Date: Tue, 12 Sep 2017 11:05:03 +0300
+In-Reply-To: <59B793C9.2030103@broadcom.com> (Arend van Spriel's message of
+        "Tue, 12 Sep 2017 09:59:05 +0200")
+Message-ID: <87k214ibps.fsf@kamboji.qca.qualcomm.com> (sfid-20170912_100517_627819_25033E79)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-We always need to initialize the status argument to the success case
-before calling iwl_mvm_send_cmd_status() or
-iwl_mvm_send_cmd_pdu_status() (which calls the former) otherwise we
-may get an uninitialized value back.  In this case, we use
-ADD_STA_SUCCESS as success.
+> On 9/12/2017 9:47 AM, Kalle Valo wrote:
+>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>>
+>>> On 9/12/2017 7:48 AM, Kalle Valo wrote:
+>>>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>>>>
+>>>>> On 09-09-17 21:30, Kevin Cernekee wrote:
+>>>>>> In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
+>>>>>> the length of rxframe is validated.  This could lead to uninitialized
+>>>>>> data being accessed (but not printed).  Since we already have a
+>>>>>> perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
+>>>>>> and ch.chspec is not modified by decchspec(), avoid the extra
+>>>>>> assignment and use ch.chspec in the debug print.
+>>>>>>
+>>>>>> Suggested-by: Mattias Nissler <mnissler@chromium.org>
+>>>>>> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+>>>>>> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>>>> ---
+>>>>>>     drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
+>>>>>>     1 file changed, 1 insertion(+), 2 deletions(-)
+>>>>>>
+>>>>>>
+>>>>>> V1->V2: Clarify changelog re: whether the uninitialized data is printed.
+>>>>>
+>>>>> This patch and the others in this series look fine to me.
+>>>>
+>>>> Should these go to v4.14?
+>>>
+>>> I have no strong opinion. These are certainly improvements, but it
+>>> does not seem an -rc fix to me. Within this series I would say patch
+>>> 3/3 adds an additional sanity check in the event processing against an
+>>> attack so you may consider adding just that one to v4.14
+>>
+>> Ok, I'll queue patch 3 to v4.14.
+>>
+>>> and tag it for stable, ie.:
+>>>
+>>> Cc: stable@vger.kernel.org # v3.8.x
+>>
+>> But why v3.8.x? I admit that I haven't fully figured out the stable tags
+>> yet, but doesn't that mean that it will be only applied to v3.8.x and
+>> nothing else? I was expecting it to be:
+>>
+>> Cc: stable@vger.kernel.org # v3.8+
+>>
+>
+> It is actually in the stable-kernel-rules documentation [1]:
+>
+> """
+> Also, some patches may have kernel version prerequisites.  This can be
+> specified in the following format in the sign-off area:
+>
+> .. code-block:: none
+>
+>      Cc: <stable@vger.kernel.org> # 3.3.x
+>
+> The tag has the meaning of:
+>
+> .. code-block:: none
+>
+>      git cherry-pick <this commit>
+>
+> For each "-stable" tree starting with the specified version.
+> """
 
-Fixes: 732d06e9d9cf ("iwlwifi: mvm: add station before allocating a queue")
-Reported by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah, but it says "starting with" which I interpret as "starting with
+string '3.3'". For example the commit here would be applied to 3.3.1,
+3.3.2 and 3.3.3 etc but _not_ to 3.4, 3.4.1, 3.5 or any later release.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 2dafe9bb4d8b..c4a343534c5e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1285,7 +1285,7 @@ static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_add_sta_cmd cmd;
- 	int ret;
--	u32 status;
-+	u32 status = ADD_STA_SUCCESS;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
+Of course I can be way off here, wouldn't be the first :)
+
 -- 
-2.14.1
+Kalle Valo
