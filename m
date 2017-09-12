@@ -1,180 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0045.outbound.protection.outlook.com ([104.47.33.45]:56553
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751801AbdIUVfB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 17:35:01 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V3 3/9] qtnfmac: retrieve current channel info from EP
-Date: Thu, 21 Sep 2017 14:34:31 -0700
-Message-Id: <20170921213437.27457-4-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233504_933753_3F4A63CF)
-In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:60779 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751363AbdILIs0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Sep 2017 04:48:26 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.14 2/2] brcmfmac: setup passive scan if requested by user-space
+Date: Tue, 12 Sep 2017 10:47:54 +0200
+Message-Id: <1505206074-28781-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_104830_855783_7426628D)
+In-Reply-To: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+The driver was not properly configuring firmware with regard to the
+type of scan. It always performed an active scan even when user-space
+was requesting for passive scan, ie. the scan request was done without
+any SSIDs specified.
 
-Do not try to cache current operational channel info in driver, this
-is a potential source of synchronization issues + driver does not
-really need that info.
-
-Introduce GET_CHANNEL command and process it appropriately.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: stable@vger.kernel.org # v4.0.x
+Reported-by: Huang, Jiangyang <Jiangyang.Huang@itron.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 35 +++++++++------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 38 +++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  1 +
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 11 +++++++
- 4 files changed, 64 insertions(+), 21 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c   | 19 ++++---------------
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil_types.h |  5 +++++
+ 2 files changed, 9 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 856fa6e..0ef1285 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -793,37 +793,30 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct net_device *ndev = wdev->netdev;
- 	struct qtnf_vif *vif;
-+	int ret;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 26a0de3..4157c90 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -980,7 +980,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
  
- 	if (!ndev)
- 		return -ENODEV;
+ 	eth_broadcast_addr(params_le->bssid);
+ 	params_le->bss_type = DOT11_BSSTYPE_ANY;
+-	params_le->scan_type = 0;
++	params_le->scan_type = BRCMF_SCANTYPE_ACTIVE;
+ 	params_le->channel_num = 0;
+ 	params_le->nprobes = cpu_to_le32(-1);
+ 	params_le->active_time = cpu_to_le32(-1);
+@@ -988,12 +988,9 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	params_le->home_time = cpu_to_le32(-1);
+ 	memset(&params_le->ssid_le, 0, sizeof(params_le->ssid_le));
  
- 	vif = qtnf_netdev_get_priv(wdev->netdev);
- 
--	switch (vif->wdev.iftype) {
--	case NL80211_IFTYPE_STATION:
--		if (vif->sta_state == QTNF_STA_DISCONNECTED) {
--			pr_warn("%s: STA disconnected\n", ndev->name);
--			return -ENODATA;
+-	/* if request is null exit so it will be all channel broadcast scan */
+-	if (!request)
+-		return;
+-
+ 	n_ssids = request->n_ssids;
+ 	n_channels = request->n_channels;
++
+ 	/* Copy channel array if applicable */
+ 	brcmf_dbg(SCAN, "### List of channelspecs to scan ### %d\n",
+ 		  n_channels);
+@@ -1030,16 +1027,8 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 			ptr += sizeof(ssid_le);
+ 		}
+ 	} else {
+-		brcmf_dbg(SCAN, "Broadcast scan %p\n", request->ssids);
+-		if ((request->ssids) && request->ssids->ssid_len) {
+-			brcmf_dbg(SCAN, "SSID %s len=%d\n",
+-				  params_le->ssid_le.SSID,
+-				  request->ssids->ssid_len);
+-			params_le->ssid_le.SSID_len =
+-				cpu_to_le32(request->ssids->ssid_len);
+-			memcpy(&params_le->ssid_le.SSID, request->ssids->ssid,
+-				request->ssids->ssid_len);
 -		}
--		break;
--	case NL80211_IFTYPE_AP:
--		if (!(vif->bss_status & QTNF_STATE_AP_START)) {
--			pr_warn("%s: AP not started\n", ndev->name);
--			return -ENODATA;
--		}
--		break;
--	default:
--		pr_err("unsupported vif type (%d)\n", vif->wdev.iftype);
--		return -ENODATA;
-+	ret = qtnf_cmd_get_channel(vif, chandef);
-+	if (ret) {
-+		pr_err("%s: failed to get channel: %d\n", ndev->name, ret);
-+		goto out;
++		brcmf_dbg(SCAN, "Performing passive scan\n");
++		params_le->scan_type = BRCMF_SCANTYPE_PASSIVE;
  	}
+ 	/* Adding mask to channel numbers */
+ 	params_le->channel_num =
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 8391989..e0d22fe 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -45,6 +45,11 @@
+ #define BRCMF_SCAN_PARAMS_COUNT_MASK	0x0000ffff
+ #define BRCMF_SCAN_PARAMS_NSSID_SHIFT	16
  
--	if (!cfg80211_chandef_valid(&mac->chandef)) {
--		pr_err("invalid channel settings on %s\n", ndev->name);
--		return -ENODATA;
-+	if (!cfg80211_chandef_valid(chandef)) {
-+		pr_err("%s: bad chan freq1=%u freq2=%u bw=%u\n", ndev->name,
-+		       chandef->center_freq1, chandef->center_freq2,
-+		       chandef->width);
-+		ret = -ENODATA;
- 	}
- 
--	memcpy(chandef, &mac->chandef, sizeof(*chandef));
--	return 0;
-+	memcpy(&mac->chandef, chandef, sizeof(mac->chandef));
++/* scan type definitions */
++#define BRCMF_SCANTYPE_DEFAULT		0xFF
++#define BRCMF_SCANTYPE_ACTIVE		0
++#define BRCMF_SCANTYPE_PASSIVE		1
 +
-+out:
-+	return ret;
- }
- 
- static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 4206886..806b88b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2358,3 +2358,41 @@ int qtnf_cmd_send_chan_switch(struct qtnf_wmac *mac,
- 	qtnf_bus_unlock(mac->bus);
- 	return ret;
- }
-+
-+int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef)
-+{
-+	struct qtnf_bus *bus = vif->mac->bus;
-+	const struct qlink_resp_channel_get *resp;
-+	struct sk_buff *cmd_skb;
-+	struct sk_buff *resp_skb = NULL;
-+	u16 res_code = QLINK_CMD_RESULT_OK;
-+	int ret;
-+
-+	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
-+					    QLINK_CMD_CHAN_GET,
-+					    sizeof(struct qlink_cmd));
-+	if (unlikely(!cmd_skb))
-+		return -ENOMEM;
-+
-+	qtnf_bus_lock(bus);
-+
-+	ret = qtnf_cmd_send_with_reply(bus, cmd_skb, &resp_skb, &res_code,
-+				       sizeof(*resp), NULL);
-+
-+	qtnf_bus_unlock(bus);
-+
-+	if (unlikely(ret))
-+		goto out;
-+
-+	if (unlikely(res_code != QLINK_CMD_RESULT_OK)) {
-+		ret = -ENODATA;
-+		goto out;
-+	}
-+
-+	resp = (const struct qlink_resp_channel_get *)resp_skb->data;
-+	qlink_chandef_q2cfg(priv_to_wiphy(vif->mac), &resp->chan, chdef);
-+
-+out:
-+	consume_skb(resp_skb);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index 783b203..e1bcb83 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -75,5 +75,6 @@ int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
- 			    struct qtnf_chan_stats *stats);
- int qtnf_cmd_send_chan_switch(struct qtnf_wmac *mac,
- 			      struct cfg80211_csa_settings *params);
-+int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef);
- 
- #endif /* QLINK_COMMANDS_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 5936854..fb88f3e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -169,6 +169,7 @@ enum qlink_cmd_type {
- 	QLINK_CMD_REG_NOTIFY		= 0x0019,
- 	QLINK_CMD_CHANS_INFO_GET	= 0x001A,
- 	QLINK_CMD_CHAN_SWITCH		= 0x001B,
-+	QLINK_CMD_CHAN_GET		= 0x001C,
- 	QLINK_CMD_CONFIG_AP		= 0x0020,
- 	QLINK_CMD_START_AP		= 0x0021,
- 	QLINK_CMD_STOP_AP		= 0x0022,
-@@ -694,6 +695,16 @@ struct qlink_resp_get_chan_stats {
- 	u8 info[0];
- } __packed;
- 
-+/**
-+ * struct qlink_resp_channel_get - response for QLINK_CMD_CHAN_GET command
-+ *
-+ * @chan: definition of current operating channel.
-+ */
-+struct qlink_resp_channel_get {
-+	struct qlink_resp rhdr;
-+	struct qlink_chandef chan;
-+} __packed;
-+
- /* QLINK Events messages related definitions
-  */
+ #define BRCMF_WSEC_MAX_PSK_LEN		32
+ #define	BRCMF_WSEC_PASSPHRASE		BIT(0)
  
 -- 
-2.9.5
+1.9.1
