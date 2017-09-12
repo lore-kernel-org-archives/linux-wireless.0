@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37720 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750710AbdIREwR (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44623 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751332AbdILJWd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 00:52:17 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+        Tue, 12 Sep 2017 05:22:33 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 0/2] qtnfmac: misc fixes intended for 4.14
-References: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
-Date: Mon, 18 Sep 2017 07:52:13 +0300
-In-Reply-To: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Fri, 15 Sep 2017 14:52:58 +0300")
-Message-ID: <87377kmww2.fsf@purkki.adurom.net> (sfid-20170918_065223_657732_5AAF1A63)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/7] brcmfmac: handle FWHALT mailbox indication
+Date: Tue, 12 Sep 2017 11:22:17 +0200
+Message-Id: <1505208143-30166-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112243_165524_73EF5BE0)
+In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+The firmware uses a mailbox to communicate to the host what is going
+on. In the driver we validate the bit received. Various people seen
+the following message:
 
-> Here are two patches intended for 4.14. The first patch fixes tx path
-> regression. Lock should be held when queuing packets to h/w fifos in order to
-> properly handle configurations with two enabled interfaces or multiple enabled
-> mbss. The second patch fixes scan issues addressing a review comment
-> from K.Valo regarding pending active scans upon device removal.
->
-> Regards,
-> Sergey
->
-> Sergey Matyukevich (2):
->
-> qtnfmac: lock access to h/w in tx path
-> qtnfmac: abort scans on wireless interface changes
+ brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
 
-There was a problem patchwork.kernel.org over the weekend, but it should
-be fixed now. Unfortunately your patches didn't make it to patchwork, so
-please resend.
+Bit 4 is cause of this message, but this actually indicates the firmware
+has halted. Handle this bit by giving a more meaningful error message.
 
-https://patchwork.kernel.org/project/linux-wireless/list/?state=*
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 613caca..3d79664 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -260,10 +260,11 @@ struct rte_console {
+ #define I_HMB_HOST_INT	I_HMB_SW3	/* Miscellaneous Interrupt */
+ 
+ /* tohostmailboxdata */
+-#define HMB_DATA_NAKHANDLED	1	/* retransmit NAK'd frame */
+-#define HMB_DATA_DEVREADY	2	/* talk to host after enable */
+-#define HMB_DATA_FC		4	/* per prio flowcontrol update flag */
+-#define HMB_DATA_FWREADY	8	/* fw ready for protocol activity */
++#define HMB_DATA_NAKHANDLED	0x0001	/* retransmit NAK'd frame */
++#define HMB_DATA_DEVREADY	0x0002	/* talk to host after enable */
++#define HMB_DATA_FC		0x0004	/* per prio flowcontrol update flag */
++#define HMB_DATA_FWREADY	0x0008	/* fw ready for protocol activity */
++#define HMB_DATA_FWHALT		0x0010	/* firmware halted */
+ 
+ #define HMB_DATA_FCDATA_MASK	0xff000000
+ #define HMB_DATA_FCDATA_SHIFT	24
+@@ -1094,6 +1095,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 			  offsetof(struct sdpcmd_regs, tosbmailbox));
+ 	bus->sdcnt.f1regdata += 2;
+ 
++	/* dongle indicates the firmware has halted/crashed */
++	if (hmb_data & HMB_DATA_FWHALT)
++		brcmf_err("mailbox indicates firmware halted\n");
++
+ 	/* Dongle recomposed rx frames, accept them again */
+ 	if (hmb_data & HMB_DATA_NAKHANDLED) {
+ 		brcmf_dbg(SDIO, "Dongle reports NAK handled, expect rtx of %d\n",
+@@ -1151,6 +1156,7 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 			 HMB_DATA_NAKHANDLED |
+ 			 HMB_DATA_FC |
+ 			 HMB_DATA_FWREADY |
++			 HMB_DATA_FWHALT |
+ 			 HMB_DATA_FCDATA_MASK | HMB_DATA_VERSION_MASK))
+ 		brcmf_err("Unknown mailbox data content: 0x%02x\n",
+ 			  hmb_data);
 -- 
-Kalle Valo
+1.9.1
