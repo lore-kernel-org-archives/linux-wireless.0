@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:38824 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965865AbdIZGcJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 02:32:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
-References: <20170922212930.620249-1-arnd@arndb.de> <20170922212930.620249-5-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 25 Sep 2017 23:32:08 -0700
-Message-ID: <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com> (sfid-20170926_083305_447901_EE28E591)
-Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-To: David Laight <David.Laight@aculab.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+Received: from s3.sipsolutions.net ([5.9.151.49]:45714 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750991AbdILUE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Sep 2017 16:04:27 -0400
+Message-ID: <1505246657.1974.11.camel@sipsolutions.net> (sfid-20170912_220440_737165_99634FF7)
+Subject: Re: iwlwifi firmware load broken in current -git
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jens Axboe <axboe@kernel.dk>, Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: linuxwifi <linuxwifi@intel.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=C5=A1ka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
+        srinath.mannam@broadcom.com, Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 Sep 2017 22:04:17 +0200
+In-Reply-To: <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> (sfid-20170912_214331_920708_6F6B2A72)
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+         <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+         <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+         (sfid-20170912_214331_920708_6F6B2A72)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 7:41 AM, David Laight <David.Laight@aculab.com> wrote:
-> From: Arnd Bergmann
->> Sent: 22 September 2017 22:29
-> ...
->> It seems that this is triggered in part by using strlcpy(), which the
->> compiler doesn't recognize as copying at most 'len' bytes, since strlcpy
->> is not part of the C standard.
->
-> Neither is strncpy().
->
-> It'll almost certainly be a marker in a header file somewhere,
-> so it should be possibly to teach it about other functions.
+On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
 
-I'm currently travelling and haven't investigated in detail, but from
-taking a closer look here, I found that the hardened 'strlcpy()'
-in include/linux/string.h triggers it. There is also a hardened
-(much shorted) 'strncpy()' that doesn't trigger it in the same file,
-and having only the extern declaration of strncpy also doesn't.
+> CC'ing the guilty part and Bjorn. I'm assuming it's the
+> pci_is_enabled() check, since the rest of the patch shouldn't have
+> functional changes.
 
-        Arnd
+and pci_enable_bridge() already checks if it's already enabled, but
+still enables mastering in that case if it isn't:
+
+static void pci_enable_bridge(struct pci_dev *dev)
+{
+[...]
+        if (pci_is_enabled(dev)) {
+                if (!dev->is_busmaster)
+                        pci_set_master(dev);
+                return;
+        }
+
+so I guess due to the new check we end up with mastering disabled, and
+thus the firmware can't load since that's a DMA thing?
+
+johannes
