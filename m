@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:17218 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750858AbdIEQtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 12:49:41 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "luca@coelho.fi" <luca@coelho.fi>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [PATCH 06/10] cfg80211: honor NL80211_RRF_NO_HT40{MINUS,PLUS}
-Date: Tue, 5 Sep 2017 16:49:37 +0000
-Message-ID: <1504630175.23076.5.camel@intel.com> (sfid-20170905_184952_864260_B2BA45BD)
-References: <20170805084438.12550-1-luca@coelho.fi>
-         <20170805084438.12550-7-luca@coelho.fi>
-         <1504621814.12380.23.camel@sipsolutions.net>
-In-Reply-To: <1504621814.12380.23.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44622 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751320AbdILJWd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Sep 2017 05:22:33 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 4/7] brcmfmac: use msecs_to_jiffies() instead of calculation using HZ
+Date: Tue, 12 Sep 2017 11:22:20 +0200
+Message-Id: <1505208143-30166-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112251_350378_5DBCEB6E)
+In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTA5LTA1IGF0IDE2OjMwICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBTYXQsIDIwMTctMDgtMDUgYXQgMTE6NDQgKzAzMDAsIEx1Y2EgQ29lbGhvIHdyb3RlOg0K
-PiANCj4gPiArCXJlZ2QgPSBnZXRfd2lwaHlfcmVnZG9tKHdpcGh5KTsNCj4gPiArCWlmIChyZWdk
-KSB7DQo+ID4gKwkJY29uc3Qgc3RydWN0IGllZWU4MDIxMV9yZWdfcnVsZSAqcmVnX3J1bGUgPQ0K
-PiA+ICsJCQlmcmVxX3JlZ19pbmZvX3JlZ2QoTUhaX1RPX0tIWihjaGFubmVsLQ0KPiA+ID4gY2Vu
-dGVyX2ZyZXEpLA0KPiA+IA0KPiA+ICsJCQkJCcKgwqDCoHJlZ2QsIE1IWl9UT19LSFooMjApKTsN
-Cj4gPiANCj4gDQo+IFRoaXMgY291bGQgcmV0dXJuIGFuIGVycm9yLCBob3cgY2FuIHlvdSBiZSBz
-dXJlIGl0IGRvZXNuJ3Q/DQo+IA0KDQpIbS4uLiBzbyBJIGd1ZXNzIEkgY291bGQgY2hlY2sgdGhh
-dCBpdCBkaWRuJ3QgcmV0dXJuIGFueSBlcnJvciBhbmQgaWYNCml0IGRpZCwgdGhlbiBmbGFncyA9
-IDA/DQoNClNvbWV0aGluZyBsaWtlIHRoaXM/IChvbiB0b3Agb2YgdGhpcyBwYXRjaCk6DQoNCkBA
-IC0xNTA2LDE1ICsxNTA2LDE1IEBAIHN0YXRpYyB2b2lkIHJlZ19wcm9jZXNzX2h0X2ZsYWdzX2No
-YW5uZWwoc3RydWN0IHdpcGh5ICp3aXBoeSwNCiAgICAgICAgICAgICAgICAgICAgICAgIGNoYW5u
-ZWxfYWZ0ZXIgPSBjOw0KICAgICAgICB9DQogDQorICAgICAgIGZsYWdzID0gMDsNCiAgICAgICAg
-cmVnZCA9IGdldF93aXBoeV9yZWdkb20od2lwaHkpOw0KICAgICAgICBpZiAocmVnZCkgew0KICAg
-ICAgICAgICAgICAgIGNvbnN0IHN0cnVjdCBpZWVlODAyMTFfcmVnX3J1bGUgKnJlZ19ydWxlID0N
-CiAgICAgICAgICAgICAgICAgICAgICAgIGZyZXFfcmVnX2luZm9fcmVnZChNSFpfVE9fS0haKGNo
-YW5uZWwtPmNlbnRlcl9mcmVxKSwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICByZWdkLCBNSFpfVE9fS0haKDIwKSk7DQogDQotICAgICAgICAgICAgICAgZmxhZ3Mg
-PSByZWdfcnVsZS0+ZmxhZ3M7DQotICAgICAgIH0gZWxzZSB7DQotICAgICAgICAgICAgICAgZmxh
-Z3MgPSAwOw0KKyAgICAgICAgICAgICAgIGlmICghSVNfRVJSKHJlZ19ydWxlKSkNCisgICAgICAg
-ICAgICAgICAgICAgICAgIGZsYWdzID0gcmVnX3J1bGUtPmZsYWdzOw0KICAgICAgICB9DQogDQog
-ICAgICAgIC8q
+Minor cleanup using provided macro to convert milliseconds interval
+to jiffies in brcmf_cfg80211_escan().
+
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 217160e..8e7717a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1126,8 +1126,8 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 		goto scan_out;
+ 
+ 	/* Arm scan timeout timer */
+-	mod_timer(&cfg->escan_timeout, jiffies +
+-			BRCMF_ESCAN_TIMER_INTERVAL_MS * HZ / 1000);
++	mod_timer(&cfg->escan_timeout,
++		  jiffies + msecs_to_jiffies(BRCMF_ESCAN_TIMER_INTERVAL_MS));
+ 
+ 	return 0;
+ 
+-- 
+1.9.1
