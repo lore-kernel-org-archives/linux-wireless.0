@@ -1,41 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:38667 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968396AbdIZQxj (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44642 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751398AbdILJWe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 12:53:39 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Andrey Konovalov <andreyknvl@google.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>
-Subject: Re: [PATCH v2] p54: don't unregister leds when they are not initialized
-Date: Tue, 26 Sep 2017 18:53:36 +0200
-Message-ID: <1968721.UFOTox51jp@debian64> (sfid-20170926_185509_434465_483272D8)
-In-Reply-To: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com>
-References: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 12 Sep 2017 05:22:34 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 3/7] brcmfmac: cleanup brcmf_cfg80211_escan() function
+Date: Tue, 12 Sep 2017 11:22:19 +0200
+Message-Id: <1505208143-30166-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112246_238990_8792090F)
+In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, September 26, 2017 5:11:33 PM CEST Andrey Konovalov wrote:
-> ieee80211_register_hw() in p54_register_common() may fail and leds won't
-> get initialized. Currently p54_unregister_common() doesn't check that and
-> always calls p54_unregister_leds(). The fix is to check priv->registered
-> flag before calling p54_unregister_leds().
-> 
-> Found by syzkaller.
-> 
-> [...]
->  process_scheduled_works kernel/workqueue.c:2179
->  worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
->  kthread+0x3a1/0x470 kernel/kthread.c:231
->  ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
-> 
-> Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
-Cc: stable@vger.kernel.org
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+The function brcmf_cfg80211_escan() was always called with a non-null
+request parameter and null pointer for this_ssid parameter. Clean up
+the function removing the dead code path.
 
-Thanks for making the patch too!
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 76 ++++------------------
+ 1 file changed, 11 insertions(+), 65 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b249083..217160e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1083,18 +1083,10 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 
+ static s32
+ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+-		     struct cfg80211_scan_request *request,
+-		     struct cfg80211_ssid *this_ssid)
++		     struct cfg80211_scan_request *request)
+ {
+-	struct brcmf_if *ifp = vif->ifp;
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	struct cfg80211_ssid *ssids;
+-	u32 passive_scan;
+-	bool escan_req;
+-	bool spec_scan;
+ 	s32 err;
+-	struct brcmf_ssid_le ssid_le;
+-	u32 SSID_len;
+ 
+ 	brcmf_dbg(SCAN, "START ESCAN\n");
+ 
+@@ -1112,8 +1104,8 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 			  cfg->scan_status);
+ 		return -EAGAIN;
+ 	}
+-	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
+-		brcmf_err("Connecting: status (%lu)\n", ifp->vif->sme_state);
++	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state)) {
++		brcmf_err("Connecting: status (%lu)\n", vif->sme_state);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -1121,63 +1113,17 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
+ 		vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
+ 
+-	escan_req = false;
+-	if (request) {
+-		/* scan bss */
+-		ssids = request->ssids;
+-		escan_req = true;
+-	} else {
+-		/* scan in ibss */
+-		/* we don't do escan in ibss */
+-		ssids = this_ssid;
+-	}
+-
+ 	cfg->scan_request = request;
+ 	set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
+-	if (escan_req) {
+-		cfg->escan_info.run = brcmf_run_escan;
+-		err = brcmf_p2p_scan_prep(wiphy, request, vif);
+-		if (err)
+-			goto scan_out;
+-
+-		err = brcmf_do_escan(vif->ifp, request);
+-		if (err)
+-			goto scan_out;
+-	} else {
+-		brcmf_dbg(SCAN, "ssid \"%s\", ssid_len (%d)\n",
+-			  ssids->ssid, ssids->ssid_len);
+-		memset(&ssid_le, 0, sizeof(ssid_le));
+-		SSID_len = min_t(u8, sizeof(ssid_le.SSID), ssids->ssid_len);
+-		ssid_le.SSID_len = cpu_to_le32(0);
+-		spec_scan = false;
+-		if (SSID_len) {
+-			memcpy(ssid_le.SSID, ssids->ssid, SSID_len);
+-			ssid_le.SSID_len = cpu_to_le32(SSID_len);
+-			spec_scan = true;
+-		} else
+-			brcmf_dbg(SCAN, "Broadcast scan\n");
+ 
+-		passive_scan = cfg->active_scan ? 0 : 1;
+-		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
+-					    passive_scan);
+-		if (err) {
+-			brcmf_err("WLC_SET_PASSIVE_SCAN error (%d)\n", err);
+-			goto scan_out;
+-		}
+-		brcmf_scan_config_mpc(ifp, 0);
+-		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN, &ssid_le,
+-					     sizeof(ssid_le));
+-		if (err) {
+-			if (err == -EBUSY)
+-				brcmf_dbg(INFO, "BUSY: scan for \"%s\" canceled\n",
+-					  ssid_le.SSID);
+-			else
+-				brcmf_err("WLC_SCAN error (%d)\n", err);
++	cfg->escan_info.run = brcmf_run_escan;
++	err = brcmf_p2p_scan_prep(wiphy, request, vif);
++	if (err)
++		goto scan_out;
+ 
+-			brcmf_scan_config_mpc(ifp, 1);
+-			goto scan_out;
+-		}
+-	}
++	err = brcmf_do_escan(vif->ifp, request);
++	if (err)
++		goto scan_out;
+ 
+ 	/* Arm scan timeout timer */
+ 	mod_timer(&cfg->escan_timeout, jiffies +
+@@ -1202,7 +1148,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	if (!check_vif_up(vif))
+ 		return -EIO;
+ 
+-	err = brcmf_cfg80211_escan(wiphy, vif, request, NULL);
++	err = brcmf_cfg80211_escan(wiphy, vif, request);
+ 
+ 	if (err)
+ 		brcmf_err("scan error (%d)\n", err);
+-- 
+1.9.1
