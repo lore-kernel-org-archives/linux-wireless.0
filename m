@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60506 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756279AbdIHI5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 04:57:05 -0400
-Message-ID: <1504861023.6177.14.camel@sipsolutions.net> (sfid-20170908_105710_262992_49A01A73)
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 08 Sep 2017 10:57:03 +0200
-In-Reply-To: <85930e91-2c1e-53a6-5b65-d796116295fa@uni-koblenz.de>
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-         <1504853647.6177.8.camel@sipsolutions.net>
-         <85930e91-2c1e-53a6-5b65-d796116295fa@uni-koblenz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:60761 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751251AbdILIsW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Sep 2017 04:48:22 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.14 0/2] brcmfmac: scan related fixes
+Date: Tue, 12 Sep 2017 10:47:52 +0200
+Message-Id: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_104825_765450_9B5D56CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-08 at 10:43 +0200, Richard Schütz wrote:
+Two patches related to scanning functionality in the driver. The first
+patch addresses a security vulnerability in firmware notification
+handling. The second one fixes a reported API issue in which the driver
+ignored a passive scan request from user-space.
 
-> > Hmm, I guess technically you're correct, since 11b added what's now
-> > Clause 16 (was Clause 18 at the time), and that has all of them
-> > mandatory? But perhaps this was actually intended for Clause 15
-> > compatibility?
-> 
-> Compatibility in what way?
+The patches apply to the master branch of the wireless-drivers
+repository.
 
-Well, realistically there are only three users of this information:
+Arend van Spriel (2):
+  brcmfmac: add length check in brcmf_cfg80211_escan_handler()
+  brcmfmac: setup passive scan if requested by user-space
 
- * ieee80211_mandatory_rates(), used for supported station rates if we
-   don't know anything better in IBSS (and OCB) and for basic rates in
-   mesh;
- * basic rates in IBSS (__cfg80211_join_ibss);
- * duration calculation in ieee80211_duration, but that's just a
-   fallback
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 37 +++++++++++-----------
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  5 +++
+ 2 files changed, 24 insertions(+), 18 deletions(-)
 
-So I guess it's now pretty unlikely that anyone would have a pre-11b
-device, so it would make sense to actually make this change.
-
-johannes
+-- 
+1.9.1
