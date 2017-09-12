@@ -1,46 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:52795 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751464AbdI1Pkh (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44630 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751393AbdILJWd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Sep 2017 11:40:37 -0400
-Received: by mail-qk0-f181.google.com with SMTP id o77so1810496qke.9
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Sep 2017 08:40:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1506613011.8795.0.camel@sipsolutions.net>
-References: <CADsGw2Zax=r7QBGYPO+bs0BTmb+JUVZ-Y-X+_gfRrKj8tQy27Q@mail.gmail.com>
- <1506613011.8795.0.camel@sipsolutions.net>
-From: Phani Siriki <yvsg.phanis@gmail.com>
-Date: Thu, 28 Sep 2017 10:40:35 -0500
-Message-ID: <CADsGw2Yy0O0rv0dxespJfcsnCXh-DnS4UY_1PX5M+fKHwqdhHQ@mail.gmail.com> (sfid-20170928_174040_372699_F07AFE96)
-Subject: Re: Query on iw command to set txq params
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 12 Sep 2017 05:22:33 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 6/7] brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
+Date: Tue, 12 Sep 2017 11:22:22 +0200
+Message-Id: <1505208143-30166-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112243_920219_21C7F56A)
+In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes Berg
+The field struct brcmf_cfg80211_info::active_scan is set to true upon
+initializing the driver instance, but it is never changed so simply
+get rid of it.
 
-Thank you for your reply.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 10 +---------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h |  2 --
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  5 +----
+ 3 files changed, 2 insertions(+), 15 deletions(-)
 
-Could you please point me to any reference implementation I can check
-to make the correct modification?
-
-Best Regards
-Phani
-
-On Thu, Sep 28, 2017 at 10:36 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2017-09-21 at 13:01 -0500, Phani Siriki wrote:
->> Hi All
->>
->> I am trying to apply the path mentioned below to set txq params using
->> iw command.
->>
->> http://www.spinics.net/lists/linux-wireless/msg42585.html
->
-> The patch is wrong (now?), it needs to use the *netdev* not just the
-> wiphy.
->
-> johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 34c2945..35e9cac 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1054,7 +1054,6 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ {
+ 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
+ 	s32 err;
+-	u32 passive_scan;
+ 	struct brcmf_scan_results *results;
+ 	struct escan_info *escan = &cfg->escan_info;
+ 
+@@ -1062,13 +1061,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	escan->ifp = ifp;
+ 	escan->wiphy = cfg->wiphy;
+ 	escan->escan_state = WL_ESCAN_STATE_SCANNING;
+-	passive_scan = cfg->active_scan ? 0 : 1;
+-	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
+-				    passive_scan);
+-	if (err) {
+-		brcmf_err("error (%d)\n", err);
+-		return err;
+-	}
++
+ 	brcmf_scan_config_mpc(ifp, 0);
+ 	results = (struct brcmf_scan_results *)cfg->escan_info.escan_buf;
+ 	results->version = 0;
+@@ -5767,7 +5760,6 @@ static s32 wl_init_priv(struct brcmf_cfg80211_info *cfg)
+ 
+ 	cfg->scan_request = NULL;
+ 	cfg->pwr_save = true;
+-	cfg->active_scan = true;	/* we do active scan per default */
+ 	cfg->dongle_up = false;		/* dongle is not up yet */
+ 	err = brcmf_init_priv_mem(cfg);
+ 	if (err)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 7b2835e..b5b5f0f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -283,7 +283,6 @@ struct brcmf_cfg80211_wowl {
+  * @scan_status: scan activity on the dongle.
+  * @pub: common driver information.
+  * @channel: current channel.
+- * @active_scan: current scan mode.
+  * @int_escan_map: bucket map for which internal e-scan is done.
+  * @ibss_starter: indicates this sta is ibss starter.
+  * @pwr_save: indicate whether dongle to support power save mode.
+@@ -316,7 +315,6 @@ struct brcmf_cfg80211_info {
+ 	unsigned long scan_status;
+ 	struct brcmf_pub *pub;
+ 	u32 channel;
+-	bool active_scan;
+ 	u32 int_escan_map;
+ 	bool ibss_starter;
+ 	bool pwr_save;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 2ce675a..8e0b3f4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -692,10 +692,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+ 
+ 	/* determine the scan engine parameters */
+ 	sparams->bss_type = DOT11_BSSTYPE_ANY;
+-	if (p2p->cfg->active_scan)
+-		sparams->scan_type = 0;
+-	else
+-		sparams->scan_type = 1;
++	sparams->scan_type = BRCMF_SCANTYPE_ACTIVE;
+ 
+ 	eth_broadcast_addr(sparams->bssid);
+ 	sparams->home_time = cpu_to_le32(P2PAPI_SCAN_HOME_TIME_MS);
+-- 
+1.9.1
