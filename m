@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59468 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750704AbdIEHDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 03:03:35 -0400
-Message-ID: <1504594996.6667.2.camel@sipsolutions.net> (sfid-20170905_090351_628521_BA842A12)
-Subject: Re: [PATCH 20/25] mac80211_hwsim: Replace hrtimer tasklet with
- softirq hrtimer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Christoph Hellwig <hch@lst.org>, keescook@chromium.org,
-        John Stultz <john.stultz@linaro.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 05 Sep 2017 09:03:16 +0200
-In-Reply-To: <20170831105827.172599262@linutronix.de>
-References: <20170831105725.809317030@linutronix.de>
-         <20170831105827.172599262@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f182.google.com ([209.85.223.182]:35770 "EHLO
+        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbdILPtC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Sep 2017 11:49:02 -0400
+Received: by mail-io0-f182.google.com with SMTP id g32so32205072ioj.2
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Sep 2017 08:49:02 -0700 (PDT)
+To: Johannes Berg <johannes.berg@intel.com>,
+        emmanuel.grumbach@intel.com,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: linuxwifi@intel.com, linux-wireless@vger.kernel.org
+From: Jens Axboe <axboe@kernel.dk>
+Subject: iwlwifi firmware load broken in current -git
+Message-ID: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk> (sfid-20170912_174912_983962_D2E573A8)
+Date: Tue, 12 Sep 2017 09:48:59 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-08-31 at 12:23 +0000, Anna-Maria Gleixner wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
-> 
-> Switch the timer to CLOCK_MONOTONIC_SOFT, which executed the timer
-> callback in softirq context and remove the hrtimer_tasklet.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> 
-This looks fine to me,
+Hi,
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+I have no wifi in current git (8fac2f96ab8), it simply fails with:
 
-Are you planning to integrate all patches in the series through some
-other tree, perhaps to be able to get rid of the tasklet_hrtimer API,
-or should I apply this?
+[    4.363481] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+[    4.363733] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+[    4.363744] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+[    4.368077] iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
+[    4.461753] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+[ ... ]
+[    9.510570] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
+[    9.513903] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
+[    9.516201] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
+[    9.530842] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
 
-johannes
+I get the same thing with -27 of the firmware:
+
+[   60.990831] Intel(R) Wireless WiFi driver for Linux                          
+[   60.990833] Copyright(c) 2003- 2015 Intel Corporation                        
+[   60.991936] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+[   60.991941] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+[   60.991946] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+[   60.991957] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
+[   60.991964] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
+[   60.991969] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
+[   60.991975] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
+[   61.029852] iwlwifi 0000:04:00.0: loaded firmware version 27.541033.0 op_mode iwlmvm
+[   61.043660] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+[   66.070135] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
+[   66.070149] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
+[   66.070165] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
+[   66.083462] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
+
+Things work fine in 4.13-rc7+, which was the last kernel I ran on my laptop.
+
+-- 
+Jens Axboe
