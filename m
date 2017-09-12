@@ -1,56 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46668 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750878AbdIAFhZ (ORCPT
+Received: from mail-it0-f42.google.com ([209.85.214.42]:38402 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750975AbdILTnY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 01:37:25 -0400
-Message-ID: <1504244238.31031.24.camel@coelho.fi> (sfid-20170901_073851_169798_BEE3FB04)
-From: Luca Coelho <luca@coelho.fi>
-To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>
-Date: Fri, 01 Sep 2017 08:37:18 +0300
-In-Reply-To: <1504216665.2786.48.camel@perches.com>
-References: <20170825082730.31388-1-luca@coelho.fi>
-         <20170825082730.31388-2-luca@coelho.fi>
-         <1504216665.2786.48.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
+        Tue, 12 Sep 2017 15:43:24 -0400
+Received: by mail-it0-f42.google.com with SMTP id c195so1275132itb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Sep 2017 12:43:24 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>
+Cc: linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        srinath.mannam@broadcom.com, Bjorn Helgaas <bhelgaas@google.com>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> (sfid-20170912_214331_920708_6F6B2A72)
+Date: Tue, 12 Sep 2017 13:43:11 -0600
+MIME-Version: 1.0
+In-Reply-To: <1505234187.5400.249.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-08-31 at 14:57 -0700, Joe Perches wrote:
-> On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
-> > From: Liad Kaufman <liad.kaufman@intel.com>
-> > 
-> > There is a debug print that sometimes reaches over
-> > 110 chars, thus generating a warning in those cases.
+On 09/12/2017 10:36 AM, Luca Coelho wrote:
+> On Tue, 2017-09-12 at 16:11 +0000, Coelho, Luciano wrote:
+>> Hi Jens,
+>>
+>> On Tue, 2017-09-12 at 09:48 -0600, Jens Axboe wrote:
+>>> Hi,
+>>>
+>>> I have no wifi in current git (8fac2f96ab8), it simply fails with:
+>>>
+>>> [    4.363481] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+>>> [    4.363733] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+>>> [    4.363744] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+>>> [    4.368077] iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
+>>> [    4.461753] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+>>> [ ... ]
+>>> [    9.510570] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
+>>> [    9.513903] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
+>>> [    9.516201] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
+>>> [    9.530842] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
+>>>
+>>> I get the same thing with -27 of the firmware:
+>>>
+>>> [   60.990831] Intel(R) Wireless WiFi driver for Linux                          
+>>> [   60.990833] Copyright(c) 2003- 2015 Intel Corporation                        
+>>> [   60.991936] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+>>> [   60.991941] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+>>> [   60.991946] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+>>> [   60.991957] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
+>>> [   60.991964] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
+>>> [   60.991969] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
+>>> [   60.991975] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
+>>> [   61.029852] iwlwifi 0000:04:00.0: loaded firmware version 27.541033.0 op_mode iwlmvm
+>>> [   61.043660] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+>>> [   66.070135] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
+>>> [   66.070149] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
+>>> [   66.070165] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
+>>> [   66.083462] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
+>>>
+>>> Things work fine in 4.13-rc7+, which was the last kernel I ran on my laptop.
+>>
+>> This is strange, Linus has been running this same combination with -31
+>> (with -27 we had a regression, but it was fixed recently and the fix is
+>> in the current master).  I have also tried this combination with both
+>> -27 and -31 after my fix and it works fine.
+>>
+>> There are only a couple of other patches that may affect iwlwifi since
+>> the previous net-next.git pull request...
+>>
+>> I'll try this combination on my machine and see if I can reproduce the
+>> problem.
 > 
-> What emits a warning here?
+> I just booted my machine with the latest linux.git/master (8fac2f96ab86)
+> and it works without a problem:
+> 
+> [    8.902174] Intel(R) Wireless WiFi driver for Linux
+> [    8.902174] Copyright(c) 2003- 2015 Intel Corporation
+> [    8.995112] iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+> [    8.995136] iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+> [    9.026455] iwlwifi 0000:02:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+> [    9.348325] iwlwifi 0000:02:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
+> [    9.369307] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+> [    9.435915] iwlwifi 0000:02:00.0: base HW address: 34:13:e8:2d:65:ef
+> [    9.509217] ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
+> 
+> 
+> So this seems to be something that doesn't happen in all machines, maybe
+> a PCIe problem?
+> 
+> Is there any chance you could try to bisect this?
 
-We have a WARN_ON in iwl-devtrace-msg.h:
+Bisect done, it tells me that this:
 
-#define MAX_MSG_LEN	110
+commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9
+Author: Srinath Mannam <srinath.mannam@broadcom.com>
+Date:   Fri Aug 18 21:50:48 2017 -0500
 
-DECLARE_EVENT_CLASS(iwlwifi_msg_event,
-	TP_PROTO(struct va_format *vaf),
-	TP_ARGS(vaf),
-	TP_STRUCT__entry(
-		__dynamic_array(char, msg, MAX_MSG_LEN)
-	),
-	TP_fast_assign(
-		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-				       MAX_MSG_LEN, vaf->fmt,
-				       *vaf->va) >= MAX_MSG_LEN);
-	),
-	TP_printk("%s", __get_str(msg))
-);
+    PCI: Avoid race while enabling upstream bridges
 
-We limit all our tracing messages to 110 bytes.  Anything longer than
-that starts getting annoying to read.  In mac80211 we limit it even
-further, to 100 bytes, so this is not unique to the iwlwifi driver.
+is the first bad commit. Reverting that on top of master makes things
+work fine again, so that commit is definitely b0rken.
 
---
-Cheers,
-Luca.
+CC'ing the guilty part and Bjorn. I'm assuming it's the pci_is_enabled()
+check, since the rest of the patch shouldn't have functional changes.
+
+-- 
+Jens Axboe
