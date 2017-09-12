@@ -1,44 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33286 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750869AbdIEJy7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 05:54:59 -0400
-Message-ID: <1504605297.12380.8.camel@sipsolutions.net> (sfid-20170905_115513_319803_716F2FB9)
-Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Date: Tue, 05 Sep 2017 11:54:57 +0200
-In-Reply-To: <87zia91nmc.fsf@toke.dk>
-References: <20170622102030.9795-1-johannes@sipsolutions.net>
-         <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk>
-         <1504517620.9797.3.camel@sipsolutions.net> <87mv6a35lb.fsf@toke.dk>
-         <1504594708.6667.1.camel@sipsolutions.net> <8760cx34cm.fsf@toke.dk>
-         <1504603125.12380.7.camel@sipsolutions.net> <87zia91nmc.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44641 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751395AbdILJWe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Sep 2017 05:22:34 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 7/7] brcmfmac: move configuration of probe request IEs
+Date: Tue, 12 Sep 2017 11:22:23 +0200
+Message-Id: <1505208143-30166-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112310_128588_59F18D4F)
+In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-09-05 at 11:49 +0200, Toke Høiland-Jørgensen wrote:
-> 
-> Ah, so the station is attached to the VLAN interface, not the parent
-> interface?
+The configuration of the IEs for probe requests was done in a P2P
+related function, which is not very obvious. Moving it to
+.scan callback function, ie. brcmf_cfg80211_scan().
 
-Doesn't actually matter, but if the VLAN goes where the station belongs
-then either the station must've moved somewhere else or have been
-destroyed, you can't have the station pointing to a VLAN that no longer
-exists :)
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 6 ++----
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-> I guess that the only case where there is likely to be any
-> significant effects of dropping the whole queue is if someone is
-> sending large amounts of multicast traffic (live video streaming? is
-> that even feasible over WiFi?) while reconfiguring their VLAN setup.
-> That is probably not a terribly common combination...
-
-Right.
-
-Anyway I've applied this with the pointless null check removed.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 35e9cac..b6d1aaa 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1119,6 +1119,11 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	if (err)
+ 		goto scan_out;
+ 
++	err = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG,
++				    request->ie, request->ie_len);
++	if (err)
++		goto scan_out;
++
+ 	err = brcmf_do_escan(vif->ifp, request);
+ 	if (err)
+ 		goto scan_out;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 8e0b3f4..cec25dd 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -881,7 +881,7 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_p2p_info *p2p = &cfg->p2p;
+-	int err = 0;
++	int err;
+ 
+ 	if (brcmf_p2p_scan_is_p2p_request(request)) {
+ 		/* find my listen channel */
+@@ -904,9 +904,7 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+ 		/* override .run_escan() callback. */
+ 		cfg->escan_info.run = brcmf_p2p_run_escan;
+ 	}
+-	err = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG,
+-				    request->ie, request->ie_len);
+-	return err;
++	return 0;
+ }
+ 
+ 
+-- 
+1.9.1
