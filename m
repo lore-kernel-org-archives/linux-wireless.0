@@ -1,90 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750855AbdIBBpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 21:45:03 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 4/9] qtnfmac: do not cache channel info from "connect" command
-Date: Fri,  1 Sep 2017 18:44:46 -0700
-Message-Id: <20170902014451.17766-5-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034521_121750_4D6870A7)
-In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36720 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751810AbdIMTCN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Sep 2017 15:02:13 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, kvalo@qca.qualcomm.com,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] ath10k: make ath10k_hw_ce_regs const
+Date: Thu, 14 Sep 2017 00:31:52 +0530
+Message-Id: <1505329312-26432-1-git-send-email-bhumirks@gmail.com> (sfid-20170913_210232_667980_8B80F06E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Make them const as they are not modified in the file referencing
+them. They are only stored in the const field 'hw_ce_reg' of an ath10k
+structure. Also, make the declarations in the header const.
 
-This makes no sense because real operational channel is choosen based
-on AP operation, not on what STA is configured to.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 15 +--------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++++--
- 2 files changed, 5 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/hw.c | 4 ++--
+ drivers/net/wireless/ath/ath10k/hw.h | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 0ef1285..17b323e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -613,8 +613,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	     struct cfg80211_connect_params *sme)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
--	struct qtnf_wmac *mac = wiphy_priv(wiphy);
--	struct cfg80211_chan_def chandef;
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index a860691..07df7c6 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -310,7 +310,7 @@
+ 	.wm_high	= &wcn3990_dst_wm_high,
+ };
  
-@@ -627,18 +625,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	bss_cfg = &vif->bss_cfg;
- 	memset(bss_cfg, 0, sizeof(*bss_cfg));
+-struct ath10k_hw_ce_regs wcn3990_ce_regs = {
++const struct ath10k_hw_ce_regs wcn3990_ce_regs = {
+ 	.sr_base_addr		= 0x00000000,
+ 	.sr_size_addr		= 0x00000008,
+ 	.dr_base_addr		= 0x0000000c,
+@@ -457,7 +457,7 @@ struct ath10k_hw_ce_regs wcn3990_ce_regs = {
+ 	.wm_high	= &qcax_dst_wm_high,
+ };
  
--	if (sme->channel) {
--		/* FIXME: need to set proper nl80211_channel_type value */
--		cfg80211_chandef_create(&chandef, sme->channel,
--					NL80211_CHAN_HT20);
--		/* fall-back to minimal safe chandef description */
--		if (!cfg80211_chandef_valid(&chandef))
--			cfg80211_chandef_create(&chandef, sme->channel,
--						NL80211_CHAN_HT20);
--
--		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
--	}
--
- 	bss_cfg->ssid_len = sme->ssid_len;
- 	memcpy(&bss_cfg->ssid, sme->ssid, bss_cfg->ssid_len);
- 	bss_cfg->auth_type = sme->auth_type;
-@@ -663,6 +649,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 		bss_cfg->connect_flags |= QLINK_STA_CONNECT_USE_RRM;
+-struct ath10k_hw_ce_regs qcax_ce_regs = {
++const struct ath10k_hw_ce_regs qcax_ce_regs = {
+ 	.sr_base_addr		= 0x00000000,
+ 	.sr_size_addr		= 0x00000004,
+ 	.dr_base_addr		= 0x00000008,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 0c089f6..f80840f 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -369,8 +369,8 @@ struct ath10k_hw_values {
+ extern const struct ath10k_hw_values qca9888_values;
+ extern const struct ath10k_hw_values qca4019_values;
+ extern const struct ath10k_hw_values wcn3990_values;
+-extern struct ath10k_hw_ce_regs wcn3990_ce_regs;
+-extern struct ath10k_hw_ce_regs qcax_ce_regs;
++extern const struct ath10k_hw_ce_regs wcn3990_ce_regs;
++extern const struct ath10k_hw_ce_regs qcax_ce_regs;
  
- 	memcpy(&bss_cfg->crypto, &sme->crypto, sizeof(bss_cfg->crypto));
-+
- 	if (sme->bssid)
- 		ether_addr_copy(bss_cfg->bssid, sme->bssid);
- 	else
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 806b88b..c55bae1 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2055,8 +2055,10 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 
- 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
- 
--	if (vif->mac->chandef.chan)
--		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
-+	if (sme->channel)
-+		cmd->channel = cpu_to_le16(sme->channel->hw_value);
-+	else
-+		cmd->channel = 0;
- 
- 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
- 
+ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
+ 				u32 cc, u32 rcc, u32 cc_prev, u32 rcc_prev);
 -- 
-2.9.5
+1.9.1
