@@ -1,391 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:38777 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752178AbdI3Rin (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Sep 2017 13:38:43 -0400
-Received: by mail-pg0-f66.google.com with SMTP id y192so1837447pgd.5
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:43 -0700 (PDT)
-From: silexcommon@gmail.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Alagu Sankar <alagusankar@silex-india.com>
-Subject: [PATCH 08/11] ath10k_sdio: common read write
-Date: Sat, 30 Sep 2017 23:07:45 +0530
-Message-Id: <1506793068-27445-9-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193807_178979_28531B16)
-In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+Received: from civicrm.laptop.org ([18.85.44.157]:38026 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751364AbdIMVq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Sep 2017 17:46:56 -0400
+Date: Thu, 14 Sep 2017 07:46:49 +1000
+From: James Cameron <quozl@laptop.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: rtl8821ae keep alive not set, connection lost
+Message-ID: <20170913214649.GC20283@us.netrek.org> (sfid-20170913_234700_431346_4321441A)
+References: <20170912220916.GB32211@us.netrek.org>
+ <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+On Wed, Sep 13, 2017 at 10:01:37AM -0500, Larry Finger wrote:
+> Thank you very much for making the effort to bisect this problem. I
+> know that several people have reported the problem, which we cannot
+> duplicate; however, most of them just say it drops the connection
+> and do nothing more.  In fact, we are lucky to have them even report
+> which kernel version they are running!
 
-convert different read write functions in sdio hif to bring it under a
-single read-write path. This helps in having a common dma bounce buffer
-implementation. Also helps in address modification that is required
-specific to change in certain mbox addresses of sdio_write.
+Yes, in the reported bugs that style is common; almost animistic, very
+mystical, and based on heuristics rather than analysis.  ;-)
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
----
- drivers/net/wireless/ath/ath10k/sdio.c | 131 ++++++++++++++++-----------------
- 1 file changed, 64 insertions(+), 67 deletions(-)
+> As we do not see the problem, we will be relying on you to help
+> diagnose the issue. Merely changing the read from 8 to 16 bits
+> should not cause any change.
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 77d4fa4..bb6fa67 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -36,6 +36,11 @@
- 
- #define ATH10K_SDIO_DMA_BUF_SIZE	(32 * 1024)
- 
-+static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf,
-+			    u32 len, bool incr);
-+static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf,
-+			     u32 len, bool incr);
-+
- /* inlined helper functions */
- 
- /* Macro to check if DMA buffer is WORD-aligned and DMA-able.
-@@ -152,6 +157,7 @@ static int ath10k_sdio_config(struct ath10k *ar)
- 	struct sdio_func *func = ar_sdio->func;
- 	unsigned char byte, asyncintdelay = 2;
- 	int ret;
-+	u32 addr;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "sdio configuration\n");
- 
-@@ -180,9 +186,8 @@ static int ath10k_sdio_config(struct ath10k *ar)
- 		 CCCR_SDIO_DRIVER_STRENGTH_ENABLE_C |
- 		 CCCR_SDIO_DRIVER_STRENGTH_ENABLE_D);
- 
--	ret = ath10k_sdio_func0_cmd52_wr_byte(func->card,
--					      CCCR_SDIO_DRIVER_STRENGTH_ENABLE_ADDR,
--					      byte);
-+	addr = CCCR_SDIO_DRIVER_STRENGTH_ENABLE_ADDR,
-+	ret = ath10k_sdio_func0_cmd52_wr_byte(func->card, addr, byte);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to enable driver strength: %d\n", ret);
- 		goto out;
-@@ -233,13 +238,16 @@ static int ath10k_sdio_config(struct ath10k *ar)
- 
- static int ath10k_sdio_write32(struct ath10k *ar, u32 addr, u32 val)
- {
--	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
--	struct sdio_func *func = ar_sdio->func;
-+	__le32 *buf;
- 	int ret;
- 
--	sdio_claim_host(func);
-+	buf = kzalloc(sizeof(*buf), GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
- 
--	sdio_writel(func, val, addr, &ret);
-+	*buf = cpu_to_le32(val);
-+
-+	ret = ath10k_sdio_write(ar, addr, &val, sizeof(val), true);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to write 0x%x to address 0x%x: %d\n",
- 			    val, addr, ret);
-@@ -250,15 +258,13 @@ static int ath10k_sdio_write32(struct ath10k *ar, u32 addr, u32 val)
- 		   addr, val);
- 
- out:
--	sdio_release_host(func);
-+	kfree(buf);
- 
- 	return ret;
- }
- 
- static int ath10k_sdio_writesb32(struct ath10k *ar, u32 addr, u32 val)
- {
--	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
--	struct sdio_func *func = ar_sdio->func;
- 	__le32 *buf;
- 	int ret;
- 
-@@ -268,9 +274,7 @@ static int ath10k_sdio_writesb32(struct ath10k *ar, u32 addr, u32 val)
- 
- 	*buf = cpu_to_le32(val);
- 
--	sdio_claim_host(func);
--
--	ret = sdio_writesb(func, addr, buf, sizeof(*buf));
-+	ret = ath10k_sdio_write(ar, addr, buf, sizeof(*buf), false);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to write value 0x%x to fixed sb address 0x%x: %d\n",
- 			    val, addr, ret);
-@@ -281,8 +285,6 @@ static int ath10k_sdio_writesb32(struct ath10k *ar, u32 addr, u32 val)
- 		   addr, val);
- 
- out:
--	sdio_release_host(func);
--
- 	kfree(buf);
- 
- 	return ret;
-@@ -290,28 +292,33 @@ static int ath10k_sdio_writesb32(struct ath10k *ar, u32 addr, u32 val)
- 
- static int ath10k_sdio_read32(struct ath10k *ar, u32 addr, u32 *val)
- {
--	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
--	struct sdio_func *func = ar_sdio->func;
-+	__le32 *buf;
- 	int ret;
- 
--	sdio_claim_host(func);
--	*val = sdio_readl(func, addr, &ret);
-+	buf = kzalloc(sizeof(*buf), GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	ret = ath10k_sdio_read(ar, addr, buf, sizeof(*val), true);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read from address 0x%x: %d\n",
- 			    addr, ret);
- 		goto out;
- 	}
- 
-+	*val = le32_to_cpu(*buf);
-+
- 	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio read32 addr 0x%x val 0x%x\n",
- 		   addr, *val);
- 
- out:
--	sdio_release_host(func);
-+	kfree(buf);
- 
- 	return ret;
- }
- 
--static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf, size_t len)
-+static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf,
-+			    size_t len, bool incr)
- {
- 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
- 	struct sdio_func *func = ar_sdio->func;
-@@ -330,8 +337,12 @@ static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf, size_t len)
- 	}
- 
- 	sdio_claim_host(func);
-+	if (incr)
-+		ret = sdio_memcpy_fromio(func, tbuf, addr, len);
-+	else
-+		ret = sdio_readsb(func, tbuf, addr, len);
-+	sdio_release_host(func);
- 
--	ret = sdio_memcpy_fromio(func, tbuf, addr, len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read from address 0x%x: %d\n",
- 			    addr, ret);
-@@ -345,14 +356,14 @@ static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf, size_t len)
- 	ath10k_dbg_dump(ar, ATH10K_DBG_SDIO_DUMP, NULL, "sdio read ", buf, len);
- 
- out:
--	sdio_release_host(func);
- 	if (bounced)
- 		mutex_unlock(&ar_sdio->dma_buffer_mutex);
- 
- 	return ret;
- }
- 
--static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf, size_t len)
-+static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf,
-+			     size_t len, bool incr)
- {
- 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
- 	struct sdio_func *func = ar_sdio->func;
-@@ -371,12 +382,18 @@ static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf, size_
- 		tbuf = (u8 *)buf;
- 	}
- 
-+	if (addr == ar_sdio->mbox_info.htc_addr)
-+		addr += (ATH10K_HIF_MBOX_WIDTH - len);
-+
- 	sdio_claim_host(func);
- 
- 	/* For some reason toio() doesn't have const for the buffer, need
- 	 * an ugly hack to workaround that.
- 	 */
--	ret = sdio_memcpy_toio(func, addr, (void *)tbuf, len);
-+	if (incr)
-+		ret = sdio_memcpy_toio(func, addr, (void *)tbuf, len);
-+	else
-+		ret = sdio_writesb(func, addr, tbuf, len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to write to address 0x%x: %d\n",
- 			    addr, ret);
-@@ -389,39 +406,13 @@ static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf, size_
- 
- out:
- 	sdio_release_host(func);
-+
- 	if (bounced)
- 		mutex_unlock(&ar_sdio->dma_buffer_mutex);
- 
- 	return ret;
- }
- 
--static int ath10k_sdio_readsb(struct ath10k *ar, u32 addr, void *buf, size_t len)
--{
--	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
--	struct sdio_func *func = ar_sdio->func;
--	int ret;
--
--	sdio_claim_host(func);
--
--	len = round_down(len, ar_sdio->mbox_info.block_size);
--
--	ret = sdio_readsb(func, buf, addr, len);
--	if (ret) {
--		ath10k_warn(ar, "failed to read from fixed (sb) address 0x%x: %d\n",
--			    addr, ret);
--		goto out;
--	}
--
--	ath10k_dbg(ar, ATH10K_DBG_SDIO, "sdio readsb addr 0x%x buf 0x%p len %zu\n",
--		   addr, buf, len);
--	ath10k_dbg_dump(ar, ATH10K_DBG_SDIO_DUMP, NULL, "sdio readsb ", buf, len);
--
--out:
--	sdio_release_host(func);
--
--	return ret;
--}
--
- /* HIF mbox functions */
- 
- static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
-@@ -671,8 +662,8 @@ static int ath10k_sdio_mbox_rx_packet(struct ath10k *ar,
- 	struct sk_buff *skb = pkt->skb;
- 	int ret;
- 
--	ret = ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_addr,
--				 skb->data, pkt->alloc_len);
-+	ret = ath10k_sdio_read(ar, ar_sdio->mbox_info.htc_addr,
-+			       skb->data, pkt->alloc_len, false);
- 	pkt->status = ret;
- 	if (!ret)
- 		skb_put(skb, pkt->act_len);
-@@ -932,7 +923,7 @@ static int ath10k_sdio_mbox_read_int_status(struct ath10k *ar,
- 	 * registers and the lookahead registers.
- 	 */
- 	ret = ath10k_sdio_read(ar, MBOX_HOST_INT_STATUS_ADDRESS,
--			       irq_proc_reg, sizeof(*irq_proc_reg));
-+			       irq_proc_reg, sizeof(*irq_proc_reg), true);
- 	if (ret)
- 		goto out;
- 
-@@ -1177,7 +1168,8 @@ static int ath10k_sdio_bmi_exchange_msg(struct ath10k *ar,
- 		addr = ar_sdio->mbox_info.htc_addr;
- 
- 		memcpy(ar_sdio->bmi_buf, req, req_len);
--		ret = ath10k_sdio_write(ar, addr, ar_sdio->bmi_buf, req_len);
-+		ret = ath10k_sdio_write(ar, addr, ar_sdio->bmi_buf, req_len,
-+					true);
- 		if (ret) {
- 			ath10k_warn(ar,
- 				    "unable to send the bmi data to the device: %d\n",
-@@ -1241,7 +1233,7 @@ static int ath10k_sdio_bmi_exchange_msg(struct ath10k *ar,
- 
- 	/* We always read from the start of the mbox address */
- 	addr = ar_sdio->mbox_info.htc_addr;
--	ret = ath10k_sdio_read(ar, addr, ar_sdio->bmi_buf, *resp_len);
-+	ret = ath10k_sdio_read(ar, addr, ar_sdio->bmi_buf, *resp_len, true);
- 	if (ret) {
- 		ath10k_warn(ar,
- 			    "unable to read the bmi data from the device: %d\n",
-@@ -1298,7 +1290,7 @@ static void __ath10k_sdio_write_async(struct ath10k *ar,
- 	int ret;
- 
- 	skb = req->skb;
--	ret = ath10k_sdio_write(ar, req->address, skb->data, skb->len);
-+	ret = ath10k_sdio_write(ar, req->address, skb->data, skb->len, true);
- 	if (ret)
- 		ath10k_warn(ar, "failed to write skb to 0x%x asynchronously: %d",
- 			    req->address, ret);
-@@ -1405,7 +1397,7 @@ static int ath10k_sdio_hif_disable_intrs(struct ath10k *ar)
- 
- 	memset(regs, 0, sizeof(*regs));
- 	ret = ath10k_sdio_write(ar, MBOX_INT_STATUS_ENABLE_ADDRESS,
--				&regs->int_status_en, sizeof(*regs));
-+				&regs->int_status_en, sizeof(*regs), true);
- 	if (ret)
- 		ath10k_warn(ar, "unable to disable sdio interrupts: %d\n", ret);
- 
-@@ -1540,7 +1532,7 @@ static int ath10k_sdio_hif_enable_intrs(struct ath10k *ar)
- 			   ATH10K_SDIO_TARGET_DEBUG_INTR_MASK);
- 
- 	ret = ath10k_sdio_write(ar, MBOX_INT_STATUS_ENABLE_ADDRESS,
--				&regs->int_status_en, sizeof(*regs));
-+				&regs->int_status_en, sizeof(*regs), true);
- 	if (ret)
- 		ath10k_warn(ar,
- 			    "failed to update mbox interrupt status register : %d\n",
-@@ -1555,7 +1547,8 @@ static int ath10k_sdio_hif_set_mbox_sleep(struct ath10k *ar, bool enable_sleep)
- 	u32 val;
- 	int ret;
- 
--	ret = ath10k_sdio_read32(ar, ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL, &val);
-+	ret = ath10k_sdio_read32(ar, ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL,
-+				 &val);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read fifo/chip control register: %d\n",
- 			    ret);
-@@ -1567,7 +1560,8 @@ static int ath10k_sdio_hif_set_mbox_sleep(struct ath10k *ar, bool enable_sleep)
- 	else
- 		val |= ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL_DISABLE_SLEEP_ON;
- 
--	ret = ath10k_sdio_write32(ar, ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL, val);
-+	ret = ath10k_sdio_write32(ar, ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL,
-+				  val);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to write to FIFO_TIMEOUT_AND_CHIP_CONTROL: %d",
- 			    ret);
-@@ -1587,12 +1581,14 @@ static int ath10k_sdio_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
- 	/* set window register to start read cycle */
- 	ret = ath10k_sdio_write32(ar, MBOX_WINDOW_READ_ADDR_ADDRESS, address);
- 	if (ret) {
--		ath10k_warn(ar, "failed to set mbox window read address: %d", ret);
-+		ath10k_warn(ar, "failed to set mbox window read address: %d",
-+			    ret);
- 		return ret;
- 	}
- 
- 	/* read the data */
--	ret = ath10k_sdio_read(ar, MBOX_WINDOW_DATA_ADDRESS, buf, buf_len);
-+	ret = ath10k_sdio_read(ar, MBOX_WINDOW_DATA_ADDRESS, buf, buf_len,
-+			       true);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read from mbox window data address: %d\n",
- 			    ret);
-@@ -1630,7 +1626,8 @@ static int ath10k_sdio_hif_diag_write_mem(struct ath10k *ar, u32 address,
- 	int ret;
- 
- 	/* set write data */
--	ret = ath10k_sdio_write(ar, MBOX_WINDOW_DATA_ADDRESS, data, nbytes);
-+	ret = ath10k_sdio_write(ar, MBOX_WINDOW_DATA_ADDRESS, data, nbytes,
-+				true);
- 	if (ret) {
- 		ath10k_warn(ar,
- 			    "failed to write 0x%p to mbox window data address: %d\n",
-@@ -1641,7 +1638,7 @@ static int ath10k_sdio_hif_diag_write_mem(struct ath10k *ar, u32 address,
- 	/* set window register, which starts the write cycle */
- 	ret = ath10k_sdio_write32(ar, MBOX_WINDOW_WRITE_ADDR_ADDRESS, address);
- 	if (ret) {
--		ath10k_warn(ar, "failed to set mbox window write address: %d", ret);
-+		ath10k_warn(ar, "failed to set mbox window register: %d", ret);
- 		return ret;
- 	}
- 
-@@ -1691,7 +1688,7 @@ static int ath10k_sdio_hif_start(struct ath10k *ar)
- 
- 	ret = ath10k_sdio_hif_diag_read32(ar, addr, &val);
- 	if (ret) {
--		ath10k_warn(ar, "unable to read hi_acs_flags address: %d\n", ret);
-+		ath10k_warn(ar, "unable to read hi_acs_flags : %d\n", ret);
- 		return ret;
- 	}
- 
+Agreed.
+
+> As _rtl8821ae_dbi_read() is only called from
+> _rtl8821ae_enable_aspm_back_door(), we want to test turning off
+> ASPM. The following patch will accomplish this. Unfortunately, the
+> patch is white-space damaged, thus you will need to apply it
+> manually. Please try it to see if it helps your connection
+> loss. Note that ASPM settings are preserved through a module
+> unload/reload sequence. Thus you will need to reboot after
+> rebuilding the driver.
+
+Went back to 4.13, added your test patch, and built kernel.
+
+http://dev.laptop.org/~quozl/z/1dsFOW.txt is dmesg.
+
+New symptom occurs; after 23 seconds since last transmission, the
+device becomes unresponsive to ping from another host, but begins to
+respond if the device transmits.  Flurry of responses then it settles
+down to regular ping.
+
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=39 ttl=64 time=1.71 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=40 ttl=64 time=1.93 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=41 ttl=64 time=1.71 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=42 ttl=64 time=1.66 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=43 ttl=64 time=1.70 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=44 ttl=64 time=1.69 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=45 ttl=64 time=37.7 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=46 ttl=64 time=383 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=47 ttl=64 time=11464 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=48 ttl=64 time=10465 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=49 ttl=64 time=9465 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=50 ttl=64 time=8466 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=51 ttl=64 time=7466 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=52 ttl=64 time=6466 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=53 ttl=64 time=5466 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=54 ttl=64 time=4467 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=55 ttl=64 time=3467 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=56 ttl=64 time=2468 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=57 ttl=64 time=1468 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=58 ttl=64 time=469 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=59 ttl=64 time=1.79 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=60 ttl=64 time=1.75 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=61 ttl=64 time=1.72 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=62 ttl=64 time=1.68 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=63 ttl=64 time=1.68 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=64 ttl=64 time=1.95 ms
+64 bytes from nl3-e.lan (10.0.0.94): icmp_seq=65 ttl=64 time=1.68 ms
+
+I'll give it some more testing and let you know, but it seems as
+capable of keeping a connection as 4.13 plus my earlier revert.
+
 -- 
-1.9.1
+James Cameron
+http://quozl.netrek.org/
