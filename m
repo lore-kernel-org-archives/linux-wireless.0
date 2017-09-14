@@ -1,93 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:51358 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751428AbdIBHOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Sep 2017 03:14:02 -0400
-Subject: Re: Problem with the wifi
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <00515b4a-5949-3746-db71-6b2b8a82dd1a@gmx.com>
- <f801b919-d4a8-6840-23ff-9773861bce6d@broadcom.com>
- <d14706d5-cc89-223f-3b4f-933af5004168@gmx.com>
- <a0a2f322-8797-ba6c-c820-a3bd2371ed96@broadcom.com>
- <dacdc512-87a3-3007-0877-ac1f90c1fd5d@lwfinger.net>
- <593b1d88-25fa-5d99-b74e-8e0c535243e1@broadcom.com>
-From: Paolo Bettini <paolobettini@gmx.com>
-Message-ID: <28ead48e-0c75-4b32-275b-9b23f772a636@gmx.com> (sfid-20170902_091439_902420_FD54BB7C)
-Date: Sat, 2 Sep 2017 09:13:50 +0200
+Received: from mail-io0-f173.google.com ([209.85.223.173]:53135 "EHLO
+        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751370AbdINRW2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 13:22:28 -0400
+Received: by mail-io0-f173.google.com with SMTP id i197so2248635ioe.9
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 10:22:28 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        srinath.mannam@broadcom.com,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk> (sfid-20170914_192234_365532_0D861417)
+Date: Thu, 14 Sep 2017 11:22:21 -0600
 MIME-Version: 1.0
-In-Reply-To: <593b1d88-25fa-5d99-b74e-8e0c535243e1@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel ha scritto:
-> On 09-08-17 18:40, Larry Finger wrote:
->> On 08/08/2017 04:10 AM, Arend van Spriel wrote:
->>> + linux-wireless
->>> + Larry
+On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+> [+cc linux-pci]
+> 
+> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
 >>>
->>> please keep linux-wireless in this thread.
+>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>> functional changes.
 >>>
->>> On 08-08-17 08:21, Paolo Bettini wrote:
->>>> Arend van Spriel ha scritto:
->>>>> + linux-wireless On 07-08-17 21:38, Paolo Bettini wrote:
->>>>>> Hi , i am Paolo and i installed Debian stretch on my ezbook2 . One
->>>>>> problem is the wifi , the card a SDIO device , seems to be 02d0:a9a6
->>>>>> linux id or Broadcom AP6212 for windows....i installed deb package
->>>>>> firmware-brcm80211 and nvram sdio txt in /lib/firmware/brcm, 
->>>>>> reloaded
->>>>>> bcrmfmac module but nothing the card seems invisible or dead i don't
->>>>>> know if is a problem of firmware or my system cannot detect the sdio
->>>>>> card ...do you know something about this problematic ?
->>>>> As always a kernel log could help or output from dmesg command. Also
->>>>> can you run following commands: $ ls /sys/bus/sdio/devices $ cat
->>>>> /sys/bus/sdio/devices/*/modalias Regards, Arend
->>>> paolo@paolo:~$ ls /sys/bus/sdio/devices
->>>> mmc1:0001:1
->>>> paolo@paolo:~$
->>>>
->>>>
->>>> paolo@paolo:~$ cat /sys/bus/sdio/devices/*/modalias sdio:c07v024CdB723
->>>> paolo@paolo:~$ sorry for previous mail ....ls was from another 
->>>> pc....:-[
->>>> it seems the system see only the card where the system is installed
+>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>> still enables mastering in that case if it isn't:
 >>>
->>> Hi Paolo,
+>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>> {
+>>> [...]
+>>>         if (pci_is_enabled(dev)) {
+>>>                 if (!dev->is_busmaster)
+>>>                         pci_set_master(dev);
+>>>                 return;
+>>>         }
 >>>
->>> Interesting. Now if Google search is correct the vendor id for this
->>> device indicates this is a Realtek (v024C) WLAN (c07) device. So what
->>> makes you say its linux id is 02d0:a9a6?
->>>
->>> In upstream linux I do not see any SDIO device drivers in realtek
->>> folder. Maybe Larry can provide clue/hint if a driver for this 
->>> device is
->>> publicly available somewhere.
+>>> so I guess due to the new check we end up with mastering disabled, and
+>>> thus the firmware can't load since that's a DMA thing?
 >>
->> Paolo,
+>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>> from working on a pretty standard laptop. It'd suck to have this be in
+>> -rc1. Seems like the trivial fix would be:
 >>
->> The only Realtek SDIO device in common distribution is the RTL8723BS, 
->> which has been packaged with some Intel processors, and may now be 
->> part of other SBC's. This driver has been in staging since V4.12. It 
->> handles SDIO Vendor code 0x024c with device codes 0x0523, 0x0623, 
->> 0x0626, and 0xb723. If your device is one of these, then you only 
->> need to build a kernel with this driver enabled.
->
-> He has device id 0xb723:
->
-> paolo@paolo:~$ cat /sys/bus/sdio/devices/*/modalias sdio:c07v024CdB723
->
-> So that driver should at least try to probe his device.
->
-> Regards,
-> Arend
->
-I built my own kernel in the debian way , very simple and amusing ,  i 
-removed some modules not interesting ,  i set to M rtl8723bs and all ok 
-!!! only a bit long the building with my dual core ,The bluetooth needs 
-rtk_hciattach of Larry Finger , however strange the new debian kernels 
-above all 4.13rc have not set rtl8723bs module.
-Best regards
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index b0002daa50f3..ffbe11dbdd61 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>                 return 0;               /* already enabled */
+>>
+>>         bridge = pci_upstream_bridge(dev);
+>> -       if (bridge && !pci_is_enabled(bridge))
+>> +       if (bridge)
+>>                 pci_enable_bridge(bridge);
+>>
+>>         /* only skip sriov related */
+>>
+>>
+> 
+> Looks like a reasonable fix.  I assume it works for you?  I don't have
+> a way to test it, so if you can verify that it works and supply a
+> Signed-off-by, I can merge it.
 
-rtk_hciattach
+Booting it right now, I'll send out a proper version in a few minutes.
+
+-- 
+Jens Axboe
