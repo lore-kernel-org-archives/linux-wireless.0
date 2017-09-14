@@ -1,92 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0127.outbound.protection.outlook.com ([104.47.0.127]:54965
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935225AbdIZThv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 15:37:51 -0400
-Subject: Re: [PATCH v4 9/9] kasan: rework Kconfig settings
-To: Arnd Bergmann <arnd@arndb.de>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
-        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=c5=a1ka?= <marxin@gcc.gnu.org>
-References: <20170922212930.620249-1-arnd@arndb.de>
- <20170922212930.620249-10-arnd@arndb.de>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <aeb9c144-10a6-53c2-89ba-cc7864f254e1@virtuozzo.com> (sfid-20170926_213900_160269_CF83BF7C)
-Date: Tue, 26 Sep 2017 22:36:38 +0300
+Received: from mail-io0-f174.google.com ([209.85.223.174]:54452 "EHLO
+        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751645AbdINTIg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 15:08:36 -0400
+Received: by mail-io0-f174.google.com with SMTP id h66so2975235ioh.11
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 12:08:35 -0700 (PDT)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1505378361.31630.2.camel@sipsolutions.net>
+ <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
+ <1505414172.31630.13.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com> (sfid-20170914_210841_107077_3943C63E)
+Date: Thu, 14 Sep 2017 14:08:33 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170922212930.620249-10-arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1505414172.31630.13.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2017 12:29 AM, Arnd Bergmann wrote:
-> We get a lot of very large stack frames using gcc-7.0.1 with the default
-> -fsanitize-address-use-after-scope --param asan-stack=1 options, which
-> can easily cause an overflow of the kernel stack, e.g.
-> 
-> drivers/gpu/drm/i915/gvt/handlers.c:2407:1: error: the frame size of 31216 bytes is larger than 2048 bytes
-> drivers/net/wireless/ralink/rt2x00/rt2800lib.c:5650:1: error: the frame size of 23632 bytes is larger than 2048 bytes
-> drivers/scsi/fnic/fnic_trace.c:451:1: error: the frame size of 5152 bytes is larger than 2048 bytes
-> fs/btrfs/relocation.c:1202:1: error: the frame size of 4256 bytes is larger than 2048 bytes
-> fs/fscache/stats.c:287:1: error: the frame size of 6552 bytes is larger than 2048 bytes
-> lib/atomic64_test.c:250:1: error: the frame size of 12616 bytes is larger than 2048 bytes
-> mm/vmscan.c:1367:1: error: the frame size of 5080 bytes is larger than 2048 bytes
-> net/wireless/nl80211.c:1905:1: error: the frame size of 4232 bytes is larger than 2048 bytes
-> 
-> To reduce this risk, -fsanitize-address-use-after-scope is now split
-> out into a separate CONFIG_KASAN_EXTRA Kconfig option, leading to stack
-> frames that are smaller than 2 kilobytes most of the time on x86_64. An
-> earlier version of this patch also prevented combining KASAN_EXTRA with
-> KASAN_INLINE, but that is no longer necessary with gcc-7.0.1.
-> 
-> A lot of warnings with KASAN_EXTRA go away if we disable KMEMCHECK,
-> as -fsanitize-address-use-after-scope seems to understand the builtin
-> memcpy, but adds checking code around an extern memcpy call. I had to work
-> around a circular dependency, as DEBUG_SLAB/SLUB depended on !KMEMCHECK,
-> while KASAN did it the other way round. Now we handle both the same way
-> and make KASAN and KMEMCHECK mutually exclusive.
-> 
-> All patches to get the frame size below 2048 bytes with CONFIG_KASAN=y
-> and CONFIG_KASAN_EXTRA=n have been submitted along with this patch, so
-> we can bring back that default now. KASAN_EXTRA=y still causes lots of
-> warnings but now defaults to !COMPILE_TEST to disable it in allmodconfig,
-> and it remains disabled in all other defconfigs since it is a new option.
-> I arbitrarily raise the warning limit for KASAN_EXTRA to 3072 to reduce
-> the noise, but an allmodconfig kernel still has around 50 warnings
-> on gcc-7.
-> 
-> I experimented a bit more with smaller stack frames and have another
-> follow-up series that reduces the warning limit for 64-bit architectures
-> to 1280 bytes (without CONFIG_KASAN).
-> 
-> With earlier versions of this patch series, I also had patches to
-> address the warnings we get with KASAN and/or KASAN_EXTRA, using a
-> "noinline_if_stackbloat" annotation. That annotation now got replaced with
-> a gcc-8 bugfix (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715)
-> and a workaround for older compilers, which means that KASAN_EXTRA is
-> now just as bad as before and will lead to an instant stack overflow in
-> a few extreme cases.
-> 
-> This reverts parts of commit commit 3f181b4 ("lib/Kconfig.debug: disable
-> -Wframe-larger-than warnings with KASAN=y").
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Hi Johannes,
 
-Acked-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
+On 09/14/2017 01:36 PM, Johannes Berg wrote:
+> Hi Denis,
+> 
+> I'd actually only Cc'ed you to see if you were actually working on
+> EAPOL-over-nl80211 :-)
+> 
+>> Curious, isn't sending a PMKID for a non-roaming case not strictly
+>> per spec?  Is this just to avoid running 802.1x?
+> 
+> I don't think so, what makes you? In -2016 9.4.2.25.5 for example, the
+> spec says:
+> 
+>      The PMKID Count and List fields are used only in the RSNE in the
+>      (Re)Association Request frame to an AP and in FT authentication
+>      sequence frames.
+> 
+> Why should it only be valid in roaming? You might turn off and on wifi
+> and still have a PMKSA.
+
+Yep, but I seem to recall there was some vague language that said the AP 
+would delete the PMKSA if the client disconnected.  Sorry, getting back 
+on track:
+
+> 
+>> How does this mesh with operstates outlined in
+>> Documentation/networking/operstates.txt?  Are you treating the
+>> 'roaming' case as 802.1x 'reauthentication'?
+> 
+> I think we have to, because otherwise DHCP/IPv6 could happen again
+> after roaming - we really can't set the oper state to dormant during
+> the roaming.
+> 
+
+Okay, I can buy this interpretation...
+
+>>> Assuming this assessment is correct, this opens up another
+>>> possibility:
+>>> tracking the PORT_AUTHORIZED state with a separate event:
+>>>
+>>>    * new connection case - no PMKSA (usage)
+>>>      - CONNECT event
+>>>        - [if !eapol-over-nl: toggle oper state up]
+>>
+>> Doesn't this go against operstates.txt, Section 4?
+> 
+> Why?
+
+operstates.txt states that for new connections, operstate should be 
+dormant until 802.1x is complete & successful.  So the !eapol-over-nl 
+condition would violate that, no?
+
+> 
+>> Also, I must be dense, but why is the behavior different between
+>> eapol-over-nl and not?
+> 
+> Because for EAPOL-over-data, we actually have to have IF_OPER_UP to be
+> able to TX/RX the EAPOL frames.
+> 
+
+Okay.  But then wouldn't userspace now have to deal with two different 
+behaviors now?
+
+>>>        - initialize 1X state machines/timeouts
+>>>      - 1X handshake
+>>>      - send PMK to device for 4-way-HS
+>>>      - AUTHORIZED event
+>>>        - [if eapol-over-nl: toggle oper state up]
+>>>
+
+Given your explanation above, should this be [if !eapol-over-nl ..?
+
+>>>    * new connection case - PMKSA usage
+>>>      - CONNECT event
+>>>        - [if !eapol-over-nl: toggle oper state up]
+>>>        - initialize 1X state machines/timeouts
+>>>      - AUTHORIZED event
+>>>        - stop 1X state machine/timeouts
+>>>        - [if eapol-over-nl: toggle oper state up]
+>>>
+>>>    * roaming case - no PMKSA (usage)
+>>>      - ROAM event
+>>>        - [no touching oper state]
+>>
+>> My understanding is that oper state goes back to dormant in case we
+>> re-associate.  At least we needed to set it back to UP after a fast
+>> transition?
+> 
+> Like I said above, I really don't think we should/can do this, I think
+> we'd lose at least IPv6 connectivity in the meantime?
+> 
+
+So I agree that OPERSTATE_UP should not change on a roam.  I think we're 
+both in agreement here.
+
+My earlier point is that software roams need to have the exact same 
+behavior as well.  And my understanding is that when we try to 
+Fast-Transition (e.g. issue a CMD_ASSOCIATE), operstate is no longer UP.
+
+At the very least there's lots of confusion with what is supposed to 
+happen with operstate and when.  So if we can work out & document a 
+consistent behavior, I'm all for it.
+
+Regards,
+-Denis
