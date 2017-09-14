@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49522 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932135AbdIYH7s (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 03:59:48 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Allen <allen.lkml@gmail.com>
-Cc: linux-kernel@vger.kernel.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [1/1] wireless: broadcom: brcm80211: use setup_timer() helper
-References: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
-        <20170925074509.1168960719@smtp.codeaurora.org>
-        <CAOMdWSLYb_LF=TS0jzCU6DC0KVfOa=pZYdMipBF_ynJ6N_0NmQ@mail.gmail.com>
-Date: Mon, 25 Sep 2017 10:59:37 +0300
-In-Reply-To: <CAOMdWSLYb_LF=TS0jzCU6DC0KVfOa=pZYdMipBF_ynJ6N_0NmQ@mail.gmail.com>
-        (Allen's message of "Mon, 25 Sep 2017 13:21:11 +0530")
-Message-ID: <87d16f6weu.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_104605_708924_C9CB05D2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:51830 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751718AbdINTjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 15:39:12 -0400
+Message-ID: <1505417948.31630.19.camel@sipsolutions.net> (sfid-20170914_213922_639923_36051E12)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Sep 2017 21:39:08 +0200
+In-Reply-To: <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com> (sfid-20170914_213406_895369_2C934E54)
+References: <1505378361.31630.2.camel@sipsolutions.net>
+         <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
+         <1505389462.31630.6.camel@sipsolutions.net>
+         <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
+         <1505416658.31630.15.camel@sipsolutions.net>
+         <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
+         (sfid-20170914_213406_895369_2C934E54)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allen <allen.lkml@gmail.com> writes:
+On Thu, 2017-09-14 at 14:34 -0500, Denis Kenzior wrote:
 
->>
->> Also your name in patchwork is just "Allen", without your lastname. I can fix
->> it this time, but please register to patchwork to fix your name. (Annoyingly
->> patchwork takes the name from it's database, not from the "From:" header)
->
->  Ah that's strange. I'll register again.
+> > I think you pretty much have to assume that, otherwise there's no
+> > point
+> > in roaming at all - you want your connections to stay, possibly
+> > voice
+> > calls to continue, etc.
+> 
+> I'm all for using this assumption.  I just wonder if real world 
+> disagrees? :)
 
-It's a frequent problem to have misconfigured name in patchwork. I guess
-it happens as the first mail patchwork sees from you is the one stored
-to the database. And if that mail has an incorrect name, that will be
-used from that onwards. You have only onetime chance to fix it yourself
-when you register to patchwork. After that only server admins can fix it
-and you need to contact kernel.org helpdesk.
+I think you can probably find networks where this doesn't work, but I
+don't think we should cater for that. And corporate networks done with
+Cisco, Aruba or similar should have it work correctly, and in fact I'd
+assume that it's pretty much only broken if you take two consumer APs
+and configure them to the same SSID or something ...
 
-Apparently in recent versions of patchwork this should work better but
-kernel.org hasn't updated it yet.
-
--- 
-Kalle Valo
+johannes
