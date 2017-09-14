@@ -1,52 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53292 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932149AbdIGM4O (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 08:56:14 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170904175134.8331-2-Larry.Finger@lwfinger.net>
-References: <20170904175134.8331-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>,
-        Stable <stable@vger.kernel.org>
-Message-Id: <20170907125614.2162060241@smtp.codeaurora.org> (sfid-20170907_145618_293260_532A53DC)
-Date: Thu,  7 Sep 2017 12:56:12 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:42366 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751454AbdINIjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 04:39:25 -0400
+Message-ID: <1505378361.31630.2.camel@sipsolutions.net> (sfid-20170914_103939_504791_7A9A2FE9)
+Subject: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>, Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Sep 2017 10:39:21 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Hi Arend, Jouni, all,
 
-> In commit bcd37f4a0831 ("rtlwifi: btcoex: 23b 2ant: let bt transmit when
-> hw initialisation done"), there is an additional error when the module
-> parameter ant_sel is used to select the auxilary antenna. The error is
-> that the antenna selection is not checked when writing the antenna
-> selection register.
-> 
-> Fixes: bcd37f4a0831 ("rtlwifi: btcoex: 23b 2ant: let bt transmit when hw initialisation done")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
-> Cc: Stable <stable@vger.kernel.org> # 4.12+
+Avi and I just discussed another use case for the PORT_AUTHORIZED flag,
+which is PMKSA caching.
 
-2 patches applied to wireless-drivers.git, thanks.
+Assume you have 4-way-HS offloaded, then if you send a PMKID in the new
+connection (doesn't matter if it's roaming or not), the AP may chose to
+use it and start the 4-way-HS, or it may not be able to and start the
+802.1X handshake.
 
-a33fcba6ec01 rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
-6d6226928369 rtlwifi: btcoexist: Fix antenna selection code
+In the supplicant, if you are waiting for the 1X handshake, then in the
+case the PMKSA gets used the supplicant would wait forever, and
+eventually terminate the connection because the handshake isn't
+successful.
 
--- 
-https://patchwork.kernel.org/patch/9937493/
+Thus, *both* cases need to know about the PORT_AUTHORIZED flag.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I previously didn't apply the patch for the flag in CONNECT
+notification, but nobody is using it in ROAM notification so far, so
+that we still have a chance of revisiting this.
+
+Throwing a potential EAPOL-over-nl80211 (*) into the mix complicates
+the picture further. For example, in that case the OPER_STATE might not
+be set to UP until the port is authorized. In the case of roaming, this
+might - on first sight - lead to toggling DOWN/UP if a new 1X handshake
+needs to be done and the PORT_AUTHORIZED flag doesn't come with the
+ROAM event. However, I think this is actually wrong as it would
+probably lose IPv6 address assignment etc. - so I think we don't want
+to do this even if we do have EAPOL-over-nl80211 and don't need the
+oper_state to be up in order to do the 1X handshake. Do you agree with
+this assessment?
+
+Assuming this assessment is correct, this opens up another possibility:
+tracking the PORT_AUTHORIZED state with a separate event:
+
+ * new connection case - no PMKSA (usage)
+   - CONNECT event
+     - [if !eapol-over-nl: toggle oper state up]
+     - initialize 1X state machines/timeouts
+   - 1X handshake
+   - send PMK to device for 4-way-HS
+   - AUTHORIZED event
+     - [if eapol-over-nl: toggle oper state up]
+
+ * new connection case - PMKSA usage
+   - CONNECT event
+     - [if !eapol-over-nl: toggle oper state up]
+     - initialize 1X state machines/timeouts
+   - AUTHORIZED event
+     - stop 1X state machine/timeouts
+     - [if eapol-over-nl: toggle oper state up]
+
+ * roaming case - no PMKSA (usage)
+   - ROAM event
+     - [no touching oper state]
+     - initialize 1X state machines/timeouts
+   - 1X handshake
+   - AUTHORIZED event
+     - [no touching oper state]
+
+ * roaming case - PMKSA usage
+   - ROAM event
+     - [no touching oper state]
+     - initialize 1X state machines/timeouts
+   - AUTHORIZED event
+     - stop 1X state machine/timeouts
+     - [no touching oper state]
+
+
+Does this seem reasonable? If possible, I prefer this to just having
+the attribute, because with the attribute the roaming case will be
+difficult, the natural code flow in the driver would probably make it
+end up looking like this:
+
+ * roaming case - no PMKSA (usage)
+   - ROAM event
+     - [no touching
+oper state]
+     - initialize 1X state machines/timeouts
+   - 1X
+handshake
+   - CONNECT event w/ PORT_AUTHORIZED
+     - [no touching oper
+state]
+
+which seems awkward.
+
+Any other thoughts?
+
+johannes
+
+(*) is anyone working on that? I'll throw it on my list if not.
