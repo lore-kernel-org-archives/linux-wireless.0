@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43184 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753087AbdIFMZ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:25:29 -0400
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] mac80211: Simplify locking in ieee80211_sta_tear_down_BA_sessions()
-Date: Wed,  6 Sep 2017 17:18:33 +0300
-Message-Id: <1504707513-28023-1-git-send-email-ilan.peer@intel.com> (sfid-20170906_142531_558852_8F175BBF)
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:37190 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbdINPNn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 11:13:43 -0400
+Received: by mail-wm0-f67.google.com with SMTP id f4so390821wmh.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 08:13:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20170914143134.5ybcusoqu74wf6d7@home.ouaza.com>
+References: <20170914143134.5ybcusoqu74wf6d7@home.ouaza.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Thu, 14 Sep 2017 08:13:42 -0700
+Message-ID: <CALLGbRJj4=2FT6DDenDL-o2tk2dJT79-gBcdSToGTSti_ZnEag@mail.gmail.com> (sfid-20170914_171347_414641_E0EA5682)
+Subject: Re: Kernel developer to work on wifi injection in mainline
+To: Raphael Hertzog <buxy@kali.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, devel@kali.org,
+        Ben Hutchings <ben@decadent.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify the locking in  ieee80211_sta_tear_down_BA_sessions() and
-lock sta->ampdu_mlme.mtx over the entire function instead of
-locking/unlocking it for each TID etc.
+Hi Raphael,
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/mac80211/ht.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+On Thu, Sep 14, 2017 at 7:31 AM, Raphael Hertzog <buxy@kali.org> wrote:
+> (Please keep-me in CC and use reply-to all)
+>
+...
+>
+> Thus we are looking for a kernel developer that we could work with on a
+> contractor basis to:
+> - make wifi injection work on the current Kali kernel on various drivers
+>   that we want to support
+> - upstream as much as possible of changes needed for wifi injection to
+>   work
+> - ensure continued support of the feature in new Linux releases
+>
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 11d691c..3169862 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -290,13 +290,15 @@ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- {
- 	int i;
- 
-+	mutex_lock(&sta->ampdu_mlme.mtx);
- 	for (i = 0; i <  IEEE80211_NUM_TIDS; i++) {
--		__ieee80211_stop_tx_ba_session(sta, i, reason);
--		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
--					       WLAN_REASON_QSTA_LEAVE_QBSS,
--					       reason != AGG_STOP_DESTROY_STA &&
--					       reason != AGG_STOP_PEER_REQUEST);
-+		___ieee80211_stop_tx_ba_session(sta, i, reason);
-+		___ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
-+						WLAN_REASON_QSTA_LEAVE_QBSS,
-+						reason != AGG_STOP_DESTROY_STA &&
-+						reason != AGG_STOP_PEER_REQUEST);
- 	}
-+	mutex_unlock(&sta->ampdu_mlme.mtx);
- 
- 	/* stopping might queue the work again - so cancel only afterwards */
- 	cancel_work_sync(&sta->ampdu_mlme.work);
--- 
-1.9.1
+I do this sort of consulting work. While I kept this reply on the list
+due to your instructions, I'll send you information directly from my
+consulting address.
+
+> I wonder whether there are non-technical hurdles that would prevent
+> merging of wifi injection patches. Are there legal challenges to this for
+> instance?
+>
+
+I don't think there would be a legal challenge provided the code is
+yours to sign-off on and isn't patent encumbered.
+
+Personally, I think the biggest issue is interest of the Linux
+community as a whole. In other words, if you can convince maintainers
+that the change is:
+1. valuable to the Linux community members
+2. not harmful to the community as a whole
+3. worth maintaining (and in part will be responsible for maintaining)
+4. not purely based on closed business reasons
+then I think it'll be possible to get it upstream.
+
+I'm not that familiar with the patch(es) in question but from my quick
+look I don't see an obvious blocking issue with the concepts here.
+
+- Steve
