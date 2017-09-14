@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751387AbdIBBpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 21:45:04 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 5/9] qtnfmac: let wifi card handle channel switch request to the same chan
-Date: Fri,  1 Sep 2017 18:44:47 -0700
-Message-Id: <20170902014451.17766-6-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034508_397309_B9BA3BAA)
-In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+Received: from mail-io0-f169.google.com ([209.85.223.169]:56030 "EHLO
+        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdINRf5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 13:35:57 -0400
+Received: by mail-io0-f169.google.com with SMTP id z187so2333295ioz.12
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 10:35:57 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk> (sfid-20170914_193601_690183_159E6CAC)
+Date: Thu, 14 Sep 2017 11:35:54 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+> Hi Bjorn,
+> 
+> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>> [+cc linux-pci]
+>>>
+>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>
+>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>> functional changes.
+>>>>>
+>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>> still enables mastering in that case if it isn't:
+>>>>>
+>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>> {
+>>>>> [...]
+>>>>>         if (pci_is_enabled(dev)) {
+>>>>>                 if (!dev->is_busmaster)
+>>>>>                         pci_set_master(dev);
+>>>>>                 return;
+>>>>>         }
+>>>>>
+>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>
+>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>> -rc1. Seems like the trivial fix would be:
+>>>>
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>                 return 0;               /* already enabled */
+>>>>
+>>>>         bridge = pci_upstream_bridge(dev);
+>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>> +       if (bridge)
+> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+> pci_enable_bridge functoin will causes a nexted lock.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 5 -----
- 1 file changed, 5 deletions(-)
+Took a look, and looks like you are right. That code looks like a mess,
+fwiw.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 17b323e..4590f30 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -846,11 +846,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		return -EINVAL;
- 	}
- 
--	if (cfg80211_chandef_identical(&params->chandef, &mac->chandef)) {
--		pr_err("%s: switch request to the same channel\n", dev->name);
--		return -EALREADY;
--	}
--
- 	ret = qtnf_cmd_send_chan_switch(mac, params);
- 	if (ret)
- 		pr_warn("%s: failed to switch to channel (%u)\n",
+I'd strongly suggest that the bad commit is reverted until a proper
+solution is found, since the simple one-liner could potentially
+introduce a deadlock with your patch applied.
+
 -- 
-2.9.5
+Jens Axboe
