@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:37098 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750968AbdIFXhI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 19:37:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
-References: <20170905.214143.826912481689443792.davem@davemloft.net> <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 6 Sep 2017 16:37:07 -0700
-Message-ID: <CA+55aFwzYm5o98ZpbC1hOGfkcbYQaucuqZN6qB1f7_qW2CjVpQ@mail.gmail.com> (sfid-20170907_013728_005926_882D6172)
-Subject: Re: [GIT] Networking
-To: David Miller <davem@davemloft.net>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45600 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751845AbdINLo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 07:44:26 -0400
+Message-ID: <1505389462.31630.6.camel@sipsolutions.net> (sfid-20170914_134503_600043_DC6E7C70)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Denis Kenzior <denkenz@gmail.com>
+Date: Thu, 14 Sep 2017 13:44:22 +0200
+In-Reply-To: <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com> (sfid-20170914_132146_263452_CA82BA42)
+References: <1505378361.31630.2.camel@sipsolutions.net>
+         <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
+         (sfid-20170914_132146_263452_CA82BA42)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 6, 2017 at 4:27 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> The firmware is iwlwifi-8000C-28.ucode from
-> iwl7260-firmware-25.30.13.0-75.fc26.noarch, and the kernel reports
->
->   iwlwifi 0000:3a:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
+On Thu, 2017-09-14 at 13:21 +0200, Arend van Spriel wrote:
 
-And when I said "iwlwifi-8000C-28.ucode" I obviously meant
-"iwlwifi-8000C-27.ucode".
+> Yep. Toggling the OPER_STATE seems to go against what roaming is
+> about. 
 
-At least it was _hopefully_ obvious from that "27" in the actual
-version number it reports.
+Agree.
 
-            Linus
+> Come to think of it, is it a good idea to tightly couple
+> PORT_AUTHORIZED to OPER_STATE. Aren't these separate concepts in
+> different layers of the network stack.
+
+Well, I think that coupling would make the most sense, since once you
+have oper state UP you'll try to get IPv6 etc., no? And before being
+authorized there's no point.
+
+Note that we *can't* do this right now, otherwise we can't transfer the
+EAPOL frames; but once we do that over nl80211 we'd be able to.
+
+> In earlier discussions the proposal for a separate event was made by 
+> Jithu (colleague). In brcmfmac it would become a bit less
+> complicated with a separate event so it has my vote as well. So the
+> AUTHORIZED event will have no attributes, right? So if the event
+> occurs it is AUTHORIZED.
+
+I think so, yes. I pondered having the attribute in there so you could
+explicitly have a "not authorized" event, but do we really need that?
+If you get disconnected that's pretty much implied, so ... I don't
+think we need it.
+
+
+> > (*) is anyone working on that? I'll throw it on my list if not.
+
+["that" being EAPOL-over-nl80211]
+
+> The last I saw on this was Denis Kenzior volunteering for it, but
+> that was about it.
+
+Oh, thanks for the reminder, I'd forgotten entirely...
+Denis?
+
+> By the way, I still have wpa_supplicant patches for 4way-hs
+> offloading. I need to dust it off a little and obviously did not
+> foresee the change above ;-) Let me know if you (Intel) plan to
+> submit patches for it.
+
+We also have some patches, we can go either way.
+
+Thanks!
+
+johannes
