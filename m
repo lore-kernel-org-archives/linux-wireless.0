@@ -1,115 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:45548 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751896AbdI0UBy (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41824 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751265AbdINOLZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Sep 2017 16:01:54 -0400
-To: LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] bcma: keep *config menu together
-Message-ID: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org> (sfid-20170927_220210_160012_703C96FC)
-Date: Wed, 27 Sep 2017 13:01:49 -0700
+        Thu, 14 Sep 2017 10:11:25 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
+Date: Thu, 14 Sep 2017 14:11:20 +0000
+Message-ID: <adde6e772d2b411c8e874d933463724e@SC-EXCH02.marvell.com> (sfid-20170914_161128_962001_1C618CDF)
+References: <1504816363-31015-1-git-send-email-gbhat@marvell.com>
+        <20170908194227.GA65107@google.com> <87poawmp1t.fsf@purkki.adurom.net>
+In-Reply-To: <87poawmp1t.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+Hi Kalle,
 
-Use "if BCMA"/"endif" around all Kconfig symbols so that they are
-kept together in *config menus instead of showing up in unexpected
-places. Also remove "depends on BCMA" since this is handled by the
-"if BCMA" addition.
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Tuesday, September 12, 2017 11:33 AM
+> To: Brian Norris
+> Cc: Ganapathi Bhat; linux-wireless@vger.kernel.org; Cathy Luo; Xinming
+> Hu; Zhiyuan Yang; James Cao; Mangesh Malusare
+> Subject: [EXT] Re: [PATCH] mwifiex: check for mfg_mode in
+> add_virtual_intf
+> 
+> External Email
+> 
+> ----------------------------------------------------------------------
+> Brian Norris <briannorris@chromium.org> writes:
+> 
+> > Could have used a 'v2' in the subject, but hopefully that doesn't
+> > bother Kalle too much.
+> 
+> It does create more work for me when sorting patches so please always
+> try include the version in the subject. But no need to resend.
+Sure. I will keep this in mind for future submits.
+> 
+> --
+> Kalle Valo
 
-Tested with ARCH={x86_64,MIPS} using make {n,menu,g,x}config.
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/Kconfig |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
---- lnx-414-rc2.orig/drivers/bcma/Kconfig
-+++ lnx-414-rc2/drivers/bcma/Kconfig
-@@ -10,14 +10,15 @@ menuconfig BCMA
- 	  Bus driver for Broadcom specific Advanced Microcontroller Bus
- 	  Architecture.
- 
-+if BCMA
-+
- # Support for Block-I/O. SELECT this from the driver that needs it.
- config BCMA_BLOCKIO
- 	bool
--	depends on BCMA
- 
- config BCMA_HOST_PCI_POSSIBLE
- 	bool
--	depends on BCMA && PCI = y
-+	depends on PCI = y
- 	default y
- 
- config BCMA_HOST_PCI
-@@ -28,7 +29,6 @@ config BCMA_HOST_PCI
- 
- config BCMA_HOST_SOC
- 	bool "Support for BCMA in a SoC"
--	depends on BCMA
- 	help
- 	  Host interface for a Broadcom AIX bus directly mapped into
- 	  the memory. This only works with the Broadcom SoCs from the
-@@ -38,7 +38,7 @@ config BCMA_HOST_SOC
- 
- config BCMA_DRIVER_PCI
- 	bool "BCMA Broadcom PCI core driver"
--	depends on BCMA && PCI
-+	depends on PCI
- 	default y
- 	help
- 	  BCMA bus may have many versions of PCIe core. This driver
-@@ -54,13 +54,13 @@ config BCMA_DRIVER_PCI
- 
- config BCMA_DRIVER_PCI_HOSTMODE
- 	bool "Driver for PCI core working in hostmode"
--	depends on BCMA && MIPS && BCMA_DRIVER_PCI
-+	depends on MIPS && BCMA_DRIVER_PCI
- 	help
- 	  PCI core hostmode operation (external PCI bus).
- 
- config BCMA_DRIVER_MIPS
- 	bool "BCMA Broadcom MIPS core driver"
--	depends on BCMA && MIPS
-+	depends on MIPS
- 	help
- 	  Driver for the Broadcom MIPS core attached to Broadcom specific
- 	  Advanced Microcontroller Bus.
-@@ -91,7 +91,6 @@ config BCMA_NFLASH
- 
- config BCMA_DRIVER_GMAC_CMN
- 	bool "BCMA Broadcom GBIT MAC COMMON core driver"
--	depends on BCMA
- 	help
- 	  Driver for the Broadcom GBIT MAC COMMON core attached to Broadcom
- 	  specific Advanced Microcontroller Bus.
-@@ -100,7 +99,7 @@ config BCMA_DRIVER_GMAC_CMN
- 
- config BCMA_DRIVER_GPIO
- 	bool "BCMA GPIO driver"
--	depends on BCMA && GPIOLIB
-+	depends on GPIOLIB
- 	select GPIOLIB_IRQCHIP if BCMA_HOST_SOC
- 	help
- 	  Driver to provide access to the GPIO pins of the bcma bus.
-@@ -109,8 +108,9 @@ config BCMA_DRIVER_GPIO
- 
- config BCMA_DEBUG
- 	bool "BCMA debugging"
--	depends on BCMA
- 	help
- 	  This turns on additional debugging messages.
- 
- 	  If unsure, say N
-+
-+endif # BCMA
+Thanks,
+Ganapathi
