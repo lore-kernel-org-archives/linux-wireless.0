@@ -1,182 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35982 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751224AbdI2MDZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 08:03:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 15:03:04 +0300
-Message-Id: <20170929120305.20551-5-luca@coelho.fi> (sfid-20170929_140328_218383_F66C7C38)
-In-Reply-To: <20170929120305.20551-1-luca@coelho.fi>
-References: <20170929120305.20551-1-luca@coelho.fi>
-Subject: [PATCH 4/5] iwlwifi: nvm-parse: unify channel flags printing
+Received: from s3.sipsolutions.net ([5.9.151.49]:51598 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751585AbdINTWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 15:22:47 -0400
+Message-ID: <1505416964.31630.17.camel@sipsolutions.net> (sfid-20170914_212253_198432_74CAECB6)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Sep 2017 21:22:44 +0200
+In-Reply-To: <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com> (sfid-20170914_210836_116060_CBC37968)
+References: <1505378361.31630.2.camel@sipsolutions.net>
+         <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
+         <1505414172.31630.13.camel@sipsolutions.net>
+         <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
+         (sfid-20170914_210836_116060_CBC37968)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-The current channel flags printing is very strange and messy,
-in LAR we sometimes print the channel number and sometimes the
-frequency, in both we print a calculated value (whether ad-hoc
-is supported or not) etc.
+> Yep, but I seem to recall there was some vague language that said the
+> AP would delete the PMKSA if the client disconnected.
 
-Unify all this to
- * print the channel number, not the frequency
- * remove the band print (2.4/5.2 GHz, it's obvious)
- * remove the calculated Ad-Hoc print
+Ok, not sure about that. But even if the AP does, we could try to send
+it and it just can't use it :)
 
-Doing all of this also gets the length of the string to a max
-of 101 characters, which is below the max of 110 for tracing,
-and thus avoids the warning that came up on certain channels
-with certain flag combinations.
+> operstates.txt states that for new connections, operstate should be 
+> dormant until 802.1x is complete & successful.  So the !eapol-over-
+> nl condition would violate that, no?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 98 +++++++++-------------
- 1 file changed, 39 insertions(+), 59 deletions(-)
+As I just wrote in my other email, I think I'm totally confused
+regarding this, and the supplicant already does it correctly - and you
+can ignore the whole "!eapol-over-nl" conditions, and just read it like
+what I thought we could only do in the eapol-over-nl case.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 3014beef4873..35638404c24e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -206,8 +206,36 @@ enum iwl_nvm_channel_flags {
- 	NVM_CHANNEL_DC_HIGH		= BIT(12),
- };
- 
-+static inline void iwl_nvm_print_channel_flags(struct device *dev, u32 level,
-+					       int chan, u16 flags)
-+{
- #define CHECK_AND_PRINT_I(x)	\
--	((ch_flags & NVM_CHANNEL_##x) ? # x " " : "")
-+	((flags & NVM_CHANNEL_##x) ? " " #x : "")
-+
-+	if (!(flags & NVM_CHANNEL_VALID)) {
-+		IWL_DEBUG_DEV(dev, level, "Ch. %d: 0x%x: No traffic\n",
-+			      chan, flags);
-+		return;
-+	}
-+
-+	/* Note: already can print up to 101 characters, 110 is the limit! */
-+	IWL_DEBUG_DEV(dev, level,
-+		      "Ch. %d: 0x%x:%s%s%s%s%s%s%s%s%s%s%s%s\n",
-+		      chan, flags,
-+		      CHECK_AND_PRINT_I(VALID),
-+		      CHECK_AND_PRINT_I(IBSS),
-+		      CHECK_AND_PRINT_I(ACTIVE),
-+		      CHECK_AND_PRINT_I(RADAR),
-+		      CHECK_AND_PRINT_I(INDOOR_ONLY),
-+		      CHECK_AND_PRINT_I(GO_CONCURRENT),
-+		      CHECK_AND_PRINT_I(UNIFORM),
-+		      CHECK_AND_PRINT_I(20MHZ),
-+		      CHECK_AND_PRINT_I(40MHZ),
-+		      CHECK_AND_PRINT_I(80MHZ),
-+		      CHECK_AND_PRINT_I(160MHZ),
-+		      CHECK_AND_PRINT_I(DC_HIGH));
-+#undef CHECK_AND_PRINT_I
-+}
- 
- static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
- 				 u16 nvm_flags, const struct iwl_cfg *cfg)
-@@ -302,12 +330,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 			 * supported, hence we still want to add them to
- 			 * the list of supported channels to cfg80211.
- 			 */
--			IWL_DEBUG_EEPROM(dev,
--					 "Ch. %d Flags %x [%sGHz] - No traffic\n",
--					 nvm_chan[ch_idx],
--					 ch_flags,
--					 (ch_idx >= num_2ghz_channels) ?
--					 "5.2" : "2.4");
-+			iwl_nvm_print_channel_flags(dev, IWL_DL_EEPROM,
-+						    nvm_chan[ch_idx], ch_flags);
- 			continue;
- 		}
- 
-@@ -337,27 +361,10 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		else
- 			channel->flags = 0;
- 
--		IWL_DEBUG_EEPROM(dev,
--				 "Ch. %d [%sGHz] flags 0x%x %s%s%s%s%s%s%s%s%s%s%s%s(%ddBm): Ad-Hoc %ssupported\n",
--				 channel->hw_value,
--				 is_5ghz ? "5.2" : "2.4",
--				 ch_flags,
--				 CHECK_AND_PRINT_I(VALID),
--				 CHECK_AND_PRINT_I(IBSS),
--				 CHECK_AND_PRINT_I(ACTIVE),
--				 CHECK_AND_PRINT_I(RADAR),
--				 CHECK_AND_PRINT_I(INDOOR_ONLY),
--				 CHECK_AND_PRINT_I(GO_CONCURRENT),
--				 CHECK_AND_PRINT_I(UNIFORM),
--				 CHECK_AND_PRINT_I(20MHZ),
--				 CHECK_AND_PRINT_I(40MHZ),
--				 CHECK_AND_PRINT_I(80MHZ),
--				 CHECK_AND_PRINT_I(160MHZ),
--				 CHECK_AND_PRINT_I(DC_HIGH),
--				 channel->max_power,
--				 ((ch_flags & NVM_CHANNEL_IBSS) &&
--				  !(ch_flags & NVM_CHANNEL_RADAR))
--					? "" : "not ");
-+		iwl_nvm_print_channel_flags(dev, IWL_DL_EEPROM,
-+					    channel->hw_value, ch_flags);
-+		IWL_DEBUG_EEPROM(dev, "Ch. %d: %ddBm\n",
-+				 channel->hw_value, channel->max_power);
- 	}
- 
- 	return n_channels;
-@@ -873,12 +880,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 		new_rule = false;
- 
- 		if (!(ch_flags & NVM_CHANNEL_VALID)) {
--			IWL_DEBUG_DEV(dev, IWL_DL_LAR,
--				      "Ch. %d Flags %x [%sGHz] - No traffic\n",
--				      nvm_chan[ch_idx],
--				      ch_flags,
--				      (ch_idx >= NUM_2GHZ_CHANNELS) ?
--				      "5.2" : "2.4");
-+			iwl_nvm_print_channel_flags(dev, IWL_DL_LAR,
-+						    nvm_chan[ch_idx], ch_flags);
- 			continue;
- 		}
- 
-@@ -914,31 +917,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 		prev_center_freq = center_freq;
- 		prev_reg_rule_flags = reg_rule_flags;
- 
--		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
--			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x)\n",
--			      center_freq,
--			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
--			      CHECK_AND_PRINT_I(VALID),
--			      CHECK_AND_PRINT_I(IBSS),
--			      CHECK_AND_PRINT_I(ACTIVE),
--			      CHECK_AND_PRINT_I(RADAR),
--			      CHECK_AND_PRINT_I(INDOOR_ONLY),
--			      CHECK_AND_PRINT_I(GO_CONCURRENT),
--			      CHECK_AND_PRINT_I(UNIFORM),
--			      CHECK_AND_PRINT_I(20MHZ),
--			      CHECK_AND_PRINT_I(40MHZ),
--			      CHECK_AND_PRINT_I(80MHZ),
--			      CHECK_AND_PRINT_I(160MHZ),
--			      CHECK_AND_PRINT_I(DC_HIGH),
--			      ch_flags);
--		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
--			      "Ch. %d [%sGHz] reg_flags 0x%x: %s\n",
--			      center_freq,
--			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
--			      reg_rule_flags,
--			      ((ch_flags & NVM_CHANNEL_ACTIVE) &&
--			       !(ch_flags & NVM_CHANNEL_RADAR))
--					 ? "Ad-Hoc" : "");
-+		iwl_nvm_print_channel_flags(dev, IWL_DL_LAR,
-+					    nvm_chan[ch_idx], ch_flags);
- 	}
- 
- 	regd->n_reg_rules = valid_rules;
--- 
-2.14.1
+No idea how I ended up with the idea that you could only send data
+frames when the netdev was IF_OPER_UP - that doesn't seem to have any
+basis in reality.
+
+> > > >        - initialize 1X state machines/timeouts
+> > > >      - 1X handshake
+> > > >      - send PMK to device for 4-way-HS
+> > > >      - AUTHORIZED event
+> > > >        - [if eapol-over-nl: toggle oper state up]
+> > > > 
+> 
+> Given your explanation above, should this be [if !eapol-over-nl ..?
+
+
+> So I agree that OPERSTATE_UP should not change on a roam.  I think
+> we're both in agreement here.
+
+Great.
+
+> My earlier point is that software roams need to have the exact same 
+> behavior as well.  And my understanding is that when we try to 
+> Fast-Transition (e.g. issue a CMD_ASSOCIATE), operstate is no longer
+> UP.
+
+I'm not sure - I don't know what the state machine in wpa_s goes
+through here. Probably easier to test than try to reason about the
+code...
+
+> At the very least there's lots of confusion with what is supposed to 
+> happen with operstate and when.  So if we can work out & document a 
+> consistent behavior, I'm all for it.
+
+:-)
+
+johannes
