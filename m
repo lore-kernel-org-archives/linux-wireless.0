@@ -1,221 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750855AbdIBBpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 21:45:00 -0400
-From: igor.mitsyanko.os@quantenna.com
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:46468 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751846AbdINTor (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 15:44:47 -0400
+Received: by mail-lf0-f54.google.com with SMTP id m199so392495lfe.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 12:44:46 -0700 (PDT)
+Received: from [172.28.2.212] (static-213-115-247-2.sme.bredbandsbolaget.se. [213.115.247.2])
+        by smtp.gmail.com with ESMTPSA id x28sm1280289lje.30.2017.09.14.12.44.44
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 14 Sep 2017 12:44:44 -0700 (PDT)
+From: Joel B <maxxflow@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 2/9] qtnfmac: make "Channel change" event report full channel info
-Date: Fri,  1 Sep 2017 18:44:44 -0700
-Message-Id: <20170902014451.17766-3-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034514_664029_E72D0216)
-In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+Subject: iwlwifi: ToF usage
+Message-ID: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com> (sfid-20170914_214450_543811_977A8C9B)
+Date: Thu, 14 Sep 2017 21:44:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Hi,
 
-Specifically, it has to report center frequency, secondary center
-frequency (for 80+80) and BW.
-Introduce channel definition structure to qlink and modify channel
-change event processing function accordingly.
+Starting to play around with the FTM/ToF support in iwlwifi, but 
+documentation is (understandably) scarce at this point. Using a pair of 
+8260:s I had lying around.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/event.c     | 29 ++++++------
- drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 18 +++++++-
- .../net/wireless/quantenna/qtnfmac/qlink_util.c    | 52 ++++++++++++++++++++++
- .../net/wireless/quantenna/qtnfmac/qlink_util.h    |  4 ++
- 4 files changed, 85 insertions(+), 18 deletions(-)
+Can someone give me some hints on how to work the debugfs API for a 
+successful measurement?
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 0fc2814..df58e83 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -25,6 +25,7 @@
- #include "trans.h"
- #include "util.h"
- #include "event.h"
-+#include "qlink_util.h"
- 
- static int
- qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
-@@ -359,39 +360,35 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- {
- 	struct wiphy *wiphy = priv_to_wiphy(mac);
- 	struct cfg80211_chan_def chandef;
--	struct ieee80211_channel *chan;
- 	struct qtnf_vif *vif;
--	int freq;
- 	int i;
- 
- 	if (len < sizeof(*data)) {
--		pr_err("payload is too short\n");
-+		pr_err("MAC%u: payload is too short\n", mac->macid);
- 		return -EINVAL;
- 	}
- 
--	freq = le32_to_cpu(data->freq);
--	chan = ieee80211_get_channel(wiphy, freq);
--	if (!chan) {
--		pr_err("channel at %d MHz not found\n", freq);
-+	qlink_chandef_q2cfg(wiphy, &data->chan, &chandef);
-+
-+	if (!cfg80211_chandef_valid(&chandef)) {
-+		pr_err("MAC%u: bad channel f1=%u f2=%u bw=%u\n", mac->macid,
-+		       chandef.center_freq1, chandef.center_freq2,
-+		       chandef.width);
- 		return -EINVAL;
- 	}
- 
--	pr_debug("MAC%d switch to new channel %u MHz\n", mac->macid, freq);
-+	pr_debug("MAC%d: new channel ieee=%u freq1=%u freq2=%u bw=%u\n",
-+		 mac->macid, chandef.chan->hw_value, chandef.center_freq1,
-+		 chandef.center_freq2, chandef.width);
- 
- 	if (mac->status & QTNF_MAC_CSA_ACTIVE) {
- 		mac->status &= ~QTNF_MAC_CSA_ACTIVE;
--		if (chan->hw_value != mac->csa_chandef.chan->hw_value)
-+		if (chandef.chan->hw_value != mac->csa_chandef.chan->hw_value)
- 			pr_warn("unexpected switch to %u during CSA to %u\n",
--				chan->hw_value,
-+				chandef.chan->hw_value,
- 				mac->csa_chandef.chan->hw_value);
- 	}
- 
--	/* FIXME: need to figure out proper nl80211_channel_type value */
--	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
--	/* fall-back to minimal safe chandef description */
--	if (!cfg80211_chandef_valid(&chandef))
--		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
--
- 	memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
- 
- 	for (i = 0; i < QTNF_MAX_INTF; i++) {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index a69fd470..5936854 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -118,6 +118,20 @@ enum qlink_channel_width {
- 	QLINK_CHAN_WIDTH_160,
- };
- 
-+/**
-+ * struct qlink_chandef - qlink channel definition
-+ *
-+ * @center_freq1: center frequency of first segment
-+ * @center_freq2: center frequency of second segment (80+80 only)
-+ * @width: channel width, one of @enum qlink_channel_width
-+ */
-+struct qlink_chandef {
-+	__le16 center_freq1;
-+	__le16 center_freq2;
-+	u8 width;
-+	u8 rsvd[3];
-+} __packed;
-+
- /* QLINK Command messages related definitions
-  */
- 
-@@ -764,11 +778,11 @@ struct qlink_event_bss_leave {
- /**
-  * struct qlink_event_freq_change - data for QLINK_EVENT_FREQ_CHANGE event
-  *
-- * @freq: new operating frequency in MHz
-+ * @chan: new operating channel definition
-  */
- struct qlink_event_freq_change {
- 	struct qlink_event ehdr;
--	__le32 freq;
-+	struct qlink_chandef chan;
- } __packed;
- 
- enum qlink_rxmgmt_flags {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-index 369b77d..3c1db5b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-@@ -75,3 +75,55 @@ u8 qlink_chan_width_mask_to_nl(u16 qlink_mask)
- 
- 	return result;
- }
-+
-+static enum nl80211_chan_width qlink_chanwidth_to_nl(u8 qlw)
-+{
-+	switch (qlw) {
-+	case QLINK_CHAN_WIDTH_20_NOHT:
-+		return NL80211_CHAN_WIDTH_20_NOHT;
-+	case QLINK_CHAN_WIDTH_20:
-+		return NL80211_CHAN_WIDTH_20;
-+	case QLINK_CHAN_WIDTH_40:
-+		return NL80211_CHAN_WIDTH_40;
-+	case QLINK_CHAN_WIDTH_80:
-+		return NL80211_CHAN_WIDTH_80;
-+	case QLINK_CHAN_WIDTH_80P80:
-+		return NL80211_CHAN_WIDTH_80P80;
-+	case QLINK_CHAN_WIDTH_160:
-+		return NL80211_CHAN_WIDTH_160;
-+	case QLINK_CHAN_WIDTH_5:
-+		return NL80211_CHAN_WIDTH_5;
-+	case QLINK_CHAN_WIDTH_10:
-+		return NL80211_CHAN_WIDTH_10;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+void qlink_chandef_q2cfg(struct wiphy *wiphy,
-+			 const struct qlink_chandef *qch,
-+			 struct cfg80211_chan_def *chdef)
-+{
-+	chdef->center_freq1 = le16_to_cpu(qch->center_freq1);
-+	chdef->center_freq2 = le16_to_cpu(qch->center_freq2);
-+	chdef->width = qlink_chanwidth_to_nl(qch->width);
-+
-+	switch (chdef->width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
-+		chdef->chan = ieee80211_get_channel(wiphy, chdef->center_freq1);
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+		chdef->chan = ieee80211_get_channel(wiphy,
-+						    chdef->center_freq1 - 10);
-+		break;
-+	default:
-+		chdef->chan = NULL;
-+		break;
-+	}
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-index de06c1e..5e49a8a 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-@@ -19,6 +19,7 @@
- 
- #include <linux/types.h>
- #include <linux/skbuff.h>
-+#include <net/cfg80211.h>
- 
- #include "qlink.h"
- 
-@@ -62,5 +63,8 @@ static inline void qtnf_cmd_skb_put_tlv_u16(struct sk_buff *skb,
- 
- u16 qlink_iface_type_to_nl_mask(u16 qlink_type);
- u8 qlink_chan_width_mask_to_nl(u16 qlink_mask);
-+void qlink_chandef_q2cfg(struct wiphy *wiphy,
-+			 const struct qlink_chandef *qch,
-+			 struct cfg80211_chan_def *chdef);
- 
- #endif /* _QTN_FMAC_QLINK_UTIL_H_ */
--- 
-2.9.5
+I've set up one card as AP with hostapd (with ftm_responder=1 and 
+ftm_initiator=1 in hostapd.conf), the other as a STA.
+
+ From the STA, I've played with 'tof_range_request' in debugfs. Writing 
+send_range_request=1, which it doesn't choke on or anything, but nothing 
+seems to happen. Guess I need to set things up a bit first, but how?
+
+If it's possible to get this to work at all at this stage, some hints on 
+how to do it would be great.
+
+
+Thanks,
+Joel
