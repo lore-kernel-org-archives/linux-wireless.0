@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48874 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751257AbdIPDDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 23:03:13 -0400
-Date: Fri, 15 Sep 2017 22:03:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Luca Coelho <luca@coelho.fi>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail2.candelatech.com ([208.74.158.173]:48198 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdINU36 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 16:29:58 -0400
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+To: Denis Kenzior <denkenz@gmail.com>,
         Johannes Berg <johannes@sipsolutions.net>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: iwlwifi firmware load broken in current -git
-Message-ID: <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com> (sfid-20170916_050316_637896_095E8F1D)
-References: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
- <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
- <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
- <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
- <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
- <1505505062.32032.1.camel@coelho.fi>
- <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+References: <1505378361.31630.2.camel@sipsolutions.net>
+ <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
+ <1505389462.31630.6.camel@sipsolutions.net>
+ <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
+ <1505416658.31630.15.camel@sipsolutions.net>
+ <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
+ <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
+ <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
+ <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com>
+ <c97ecdb4-fe7a-e79a-d73e-32166beb1e11@gmail.com>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <8a26a838-adde-08f1-5f64-c98e1d947675@candelatech.com> (sfid-20170914_223001_524003_20704249)
+Date: Thu, 14 Sep 2017 13:29:57 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
+In-Reply-To: <c97ecdb4-fe7a-e79a-d73e-32166beb1e11@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 15, 2017 at 01:55:57PM -0600, Jens Axboe wrote:
-> On 09/15/2017 01:51 PM, Luca Coelho wrote:
-> > On Fri, 2017-09-15 at 13:48 -0600, Jens Axboe wrote:
-> >> On 09/15/2017 01:38 PM, Linus Torvalds wrote:
-> >>> On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> >>>>>
-> >>>>> In any case, your patch introduces a regression on systems. Please get
-> >>>>> it reverted now, and then you can come up with a new approach to fix the
-> >>>>> double enable of the upstream bridge.
-> >>>>
-> >>>> Who's sending in the revert? I can certainly do it if no one else does,
-> >>>> but it needs to be done.
-> >>>>
-> >>>> I'm not seeing any patches coming out of Srinath to fix up the
-> >>>> situation, so we should revert the broken patch until a better solution
-> >>>> exists.
-> >>>
-> >>> Hmm. I don't have the history here (apparently it never made lkml, for
-> >>> example), so I don't even know which commit you're talking about.
-> >>>
-> >>> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
-> >>> Avoid race while enabling upstream bridges"), is that correct?
-> >>
-> >> Yes, Luca says that Bjorn already sent in the revert request, I just
-> >> didn't see it since I wasn't CC'ed on it. So looks like we're all
-> >> good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
-> >> commit.
-> > 
-> > Strange... AFAICT you *were* CCed on it.  And so was everyone else in
-> > the original thread (+LKML)...
-> 
-> Hmm, never showed up here. Very odd!
+On 09/14/2017 01:26 PM, Denis Kenzior wrote:
+> Hi Ben,
+>>
+>> How do you re-confirm them?  There are definitely cases where SSID/Security is the same but each
+>> AP has its own DHCP server and roaming between them will require getting a new DHCP address (on
+>> the same (NAT'd) subnet and with same gateway, likely as not).
+>>
+>
+> Using DHCPREQUEST to verify obtained parameters, or the DHCPv6 equivalent Confirm message.  This obviously requires some integration between the dhcp daemon and
+> the supplicant.
 
-Sorry, I think this is probably because I'm an idiot and sent it from
-an @google.com account and it got rejected because the DMARC check
-failed.
+Do you want to allow the just-now-roamed station to use its old IP address(es) while you are
+confirming?
 
-Bjorn
+If not, how is this different from just re-doing DHCP like normal?
+
+And if so, you will in some cases be allowing duplicate IP addresses on
+a network?
+
+Thanks,
+Ben
+
+>
+> Regards,
+> -Denis
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
