@@ -1,63 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway31.websitewelcome.com ([192.185.144.28]:43278 "EHLO
-        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752200AbdIGO45 (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:47656 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751691AbdINR20 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 10:56:57 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway31.websitewelcome.com (Postfix) with ESMTP id C09FDE1CF2
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2017 09:35:55 -0500 (CDT)
-Subject: Re: [PATCH] rtlwifi: btcoex: 23b 1ant: fix duplicated code for
- different branches
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170830134223.GA13596@embeddedgus>
- <ae09e952-112e-9616-735a-b86ba01ad398@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <02176aa2-9af5-c933-74e1-b2333c07c36b@embeddedor.com> (sfid-20170907_165700_496294_BA527818)
-Date: Thu, 7 Sep 2017 09:35:49 -0500
+        Thu, 14 Sep 2017 13:28:26 -0400
+Received: by mail-io0-f177.google.com with SMTP id e189so2349558ioa.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 10:28:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ae09e952-112e-9616-735a-b86ba01ad398@lwfinger.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+Date: Thu, 14 Sep 2017 22:58:24 +0530
+Message-ID: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com> (sfid-20170914_192830_595503_92F2E0FA)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+Hi Bjorn,
 
-On 08/30/2017 11:48 PM, Larry Finger wrote:
-> On 08/30/2017 08:42 AM, Gustavo A. R. Silva wrote:
->> Refactor code in order to avoid identical code for different branches.
->>
->> This issue was detected with the help of Coccinelle.
->>
->> Addresses-Coverity-ID: 1226788
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->> This issue was reported by Coverity and it was tested by compilation
->> only.
->> I'm suspicious this may be a copy/paste error. Please, verify.
->>
->>   .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c   | 10
->> ++--------
->>   1 file changed, 2 insertions(+), 8 deletions(-)
+On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
 >
-> This change is not correct. When bt_link_info->sco_exist is true, the
-> call should be
->
->                 halbtc8723b1ant_limited_rx(btcoexist,
->                                NORMAL_EXEC, true,
->                                false, 0x5);
->
-> NACK
->
-> I will push the correct patch.
->
+> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+> > [+cc linux-pci]
+> >
+> > On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> >> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+> >>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+> >>>
+> >>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+> >>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+> >>>> functional changes.
+> >>>
+> >>> and pci_enable_bridge() already checks if it's already enabled, but
+> >>> still enables mastering in that case if it isn't:
+> >>>
+> >>> static void pci_enable_bridge(struct pci_dev *dev)
+> >>> {
+> >>> [...]
+> >>>         if (pci_is_enabled(dev)) {
+> >>>                 if (!dev->is_busmaster)
+> >>>                         pci_set_master(dev);
+> >>>                 return;
+> >>>         }
+> >>>
+> >>> so I guess due to the new check we end up with mastering disabled, and
+> >>> thus the firmware can't load since that's a DMA thing?
+> >>
+> >> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+> >> from working on a pretty standard laptop. It'd suck to have this be in
+> >> -rc1. Seems like the trivial fix would be:
+> >>
+> >>
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index b0002daa50f3..ffbe11dbdd61 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+> >>                 return 0;               /* already enabled */
+> >>
+> >>         bridge = pci_upstream_bridge(dev);
+> >> -       if (bridge && !pci_is_enabled(bridge))
+> >> +       if (bridge)
+With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+pci_enable_bridge functoin will causes a nexted lock.
 
-Great. Good to know.
-
-Thanks
--- 
-Gustavo A. R. Silva
+> >>                 pci_enable_bridge(bridge);
+> >>
+> >>         /* only skip sriov related */
+> >>
+> >>
+> >
+> > Looks like a reasonable fix.  I assume it works for you?  I don't have
+> > a way to test it, so if you can verify that it works and supply a
+> > Signed-off-by, I can merge it.
+>
+> Booting it right now, I'll send out a proper version in a few minutes.
+>
+> --
+> Jens Axboe
+>
