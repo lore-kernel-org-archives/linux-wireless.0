@@ -1,77 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:55642 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751330AbdINUfH (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36605 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751370AbdINSFI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 16:35:07 -0400
-Received: by mail-io0-f170.google.com with SMTP id z187so3549907ioz.12
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 13:35:07 -0700 (PDT)
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-To: Ben Greear <greearb@candelatech.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <1505378361.31630.2.camel@sipsolutions.net>
- <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
- <1505389462.31630.6.camel@sipsolutions.net>
- <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
- <1505416658.31630.15.camel@sipsolutions.net>
- <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
- <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
- <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
- <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com>
- <c97ecdb4-fe7a-e79a-d73e-32166beb1e11@gmail.com>
- <8a26a838-adde-08f1-5f64-c98e1d947675@candelatech.com>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <756be45c-fd13-56a7-b8d4-129c4fd07dc8@gmail.com> (sfid-20170914_223511_343312_52A23F96)
-Date: Thu, 14 Sep 2017 15:35:05 -0500
+        Thu, 14 Sep 2017 14:05:08 -0400
+Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
+To: Zwindl <zwindl@protonmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "pkshih@realtek.com" <pkshih@realtek.com>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net> (sfid-20170914_200523_807959_1627D26B)
+Date: Thu, 14 Sep 2017 13:05:03 -0500
 MIME-Version: 1.0
-In-Reply-To: <8a26a838-adde-08f1-5f64-c98e1d947675@candelatech.com>
+In-Reply-To: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+On 09/14/2017 08:30 AM, Zwindl wrote:
+> Dear developers:
+> I'm using Arch Linux with testing enabled, the current kernel version and 
+> details are
+> `Linux zwindl 4.13.2-1-ARCH #1 SMP PREEMPT Thu Sep 14 02:57:34 UTC 2017 x86_64 
+> GNU/Linux`.
+> The wireless card can't work properly from the kernel 4.13. Here's the log(in 
+> attachment) when NetworkManager trying to connect my wifi which is named as 
+> 'TP', my mac addr hided as xx:xx:xx:xx:xx.
+> What should I provide to help to debug?
+> ZWindL.
 
-On 09/14/2017 03:29 PM, Ben Greear wrote:
-> On 09/14/2017 01:26 PM, Denis Kenzior wrote:
->> Hi Ben,
->>>
->>> How do you re-confirm them?  There are definitely cases where 
->>> SSID/Security is the same but each
->>> AP has its own DHCP server and roaming between them will require 
->>> getting a new DHCP address (on
->>> the same (NAT'd) subnet and with same gateway, likely as not).
->>>
->>
->> Using DHCPREQUEST to verify obtained parameters, or the DHCPv6 
->> equivalent Confirm message.  This obviously requires some integration 
->> between the dhcp daemon and
->> the supplicant.
-> 
-> Do you want to allow the just-now-roamed station to use its old IP 
-> address(es) while you are
-> confirming?
+The BUG-ON arises in __intel_map_single() due to dir (for direction of DMA) 
+equal to DMA_NONE (3). When rtl8192ee calls pci_map_single(), it uses 
+PCI_DMA_TODEVICE (1). I followed the calling sequence through the entire chain, 
+and none of the routines made any changes to 'dir', other that changing the type 
+from int to enum dma_data_direction. That would not have changed a 1 to a 3.
 
-I think it is sane to assume that the IP address _should_ be the same. 
-The 802.11 spec expects this even.  This is to handle bizarre networks 
-that don't do this properly.
+I built a 4.13.2 system. The problem does not happen here. At this point, the 
+system has been up for about two hours. I did discover a small memory leak 
+associated with firmware loading, but that should not have caused the problem. 
+Nonetheless, I will be sending a patch to fix that problem.
 
-> 
-> If not, how is this different from just re-doing DHCP like normal?
-> 
+I will continue testing, although I doubt that the problem will happen here.
 
-You get to use your old IP address.  So e.g. your VoIP call doesn't 
-disappear if you decide to switch access points.
+How long had your system been up when the problem occurred? Your dmesg fragment 
+did not show any times. What kernels have you tried besides 4.13.2?
 
-> And if so, you will in some cases be allowing duplicate IP addresses on
-> a network?
-> 
-
-Life is never perfect ;)
-
-Regards,
--Denis
+Larry
