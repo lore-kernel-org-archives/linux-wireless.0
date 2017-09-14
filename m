@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:44035 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753250AbdIIHpj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Sep 2017 03:45:39 -0400
-Received: by mail-wm0-f48.google.com with SMTP id 137so10490498wmj.1
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Sep 2017 00:45:38 -0700 (PDT)
-Subject: Re: [PATCH 1/3] brcmfmac: Avoid possible out-of-bounds read
-To: Kevin Cernekee <cernekee@chromium.org>, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-References: <20170908191342.28053-1-cernekee@chromium.org>
- <20170908191342.28053-2-cernekee@chromium.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <be986d32-dabc-2638-3d38-abe85df4a5b8@broadcom.com> (sfid-20170909_094555_035556_2B11A22A)
-Date: Sat, 9 Sep 2017 09:45:35 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170908191342.28053-2-cernekee@chromium.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:51918 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751810AbdINTlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 15:41:36 -0400
+Message-ID: <1505418093.31630.21.camel@sipsolutions.net> (sfid-20170914_214139_624363_BD1F3B7A)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Sep 2017 21:41:33 +0200
+In-Reply-To: <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com> (sfid-20170914_213704_661714_E0BFBBE8)
+References: <1505378361.31630.2.camel@sipsolutions.net>
+         <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
+         <1505414172.31630.13.camel@sipsolutions.net>
+         <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
+         <1505416964.31630.17.camel@sipsolutions.net>
+         <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
+         (sfid-20170914_213704_661714_E0BFBBE8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08-09-17 21:13, Kevin Cernekee wrote:
-> In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
-> the length of rxframe is validated.  This could lead to uninitialized
-> data being printed in a debug message.  Since we already have a
+On Thu, 2017-09-14 at 14:37 -0500, Denis Kenzior wrote:
 
-The debug message is after the length validation so there is not 
-unintialized data being printed.
+> > > My earlier point is that software roams need to have the exact
+> > > same behavior as well.  And my understanding is that when we try
+> > > to Fast-Transition (e.g. issue a CMD_ASSOCIATE), operstate is no
+> > > longer UP.
 
-> perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
-> and ch.chspec is not modified by decchspec(), avoid the extra
-> assignment and use ch.chspec in the debug print.
+> I'm talking about the kernel behavior, not wpa_s.
 
-However, there is no real for the chanspec variable for the given reason 
-so...
+Oh.
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Suggested-by: Mattias Nissler <mnissler@chromium.org>
-> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> My guys discovered that the kernel seems to twiddle operstate
+> automagically?  E.g. see description of 
+> https://git.kernel.org/pub/scm/network/wireless/iwd.git/commit/?id=4d
+> 20db05d7c8806749db574e9231bd5d1c476c7f
+
+Well I guess any time that the carrier does in fact go down, you'd also
+reset oper state...
+
+And now that I think about it, that does in fact happen in
+ieee80211_set_disassoc(), which we even go through for FT roaming.
+
+Sounds like something we should fix?
+
+johannes
