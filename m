@@ -1,69 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40978 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751434AbdION3W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 09:29:22 -0400
-Message-ID: <1505482156.31630.39.camel@sipsolutions.net> (sfid-20170915_152926_419833_E8AB1BA4)
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 15 Sep 2017 15:29:16 +0200
-In-Reply-To: <ff73f237-71dd-5fde-9c9f-9bc8fce57e76@gmail.com> (sfid-20170915_145045_823652_4B4D42A4)
-References: <1505378361.31630.2.camel@sipsolutions.net>
-         <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
-         <1505414172.31630.13.camel@sipsolutions.net>
-         <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
-         <1505416964.31630.17.camel@sipsolutions.net>
-         <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
-         <1505418093.31630.21.camel@sipsolutions.net>
-         <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com>
-         <1505459955.31630.26.camel@sipsolutions.net>
-         <ff73f237-71dd-5fde-9c9f-9bc8fce57e76@gmail.com>
-         (sfid-20170915_145045_823652_4B4D42A4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f177.google.com ([209.85.223.177]:46668 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751173AbdINAjh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Sep 2017 20:39:37 -0400
+Received: by mail-io0-f177.google.com with SMTP id d16so10928620ioj.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2017 17:39:36 -0700 (PDT)
+Subject: Re: rtl8821ae keep alive not set, connection lost
+To: James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170912220916.GB32211@us.netrek.org>
+ <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
+ <20170913214649.GC20283@us.netrek.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net> (sfid-20170914_023940_354920_589BA614)
+Date: Wed, 13 Sep 2017 19:39:35 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170913214649.GC20283@us.netrek.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-15 at 07:50 -0500, Denis Kenzior wrote:
-
-> > > E.g. if I CMD_CONNECT to AP1, then pre-authenticate to AP2 and
-> > > issue a CMD_CONNECT to AP2?
-> > 
-> > That's not something you can do with full-MAC cards?
+On 09/13/2017 04:46 PM, James Cameron wrote:
 > 
-> Err, why not?  Pre-Authentication runs over a 0x88c7 protocol.  So
-> we should get these just like regular PAE frames.  But forget 
-> pre-authentication, one can still force a roam between BSSes within
-> the same ESS by specifying NL80211_ATTR_PREV_BSSID.  At least that's
-> what the docs say ;)
-
-Oh, you meant that kind of pre-authentication :-)
-
-I thought you meant sending an 802.11 auth frame to the new AP before
-breaking the connection to the old AP.
-
-> > And even mac80211 doesn't really support pre-authentication (unless
-> > you mean over-the-DS)
-
+> I'll give it some more testing and let you know, but it seems as
+> capable of keeping a connection as 4.13 plus my earlier revert.
 > 
-> There's only one kind of preauthentication? Are you confusing this
-> with FT?
 
-No, see above.
+The change I sent earlier should be as good as reverting the change to 
+write_byte in your reversion.
 
-> We use FT-over-Air just fine on mac80211 and on real hardware.  We 
-> even have an autotest for this based on mac80211_hwsim.  FT-over-DS 
-> should work as well.
-> 
-> Full macs don't support FT due to lack of 
-> CMD_ASSOCIATE/CMD_AUTHENTICATE.  Can we fix that btw?
+There has been a report (in Russian unfortunately) at 
+https://www.linux.org.ru/forum/desktop/12620193 of delays in ARP handling. 
+According to Google translate is as follows:
 
-Well, with full MAC devices you should let the device decide on the
-BSS?
+============================================================
+Periodically, Wi-Fi networker rtl8821ae ceases to respond to ARP, which causes 
+the Internet to end. Wireshark looks quite interesting: ARP replays can be sent 
+by one large packet a few seconds after receiving the requests, ie. they seem to 
+be buffered somewhere.
 
-johannes
+arping, launched under strace, also hints at certain problems:
+sendto(3, 
+"\0\1\10\0\6\4\0\1\334\205\336\3572\343\300\250\0h\377\377\377\377\377\377\300\250\0\1", 
+28, 0, {sa_family=AF_PACKET, proto=0x806, if3, pkttype=PACKET_HOST, addr(6)={1, 
+ffffffffffff}, 20) = -1 ENOBUFS (No buffer space available)
+alarm(1)                                = 0
+rt_sigreturn()                          = 45
+recvfrom(3, 0x7fffc1646030, 4096, 0, 0x7fffc1645fb0, 0x7fffc1645eac) = ? 
+ERESTARTSYS (To be restarted if SA_RESTART is set)
+--- SIGALRM {si_signo=SIGALRM, si_code=SI_KERNEL} ---
+sendto(3, 
+"\0\1\10\0\6\4\0\1\334\205\336\3572\343\300\250\0h\377\377\377\377\377\377\300\250\0\1", 
+28, 0, {sa_family=AF_PACKET, proto=0x806, if3, pkttype=PACKET_HOST, addr(6)={1, 
+ffffffffffff}, 20) = -1 ENOBUFS (No buffer space available)
+alarm(1)                                = 0
+rt_sigreturn()                          = 45
+recvfrom(3, 0x7fffc1646030, 4096, 0, 0x7fffc1645fb0, 0x7fffc1645eac) = ? 
+ERESTARTSYS (To be restarted if SA_RESTART is set)
+--- SIGALRM {si_signo=SIGALRM, si_code=SI_KERNEL} ---
+recvfrom(3, 0x7fffc1646030, 4096, 0, 0x7fffc1645fb0, 0x7fffc1645eac) = ? 
+ERESTARTSYS (To be restarted if SA_RESTART is set)
+--- SIGALRM {si_signo=SIGALRM, si_code=SI_KERNEL} ---
+sendto(3, 
+"\0\1\10\0\6\4\0\1\334\205\336\3572\343\300\250\0h\377\377\377\377\377\377\300\250\0\1", 
+28, 0, {sa_family=AF_PACKET, proto=0x806, if3, pkttype=PACKET_HOST, addr(6)={1, 
+ffffffffffff}, 20) = -1 ENOBUFS (No buffer space available)
+============================================================
+
+I need to explore that ENOBUFS return code.
+
+Your case where the device is unresponsive to pings from another NIC until the 
+device transmits may also be an ARP problem.
+
+For completeness, are you using the 2.4 of 5 GHz band? What is the make/model 
+your AP? If possible for you to determine, what firmware is it running?
+
+Thanks,
+
+Larry
