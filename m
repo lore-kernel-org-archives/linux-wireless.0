@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60990 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753060AbdIYFWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 01:22:33 -0400
-Message-ID: <1506316946.2909.8.camel@sipsolutions.net> (sfid-20170925_072508_951437_680DD0C5)
-Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Xiang Gao <qasdfgtyuiop@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-crypto@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 25 Sep 2017 07:22:26 +0200
-In-Reply-To: <20170925045641.GB22947@gondor.apana.org.au>
-References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com>
-         <1506265531.2909.5.camel@sipsolutions.net>
-         <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com>
-         <1506274966.2909.7.camel@sipsolutions.net>
-         <20170925045641.GB22947@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38714 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751133AbdINOOc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 10:14:32 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Joe Perches <joe@perches.com>
+CC: Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [EXT] Re: [PATCH 2/2] mwifiex: print URB submit failure error
+ after threshold attemtps
+Date: Thu, 14 Sep 2017 14:14:24 +0000
+Message-ID: <6dfc9cfaff734c12bc53ffcb063c4491@SC-EXCH02.marvell.com> (sfid-20170914_161435_428321_8D6FA2BA)
+References: <1504122674-3379-1-git-send-email-gbhat@marvell.com>
+         <1504122674-3379-3-git-send-email-gbhat@marvell.com>
+ <1504238727.2361.1.camel@perches.com>
+In-Reply-To: <1504238727.2361.1.camel@perches.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-09-25 at 12:56 +0800, Herbert Xu wrote:
-> On Sun, Sep 24, 2017 at 07:42:46PM +0200, Johannes Berg wrote:
-> > 
-> > Unrelated to this, I'm not sure whose tree this should go through -
-> > probably Herbert's (or DaveM's with his ACK? not sure if there's a
-> > crypto tree?) or so?
+Hi Joe,
+
+> On Thu, 2017-08-31 at 01:21 +0530, Ganapathi Bhat wrote:
+> > Current driver prints dev_alloc_skb failures everytime while
+> > submitting RX URBs. This failure might be frequent in some low
+> > resource platforms. So, wait for a threshold failure count before
+> > start priting the error. This change is a follow up for the 'commit
+> > 7b368e3d15c3
+> > ("mwifiex: resubmit failed to submit RX URBs in main thread")'
 > 
-> Since you're just rearranging code invoking the crypto API, rather
-> than touching actual crypto API code, I think you should handle it
-> as you do with any other wireless patch.
+> []
+> 
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c
+> > b/drivers/net/wireless/marvell/mwifiex/usb.c
+> []
+> > @@ -300,9 +300,16 @@ static int mwifiex_usb_submit_rx_urb(struct
+> urb_context *ctx, int size)
+> >  	if (card->rx_cmd_ep != ctx->ep) {
+> >  		ctx->skb = dev_alloc_skb(size);
+> >  		if (!ctx->skb) {
+> > -			mwifiex_dbg(adapter, ERROR,
+> > -				    "%s: dev_alloc_skb failed\n", __func__);
+> > +			if (++card->rx_urb_failure_count >
+> > +			    MWIFIEX_RX_URB_FAILURE_THRESHOLD) {
+> > +				mwifiex_dbg(adapter, ERROR,
+> > +					    "%s: dev_alloc_skb failed, failure
+> count = %u\n",
+> > +					    __func__,
+> > +					    card->rx_urb_failure_count);
+> > +			}
+> >  			return -ENOMEM;
+> 
+> Why not use a ratelimit?
+Since this is for receive, the packets are from AP side and we cannot lower the rate from AP. On some low performance systems this change will be helpful.
 
-The code moves to crypto/ though, and I'm not even sure I can vouch for
-the Makefile choice there.
-
-johannes
+Regards,
+Ganapathi
