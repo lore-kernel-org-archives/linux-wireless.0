@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38498 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752340AbdIRKUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 06:20:41 -0400
-Message-ID: <1505730039.13691.3.camel@sipsolutions.net> (sfid-20170918_122044_586666_EE893019)
-Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Mon, 18 Sep 2017 12:20:39 +0200
-In-Reply-To: <20170918101654.5zukak72wvmpm6pp@bars>
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
-         <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
-         <1505724068.13691.0.camel@sipsolutions.net>
-         <20170918095713.mfn76hkdbo73k4fu@bars>
-         <1505728987.13691.2.camel@sipsolutions.net>
-         <20170918101654.5zukak72wvmpm6pp@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f182.google.com ([209.85.223.182]:50834 "EHLO
+        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdINUFT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 16:05:19 -0400
+Received: by mail-io0-f182.google.com with SMTP id w94so3396992ioi.7
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 13:05:19 -0700 (PDT)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+To: Ben Greear <greearb@candelatech.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1505378361.31630.2.camel@sipsolutions.net>
+ <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
+ <1505389462.31630.6.camel@sipsolutions.net>
+ <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
+ <1505416658.31630.15.camel@sipsolutions.net>
+ <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
+ <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com> (sfid-20170914_220523_377189_29946CB9)
+Date: Thu, 14 Sep 2017 15:05:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-09-18 at 13:16 +0300, Sergey Matyukevich wrote:
+Hi Ben,
+>
+> There are different meanings for 'roam'.  Are you just talking about
+> fast-transition roaming?
 > 
-> > > > > -     if (timer_pending(&mac->scan_timeout))
-> > > > > -             del_timer_sync(&mac->scan_timeout);
 
-> I don't quite understand the question. Do you mean it makes sense to
-> call cfg80211_scan_done first and then cancel timer ?
+I'm using 'roam' as any transition between BSSes in the same 
+SSID/Security type.  So regular re-association, pre-authenticated 
+association, fast transition.
 
-No, I'm just not sure why you call timer_pending() first.
+> I would think that the decision to restart DHCP (at least ipv4) should
+> be in user-space.  I'm less sure about how IPv6 should deal with this.
+> 
+> I have tested roaming using FT and normal-ish wpa_supplicant without
+> doing DHCP, and it works fine.  Of course, it also works if you
+> choose to re-do DHCP.
+> 
 
-johannes
+Our thinking on this was to assume that DHCP parameters are still valid 
+after a roam, but re-confirm them just in case.  If the confirmation 
+fails, then we can fall back to requesting a new DHCP lease.
+
+Regards,
+-Denis
