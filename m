@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43994 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751748AbdITMXO (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47374 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751330AbdINUIx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:23:14 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 14 Sep 2017 16:08:53 -0400
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+To: Denis Kenzior <denkenz@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+References: <1505378361.31630.2.camel@sipsolutions.net>
+ <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
+ <1505389462.31630.6.camel@sipsolutions.net>
+ <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
+ <1505416658.31630.15.camel@sipsolutions.net>
+ <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
+ <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
+ <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com> (sfid-20170914_220857_288012_FFCC7E3D)
+Date: Thu, 14 Sep 2017 13:08:53 -0700
 MIME-Version: 1.0
-Subject: Re: [V2,
- 1/9] qtnfmac: qlink: convert channel width from bitfiled to simple
- enum
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170902014451.17766-2-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-2-igor.mitsyanko.os@quantenna.com>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Message-Id: <20170920122314.5397A60710@smtp.codeaurora.org> (sfid-20170920_142318_172133_D4C5C43C)
-Date: Wed, 20 Sep 2017 12:23:14 +0000 (UTC)
+In-Reply-To: <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
+On 09/14/2017 01:05 PM, Denis Kenzior wrote:
+> Hi Ben,
+>>
+>> There are different meanings for 'roam'.  Are you just talking about
+>> fast-transition roaming?
+>>
+>
+> I'm using 'roam' as any transition between BSSes in the same SSID/Security type.  So regular re-association, pre-authenticated association, fast transition.
+>
+>> I would think that the decision to restart DHCP (at least ipv4) should
+>> be in user-space.  I'm less sure about how IPv6 should deal with this.
+>>
+>> I have tested roaming using FT and normal-ish wpa_supplicant without
+>> doing DHCP, and it works fine.  Of course, it also works if you
+>> choose to re-do DHCP.
+>>
+>
+> Our thinking on this was to assume that DHCP parameters are still valid after a roam, but re-confirm them just in case.  If the confirmation fails, then we can
+> fall back to requesting a new DHCP lease.
 
-> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> 
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+How do you re-confirm them?  There are definitely cases where SSID/Security is the same but each
+AP has its own DHCP server and roaming between them will require getting a new DHCP address (on
+the same (NAT'd) subnet and with same gateway, likely as not).
 
-No empty commit logs, please. After the first patch I was about to write
-one myself but after seeing multiple of them I'm not going to do that.
+Thanks,
+Ben
 
-9 patches set to Changes Requested.
+>
+> Regards,
+> -Denis
+>
 
-9935431 [V2,1/9] qtnfmac: qlink: convert channel width from bitfiled to simple enum
-9935437 [V2,2/9] qtnfmac: make "Channel change" event report full channel info
-9935443 [V2,3/9] qtnfmac: retrieve current channel info from EP
-9935445 [V2,4/9] qtnfmac: do not cache channel info from "connect" command
-9935429 [V2,5/9] qtnfmac: let wifi card handle channel switch request to the same chan
-9935441 [V2,6/9] qtnfmac: pass VIF info to SendChannel command
-9935433 [V2,7/9] qtnfmac: do not cache CSA chandef info
-9935439 [V2,8/9] qtnfmac: remove unused mac::status field
-9935435 [V2,9/9] qtnfmac: do not report channel changes until wiphy is registered
 
 -- 
-https://patchwork.kernel.org/patch/9935431/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
