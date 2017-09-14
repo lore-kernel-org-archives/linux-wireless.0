@@ -1,56 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.cypress.com ([157.95.67.100]:60013 "EHLO
-        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751949AbdIDHa2 (ORCPT
+Received: from mail-it0-f45.google.com ([209.85.214.45]:56332 "EHLO
+        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751268AbdINRo2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 03:30:28 -0400
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH] brcmfmac: return -EPERM when getting error in vendor command handler
-Date: Mon,  4 Sep 2017 15:34:33 +0800
-Message-Id: <1504510473-13549-1-git-send-email-wright.feng@cypress.com> (sfid-20170904_093037_992402_23CA2602)
+        Thu, 14 Sep 2017 13:44:28 -0400
+Received: by mail-it0-f45.google.com with SMTP id g18so1060887itg.5
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 10:44:28 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+From: Jens Axboe <axboe@kernel.dk>
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+Message-ID: <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk> (sfid-20170914_194431_951087_A23F5749)
+Date: Thu, 14 Sep 2017 11:44:25 -0600
+MIME-Version: 1.0
+In-Reply-To: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware returns proprietary error code when getting error in
-fil_cmd_data_set or fil_cmd_data_get. The vendor tools or
-utilities which uses libnl may stuck in some commands when wl is down.
-For example, issue "scan" command after issuing "down" command, the
-"scan" command will be the blocking call and stuck as no response from
-libnl. It is caused by that firmware returns BCME_NOTUP(-4) when wl
-is down, but the -4 is -EINTR in Linux kernel, so libnl catches the error
-and not passes to upper layer.
-Because of that, the driver should return Linux error code instead of the
-proprietary error code, and the tools or utilities need to get the real
-firmware error code by command "bcmerror" or "bcmerrorstr" after receiving
-the error.
+On 09/14/2017 11:35 AM, Jens Axboe wrote:
+> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+>> Hi Bjorn,
+>>
+>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>
+>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>>> [+cc linux-pci]
+>>>>
+>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>>
+>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>>> functional changes.
+>>>>>>
+>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>>> still enables mastering in that case if it isn't:
+>>>>>>
+>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>>> {
+>>>>>> [...]
+>>>>>>         if (pci_is_enabled(dev)) {
+>>>>>>                 if (!dev->is_busmaster)
+>>>>>>                         pci_set_master(dev);
+>>>>>>                 return;
+>>>>>>         }
+>>>>>>
+>>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>>
+>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>>> -rc1. Seems like the trivial fix would be:
+>>>>>
+>>>>>
+>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>>> --- a/drivers/pci/pci.c
+>>>>> +++ b/drivers/pci/pci.c
+>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>>                 return 0;               /* already enabled */
+>>>>>
+>>>>>         bridge = pci_upstream_bridge(dev);
+>>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>>> +       if (bridge)
+>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+>> pci_enable_bridge functoin will causes a nexted lock.
+> 
+> Took a look, and looks like you are right. That code looks like a mess,
+> fwiw.
+> 
+> I'd strongly suggest that the bad commit is reverted until a proper
+> solution is found, since the simple one-liner could potentially
+> introduce a deadlock with your patch applied.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+BTW, your patch looks pretty bad too, introducing a random mutex
+deep on code that can be recursive. Why isn't this check in
+pci_enable_device_flags() enough to prevent double-enable of
+an upstream bridge?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-index 8eff275..2b88ba1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-@@ -80,8 +80,12 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
- 	else
- 		ret = brcmf_fil_cmd_data_get(ifp, cmdhdr->cmd, dcmd_buf,
- 					     ret_len);
--	if (ret != 0)
-+
-+	if (ret != 0) {
-+		brcmf_dbg(INFO, "error(%d), return -EPERM\n", ret);
-+		ret = -EPERM;
- 		goto exit;
-+	}
- 
- 	wr_pointer = dcmd_buf;
- 	while (ret_len > 0) {
+if (atomic_inc_return(&dev->enable_cnt) > 1)                            
+	return 0;               /* already enabled */
+
 -- 
-1.9.1
+Jens Axboe
