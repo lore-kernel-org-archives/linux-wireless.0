@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51896 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42670 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754568AbdIFN1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 09:27:16 -0400
-Date: Wed, 6 Sep 2017 15:27:09 +0200
-From: Stefano Brivio <sbrivio@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: hung task in mac80211
-Message-ID: <20170906152709.673f230d@elisabeth> (sfid-20170906_152746_934606_C0B4C5F7)
-In-Reply-To: <1504704060.13457.20.camel@sipsolutions.net>
-References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
-        <20170906144019.1c98a636@elisabeth>
-        <1504702115.13457.16.camel@sipsolutions.net>
-        <20170906151922.4a320b1d@elisabeth>
-        <1504704060.13457.20.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        id S1751174AbdINIyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Sep 2017 04:54:13 -0400
+Message-ID: <1505379250.31630.3.camel@sipsolutions.net> (sfid-20170914_105415_508864_FE7A0449)
+Subject: Re: [PATCH v1] iwlwifi: mvm: allow monitor mode capture in STA mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: gavinli@thegavinli.com,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Cc: linux-wireless@vger.kernel.org, Gavin Li <git@thegavinli.com>
+Date: Thu, 14 Sep 2017 10:54:10 +0200
+In-Reply-To: <20170914085006.15933-1-gavinli@thegavinli.com> (sfid-20170914_105018_121624_BDD0005B)
+References: <20170914085006.15933-1-gavinli@thegavinli.com>
+         (sfid-20170914_105018_121624_BDD0005B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 06 Sep 2017 15:21:00 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
-
-> On Wed, 2017-09-06 at 15:19 +0200, Stefano Brivio wrote:
-> > On Wed, 06 Sep 2017 14:48:35 +0200
-> > Johannes Berg <johannes@sipsolutions.net> wrote:
-> >   
-> > > I'll look in a bit - but
-> > >   
-> > > > +			mutex_unlock(&sta->ampdu_mlme.mtx);
-> > > >  			___ieee80211_stop_rx_ba_session(
-> > > >  				sta, tid, WLAN_BACK_RECIPIENT,
-> > > >  				WLAN_REASON_QSTA_TIMEOUT,
-> > > > true);    
-> > > 
-> > > This already has three underscores so shouldn't drop.  
-> > 
-> > Right, of course.
-> >   
-> > > [...]  
-> > > > +			mutex_unlock(&sta->ampdu_mlme.mtx);
-> > > >  			__ieee80211_start_rx_ba_session(sta, 0,
-> > > > 0,
-> > > > 0, 1, tid,    
-> > > 
-> > > maybe this one needs a ___ version then?  
-> > 
-> > Either that, or as it's a single call, perhaps just the following?
-> > Matter of taste I guess...  
+On Thu, 2017-09-14 at 01:50 -0700, gavinli@thegavinli.com wrote:
 > 
-> I don't think it's a matter of taste - for me, in principle, dropping
-> locks for small sections of code where the larger section holds it is a
-> bug waiting to happen. It may (may, I don't even know) be OK here, but
-> in general it's something to avoid.
+>  	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP);
+>  
+> +	if (mvm->hw->conf.flags & IEEE80211_CONF_MONITOR)
+> +		cmd->filter_flags |=
+> cpu_to_le32(MAC_FILTER_IN_PROMISC |
+> +						 MAC_FILTER_IN_CONTR
+> OL_AND_MGMT |
+> +						 MAC_FILTER_IN_BEACO
+> N |
+> +						 MAC_FILTER_IN_PROBE
+> _REQUEST);
 
-Yes, that was based on the assumption that the initial part of
-__ieee80211_start_rx_ba_session() can't really affect the AMPDU
-state-machine in any way.
+[...]
 
-But sure, one small change there in the future and the assumption
-doesn't hold anymore.
+> +	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
+> +		mutex_lock(&mvm->mutex);
+> +		ieee80211_iterate_active_interfaces(hw,
+> IEEE80211_IFACE_ITER_NORMAL,
+> +				iwl_mvm_monitor_changed_iterator,
+> mvm);
+> +		mutex_unlock(&mvm->mutex);
+> +	}
 
+This isn't right from a mac80211 perspective - at the very least it
+should follow the monitor flags; checking CONF_CHANGE_MONITOR is always
+a bad idea.
 
---
-Stefano
+johannes
