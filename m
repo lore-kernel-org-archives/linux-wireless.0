@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53284 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752020AbdIVPjE (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:56374 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751363AbdINU0m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 11:39:04 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] b43: make const arrays static, reduces object code size
-Date: Fri, 22 Sep 2017 16:39:02 +0100
-Message-Id: <20170922153902.15372-1-colin.king@canonical.com> (sfid-20170922_173940_202284_EA70E4FB)
+        Thu, 14 Sep 2017 16:26:42 -0400
+Received: by mail-oi0-f42.google.com with SMTP id y195so425oia.13
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 13:26:42 -0700 (PDT)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+To: Ben Greear <greearb@candelatech.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1505378361.31630.2.camel@sipsolutions.net>
+ <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
+ <1505389462.31630.6.camel@sipsolutions.net>
+ <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
+ <1505416658.31630.15.camel@sipsolutions.net>
+ <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
+ <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
+ <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
+ <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <c97ecdb4-fe7a-e79a-d73e-32166beb1e11@gmail.com> (sfid-20170914_222645_761527_F54490FD)
+Date: Thu, 14 Sep 2017 15:26:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi Ben,
+> 
+> How do you re-confirm them?  There are definitely cases where 
+> SSID/Security is the same but each
+> AP has its own DHCP server and roaming between them will require getting 
+> a new DHCP address (on
+> the same (NAT'd) subnet and with same gateway, likely as not).
+> 
 
-Don't populate const arrays on the stack, instead make them static.
-Makes the object code smaller by over 60 bytes:
+Using DHCPREQUEST to verify obtained parameters, or the DHCPv6 
+equivalent Confirm message.  This obviously requires some integration 
+between the dhcp daemon and the supplicant.
 
-Before:
-   text	   data	    bss	    dec	    hex	filename
-  14816	   1296	      0	  16112	   3ef0	b43/phy_ht.o
-
-After:
-   text	   data	    bss	    dec	    hex	filename
-  14551	   1496	      0	  16047	   3eaf	b43/phy_ht.o
-
-(gcc 6.3.0, x86-64)
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/broadcom/b43/phy_ht.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/b43/phy_ht.c b/drivers/net/wireless/broadcom/b43/phy_ht.c
-index 718c90e81696..c3158d085c2b 100644
---- a/drivers/net/wireless/broadcom/b43/phy_ht.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_ht.c
-@@ -119,7 +119,7 @@ static void b43_radio_2059_rcal(struct b43_wldev *dev)
- /* Calibrate the internal RC oscillator? */
- static void b43_radio_2057_rccal(struct b43_wldev *dev)
- {
--	const u16 radio_values[3][2] = {
-+	static const u16 radio_values[3][2] = {
- 		{ 0x61, 0xE9 }, { 0x69, 0xD5 }, { 0x73, 0x99 },
- 	};
- 	int i;
-@@ -154,7 +154,7 @@ static void b43_radio_2059_init_pre(struct b43_wldev *dev)
- 
- static void b43_radio_2059_init(struct b43_wldev *dev)
- {
--	const u16 routing[] = { R2059_C1, R2059_C2, R2059_C3 };
-+	static const u16 routing[] = { R2059_C1, R2059_C2, R2059_C3 };
- 	int i;
- 
- 	/* Prepare (reset?) radio */
-@@ -263,7 +263,7 @@ static void b43_phy_ht_reset_cca(struct b43_wldev *dev)
- static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
- {
- 	u8 i, j;
--	u16 base[] = { 0x40, 0x60, 0x80 };
-+	static const u16 base[] = { 0x40, 0x60, 0x80 };
- 
- 	for (i = 0; i < ARRAY_SIZE(base); i++) {
- 		for (j = 0; j < 4; j++)
--- 
-2.14.1
+Regards,
+-Denis
