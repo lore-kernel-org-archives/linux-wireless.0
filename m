@@ -1,76 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44623 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751332AbdILJWd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55200 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751537AbdIOTvN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 05:22:33 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/7] brcmfmac: handle FWHALT mailbox indication
-Date: Tue, 12 Sep 2017 11:22:17 +0200
-Message-Id: <1505208143-30166-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112243_165524_73EF5BE0)
-In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 15 Sep 2017 15:51:13 -0400
+Message-ID: <1505505062.32032.1.camel@coelho.fi> (sfid-20170915_215118_579916_223F0B9B)
+From: Luca Coelho <luca@coelho.fi>
+To: Jens Axboe <axboe@kernel.dk>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Srinath Mannam <srinath.mannam@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Fri, 15 Sep 2017 22:51:02 +0300
+In-Reply-To: <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+         <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+         <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+         <1505246657.1974.11.camel@sipsolutions.net>
+         <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+         <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+         <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+         <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+         <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+         <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+         <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+         <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+         <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+         <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
+         <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi firmware load broken in current -git
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware uses a mailbox to communicate to the host what is going
-on. In the driver we validate the bit received. Various people seen
-the following message:
+On Fri, 2017-09-15 at 13:48 -0600, Jens Axboe wrote:
+> On 09/15/2017 01:38 PM, Linus Torvalds wrote:
+> > On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > 
+> > > > In any case, your patch introduces a regression on systems. Please get
+> > > > it reverted now, and then you can come up with a new approach to fix the
+> > > > double enable of the upstream bridge.
+> > > 
+> > > Who's sending in the revert? I can certainly do it if no one else does,
+> > > but it needs to be done.
+> > > 
+> > > I'm not seeing any patches coming out of Srinath to fix up the
+> > > situation, so we should revert the broken patch until a better solution
+> > > exists.
+> > 
+> > Hmm. I don't have the history here (apparently it never made lkml, for
+> > example), so I don't even know which commit you're talking about.
+> > 
+> > From some of the context it looks like commit 40f11adc7cd9 ("PCI:
+> > Avoid race while enabling upstream bridges"), is that correct?
+> 
+> Yes, Luca says that Bjorn already sent in the revert request, I just
+> didn't see it since I wasn't CC'ed on it. So looks like we're all
+> good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
+> commit.
 
- brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+Strange... AFAICT you *were* CCed on it.  And so was everyone else in
+the original thread (+LKML)...
 
-Bit 4 is cause of this message, but this actually indicates the firmware
-has halted. Handle this bit by giving a more meaningful error message.
-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 613caca..3d79664 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -260,10 +260,11 @@ struct rte_console {
- #define I_HMB_HOST_INT	I_HMB_SW3	/* Miscellaneous Interrupt */
- 
- /* tohostmailboxdata */
--#define HMB_DATA_NAKHANDLED	1	/* retransmit NAK'd frame */
--#define HMB_DATA_DEVREADY	2	/* talk to host after enable */
--#define HMB_DATA_FC		4	/* per prio flowcontrol update flag */
--#define HMB_DATA_FWREADY	8	/* fw ready for protocol activity */
-+#define HMB_DATA_NAKHANDLED	0x0001	/* retransmit NAK'd frame */
-+#define HMB_DATA_DEVREADY	0x0002	/* talk to host after enable */
-+#define HMB_DATA_FC		0x0004	/* per prio flowcontrol update flag */
-+#define HMB_DATA_FWREADY	0x0008	/* fw ready for protocol activity */
-+#define HMB_DATA_FWHALT		0x0010	/* firmware halted */
- 
- #define HMB_DATA_FCDATA_MASK	0xff000000
- #define HMB_DATA_FCDATA_SHIFT	24
-@@ -1094,6 +1095,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 			  offsetof(struct sdpcmd_regs, tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
- 
-+	/* dongle indicates the firmware has halted/crashed */
-+	if (hmb_data & HMB_DATA_FWHALT)
-+		brcmf_err("mailbox indicates firmware halted\n");
-+
- 	/* Dongle recomposed rx frames, accept them again */
- 	if (hmb_data & HMB_DATA_NAKHANDLED) {
- 		brcmf_dbg(SDIO, "Dongle reports NAK handled, expect rtx of %d\n",
-@@ -1151,6 +1156,7 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 			 HMB_DATA_NAKHANDLED |
- 			 HMB_DATA_FC |
- 			 HMB_DATA_FWREADY |
-+			 HMB_DATA_FWHALT |
- 			 HMB_DATA_FCDATA_MASK | HMB_DATA_VERSION_MASK))
- 		brcmf_err("Unknown mailbox data content: 0x%02x\n",
- 			  hmb_data);
--- 
-1.9.1
+--
+Luca.
