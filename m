@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:45731 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752507AbdI2TsO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 15:48:14 -0400
-Received: by mail-oi0-f68.google.com with SMTP id f3so1108097oia.2
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:14 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 07/10] rtlwifi: Add RSSI and RF type to wifi.h for phydm
-Date: Fri, 29 Sep 2017 14:47:57 -0500
-Message-Id: <20170929194800.15617-8-Larry.Finger@lwfinger.net> (sfid-20170929_214818_117929_BD885E2B)
-In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37314 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751184AbdIOKVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 06:21:00 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1dsnk3-0006cq-GF
+        for linux-wireless@vger.kernel.org; Fri, 15 Sep 2017 12:20:59 +0200
+Message-ID: <1505470858.31630.37.camel@sipsolutions.net> (sfid-20170915_122103_822713_1A22C8F6)
+Subject: Re: [RFC 4/4] cfg80211: implement regdb signature checking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 15 Sep 2017 12:20:58 +0200
+In-Reply-To: <20170915101810.11435-5-johannes@sipsolutions.net> (sfid-20170915_121820_023097_633FD9F9)
+References: <20170915101810.11435-1-johannes@sipsolutions.net>
+         <20170915101810.11435-5-johannes@sipsolutions.net>
+         (sfid-20170915_121820_023097_633FD9F9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Fri, 2017-09-15 at 12:18 +0200, Johannes Berg wrote:
+> 
+> +config CFG80211_REQUIRE_SIGNED_REGDB
+> +	bool "require regdb signature" if
+> CFG80211_CERTIFICATION_ONUS
+> +	default y
+> +	select SYSTEM_DATA_VERIFICATION
 
-These definition will be used by phydm later.
+Note that this will not be easy to backport, however, the code only
+needs relatively self-contained functionality, namely this:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+> +       builtin_regdb_keys =
+> +               keyring_alloc(".builtin_regdb_keys",
+> +                             KUIDT_INIT(0), KGIDT_INIT(0), current_cred(),
+> +                             ((KEY_POS_ALL & ~KEY_POS_SETATTR) |
+> +                             KEY_USR_VIEW | KEY_USR_READ | KEY_USR_SEARCH),
+> +                             KEY_ALLOC_NOT_IN_QUOTA, NULL, NULL);
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index ceeca79acc56..5843aee5c921 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -560,6 +560,11 @@ enum rf_type {
- 	RF_1T2R = 1,
- 	RF_2T2R = 2,
- 	RF_2T2R_GREEN = 3,
-+	RF_2T3R = 4,
-+	RF_2T4R = 5,
-+	RF_3T3R = 6,
-+	RF_3T4R = 7,
-+	RF_4T4R = 8,
- };
- 
- enum ht_channel_width {
-@@ -1329,6 +1334,7 @@ struct rtl_sta_info {
- 	struct rtl_tid_data tids[MAX_TID_COUNT];
- 	/* just used for ap adhoc or mesh*/
- 	struct rssi_sta rssi_stat;
-+	u8 rssi_level;
- 	u16 wireless_mode;
- 	u8 ratr_index;
- 	u8 mimo_ps;
--- 
-2.13.5
+> +               key = key_create_or_update(make_key_ref(builtin_regdb_keys, 1),
+> +                                          "asymmetric",
+> +                                          NULL,
+> +                                          p,
+> +                                          plen,
+> +                                          ((KEY_POS_ALL & ~KEY_POS_SETATTR) |
+> +                                          KEY_USR_VIEW | KEY_USR_READ),
+> +                                          KEY_ALLOC_NOT_IN_QUOTA |
+> +                                          KEY_ALLOC_BUILT_IN |
+> +                                          KEY_ALLOC_BYPASS_RESTRICTION);
+
+> +       if (verify_pkcs7_signature(db->data, db->size, sig->data, sig->size,
+> +                                  builtin_regdb_keys,
+> +                                  VERIFYING_UNSPECIFIED_SIGNATURE, NULL, NULL))
+
+so I'm hoping it won't be too difficult, since we don't really need the
+ability to manipulate keyrings etc.
+
+johannes
