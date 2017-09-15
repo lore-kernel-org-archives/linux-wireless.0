@@ -1,45 +1,365 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:35575 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbdIAPCS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54460 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751323AbdIOMrY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 11:02:18 -0400
-Received: by mail-oi0-f46.google.com with SMTP id n18so4015970oig.2
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Sep 2017 08:02:18 -0700 (PDT)
-Subject: Re: RT2870 failure in kernel 4.12.8
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
- <20170831075514.GA12340@redhat.com>
- <26ef3184-a19e-1bb7-7aa4-4e8647210763@lwfinger.net>
- <20170901085738.GA18397@redhat.com> <87y3pymqw2.fsf@purkki.adurom.net>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <ac74a535-80f7-6211-62ca-1016302d24bd@lwfinger.net> (sfid-20170901_170222_583050_D5F019AD)
-Date: Fri, 1 Sep 2017 10:02:16 -0500
-MIME-Version: 1.0
-In-Reply-To: <87y3pymqw2.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 15 Sep 2017 08:47:24 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 15 Sep 2017 15:46:59 +0300
+Message-Id: <20170915124704.9032-6-luca@coelho.fi> (sfid-20170915_144730_050449_24A7D78D)
+In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
+References: <20170915124704.9032-1-luca@coelho.fi>
+Subject: [PATCH 05/10] iwlwifi: mvm: Add new quota command API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/01/2017 09:31 AM, Kalle Valo wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> 
->> On Thu, Aug 31, 2017 at 10:33:28AM -0500, Larry Finger wrote:
->>> Should the patch to wireless-drivers be annotated with a Stable reference so
->>> that it is added to 4.12 and 4.13?
->>
->> According to Documentation/networking/netdev-FAQ.txt networking patches
->> should not be marked cc:stable, instead a decent commit log should
->> be written describing a bugfix. Which I believe it is done for
->> this patch.
-> 
-> But that's for net and net-next trees, not for wireless trees. With
-> wireless patches we use "Cc: stable@..." references.
+From: David Spinadel <david.spinadel@intel.com>
 
-I see that this patch was just pushed for 4.14. I hope it got the Stable 
-annotation at that time.
+New quota command adds a field indicating low latency
+direction per quota.
 
-Larry
+A TLV API bit was added to indicate the new API.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/binding.h    | 41 +++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |  3 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        | 16 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 27 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/quota.c     | 59 +++++++++++++---------
+ 5 files changed, 113 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h b/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
+index d2717fafdf5b..570f19026c91 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
+@@ -116,14 +116,14 @@ struct iwl_binding_cmd {
+ #define IWL_MVM_MAX_QUOTA 128
+ 
+ /**
+- * struct iwl_time_quota_data - configuration of time quota per binding
++ * struct iwl_time_quota_data_v1 - configuration of time quota per binding
+  * @id_and_color: ID and color of the relevant Binding,
+  *	&enum iwl_ctxt_id_and_color
+  * @quota: absolute time quota in TU. The scheduler will try to divide the
+  *	remainig quota (after Time Events) according to this quota.
+  * @max_duration: max uninterrupted context duration in TU
+  */
+-struct iwl_time_quota_data {
++struct iwl_time_quota_data_v1 {
+ 	__le32 id_and_color;
+ 	__le32 quota;
+ 	__le32 max_duration;
+@@ -137,8 +137,43 @@ struct iwl_time_quota_data {
+  *	essentially zero.
+  *	On CDB the fourth one is a regular binding.
+  */
++struct iwl_time_quota_cmd_v1 {
++	struct iwl_time_quota_data_v1 quotas[MAX_BINDINGS];
++} __packed; /* TIME_QUOTA_ALLOCATION_CMD_API_S_VER_1 */
++
++enum iwl_quota_low_latency {
++	IWL_QUOTA_LOW_LATENCY_NONE = 0,
++	IWL_QUOTA_LOW_LATENCY_TX = BIT(0),
++	IWL_QUOTA_LOW_LATENCY_RX = BIT(1),
++	IWL_QUOTA_LOW_LATENCY_TX_RX =
++		IWL_QUOTA_LOW_LATENCY_TX | IWL_QUOTA_LOW_LATENCY_RX,
++};
++
++/**
++ * struct iwl_time_quota_data - configuration of time quota per binding
++ * @id_and_color: ID and color of the relevant Binding.
++ * @quota: absolute time quota in TU. The scheduler will try to divide the
++ *	remainig quota (after Time Events) according to this quota.
++ * @max_duration: max uninterrupted context duration in TU
++ * @low_latency: low latency status, &enum iwl_quota_low_latency
++ */
++struct iwl_time_quota_data {
++	__le32 id_and_color;
++	__le32 quota;
++	__le32 max_duration;
++	__le32 low_latency;
++} __packed; /* TIME_QUOTA_DATA_API_S_VER_2 */
++
++/**
++ * struct iwl_time_quota_cmd - configuration of time quota between bindings
++ * ( TIME_QUOTA_CMD = 0x2c )
++ * Note: on non-CDB the fourth one is the auxilary mac and is essentially zero.
++ * On CDB the fourth one is a regular binding.
++ *
++ * @quotas: allocations per binding
++ */
+ struct iwl_time_quota_cmd {
+ 	struct iwl_time_quota_data quotas[MAX_BINDINGS];
+-} __packed; /* TIME_QUOTA_ALLOCATION_CMD_API_S_VER_1 */
++} __packed; /* TIME_QUOTA_ALLOCATION_CMD_API_S_VER_2 */
+ 
+ #endif /* __iwl_fw_api_binding_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 887f6d8fc8a7..7d794ad53e4b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -248,6 +248,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
+  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
+  * @IWL_UCODE_TLV_API_ATS_COEX_EXTERNAL: the coex notification is enlared to
+  *	include information about ACL time sharing.
++ * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
++ *	indicating low latency direction.
+  *
+  * @NUM_IWL_UCODE_TLV_API: number of bits used
+  */
+@@ -265,6 +267,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
+ 	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
++	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
+ 
+ 	NUM_IWL_UCODE_TLV_API
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 5de19ea10575..c5ea3fad8002 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -664,6 +664,7 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	int ret, i;
+ 	struct iwl_binding_cmd binding_cmd = {};
+ 	struct iwl_time_quota_cmd quota_cmd = {};
++	struct iwl_time_quota_data *quota;
+ 	u32 status;
+ 	int size;
+ 
+@@ -745,17 +746,20 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		return ret;
+ 
+ 	/* and some quota */
+-	quota_cmd.quotas[0].id_and_color =
++	quota = iwl_mvm_quota_cmd_get_quota(mvm, &quota_cmd, 0);
++	quota->id_and_color =
+ 		cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->phy_ctxt->id,
+ 						mvmvif->phy_ctxt->color));
+-	quota_cmd.quotas[0].quota = cpu_to_le32(IWL_MVM_MAX_QUOTA);
+-	quota_cmd.quotas[0].max_duration = cpu_to_le32(IWL_MVM_MAX_QUOTA);
++	quota->quota = cpu_to_le32(IWL_MVM_MAX_QUOTA);
++	quota->max_duration = cpu_to_le32(IWL_MVM_MAX_QUOTA);
+ 
+-	for (i = 1; i < MAX_BINDINGS; i++)
+-		quota_cmd.quotas[i].id_and_color = cpu_to_le32(FW_CTXT_INVALID);
++	for (i = 1; i < MAX_BINDINGS; i++) {
++		quota = iwl_mvm_quota_cmd_get_quota(mvm, &quota_cmd, i);
++		quota->id_and_color = cpu_to_le32(FW_CTXT_INVALID);
++	}
+ 
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, 0,
+-				   sizeof(quota_cmd), &quota_cmd);
++				   iwl_mvm_quota_cmd_size(mvm), &quota_cmd);
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to send quota: %d\n", ret);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 83303bac0e4b..48cb08eea700 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1248,6 +1248,12 @@ static inline bool iwl_mvm_has_new_ats_coex_api(struct iwl_mvm *mvm)
+ 			  IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL);
+ }
+ 
++static inline bool iwl_mvm_has_quota_low_latency(struct iwl_mvm *mvm)
++{
++	return fw_has_api(&mvm->fw->ucode_capa,
++			  IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY);
++}
++
+ static inline struct agg_tx_status *
+ iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
+ {
+@@ -1486,6 +1492,27 @@ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ 
+ /* Quota management */
++static inline size_t iwl_mvm_quota_cmd_size(struct iwl_mvm *mvm)
++{
++	return iwl_mvm_has_quota_low_latency(mvm) ?
++		sizeof(struct iwl_time_quota_cmd) :
++		sizeof(struct iwl_time_quota_cmd_v1);
++}
++
++static inline struct iwl_time_quota_data
++*iwl_mvm_quota_cmd_get_quota(struct iwl_mvm *mvm,
++			     struct iwl_time_quota_cmd *cmd,
++			     int i)
++{
++	struct iwl_time_quota_data_v1 *quotas;
++
++	if (iwl_mvm_has_quota_low_latency(mvm))
++		return &cmd->quotas[i];
++
++	quotas = (struct iwl_time_quota_data_v1 *)cmd->quotas;
++	return (struct iwl_time_quota_data *)&quotas[i];
++}
++
+ int iwl_mvm_update_quotas(struct iwl_mvm *mvm, bool force_upload,
+ 			  struct ieee80211_vif *disabled_vif);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
+index 2141db5bff82..b4a0264329b7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -164,9 +164,12 @@ static void iwl_mvm_adjust_quota_for_noa(struct iwl_mvm *mvm,
+ 	beacon_int = mvm->noa_vif->bss_conf.beacon_int;
+ 
+ 	for (i = 0; i < MAX_BINDINGS; i++) {
+-		u32 id_n_c = le32_to_cpu(cmd->quotas[i].id_and_color);
++		struct iwl_time_quota_data *data =
++					iwl_mvm_quota_cmd_get_quota(mvm, cmd,
++								    i);
++		u32 id_n_c = le32_to_cpu(data->id_and_color);
+ 		u32 id = (id_n_c & FW_CTXT_ID_MSK) >> FW_CTXT_ID_POS;
+-		u32 quota = le32_to_cpu(cmd->quotas[i].quota);
++		u32 quota = le32_to_cpu(data->quota);
+ 
+ 		if (id != phy_id)
+ 			continue;
+@@ -175,9 +178,9 @@ static void iwl_mvm_adjust_quota_for_noa(struct iwl_mvm *mvm,
+ 		quota /= beacon_int;
+ 
+ 		IWL_DEBUG_QUOTA(mvm, "quota: adjust for NoA from %d to %d\n",
+-				le32_to_cpu(cmd->quotas[i].quota), quota);
++				le32_to_cpu(data->quota), quota);
+ 
+-		cmd->quotas[i].quota = cpu_to_le32(quota);
++		data->quota = cpu_to_le32(quota);
+ 	}
+ #endif
+ }
+@@ -194,6 +197,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 		.disabled_vif = disabled_vif,
+ 	};
+ 	struct iwl_time_quota_cmd *last = &mvm->last_quota_cmd;
++	struct iwl_time_quota_data *qdata, *last_data;
+ 	bool send = false;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -216,7 +220,8 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 	 */
+ 	num_active_macs = 0;
+ 	for (i = 0; i < MAX_BINDINGS; i++) {
+-		cmd.quotas[i].id_and_color = cpu_to_le32(FW_CTXT_INVALID);
++		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, i);
++		qdata->id_and_color = cpu_to_le32(FW_CTXT_INVALID);
+ 		num_active_macs += data.n_interfaces[i];
+ 	}
+ 
+@@ -265,14 +270,16 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 		if (data.colors[i] < 0)
+ 			continue;
+ 
+-		cmd.quotas[idx].id_and_color =
++		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, idx);
++
++		qdata->id_and_color =
+ 			cpu_to_le32(FW_CMD_ID_AND_COLOR(i, data.colors[i]));
+ 
+ 		if (data.n_interfaces[i] <= 0)
+-			cmd.quotas[idx].quota = cpu_to_le32(0);
++			qdata->quota = cpu_to_le32(0);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 		else if (data.dbgfs_min[i])
+-			cmd.quotas[idx].quota =
++			qdata->quota =
+ 				cpu_to_le32(data.dbgfs_min[i] * QUOTA_100 / 100);
+ #endif
+ 		else if (data.n_low_latency_bindings == 1 && n_non_lowlat &&
+@@ -283,24 +290,25 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 			 * the minimal required quota for the low latency
+ 			 * binding.
+ 			 */
+-			cmd.quotas[idx].quota = cpu_to_le32(QUOTA_LOWLAT_MIN);
++			qdata->quota = cpu_to_le32(QUOTA_LOWLAT_MIN);
+ 		else
+-			cmd.quotas[idx].quota =
++			qdata->quota =
+ 				cpu_to_le32(quota * data.n_interfaces[i]);
+ 
+-		WARN_ONCE(le32_to_cpu(cmd.quotas[idx].quota) > QUOTA_100,
++		WARN_ONCE(le32_to_cpu(qdata->quota) > QUOTA_100,
+ 			  "Binding=%d, quota=%u > max=%u\n",
+-			  idx, le32_to_cpu(cmd.quotas[idx].quota), QUOTA_100);
++			  idx, le32_to_cpu(qdata->quota), QUOTA_100);
+ 
+-		cmd.quotas[idx].max_duration = cpu_to_le32(0);
++		qdata->max_duration = cpu_to_le32(0);
+ 
+ 		idx++;
+ 	}
+ 
+ 	/* Give the remainder of the session to the first data binding */
+ 	for (i = 0; i < MAX_BINDINGS; i++) {
+-		if (le32_to_cpu(cmd.quotas[i].quota) != 0) {
+-			le32_add_cpu(&cmd.quotas[i].quota, quota_rem);
++		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, i);
++		if (le32_to_cpu(qdata->quota) != 0) {
++			le32_add_cpu(&qdata->quota, quota_rem);
+ 			IWL_DEBUG_QUOTA(mvm,
+ 					"quota: giving remainder of %d to binding %d\n",
+ 					quota_rem, i);
+@@ -312,17 +320,19 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 
+ 	/* check that we have non-zero quota for all valid bindings */
+ 	for (i = 0; i < MAX_BINDINGS; i++) {
+-		if (cmd.quotas[i].id_and_color != last->quotas[i].id_and_color)
++		qdata = iwl_mvm_quota_cmd_get_quota(mvm, &cmd, i);
++		last_data = iwl_mvm_quota_cmd_get_quota(mvm, last, i);
++		if (qdata->id_and_color != last_data->id_and_color)
+ 			send = true;
+-		if (cmd.quotas[i].max_duration != last->quotas[i].max_duration)
++		if (qdata->max_duration != last_data->max_duration)
+ 			send = true;
+-		if (abs((int)le32_to_cpu(cmd.quotas[i].quota) -
+-			(int)le32_to_cpu(last->quotas[i].quota))
++		if (abs((int)le32_to_cpu(qdata->quota) -
++			(int)le32_to_cpu(last_data->quota))
+ 						> IWL_MVM_QUOTA_THRESHOLD)
+ 			send = true;
+-		if (cmd.quotas[i].id_and_color == cpu_to_le32(FW_CTXT_INVALID))
++		if (qdata->id_and_color == cpu_to_le32(FW_CTXT_INVALID))
+ 			continue;
+-		WARN_ONCE(cmd.quotas[i].quota == 0,
++		WARN_ONCE(qdata->quota == 0,
+ 			  "zero quota on binding %d\n", i);
+ 	}
+ 
+@@ -334,7 +344,8 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 		return 0;
+ 	}
+ 
+-	err = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, 0, sizeof(cmd), &cmd);
++	err = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, 0,
++				   iwl_mvm_quota_cmd_size(mvm), &cmd);
+ 
+ 	if (err)
+ 		IWL_ERR(mvm, "Failed to send quota: %d\n", err);
+-- 
+2.14.1
