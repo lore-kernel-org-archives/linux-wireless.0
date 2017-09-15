@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:52859 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751269AbdIOO1e (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54430 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751323AbdIOMrV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 10:27:34 -0400
-Received: by mail-pg0-f49.google.com with SMTP id i195so1600405pgd.9
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Sep 2017 07:27:33 -0700 (PDT)
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <1505378361.31630.2.camel@sipsolutions.net>
- <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
- <1505414172.31630.13.camel@sipsolutions.net>
- <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
- <1505416964.31630.17.camel@sipsolutions.net>
- <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
- <1505418093.31630.21.camel@sipsolutions.net>
- <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com>
- <1505459955.31630.26.camel@sipsolutions.net>
- <ff73f237-71dd-5fde-9c9f-9bc8fce57e76@gmail.com>
- <1505482156.31630.39.camel@sipsolutions.net>
- <9b466254-e9c1-c5e4-c3fd-b881c4c583e9@gmail.com>
- <1505485208.31630.42.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <b87b61bc-6c29-3a4e-01bd-652cf1eb095c@gmail.com> (sfid-20170915_162738_999614_363772B7)
-Date: Fri, 15 Sep 2017 09:27:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <1505485208.31630.42.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 15 Sep 2017 08:47:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 15 Sep 2017 15:46:58 +0300
+Message-Id: <20170915124704.9032-5-luca@coelho.fi> (sfid-20170915_144726_763691_702FD455)
+In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
+References: <20170915124704.9032-1-luca@coelho.fi>
+Subject: [PATCH 04/10] iwlwifi: add a new a000 device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Oren Givon <oren.givon@intel.com>
 
->> And AFAIK the kernel generates a disconnected event as soon as we
->> send a CMD_AUTHENTICATE, so not sure how you envision 'your'
->> preauthentication working...
-> 
-> That's what I was trying to say - it doesn't. A few years ago we tried
-> to support that but it's not really possible to do well.
+Add a new a000 device with PCI ID (0x2720, 0x0030).
 
-Okay, *now* I'm with you :)
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> 
->> However, you're not answering my question...
-> 
-> Which was?
-
-So if we issue CMD_CONNECT with a PREV_BSSID, does/should OPERSTATE 
-still stay UP?
-
->> One can use regular roaming on a full mac but not FT.
-> 
-> We had intended to have NL80211_CMD_ROAM to make that decision once,
-> but never really used it for that... I think it could be implemented
-> but I don't really know how well drivers were to support it.
-
-I think it would be nice.  Worst case a driver won't implement it, but 
-we can use FT on those that do.
-
-Regards,
--Denis
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 3416c6155996..e0966f656376 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -577,6 +577,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwla000_2ax_cfg_hr)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x0078, iwla000_2ax_cfg_hr)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x0070, iwla000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x2720, 0x0030, iwla000_2ac_cfg_hr_cdb)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x1080, iwla000_2ax_cfg_hr)},
+ #endif /* CONFIG_IWLMVM */
+ 
+-- 
+2.14.1
