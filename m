@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:48818 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751387AbdIUOkR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54352 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751323AbdIOMrO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:40:17 -0400
-Received: by mail-io0-f169.google.com with SMTP id n69so11318093ioi.5
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 07:40:16 -0700 (PDT)
-Subject: Re: rtl8821ae keep alive not set, connection lost
-To: James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170912220916.GB32211@us.netrek.org>
- <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
- <20170913214649.GC20283@us.netrek.org>
- <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net>
- <20170914092738.GG20283@us.netrek.org> <20170919094204.GR26927@us.netrek.org>
- <20170920093633.GO9946@us.netrek.org>
- <476b183f-5cc5-9a34-1a85-332dd5244b66@lwfinger.net>
- <20170920232228.GC9210@us.netrek.org> <20170921080746.GL9210@us.netrek.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <abff13d3-4115-4935-6546-b0fd8c860124@lwfinger.net> (sfid-20170921_164021_227090_B7728904)
-Date: Thu, 21 Sep 2017 09:40:14 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170921080746.GL9210@us.netrek.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 15 Sep 2017 08:47:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 15 Sep 2017 15:46:55 +0300
+Message-Id: <20170915124704.9032-2-luca@coelho.fi> (sfid-20170915_144721_702691_F3DE59BE)
+In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
+References: <20170915124704.9032-1-luca@coelho.fi>
+Subject: [PATCH 01/10] iwlwifi: mvm: add dbgfs entry for fw info
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2017 03:07 AM, James Cameron wrote:
-> My test kernel "-qb" was write_readback = false in sw.c, with 8-bit
-> read of REG_DBI_RDATA, and has been stable for four hours.  I'll focus
-> on some more testing of this one.  It is a surprise.
-> 
-> http://dev.laptop.org/~quozl/z/1dutXk.txt  (dmesg)
-> 
-> Observe how REG_DBI_FLAG+0 is briefly seen as 1, which doesn't happen
-> with write_readback = true.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Again, thanks for your efforts.
+Add a dbgfs entry for an easy way during runtime to
+check what FW file was loaded, and get some general
+FW-related data.
 
-At this point, my system has been up over 17 hours without a single drop. As a 
-result, I will leave the reversion of commit 40b368af4b75 in place. It seems 
-safer than turning off write_readback. After we get more testing, that could 
-still be an option.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 32 ++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-Larry
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index e97904c2c4d4..2ff594f11259 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -660,6 +660,36 @@ iwl_dbgfs_bt_force_ant_write(struct iwl_mvm *mvm, char *buf,
+ 	return ret ?: count;
+ }
+ 
++static ssize_t iwl_dbgfs_fw_ver_read(struct file *file, char __user *user_buf,
++				     size_t count, loff_t *ppos)
++{
++	struct iwl_mvm *mvm = file->private_data;
++	char *buff, *pos, *endpos;
++	static const size_t bufsz = 1024;
++	int ret;
++
++	buff = kmalloc(bufsz, GFP_KERNEL);
++	if (!buff)
++		return -ENOMEM;
++
++	pos = buff;
++	endpos = pos + bufsz;
++
++	pos += scnprintf(pos, endpos - pos, "FW prefix: %s\n",
++			 mvm->trans->cfg->fw_name_pre);
++	pos += scnprintf(pos, endpos - pos, "FW: %s\n",
++			 mvm->fwrt.fw->human_readable);
++	pos += scnprintf(pos, endpos - pos, "Device: %s\n",
++			 mvm->fwrt.trans->cfg->name);
++	pos += scnprintf(pos, endpos - pos, "Bus: %s\n",
++			 mvm->fwrt.dev->bus->name);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buff, pos - buff);
++	kfree(buff);
++
++	return ret;
++}
++
+ #define PRINT_STATS_LE32(_struct, _memb)				\
+ 			 pos += scnprintf(buf + pos, bufsz - pos,	\
+ 					  fmt_table, #_memb,		\
+@@ -1662,6 +1692,7 @@ MVM_DEBUGFS_READ_FILE_OPS(bt_cmd);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(disable_power_off, 64);
+ MVM_DEBUGFS_READ_FILE_OPS(fw_rx_stats);
+ MVM_DEBUGFS_READ_FILE_OPS(drv_rx_stats);
++MVM_DEBUGFS_READ_FILE_OPS(fw_ver);
+ MVM_DEBUGFS_WRITE_FILE_OPS(fw_restart, 10);
+ MVM_DEBUGFS_WRITE_FILE_OPS(fw_nmi, 10);
+ MVM_DEBUGFS_WRITE_FILE_OPS(bt_tx_prio, 10);
+@@ -1843,6 +1874,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 	MVM_DEBUGFS_ADD_FILE(bt_cmd, dbgfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(disable_power_off, mvm->debugfs_dir,
+ 			     S_IRUSR | S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE(fw_ver, mvm->debugfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(fw_rx_stats, mvm->debugfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(drv_rx_stats, mvm->debugfs_dir, S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(fw_restart, mvm->debugfs_dir, S_IWUSR);
+-- 
+2.14.1
