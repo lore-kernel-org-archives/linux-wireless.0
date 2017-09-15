@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:51324 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751370AbdINRA0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 13:00:26 -0400
-Received: by mail-it0-f49.google.com with SMTP id o200so948170itg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 10:00:26 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        srinath.mannam@broadcom.com, Bjorn Helgaas <bhelgaas@google.com>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
- <1505246657.1974.11.camel@sipsolutions.net>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> (sfid-20170914_190029_983995_D3F9F5E6)
-Date: Thu, 14 Sep 2017 11:00:23 -0600
-MIME-Version: 1.0
-In-Reply-To: <1505246657.1974.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:40978 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751434AbdION3W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 09:29:22 -0400
+Message-ID: <1505482156.31630.39.camel@sipsolutions.net> (sfid-20170915_152926_419833_E8AB1BA4)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 15 Sep 2017 15:29:16 +0200
+In-Reply-To: <ff73f237-71dd-5fde-9c9f-9bc8fce57e76@gmail.com> (sfid-20170915_145045_823652_4B4D42A4)
+References: <1505378361.31630.2.camel@sipsolutions.net>
+         <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
+         <1505414172.31630.13.camel@sipsolutions.net>
+         <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
+         <1505416964.31630.17.camel@sipsolutions.net>
+         <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
+         <1505418093.31630.21.camel@sipsolutions.net>
+         <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com>
+         <1505459955.31630.26.camel@sipsolutions.net>
+         <ff73f237-71dd-5fde-9c9f-9bc8fce57e76@gmail.com>
+         (sfid-20170915_145045_823652_4B4D42A4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2017 02:04 PM, Johannes Berg wrote:
-> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+On Fri, 2017-09-15 at 07:50 -0500, Denis Kenzior wrote:
+
+> > > E.g. if I CMD_CONNECT to AP1, then pre-authenticate to AP2 and
+> > > issue a CMD_CONNECT to AP2?
+> > 
+> > That's not something you can do with full-MAC cards?
 > 
->> CC'ing the guilty part and Bjorn. I'm assuming it's the
->> pci_is_enabled() check, since the rest of the patch shouldn't have
->> functional changes.
+> Err, why not?  Pre-Authentication runs over a 0x88c7 protocol.  So
+> we should get these just like regular PAE frames.  But forget 
+> pre-authentication, one can still force a roam between BSSes within
+> the same ESS by specifying NL80211_ATTR_PREV_BSSID.  At least that's
+> what the docs say ;)
+
+Oh, you meant that kind of pre-authentication :-)
+
+I thought you meant sending an 802.11 auth frame to the new AP before
+breaking the connection to the old AP.
+
+> > And even mac80211 doesn't really support pre-authentication (unless
+> > you mean over-the-DS)
+
 > 
-> and pci_enable_bridge() already checks if it's already enabled, but
-> still enables mastering in that case if it isn't:
+> There's only one kind of preauthentication? Are you confusing this
+> with FT?
+
+No, see above.
+
+> We use FT-over-Air just fine on mac80211 and on real hardware.  We 
+> even have an autotest for this based on mac80211_hwsim.  FT-over-DS 
+> should work as well.
 > 
-> static void pci_enable_bridge(struct pci_dev *dev)
-> {
-> [...]
->         if (pci_is_enabled(dev)) {
->                 if (!dev->is_busmaster)
->                         pci_set_master(dev);
->                 return;
->         }
-> 
-> so I guess due to the new check we end up with mastering disabled, and
-> thus the firmware can't load since that's a DMA thing?
+> Full macs don't support FT due to lack of 
+> CMD_ASSOCIATE/CMD_AUTHENTICATE.  Can we fix that btw?
 
-Bjorn/Srinath, any input here? This is a regression that prevents wifi
-from working on a pretty standard laptop. It'd suck to have this be in
--rc1. Seems like the trivial fix would be:
+Well, with full MAC devices you should let the device decide on the
+BSS?
 
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b0002daa50f3..ffbe11dbdd61 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		return 0;		/* already enabled */
- 
- 	bridge = pci_upstream_bridge(dev);
--	if (bridge && !pci_is_enabled(bridge))
-+	if (bridge)
- 		pci_enable_bridge(bridge);
- 
- 	/* only skip sriov related */
-
-
--- 
-Jens Axboe
+johannes
