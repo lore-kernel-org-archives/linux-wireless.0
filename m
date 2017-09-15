@@ -1,202 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54572 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751323AbdIOMrd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 08:47:33 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 15 Sep 2017 15:47:03 +0300
-Message-Id: <20170915124704.9032-10-luca@coelho.fi> (sfid-20170915_144737_028962_AF1CAAB3)
-In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
-References: <20170915124704.9032-1-luca@coelho.fi>
-Subject: [PATCH 09/10] iwlwifi: pcie: dynamic Tx command queue size
+Received: from mail.kernel.org ([198.145.29.99]:60106 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750871AbdIOHXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 03:23:53 -0400
+Subject: [PATCH] Revert "PCI: Avoid race while enabling upstream bridges"
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linuxwifi@intel.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>
+Date: Fri, 15 Sep 2017 02:23:52 -0500
+Message-ID: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com> (sfid-20170915_092421_871959_972505CF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+This reverts commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9.
 
-Devices in the A000 family can use a different size for the command queue.
-To allow this, make the command queue size configurable and set the size
-for A000 devices to 32.
+Jens found that iwlwifi firmware loading failed on a Lenovo X1 Carbon,
+gen4:
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+  iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
+  iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+  ...
+  iwlwifi 0000:04:00.0: Failed to load firmware chunk!
+  iwlwifi 0000:04:00.0: Could not load the [0] uCode section
+  iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110
+  iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110
+
+He bisected it to 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+bridges").  Revert that commit to fix the regression.
+
+Link: http://lkml.kernel.org/r/4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk
+Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Srinath Mannam <srinath.mannam@broadcom.com>
+CC: Jens Axboe <axboe@kernel.dk>
+CC: Luca Coelho <luca@coelho.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>
+CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |  3 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  3 +++
- .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  3 +++
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  8 ++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 23 ++++++++++++++++++++--
- 6 files changed, 36 insertions(+), 6 deletions(-)
+ drivers/pci/pci.c |   13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-index 76ba1f8bc72f..ed8bccd228f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-@@ -134,7 +134,8 @@ static const struct iwl_ht_params iwl_a000_ht_params = {
- 	.rf_id = true,							\
- 	.gen2 = true,							\
- 	.ext_nvm = true,						\
--	.dbgc_supported = true
-+	.dbgc_supported = true,						\
-+	.tx_cmd_queue_size = 32
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b0002daa50f3..6078dfc11b11 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -52,7 +52,6 @@ static void pci_pme_list_scan(struct work_struct *work);
+ static LIST_HEAD(pci_pme_list);
+ static DEFINE_MUTEX(pci_pme_list_mutex);
+ static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
+-static DEFINE_MUTEX(pci_bridge_mutex);
  
- const struct iwl_cfg iwla000_2ac_cfg_hr = {
- 		.name = "Intel(R) Dual Band Wireless AC a000",
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 3e057b539d5b..b9f3b350fe34 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -321,6 +321,8 @@ struct iwl_pwr_tx_backoff {
-  * @gen2: a000 and on transport operation
-  * @cdb: CDB support
-  * @ext_nvm: extended NVM format
-+ * @tx_cmd_queue_size: size of the cmd queue. If zero, use the same value as
-+ *	the regular queues
-  *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -371,6 +373,7 @@ struct iwl_cfg {
- 	    cdb:1,
- 	    ext_nvm:1,
- 	    dbgc_supported:1;
-+	u16 tx_cmd_queue_size;
- 	u8 valid_tx_ant;
- 	u8 valid_rx_ant;
- 	u8 non_shared_ant;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index 3fc4343581ee..5ef216f3a60b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -244,7 +244,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
- 	ctxt_info->hcmd_cfg.cmd_queue_addr =
- 		cpu_to_le64(trans_pcie->txq[trans_pcie->cmd_queue]->dma_addr);
- 	ctxt_info->hcmd_cfg.cmd_queue_size =
--		TFD_QUEUE_CB_SIZE(TFD_CMD_SLOTS);
-+		TFD_QUEUE_CB_SIZE(trans_pcie->tx_cmd_queue_size);
+ struct pci_pme_device {
+ 	struct list_head list;
+@@ -1351,16 +1350,10 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
  
- 	/* allocate ucode sections in dram and set addresses */
- 	ret = iwl_pcie_ctxt_info_init_fw_sec(trans, fw, ctxt_info);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 79020cf8c79c..5647182e1b46 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -383,6 +383,7 @@ struct iwl_self_init_dram {
-  * @hw_init_mask: initial unmasked hw causes
-  * @fh_mask: current unmasked fh causes
-  * @hw_mask: current unmasked hw causes
-+ * @tx_cmd_queue_size: the size of the tx command queue
-  */
- struct iwl_trans_pcie {
- 	struct iwl_rxq *rxq;
-@@ -463,6 +464,7 @@ struct iwl_trans_pcie {
- 	u32 fh_mask;
- 	u32 hw_mask;
- 	cpumask_t affinity_mask[IWL_MAX_RX_HW_QUEUES];
-+	u16 tx_cmd_queue_size;
- };
- 
- static inline struct iwl_trans_pcie *
-@@ -534,6 +536,7 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
- void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 			    struct sk_buff_head *skbs);
- void iwl_trans_pcie_tx_reset(struct iwl_trans *trans);
-+void iwl_pcie_set_tx_cmd_queue_size(struct iwl_trans *trans);
- 
- static inline u16 iwl_pcie_tfd_tb_get_len(struct iwl_trans *trans, void *_tfd,
- 					  u8 idx)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index d74613fcb756..79e4c73a9709 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -1160,6 +1160,8 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
- 	struct iwl_txq *cmd_queue;
- 	int txq_id = trans_pcie->cmd_queue, ret;
- 
-+	iwl_pcie_set_tx_cmd_queue_size(trans);
-+
- 	/* alloc and init the command queue */
- 	if (!trans_pcie->txq[txq_id]) {
- 		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
-@@ -1168,7 +1170,8 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
- 			return -ENOMEM;
- 		}
- 		trans_pcie->txq[txq_id] = cmd_queue;
--		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS, true);
-+		ret = iwl_pcie_txq_alloc(trans, cmd_queue,
-+					 trans_pcie->tx_cmd_queue_size, true);
- 		if (ret) {
- 			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
- 			goto error;
-@@ -1177,7 +1180,8 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
- 		cmd_queue = trans_pcie->txq[txq_id];
+-	/*
+-	 * Hold pci_bridge_mutex to prevent a race when enabling two
+-	 * devices below the bridge simultaneously.  The race may cause a
+-	 * PCI_COMMAND_MEMORY update to be lost (see changelog).
+-	 */
+-	mutex_lock(&pci_bridge_mutex);
+ 	if (pci_is_enabled(dev)) {
+ 		if (!dev->is_busmaster)
+ 			pci_set_master(dev);
+-		goto end;
++		return;
  	}
  
--	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, true);
-+	ret = iwl_pcie_txq_init(trans, cmd_queue,
-+				trans_pcie->tx_cmd_queue_size, true);
- 	if (ret) {
- 		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
- 		goto error;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index c645d10d3707..e93c471ef9bf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -951,7 +951,8 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
- 	     txq_id++) {
- 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
- 
--		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
-+		slots_num = cmd_queue ? trans_pcie->tx_cmd_queue_size :
-+			TFD_TX_CMD_SLOTS;
- 		trans_pcie->txq[txq_id] = &trans_pcie->txq_memory[txq_id];
- 		ret = iwl_pcie_txq_alloc(trans, trans_pcie->txq[txq_id],
- 					 slots_num, cmd_queue);
-@@ -970,6 +971,21 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
- 	return ret;
+ 	retval = pci_enable_device(dev);
+@@ -1368,8 +1361,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+ 			retval);
+ 	pci_set_master(dev);
+-end:
+-	mutex_unlock(&pci_bridge_mutex);
  }
  
-+void iwl_pcie_set_tx_cmd_queue_size(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int queue_size = TFD_CMD_SLOTS;
-+
-+	if (trans->cfg->tx_cmd_queue_size)
-+		queue_size = trans->cfg->tx_cmd_queue_size;
-+
-+	if (WARN_ON(!(is_power_of_2(queue_size) &&
-+		      TFD_QUEUE_CB_SIZE(queue_size) > 0)))
-+		trans_pcie->tx_cmd_queue_size = TFD_CMD_SLOTS;
-+	else
-+		trans_pcie->tx_cmd_queue_size = queue_size;
-+}
-+
- int iwl_pcie_tx_init(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -977,6 +993,8 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	int txq_id, slots_num;
- 	bool alloc = false;
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+@@ -1394,7 +1385,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		return 0;		/* already enabled */
  
-+	iwl_pcie_set_tx_cmd_queue_size(trans);
-+
- 	if (!trans_pcie->txq_memory) {
- 		ret = iwl_pcie_tx_alloc(trans);
- 		if (ret)
-@@ -1000,7 +1018,8 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	     txq_id++) {
- 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
+ 	bridge = pci_upstream_bridge(dev);
+-	if (bridge && !pci_is_enabled(bridge))
++	if (bridge)
+ 		pci_enable_bridge(bridge);
  
--		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
-+		slots_num = cmd_queue ? trans_pcie->tx_cmd_queue_size :
-+			TFD_TX_CMD_SLOTS;
- 		ret = iwl_pcie_txq_init(trans, trans_pcie->txq[txq_id],
- 					slots_num, cmd_queue);
- 		if (ret) {
--- 
-2.14.1
+ 	/* only skip sriov related */
