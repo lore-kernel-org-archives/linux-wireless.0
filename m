@@ -1,57 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49624 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752634AbdIHJN1 (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:48595 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751184AbdIOTqt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 05:13:27 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  8 Sep 2017 12:12:55 +0300
-Message-Id: <20170908091256.25279-10-luca@coelho.fi> (sfid-20170908_111331_135964_3D5F0DD9)
-In-Reply-To: <20170908091256.25279-1-luca@coelho.fi>
-References: <20170908091256.25279-1-luca@coelho.fi>
-Subject: [PATCH 09/10] iwlwifi: mvm: set status before calling iwl_mvm_send_cmd_status()
+        Fri, 15 Sep 2017 15:46:49 -0400
+Received: by mail-pf0-f182.google.com with SMTP id n24so1950497pfk.5
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Sep 2017 12:46:49 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Luca Coelho <luca@coelho.fi>,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+ <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+ <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+ <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+ <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+ <1505504195.5400.295.camel@coelho.fi>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <a9913d13-c14d-c261-e4ed-739bccc7755d@kernel.dk> (sfid-20170915_214653_463383_DC54018C)
+Date: Fri, 15 Sep 2017 13:46:45 -0600
+MIME-Version: 1.0
+In-Reply-To: <1505504195.5400.295.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 09/15/2017 01:36 PM, Luca Coelho wrote:
+> On Fri, 2017-09-15 at 13:32 -0600, Jens Axboe wrote:
+>> On 09/14/2017 02:36 PM, Jens Axboe wrote:
+>>> On 09/14/2017 02:04 PM, Srinath Mannam wrote:
+>>>> Hi Jens Axboe,
+>>>>
+>>>>
+>>>> On Thu, Sep 14, 2017 at 11:14 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>> On 09/14/2017 11:35 AM, Jens Axboe wrote:
+>>>>>> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+>>>>>>> Hi Bjorn,
+>>>>>>>
+>>>>>>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>>
+>>>>>>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>>>>>>>> [+cc linux-pci]
+>>>>>>>>>
+>>>>>>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>>>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>>>>>>>
+>>>>>>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>>>>>>>> functional changes.
+>>>>>>>>>>>
+>>>>>>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>>>>>>>> still enables mastering in that case if it isn't:
+>>>>>>>>>>>
+>>>>>>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>>>>>>>> {
+>>>>>>>>>>> [...]
+>>>>>>>>>>>         if (pci_is_enabled(dev)) {
+>>>>>>>>>>>                 if (!dev->is_busmaster)
+>>>>>>>>>>>                         pci_set_master(dev);
+>>>>>>>>>>>                 return;
+>>>>>>>>>>>         }
+>>>>>>>>>>>
+>>>>>>>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>>>>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>>>>>>>
+>>>>>>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>>>>>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>>>>>>>> -rc1. Seems like the trivial fix would be:
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>>>>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>>>>>>>> --- a/drivers/pci/pci.c
+>>>>>>>>>> +++ b/drivers/pci/pci.c
+>>>>>>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>>>>>>>                 return 0;               /* already enabled */
+>>>>>>>>>>
+>>>>>>>>>>         bridge = pci_upstream_bridge(dev);
+>>>>>>>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>>>>>>>> +       if (bridge)
+>>>>>>>
+>>>>>>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+>>>>>>> pci_enable_bridge functoin will causes a nexted lock.
+>>>>>>
+>>>>>> Took a look, and looks like you are right. That code looks like a mess,
+>>>>>> fwiw.
+>>>>>>
+>>>>>> I'd strongly suggest that the bad commit is reverted until a proper
+>>>>>> solution is found, since the simple one-liner could potentially
+>>>>>> introduce a deadlock with your patch applied.
+>>>>>
+>>>>> BTW, your patch looks pretty bad too, introducing a random mutex
+>>>>> deep on code that can be recursive. Why isn't this check in
+>>>>> pci_enable_device_flags() enough to prevent double-enable of
+>>>>> an upstream bridge?
+>>>>>
+>>>>> if (atomic_inc_return(&dev->enable_cnt) > 1)
+>>>>>         return 0;               /* already enabled */
+>>>>>
+>>>>
+>>>> This check only to verify device enable not for the bus master check.
+>>>> But device enable function calls the bridge enable if it has the bridge.
+>>>> Bridge enable function enables both device and bus master.
+>>>>
+>>>> Here the issue might be because, bridge of endpoint has already set
+>>>> device enable without set bus master in some other context. which is
+>>>> wrong.
+>>>> because all bridges should enable with bridge_enable function only.
+>>>> So we see the problem In this context, because "if (bridge &&
+>>>> !pci_is_enabled(bridge))" check stops bridge enable which intern stops
+>>>> bus master.
+>>>> pci_enable_bridge function always makes sure that both device and bus
+>>>> master are enabled in any case. If pci_enable_bridge function is not
+>>>> called means, that bridge is already has device enable flag set. which
+>>>> is not from pci_enable_bridge function.
+>>>
+>>> In any case, your patch introduces a regression on systems. Please get
+>>> it reverted now, and then you can come up with a new approach to fix the
+>>> double enable of the upstream bridge.
+>>
+>> Who's sending in the revert? I can certainly do it if no one else does,
+>> but it needs to be done.
+>>
+>> I'm not seeing any patches coming out of Srinath to fix up the
+>> situation, so we should revert the broken patch until a better solution
+>> exists.
+> 
+> Bjorn already sent it:
+> 
+> https://lkml.org/lkml/2017/9/15/46
 
-We always must set the status to what we consider success before
-calling iwl_mvm_send_cmd_status() (also iwl_mvm_send_cmd_pdu_status()
-which calls it).  Fix a few places where initialization is missing.
+Huh ok, I would have thought the various folks in this discussion would
+have been CC'ed on that. But good to know, that takes care of my
+concern.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c   | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 50983615dce6..774122fed454 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -555,7 +555,7 @@ static int iwl_mvm_lmac_scan_abort(struct iwl_mvm *mvm)
- 	struct iwl_host_cmd cmd = {
- 		.id = SCAN_OFFLOAD_ABORT_CMD,
- 	};
--	u32 status;
-+	u32 status = CAN_ABORT_STATUS;
- 
- 	ret = iwl_mvm_send_cmd_status(mvm, &cmd, &status);
- 	if (ret)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index 8876c2abc440..4d907f60bce9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -529,6 +529,7 @@ int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 state)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	status = 0;
- 	ret = iwl_mvm_send_cmd_pdu_status(mvm, WIDE_ID(PHY_OPS_GROUP,
- 						       CTDP_CONFIG_CMD),
- 					  sizeof(cmd), &cmd, &status);
 -- 
-2.14.1
+Jens Axboe
