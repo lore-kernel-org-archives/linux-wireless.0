@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.185]:52531 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934544AbdIYOtg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 10:49:36 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Arnd Bergmann' <arnd@arndb.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>
-CC: Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?Windows-1252?Q?Martin_Li=9Aka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-Date: Mon, 25 Sep 2017 14:41:30 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com> (sfid-20170925_165005_382544_992627DF)
-References: <20170922212930.620249-1-arnd@arndb.de>
- <20170922212930.620249-5-arnd@arndb.de>
-In-Reply-To: <20170922212930.620249-5-arnd@arndb.de>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:34026 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750865AbdIOHTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 03:19:20 -0400
+Message-ID: <1505459955.31630.26.camel@sipsolutions.net> (sfid-20170915_091922_486605_00771953)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 15 Sep 2017 09:19:15 +0200
+In-Reply-To: <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com> (sfid-20170914_215443_438675_4A9B3055)
+References: <1505378361.31630.2.camel@sipsolutions.net>
+         <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
+         <1505414172.31630.13.camel@sipsolutions.net>
+         <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
+         <1505416964.31630.17.camel@sipsolutions.net>
+         <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
+         <1505418093.31630.21.camel@sipsolutions.net>
+         <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com>
+         (sfid-20170914_215443_438675_4A9B3055)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arnd Bergmann
-> Sent: 22 September 2017 22:29
-...
-> It seems that this is triggered in part by using strlcpy(), which the
-> compiler doesn't recognize as copying at most 'len' bytes, since strlcpy
-> is not part of the C standard.
+On Thu, 2017-09-14 at 14:54 -0500, Denis Kenzior wrote:
 
-Neither is strncpy().
+> If you want roaming to keep oper state UP in all cases, then
+> yes.  Does this work on full mac cards as well?
 
-It'll almost certainly be a marker in a header file somewhere,
-so it should be possibly to teach it about other functions.
+I don't see why not.
 
-	David
+> E.g. if I CMD_CONNECT to AP1, then pre-authenticate to AP2 and issue
+> a CMD_CONNECT to AP2?
+
+That's not something you can do with full-MAC cards?
+
+And even mac80211 doesn't really support pre-authentication (unless you
+mean over-the-DS)
+
+johannes
