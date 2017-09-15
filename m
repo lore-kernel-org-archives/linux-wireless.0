@@ -1,74 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48558 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932987AbdIYM0a (ORCPT
+Received: from mail-io0-f174.google.com ([209.85.223.174]:49328 "EHLO
+        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751812AbdIOTVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 08:26:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andrey Konovalov <andreyknvl@google.com>
-Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
-Subject: Re: usb/wireless/rsi_91x: use-after-free write in __run_timers
-References: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
-        <87lgl3769o.fsf@kamboji.qca.qualcomm.com>
-        <CAAeHK+y61FFKLpePKOhRjd=5QJEWRy9-pank64PuG+aKzafANw@mail.gmail.com>
-Date: Mon, 25 Sep 2017 15:26:24 +0300
-In-Reply-To: <CAAeHK+y61FFKLpePKOhRjd=5QJEWRy9-pank64PuG+aKzafANw@mail.gmail.com>
-        (Andrey Konovalov's message of "Mon, 25 Sep 2017 13:20:43 +0200")
-Message-ID: <874lrr6k27.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_142735_755709_0F1E995A)
+        Fri, 15 Sep 2017 15:21:23 -0400
+Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
+To: Zwindl <zwindl@protonmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "pkshih@realtek.com" <pkshih@realtek.com>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
+ <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net>
+ <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
+ <1eb67d2e-dfbc-a2d0-8949-d4336191c07b@lwfinger.net>
+ <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <35856452-c05c-d116-f91b-0964947ec8ae@lwfinger.net> (sfid-20170915_212257_269319_122C4B03)
+Date: Fri, 15 Sep 2017 14:21:21 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Konovalov <andreyknvl@google.com> writes:
+On 09/15/2017 12:12 PM, Zwindl wrote:
+> Thanks for your patient and advice, I'll keep that in mind.
+> I do want help, and I got 1 day to build the system, but I can't recall how to 
+> compile it, The last time I compile kernel is 2013, so, maybe I'll ask you so 
+> many stupid questions during the build time.
+> ZWindL
 
-> On Mon, Sep 25, 2017 at 6:26 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Andrey Konovalov <andreyknvl@google.com> writes:
->>
->>> I've got the following report while fuzzing the kernel with syzkaller.
->>>
->>> On commit 6e80ecdddf4ea6f3cd84e83720f3d852e6624a68 (Sep 21).
->>>
->>> ==================================================================
->>> BUG: KASAN: use-after-free in __run_timers+0xc0e/0xd40
->>> Write of size 8 at addr ffff880069f701b8 by task swapper/0/0
->>>
->>> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.14.0-rc1-42311-g6e80ecdddf4e #234
->>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
->>
->> [...]
->>
->>> Allocated by task 1845:
->>>  save_stack_trace+0x1b/0x20 arch/x86/kernel/stacktrace.c:59
->>>  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
->>>  set_track mm/kasan/kasan.c:459
->>>  kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:551
->>>  kmem_cache_alloc_trace+0x11e/0x2d0 mm/slub.c:2772
->>>  kmalloc ./include/linux/slab.h:493
->>>  kzalloc ./include/linux/slab.h:666
->>>  rsi_91x_init+0x98/0x510 drivers/net/wireless/rsi/rsi_91x_main.c:203
->>>  rsi_probe+0xb6/0x13b0 drivers/net/wireless/rsi/rsi_91x_usb.c:665
->>>  usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
->>
->> I'm curious about your setup. Apparently you are running syzkaller on
->> QEMU but what I don't understand is how the rsi device comes into the
->> picture. Did you have a rsi usb device connected to the virtual machine
->> or what? Or does syzkaller do some kind of magic here?
->
-> I use dummy_hcd and gadgetfs to connect random USB devices to the
-> kernel from a userspace application. This happens inside a QEMU
-> instance. This simplifies fuzzing, since everything is virtualized,
-> but the found bugs can be triggered on a real machine by connecting a
-> malicious USB device.
+Building a new kernel is not difficult. In an average week, I make at least 10 
+new kernels. Many of them are done on slow machines that take many hours. At 
+least, your i5 CPU should do it in less that one hour.
 
-That's very cool, thanks for explaining the setup.
+Step 1: Download the kernel sources using
 
--- 
-Kalle Valo
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+If your system complains that the git command is unknown, then you will need to 
+install it with your package manager (pacman?).
+
+Step 2: "cd  linux" and copy the latest /boot/config-..... to the linux source 
+directory as ".config". Edit .config, find the line that says
+"# CONFIG_LOCALVERSION_AUTO is not set", and change the line to read 
+"CONFIG_LOCALVERSION_AUTO=y".
+
+Step 3: Build and install the latest version using
+
+make -j9
+sudo make modules_install install
+
+You will need to answer some configuration questions at the start of the first 
+make line. Answer with the default value, i.e. just use an ENTER. When the build 
+is complete, reboot. Grub should show an entry for something like 
+v4.13-12084-ged43e4d190d0. The numbers after the 4.13 will likely be different, 
+but the form will match. Check that the new kernel still has the fault. If not, 
+it has been fixed and we do not need to find it.
+
+It the problem is still in the latest version of the kernel, then we start the 
+bisection with the following:
+
+git bisect start
+git bisect bad v4.13
+git bisect good v4.12
+
+At this point, git will report the number of revisions to test, the likely 
+number of tries, and the SHA hash for the new kernel. Record the first 7 digits 
+of the hash, and repeat the make commands above. After the build is complete, 
+reboot into the kernel with the hash in the version name and test. Then enter 
+the command "git bisect xxx", where xxx is good or bad depending on the test. A 
+new trial will be generated by bisecting the appropriate half of the commits. 
+Record its hash and redo the build. Repeat until git tells you the bad commit.
+
+This process will generate a number of kernels that will take quite a bit of 
+disk space. If you run short, you can delete kernels that have already been 
+tested from /boot. You should also delete the corresponding modules from 
+/lib/modules.
+
+Good luck,
+
+Larry
