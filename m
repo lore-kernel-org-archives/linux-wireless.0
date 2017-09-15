@@ -1,158 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:63064 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751009AbdISCuS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54516 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751323AbdIOMr2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 22:50:18 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V2 3/5] ath10k: Enable TDLS peer inactivity detection
-Date: Tue, 19 Sep 2017 10:51:06 +0800
-Message-ID: <1505789468-25330-4-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_045021_556812_880BBCF8)
-In-Reply-To: <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patchset v2>
- <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 15 Sep 2017 08:47:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 15 Sep 2017 15:47:01 +0300
+Message-Id: <20170915124704.9032-8-luca@coelho.fi> (sfid-20170915_144731_674968_119E2BF2)
+In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
+References: <20170915124704.9032-1-luca@coelho.fi>
+Subject: [PATCH 07/10] iwlwifi: mvm: support firmware debug trigger on frame reorder timeout
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Enable TDLS peer inactivity detetion feature.
-QCA6174 firmware(version: WLAN.RM.4.4) support TDLS link inactivity detecting.
-Set related parameters in TDLS WMI command to enable this feature.
+The trigger that collects data when a frame is released
+because of the timer of the reordering buffer was not
+implemented for 9000 devices.
+Fix this.
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   52 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 +++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
- 3 files changed, 76 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 28 ++---------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  6 +++++
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  5 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 25 ++++++++++++++++++++
+ 5 files changed, 39 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index f60b46e..63bb2c4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -412,6 +412,49 @@ static int ath10k_wmi_tlv_event_tx_pause(struct ath10k *ar,
- 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 8b4584541272..d7530474c1d3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4186,31 +4186,6 @@ static void iwl_mvm_event_bar_rx_callback(struct iwl_mvm *mvm,
+ 				event->u.ba.ssn);
  }
  
-+void ath10k_wmi_event_tdls_peer(struct ath10k *ar, struct sk_buff *skb)
+-static void
+-iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
+-				     struct ieee80211_vif *vif,
+-				     const struct ieee80211_event *event)
+-{
+-	struct iwl_fw_dbg_trigger_tlv *trig;
+-	struct iwl_fw_dbg_trigger_ba *ba_trig;
+-
+-	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_BA))
+-		return;
+-
+-	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_BA);
+-	ba_trig = (void *)trig->data;
+-	if (!iwl_fw_dbg_trigger_check_stop(&mvm->fwrt,
+-					   ieee80211_vif_to_wdev(vif), trig))
+-		return;
+-
+-	if (!(le16_to_cpu(ba_trig->frame_timeout) & BIT(event->u.ba.tid)))
+-		return;
+-
+-	iwl_fw_dbg_collect_trig(&mvm->fwrt, trig,
+-				"Frame from %pM timed out, tid %d",
+-				event->u.ba.sta->addr, event->u.ba.tid);
+-}
+-
+ static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       const struct ieee80211_event *event)
+@@ -4225,7 +4200,8 @@ static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
+ 		iwl_mvm_event_bar_rx_callback(mvm, vif, event);
+ 		break;
+ 	case BA_FRAME_TIMEOUT:
+-		iwl_mvm_event_frame_timeout_callback(mvm, vif, event);
++		iwl_mvm_event_frame_timeout_callback(mvm, vif, event->u.ba.sta,
++						     event->u.ba.tid);
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index ec2cf248990b..e8be5104b909 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -586,6 +586,7 @@ enum iwl_mvm_tdls_cs_state {
+  * @queue: queue of this reorder buffer
+  * @last_amsdu: track last ASMDU SN for duplication detection
+  * @last_sub_index: track ASMDU sub frame index for duplication detection
++ * @tid: the tid
+  * @entries: list of skbs stored
+  * @reorder_time: time the packet was stored in the reorder buffer
+  * @reorder_timer: timer for frames are in the reorder buffer. For AMSDU
+@@ -603,6 +604,7 @@ struct iwl_mvm_reorder_buffer {
+ 	int queue;
+ 	u16 last_amsdu;
+ 	u8 last_sub_index;
++	u8 tid;
+ 	struct sk_buff_head entries[IEEE80211_MAX_AMPDU_BUF];
+ 	unsigned long reorder_time[IEEE80211_MAX_AMPDU_BUF];
+ 	struct timer_list reorder_timer;
+@@ -1839,6 +1841,10 @@ unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
+ 				    bool tdls, bool cmd_q);
+ void iwl_mvm_connection_loss(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			     const char *errmsg);
++void iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
++					  struct ieee80211_vif *vif,
++					  const struct ieee80211_sta *sta,
++					  u16 tid);
+ 
+ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b);
+ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 67ffd9774712..a0b406e68d55 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -492,13 +492,18 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 
+ 	if (expired) {
+ 		struct ieee80211_sta *sta;
++		struct iwl_mvm_sta *mvmsta;
+ 
+ 		rcu_read_lock();
+ 		sta = rcu_dereference(buf->mvm->fw_id_to_mac_id[buf->sta_id]);
++		mvmsta = iwl_mvm_sta_from_mac80211(sta);
++
+ 		/* SN is set to the last expired frame + 1 */
+ 		IWL_DEBUG_HT(buf->mvm,
+ 			     "Releasing expired frames for sta %u, sn %d\n",
+ 			     buf->sta_id, sn);
++		iwl_mvm_event_frame_timeout_callback(buf->mvm, mvmsta->vif,
++						     sta, buf->tid);
+ 		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
+ 		rcu_read_unlock();
+ 	} else {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 411a2055dc45..3711f226220c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2158,6 +2158,7 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
+ 		reorder_buf->mvm = mvm;
+ 		reorder_buf->queue = i;
+ 		reorder_buf->sta_id = sta_id;
++		reorder_buf->tid = data->tid;
+ 		reorder_buf->valid = false;
+ 		for (j = 0; j < reorder_buf->buf_size; j++)
+ 			__skb_queue_head_init(&reorder_buf->entries[j]);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 328035640669..2da1b088ac01 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1368,6 +1368,31 @@ void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
+ 	rcu_read_unlock();
+ }
+ 
++void iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
++					  struct ieee80211_vif *vif,
++					  const struct ieee80211_sta *sta,
++					  u16 tid)
 +{
-+	struct ieee80211_sta *station;
-+	const struct wmi_tlv_tdls_peer_event *ev;
-+	const void **tb;
-+	struct ath10k_vif *arvif;
++	struct iwl_fw_dbg_trigger_tlv *trig;
++	struct iwl_fw_dbg_trigger_ba *ba_trig;
 +
-+	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
-+	if (IS_ERR(tb)) {
-+		ath10k_warn(ar, "tdls peer failed to parse tlv");
++	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_BA))
 +		return;
-+	}
-+	ev = tb[WMI_TLV_TAG_STRUCT_TDLS_PEER_EVENT];
-+	if (!ev) {
-+		kfree(tb);
-+		ath10k_warn(ar, "tdls peer NULL event");
-+		return;
-+	}
 +
-+	switch (ev->peer_reason) {
-+	case WMI_TDLS_TEARDOWN_REASON_TX:
-+	case WMI_TDLS_TEARDOWN_REASON_RSSI:
-+	case WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT:
-+		station = ieee80211_find_sta_by_ifaddr(ar->hw,
-+						       ev->peer_macaddr.addr,
-+						       NULL);
-+		if (!station) {
-+			ath10k_warn(ar, "did not find station from tdls peer event");
-+			kfree(tb);
-+			return;
-+		}
-+		arvif = ath10k_get_arvif(ar, ev->vdev_id);
-+		ieee80211_tdls_oper_request(
-+					arvif->vif, station->addr,
-+					NL80211_TDLS_TEARDOWN,
-+					WLAN_REASON_TDLS_TEARDOWN_UNREACHABLE,
-+					GFP_ATOMIC
-+					);
-+		break;
-+	}
-+	kfree(tb);
++	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_BA);
++	ba_trig = (void *)trig->data;
++	if (!iwl_fw_dbg_trigger_check_stop(&mvm->fwrt,
++					   ieee80211_vif_to_wdev(vif), trig))
++		return;
++
++	if (!(le16_to_cpu(ba_trig->frame_timeout) & BIT(tid)))
++		return;
++
++	iwl_fw_dbg_collect_trig(&mvm->fwrt, trig,
++				"Frame from %pM timed out, tid %d",
++				sta->addr, tid);
 +}
 +
- /***********/
- /* TLV ops */
- /***********/
-@@ -552,6 +595,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_TLV_TX_PAUSE_EVENTID:
- 		ath10k_wmi_tlv_event_tx_pause(ar, skb);
- 		break;
-+	case WMI_TLV_TDLS_PEER_EVENTID:
-+		ath10k_wmi_event_tdls_peer(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -2750,6 +2796,12 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
- 		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
- 
-+	/* WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL means firm will handle TDLS
-+	 * link inactivity detecting logic.
-+	 */
-+	if (state == WMI_TDLS_ENABLE_ACTIVE)
-+		state = WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL;
-+
- 	len = sizeof(*tlv) + sizeof(*cmd);
- 	skb = ath10k_wmi_alloc_skb(ar, len);
- 	if (!skb)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 22cf011..00d68c5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1641,6 +1641,29 @@ struct wmi_tlv_tx_pause_ev {
- 	__le32 tid_map;
- } __packed;
- 
-+struct wmi_tlv_tdls_peer_event {
-+	struct wmi_mac_addr    peer_macaddr;
-+	__le32 peer_status;
-+	__le32 peer_reason;
-+	__le32 vdev_id;
-+} __packed;
-+
-+enum wmi_tdls_peer_reason {
-+	WMI_TDLS_TEARDOWN_REASON_TX,
-+	WMI_TDLS_TEARDOWN_REASON_RSSI,
-+	WMI_TDLS_TEARDOWN_REASON_SCAN,
-+	WMI_TDLS_DISCONNECTED_REASON_PEER_DELETE,
-+	WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT,
-+	WMI_TDLS_TEARDOWN_REASON_BAD_PTR,
-+	WMI_TDLS_TEARDOWN_REASON_NO_RESPONSE,
-+	WMI_TDLS_ENTER_BUF_STA,
-+	WMI_TDLS_EXIT_BUF_STA,
-+	WMI_TDLS_ENTER_BT_BUSY_MODE,
-+	WMI_TDLS_EXIT_BT_BUSY_MODE,
-+	WMI_TDLS_SCAN_STARTED_EVENT,
-+	WMI_TDLS_SCAN_COMPLETED_EVENT,
-+};
-+
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7a3606d..74a6c78 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6720,6 +6720,7 @@ enum wmi_tdls_state {
- 	WMI_TDLS_DISABLE,
- 	WMI_TDLS_ENABLE_PASSIVE,
- 	WMI_TDLS_ENABLE_ACTIVE,
-+	WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL,
- };
- 
- enum wmi_tdls_peer_state {
+ void iwl_mvm_get_sync_time(struct iwl_mvm *mvm, u32 *gp2, u64 *boottime)
+ {
+ 	bool ps_disabled;
 -- 
-1.7.9.5
+2.14.1
