@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f41.google.com ([74.125.83.41]:37912 "EHLO
-        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756928AbdIHTOL (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:32628 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751230AbdIOLCg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 15:14:11 -0400
-Received: by mail-pg0-f41.google.com with SMTP id v66so6247699pgb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Sep 2017 12:14:10 -0700 (PDT)
-From: Kevin Cernekee <cernekee@chromium.org>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: [PATCH 1/3] brcmfmac: Avoid possible out-of-bounds read
-Date: Fri,  8 Sep 2017 12:13:40 -0700
-Message-Id: <20170908191342.28053-2-cernekee@chromium.org> (sfid-20170908_211422_918841_C8B9FC02)
-In-Reply-To: <20170908191342.28053-1-cernekee@chromium.org>
-References: <20170908191342.28053-1-cernekee@chromium.org>
+        Fri, 15 Sep 2017 07:02:36 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V1 1/5] mac80211: Enable TDLS peer buffer STA feature
+Date: Fri, 15 Sep 2017 19:03:36 +0800
+Message-ID: <1505473420-22932-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20170915_130239_100508_B07D55ED)
+In-Reply-To: <1505473420-22932-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k>
+ <1505473420-22932-1-git-send-email-yintang@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
-the length of rxframe is validated.  This could lead to uninitialized
-data being printed in a debug message.  Since we already have a
-perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
-and ch.chspec is not modified by decchspec(), avoid the extra
-assignment and use ch.chspec in the debug print.
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-Suggested-by: Mattias Nissler <mnissler@chromium.org>
-Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+Enable TDLS peer buffer STA feature.
+Set extended capability bit to enable buffer STA when driver
+support it.
+
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ include/net/cfg80211.h |    3 +++
+ net/mac80211/tdls.c    |    5 ++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 2ce675ab40ef..1c450c0727cb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1853,7 +1853,6 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
- 	struct brcmf_cfg80211_vif *vif = ifp->vif;
- 	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
--	u16 chanspec = be16_to_cpu(rxframe->chanspec);
- 	struct brcmu_chan ch;
- 	u8 *mgmt_frame;
- 	u32 mgmt_frame_len;
-@@ -1906,7 +1905,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f12fa52..edefc25 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3249,6 +3249,8 @@ struct cfg80211_ops {
+  *	beaconing mode (AP, IBSS, Mesh, ...).
+  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
+  *	before connection.
++ * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_ST: Device support buffer STA when TDLS is
++ *	established.
+  */
+ enum wiphy_flags {
+ 	/* use hole at 0 */
+@@ -3275,6 +3277,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+ 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
++	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
+ };
  
- 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
--		  mgmt_frame_len, e->datalen, chanspec, freq);
-+		  mgmt_frame_len, e->datalen, ch.chspec, freq);
+ /**
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 91093d4..f99e379 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -49,6 +49,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 			  !ifmgd->tdls_wider_bw_prohibited;
+ 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
+ 	bool vht = sband && sband->vht_cap.vht_supported;
++	bool buffer_sta =
++		local->hw.wiphy->flags & WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
+ 	u8 *pos = skb_put(skb, 10);
  
- 	return 0;
- }
+ 	*pos++ = WLAN_EID_EXT_CAPABILITY;
+@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 	*pos++ = 0x0;
+ 	*pos++ = 0x0;
+ 	*pos++ = 0x0;
+-	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
++	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
++		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
+ 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
+ 	*pos++ = 0;
+ 	*pos++ = 0;
 -- 
-2.14.1.581.gf28d330327-goog
+1.7.9.5
