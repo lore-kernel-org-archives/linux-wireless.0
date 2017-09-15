@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44522 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750948AbdISOaM (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:45031 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750879AbdIOIsf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 10:30:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Brian Norris" <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
-References: <1505720537-13362-1-git-send-email-gbhat@marvell.com>
-        <87o9q8kuy4.fsf@purkki.adurom.net>
-        <3f3f5c9672a5421db05337a00d9578f2@SC-EXCH02.marvell.com>
-Date: Tue, 19 Sep 2017 17:30:06 +0300
-In-Reply-To: <3f3f5c9672a5421db05337a00d9578f2@SC-EXCH02.marvell.com>
-        (Ganapathi Bhat's message of "Mon, 18 Sep 2017 14:13:41 +0000")
-Message-ID: <87tvzyahht.fsf@kamboji.qca.qualcomm.com> (sfid-20170919_163015_400027_D455B000)
+        Fri, 15 Sep 2017 04:48:35 -0400
+Received: by mail-io0-f170.google.com with SMTP id v36so6784440ioi.1
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Sep 2017 01:48:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Ernst Wegner <ernstwegner95@gmail.com>
+Date: Fri, 15 Sep 2017 10:48:34 +0200
+Message-ID: <CAF11ideB1ButOi1r8dmkbQZzSjmVrO247+pMOuxy60pO+BkuiA@mail.gmail.com> (sfid-20170915_104839_253575_11130D3E)
+Subject: What makes USB WiFi so difficult in Linux and may I help out?
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> writes:
+Dear list!
 
-> Hi Kalle,
->> 
->> > Avoid calculating random MAC address in driver. Instead make use of
->> > 'get_random_mask_addr()' function.
->> >
->> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
->> 
->> I don't see 1/2 anywhere. Did it get lost?
->
-> Actually there is no 1/2. What I did is: 'git send-email'; CTRL + C
-> (to correct a typo); and then tried sending it again. I think that
-> created some problem here. Kindly let me know how to proceed.
+I recently suffer from attempts to use some USB WiFi sticks to connect
+to a wireless network using Linux. I tried that with a number of
+distros, but found that there seem to be kind of the same problems all
+the way from Linux 2.6.x to 4.x. Most USB WiFi sticks don't work
+reliably.
 
-Ok. I'll wait for review comments and if all goes well I'll apply it in
-few days.
+As I am a developer also (and very interested in these things) I would
+be willing to help debugging drivers and possibly fix them. But I
+don't really know where to start searching. So some hints would be
+very welcome.
 
--- 
-Kalle Valo
+Currently I try to get this one here to work:
+
+Bus 001 Device 006: ID 148f:5370 Ralink Technology, Corp. RT5370
+Wireless Adapter
+
+I am on Debian 9 with a pretty recent kernel:
+
+Linux debian 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u3 (2017-08-06)
+x86_64 GNU/Linux
+
+I was able to get this stick to work kind of. Actually, it drops the
+connection every couple of minutes, without any error messages in
+dmesg or syslog, actually. But I was able to reach that state only
+after applying some tweaks like disabling hardware encrypt, i.e.
+
+options rt2800usb nohwcrypt=y
+
+and
+
+[device]
+wifi.scan-rand-mac-address=no
+
+So any pointers would be welcome.
+
+I am not afraid to dig into the code of the driver and recompile.
+
+I could also possibly add or enable some debugging code so I will get
+some more debugging output to see what actually happens when I loose
+the connection, i.e. if this is an external event, a special kind of
+package, overload, ...
+
+And finally: This isn't the only USB Wifi stick which has serious
+problems with Linux. The Internet is full of this including drivers
+for some sticks which don't work at all and don't go anywhere for
+month. Obviously it's not the sticks to blame, as they all work fine
+on Windows. So what's the underlying story here which I am missing?
+
+Regards,
+Torsten
