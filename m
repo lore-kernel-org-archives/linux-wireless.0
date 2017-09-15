@@ -1,161 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53234 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751366AbdIFNTW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 09:19:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Matteo Croce <mcroce@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix deadlock in driver-managed RX BA session start
-Date: Wed,  6 Sep 2017 15:19:17 +0200
-Message-Id: <20170906131917.21090-1-johannes@sipsolutions.net> (sfid-20170906_151925_365125_28F4ED16)
+Received: from paleale.coelho.fi ([176.9.41.70]:55050 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751831AbdIOTgr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 15:36:47 -0400
+Message-ID: <1505504195.5400.295.camel@coelho.fi> (sfid-20170915_213655_886127_E17CEE89)
+From: Luca Coelho <luca@coelho.fi>
+To: Jens Axboe <axboe@kernel.dk>,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 15 Sep 2017 22:36:35 +0300
+In-Reply-To: <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+         <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+         <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+         <1505246657.1974.11.camel@sipsolutions.net>
+         <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+         <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+         <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+         <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+         <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+         <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+         <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+         <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+         <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi firmware load broken in current -git
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2017-09-15 at 13:32 -0600, Jens Axboe wrote:
+> On 09/14/2017 02:36 PM, Jens Axboe wrote:
+> > On 09/14/2017 02:04 PM, Srinath Mannam wrote:
+> > > Hi Jens Axboe,
+> > > 
+> > > 
+> > > On Thu, Sep 14, 2017 at 11:14 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > On 09/14/2017 11:35 AM, Jens Axboe wrote:
+> > > > > On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+> > > > > > Hi Bjorn,
+> > > > > > 
+> > > > > > On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > > > > 
+> > > > > > > On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+> > > > > > > > [+cc linux-pci]
+> > > > > > > > 
+> > > > > > > > On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > > > > > > On 09/12/2017 02:04 PM, Johannes Berg wrote:
+> > > > > > > > > > On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+> > > > > > > > > > 
+> > > > > > > > > > > CC'ing the guilty part and Bjorn. I'm assuming it's the
+> > > > > > > > > > > pci_is_enabled() check, since the rest of the patch shouldn't have
+> > > > > > > > > > > functional changes.
+> > > > > > > > > > 
+> > > > > > > > > > and pci_enable_bridge() already checks if it's already enabled, but
+> > > > > > > > > > still enables mastering in that case if it isn't:
+> > > > > > > > > > 
+> > > > > > > > > > static void pci_enable_bridge(struct pci_dev *dev)
+> > > > > > > > > > {
+> > > > > > > > > > [...]
+> > > > > > > > > >         if (pci_is_enabled(dev)) {
+> > > > > > > > > >                 if (!dev->is_busmaster)
+> > > > > > > > > >                         pci_set_master(dev);
+> > > > > > > > > >                 return;
+> > > > > > > > > >         }
+> > > > > > > > > > 
+> > > > > > > > > > so I guess due to the new check we end up with mastering disabled, and
+> > > > > > > > > > thus the firmware can't load since that's a DMA thing?
+> > > > > > > > > 
+> > > > > > > > > Bjorn/Srinath, any input here? This is a regression that prevents wifi
+> > > > > > > > > from working on a pretty standard laptop. It'd suck to have this be in
+> > > > > > > > > -rc1. Seems like the trivial fix would be:
+> > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > > > > > > index b0002daa50f3..ffbe11dbdd61 100644
+> > > > > > > > > --- a/drivers/pci/pci.c
+> > > > > > > > > +++ b/drivers/pci/pci.c
+> > > > > > > > > @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+> > > > > > > > >                 return 0;               /* already enabled */
+> > > > > > > > > 
+> > > > > > > > >         bridge = pci_upstream_bridge(dev);
+> > > > > > > > > -       if (bridge && !pci_is_enabled(bridge))
+> > > > > > > > > +       if (bridge)
+> > > > > > 
+> > > > > > With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+> > > > > > pci_enable_bridge functoin will causes a nexted lock.
+> > > > > 
+> > > > > Took a look, and looks like you are right. That code looks like a mess,
+> > > > > fwiw.
+> > > > > 
+> > > > > I'd strongly suggest that the bad commit is reverted until a proper
+> > > > > solution is found, since the simple one-liner could potentially
+> > > > > introduce a deadlock with your patch applied.
+> > > > 
+> > > > BTW, your patch looks pretty bad too, introducing a random mutex
+> > > > deep on code that can be recursive. Why isn't this check in
+> > > > pci_enable_device_flags() enough to prevent double-enable of
+> > > > an upstream bridge?
+> > > > 
+> > > > if (atomic_inc_return(&dev->enable_cnt) > 1)
+> > > >         return 0;               /* already enabled */
+> > > > 
+> > > 
+> > > This check only to verify device enable not for the bus master check.
+> > > But device enable function calls the bridge enable if it has the bridge.
+> > > Bridge enable function enables both device and bus master.
+> > > 
+> > > Here the issue might be because, bridge of endpoint has already set
+> > > device enable without set bus master in some other context. which is
+> > > wrong.
+> > > because all bridges should enable with bridge_enable function only.
+> > > So we see the problem In this context, because "if (bridge &&
+> > > !pci_is_enabled(bridge))" check stops bridge enable which intern stops
+> > > bus master.
+> > > pci_enable_bridge function always makes sure that both device and bus
+> > > master are enabled in any case. If pci_enable_bridge function is not
+> > > called means, that bridge is already has device enable flag set. which
+> > > is not from pci_enable_bridge function.
+> > 
+> > In any case, your patch introduces a regression on systems. Please get
+> > it reverted now, and then you can come up with a new approach to fix the
+> > double enable of the upstream bridge.
+> 
+> Who's sending in the revert? I can certainly do it if no one else does,
+> but it needs to be done.
+> 
+> I'm not seeing any patches coming out of Srinath to fix up the
+> situation, so we should revert the broken patch until a better solution
+> exists.
 
-When an RX BA session is started by the driver, and it has to tell
-mac80211 about it, the corresponding bit in tid_rx_manage_offl gets
-set and the BA session work is scheduled. Upon testing this bit, it
-will call __ieee80211_start_rx_ba_session(), thus deadlocking as it
-already holds the ampdu_mlme.mtx, which that acquires again.
+Bjorn already sent it:
 
-Fix this by adding ___ieee80211_start_rx_ba_session(), a version of
-the function that requires the mutex already held.
+https://lkml.org/lkml/2017/9/15/46
 
-Cc: stable@vger.kernel.org
-Fixes: 699cb58c8a52 ("mac80211: manage RX BA session offload without SKB queue")
-Reported-by: Matteo Croce <mcroce@redhat.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c      | 32 +++++++++++++++++++++-----------
- net/mac80211/ht.c          |  6 +++---
- net/mac80211/ieee80211_i.h |  4 ++++
- 3 files changed, 28 insertions(+), 14 deletions(-)
-
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 2b36eff5d97e..2849a1fc41c5 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -245,10 +245,10 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- 	ieee80211_tx_skb(sdata, skb);
- }
- 
--void __ieee80211_start_rx_ba_session(struct sta_info *sta,
--				     u8 dialog_token, u16 timeout,
--				     u16 start_seq_num, u16 ba_policy, u16 tid,
--				     u16 buf_size, bool tx, bool auto_seq)
-+void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				      u8 dialog_token, u16 timeout,
-+				      u16 start_seq_num, u16 ba_policy, u16 tid,
-+				      u16 buf_size, bool tx, bool auto_seq)
- {
- 	struct ieee80211_local *local = sta->sdata->local;
- 	struct tid_ampdu_rx *tid_agg_rx;
-@@ -267,7 +267,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		ht_dbg(sta->sdata,
- 		       "STA %pM requests BA session on unsupported tid %d\n",
- 		       sta->sta.addr, tid);
--		goto end_no_lock;
-+		goto end;
- 	}
- 
- 	if (!sta->sta.ht_cap.ht_supported) {
-@@ -275,14 +275,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		       "STA %pM erroneously requests BA session on tid %d w/o QoS\n",
- 		       sta->sta.addr, tid);
- 		/* send a response anyway, it's an error case if we get here */
--		goto end_no_lock;
-+		goto end;
- 	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
- 		ht_dbg(sta->sdata,
- 		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
- 		       sta->sta.addr, tid);
--		goto end_no_lock;
-+		goto end;
- 	}
- 
- 	/* sanity check for incoming parameters:
-@@ -296,7 +296,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		ht_dbg_ratelimited(sta->sdata,
- 				   "AddBA Req with bad params from %pM on tid %u. policy %d, buffer size %d\n",
- 				   sta->sta.addr, tid, ba_policy, buf_size);
--		goto end_no_lock;
-+		goto end;
- 	}
- 	/* determine default buffer size */
- 	if (buf_size == 0)
-@@ -311,7 +311,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	       buf_size, sta->sta.addr);
- 
- 	/* examine state machine */
--	mutex_lock(&sta->ampdu_mlme.mtx);
-+	lockdep_assert_held(&sta->ampdu_mlme.mtx);
- 
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
-@@ -415,15 +415,25 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
- 		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
- 	}
--	mutex_unlock(&sta->ampdu_mlme.mtx);
- 
--end_no_lock:
- 	if (tx)
- 		ieee80211_send_addba_resp(sta->sdata, sta->sta.addr, tid,
- 					  dialog_token, status, 1, buf_size,
- 					  timeout);
- }
- 
-+void __ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				     u8 dialog_token, u16 timeout,
-+				     u16 start_seq_num, u16 ba_policy, u16 tid,
-+				     u16 buf_size, bool tx, bool auto_seq)
-+{
-+	mutex_lock(&sta->ampdu_mlme.mtx);
-+	___ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
-+					 start_seq_num, ba_policy, tid,
-+					 buf_size, tx, auto_seq);
-+	mutex_unlock(&sta->ampdu_mlme.mtx);
-+}
-+
- void ieee80211_process_addba_request(struct ieee80211_local *local,
- 				     struct sta_info *sta,
- 				     struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c92df492e898..198b2d3e56fd 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -333,9 +333,9 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 
- 		if (test_and_clear_bit(tid,
- 				       sta->ampdu_mlme.tid_rx_manage_offl))
--			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
--							IEEE80211_MAX_AMPDU_BUF,
--							false, true);
-+			___ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
-+							 IEEE80211_MAX_AMPDU_BUF,
-+							 false, true);
- 
- 		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
- 				       sta->ampdu_mlme.tid_rx_manage_offl))
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2197c62a0a6e..9675814f64db 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1760,6 +1760,10 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 				     u8 dialog_token, u16 timeout,
- 				     u16 start_seq_num, u16 ba_policy, u16 tid,
- 				     u16 buf_size, bool tx, bool auto_seq);
-+void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				      u8 dialog_token, u16 timeout,
-+				      u16 start_seq_num, u16 ba_policy, u16 tid,
-+				      u16 buf_size, bool tx, bool auto_seq);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- 					 enum ieee80211_agg_stop_reason reason);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
--- 
-2.14.1
+--
+Cheers,
+Luca.
