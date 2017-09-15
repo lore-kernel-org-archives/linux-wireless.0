@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32876 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751119AbdIEJSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 05:18:47 -0400
-Message-ID: <1504603125.12380.7.camel@sipsolutions.net> (sfid-20170905_111850_600512_16DD302B)
-Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Date: Tue, 05 Sep 2017 11:18:45 +0200
-In-Reply-To: <8760cx34cm.fsf@toke.dk>
-References: <20170622102030.9795-1-johannes@sipsolutions.net>
-         <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk>
-         <1504517620.9797.3.camel@sipsolutions.net> <87mv6a35lb.fsf@toke.dk>
-         <1504594708.6667.1.camel@sipsolutions.net> <8760cx34cm.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:45582 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751335AbdIOMup (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 08:50:45 -0400
+Received: by mail-pf0-f169.google.com with SMTP id q76so1396541pfq.2
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Sep 2017 05:50:45 -0700 (PDT)
+Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend@broadcom.com>,
+        Jouni Malinen <j@w1.fi>
+Cc: Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1505378361.31630.2.camel@sipsolutions.net>
+ <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
+ <1505414172.31630.13.camel@sipsolutions.net>
+ <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
+ <1505416964.31630.17.camel@sipsolutions.net>
+ <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com>
+ <1505418093.31630.21.camel@sipsolutions.net>
+ <94a01366-1af7-4728-59e4-847bfd8476e0@gmail.com>
+ <1505459955.31630.26.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <ff73f237-71dd-5fde-9c9f-9bc8fce57e76@gmail.com> (sfid-20170915_145048_802128_DC00E62F)
+Date: Fri, 15 Sep 2017 07:50:42 -0500
+MIME-Version: 1.0
+In-Reply-To: <1505459955.31630.26.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-09-05 at 11:02 +0200, Toke Høiland-Jørgensen wrote:
-> 
-> > I'm not sure. However, I think it's less bad than one might guess
-> > since it really should only affect multicast frames, right? All
-> > unicast frames should go directly to the per-STA TXQ.
-> 
-> Ah, right, that is the interface txq that is being purged. Gotcha.
-> 
-> But, erm, what happens with unicast traffic sent on the VLAN
-> interface when it goes down? Shouldn't that be purged from the per-
-> station TXQs as well?
+Hi Johannes,
 
-Well, those entire TXQs are destroyed with the station :)
-
-> One nit with the patch:
+On 09/15/2017 02:19 AM, Johannes Berg wrote:
+> On Thu, 2017-09-14 at 14:54 -0500, Denis Kenzior wrote:
 > 
-> > -	tx.sdata = vif_to_sdata(info->control.vif);
-> > +	if (info->control.vif)
-> > +		tx.sdata = vif_to_sdata(info->control.vif);
+>> If you want roaming to keep oper state UP in all cases, then
+>> yes.  Does this work on full mac cards as well?
 > 
-> Why the conditional assignment? The code below unconditionally
-> dereferences tx.sdata, so if info->control.vif is null it is going to
-> crash anyway?
+> I don't see why not.
+> 
+>> E.g. if I CMD_CONNECT to AP1, then pre-authenticate to AP2 and issue
+>> a CMD_CONNECT to AP2?
+> 
+> That's not something you can do with full-MAC cards?
 
-Yeah, I agree that makes no sense, I'll remove that piece again.
+Err, why not?  Pre-Authentication runs over a 0x88c7 protocol.  So we 
+should get these just like regular PAE frames.  But forget 
+pre-authentication, one can still force a roam between BSSes within the 
+same ESS by specifying NL80211_ATTR_PREV_BSSID.  At least that's what 
+the docs say ;)
 
-johannes
+> 
+> And even mac80211 doesn't really support pre-authentication (unless you
+> mean over-the-DS)
+> 
+
+There's only one kind of preauthentication?  Are you confusing this with 
+FT?  We use FT-over-Air just fine on mac80211 and on real hardware.  We 
+even have an autotest for this based on mac80211_hwsim.  FT-over-DS 
+should work as well.
+
+Full macs don't support FT due to lack of 
+CMD_ASSOCIATE/CMD_AUTHENTICATE.  Can we fix that btw?
+
+Regards,
+-Denis
