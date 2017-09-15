@@ -1,30 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45722 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751753AbdIUNt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 09:49:59 -0400
-Message-ID: <1506001797.2048.3.camel@sipsolutions.net> (sfid-20170921_155003_576574_537A168D)
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Date: Thu, 21 Sep 2017 15:49:57 +0200
-In-Reply-To: <20170907154744.28357-1-rschuetz@uni-koblenz.de> (sfid-20170907_175508_102149_80D1890A)
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-         (sfid-20170907_175508_102149_80D1890A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f171.google.com ([209.85.223.171]:51117 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751152AbdIOPUA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 11:20:00 -0400
+Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
+To: Zwindl <zwindl@protonmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "pkshih@realtek.com" <pkshih@realtek.com>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
+ <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net>
+ <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <1eb67d2e-dfbc-a2d0-8949-d4336191c07b@lwfinger.net> (sfid-20170915_172022_352199_E7F9A404)
+Date: Fri, 15 Sep 2017 10:19:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
-> According to IEEE Std 802.11-2016 (16.2.3.4 Long PHY SIGNAL field)
-> all of
-> the following rates are mandatory for a HR/DSSS PHY: 1 Mb/s, 2 Mb/s,
-> 5.5 Mb/s and 11 Mb/s. Set IEEE80211_RATE_MANDATORY_B flag for all of
-> these
-> instead of just 1 Mb/s to correctly reflect this.
+On 09/15/2017 05:10 AM, Zwindl wrote:
+> 
+>> -------- Original Message --------
+>> Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
+>> Local Time: 14 September 2017 6:05 PM
+>> UTC Time: 14 September 2017 18:05
+>> From: Larry.Finger@lwfinger.net
+>> To: Zwindl <zwindl@protonmail.com>, linux-wireless@vger.kernel.org 
+>> <linux-wireless@vger.kernel.org>
+>> chaoming_li@realsil.com.cn <chaoming_li@realsil.com.cn>, kvalo@codeaurora.org 
+>> <kvalo@codeaurora.org>, pkshih@realtek.com <pkshih@realtek.com>, 
+>> johannes.berg@intel.com <johannes.berg@intel.com>, gregkh@linuxfoundation.org 
+>> <gregkh@linuxfoundation.org>, netdev@vger.kernel.org <netdev@vger.kernel.org>, 
+>> linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+>>
+>> On 09/14/2017 08:30 AM, Zwindl wrote:
+>> > Dear developers:
+>> > I"m using Arch Linux with testing enabled, the current kernel version and
+>> > details are
+>> > `Linux zwindl 4.13.2-1-ARCH #1 SMP PREEMPT Thu Sep 14 02:57:34 UTC 2017 x86_64
+>> > GNU/Linux`.
+>> > The wireless card can"t work properly from the kernel 4.13. Here"s the log(in
+>> > attachment) when NetworkManager trying to connect my wifi which is named as
+>> > "TP", my mac addr hided as xx:xx:xx:xx:xx.
+>> > What should I provide to help to debug?
+>> > ZWindL.
+>>
+>> The BUG-ON arises in __intel_map_single() due to dir (for direction of DMA)
+>> equal to DMA_NONE (3). When rtl8192ee calls pci_map_single(), it uses
+>> PCI_DMA_TODEVICE (1). I followed the calling sequence through the entire chain,
+>> and none of the routines made any changes to "dir", other that changing the type
+>> from int to enum dma_data_direction. That would not have changed a 1 to a 3.
+>>
+>> I built a 4.13.2 system. The problem does not happen here. At this point, the
+>> system has been up for about two hours. I did discover a small memory leak
+>> associated with firmware loading, but that should not have caused the problem.
+>> Nonetheless, I will be sending a patch to fix that problem.
+>>
+>> I will continue testing, although I doubt that the problem will happen here.
+>>
+>> How long had your system been up when the problem occurred? Your dmesg fragment
+>> did not show any times. What kernels have you tried besides 4.13.2?
+>>
+>> Larry
+> Oh, sorry, the original log is from `journalctl`.
+> Here's the `dmesg` prints(error.txt). I can't determine which part is related, 
+> so I paste all of it. I've tried 4.12.X(no issue), 4.13.1(issue), 4.13.2(issue).
+> ZWindL
 
-Applied, but I modified it to use a switch statement.
+The output of dmesg is a lot more instructive than that of journalctl. I now 
+know exactly the location that triggered the WARNING. I still do not understand 
+it. In fact, it is likely a regression in kernel 4.13 that does not affect my 
+Toshiba laptop, nor a Lenovo machine I have, but does affect your Lenovo laptop.
 
-johannes
+Is it possible for you to install the mainline source from vger.kernel.org using 
+git and bisect the issue? It will take quite a bit of time, but it is likely the 
+only way to find the offending change. If you are willing to try this, I will 
+send you reasonably complete instructions.
+
+By the way, it is usually better to load the dmesg output into a pastebin site 
+and post the link. Sending the entire file to a list makes a lot of people 
+receive a lot of data for which they have no interest.
+
+Larry
