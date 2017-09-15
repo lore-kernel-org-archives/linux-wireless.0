@@ -1,72 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:33606 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753060AbdIFL62 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 07:58:28 -0400
-Received: by mail-io0-f172.google.com with SMTP id y123so23259861iod.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Sep 2017 04:58:28 -0700 (PDT)
+Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:55916
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751184AbdIOLxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Sep 2017 07:53:33 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
+Date: Fri, 15 Sep 2017 14:53:00 +0300
+Message-Id: <20170915115300.12719-3-sergey.matyukevich.os@quantenna.com> (sfid-20170915_135337_881065_74B264ED)
+In-Reply-To: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
+References: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-From: Matteo Croce <mcroce@redhat.com>
-Date: Wed, 6 Sep 2017 13:57:47 +0200
-Message-ID: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com> (sfid-20170906_135833_735521_576001D5)
-Subject: hung task in mac80211
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Abort active scans when wireless interface configuration is changed.
+The usecases include wireless interface mode change, interface down,
+AP stop, virtual interface removal.
 
-I have an hung task on vanilla 4.13 kernel which I haven't on 4.12.
-The problem is present both on my AP and on my notebook,
-so it seems it affects AP and STA mode as well.
-The generated messages are:
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 9 ++++++---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.h | 3 +++
+ drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
+ 4 files changed, 10 insertions(+), 6 deletions(-)
 
-INFO: task kworker/u16:6:120 blocked for more than 120 seconds.
-      Not tainted 4.13.0 #57
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kworker/u16:6   D    0   120      2 0x00000000
-Workqueue: phy0 ieee80211_ba_session_work [mac80211]
-Call Trace:
- ? __schedule+0x174/0x5b0
- ? schedule+0x31/0x80
- ? schedule_preempt_disabled+0x9/0x10
- ? __mutex_lock.isra.2+0x163/0x480
- ? select_task_rq_fair+0xb9f/0xc60
- ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
- ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
- ? try_to_wake_up+0x1f1/0x340
- ? update_curr+0x88/0xd0
- ? ieee80211_ba_session_work+0x148/0x230 [mac80211]
- ? process_one_work+0x1a5/0x330
- ? worker_thread+0x42/0x3c0
- ? create_worker+0x170/0x170
- ? kthread+0x10d/0x130
- ? kthread_create_on_node+0x40/0x40
- ? ret_from_fork+0x22/0x30
-
-I did a bisect and the offending commit is:
-
-commit 699cb58c8a52ff39bf659bff7971893ebe111bf2
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Tue May 30 16:34:46 2017 +0200
-
-    mac80211: manage RX BA session offload without SKB queue
-
-    Instead of using the SKB queue with the fake pkt_type for the
-    offloaded RX BA session management, also handle this with the
-    normal aggregation state machine worker. This also makes the
-    use of this more reliable since it gets rid of the allocation
-    of the fake skb.
-
-    Combined with the previous patch, this finally allows us to
-    get rid of the pkt_type hack entirely, so do that as well.
-
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-
-Regards,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 856fa6e8327e..a450bc6bc774 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -115,6 +115,8 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 
+ 	vif = qtnf_netdev_get_priv(wdev->netdev);
+ 
++	qtnf_scan_done(vif->mac, true);
++
+ 	if (qtnf_cmd_send_del_intf(vif))
+ 		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
+ 		       vif->vifid);
+@@ -335,6 +337,8 @@ static int qtnf_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
+ 	int ret;
+ 
++	qtnf_scan_done(vif->mac, true);
++
+ 	ret = qtnf_cmd_send_stop_ap(vif);
+ 	if (ret) {
+ 		pr_err("VIF%u.%u: failed to stop AP operation in FW\n",
+@@ -570,8 +574,6 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	    !qtnf_sta_list_lookup(&vif->sta_list, params->mac))
+ 		return 0;
+ 
+-	qtnf_scan_done(vif->mac, true);
+-
+ 	ret = qtnf_cmd_send_del_sta(vif, params);
+ 	if (ret)
+ 		pr_err("VIF%u.%u: failed to delete STA %pM\n",
+@@ -1134,8 +1136,9 @@ void qtnf_virtual_intf_cleanup(struct net_device *ndev)
+ 		}
+ 
+ 		vif->sta_state = QTNF_STA_DISCONNECTED;
+-		qtnf_scan_done(mac, true);
+ 	}
++
++	qtnf_scan_done(mac, true);
+ }
+ 
+ void qtnf_cfg80211_vif_reset(struct qtnf_vif *vif)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+index 6a4af52522b8..66db26613b1f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+@@ -34,6 +34,9 @@ static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
+ 		.aborted = aborted,
+ 	};
+ 
++	if (timer_pending(&mac->scan_timeout))
++		del_timer_sync(&mac->scan_timeout);
++
+ 	mutex_lock(&mac->mac_lock);
+ 
+ 	if (mac->scan_req) {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 5e60180482d1..7f83bedc0b88 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -68,9 +68,9 @@ static int qtnf_netdev_open(struct net_device *ndev)
+  */
+ static int qtnf_netdev_close(struct net_device *ndev)
+ {
+-	netif_carrier_off(ndev);
+ 	qtnf_virtual_intf_cleanup(ndev);
+ 	qtnf_netdev_updown(ndev, 0);
++	netif_carrier_off(ndev);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 0fc2814eafad..43d2e7fd6e02 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -345,8 +345,6 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (timer_pending(&mac->scan_timeout))
+-		del_timer_sync(&mac->scan_timeout);
+ 	qtnf_scan_done(mac, le32_to_cpu(status->flags) & QLINK_SCAN_ABORTED);
+ 
+ 	return 0;
 -- 
-Matteo Croce
-per aspera ad upstream
+2.11.0
