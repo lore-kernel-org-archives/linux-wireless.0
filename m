@@ -1,72 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:41746 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752219AbdIVKG5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54370 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751323AbdIOMrQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 06:06:57 -0400
-Date: Fri, 22 Sep 2017 12:06:20 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Colin Ian King <colin.king@canonical.com>
-cc: Joe Perches <joe@perches.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
- object code size Content-Type: text/plain; charset="utf-8" Content-Transfer-Encoding:
- 8bit
-In-Reply-To: <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>
-Message-ID: <alpine.DEB.2.20.1709221206050.3170@hadrien> (sfid-20170922_120718_609799_7576B18D)
-References: <20170921225630.21916-1-colin.king@canonical.com> <alpine.DEB.2.20.1709220921350.2024@hadrien> <1506074588.12311.37.camel@perches.com> <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Fri, 15 Sep 2017 08:47:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 15 Sep 2017 15:46:56 +0300
+Message-Id: <20170915124704.9032-3-luca@coelho.fi> (sfid-20170915_144721_948119_F3B9B217)
+In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
+References: <20170915124704.9032-1-luca@coelho.fi>
+Subject: [PATCH 02/10] iwlwifi: trans: move ref/unref code to the common part of the transport
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Luca Coelho <luciano.coelho@intel.com>
 
+De-inline iwl_trans_ref/unref and move it to common transport code
+in preparation for more common code to come to these functions.
 
-On Fri, 22 Sep 2017, Colin Ian King wrote:
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 16 ++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 14 ++------------
+ 2 files changed, 18 insertions(+), 12 deletions(-)
 
-> On 22/09/17 11:03, Joe Perches wrote:
-> > On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
-> >>
-> >> On Thu, 21 Sep 2017, Colin King wrote:
-> >>
-> >>> From: Colin Ian King <colin.king@canonical.com>
-> >>>
-> >>> Don't populate const array ac_to_fifo on the stack in an inlined
-> >>> function, instead make it static.  Makes the object code smaller
-> >>> by over 800 bytes:
-> >>>
-> >>>    text	   data	    bss	    dec	    hex	filename
-> >>>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
-> >>>
-> >>>    text	   data	    bss	    dec	    hex	filename
-> >>>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
-> >>>
-> >>> (gcc version 7.2.0 x86_64)
-> >>
-> >> Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
-> >> change that I got on this file:
-> >>
-> >>      text          data     bss     dec     hex filename
-> >> -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> >> +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> >> decrease of 48
-> >
-> > More likely different CONFIG options.
-> >
-> > e.g. allyesconfig vs defconfig with wireless
-> >
-> yup, I used allyesconfig
-
-Mine is also allyesconfig.
-
-julia
-
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index 784bdd0ed233..7e9c924e1220 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,6 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -205,3 +207,17 @@ int iwl_cmd_groups_verify_sorted(const struct iwl_trans_config *trans)
+ 	return 0;
+ }
+ IWL_EXPORT_SYMBOL(iwl_cmd_groups_verify_sorted);
++
++void iwl_trans_ref(struct iwl_trans *trans)
++{
++	if (trans->ops->ref)
++		trans->ops->ref(trans);
++}
++IWL_EXPORT_SYMBOL(iwl_trans_ref);
++
++void iwl_trans_unref(struct iwl_trans *trans)
++{
++	if (trans->ops->unref)
++		trans->ops->unref(trans);
++}
++IWL_EXPORT_SYMBOL(iwl_trans_unref);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index e90abbfba718..91ec077900f6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -875,18 +875,6 @@ static inline int iwl_trans_d3_resume(struct iwl_trans *trans,
+ 	return trans->ops->d3_resume(trans, status, test, reset);
+ }
+ 
+-static inline void iwl_trans_ref(struct iwl_trans *trans)
+-{
+-	if (trans->ops->ref)
+-		trans->ops->ref(trans);
+-}
+-
+-static inline void iwl_trans_unref(struct iwl_trans *trans)
+-{
+-	if (trans->ops->unref)
+-		trans->ops->unref(trans);
+-}
+-
+ static inline int iwl_trans_suspend(struct iwl_trans *trans)
+ {
+ 	if (!trans->ops->suspend)
+@@ -1191,6 +1179,8 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
+ 				  const struct iwl_cfg *cfg,
+ 				  const struct iwl_trans_ops *ops);
+ void iwl_trans_free(struct iwl_trans *trans);
++void iwl_trans_ref(struct iwl_trans *trans);
++void iwl_trans_unref(struct iwl_trans *trans);
+ 
+ /*****************************************************
+ * driver (transport) register/unregister functions
+-- 
+2.14.1
