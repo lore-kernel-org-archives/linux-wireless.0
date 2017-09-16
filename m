@@ -1,166 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35721 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752178AbdI3Rir (ORCPT
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:51199 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbdIPSxO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Sep 2017 13:38:47 -0400
-Received: by mail-pf0-f196.google.com with SMTP id i23so1766338pfi.2
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:46 -0700 (PDT)
-From: silexcommon@gmail.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Alagu Sankar <alagusankar@silex-india.com>
-Subject: [PATCH 10/11] ath10k_sdio: enable firmware crash dump
-Date: Sat, 30 Sep 2017 23:07:47 +0530
-Message-Id: <1506793068-27445-11-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193811_478703_AA20E521)
-In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+        Sat, 16 Sep 2017 14:53:14 -0400
+Received: by mail-pg0-f54.google.com with SMTP id p5so3125281pgn.7
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 11:53:14 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Luca Coelho <luca@coelho.fi>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+ <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+ <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+ <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+ <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+ <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
+ <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
+ <1505505062.32032.1.camel@coelho.fi>
+ <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
+ <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <913e8f70-699c-8f87-a86c-7030fddd19b7@kernel.dk> (sfid-20170916_205331_442439_F3B6DE64)
+Date: Sat, 16 Sep 2017 12:53:10 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+On 09/15/2017 09:03 PM, Bjorn Helgaas wrote:
+> On Fri, Sep 15, 2017 at 01:55:57PM -0600, Jens Axboe wrote:
+>> On 09/15/2017 01:51 PM, Luca Coelho wrote:
+>>> On Fri, 2017-09-15 at 13:48 -0600, Jens Axboe wrote:
+>>>> On 09/15/2017 01:38 PM, Linus Torvalds wrote:
+>>>>> On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>
+>>>>>>> In any case, your patch introduces a regression on systems. Please get
+>>>>>>> it reverted now, and then you can come up with a new approach to fix the
+>>>>>>> double enable of the upstream bridge.
+>>>>>>
+>>>>>> Who's sending in the revert? I can certainly do it if no one else does,
+>>>>>> but it needs to be done.
+>>>>>>
+>>>>>> I'm not seeing any patches coming out of Srinath to fix up the
+>>>>>> situation, so we should revert the broken patch until a better solution
+>>>>>> exists.
+>>>>>
+>>>>> Hmm. I don't have the history here (apparently it never made lkml, for
+>>>>> example), so I don't even know which commit you're talking about.
+>>>>>
+>>>>> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
+>>>>> Avoid race while enabling upstream bridges"), is that correct?
+>>>>
+>>>> Yes, Luca says that Bjorn already sent in the revert request, I just
+>>>> didn't see it since I wasn't CC'ed on it. So looks like we're all
+>>>> good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
+>>>> commit.
+>>>
+>>> Strange... AFAICT you *were* CCed on it.  And so was everyone else in
+>>> the original thread (+LKML)...
+>>
+>> Hmm, never showed up here. Very odd!
+> 
+> Sorry, I think this is probably because I'm an idiot and sent it from
+> an @google.com account and it got rejected because the DMARC check
+> failed.
 
-Handle firmware crash and gracefully restart the sdio driver on firmware
-failures.  The caldata prefetch is disabled for sdio as the data read in
-prefetch is resulting in errors, when enabled.
+Ah, good to know why it didn't show up. Thanks.
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |  3 ++
- drivers/net/wireless/ath/ath10k/sdio.c  | 86 +++++++++++++++++++++++++++++++++
- 2 files changed, 89 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index eed4e9c..3a1982f 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1255,6 +1255,9 @@ static int ath10k_debug_cal_data_fetch(struct ath10k *ar)
- 	if (WARN_ON(ar->hw_params.cal_data_len > ATH10K_DEBUG_CAL_DATA_LEN))
- 		return -EINVAL;
- 
-+	if (ar->hif.bus == ATH10K_BUS_SDIO)
-+		return -EINVAL;
-+
- 	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
- 
- 	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 45df9db..11fbf6e 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -28,6 +28,7 @@
- #include "core.h"
- #include "bmi.h"
- #include "debug.h"
-+#include "coredump.h"
- #include "hif.h"
- #include "htc.h"
- #include "targaddrs.h"
-@@ -37,6 +38,8 @@
- #define ATH10K_SDIO_DMA_BUF_SIZE	(32 * 1024)
- #define ATH10K_SDIO_VSG_BUF_SIZE	(32 * 1024)
- 
-+static int ath10k_sdio_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
-+				     size_t buf_len);
- static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf,
- 			    u32 len, bool incr);
- static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const void *buf,
-@@ -810,6 +813,86 @@ static int ath10k_sdio_mbox_rxmsg_pending_handler(struct ath10k *ar,
- 	return ret;
- }
- 
-+static int __ath10k_sdio_diag_read_hi(struct ath10k *ar, void *dest, u32 src,
-+				      u32 len)
-+{
-+	u32 host_addr, addr;
-+	int ret;
-+
-+	host_addr = host_interest_item_address(src);
-+
-+	ret = ath10k_sdio_hif_diag_read(ar, host_addr, &addr, sizeof(addr));
-+	if (ret != 0) {
-+		ath10k_warn(ar, "failed to get firmware hi address %d: %d\n",
-+			    src, ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_sdio_hif_diag_read(ar, addr, dest, len);
-+	if (ret != 0) {
-+		ath10k_warn(ar, "failed to copy memory from %d (%d B): %d\n",
-+			    addr, len, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+#define ath10k_sdio_diag_read_hi(ar, dest, src, len)		\
-+	__ath10k_sdio_diag_read_hi(ar, dest, HI_ITEM(src), len)
-+
-+static void ath10k_sdio_dump_registers(struct ath10k *ar,
-+				       struct ath10k_fw_crash_data *crash_data)
-+{
-+	__le32 reg_dump_values[REG_DUMP_COUNT_QCA988X] = {};
-+	int i, ret;
-+
-+	ret = ath10k_sdio_diag_read_hi(ar, &reg_dump_values[0],
-+				       hi_failure_state,
-+				       sizeof(reg_dump_values));
-+	if (ret) {
-+		ath10k_err(ar, "failed to read firmware dump area: %d\n", ret);
-+		return;
-+	}
-+
-+	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
-+
-+	ath10k_err(ar, "firmware register dump:\n");
-+	for (i = 0; i < REG_DUMP_COUNT_QCA988X; i += 4)
-+		ath10k_err(ar, "[%02d]: 0x%08X 0x%08X 0x%08X 0x%08X\n",
-+			   i,
-+			   __le32_to_cpu(reg_dump_values[i]),
-+			   __le32_to_cpu(reg_dump_values[i + 1]),
-+			   __le32_to_cpu(reg_dump_values[i + 2]),
-+			   __le32_to_cpu(reg_dump_values[i + 3]));
-+
-+	if (!crash_data)
-+		return;
-+
-+	for (i = 0; i < REG_DUMP_COUNT_QCA988X; i++)
-+		crash_data->registers[i] = reg_dump_values[i];
-+}
-+
-+static void ath10k_sdio_fw_crashed_dump(struct ath10k *ar)
-+{
-+	struct ath10k_fw_crash_data *crash_data;
-+	char guid[UUID_STRING_LEN + 1];
-+
-+	ar->stats.fw_crash_counter++;
-+	crash_data = ath10k_coredump_new(ar);
-+
-+	if (crash_data)
-+		scnprintf(guid, sizeof(guid), "%pUl", &crash_data->guid);
-+	else
-+		scnprintf(guid, sizeof(guid), "n/a");
-+
-+	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
-+	ath10k_print_driver_info(ar);
-+	ath10k_sdio_dump_registers(ar, crash_data);
-+
-+	queue_work(ar->workqueue, &ar->restart_work);
-+}
-+
- static int ath10k_sdio_mbox_proc_dbg_intr(struct ath10k *ar)
- {
- 	u32 val;
-@@ -933,6 +1016,9 @@ static int ath10k_sdio_mbox_proc_cpu_intr(struct ath10k *ar)
- 		goto out;
- 	}
- 
-+	if (cpu_int_status & 0x1)
-+		ath10k_sdio_fw_crashed_dump(ar);
-+
- out:
- 	mutex_unlock(&irq_data->mtx);
- 	return ret;
 -- 
-1.9.1
+Jens Axboe
