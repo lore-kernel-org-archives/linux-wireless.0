@@ -1,108 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:44582 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031205AbdIZPGc (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:56200 "EHLO
+        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751253AbdIPR0R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 11:06:32 -0400
-Received: by mail-oi0-f54.google.com with SMTP id l74so12355752oih.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 08:06:32 -0700 (PDT)
+        Sat, 16 Sep 2017 13:26:17 -0400
+Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
+To: Zwindl <zwindl@protonmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "pkshih@realtek.com" <pkshih@realtek.com>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
+ <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net>
+ <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
+ <1eb67d2e-dfbc-a2d0-8949-d4336191c07b@lwfinger.net>
+ <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
+ <35856452-c05c-d116-f91b-0964947ec8ae@lwfinger.net>
+ <2_UKRQjXR9_CXy_99R7fqRbs4VDG0hfFCMvvf4ll2BQV5C_zNiPTnHHNtoYstAGy_UF9X85pl4siU7fnXefmqbhlErxR6FqZQfIf0tADKNg=@protonmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5e2a695a-ea26-e0a3-d5eb-cf8135c1349e@lwfinger.net> (sfid-20170916_192637_184597_B622ABCB)
+Date: Sat, 16 Sep 2017 12:26:14 -0500
 MIME-Version: 1.0
-In-Reply-To: <2589427.Vd4nrgaY4N@debian64>
-References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
- <1505937307.3026.20.camel@sipsolutions.net> <CAAeHK+wWRZuCDNhoZJ0ACDhiNQw8tVRp2HW0j1EDH0HOe523xA@mail.gmail.com>
- <2589427.Vd4nrgaY4N@debian64>
-From: Andrey Konovalov <andreyknvl@google.com>
-Date: Tue, 26 Sep 2017 17:06:31 +0200
-Message-ID: <CAAeHK+zsRJcUVDUASBLBb9QyT9BgTevEe4SKkWPMqRKCMXbS8A@mail.gmail.com> (sfid-20170926_170718_961434_CD53136D)
-Subject: Re: [RESEND] Re: usb/net/p54: trying to register non-static key in p54_unregister_leds
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
-        Yong Zhang <yong.zhang0@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <2_UKRQjXR9_CXy_99R7fqRbs4VDG0hfFCMvvf4ll2BQV5C_zNiPTnHHNtoYstAGy_UF9X85pl4siU7fnXefmqbhlErxR6FqZQfIf0tADKNg=@protonmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 23, 2017 at 9:37 PM, 'Christian Lamparter' via syzkaller
-<syzkaller@googlegroups.com> wrote:
-> This got rejected by gmail once. Let's see if it works now.
->
-> On Thursday, September 21, 2017 8:22:45 PM CEST Andrey Konovalov wrote:
->> On Wed, Sep 20, 2017 at 9:55 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Wed, 2017-09-20 at 21:27 +0200, Christian Lamparter wrote:
->> >
->> >> It seems this is caused as a result of:
->> >>     -> lock_map_acquire(&work->lockdep_map);
->> >>           lock_map_release(&work->lockdep_map);
->> >>
->> >>     in flush_work() [0]
->> >
->> > Agree.
->> >
->> >> This was added by:
->> >>
->> >>       commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
->> >>       Author: Stephen Boyd <sboyd@codeaurora.org>
->> >>       Date:   Fri Apr 20 17:28:50 2012 -0700
->> >>
->> >>       workqueue: Catch more locking problems with flush_work()
->> >
->> > Yes, but that doesn't matter.
->> >
->> >> Looking at the Stephen's patch, it's clear that it was made
->> >> with "static DECLARE_WORK(work, my_work)" in mind. However
->> >> p54's led_work is "per-device", hence it is stored in the
->> >> devices context p54_common, which is dynamically allocated.
->> >> So, maybe revert Stephen's patch?
->> >
->> > I disagree - as the lockdep warning says:
->> >
->> >> > INFO: trying to register non-static key.
->> >> > the code is fine but needs lockdep annotation.
->> >> > turning off the locking correctness validator.
->> >
->> > What it needs is to actually correctly go through initializing the work
->> > at least once.
->> >
->> > Without more information, I can't really say what's going on, but I
->> > assume that something is failing and p54_unregister_leds() is getting
->> > invoked without p54_init_leds() having been invoked, so essentially
->> > it's trying to flush a work that was never initialized?
->> >
->> > INIT_DELAYED_WORK() does, after all, initialize the lockdep map
->> > properly via __INIT_WORK().
->
-> Ok, thanks. This does indeed explain it.
->
-> But this also begs the question: Is this really working then?
-> From what I can tell, if CONFIG_LOCKDEP is not set then there's no BUG
-> no WARN, no other splat or any other odd system behaviour. Does
-> [cancel | flush]_[delayed_]work[_sync] really "just work" by *accident*,
-> as long the delayed_work | work_struct is zeroed out?
-> And should it work in the future as well?
->
->> Since I'm able to reproduce this, please let me know if you need me to
->> collect some debug traces to help with the triage.
->
-> Do you want to take a shot at making a patch too? At a quick glance, it
-> should be enough to move the [#ifdef CONFIG_P54_LEDS ... #endif] block
-> in p54_unregister_common() into the if (priv->registered) { block
-> (preferably before the ieee80211_unregister_hw(dev).
+On 09/16/2017 06:27 AM, Zwindl wrote:
+> Hi, I've done the test, and the weird thing happened. The kernel buit with this 
+> config file https://ptpb.pw/HF1g which is from 
+> https://aur.archlinux.org/packages/linux-git/  can run properly, the wifi can 
+> connect, despite which version it is, but, with this config file 
+> https://ptpb.pw/7GuV which comes from the archlinux's official package build 
+> repo(linux-package 
+> <https://git.archlinux.org/svntogit/packages.git/tree/trunk?h=packages/linux>), 
+> all the version begin with 4.13 was failed to connect wifi.
+> So, I think the issue is not caused by the kernel code, is caused by some 
+> options in the config file, but I can't fully understand the meaning of these 
+> options so that I can't determine which option caused that issue, what should I 
+> do now, maybe report this bug to archlinux's maintainer?
+> By the way, maybe I'll lost internet connection tomorrow, it's time to back to 
+> university, but I'm happy to help to push the debug progress.
 
-Just mailed a patch.
+Yes, you need to report this to archlinux's bugzilla or maintainer, whichever is 
+appropriate. I have seen a configuration error cause some feature to be silently 
+missing, but leading to a WARN is rare.
 
->
-> Regards,
-> Christian
->
-> --
-> You received this message because you are subscribed to the Google Groups "syzkaller" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller+unsubscribe@googlegroups.com.
-> For more options, visit https://groups.google.com/d/optout.
+I looked at your two configurations, but did not see a definitive difference.
+
+Larry
