@@ -1,57 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49686 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751626AbdITMRv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:17:51 -0400
-Message-ID: <1505909866.3026.16.camel@sipsolutions.net> (sfid-20170920_141758_732364_2AE6C294)
-Subject: Re: [PATCH v2 1/2] mac80211: Add rcu read side critical sections
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Date: Wed, 20 Sep 2017 14:17:46 +0200
-In-Reply-To: <20170920121137.GZ4914@intel.com>
-References: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
-         <20170920101123.23312-1-ville.syrjala@linux.intel.com>
-         <1505903964.3026.14.camel@sipsolutions.net>
-         <20170920121137.GZ4914@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:52872 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbdIQOZK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Sep 2017 10:25:10 -0400
+Received: by mail-pf0-f174.google.com with SMTP id p87so3588104pfj.9
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 07:25:09 -0700 (PDT)
+Received: from [192.168.0.9] (ip72-208-6-62.ph.ph.cox.net. [72.208.6.62])
+        by smtp.gmail.com with ESMTPSA id v126sm9691835pfv.113.2017.09.17.07.25.08
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 17 Sep 2017 07:25:08 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+From: Charles Chambers <cchamb2@gmail.com>
+Subject: Wifi driver for RTL8191SU
+Message-ID: <29647c11-2bd6-e035-0e69-0af972b58abd@gmail.com> (sfid-20170917_162517_923312_9DE961D9)
+Date: Sun, 17 Sep 2017 07:28:16 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-09-20 at 15:11 +0300, Ville Syrjälä wrote:
-> 
-> > I guess since the outer pointer isn't protected, only the inner ...
-> 
-> I think just the fact that even the pointers in ieee80211_tx_data
-> don't have the __rcu annotation makes it rather hard to see what is
-> really rcu protected and what isn't. If every user of those pointers
-> would have to do the rcu_dereference() things would be rather more
-> explicit.
+I have a USB wifi adapter based on the subject chipset.  Debian Linux
+for its new release (9.x) incorporates version 4.9 of the kernel, which
+does not work with the existing driver for this USB wifi adapter.  The
+driver for it (under Debian 8.x) shows as "r8712U".  There's a movement
+afoot to update the driver.
 
-It wouldn't make sense though, because those users don't need to
-provide the protection, and they don't need to make sure to use the
-pointer in an RCU safe manner (access once etc.) since they're in code
-that can't really go wrong... mostly.
-
-> > Therefore, this patch is wrong.
-> 
-> OK, so the problem is in ath9k then.
-
-I agree.
-
-> > I actually think the same is true for ieee80211_tx_dequeue(), but 
-[...]
-> Well, I think this is as far as I want to dig into the matter. I can
-> respin the patch once more with just tx_dequeue() fix in there, if
-> you want (not sure you do if you think it's wrong as well). After
-> that I'll leave it to someone who actually knows what they're doing
-> with mac80211 ;)
-
-:-)
-I think we should rather document that RCU is required for that
-function, I think for some usages it may be OK without but with keys
-I'm pretty sure you'll need it.
-
-johannes
+Any idea when an updated driver (or a wide beta restoring *some*
+functionality) could be expected?
