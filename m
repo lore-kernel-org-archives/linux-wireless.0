@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:63064 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751009AbdISCuL (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:37178 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751562AbdIQTkf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 22:50:11 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V2 1/5] mac80211: Enable TDLS peer buffer STA feature
-Date: Tue, 19 Sep 2017 10:51:04 +0800
-Message-ID: <1505789468-25330-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_045014_529176_ADDE0419)
-In-Reply-To: <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patchset v2>
- <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 17 Sep 2017 15:40:35 -0400
+Received: by mail-lf0-f68.google.com with SMTP id q132so3528966lfe.4
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:34 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 11/11] ath10k: remove htt pending TX count for high latency
+Date: Sun, 17 Sep 2017 21:40:13 +0200
+Message-Id: <20170917194013.8658-12-erik.stromdahl@gmail.com> (sfid-20170917_214038_527776_717AA1A3)
+In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+High latency chipsest does not seem to send any
+HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing frames.
 
-Enable TDLS peer buffer STA feature.
-Set extended capability bit to enable buffer STA when driver
-support it.
+This means that htt->num_pending_tx will never be
+decremented and we will eventually hit the maximum
+limit. All outgoing packets will then be discarded.
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- include/net/cfg80211.h |    3 +++
- net/mac80211/tdls.c    |    5 ++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f12fa52..edefc25 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3249,6 +3249,8 @@ struct cfg80211_ops {
-  *	beaconing mode (AP, IBSS, Mesh, ...).
-  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
-  *	before connection.
-+ * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_ST: Device support buffer STA when TDLS is
-+ *	established.
-  */
- enum wiphy_flags {
- 	/* use hole at 0 */
-@@ -3275,6 +3277,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
- 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
- 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
-+	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
- };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 82d01139ff92..c74fc137ac67 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -153,6 +153,9 @@ void ath10k_htt_tx_txq_update(struct ieee80211_hw *hw,
  
- /**
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 91093d4..f99e379 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -49,6 +49,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 			  !ifmgd->tdls_wider_bw_prohibited;
- 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
- 	bool vht = sband && sband->vht_cap.vht_supported;
-+	bool buffer_sta =
-+		local->hw.wiphy->flags & WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
- 	u8 *pos = skb_put(skb, 10);
+ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
+ {
++	if (htt->ar->is_high_latency)
++		return;
++
+ 	lockdep_assert_held(&htt->tx_lock);
  
- 	*pos++ = WLAN_EID_EXT_CAPABILITY;
-@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
--	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
-+	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
-+		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
- 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
- 	*pos++ = 0;
- 	*pos++ = 0;
+ 	htt->num_pending_tx--;
+@@ -162,6 +165,9 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
+ 
+ int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
+ {
++	if (htt->ar->is_high_latency)
++		return 0;
++
+ 	lockdep_assert_held(&htt->tx_lock);
+ 
+ 	if (htt->num_pending_tx >= htt->max_num_pending_tx)
 -- 
-1.7.9.5
+2.14.1
