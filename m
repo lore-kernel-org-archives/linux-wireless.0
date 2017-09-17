@@ -1,111 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36134 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751899AbdI2Qoc (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:53850 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750761AbdIQEIc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 12:44:32 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 19:44:05 +0300
-Message-Id: <20170929164423.23666-1-luca@coelho.fi> (sfid-20170929_200756_068273_D51C41D7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 00/18] iwlwifi: updates intended for v4.15 2017-09-29
+        Sun, 17 Sep 2017 00:08:32 -0400
+Received: by mail-pg0-f43.google.com with SMTP id j70so3414220pgc.10
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 21:08:32 -0700 (PDT)
+From: Kevin Cernekee <cernekee@chromium.org>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+Subject: [PATCH V3 3/3] brcmfmac: Add check for short event packets
+Date: Sat, 16 Sep 2017 21:08:24 -0700
+Message-Id: <20170917040824.22237-3-cernekee@chromium.org> (sfid-20170917_060839_838573_AAE7A7B8)
+In-Reply-To: <20170917040824.22237-1-cernekee@chromium.org>
+References: <20170917040824.22237-1-cernekee@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+The length of the data in the received skb is currently passed into
+brcmf_fweh_process_event() as packet_len, but this value is not checked.
+event_packet should be followed by DATALEN bytes of additional event
+data.  Ensure that the received packet actually contains at least
+DATALEN bytes of additional data, to avoid copying uninitialized memory
+into event->data.
 
-Hi,
-
-Here's the second set of patches intended for 4.15.  Nothing major,
-mostly just cleanups.
-
-These are the changes:
-
-* ACPI code refactoring;
-* Some coding-style fixes;
-* Avoid redundant command to the firmware;
-* Add a struct with the format of one FW command;
-* Change an error log to a warning when the FW API is not aligned with
-  the driver (important during development);
-* Change a WARN_ON to WARN_ONCE to make it more descriptive and less
-  noisy (i.e. no repeated warnings on a firmware triggered error);
-* Dump PCI registers when an error occurs, to make it easier to debug;
-
-Since I have not sent a pull-req for the previous batch yet, I'll send
-them all together next week.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
+Suggested-by: Mattias Nissler <mnissler@chromium.org>
+Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-Christoph Böhmwalder (1):
-  iwlwifi: fix minor code style issues
+V2->V3: Change '<' to '>' and retest
 
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: don't send identical PHY_CTXT_CMD
 
-Johannes Berg (3):
-  iwlwifi: fw: api: remove excess enum value documentation
-  iwlwifi: fix indentation in a000 family configuration
-  iwlwifi: mvm: warn on invalid statistics size
-
-Luca Coelho (10):
-  iwlwifi: acpi: add common code to read from ACPI
-  iwlwifi: acpi: move ACPI method definitions to acpi.h
-  iwlwifi: acpi: move ACPI-related definitions to acpi.h
-  iwlwifi: acpi: generalize iwl_mvm_sar_find_wifi_pkg()
-  iwlwifi: acpi: use iwl_acpi_get_wifi_pkg when reading reading SPLC
-  iwlwifi: acpi: make iwl_get_bios_mcc() use the common acpi functions
-  iwlwifi: acpi: remove a couple of unnecessary ifdefs
-  iwlwifi: acpi: move function to get mcc into acpi code
-  iwlwifi: acpi: move code that reads SPLC to acpi
-  iwlwifi: remove dflt_pwr_limit from the transport
-
-Mordechay Goodstein (1):
-  iwlwifi: mvm: add marker cmd response struct.
-
-Rajat Jain (1):
-  iwlwifi: pcie: dump registers when HW becomes inaccessible
-
-Sara Sharon (1):
-  iwlwifi: mvm: change warning to warn_once()
-
- drivers/net/wireless/intel/iwlwifi/Makefile        |   1 +
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c      | 100 +++++-----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c       | 210 +++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h       | 138 ++++++++++++++
- .../net/wireless/intel/iwlwifi/fw/api/commands.h   |   1 +
- drivers/net/wireless/intel/iwlwifi/fw/api/debug.h  |   9 +
- drivers/net/wireless/intel/iwlwifi/fw/api/power.h  |   3 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/sta.h    |   4 -
- drivers/net/wireless/intel/iwlwifi/iwl-debug.h     |   1 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   7 +-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  91 +--------
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  17 --
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   2 -
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 207 ++++----------------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  14 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  17 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |   3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  20 +-
- drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c  |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   3 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  97 +---------
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   1 +
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  88 +++++++++
- 24 files changed, 590 insertions(+), 452 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 27e661fa356f..e7eaa57d11d9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -424,7 +424,8 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+ 	if (code != BRCMF_E_IF && !fweh->evt_handler[code])
+ 		return;
+ 
+-	if (datalen > BRCMF_DCMD_MAXLEN)
++	if (datalen > BRCMF_DCMD_MAXLEN ||
++	    datalen + sizeof(*event_packet) > packet_len)
+ 		return;
+ 
+ 	if (in_interrupt())
 -- 
-2.14.1
+2.14.1.690.gbb1197296e-goog
