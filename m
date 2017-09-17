@@ -1,79 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52560 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdIULWr (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35209 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751370AbdIQTk0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 07:22:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [v2,1/2] qtnfmac: lock access to h/w in tx path
-References: <20170918122950.32612-2-sergey.matyukevich.os@quantenna.com>
-        <20170920123553.7121D6070F@smtp.codeaurora.org>
-        <20170921080147.tvcztifyfwy2lp7g@bars>
-Date: Thu, 21 Sep 2017 14:22:40 +0300
-In-Reply-To: <20170921080147.tvcztifyfwy2lp7g@bars> (Sergey Matyukevich's
-        message of "Thu, 21 Sep 2017 11:01:48 +0300")
-Message-ID: <878th870u7.fsf@codeaurora.org> (sfid-20170921_132250_922244_A1CDD54B)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 17 Sep 2017 15:40:26 -0400
+Received: by mail-lf0-f68.google.com with SMTP id c8so3538379lfe.2
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:25 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 02/11] ath10k: htt: RX ring config HL support
+Date: Sun, 17 Sep 2017 21:40:04 +0200
+Message-Id: <20170917194013.8658-3-erik.stromdahl@gmail.com> (sfid-20170917_214047_168343_B38B7EDA)
+In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Special HTT RX ring config message used by high latency
+devices.
 
-> Hello Kalle,
->
->> > Fix tx path regression. Lock should be held when queuing packets
->> > to h/w fifos in order to properly handle configurations with
->> > multiple enabled interfaces.
->> >
->> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
->> 
->> 2 patches applied to wireless-drivers.git, thanks.
->> 
->> 20da2ec06bfa qtnfmac: lock access to h/w in tx path
->> a715b3a0efe7 qtnfmac: cancel scans on wireless interface changes
->
-> Could you please clarify a couple of points regarding wireless-drivers-next
-> and wireless-drivers trees. I checked development process article at
-> wireless.wiki.kernel.org, but it looks a bit outdated.
+The main difference between HL and LL is that HL devices
+do not use shared memory between device and host and thus,
+no host paddr's are added to the RX config message.
 
-You mean this page:
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
+ drivers/net/wireless/ath/ath10k/htt.h    |  1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
+ 3 files changed, 56 insertions(+), 1 deletion(-)
 
-https://wireless.wiki.kernel.org/en/developers/process
-
-Yeah, that is outdated :)
-
-> So am I correct assuming the following: - these two fixes were applied
-> to wireless-drivers because I asked to to queue them to 4.14
-
-Correct.
-
-> - these two fixes will show up in wireless-drivers-next at some point
-> in the future after you move wireless-drivers-next forward, rebasing
-> it on top of one of the upcoming "-rc"
-
-I would not use the term "rebase" here, as that means rewriting the
-history which should be avoided on public trees. What I usually do is to
-"merge" (git pull) or "fast forward" (git pull --ff-only).
-
-You are correct that eventually commits from wireless-drivers trickle
-down to wireless-drivers-next, I guess usually it takes something like
-2-4 weeks. Most of them time they trickle down when Dave merges net to
-net-next and I fast forward wireless-drivers-next to latest net-next
-(after Dave has pulled from me). But occasionally I also merge
-wireless-drivers to wireless-drivers-next myself, for example I did that
-last cycle as there were major conflicts on iwlwifi and we wanted to fix
-those early on. The earlier the conflicts are resolved the smoother it
-is for everyone.
-
-So if you have needs for getting the commits from wireless-drivers to
-wireless-drivers-next please let me know and let's see what's the best
-way forward.
-
-Did this help?
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index cd160b16db1e..29ed4afe52a4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 	if (status)
+ 		return status;
+ 
+-	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
++	if (ar->is_high_latency)
++		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
++	else
++		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
+ 	if (status) {
+ 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
+ 			    status);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 6305308422c4..7ffa1d41f478 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1805,6 +1805,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
+ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
+ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
++int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 685faac1368f..8d85f82ad8f8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -693,6 +693,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
++int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	struct sk_buff *skb;
++	struct htt_cmd *cmd;
++	struct htt_rx_ring_setup_ring *ring;
++	const int num_rx_ring = 1;
++	u16 flags;
++	int len;
++	int ret;
++
++	/*
++	 * the HW expects the buffer to be an integral number of 4-byte
++	 * "words"
++	 */
++	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
++	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
++
++	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
++	    + (sizeof(*ring) * num_rx_ring);
++	skb = ath10k_htc_alloc_skb(ar, len);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, len);
++
++	cmd = (struct htt_cmd *)skb->data;
++	ring = &cmd->rx_setup.rings[0];
++
++	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
++	cmd->rx_setup.hdr.num_rings = 1;
++
++	flags = 0;
++	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
++	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
++	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
++
++	memset(ring, 0, sizeof(*ring));
++	ring->rx_ring_len = __cpu_to_le16(HTT_RX_RING_SIZE_MIN);
++	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
++	ring->flags = __cpu_to_le16(flags);
++
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	if (ret) {
++		dev_kfree_skb_any(skb);
++		return ret;
++	}
++
++	return 0;
++}
++
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu)
 -- 
-Kalle Valo
+2.14.1
