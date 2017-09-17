@@ -1,67 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:33547 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752753AbdIEVVc (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:37163 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751254AbdIQTkZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 17:21:32 -0400
-Received: by mail-wm0-f47.google.com with SMTP id f145so13369612wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:21:31 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 26/30] brcmfmac: More efficient and slightly easier to
- read fixup for 4339 chips
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-27-ian@mnementh.co.uk>
-Message-ID: <debb0614-e8a1-4e1e-b0c2-8bb5ce04a43f@broadcom.com> (sfid-20170905_232135_271427_7B670A29)
-Date: Tue, 5 Sep 2017 23:21:29 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-27-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 17 Sep 2017 15:40:25 -0400
+Received: by mail-lf0-f65.google.com with SMTP id q132so3528870lfe.4
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:24 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 00/11] ath10k high latency
+Date: Sun, 17 Sep 2017 21:40:02 +0200
+Message-Id: <20170917194013.8658-1-erik.stromdahl@gmail.com> (sfid-20170917_214031_801393_8D3BF446)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
-> Its more efficient to test the register we're interested in first,
-> potentially avoiding two more comparisons, and therefore always avoiding
-> one comparison per call on all other chips.
+This is the third version of the high latency patches (stuff common for
+usb and sdio).
 
-Efficiency is really not a big issue. The buscore callbacks are really 
-only used during chip recognition so this feels like change for sake of 
-change. Not my favorite.
+One major difference between this version and the previous is that the
+num_pending_tx counter has been disabled for high latency devices (last patch).
 
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 9 ++++++---
->   1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index 7ebe6460cb5c..8a730133db77 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -3766,15 +3766,18 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
->   	/* Force 4339 chips over rev2 to use the same ID */
->   	/* This is borderline tolerable whilst there is only two exceptions */
->   	/* But could be handled better */
+This fixes the previous issue with the halted USB RX.
+I have tested these patches with a Linksys WUSB6100M and it looks
+much better than the previous version.
 
-This is not correct way to do multi-line comment and the story is not 
-quite correct or maybe I do not understand what is written here.
+High latency devices does not seem to send HTT_T2H_MSG_TYPE_TX_COMPL_IND's
+to the host for outgoing packets, resulting in a transmit stop when the
+upper limit of num_pending_tx is reached.
 
-> -	if ((sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
-> -	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
-> -	     addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-> +	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
-> +	    (sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
-> +	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
-> +
->   		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
-> +
->   		if (rev >= 2) {
->   			val &= ~CID_ID_MASK;
->   			val |= BRCM_CC_4339_CHIP_ID;
->   		}
->   	}
-> +
->   	return val;
->   }
->   
-> 
+The qcacld driver mentions that the TX_COMPL_IND can be disabled for HL
+devices in order to achieve better throughput:
+
+/*
+ * HTT option TLV for specifying whether HL systems should indicate
+ * over-the-air tx completion for individual frames, or should instead
+ * send a bulk TX_CREDIT_UPDATE_IND except when the host explicitly
+ * requests an OTA tx completion for a particular tx frame.
+ * This option does not apply to LL systems, where the TX_COMPL_IND
+ * is mandatory.
+ * This option is primarily intended for HL systems in which the tx frame
+ * downloads over the host --> target bus are as slow as or slower than
+ * the transmissions over the WLAN PHY.  For cases where the bus is faster
+ * than the WLAN PHY, the target will transmit relatively large A-MPDUs,
+ * and consquently will send one TX_COMPL_IND message that covers several
+ * tx frames.  For cases where the WLAN PHY is faster than the bus,
+ * the target will end up transmitting very short A-MPDUs, and consequently
+ * sending many TX_COMPL_IND messages, which each cover a very small number
+ * of tx frames.
+ * The HL_SUPPRESS_TX_COMPL_IND TLV can be sent by the host to the target as
+ * a suffix to the VERSION_REQ message to request whether the host desires to
+ * use TX_CREDIT_UPDATE_IND rather than TX_COMPL_IND.  The target can then
+ * send a HTT_SUPPRESS_TX_COMPL_IND TLV to the host as a suffix to the
+ * VERSION_CONF message to confirm whether TX_CREDIT_UPDATE_IND will be used
+ * rather than TX_COMPL_IND.  TX_CREDIT_UPDATE_IND shall only be used if the
+ * host sends a HL_SUPPRESS_TX_COMPL_IND TLV requesting use of
+ * TX_CREDIT_UPDATE_IND, and the target sends a HL_SUPPRESS_TX_COMPLE_IND TLV
+ * back to the host confirming use of TX_CREDIT_UPDATE_IND.
+ * Lack of a HL_SUPPRESS_TX_COMPL_IND TLV from either host --> target or
+ * target --> host is equivalent to a HL_SUPPRESS_TX_COMPL_IND that
+ * explicitly specifies HL_ALLOW_TX_COMPL_IND in the value payload of the
+ * TLV.
+ */
+
+I am suspecting this is the default behavior in the firmware.
+
+I have tried a simple wget test where I download a Linux kernel tar ball
+from kernel.org. I got the below results:
+
+wget --no-check-certificate \
+https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.11.4.tar.xz
+
+2017-09-17 16:46:20 (13.3 MB/s) - 'linux-4.11.4.tar.xz' saved
+[95549228/95549228]
+
+13.3 MB/s is a fairly OK result since I have a 100 Mbit/s internet
+connection.
+
+Changes since v2:
+
+- Disabled htt num_pending_tx counter for HL.
+- Fixed transmit flags for HL HTT TX.
+- Proper marking of aggregated frames in the HL HTT RX handler.
+- A few other minor fixes
+
+Erik Stromdahl (11):
+  ath10k: high_latency detection
+  ath10k: htt: RX ring config HL support
+  ath10k: per target configurablity of various items
+  ath10k: add start_once support
+  ath10k: htt: High latency TX support
+  ath10k: htt: High latency RX support
+  ath10k: various fixes for high latency devices
+  ath10k: add QCA9377 usb hw_param item
+  ath10k: add QCA9377 sdio hw_param item
+  ath10k: wmi: disable softirq's while calling ieee80211_rx
+  ath10k: remove htt pending TX count for high latency
+
+ drivers/net/wireless/ath/ath10k/core.c    | 128 +++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/core.h    |  16 +--
+ drivers/net/wireless/ath/ath10k/htc.c     |  19 ++--
+ drivers/net/wireless/ath/ath10k/htt.c     |   5 +-
+ drivers/net/wireless/ath/ath10k/htt.h     |  57 ++++++++++-
+ drivers/net/wireless/ath/ath10k/htt_rx.c  | 122 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c  | 157 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h      |  30 ++++++
+ drivers/net/wireless/ath/ath10k/mac.c     |   5 +-
+ drivers/net/wireless/ath/ath10k/rx_desc.h |  15 +++
+ drivers/net/wireless/ath/ath10k/txrx.c    |   5 +-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   4 +-
+ drivers/net/wireless/ath/ath10k/wmi.c     |   3 +
+ 13 files changed, 513 insertions(+), 53 deletions(-)
+
+-- 
+2.14.1
