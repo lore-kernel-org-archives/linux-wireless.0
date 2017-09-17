@@ -1,38 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f175.google.com ([209.85.128.175]:51281 "EHLO
-        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751407AbdIQQFt (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:33935 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbdIQTk2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Sep 2017 12:05:49 -0400
-Received: by mail-wr0-f175.google.com with SMTP id z39so4586566wrb.8
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 09:05:48 -0700 (PDT)
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        Charles Chambers <cchamb2@gmail.com>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: Wifi driver for RTL8191SU
-Message-ID: <3aaaf30c-c62a-8cf6-b2dd-76cdeb5dfbec@gmail.com> (sfid-20170917_180553_160252_52B4DA96)
-Date: Sun, 17 Sep 2017 18:05:46 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Sun, 17 Sep 2017 15:40:28 -0400
+Received: by mail-lf0-f66.google.com with SMTP id h80so3540650lfe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:27 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 04/11] ath10k: add start_once support
+Date: Sun, 17 Sep 2017 21:40:06 +0200
+Message-Id: <20170917194013.8658-5-erik.stromdahl@gmail.com> (sfid-20170917_214032_998620_AB8F9936)
+In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Charles Chambers wrote:
+Add possibility to configure the driver to only start target once.
+This can reduce startup time of SDIO devices significantly since
+loading the firmware can take a substantial amount of time.
 
-> I have a USB wifi adapter based on the subject chipset.  Debian Linux
-> for its new release (9.x) incorporates version 4.9 of the kernel, which
-> does not work with the existing driver for this USB wifi adapter.  The
-> driver for it (under Debian 8.x) shows as "r8712U".  There's a movement
-> afoot to update the driver.
-> 
-> Any idea when an updated driver (or a wide beta restoring *some*
-> functionality) could be expected?
+The patch is also necessary for high latency devices in general
+since it does not seem to be possible to rerun the BMI phase
+(fw upload) without power-cycling the device.
 
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 19 +++++++++++++++----
+ drivers/net/wireless/ath/ath10k/core.h |  2 ++
+ drivers/net/wireless/ath/ath10k/hw.h   |  6 ++++++
+ 3 files changed, 23 insertions(+), 4 deletions(-)
 
-There are three drivers:
-
-- r8712u from staging, crappy with no future in staging or drivers/net/wireless
-- r92su or rtl8192su from https://github.com/chunkeey/rtl8192su
-
-
-More info about Realtek at: https://wireless.wiki.kernel.org/en/users/Drivers/rtl819x
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a4a326c89e0d..c21227a74996 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1999,6 +1999,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	int status;
+ 	u32 val;
+ 
++	if (ar->is_started && ar->hw_params.start_once)
++		return 0;
++
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+ 	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
+@@ -2226,6 +2229,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	if (status)
+ 		goto err_hif_stop;
+ 
++	ar->is_started = true;
+ 	return 0;
+ 
+ err_hif_stop:
+@@ -2278,6 +2282,7 @@ void ath10k_core_stop(struct ath10k *ar)
+ 	ath10k_htt_tx_stop(&ar->htt);
+ 	ath10k_htt_rx_free(&ar->htt);
+ 	ath10k_wmi_detach(ar);
++	ar->is_started = false;
+ }
+ EXPORT_SYMBOL(ath10k_core_stop);
+ 
+@@ -2380,12 +2385,18 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_unlock;
+ 	}
+ 
+-	ath10k_debug_print_boot_info(ar);
+-	ath10k_core_stop(ar);
++	/* Leave target running if hw_params.start_once is set */
++	if (ar->hw_params.start_once) {
++		mutex_unlock(&ar->conf_mutex);
++	} else {
++		ath10k_debug_print_boot_info(ar);
++		ath10k_core_stop(ar);
+ 
+-	mutex_unlock(&ar->conf_mutex);
++		mutex_unlock(&ar->conf_mutex);
++
++		ath10k_hif_power_down(ar);
++	}
+ 
+-	ath10k_hif_power_down(ar);
+ 	return 0;
+ 
+ err_unlock:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 64dadcd6e531..0b5b1dd00e16 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -784,6 +784,8 @@ struct ath10k {
+ 
+ 	bool is_high_latency;
+ 
++	bool is_started;
++
+ 	struct {
+ 		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 8cf7b963f3d4..fd0536077404 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -569,6 +569,12 @@ struct ath10k_hw_params {
+ 	bool is_high_latency;
+ 
+ 	enum ath10k_bus bus;
++
++	/* Specifies whether or not the device should be started once.
++	 * If set, the device will be started once by the early fw probe
++	 * and it will not be terminated afterwards.
++	 */
++	bool start_once;
+ };
+ 
+ struct htt_rx_desc;
+-- 
+2.14.1
