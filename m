@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:56097 "EHLO
-        mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751408AbdITVsZ (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35874 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751524AbdIQTkc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 17:48:25 -0400
-Received: by mail-io0-f179.google.com with SMTP id z187so6760323ioz.12
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 14:48:25 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: rtl8821ae keep alive not set, connection lost
-To: James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170912220916.GB32211@us.netrek.org>
- <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
- <20170913214649.GC20283@us.netrek.org>
- <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net>
- <20170914092738.GG20283@us.netrek.org> <20170919094204.GR26927@us.netrek.org>
- <20170920093633.GO9946@us.netrek.org>
-Message-ID: <476b183f-5cc5-9a34-1a85-332dd5244b66@lwfinger.net> (sfid-20170920_234830_074347_2B509D73)
-Date: Wed, 20 Sep 2017 16:48:23 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170920093633.GO9946@us.netrek.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 17 Sep 2017 15:40:32 -0400
+Received: by mail-lf0-f65.google.com with SMTP id l196so3535726lfl.3
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:31 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 08/11] ath10k: add QCA9377 usb hw_param item
+Date: Sun, 17 Sep 2017 21:40:10 +0200
+Message-Id: <20170917194013.8658-9-erik.stromdahl@gmail.com> (sfid-20170917_214048_341398_DC1C9ACD)
+In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/20/2017 04:36 AM, James Cameron wrote:
-> When the problem occurs, register 0x350 bit 25 is set, for which a
-> comment in _rtl8821ae_check_pcie_dma_hang says means there is an RX
-> hang.
-> 
-> So perhaps driver should call _rtl8821ae_check_pcie_dma_hang
-> and _rtl8821ae_reset_pcie_interface_dma.
-> 
-> Any ideas where to do this?
+Hardware parameters for QCA9377 usb devices.
 
-Thanks for the extended debugging.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ 2 files changed, 24 insertions(+)
 
-I was able to repeat your findings. With the 8-bit read of REG_DBI_RDATA, I got 
-poor connection stability. Reverting that part made it stable again. For that 
-reason, I pushed the partial reversion of commit 40b368af4b75 ("rtlwifi: Fix 
-alignment issues").
-
-Where did you detect that bit 25 of register 0x350 was set?
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 1880570989ae..b6893254ef53 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -328,6 +328,29 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 	},
++	{
++		.id = QCA9377_HW_1_1_DEV_VERSION,
++		.dev_id = QCA9377_1_0_DEVICE_ID,
++		.name = "qca9377 hw1.1 usb",
++		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
++		.uart_pin = 6,
++		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
++		.cal_data_len = 8124,
++		.fw = {
++			.dir = QCA9377_HW_1_0_FW_DIR,
++			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_USB,
++			.board_size = QCA9377_BOARD_DATA_SZ,
++			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
++		},
++		.hw_ops = &qca988x_ops,
++		.decap_align_bytes = 4,
++		.max_num_peers = TARGET_QCA9377_HL_NUM_PEERS,
++		.is_high_latency = true,
++		.bus = ATH10K_BUS_USB,
++		.start_once = true,
++	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+ 		.dev_id = 0,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index fd0536077404..420851e26a09 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -127,6 +127,7 @@ enum qca9377_chip_id_rev {
+ /* QCA9377 1.0 definitions */
+ #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
+ #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
++#define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
+ #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
+ 
+ /* QCA4019 1.0 definitions */
+-- 
+2.14.1
