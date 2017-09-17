@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:34956 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752639AbdIFMYY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:24:24 -0400
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2] mac80211: Complete ampdu work schedule during session tear down
-Date: Wed,  6 Sep 2017 17:17:29 +0300
-Message-Id: <1504707449-27966-1-git-send-email-ilan.peer@intel.com> (sfid-20170906_142427_591608_64E366B2)
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:56782 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750761AbdIQEIb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Sep 2017 00:08:31 -0400
+Received: by mail-pg0-f48.google.com with SMTP id 7so3412809pgd.13
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 21:08:31 -0700 (PDT)
+From: Kevin Cernekee <cernekee@chromium.org>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, mnissler@chromium.org
+Subject: [PATCH V3 1/3] brcmfmac: Avoid possible out-of-bounds read
+Date: Sat, 16 Sep 2017 21:08:22 -0700
+Message-Id: <20170917040824.22237-1-cernekee@chromium.org> (sfid-20170917_060836_561432_5F3A3885)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 7a7c0a6438b8 ("mac80211: fix TX aggregation start/stop callback race")
-added a cancellation of the ampdu work after the loop that stopped the
-Tx and Rx BA sessions. However, in some cases, e.g., during HW reconfig,
-the low level driver might call mac80211 APIs to complete the stopping
-of the BA sessions, which would queue the ampdu work to handle the actual
-completion. This work needs to be performed as otherwise mac80211 data
-structures would not be properly synced.
+In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
+the length of rxframe is validated.  This could lead to uninitialized
+data being accessed (but not printed).  Since we already have a
+perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
+and ch.chspec is not modified by decchspec(), avoid the extra
+assignment and use ch.chspec in the debug print.
 
-Fix this by checking if BA session STOP_CB bit is set after the BA session
-cancellation and properly clean the session.
-
-type=bugfix
-ticket=jira:WIFILNX-1267
-fixes=Ia3e7824a35ea15e7d36db45c6ada65f9c059c0d6
-
-Change-Id: Ib872bb24e3921fdd44787bface7f2ecbf0cf215d
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Reviewed-on: https://git-amr-3.devtools.intel.com/gerrit/133919
-Tested-by: ec ger unix iil jenkins <EC.GER.UNIX.IIL.JENKINS@INTEL.COM>
-Reviewed-by: Coelho, Luciano <luciano.coelho@intel.com>
+Suggested-by: Mattias Nissler <mnissler@chromium.org>
+Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- net/mac80211/ht.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c92df49..11d691c 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -300,6 +300,23 @@ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
+
+V2->V3: No change
+
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 2ce675ab40ef..1c450c0727cb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -1853,7 +1853,6 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
+ 	struct brcmf_cfg80211_vif *vif = ifp->vif;
+ 	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
+-	u16 chanspec = be16_to_cpu(rxframe->chanspec);
+ 	struct brcmu_chan ch;
+ 	u8 *mgmt_frame;
+ 	u32 mgmt_frame_len;
+@@ -1906,7 +1905,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0);
  
- 	/* stopping might queue the work again - so cancel only afterwards */
- 	cancel_work_sync(&sta->ampdu_mlme.work);
-+
-+	/* In case the tear down is part of a reconfigure due to HW restart
-+	 * request, it is possible that the low level driver requested to stop
-+	 * the BA session, so handle it to properly clean tid_tx data.
-+	 */
-+	mutex_lock(&sta->ampdu_mlme.mtx);
-+	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+		struct tid_ampdu_tx *tid_tx =
-+			rcu_dereference_protected_tid_tx(sta, i);
-+
-+		if (!tid_tx)
-+			continue;
-+
-+		if (test_and_clear_bit(HT_AGG_STATE_STOP_CB, &tid_tx->state))
-+			ieee80211_stop_tx_ba_cb(sta, i, tid_tx);
-+	}
-+	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
+-		  mgmt_frame_len, e->datalen, chanspec, freq);
++		  mgmt_frame_len, e->datalen, ch.chspec, freq);
+ 
+ 	return 0;
  }
- 
- void ieee80211_ba_session_work(struct work_struct *work)
 -- 
-1.9.1
+2.14.1.690.gbb1197296e-goog
