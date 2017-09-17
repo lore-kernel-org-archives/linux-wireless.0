@@ -1,37 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45762 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751714AbdIUNwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 09:52:08 -0400
-Message-ID: <1506001926.2048.5.camel@sipsolutions.net> (sfid-20170921_155212_745730_527B0AEF)
-Subject: Re: [PATCH v2 2/2] wireless: return correct mandatory rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Date: Thu, 21 Sep 2017 15:52:06 +0200
-In-Reply-To: <20170908160712.8765-1-rschuetz@uni-koblenz.de> (sfid-20170908_180746_422254_8173A2C4)
-References: <20170907154744.28357-2-rschuetz@uni-koblenz.de>
-         <20170908160712.8765-1-rschuetz@uni-koblenz.de>
-         (sfid-20170908_180746_422254_8173A2C4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35211 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751254AbdIQTk1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Sep 2017 15:40:27 -0400
+Received: by mail-lf0-f68.google.com with SMTP id c8so3538389lfe.2
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:26 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 03/11] ath10k: per target configurablity of various items
+Date: Sun, 17 Sep 2017 21:40:05 +0200
+Message-Id: <20170917194013.8658-4-erik.stromdahl@gmail.com> (sfid-20170917_214042_903046_74C556D2)
+In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-08 at 18:07 +0200, Richard Schütz wrote:
-> Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B
-> to get
-> all mandatory rates in 2.4 GHz band. It is safe to do so because ERP
-> mandatory rates are a superset of HR/DSSS mandatory rates. Also limit
-> to
-> OFDM rates for 10 MHz and 5 MHz channels as originally intended by
-> commit
-> 74608aca4d82e.
+Added ability to set bus type and configure the max number of
+peers in the ath10k_hw_params struct.
 
-I don't understand this. Why should all ERP (Clause 18, 11g) rates be
-mandatory for the users of this?
+With this functionality it is possible to have a different
+hw configuration depending on bus type for the same radio
+chipset.
 
-The way I see it, this would make us assume that all 2.4 GHz clients
-support ERP in IBSS, which may not be true?
+E.g. SDIO and USB devices using the same chipset as PCIe
+devices will potentially use different board files and perhaps
+other configuration parameters.
 
-johannes
+One such parameter is the max number of peers.
+Instead of using a default value (suitable for PCIe devices)
+derived from the WMI op version, a per target value can be
+used instead.
+
+This is needed by the QCA9377 USB device in order to prevent
+the target fw to crash after HTT RX ring cfg is issued.
+
+Apparently, the QCA9377 HL device does not seem to handle the
+same amount of peers as the LL devices.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c    | 33 +++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath10k/core.h    |  7 -------
+ drivers/net/wireless/ath/ath10k/hw.h      | 22 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
+ 4 files changed, 49 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f1924c974a12..a4a326c89e0d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1663,9 +1663,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+ 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
+ 		hw_params = &ath10k_hw_params_list[i];
+ 
+-		if (hw_params->id == ar->target_version &&
+-		    hw_params->dev_id == ar->dev_id)
+-			break;
++		if (ar->is_high_latency) {
++			/* High latency devices will use different fw depending
++			 * on if it is a USB or SDIO device.
++			 */
++			if (hw_params->bus == ar->hif.bus &&
++			    hw_params->id == ar->target_version &&
++			    hw_params->dev_id == ar->dev_id)
++				break;
++		} else {
++			if (hw_params->id == ar->target_version &&
++			    hw_params->dev_id == ar->dev_id)
++				break;
++		}
+ 	}
+ 
+ 	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
+@@ -1764,6 +1774,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
+ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
++	int max_num_peers;
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
+@@ -1843,7 +1854,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 
+ 	switch (fw_file->wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+-		ar->max_num_peers = TARGET_NUM_PEERS;
++		max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
+@@ -1855,10 +1866,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		if (ath10k_peer_stats_enabled(ar)) {
+-			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
++			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
+ 		} else {
+-			ar->max_num_peers = TARGET_10X_NUM_PEERS;
++			max_num_peers = TARGET_10X_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+ 		}
+ 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
+@@ -1867,7 +1878,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_TLV:
+-		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
++		max_num_peers = TARGET_TLV_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
+ 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
+@@ -1878,7 +1889,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+-		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
++		max_num_peers = TARGET_10_4_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
+ 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
+ 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
+@@ -1896,10 +1907,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
++	default:
+ 		WARN_ON(1);
+ 		return -EINVAL;
+ 	}
+ 
++	if (ar->hw_params.max_num_peers)
++		ar->max_num_peers = ar->hw_params.max_num_peers;
++	else
++		ar->max_num_peers = max_num_peers;
++
+ 	/* Backwards compatibility for firmwares without
+ 	 * ATH10K_FW_IE_HTT_OP_VERSION.
+ 	 */
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index dc9ecf773d51..64dadcd6e531 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -88,13 +88,6 @@
+ 
+ struct ath10k;
+ 
+-enum ath10k_bus {
+-	ATH10K_BUS_PCI,
+-	ATH10K_BUS_AHB,
+-	ATH10K_BUS_SDIO,
+-	ATH10K_BUS_USB,
+-};
+-
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ {
+ 	switch (bus) {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 0c089f6dd3d9..8cf7b963f3d4 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -20,6 +20,13 @@
+ 
+ #include "targaddrs.h"
+ 
++enum ath10k_bus {
++	ATH10K_BUS_PCI,
++	ATH10K_BUS_AHB,
++	ATH10K_BUS_SDIO,
++	ATH10K_BUS_USB,
++};
++
+ #define ATH10K_FW_DIR			"ath10k"
+ 
+ #define QCA988X_2_0_DEVICE_ID   (0x003c)
+@@ -550,6 +557,18 @@ struct ath10k_hw_params {
+ 	 */
+ 	int vht160_mcs_rx_highest;
+ 	int vht160_mcs_tx_highest;
++
++	/* max_num_peers can be used to override the setting derived from
++	 * the WMI op version. If this value is non-zero, it will always
++	 * be used instead of the default value derived from the WMI op
++	 * version.
++	 */
++	int max_num_peers;
++
++	/* Specifies whether or not the device is a high latency device */
++	bool is_high_latency;
++
++	enum ath10k_bus bus;
+ };
+ 
+ struct htt_rx_desc;
+@@ -660,6 +679,9 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ 
++/* Target specific defines for QCA9377 high latency firmware */
++#define TARGET_QCA9377_HL_NUM_PEERS		15
++
+ /* Diagnostic Window */
+ #define CE_DIAG_PIPE	7
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 7616c1c4bbd3..34e977049f00 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1406,7 +1406,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
+ 
+ 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+-	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
++	cfg->num_peers = __cpu_to_le32(ar->max_num_peers);
+ 
+ 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
+ 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+@@ -1417,7 +1417,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	}
+ 
+ 	cfg->num_peer_keys = __cpu_to_le32(2);
+-	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
++	cfg->num_tids = __cpu_to_le32(ar->max_num_peers * 2);
+ 	cfg->ast_skid_limit = __cpu_to_le32(0x10);
+ 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
+ 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
+-- 
+2.14.1
