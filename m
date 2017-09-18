@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orcrist.hmeau.com ([104.223.48.154]:41312 "EHLO
-        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932065AbdIYGOz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37720 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750710AbdIREwR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 02:14:55 -0400
-Date: Mon, 25 Sep 2017 14:14:30 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Xiang Gao <qasdfgtyuiop@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-crypto@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
-Message-ID: <20170925061430.GA23808@gondor.apana.org.au> (sfid-20170925_085305_142128_39244D21)
-References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com>
- <1506265531.2909.5.camel@sipsolutions.net>
- <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com>
- <1506274966.2909.7.camel@sipsolutions.net>
- <20170925045641.GB22947@gondor.apana.org.au>
- <1506316946.2909.8.camel@sipsolutions.net>
+        Mon, 18 Sep 2017 00:52:17 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 0/2] qtnfmac: misc fixes intended for 4.14
+References: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
+Date: Mon, 18 Sep 2017 07:52:13 +0300
+In-Reply-To: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Fri, 15 Sep 2017 14:52:58 +0300")
+Message-ID: <87377kmww2.fsf@purkki.adurom.net> (sfid-20170918_065223_657732_5AAF1A63)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506316946.2909.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 07:22:26AM +0200, Johannes Berg wrote:
-> 
-> The code moves to crypto/ though, and I'm not even sure I can vouch for
-> the Makefile choice there.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Thanks, I missed that.  I don't think this belongs in crypto.
-This proposed helper is only useful for wireless so it should
-stay there.
+> Here are two patches intended for 4.14. The first patch fixes tx path
+> regression. Lock should be held when queuing packets to h/w fifos in order to
+> properly handle configurations with two enabled interfaces or multiple enabled
+> mbss. The second patch fixes scan issues addressing a review comment
+> from K.Valo regarding pending active scans upon device removal.
+>
+> Regards,
+> Sergey
+>
+> Sergey Matyukevich (2):
+>
+> qtnfmac: lock access to h/w in tx path
+> qtnfmac: abort scans on wireless interface changes
 
-Cheers,
+There was a problem patchwork.kernel.org over the weekend, but it should
+be fixed now. Unfortunately your patches didn't make it to patchwork, so
+please resend.
+
+https://patchwork.kernel.org/project/linux-wireless/list/?state=*
+
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Kalle Valo
