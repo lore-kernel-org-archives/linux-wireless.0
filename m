@@ -1,58 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:37178 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751562AbdIQTkf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Sep 2017 15:40:35 -0400
-Received: by mail-lf0-f68.google.com with SMTP id q132so3528966lfe.4
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:34 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v3 11/11] ath10k: remove htt pending TX count for high latency
-Date: Sun, 17 Sep 2017 21:40:13 +0200
-Message-Id: <20170917194013.8658-12-erik.stromdahl@gmail.com> (sfid-20170917_214038_527776_717AA1A3)
-In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38498 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752340AbdIRKUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 06:20:41 -0400
+Message-ID: <1505730039.13691.3.camel@sipsolutions.net> (sfid-20170918_122044_586666_EE893019)
+Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Mon, 18 Sep 2017 12:20:39 +0200
+In-Reply-To: <20170918101654.5zukak72wvmpm6pp@bars>
+References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+         <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
+         <1505724068.13691.0.camel@sipsolutions.net>
+         <20170918095713.mfn76hkdbo73k4fu@bars>
+         <1505728987.13691.2.camel@sipsolutions.net>
+         <20170918101654.5zukak72wvmpm6pp@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-High latency chipsest does not seem to send any
-HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing frames.
+On Mon, 2017-09-18 at 13:16 +0300, Sergey Matyukevich wrote:
+> 
+> > > > > -     if (timer_pending(&mac->scan_timeout))
+> > > > > -             del_timer_sync(&mac->scan_timeout);
 
-This means that htt->num_pending_tx will never be
-decremented and we will eventually hit the maximum
-limit. All outgoing packets will then be discarded.
+> I don't quite understand the question. Do you mean it makes sense to
+> call cfg80211_scan_done first and then cancel timer ?
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+No, I'm just not sure why you call timer_pending() first.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 82d01139ff92..c74fc137ac67 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -153,6 +153,9 @@ void ath10k_htt_tx_txq_update(struct ieee80211_hw *hw,
- 
- void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
- {
-+	if (htt->ar->is_high_latency)
-+		return;
-+
- 	lockdep_assert_held(&htt->tx_lock);
- 
- 	htt->num_pending_tx--;
-@@ -162,6 +165,9 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
- 
- int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
- {
-+	if (htt->ar->is_high_latency)
-+		return 0;
-+
- 	lockdep_assert_held(&htt->tx_lock);
- 
- 	if (htt->num_pending_tx >= htt->max_num_pending_tx)
--- 
-2.14.1
+johannes
