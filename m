@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:43945 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751669AbdIUOV2 (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:45923 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754958AbdIRQ1E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:21:28 -0400
-Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
-To: Zwindl <zwindl@protonmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "pkshih@realtek.com" <pkshih@realtek.com>,
-        "johannes.berg@intel.com" <johannes.berg@intel.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
- <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net>
- <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
- <1eb67d2e-dfbc-a2d0-8949-d4336191c07b@lwfinger.net>
- <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
- <35856452-c05c-d116-f91b-0964947ec8ae@lwfinger.net>
- <2_UKRQjXR9_CXy_99R7fqRbs4VDG0hfFCMvvf4ll2BQV5C_zNiPTnHHNtoYstAGy_UF9X85pl4siU7fnXefmqbhlErxR6FqZQfIf0tADKNg=@protonmail.com>
- <5e2a695a-ea26-e0a3-d5eb-cf8135c1349e@lwfinger.net>
- <ZeTD57H3euqWFB5wrD_vYAkdu91l_6Yalbz_mRWtrrb2t17d0cdWOpCaXw33jcPYNKhgqnHbuqHTI9xkVnrkliRTGxraEqWnk5GZ63xKifI=@protonmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5a6aa431-fdde-a329-4168-44490c37f197@lwfinger.net> (sfid-20170921_162204_113396_357E4DB4)
-Date: Thu, 21 Sep 2017 09:21:25 -0500
+        Mon, 18 Sep 2017 12:27:04 -0400
+Received: by mail-pf0-f175.google.com with SMTP id q76so493793pfq.2
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2017 09:27:03 -0700 (PDT)
+Date: Mon, 18 Sep 2017 09:27:00 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH] mwifiex: avoid storing random_mac in private
+Message-ID: <20170918162659.GA59044@google.com> (sfid-20170918_182708_031337_038AE329)
+References: <1505717702-10342-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <ZeTD57H3euqWFB5wrD_vYAkdu91l_6Yalbz_mRWtrrb2t17d0cdWOpCaXw33jcPYNKhgqnHbuqHTI9xkVnrkliRTGxraEqWnk5GZ63xKifI=@protonmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1505717702-10342-1-git-send-email-gbhat@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2017 06:37 AM, Zwindl wrote:
-> Hi, I've reported to archlinux's bugzilla, and finally found out the flag which 
-> caused that issue, it's the `CONFIG_INTEL_IOMMU_DEFAULT_ON=y` flag, I think may 
-> this is a kernel bug, more details at https://bugs.archlinux.org/task/55665
+On Mon, Sep 18, 2017 at 12:25:02PM +0530, Ganapathi Bhat wrote:
+> Application will keep track of whether MAC address randomization
+> is enabled or not during scan. But at present driver is storing
+> 'random_mac' in mwifiex_private which implies even after scan is
+> done driver has some reference to the earlier 'scan request'. To
+> avoid this, make use of 'mac_addr' variable in 'scan_request' to
+> store 'random_mac'. This structure will be freed by cfg80211 once
+> scan is done.
+> 
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-My standard kernel has the following:
-
-CONFIG_INTEL_IOMMU=y
-# CONFIG_INTEL_IOMMU_SVM is not set
-# CONFIG_INTEL_IOMMU_DEFAULT_ON is not set
-
-I will do some further testing to see if turning CONFIG_INTEL_IOMMU_DEFAULT_ON 
-also breaks my system.
-
-Larry
+Reviewed-by: Brian Norris <briannorris@chromium.org>
