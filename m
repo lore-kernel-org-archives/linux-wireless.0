@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:38375 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753952AbdIDRvv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 13:51:51 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t75so810000oie.5
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Sep 2017 10:51:51 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 0/2] rtlwifi: Fixes for antenna selection in rtl8723be
-Date: Mon,  4 Sep 2017 12:51:32 -0500
-Message-Id: <20170904175134.8331-1-Larry.Finger@lwfinger.net> (sfid-20170904_195214_554867_8F8B8C32)
+Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:56446
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751961AbdIRIFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 04:05:04 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 1/2] qtnfmac: lock access to h/w in tx path
+Date: Mon, 18 Sep 2017 11:04:45 +0300
+Message-Id: <20170918080446.21763-2-sergey.matyukevich.os@quantenna.com> (sfid-20170918_100534_615605_2BA4F02D)
+In-Reply-To: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are some HP laptops that contain only a single antenna, which would
-not be a problem except these boxes have a mistake in their EFUSE coding.
-The ant_sel module option has been provided to correct for this problem;
-however, the current antenna selection code has bugs. The first of these
-two patches fix a problem in kernel 4.12, and the second fixes an
-additional problem in kernel 4.13.
+Fix tx path regression. Lock should be held when queuing packets
+to h/w fifos in order to properly handle configurations with
+multiple enabled interfaces.
 
-These patches are intended for kernel 4.14.
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c          | 9 ++++++++-
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h | 2 ++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-Thanks,
-Larry
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
-Larry Finger (2):
-  rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
-  rtlwifi: btcoexist: Fix antenna selection code
-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  5 ++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 23 +++++++++++++++-------
- 2 files changed, 20 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 502e72b7cdcc..69131965a298 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -661,14 +661,18 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ 	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
+ 	dma_addr_t txbd_paddr, skb_paddr;
+ 	struct qtnf_tx_bd *txbd;
++	unsigned long flags;
+ 	int len, i;
+ 	u32 info;
+ 	int ret = 0;
+ 
++	spin_lock_irqsave(&priv->tx0_lock, flags);
++
+ 	if (!qtnf_tx_queue_ready(priv)) {
+ 		if (skb->dev)
+ 			netif_stop_queue(skb->dev);
+ 
++		spin_unlock_irqrestore(&priv->tx0_lock, flags);
+ 		return NETDEV_TX_BUSY;
+ 	}
+ 
+@@ -717,8 +721,10 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ 		dev_kfree_skb_any(skb);
+ 	}
+ 
+-	qtnf_pcie_data_tx_reclaim(priv);
+ 	priv->tx_done_count++;
++	spin_unlock_irqrestore(&priv->tx0_lock, flags);
++
++	qtnf_pcie_data_tx_reclaim(priv);
+ 
+ 	return NETDEV_TX_OK;
+ }
+@@ -1247,6 +1253,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	strcpy(bus->fwname, QTN_PCI_PEARL_FW_NAME);
+ 	init_completion(&bus->request_firmware_complete);
+ 	mutex_init(&bus->bus_lock);
++	spin_lock_init(&pcie_priv->tx0_lock);
+ 	spin_lock_init(&pcie_priv->irq_lock);
+ 	spin_lock_init(&pcie_priv->tx_reclaim_lock);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
+index e76a23716ee0..86ac1ccedb52 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
+@@ -34,6 +34,8 @@ struct qtnf_pcie_bus_priv {
+ 
+ 	/* lock for tx reclaim operations */
+ 	spinlock_t tx_reclaim_lock;
++	/* lock for tx0 operations */
++	spinlock_t tx0_lock;
+ 	u8 msi_enabled;
+ 	int mps;
+ 
 -- 
-2.12.3
+2.11.0
