@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34133 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751700AbdIUOdY (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:62317 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753054AbdIRPGL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:33:24 -0400
-Received: by mail-io0-f193.google.com with SMTP id g32so5566925ioj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 07:33:24 -0700 (PDT)
+        Mon, 18 Sep 2017 11:06:11 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH 2/3] ath10k: QCA6174 hw3.0: update board-2.bin
+Date: Mon, 18 Sep 2017 18:00:56 +0300
+Message-ID: <1505746857-31938-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170918_170658_872087_EFCFFEB3)
+In-Reply-To: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <87mv5qah2y.fsf@kamboji.qca.qualcomm.com>
-References: <1504094535-6680-1-git-send-email-amitkarwar@gmail.com> <87mv5qah2y.fsf@kamboji.qca.qualcomm.com>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Thu, 21 Sep 2017 20:03:23 +0530
-Message-ID: <CAEhWJFn9_gCNTT2AcN5+3TAzHYjfDOmhHC2YCurpJYhhAW4KMA@mail.gmail.com> (sfid-20170921_163328_845720_41332B01)
-Subject: Re: [PATCH] rsi: add driver and firmware version info
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 19, 2017 at 8:09 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
->>
->> We will dump information about driver and firmware versions,
->> firmware file name and operating mode during initialization.
->>
->> Signed-off-by: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> [...]
->
->> +void rsi_print_version(struct rsi_common *common)
->> +{
->> +     memcpy(common->driver_ver, DRV_VER, ARRAY_SIZE(DRV_VER));
->> +     common->driver_ver[ARRAY_SIZE(DRV_VER)] = '\0';
->> +
->> +     rsi_dbg(ERR_ZONE, "================================================\n");
->> +     rsi_dbg(ERR_ZONE, "================ RSI Version Info ==============\n");
->> +     rsi_dbg(ERR_ZONE, "================================================\n");
->> +     rsi_dbg(ERR_ZONE, "FW Version\t: %d.%d.%d\n",
->> +             common->lmac_ver.major, common->lmac_ver.minor,
->> +             common->lmac_ver.release_num);
->> +     rsi_dbg(ERR_ZONE, "Driver Version\t: %s", common->driver_ver);
->> +     rsi_dbg(ERR_ZONE, "Operating mode\t: %d [%s]",
->> +             common->oper_mode, opmode_str(common->oper_mode));
->> +     rsi_dbg(ERR_ZONE, "Firmware file\t: %s", common->priv->fw_file_name);
->> +     rsi_dbg(ERR_ZONE, "================================================\n");
->> +}
->> +
->
-> [...]
->
->> +#define DRV_VER                              "RS911X.NB0.NL.GNU.LNX.1.0"
->
-> The concept of a driver version does not really work with upstream
-> drivers. The history has shown multiple times that the driver version
-> won't be updated for years and thus it won't have any meaning. So better
-> remove driver_ver from the driver entirely.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ ath10k/QCA6174/hw3.0/board-2.bin | Bin 477060 -> 501748 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
 
-I agree. Driver version has been removed in v2 patch.
+diff --git a/ath10k/QCA6174/hw3.0/board-2.bin b/ath10k/QCA6174/hw3.0/board-2.bin
+index a442315503bfc70f5a5fbfaa6f04004702d8474c..10960ba28975ed1c7c4e9fb91b4742f1c2ecba33 100644
+GIT binary patch
+delta 587
+zcmZqam;G{HuAzmog{g(Pg{6hHg>4Iai~D2)NtWprs;t3^#%3moI%SDPnTdHNwl1#m
+z2Bt<vxr_`941453_~YWucM`NX>KCmkD23pvmdT4iYzVz(N5LWp2J?Yzi1>1#dI+wn
+z2dQ7a21F|)B#6o<gfoF~ctR)(j8=$O5RDIqVDb1+aS$6si-n1af-ygs5h?}|2o>9`
+zD9OUOeTF~lTi*H|d(ZlX#ijL4+kf0AX3LJf2aleG(J=9#q)Cf59cExa7x#(jnQ#{9
+zR~QXc-?#rb0|P=mL>?v{6&DvL6DJo3qGROb;v%Ht<m%(%B;|r7BIDvB7#P3`pb{YQ
+zD4=o>fYA{k1we6O2}wCQ36Oe-JWM<)E-Fe2=%A=r2n`gEm6T;*0GSU~k0uUOx}9wj
+zlOWUfD|;BjSy@btO_MhFE3hj}H+#w=DhP^Pq{vL02#!oK?2$QHCeuhPNmM==7(Xe%
+Q_(=lB50u`Vl4&3g0Lc2w3IG5A
 
-Thanks,
-Amitkumar Karwar
+delta 23
+ecmexzUaqBIwxNZwg{g(Pg{6hHg>4Iai#q^tr3gg;
+
+-- 
+2.7.4
