@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33219 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964888AbdIZGmI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 02:42:08 -0400
-From: AceLan Kao <acelan.kao@canonical.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 5/6] ath9k: set use_msi=1 on Dell Vostro 15-3572
-Date: Tue, 26 Sep 2017 14:41:38 +0800
-Message-Id: <1506408099-18488-5-git-send-email-acelan.kao@canonical.com> (sfid-20170926_084504_194625_9BD01631)
-In-Reply-To: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
-References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+Received: from mail-dm3nam03on0066.outbound.protection.outlook.com ([104.47.41.66]:14584
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750998AbdIRKRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 06:17:05 -0400
+Date: Mon, 18 Sep 2017 13:16:54 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
+Message-ID: <20170918101654.5zukak72wvmpm6pp@bars> (sfid-20170918_121709_804828_CFE56481)
+References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+ <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
+ <1505724068.13691.0.camel@sipsolutions.net>
+ <20170918095713.mfn76hkdbo73k4fu@bars>
+ <1505728987.13691.2.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1505728987.13691.2.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BIOS on Dell Vostro 15-3572 blocks legacy interrupts (INTx),
-and only allows MSI for WLAN device.
+On Mon, Sep 18, 2017 at 12:03:07PM +0200, Johannes Berg wrote:
 
-Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> > > > -     if (timer_pending(&mac->scan_timeout))
+> > > > -             del_timer_sync(&mac->scan_timeout);
+> > > >       qtnf_scan_done(mac, le32_to_cpu(status->flags) &
+> > > > QLINK_SCAN_ABORTED);
+> > >
+> > > and that's related perhaps but not really explained in the
+> > > changelog,
+> > > not sure?
+> >
+> > That was minor optimization: to remove pedning timer whenever scan
+> > is canceled. Sure, it worth mentioning in changelog, will do.
+> 
+> I realized (after sending my email) that it actually made a lot of
+> sense, so yeah - and in fact I'm not sure it's just an optimisation,
+> depends on where else you cancel the timer and if that could leave the
+> timer running until after the interface is removed or something.
+> 
+> Btw, I don't really see why you check pending first?
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index fce9ac7..e1198e1 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -128,6 +128,14 @@ static const struct dmi_system_id ath9k_quirks[] __initconst = {
- 			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 3472"),
- 		},
- 	},
-+	{
-+		.callback = set_use_msi,
-+		.ident = "Dell Vostro 15-3572",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "Vostro 15-3572"),
-+		},
-+	},
- 	{}
- };
- 
--- 
-2.7.4
+I don't quite understand the question. Do you mean it makes sense to call
+cfg80211_scan_done first and then cancel timer ?
+
+> > By the way, is it ok to send corrected single patch in reply to this
+> > discussion ? Or the appropriate way is to resend the whole patch set
+> > ?
+> 
+> Good question. I think it's up to the specific maintainer, I know davem
+> wants a full resend, but Kalle might have his own preference. I for one
+> am willing to deal with both, though a full resend is somewhat easier.
+
+Ok, understood.
+
+Regards,
+Sergey
