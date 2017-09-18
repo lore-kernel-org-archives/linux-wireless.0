@@ -1,104 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51050 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751543AbdINWPb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 18:15:31 -0400
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-To: Denis Kenzior <denkenz@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-References: <1505378361.31630.2.camel@sipsolutions.net>
- <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
- <1505389462.31630.6.camel@sipsolutions.net>
- <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
- <1505416658.31630.15.camel@sipsolutions.net>
- <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
- <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
- <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
- <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com>
- <c97ecdb4-fe7a-e79a-d73e-32166beb1e11@gmail.com>
- <8a26a838-adde-08f1-5f64-c98e1d947675@candelatech.com>
- <756be45c-fd13-56a7-b8d4-129c4fd07dc8@gmail.com>
- <c33e5aed-be5a-890d-cc50-b5ac87b40d9a@candelatech.com>
- <5ec7a05e-dfa4-37e0-b108-51ca0885b9a7@gmail.com>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <038474b0-4d37-9bb7-ebf0-b92564abf5af@candelatech.com> (sfid-20170915_001535_963254_8D0B77A0)
-Date: Thu, 14 Sep 2017 15:15:29 -0700
+Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:56446
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752085AbdIRIFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 04:05:06 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
+Date: Mon, 18 Sep 2017 11:04:46 +0300
+Message-Id: <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com> (sfid-20170918_100515_833823_05EC3731)
+In-Reply-To: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <5ec7a05e-dfa4-37e0-b108-51ca0885b9a7@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2017 02:35 PM, Denis Kenzior wrote:
-> Hi Ben,
->
->>> I think it is sane to assume that the IP address _should_ be the same. The 802.11 spec expects this even.  This is to handle bizarre networks that don't do this
->>> properly.
->>
->> Can you point me to the section in the spec about this?
->>
->
-> Lets see, 802.11-2012, Section 4.3.4.2:
-> "The key concept is that the ESS network appears the same to an LLC layer as an IBSS network. STAs within an ESS may communicate and mobile STAs may move from
-> one BSS to another (within the same ESS) transparently to LLC."
->
-> Section 4.5.3.2,
+Abort active scans when wireless interface configuration is changed.
+The usecases include wireless interface mode change, interface down,
+AP stop, virtual interface removal.
 
-Thanks for the pointer.
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 9 ++++++---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.h | 3 +++
+ drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
+ 4 files changed, 10 insertions(+), 6 deletions(-)
 
-It looks to me like having same SSID/auth is a requirement to be in the same ESS, but
-just having the same ESSID/auth does not mean it is definitely in the same ESS.
-
-> etc.
->
->>>> If not, how is this different from just re-doing DHCP like normal?
->>>>
->>>
->>> You get to use your old IP address.  So e.g. your VoIP call doesn't disappear if you decide to switch access points.
->>>
->>>> And if so, you will in some cases be allowing duplicate IP addresses on
->>>> a network?
->>>>
->>>
->>> Life is never perfect ;)
->>
->> If you are breaking networks while trying to optimize something, then I think you
->> are going about it wrong.
->>
->> Seems like we would need some way for the DHCP server and/or AP to proactively
->> notify the station that they can skip DHCP, and default to not skipping.
->
-> Not unless you're planning to extend the spec?  802.11 doesn't even mention DHCP in any real manner.
-
-So, it could be given out by the DHCP server then.  There are ways to add custom
-options to it, right?
-
-User-space can remember the option and use that to decide whether to re-do DHCP
-when a station roams to another AP in (the probable) same ESS.  Since this is
-a new option, you should not have backwards-compatibility issues.
-
->> I vaguely recall that FT had some way to verify you were roaming to the same dhcp-domain
->> or not, but honestly, it has been a long time since I read through that...
->>
->
-> Do you mean a mobility domain?  This has nothing to do with DHCP...
-
-It seems to be a very convenient way to identify a group of APs that share
-common infrastructure, more so that just having the same SSID/auth...
-
-Do you think there would ever be a mobility domain that did not share
-a common DHCP server pool?
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 856fa6e8327e..a450bc6bc774 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -115,6 +115,8 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 
+ 	vif = qtnf_netdev_get_priv(wdev->netdev);
+ 
++	qtnf_scan_done(vif->mac, true);
++
+ 	if (qtnf_cmd_send_del_intf(vif))
+ 		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
+ 		       vif->vifid);
+@@ -335,6 +337,8 @@ static int qtnf_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
+ 	int ret;
+ 
++	qtnf_scan_done(vif->mac, true);
++
+ 	ret = qtnf_cmd_send_stop_ap(vif);
+ 	if (ret) {
+ 		pr_err("VIF%u.%u: failed to stop AP operation in FW\n",
+@@ -570,8 +574,6 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	    !qtnf_sta_list_lookup(&vif->sta_list, params->mac))
+ 		return 0;
+ 
+-	qtnf_scan_done(vif->mac, true);
+-
+ 	ret = qtnf_cmd_send_del_sta(vif, params);
+ 	if (ret)
+ 		pr_err("VIF%u.%u: failed to delete STA %pM\n",
+@@ -1134,8 +1136,9 @@ void qtnf_virtual_intf_cleanup(struct net_device *ndev)
+ 		}
+ 
+ 		vif->sta_state = QTNF_STA_DISCONNECTED;
+-		qtnf_scan_done(mac, true);
+ 	}
++
++	qtnf_scan_done(mac, true);
+ }
+ 
+ void qtnf_cfg80211_vif_reset(struct qtnf_vif *vif)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+index 6a4af52522b8..66db26613b1f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+@@ -34,6 +34,9 @@ static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
+ 		.aborted = aborted,
+ 	};
+ 
++	if (timer_pending(&mac->scan_timeout))
++		del_timer_sync(&mac->scan_timeout);
++
+ 	mutex_lock(&mac->mac_lock);
+ 
+ 	if (mac->scan_req) {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 5e60180482d1..7f83bedc0b88 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -68,9 +68,9 @@ static int qtnf_netdev_open(struct net_device *ndev)
+  */
+ static int qtnf_netdev_close(struct net_device *ndev)
+ {
+-	netif_carrier_off(ndev);
+ 	qtnf_virtual_intf_cleanup(ndev);
+ 	qtnf_netdev_updown(ndev, 0);
++	netif_carrier_off(ndev);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 0fc2814eafad..43d2e7fd6e02 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -345,8 +345,6 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (timer_pending(&mac->scan_timeout))
+-		del_timer_sync(&mac->scan_timeout);
+ 	qtnf_scan_done(mac, le32_to_cpu(status->flags) & QLINK_SCAN_ABORTED);
+ 
+ 	return 0;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.11.0
