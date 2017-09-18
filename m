@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:54215 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752542AbdI2TsN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 15:48:13 -0400
-Received: by mail-oi0-f66.google.com with SMTP id j126so1071524oia.10
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:13 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 06/10] rtlwifi: Add TX/RX throughput statistics in period
-Date: Fri, 29 Sep 2017 14:47:56 -0500
-Message-Id: <20170929194800.15617-7-Larry.Finger@lwfinger.net> (sfid-20170929_214828_074616_3B6BA38B)
-In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+Received: from mail-dm3nam03on0065.outbound.protection.outlook.com ([104.47.41.65]:24496
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752541AbdIRIFD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 04:05:03 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: [PATCH RESEND 0/2] qtnfmac: misc fixes intended for 4.14
+Date: Mon, 18 Sep 2017 11:04:44 +0300
+Message-Id: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com> (sfid-20170918_100549_928521_34A67E7E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hello Kalle, Igor, and all
 
-The statistic variables use u64 to get higher precision.
+Here are two patches intended for 4.14. The first patch fixes tx path
+regression. Lock should be held when queuing packets to h/w fifos in order to
+properly handle configurations with two enabled interfaces or multiple enabled
+mbss. The second patch fixes scan issues addressing a review comment
+from K.Valo regarding pending active scans upon device removal.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 16 ++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 15 +++++++++++----
- 2 files changed, 27 insertions(+), 4 deletions(-)
+Regards,
+Sergey
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 081b9507e02e..e28261bc2c27 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1998,6 +1998,22 @@ void rtl_watchdog_wq_callback(void *data)
- 	rtlpriv->link_info.tx_busy_traffic = tx_busy_traffic;
- 	rtlpriv->link_info.higher_busyrxtraffic = higher_busyrxtraffic;
- 
-+	rtlpriv->stats.txbytesunicast_inperiod =
-+		rtlpriv->stats.txbytesunicast -
-+		rtlpriv->stats.txbytesunicast_last;
-+	rtlpriv->stats.rxbytesunicast_inperiod =
-+		rtlpriv->stats.rxbytesunicast -
-+		rtlpriv->stats.rxbytesunicast_last;
-+	rtlpriv->stats.txbytesunicast_last = rtlpriv->stats.txbytesunicast;
-+	rtlpriv->stats.rxbytesunicast_last = rtlpriv->stats.rxbytesunicast;
-+
-+	rtlpriv->stats.txbytesunicast_inperiod_tp =
-+		(u32)(rtlpriv->stats.txbytesunicast_inperiod * 8 / 2 /
-+		1024 / 1024);
-+	rtlpriv->stats.rxbytesunicast_inperiod_tp =
-+		(u32)(rtlpriv->stats.rxbytesunicast_inperiod * 8 / 2 /
-+		1024 / 1024);
-+
- 	/* <3> DM */
- 	if (!rtlpriv->cfg->mod_params->disable_watchdog)
- 		rtlpriv->cfg->ops->dm_watchdog(hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 809648d28f52..ceeca79acc56 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1013,10 +1013,17 @@ struct init_gain {
- };
- 
- struct wireless_stats {
--	unsigned long txbytesunicast;
--	unsigned long txbytesmulticast;
--	unsigned long txbytesbroadcast;
--	unsigned long rxbytesunicast;
-+	u64 txbytesunicast;
-+	u64 txbytesmulticast;
-+	u64 txbytesbroadcast;
-+	u64 rxbytesunicast;
-+
-+	u64 txbytesunicast_inperiod;
-+	u64 rxbytesunicast_inperiod;
-+	u32 txbytesunicast_inperiod_tp;
-+	u32 rxbytesunicast_inperiod_tp;
-+	u64 txbytesunicast_last;
-+	u64 rxbytesunicast_last;
- 
- 	long rx_snr_db[4];
- 	/*Correct smoothed ss in Dbm, only used
--- 
-2.13.5
+Sergey Matyukevich (2):
+
+qtnfmac: lock access to h/w in tx path
+qtnfmac: abort scans on wireless interface changes
+
+cfg80211.c            |    9 ++++++---
+cfg80211.h            |    3 +++
+core.c                |    2 +-
+event.c               |    2 --
+pearl/pcie.c          |    9 ++++++++-
+pearl/pcie_bus_priv.h |    2 ++
+6 files changed, 20 insertions(+), 7 deletions(-)
