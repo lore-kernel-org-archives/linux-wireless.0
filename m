@@ -1,169 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52938 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754421AbdIFM6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:58:50 -0400
-Message-ID: <1504702728.13457.17.camel@sipsolutions.net> (sfid-20170906_150010_012096_DEDAEAD3)
-Subject: Re: hung task in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 06 Sep 2017 14:58:48 +0200
-In-Reply-To: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com> (sfid-20170906_135833_735521_576001D5)
-References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
-         (sfid-20170906_135833_735521_576001D5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-cys01nam02on0084.outbound.protection.outlook.com ([104.47.37.84]:11360
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753196AbdIRMaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 08:30:05 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 2/2] qtnfmac: cancel scans on wireless interface changes
+Date: Mon, 18 Sep 2017 15:29:50 +0300
+Message-Id: <20170918122950.32612-3-sergey.matyukevich.os@quantenna.com> (sfid-20170918_143012_182451_2B8C24F5)
+In-Reply-To: <20170918122950.32612-1-sergey.matyukevich.os@quantenna.com>
+References: <20170918122950.32612-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-09-06 at 13:57 +0200, Matteo Croce wrote:
+Cancel active scans and deactivate firmware scan watchdog timer
+when wireless interface configuration is changed. The usecases
+include wireless interface mode change, interface down,
+AP stop, virtual interface removal.
 
-> I have an hung task on vanilla 4.13 kernel which I haven't on 4.12.
-> The problem is present both on my AP and on my notebook,
-> so it seems it affects AP and STA mode as well.
-> The generated messages are:
-> 
-> INFO: task kworker/u16:6:120 blocked for more than 120 seconds.
->       Not tainted 4.13.0 #57
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
-> message.
-> kworker/u16:6   D    0   120      2 0x00000000
-> Workqueue: phy0 ieee80211_ba_session_work [mac80211]
-> Call Trace:
->  ? __schedule+0x174/0x5b0
->  ? schedule+0x31/0x80
->  ? schedule_preempt_disabled+0x9/0x10
->  ? __mutex_lock.isra.2+0x163/0x480
->  ? select_task_rq_fair+0xb9f/0xc60
->  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
->  ? __ieee80211_start_rx_ba_session+0x135/0x4d0 [mac80211]
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 9 ++++++---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.h | 3 +++
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
-Yeah - obviously as Stefano found, both take &sta->ampdu_mlme.mtx.
-
-Can you try this?
-
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 2b36eff5d97e..d8d32776031e 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -245,10 +245,10 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- 	ieee80211_tx_skb(sdata, skb);
- }
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 856fa6e8327e..a450bc6bc774 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -115,6 +115,8 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
  
--void __ieee80211_start_rx_ba_session(struct sta_info *sta,
--				     u8 dialog_token, u16 timeout,
--				     u16 start_seq_num, u16 ba_policy, u16 tid,
--				     u16 buf_size, bool tx, bool auto_seq)
-+void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				      u8 dialog_token, u16 timeout,
-+				      u16 start_seq_num, u16 ba_policy, u16 tid,
-+				      u16 buf_size, bool tx, bool auto_seq)
- {
- 	struct ieee80211_local *local = sta->sdata->local;
- 	struct tid_ampdu_rx *tid_agg_rx;
-@@ -267,7 +267,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		ht_dbg(sta->sdata,
- 		       "STA %pM requests BA session on unsupported tid %d\n",
- 		       sta->sta.addr, tid);
--		goto end_no_lock;
-+		goto end;
- 	}
+ 	vif = qtnf_netdev_get_priv(wdev->netdev);
  
- 	if (!sta->sta.ht_cap.ht_supported) {
-@@ -275,14 +275,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		       "STA %pM erroneously requests BA session on tid %d w/o QoS\n",
- 		       sta->sta.addr, tid);
- 		/* send a response anyway, it's an error case if we get here */
--		goto end_no_lock;
-+		goto end;
- 	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
- 		ht_dbg(sta->sdata,
- 		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
- 		       sta->sta.addr, tid);
--		goto end_no_lock;
-+		goto end;
- 	}
- 
- 	/* sanity check for incoming parameters:
-@@ -296,7 +296,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		ht_dbg_ratelimited(sta->sdata,
- 				   "AddBA Req with bad params from %pM on tid %u. policy %d, buffer size %d\n",
- 				   sta->sta.addr, tid, ba_policy, buf_size);
--		goto end_no_lock;
-+		goto end;
- 	}
- 	/* determine default buffer size */
- 	if (buf_size == 0)
-@@ -311,7 +311,6 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	       buf_size, sta->sta.addr);
- 
- 	/* examine state machine */
--	mutex_lock(&sta->ampdu_mlme.mtx);
- 
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
-@@ -415,15 +414,25 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
- 		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
- 	}
--	mutex_unlock(&sta->ampdu_mlme.mtx);
- 
--end_no_lock:
- 	if (tx)
- 		ieee80211_send_addba_resp(sta->sdata, sta->sta.addr, tid,
- 					  dialog_token, status, 1, buf_size,
- 					  timeout);
- }
- 
-+void __ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				     u8 dialog_token, u16 timeout,
-+				     u16 start_seq_num, u16 ba_policy, u16 tid,
-+				     u16 buf_size, bool tx, bool auto_seq)
-+{
-+	mutex_lock(&sta->ampdu_mlme.mtx);
-+	___ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
-+					 start_seq_num, ba_policy, tid,
-+					 buf_size, tx, auto_seq);
-+	mutex_unlock(&sta->ampdu_mlme.mtx);
-+}
++	qtnf_scan_done(vif->mac, true);
 +
- void ieee80211_process_addba_request(struct ieee80211_local *local,
- 				     struct sta_info *sta,
- 				     struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c92df492e898..198b2d3e56fd 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -333,9 +333,9 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 	if (qtnf_cmd_send_del_intf(vif))
+ 		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
+ 		       vif->vifid);
+@@ -335,6 +337,8 @@ static int qtnf_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
+ 	int ret;
  
- 		if (test_and_clear_bit(tid,
- 				       sta->ampdu_mlme.tid_rx_manage_offl))
--			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
--							IEEE80211_MAX_AMPDU_BUF,
--							false, true);
-+			___ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
-+							 IEEE80211_MAX_AMPDU_BUF,
-+							 false, true);
++	qtnf_scan_done(vif->mac, true);
++
+ 	ret = qtnf_cmd_send_stop_ap(vif);
+ 	if (ret) {
+ 		pr_err("VIF%u.%u: failed to stop AP operation in FW\n",
+@@ -570,8 +574,6 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	    !qtnf_sta_list_lookup(&vif->sta_list, params->mac))
+ 		return 0;
  
- 		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
- 				       sta->ampdu_mlme.tid_rx_manage_offl))
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2197c62a0a6e..9675814f64db 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1760,6 +1760,10 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 				     u8 dialog_token, u16 timeout,
- 				     u16 start_seq_num, u16 ba_policy, u16 tid,
- 				     u16 buf_size, bool tx, bool auto_seq);
-+void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
-+				      u8 dialog_token, u16 timeout,
-+				      u16 start_seq_num, u16 ba_policy, u16 tid,
-+				      u16 buf_size, bool tx, bool auto_seq);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- 					 enum ieee80211_agg_stop_reason reason);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
-
-johannes
+-	qtnf_scan_done(vif->mac, true);
+-
+ 	ret = qtnf_cmd_send_del_sta(vif, params);
+ 	if (ret)
+ 		pr_err("VIF%u.%u: failed to delete STA %pM\n",
+@@ -1134,8 +1136,9 @@ void qtnf_virtual_intf_cleanup(struct net_device *ndev)
+ 		}
+ 
+ 		vif->sta_state = QTNF_STA_DISCONNECTED;
+-		qtnf_scan_done(mac, true);
+ 	}
++
++	qtnf_scan_done(mac, true);
+ }
+ 
+ void qtnf_cfg80211_vif_reset(struct qtnf_vif *vif)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+index 6a4af52522b8..66db26613b1f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
+@@ -34,6 +34,9 @@ static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
+ 		.aborted = aborted,
+ 	};
+ 
++	if (timer_pending(&mac->scan_timeout))
++		del_timer_sync(&mac->scan_timeout);
++
+ 	mutex_lock(&mac->mac_lock);
+ 
+ 	if (mac->scan_req) {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 0fc2814eafad..43d2e7fd6e02 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -345,8 +345,6 @@ qtnf_event_handle_scan_complete(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (timer_pending(&mac->scan_timeout))
+-		del_timer_sync(&mac->scan_timeout);
+ 	qtnf_scan_done(mac, le32_to_cpu(status->flags) & QLINK_SCAN_ABORTED);
+ 
+ 	return 0;
+-- 
+2.11.0
