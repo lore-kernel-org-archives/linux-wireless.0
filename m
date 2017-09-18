@@ -1,85 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21218 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752364AbdIBIDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Sep 2017 04:03:07 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "Triebitz, Shaul" <shaul.triebitz@intel.com>,
-        "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [bug report] iwlwifi: mvm: add station before allocating a queue
-Date: Sat, 2 Sep 2017 08:03:03 +0000
-Message-ID: <1504339382.31031.32.camel@intel.com> (sfid-20170902_100321_701331_5A742D3E)
-References: <20170901083022.t6e2zlrqfyebrf5t@mwanda>
-In-Reply-To: <20170901083022.t6e2zlrqfyebrf5t@mwanda>
-Content-Type: text/plain; charset="utf-8"
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:45198 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932312AbdIRPBR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 11:01:17 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH 0/3] linux-firmware: ath10k update 20170918
+Date: Mon, 18 Sep 2017 18:00:54 +0300
+Message-ID: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20170918_170120_524947_56A657ED)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE3LTA5LTAxIGF0IDExOjMwICswMzAwLCBEYW4gQ2FycGVudGVyIHdyb3RlOg0K
-PiBIZWxsbyBTaGF1bCBUcmllYml0eiwNCj4gDQo+IFRoZSBwYXRjaCA3MzJkMDZlOWQ5Y2Y6ICJp
-d2x3aWZpOiBtdm06IGFkZCBzdGF0aW9uIGJlZm9yZSBhbGxvY2F0aW5nDQo+IGEgcXVldWUiIGZy
-b20gSnVsIDEwLCAyMDE3LCBsZWFkcyB0byB0aGUgZm9sbG93aW5nIHN0YXRpYyBjaGVja2VyDQo+
-IHdhcm5pbmc6DQo+IA0KPiAJZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0v
-c3RhLmM6MTMxMiBpd2xfbXZtX2FkZF9pbnRfc3RhX2NvbW1vbigpDQo+IAllcnJvcjogdW5pbml0
-aWFsaXplZCBzeW1ib2wgJ3N0YXR1cycuDQo+IA0KPiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRl
-bC9pd2x3aWZpL212bS9zdGEuYw0KPiAgIDEyODEgIHN0YXRpYyBpbnQgaXdsX212bV9hZGRfaW50
-X3N0YV9jb21tb24oc3RydWN0IGl3bF9tdm0gKm12bSwNCj4gICAxMjgyICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBpd2xfbXZtX2ludF9zdGEgKnN0YSwNCj4g
-ICAxMjgzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IHU4ICph
-ZGRyLA0KPiAgIDEyODQgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdTE2
-IG1hY19pZCwgdTE2IGNvbG9yKQ0KPiAgIDEyODUgIHsNCj4gICAxMjg2ICAgICAgICAgIHN0cnVj
-dCBpd2xfbXZtX2FkZF9zdGFfY21kIGNtZDsNCj4gICAxMjg3ICAgICAgICAgIGludCByZXQ7DQo+
-ICAgMTI4OCAgICAgICAgICB1MzIgc3RhdHVzOw0KPiAgICAgICAgICAgICAgICAgXl5eXl5eXl5e
-Xg0KPiAgIDEyODkgIA0KPiAgIDEyOTAgICAgICAgICAgbG9ja2RlcF9hc3NlcnRfaGVsZCgmbXZt
-LT5tdXRleCk7DQo+ICAgMTI5MSAgDQo+ICAgMTI5MiAgICAgICAgICBtZW1zZXQoJmNtZCwgMCwg
-c2l6ZW9mKGNtZCkpOw0KPiAgIDEyOTMgICAgICAgICAgY21kLnN0YV9pZCA9IHN0YS0+c3RhX2lk
-Ow0KPiAgIDEyOTQgICAgICAgICAgY21kLm1hY19pZF9uX2NvbG9yID0gY3B1X3RvX2xlMzIoRldf
-Q01EX0lEX0FORF9DT0xPUihtYWNfaWQsDQo+ICAgMTI5NSAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNvbG9yKSk7DQo+ICAgMTI5
-NiAgICAgICAgICBpZiAoZndfaGFzX2FwaSgmbXZtLT5mdy0+dWNvZGVfY2FwYSwgSVdMX1VDT0RF
-X1RMVl9BUElfU1RBX1RZUEUpKQ0KPiAgIDEyOTcgICAgICAgICAgICAgICAgICBjbWQuc3RhdGlv
-bl90eXBlID0gc3RhLT50eXBlOw0KPiAgIDEyOTggIA0KPiAgIDEyOTkgICAgICAgICAgaWYgKCFp
-d2xfbXZtX2hhc19uZXdfdHhfYXBpKG12bSkpDQo+ICAgMTMwMCAgICAgICAgICAgICAgICAgIGNt
-ZC50ZmRfcXVldWVfbXNrID0gY3B1X3RvX2xlMzIoc3RhLT50ZmRfcXVldWVfbXNrKTsNCj4gICAx
-MzAxICAgICAgICAgIGNtZC50aWRfZGlzYWJsZV90eCA9IGNwdV90b19sZTE2KDB4ZmZmZik7DQo+
-ICAgMTMwMiAgDQo+ICAgMTMwMyAgICAgICAgICBpZiAoYWRkcikNCj4gICAxMzA0ICAgICAgICAg
-ICAgICAgICAgbWVtY3B5KGNtZC5hZGRyLCBhZGRyLCBFVEhfQUxFTik7DQo+ICAgMTMwNSAgDQo+
-ICAgMTMwNiAgICAgICAgICByZXQgPSBpd2xfbXZtX3NlbmRfY21kX3BkdV9zdGF0dXMobXZtLCBB
-RERfU1RBLA0KPiAgIDEzMDcgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIGl3bF9tdm1fYWRkX3N0YV9jbWRfc2l6ZShtdm0pLA0KPiAgIDEzMDggICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICZjbWQsICZzdGF0dXMpOw0KPiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeXl5eXl4N
-Cj4gICAxMzA5ICAgICAgICAgIGlmIChyZXQpDQo+ICAgMTMxMCAgICAgICAgICAgICAgICAgIHJl
-dHVybiByZXQ7DQo+ICAgMTMxMSAgDQo+ICAgMTMxMiAgICAgICAgICBzd2l0Y2ggKHN0YXR1cyAm
-IElXTF9BRERfU1RBX1NUQVRVU19NQVNLKSB7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIF5e
-Xl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eDQo+ICAgMTMxMyAgICAgICAgICBjYXNlIEFE
-RF9TVEFfU1VDQ0VTUzoNCj4gICAxMzE0ICAgICAgICAgICAgICAgICAgSVdMX0RFQlVHX0lORk8o
-bXZtLCAiSW50ZXJuYWwgc3RhdGlvbiBhZGRlZC5cbiIpOw0KPiAgIDEzMTUgICAgICAgICAgICAg
-ICAgICByZXR1cm4gMDsNCj4gICAxMzE2ICAgICAgICAgIGRlZmF1bHQ6DQo+ICAgMTMxNyAgICAg
-ICAgICAgICAgICAgIHJldCA9IC1FSU87DQo+ICAgMTMxOCAgICAgICAgICAgICAgICAgIElXTF9F
-UlIobXZtLCAiQWRkIGludGVybmFsIHN0YXRpb24gZmFpbGVkLCBzdGF0dXM9MHgleFxuIiwNCj4g
-ICAxMzE5ICAgICAgICAgICAgICAgICAgICAgICAgICBzdGF0dXMpOw0KPiAgIDEzMjAgICAgICAg
-ICAgICAgICAgICBicmVhazsNCj4gICAxMzIxICAgICAgICAgIH0NCj4gICAxMzIyICAgICAgICAg
-IHJldHVybiByZXQ7DQo+ICAgMTMyMyAgfQ0KPiANCj4gVGhlIHByb2JsZW0gaGVyZSBpcyB0aGlz
-IGNvZGUgZnJvbSBpd2xfbXZtX3NlbmRfY21kX3N0YXR1cygpDQo+IA0KPiBkcml2ZXJzL25ldC93
-aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS91dGlscy5jDQo+ICAgIDE1NyAgICAgICAgICBjbWQt
-PmZsYWdzIHw9IENNRF9XQU5UX1NLQjsNCj4gICAgMTU4ICANCj4gICAgMTU5ICAgICAgICAgIHJl
-dCA9IGl3bF90cmFuc19zZW5kX2NtZChtdm0tPnRyYW5zLCBjbWQpOw0KPiAgICAxNjAgICAgICAg
-ICAgaWYgKHJldCA9PSAtRVJGS0lMTCkgew0KPiAgICAxNjEgICAgICAgICAgICAgICAgICAvKg0K
-PiAgICAxNjIgICAgICAgICAgICAgICAgICAgKiBUaGUgY29tbWFuZCBmYWlsZWQgYmVjYXVzZSBv
-ZiBSRktJTEwsIGRvbid0IHVwZGF0ZQ0KPiAgICAxNjMgICAgICAgICAgICAgICAgICAgKiB0aGUg
-c3RhdHVzLCBsZWF2ZSBpdCBhcyBzdWNjZXNzIGFuZCByZXR1cm4gMC4NCj4gICAgMTY0ICAgICAg
-ICAgICAgICAgICAgICovDQo+ICAgIDE2NSAgICAgICAgICAgICAgICAgIHJldHVybiAwOw0KPiAN
-Cj4gV2UgcmV0dXJuIHplcm8gd2l0aG91dCBzZXR0aW5nICJzdGF0dXMiLiAgU2hvdWxkbid0IHdl
-IHNldCAqc3RhdHVzID0gMDs/DQo+IA0KPiAgICAxNjYgICAgICAgICAgfSBlbHNlIGlmIChyZXQp
-IHsNCj4gICAgMTY3ICAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gICAgMTY4ICAgICAg
-ICAgIH0NCj4gICAgMTY5ICANCj4gICAgMTcwICAgICAgICAgIHBrdCA9IGNtZC0+cmVzcF9wa3Q7
-DQoNClRoZSBjYWxsZXIgc2hvdWxkIHNldCB0aGUgc3RhdHVzIHRvICJzdWNjZXNzIiBiZWZvcmUg
-Y2FsbGluZyB0aGlzDQpmdW5jdGlvbi4gIEluIHNvbWUgY2FzZXMgc3VjY2VzcyBpcyBub3QgemVy
-byAoZS5nLiB3ZSB1c2UNCkFERF9TVEFfU1VDQ0VTUywgd2hpY2ggaXMgMSwgaW4gc2V2ZXJhbCBw
-bGFjZXMpLg0KDQpJJ2xsIHNlbmQgYSBmaXggc3BlY2lmaWMgZm9yIHRoaXMgcGF0Y2ggYW5kIGFu
-IGFkZGl0aW9uYWwgb25lIGZvciBvdGhlcg0KcGxhY2VzIHdoZXJlIHdlIGFsc28gY2FsbCB0aGlz
-IGZ1bmN0aW9uIHdpdGhvdXQgaW5pdGlhbGl6aW5nIHN0YXR1cy4NCg0KVGhhbmtzIGZvciByZXBv
-cnRpbmchDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg==
+Few firmware fixes to user reported issues for ath10k, but the other "fix"
+being a revert back to older firmware. Also a small board-2.bin update.
+
+Kalle Valo (3):
+  ath10k: QCA6174 hw3.0: update firmware-6.bin to
+    WLAN.RM.4.4.1-00051-QCARMSWP-1
+  ath10k: QCA6174 hw3.0: update board-2.bin
+  Revert "ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2"
+
+ WHENCE                                            |   4 +-
+ ath10k/QCA6174/hw3.0/board-2.bin                  | Bin 477060 -> 501748 bytes
+ ath10k/QCA6174/hw3.0/firmware-6.bin               | Bin 711408 -> 727776 bytes
+ ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt |  97 +++++-----------------
+ ath10k/QCA988X/hw2.0/firmware-5.bin               | Bin 249384 -> 248188 bytes
+ 5 files changed, 25 insertions(+), 76 deletions(-)
+
+-- 
+2.7.4
