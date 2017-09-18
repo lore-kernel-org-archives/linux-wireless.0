@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51018 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752500AbdIVODW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 10:03:22 -0400
-From: Colin King <colin.king@canonical.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] brcm80211: make const array ucode_ofdm_rates static, reduces object code size
-Date: Fri, 22 Sep 2017 15:03:16 +0100
-Message-Id: <20170922140316.12768-1-colin.king@canonical.com> (sfid-20170922_160540_262526_7F4A32A7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37324 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751661AbdIRIlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 04:41:10 -0400
+Message-ID: <1505724068.13691.0.camel@sipsolutions.net> (sfid-20170918_104119_890217_954BB331)
+Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Mon, 18 Sep 2017 10:41:08 +0200
+In-Reply-To: <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com> (sfid-20170918_100515_833823_05EC3731)
+References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+         <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
+         (sfid-20170918_100515_833823_05EC3731)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Mon, 2017-09-18 at 11:04 +0300, Sergey Matyukevich wrote:
+> 
+>   */
+>  static int qtnf_netdev_close(struct net_device *ndev)
+>  {
+> -	netif_carrier_off(ndev);
+>  	qtnf_virtual_intf_cleanup(ndev);
+>  	qtnf_netdev_updown(ndev, 0);
+> +	netif_carrier_off(ndev);
+>  	return 0;
+>  }
 
-Don't populate const array ucode_ofdm_rates on the stack, instead make it
-static. Makes the object code smaller by 100 bytes:
+This seems unrelated?
 
-Before:
-   text	   data	    bss	    dec	    hex	filename
-  39482	    564	      0	  40046	   9c6e	phy_cmn.o
+> -	if (timer_pending(&mac->scan_timeout))
+> -		del_timer_sync(&mac->scan_timeout);
+>  	qtnf_scan_done(mac, le32_to_cpu(status->flags) &
+> QLINK_SCAN_ABORTED);
 
-After
-   text	   data	    bss	    dec	    hex	filename
-  39326	    620	      0	  39946	   9c0a	phy_cmn.o
+and that's related perhaps but not really explained in the changelog,
+not sure?
 
-(gcc 6.3.0, x86-64)
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-index 1c4e9dd57960..3a13d176b221 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -1916,7 +1916,7 @@ void wlc_phy_txpower_update_shm(struct brcms_phy *pi)
- 				     pi->hwpwr_txcur);
- 
- 		for (j = TXP_FIRST_OFDM; j <= TXP_LAST_OFDM; j++) {
--			const u8 ucode_ofdm_rates[] = {
-+			static const u8 ucode_ofdm_rates[] = {
- 				0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6c
- 			};
- 			offset = wlapi_bmac_rate_shm_offset(
--- 
-2.14.1
+johannes
