@@ -1,180 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:13344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751236AbdIBBpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 21:45:01 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 3/9] qtnfmac: retrieve current channel info from EP
-Date: Fri,  1 Sep 2017 18:44:45 -0700
-Message-Id: <20170902014451.17766-4-igor.mitsyanko.os@quantenna.com> (sfid-20170902_034519_784527_E555FD24)
-In-Reply-To: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
-References: <20170902014451.17766-1-igor.mitsyanko.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42636 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754268AbdIRNRM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 09:17:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
+References: <1505720537-13362-1-git-send-email-gbhat@marvell.com>
+Date: Mon, 18 Sep 2017 16:17:07 +0300
+In-Reply-To: <1505720537-13362-1-git-send-email-gbhat@marvell.com> (Ganapathi
+        Bhat's message of "Mon, 18 Sep 2017 13:12:17 +0530")
+Message-ID: <87o9q8kuy4.fsf@purkki.adurom.net> (sfid-20170918_151715_643732_26937645)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Ganapathi Bhat <gbhat@marvell.com> writes:
 
-Do not try to cache current operational channel info in driver, this
-is a potential source of synchronization issues + driver does not
-really need that info.
+> Avoid calculating random MAC address in driver. Instead make
+> use of 'get_random_mask_addr()' function.
+>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-Introduce GET_CHANNEL command and process it appropriately.
+I don't see 1/2 anywhere. Did it get lost?
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 35 +++++++++------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 38 +++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  1 +
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 11 +++++++
- 4 files changed, 64 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 856fa6e..0ef1285 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -793,37 +793,30 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct net_device *ndev = wdev->netdev;
- 	struct qtnf_vif *vif;
-+	int ret;
- 
- 	if (!ndev)
- 		return -ENODEV;
- 
- 	vif = qtnf_netdev_get_priv(wdev->netdev);
- 
--	switch (vif->wdev.iftype) {
--	case NL80211_IFTYPE_STATION:
--		if (vif->sta_state == QTNF_STA_DISCONNECTED) {
--			pr_warn("%s: STA disconnected\n", ndev->name);
--			return -ENODATA;
--		}
--		break;
--	case NL80211_IFTYPE_AP:
--		if (!(vif->bss_status & QTNF_STATE_AP_START)) {
--			pr_warn("%s: AP not started\n", ndev->name);
--			return -ENODATA;
--		}
--		break;
--	default:
--		pr_err("unsupported vif type (%d)\n", vif->wdev.iftype);
--		return -ENODATA;
-+	ret = qtnf_cmd_get_channel(vif, chandef);
-+	if (ret) {
-+		pr_err("%s: failed to get channel: %d\n", ndev->name, ret);
-+		goto out;
- 	}
- 
--	if (!cfg80211_chandef_valid(&mac->chandef)) {
--		pr_err("invalid channel settings on %s\n", ndev->name);
--		return -ENODATA;
-+	if (!cfg80211_chandef_valid(chandef)) {
-+		pr_err("%s: bad chan freq1=%u freq2=%u bw=%u\n", ndev->name,
-+		       chandef->center_freq1, chandef->center_freq2,
-+		       chandef->width);
-+		ret = -ENODATA;
- 	}
- 
--	memcpy(chandef, &mac->chandef, sizeof(*chandef));
--	return 0;
-+	memcpy(&mac->chandef, chandef, sizeof(mac->chandef));
-+
-+out:
-+	return ret;
- }
- 
- static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 4206886..806b88b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2358,3 +2358,41 @@ int qtnf_cmd_send_chan_switch(struct qtnf_wmac *mac,
- 	qtnf_bus_unlock(mac->bus);
- 	return ret;
- }
-+
-+int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef)
-+{
-+	struct qtnf_bus *bus = vif->mac->bus;
-+	const struct qlink_resp_channel_get *resp;
-+	struct sk_buff *cmd_skb;
-+	struct sk_buff *resp_skb = NULL;
-+	u16 res_code = QLINK_CMD_RESULT_OK;
-+	int ret;
-+
-+	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
-+					    QLINK_CMD_CHAN_GET,
-+					    sizeof(struct qlink_cmd));
-+	if (unlikely(!cmd_skb))
-+		return -ENOMEM;
-+
-+	qtnf_bus_lock(bus);
-+
-+	ret = qtnf_cmd_send_with_reply(bus, cmd_skb, &resp_skb, &res_code,
-+				       sizeof(*resp), NULL);
-+
-+	qtnf_bus_unlock(bus);
-+
-+	if (unlikely(ret))
-+		goto out;
-+
-+	if (unlikely(res_code != QLINK_CMD_RESULT_OK)) {
-+		ret = -ENODATA;
-+		goto out;
-+	}
-+
-+	resp = (const struct qlink_resp_channel_get *)resp_skb->data;
-+	qlink_chandef_q2cfg(priv_to_wiphy(vif->mac), &resp->chan, chdef);
-+
-+out:
-+	consume_skb(resp_skb);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index 783b203..e1bcb83 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -75,5 +75,6 @@ int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
- 			    struct qtnf_chan_stats *stats);
- int qtnf_cmd_send_chan_switch(struct qtnf_wmac *mac,
- 			      struct cfg80211_csa_settings *params);
-+int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef);
- 
- #endif /* QLINK_COMMANDS_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 5936854..fb88f3e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -169,6 +169,7 @@ enum qlink_cmd_type {
- 	QLINK_CMD_REG_NOTIFY		= 0x0019,
- 	QLINK_CMD_CHANS_INFO_GET	= 0x001A,
- 	QLINK_CMD_CHAN_SWITCH		= 0x001B,
-+	QLINK_CMD_CHAN_GET		= 0x001C,
- 	QLINK_CMD_CONFIG_AP		= 0x0020,
- 	QLINK_CMD_START_AP		= 0x0021,
- 	QLINK_CMD_STOP_AP		= 0x0022,
-@@ -694,6 +695,16 @@ struct qlink_resp_get_chan_stats {
- 	u8 info[0];
- } __packed;
- 
-+/**
-+ * struct qlink_resp_channel_get - response for QLINK_CMD_CHAN_GET command
-+ *
-+ * @chan: definition of current operating channel.
-+ */
-+struct qlink_resp_channel_get {
-+	struct qlink_resp rhdr;
-+	struct qlink_chandef chan;
-+} __packed;
-+
- /* QLINK Events messages related definitions
-  */
- 
 -- 
-2.9.5
+Kalle Valo
