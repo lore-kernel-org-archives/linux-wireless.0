@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:43368 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752624AbdIXRWN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Sep 2017 13:22:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <1506265531.2909.5.camel@sipsolutions.net>
-References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com> <1506265531.2909.5.camel@sipsolutions.net>
-From: Xiang Gao <qasdfgtyuiop@gmail.com>
-Date: Sun, 24 Sep 2017 13:21:52 -0400
-Message-ID: <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com> (sfid-20170924_193027_450530_BFEEC825)
-Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-crypto@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Received: from s3.sipsolutions.net ([5.9.151.49]:43940 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750769AbdIRULX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Sep 2017 16:11:23 -0400
+Message-ID: <1505765477.13691.20.camel@sipsolutions.net> (sfid-20170918_221129_661478_C776DDAA)
+Subject: Re: [PATCH 1/2] mac80211: Add rcu read side critical sections
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ville Syrjala <ville.syrjala@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Date: Mon, 18 Sep 2017 22:11:17 +0200
+In-Reply-To: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
+References: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-09-24 11:05 GMT-04:00 Johannes Berg <johannes@sipsolutions.net>:
-> On Sun, 2017-09-24 at 01:40 -0400, Xiang Gao wrote:
->> Currently, the aes_ccm.c and aes_gcm.c are almost line by line
->> copy of each other. This patch reduce code redundancy by moving
->> the code in these two files to crypto/aead_api.c to make it a
->> higher level aead api. The aes_ccm.c and aes_gcm.c are removed
->> and all the functions are now implemented in their headers using
->> the newly added aead api.
->>
-> No objection from me, though I'd ask you to respin with the indentation
-> fixed up a bit.
+> I got the following lockdep warning about the rcu_dereference()s in
+> ieee80211_tx_h_select_key(). After tracing all callers of
+> ieee80211_tx_h_select_key() I discovered that
+> ieee80211_get_buffered_bc()
+> and ieee80211_build_data_template() had the rcu_read_lock/unlock()
+> but
+> three other places did not. So I just blindly added them and made the
+> read side critical section extend as far as the lifetime of 'tx'
+> which
+> is where we seem to be stuffing the rcu protected pointers. No real
+> clue whether this is correct or not.
 
-Hi Johannes,
+Heh.
 
-Thank you for you time for the suggestion. I'm not sure if I correctly
-understand you point.
-Do you mean to put more characters each line in the description? Something like:
+I think we should do it in ieee80211_tx_dequeue(), if not even in the
+driver (and document that it's required)
 
-> Currently, the aes_ccm.c and aes_gcm.c are almost line by line copy of
-> each other. This patch reduce code redundancy by moving the code in these
-> two files to crypto/aead_api.c to make it a higher level aead api. The
-> file aes_ccm.c and aes_gcm.c are removed and all the functions there are
-> now implemented in their headers using the newly added aead api.
+johannes
 
-instead of
+> @@ -3411,6 +3430,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
+> ieee80211_hw *hw,
+>  	ieee80211_tx_result r;
+>  	struct ieee80211_vif *vif;
+>  
+> +	rcu_read_lock();
+> +
+>  	spin_lock_bh(&fq->lock);
+>  
+>  	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
+> @@ -3513,6 +3534,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
+> ieee80211_hw *hw,
+>  out:
+>  	spin_unlock_bh(&fq->lock);
+>  
+> +	rcu_read_unlock();
+> 
 
-> Currently, the aes_ccm.c and aes_gcm.c are almost line by line
-> copy of each other. This patch reduce code redundancy by moving
-> the code in these two files to crypto/aead_api.c to make it a
-> higher level aead api. The aes_ccm.c and aes_gcm.c are removed
-> and all the functions are now implemented in their headers using
-> the newly added aead api.
+i.e. this in itself should be sufficient, though you should probably
+reorder and acquire the spinlock first since that might spin, and you
+want to keep the RCU section minimal (it's trivial here, after all)
 
-Xiang Gao
-
->
-> johannes
+johannes
