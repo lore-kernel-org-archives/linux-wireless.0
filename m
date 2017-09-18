@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:35317 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752400AbdIAUHm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55998 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752743AbdIRMwB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 16:07:42 -0400
-Received: by mail-qt0-f173.google.com with SMTP id x36so5569625qtx.2
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Sep 2017 13:07:42 -0700 (PDT)
+        Mon, 18 Sep 2017 08:52:01 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
+References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
+        <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
+        <1505724068.13691.0.camel@sipsolutions.net>
+        <20170918095713.mfn76hkdbo73k4fu@bars>
+Date: Mon, 18 Sep 2017 15:51:57 +0300
+In-Reply-To: <20170918095713.mfn76hkdbo73k4fu@bars> (Sergey Matyukevich's
+        message of "Mon, 18 Sep 2017 12:57:13 +0300")
+Message-ID: <87shfkkw42.fsf@purkki.adurom.net> (sfid-20170918_145205_358775_21A0330A)
 MIME-Version: 1.0
-In-Reply-To: <CAG5S3ZTRe52qSWt6WEe6K78brrQqc7+HgN_8OQ+RKC9k1WUMCw@mail.gmail.com>
-References: <CAG5S3ZTRe52qSWt6WEe6K78brrQqc7+HgN_8OQ+RKC9k1WUMCw@mail.gmail.com>
-From: Thomas Pedersen <thomas@eero.com>
-Date: Fri, 1 Sep 2017 13:07:41 -0700
-Message-ID: <CADjYELxyuT74Ms30Ohu_a6Ymg6RLctf6mehRmw-poLgLMZWiwQ@mail.gmail.com> (sfid-20170901_220755_362447_35ACB724)
-Subject: Re: Incorrect mesh path seq num
-To: Greg Maitz <ghh19622@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 11:30 PM, Greg Maitz <ghh19622@gmail.com> wrote:
-> Hi guys,
->
-> I'm seeing a problem when I work on the wireless mesh between two
-> linux devices. The root node has 3.18 kernel while the next hop
-> station runs 2.6.37 kernel. I found the mpath->sn value is incorrect
-> most of the time on the device having 2.6.37 kernel. After examining
-> the code, in function hwmp_route_info_get [mesh_hwmp.c], after
-> mesh_path_lookup, the sequence number (i.e, mpath->sn) is incorrect.
-> For instance, I see mpath->sn having value 0x30950000. It should be
-> 0x9530, while the orig_sn is having value 0x9531.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Looks like an endianess bug. Are you testing on two platforms of
-different endianess?
+> By the way, is it ok to send corrected single patch in reply to this
+> discussion ? Or the appropriate way is to resend the whole patch set ?
 
-> This results in the
-> last hop metric to become zero in function mesh_rx_path_sel_frame and
-> hwmp_preq_frame_process doesn't get called. Is this a known problem?
-> Can anyone provide suggestions to debug further?
+This has been a common question so I documented it:
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#resubmit_the_whole_patchset
 
+I leave it as an exercise to the reader to find the answer, even though
+the URL even spoils it ;)
 
 -- 
-thomas
+Kalle Valo
