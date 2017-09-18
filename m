@@ -1,138 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36304 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752438AbdI2Qov (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35114 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753017AbdIRONq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 12:44:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 19:44:13 +0300
-Message-Id: <20170929164423.23666-9-luca@coelho.fi> (sfid-20170929_200759_145286_22B57038)
-In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
-References: <20170929164423.23666-1-luca@coelho.fi>
-Subject: [PATCH 08/18] iwlwifi: acpi: move ACPI method definitions to acpi.h
+        Mon, 18 Sep 2017 10:13:46 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Brian Norris" <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: RE: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
+Date: Mon, 18 Sep 2017 14:13:41 +0000
+Message-ID: <3f3f5c9672a5421db05337a00d9578f2@SC-EXCH02.marvell.com> (sfid-20170918_161350_086438_6517388D)
+References: <1505720537-13362-1-git-send-email-gbhat@marvell.com>
+ <87o9q8kuy4.fsf@purkki.adurom.net>
+In-Reply-To: <87o9q8kuy4.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Hi Kalle,
+> 
+> > Avoid calculating random MAC address in driver. Instead make use of
+> > 'get_random_mask_addr()' function.
+> >
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> 
+> I don't see 1/2 anywhere. Did it get lost?
+Actually there is no 1/2. What I did is: 'git send-email'; CTRL + C (to correct a typo); and then tried sending it again. I think that created some problem here. Kindly let me know how to proceed. 
 
-Instead of defining each method where they are used and re-defining
-WIFI_DOMAIN in each one of them, move all the definitions to a central
-place and define the domain only a single time.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h       | 15 +++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  8 ++------
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 11 -----------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  5 +----
- 4 files changed, 18 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index e7612a1a8e1a..a6d2907f75f5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -65,6 +65,21 @@
- 
- #ifdef CONFIG_ACPI
- 
-+#define ACPI_WRDS_METHOD	"WRDS"
-+#define ACPI_EWRD_METHOD	"EWRD"
-+#define ACPI_WGDS_METHOD	"WGDS"
-+#define ACPI_WRDD_METHOD	"WRDD"
-+#define ACPI_SPLC_METHOD	"SPLC"
-+
-+#define ACPI_WIFI_DOMAIN	(0x07)
-+
-+#define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
-+#define ACPI_EWRD_WIFI_DATA_SIZE	((IWL_MVM_SAR_PROFILE_NUM - 1) * \
-+					 IWL_MVM_SAR_TABLE_SIZE + 3)
-+#define ACPI_WGDS_WIFI_DATA_SIZE	18
-+#define ACPI_WGDS_NUM_BANDS		2
-+#define ACPI_WGDS_TABLE_SIZE		3
-+
- void *iwl_acpi_get_object(struct device *dev, acpi_string method);
- 
- #else /* CONFIG_ACPI */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 5165af25f010..2ece3c531b88 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -946,10 +946,6 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- IWL_EXPORT_SYMBOL(iwl_parse_nvm_mcc_info);
- 
- #ifdef CONFIG_ACPI
--#define WRDD_METHOD		"WRDD"
--#define WRDD_WIFI		(0x07)
--#define WRDD_WIGIG		(0x10)
--
- static u32 iwl_wrdd_get_mcc(struct device *dev, union acpi_object *wrdd)
- {
- 	union acpi_object *mcc_pkg, *domain_type, *mcc_value;
-@@ -975,7 +971,7 @@ static u32 iwl_wrdd_get_mcc(struct device *dev, union acpi_object *wrdd)
- 		}
- 
- 		domain_type = &mcc_pkg->package.elements[0];
--		if (domain_type->integer.value == WRDD_WIFI)
-+		if (domain_type->integer.value == ACPI_WIFI_DOMAIN)
- 			break;
- 
- 		mcc_pkg = NULL;
-@@ -994,7 +990,7 @@ int iwl_get_bios_mcc(struct device *dev, char *mcc)
- 	union acpi_object *data;
- 	u32 mcc_val;
- 
--	data = iwl_acpi_get_object(dev, WRDD_METHOD);
-+	data = iwl_acpi_get_object(dev, ACPI_WRDD_METHOD);
- 	if (IS_ERR(data))
- 		return PTR_ERR(data);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index b2a9e7de15b7..6c8bcf03afc7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -579,17 +579,6 @@ static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
- }
- 
- #ifdef CONFIG_ACPI
--#define ACPI_WRDS_METHOD		"WRDS"
--#define ACPI_EWRD_METHOD		"EWRD"
--#define ACPI_WGDS_METHOD		"WGDS"
--#define ACPI_WIFI_DOMAIN		(0x07)
--#define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
--#define ACPI_EWRD_WIFI_DATA_SIZE	((IWL_MVM_SAR_PROFILE_NUM - 1) * \
--					 IWL_MVM_SAR_TABLE_SIZE + 3)
--#define ACPI_WGDS_WIFI_DATA_SIZE	18
--#define ACPI_WGDS_NUM_BANDS		2
--#define ACPI_WGDS_TABLE_SIZE		3
--
- static int iwl_mvm_sar_set_profile(struct iwl_mvm *mvm,
- 				   union acpi_object *table,
- 				   struct iwl_mvm_sar_profile *profile,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 09fb27e9adf5..a6c4f096cb19 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -588,9 +588,6 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
- 
- #ifdef CONFIG_ACPI
--#define ACPI_SPLC_METHOD	"SPLC"
--#define ACPI_SPLC_DOMAIN_WIFI	(0x07)
--
- static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
- {
- 	union acpi_object *data_pkg, *dflt_pwr_limit;
-@@ -625,7 +622,7 @@ static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
- 			continue;
- 
- 		domain = &data_pkg->package.elements[0];
--		if (domain->integer.value == ACPI_SPLC_DOMAIN_WIFI)
-+		if (domain->integer.value == ACPI_WIFI_DOMAIN)
- 			break;
- 
- 		data_pkg = NULL;
--- 
-2.14.1
+Thanks,
+Ganapathi
+> 
+> --
+> Kalle Valo
