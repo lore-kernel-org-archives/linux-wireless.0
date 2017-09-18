@@ -1,34 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40415 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964935AbdIYU6o (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38925 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752346AbdIRG6r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 16:58:44 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: RE: [PATCH] ath10k: add new cipher suite support
-Date: Mon, 25 Sep 2017 20:58:40 +0000
-Message-ID: <88e4ab8e9f5d4ac6a598b1bc2fccd9a6@NALASEXR01H.na.qualcomm.com> (sfid-20170925_225945_705362_9D6886DB)
-References: <1506115070-10467-1-git-send-email-rmanohar@qti.qualcomm.com>
- <bff1aa84-d199-7b10-3718-33323a984954@dd-wrt.com>
-In-Reply-To: <bff1aa84-d199-7b10-3718-33323a984954@dd-wrt.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 18 Sep 2017 02:58:47 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: avoid storing random_mac in private
+Date: Mon, 18 Sep 2017 12:25:02 +0530
+Message-ID: <1505717702-10342-1-git-send-email-gbhat@marvell.com> (sfid-20170918_085851_594465_85EBBBB9)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBBbSAyMi4wOS4yMDE3IHVtIDIzOjE3IHNjaHJpZWIgUmFqa3VtYXIgTWFub2hhcmFuOg0KPiA+
-IC0JYXItPmh3LT53aXBoeS0+bl9jaXBoZXJfc3VpdGVzID0gQVJSQVlfU0laRShjaXBoZXJfc3Vp
-dGVzKTsNCj4gPiArDQo+ID4gKwkvKiBRQ0E5ODh4IGFuZCBRQ0E2MTc0IGZhbWlseSBjaGlwcyBk
-byBub3Qgc3VwcG9ydCBDQ01QLTI1NiwNCj4gR0NNUC0xMjgNCj4gPiArCSAqIGFuZCBHQ01QLTI1
-NiBjaXBoZXJzIGluIGhhcmR3YXJlLg0KPiA+ICsJICovDQo+ID4gKwlpZiAoIWFyLT5od19wYXJh
-bXMubl9jaXBoZXJfc3VpdGVzKQ0KPiA+ICsJCWFyLT5ody0+d2lwaHktPm5fY2lwaGVyX3N1aXRl
-cyA9IEFSUkFZX1NJWkUoY2lwaGVyX3N1aXRlcyk7DQo+IHRoaXMgaXMgYSBidWcuIHlvdSBkbyBu
-b3Qgc2V0IGFyLT5ody0+d2lwaHktPm5fY2lwaGVyX3N1aXRlcyBpZiBpdHMgbm9uIHplcm8uIHRo
-aXMNCj4gYnJlYWtzIGF0aDEwayBjcnlwdG8gc3VwcG9ydCBmb3IgYWxsIGNoaXBzZXRzIGV4Y2Vw
-dCBmb3IgUUNBOTk4WA0KPg0KT29wcy4uIE15IGJhZC4uIEkgb3Zlcmxvb2tlZCBpdC4gV2lsbCBz
-ZW5kIG5leHQgdmVyc2lvbi4NCg0KLVJhamt1bWFyDQo=
+Application will keep track of whether MAC address randomization
+is enabled or not during scan. But at present driver is storing
+'random_mac' in mwifiex_private which implies even after scan is
+done driver has some reference to the earlier 'scan request'. To
+avoid this, make use of 'mac_addr' variable in 'scan_request' to
+store 'random_mac'. This structure will be freed by cfg80211 once
+scan is done.
+
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 11 ++++-------
+ drivers/net/wireless/marvell/mwifiex/main.h     |  1 -
+ drivers/net/wireless/marvell/mwifiex/scan.c     |  3 ++-
+ 3 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index ad1ebd8..84c1518 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -2529,15 +2529,12 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
+ 	priv->scan_request = request;
+ 
+ 	if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-		ether_addr_copy(priv->random_mac, request->mac_addr);
+ 		for (i = 0; i < ETH_ALEN; i++) {
+-			priv->random_mac[i] &= request->mac_addr_mask[i];
+-			priv->random_mac[i] |= get_random_int() &
+-					       ~(request->mac_addr_mask[i]);
++			request->mac_addr[i] &= request->mac_addr_mask[i];
++			request->mac_addr[i] |=
++				get_random_int() & ~(request->mac_addr_mask[i]);
+ 		}
+-		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
+-	} else {
+-		eth_zero_addr(priv->random_mac);
++		ether_addr_copy(user_scan_cfg->random_mac, request->mac_addr);
+ 	}
+ 
+ 	user_scan_cfg->num_ssids = request->n_ssids;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index a76bd79..a34de85 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -680,7 +680,6 @@ struct mwifiex_private {
+ 	struct mwifiex_user_scan_chan hidden_chan[MWIFIEX_USER_SCAN_CHAN_MAX];
+ 	u8 assoc_resp_ht_param;
+ 	bool ht_param_present;
+-	u8 random_mac[ETH_ALEN];
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index c9d41ed..cddf412 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1948,7 +1948,8 @@ static void mwifiex_complete_scan(struct mwifiex_private *priv)
+ 
+ 	adapter->active_scan_triggered = true;
+ 	if (priv->scan_request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR)
+-		ether_addr_copy(user_scan_cfg->random_mac, priv->random_mac);
++		ether_addr_copy(user_scan_cfg->random_mac,
++				priv->scan_request->mac_addr);
+ 	user_scan_cfg->num_ssids = priv->scan_request->n_ssids;
+ 	user_scan_cfg->ssid_list = priv->scan_request->ssids;
+ 
+-- 
+1.9.1
