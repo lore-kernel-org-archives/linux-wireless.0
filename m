@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:52242 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752970AbdIRPOp (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:60223 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751396AbdISDOD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 11:14:45 -0400
-Received: by mail-io0-f173.google.com with SMTP id i197so2878184ioe.9
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2017 08:14:45 -0700 (PDT)
+        Mon, 18 Sep 2017 23:14:03 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V3 2/5] ath10k: Enable TDLS peer buffer STA feature
+Date: Tue, 19 Sep 2017 11:15:10 +0800
+Message-ID: <1505790913-28377-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051439_942405_DC895C5D)
+In-Reply-To: <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patchset v3>
+ <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1505746857-31938-4-git-send-email-kvalo@qca.qualcomm.com>
-References: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com> <1505746857-31938-4-git-send-email-kvalo@qca.qualcomm.com>
-From: Matteo Croce <mcroce@redhat.com>
-Date: Mon, 18 Sep 2017 17:14:04 +0200
-Message-ID: <CAGnkfhw1bGxD7Z4B=i_xtRJAD5ph_YxEcW0y2F5RTXfPrDkd0A@mail.gmail.com> (sfid-20170918_171449_535892_E3416545)
-Subject: Re: [PATCH 3/3] Revert "ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2"
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 18, 2017 at 5:00 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> This reverts commit c7370e2728c72e5e87f63a48911a925330485a8e.
->
-> 10.2.4.70.63-2 was buggy and lots of people have been reporting crashes, Hauke
-> Mehrtens among others:
->
-> http://lists.infradead.org/pipermail/ath10k/2017-September/010138.html
->
-> This reverts the firmware back to 10.2.4.70.54.
-> ---
->  WHENCE                              |   2 +-
->  ath10k/QCA988X/hw2.0/firmware-5.bin | Bin 249384 -> 248188 bytes
->  2 files changed, 1 insertion(+), 1 deletion(-)
->
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-I can confirm that it crashes on insmod:
+Enable TDLS peer buffer STA feature.
+QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
+it reports this capability through wmi service map in wmi service ready
+event. Set related parameter in TDLS WMI command to enable this feature.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196919
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c     |    3 +++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 +++
+ 2 files changed, 6 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5683f1a..399f9ba 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8204,6 +8204,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
+ 	}
+ 
++	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
++		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
++
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 7616c1c..f60b46e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2747,6 +2747,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
+ 	 */
+ 	u32 options = 0;
+ 
++	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
++		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
++
+ 	len = sizeof(*tlv) + sizeof(*cmd);
+ 	skb = ath10k_wmi_alloc_skb(ar, len);
+ 	if (!skb)
 -- 
-Matteo Croce
-per aspera ad upstream
+1.7.9.5
