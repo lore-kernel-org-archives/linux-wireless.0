@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48556 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751663AbdITMlZ (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:7035 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751590AbdISDOK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:41:25 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 18 Sep 2017 23:14:10 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V3 4/5] ath10k: Avoid to set WEP key for TDLS peer
+Date: Tue, 19 Sep 2017 11:15:12 +0800
+Message-ID: <1505790913-28377-5-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051440_578389_B6F6D341)
+In-Reply-To: <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patchset v3>
+ <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] b43: fix unitialized reads of ret by initializing the array
- to zero
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170905181550.23839-1-colin.king@canonical.com>
-References: <20170905181550.23839-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20170920124124.7B32460725@smtp.codeaurora.org> (sfid-20170920_144141_986971_2951D13F)
-Date: Wed, 20 Sep 2017 12:41:24 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The u8 char array ret is not being initialized and elements outside
-> the range start to end contain just garbage values from the stack.
-> This results in a later scan of the array to read potentially
-> uninitialized values.  Fix this by initializing the array to zero.
-> This seems to have been an issue since the very first commit.
-> 
-> Detected by CoverityScan CID#139652 ("Uninitialized scalar variable")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Reviewed-by: Michael Buesch <m@bues.ch>
+TDLS peer do not need WEP key. Setting WEP key will lead
+to TDLS setup failure. Add fix to avoid setting WEP key
+for TDLS peer.
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-e31fbe1034d9 b43: fix unitialized reads of ret by initializing the array to zero
-e3ae1c772046 b43legacy: fix unitialized reads of ret by initializing the array to zero
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 399f9ba..f6702cb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2966,7 +2966,7 @@ static int ath10k_station_assoc(struct ath10k *ar,
+ 		}
+ 
+ 		/* Plumb cached keys only for static WEP */
+-		if (arvif->def_wep_key_idx != -1) {
++		if ((arvif->def_wep_key_idx != -1) && (!sta->tdls)) {
+ 			ret = ath10k_install_peer_wep_keys(arvif, sta->addr);
+ 			if (ret) {
+ 				ath10k_warn(ar, "failed to install peer wep keys for vdev %i: %d\n",
 -- 
-https://patchwork.kernel.org/patch/9939435/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
