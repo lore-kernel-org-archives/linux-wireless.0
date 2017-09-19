@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35952 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753750AbdIDMrf (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:43824 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751367AbdISUkX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 08:47:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RT2870 failure in kernel 4.12.8
-References: <b08798d4-21eb-6fda-3972-50bc1f4d0e9a@lwfinger.net>
-        <20170831075514.GA12340@redhat.com>
-        <26ef3184-a19e-1bb7-7aa4-4e8647210763@lwfinger.net>
-        <20170901085738.GA18397@redhat.com> <87y3pymqw2.fsf@purkki.adurom.net>
-        <ac74a535-80f7-6211-62ca-1016302d24bd@lwfinger.net>
-Date: Mon, 04 Sep 2017 15:47:30 +0300
-In-Reply-To: <ac74a535-80f7-6211-62ca-1016302d24bd@lwfinger.net> (Larry
-        Finger's message of "Fri, 1 Sep 2017 10:02:16 -0500")
-Message-ID: <874lsipr4t.fsf@kamboji.qca.qualcomm.com> (sfid-20170904_144750_085590_A35639F3)
+        Tue, 19 Sep 2017 16:40:23 -0400
+From: Colin King <colin.king@canonical.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k: make const array reg_hole_list static, reduces object code size
+Date: Tue, 19 Sep 2017 21:40:19 +0100
+Message-Id: <20170919204019.30804-1-colin.king@canonical.com> (sfid-20170919_224040_177044_F4CAD1C0)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> On 09/01/2017 09:31 AM, Kalle Valo wrote:
->> Stanislaw Gruszka <sgruszka@redhat.com> writes:
->>
->>> On Thu, Aug 31, 2017 at 10:33:28AM -0500, Larry Finger wrote:
->>>> Should the patch to wireless-drivers be annotated with a Stable reference so
->>>> that it is added to 4.12 and 4.13?
->>>
->>> According to Documentation/networking/netdev-FAQ.txt networking patches
->>> should not be marked cc:stable, instead a decent commit log should
->>> be written describing a bugfix. Which I believe it is done for
->>> this patch.
->>
->> But that's for net and net-next trees, not for wireless trees. With
->> wireless patches we use "Cc: stable@..." references.
->
-> I see that this patch was just pushed for 4.14. I hope it got the
-> Stable annotation at that time.
+Don't populate the read-only array reg_hole_list on the stack, instead make
+it static.  Makes the object code smaller by over 200 bytes:
 
-Justo to be sure, my understanding is that we are here talking about
-this commit:
+Before:
+   text	   data	    bss	    dec	    hex	filename
+  57518	  15248	      0	  72766	  11c3e	debug.o
 
-rt2800: fix TX_PIN_CFG setting for non MT7620 chips
+After:
+   text	   data	    bss	    dec	    hex	filename
+  57218	  15344	      0	  72562	  11b72	debug.o
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=83ec489193894e52bd395eec470f4f7c4286d4a5
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I applied that already last Wednesday and that was without "Cc: stable".
-So now someone should follow Option 2, wait the commit to hit Linus'
-tree (I expect it to happen some time this week) and then send a note to
-the stable team:
-
-https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html#option-2
-
-Or if the commit doesn't apply cleanly to v4.13 then Option 3 is of
-course the better approach.
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 01fa30117288..5a0a05abd51a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -916,7 +916,7 @@ static int open_file_regdump(struct inode *inode, struct file *file)
+ 	u8 *buf;
+ 	int i, j = 0;
+ 	unsigned long num_regs, regdump_len, max_reg_offset;
+-	const struct reg_hole {
++	static const struct reg_hole {
+ 		u32 start;
+ 		u32 end;
+ 	} reg_hole_list[] = {
 -- 
-Kalle Valo
+2.14.1
