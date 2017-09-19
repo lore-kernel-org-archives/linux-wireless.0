@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:45923 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754958AbdIRQ1E (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28511 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbdISDP7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 12:27:04 -0400
-Received: by mail-pf0-f175.google.com with SMTP id q76so493793pfq.2
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2017 09:27:03 -0700 (PDT)
-Date: Mon, 18 Sep 2017 09:27:00 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>
-Subject: Re: [PATCH] mwifiex: avoid storing random_mac in private
-Message-ID: <20170918162659.GA59044@google.com> (sfid-20170918_182708_031337_038AE329)
-References: <1505717702-10342-1-git-send-email-gbhat@marvell.com>
+        Mon, 18 Sep 2017 23:15:59 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V3 5/5] ath10k: Avoid to set WEP key for TDLS peer
+Date: Tue, 19 Sep 2017 11:17:15 +0800
+Message-ID: <1505791035-28426-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051605_353842_4DE8CE8E)
+In-Reply-To: <TDLS for ath10k patchset v3>
+References: <TDLS for ath10k patchset v3>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1505717702-10342-1-git-send-email-gbhat@marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 18, 2017 at 12:25:02PM +0530, Ganapathi Bhat wrote:
-> Application will keep track of whether MAC address randomization
-> is enabled or not during scan. But at present driver is storing
-> 'random_mac' in mwifiex_private which implies even after scan is
-> done driver has some reference to the earlier 'scan request'. To
-> avoid this, make use of 'mac_addr' variable in 'scan_request' to
-> store 'random_mac'. This structure will be freed by cfg80211 once
-> scan is done.
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+TDLS peer do not need WEP key. Setting WEP key will lead
+to TDLS setup failure. Add fix to avoid setting WEP key
+for TDLS peer.
+
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f6702cb..d2530f7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5841,6 +5841,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		ath10k_warn(ar, "Peer %pM disappeared!\n", peer_addr);
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	if (sta && sta->tdls)
++		ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++					  WMI_PEER_AUTHORIZE, 1);
++
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+-- 
+1.7.9.5
