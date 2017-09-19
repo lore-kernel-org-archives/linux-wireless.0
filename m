@@ -1,91 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0016.hostedemail.com ([216.40.44.16]:41280 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751903AbdIVKqZ (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:45824 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751237AbdISQnV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 06:46:25 -0400
-Message-ID: <1506077181.12311.39.camel@perches.com> (sfid-20170922_124649_259171_8D2D199F)
-Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
- object code size Content-Type: text/plain; charset="utf-8"
- Content-Transfer-Encoding: 8bit
-From: Joe Perches <joe@perches.com>
-To: Julia Lawall <julia.lawall@lip6.fr>,
-        Colin Ian King <colin.king@canonical.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 22 Sep 2017 03:46:21 -0700
-In-Reply-To: <alpine.DEB.2.20.1709221206050.3170@hadrien>
-References: <20170921225630.21916-1-colin.king@canonical.com>
-         <alpine.DEB.2.20.1709220921350.2024@hadrien>
-         <1506074588.12311.37.camel@perches.com>
-         <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>
-         <alpine.DEB.2.20.1709221206050.3170@hadrien>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 19 Sep 2017 12:43:21 -0400
+Received: by mail-pf0-f172.google.com with SMTP id z84so102379pfi.2
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 09:43:20 -0700 (PDT)
+Date: Tue, 19 Sep 2017 09:43:17 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
+Message-ID: <20170919164316.GA4617@google.com> (sfid-20170919_184325_103391_33A2BCBC)
+References: <1505720537-13362-1-git-send-email-gbhat@marvell.com>
+ <87o9q8kuy4.fsf@purkki.adurom.net>
+ <3f3f5c9672a5421db05337a00d9578f2@SC-EXCH02.marvell.com>
+ <87tvzyahht.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87tvzyahht.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-22 at 12:06 +0200, Julia Lawall wrote:
+Hi,
+
+On Tue, Sep 19, 2017 at 05:30:06PM +0300, Kalle Valo wrote:
+> Ganapathi Bhat <gbhat@marvell.com> writes:
 > 
-> On Fri, 22 Sep 2017, Colin Ian King wrote:
+> > Hi Kalle,
+> >> 
+> >> > Avoid calculating random MAC address in driver. Instead make use of
+> >> > 'get_random_mask_addr()' function.
+> >> >
+> >> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> >> 
+> >> I don't see 1/2 anywhere. Did it get lost?
+> >
+> > Actually there is no 1/2. What I did is: 'git send-email'; CTRL + C
+
+It's dependent on this patch though, which kinda should be '1/2':
+
+[PATCH] mwifiex: avoid storing random_mac in private
+
+> > (to correct a typo); and then tried sending it again. I think that
+> > created some problem here. Kindly let me know how to proceed.
 > 
-> > On 22/09/17 11:03, Joe Perches wrote:
-> > > On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
-> > > > 
-> > > > On Thu, 21 Sep 2017, Colin King wrote:
-> > > > 
-> > > > > From: Colin Ian King <colin.king@canonical.com>
-> > > > > 
-> > > > > Don't populate const array ac_to_fifo on the stack in an inlined
-> > > > > function, instead make it static.  Makes the object code smaller
-> > > > > by over 800 bytes:
-> > > > > 
-> > > > >    text	   data	    bss	    dec	    hex	filename
-> > > > >  159029	  33154	   1216	 193399	  2f377	4965-mac.o
-> > > > > 
-> > > > >    text	   data	    bss	    dec	    hex	filename
-> > > > >  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
-> > > > > 
-> > > > > (gcc version 7.2.0 x86_64)
-> > > > 
-> > > > Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
-> > > > change that I got on this file:
-> > > > 
-> > > >      text          data     bss     dec     hex filename
-> > > > -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> > > > +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> > > > decrease of 48
-> > > 
-> > > More likely different CONFIG options.
-> > > 
-> > > e.g. allyesconfig vs defconfig with wireless
-> > > 
-> > 
-> > yup, I used allyesconfig
-> 
-> Mine is also allyesconfig.
+> Ok. I'll wait for review comments and if all goes well I'll apply it in
+> few days.
 
-Odd.
+FWIW, this looks OK to me:
 
-Here is what I get: (Sorry, no gcc-7)
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-gcc4: gcc-4.9 (Ubuntu 4.9.4-2ubuntu1) 4.9.4
-gcc5: gcc-5 (Ubuntu 5.4.1-8ubuntu1) 5.4.1 20170304
-gcc6: gcc-6 (Ubuntu 6.3.0-12ubuntu2) 6.3.0 20170406
+It's just a bit strange that we have to keep our own on-stack temporary
+buffer for this. Maybe this could use an in-place helper too? Or (if
+it's really legal for us to modify the cfg80211_scan_request in-place)
+why doesn't the upper-layer nl80211 code do the randomization for us?
+Many (all?) drivers I see implementing randomization have to do this
+anyway; they don't use request->mac_addr directly. (Or I suppose some
+firmware could implement the randomization on its own someday...but
+would we really trust it?)
 
-$ size drivers/net/wireless/intel/iwlegacy/4965-mac.o*
-   text	   data	    bss	    dec	    hex	filename
- 118559	   1766	    152	 120477	  1d69d	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.allyesconfig.new
- 118623	   1766	    152	 120541	  1d6dd	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.allyesconfig.old
-  51595	   1156	      0	  52751	   ce0f	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.defconfig.new
-  51659	   1156	      0	  52815	   ce4f	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.defconfig.old
- 141956	  29790	   1216	 172962	  2a3a2	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.allyesconfig.new
- 142671	  29702	   1216	 173589	  2a615	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.allyesconfig.old
-  51733	   1156	      0	  52889	   ce99	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.defconfig.new
-  51813	   1156	      0	  52969	   cee9	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.defconfig.old
- 152991	  29790	   1216	 183997	  2cebd	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.allyesconfig.new
- 153722	  29702	   1216	 184640	  2d140	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.allyesconfig.old
-  51813	   1156	      0	  52969	   cee9	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.defconfig.new
-  51893	   1156	      0	  53049	   cf39	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.defconfig.old
+Brian
