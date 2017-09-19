@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:44407 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750703AbdIEIts (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58820 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751009AbdISOt1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 04:49:48 -0400
-Date: Tue, 5 Sep 2017 10:49:32 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Christoph Hellwig <hch@lst.org>, keescook@chromium.org,
-        John Stultz <john.stultz@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/25] mac80211_hwsim: Replace hrtimer tasklet with
- softirq hrtimer
-In-Reply-To: <1504594996.6667.2.camel@sipsolutions.net>
-Message-ID: <alpine.DEB.2.20.1709051047360.1900@nanos> (sfid-20170905_105003_742428_D03C9E73)
-References: <20170831105725.809317030@linutronix.de>  <20170831105827.172599262@linutronix.de> <1504594996.6667.2.camel@sipsolutions.net>
+        Tue, 19 Sep 2017 10:49:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: Re: [PATCH] rsi: sdio suspend and resume support
+References: <1504102172-5262-1-git-send-email-amitkarwar@gmail.com>
+Date: Tue, 19 Sep 2017 17:49:22 +0300
+In-Reply-To: <1504102172-5262-1-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Wed, 30 Aug 2017 19:39:32 +0530")
+Message-ID: <87h8vylp59.fsf@purkki.adurom.net> (sfid-20170919_164932_200435_DD8293C5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 5 Sep 2017, Johannes Berg wrote:
-> On Thu, 2017-08-31 at 12:23 +0000, Anna-Maria Gleixner wrote:
-> > From: Thomas Gleixner <tglx@linutronix.de>
-> > 
-> > Switch the timer to CLOCK_MONOTONIC_SOFT, which executed the timer
-> > callback in softirq context and remove the hrtimer_tasklet.
-> > 
-> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> > Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Cc: Kalle Valo <kvalo@codeaurora.org>
-> > Cc: linux-wireless@vger.kernel.org
-> > 
-> This looks fine to me,
-> 
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> Are you planning to integrate all patches in the series through some
-> other tree, perhaps to be able to get rid of the tasklet_hrtimer API,
-> or should I apply this?
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-The patch depends on the hrtimer core changes, so we either delay the
-removal for a release cycle or just take the whole lot through
-tip:timers/core and get rid of it in one go.
+> From: Karun Eagalapati <karun256@gmail.com>
+>
+> SDIO suspend and resume handlers are implemented and verified
+> that device works after suspend/resume cycle.
+>
+> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Thanks,
+[...]
 
-	tglx
+> +static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
+> +{
+> +	struct rsi_hw *adapter = sdio_get_drvdata(pfunc);
+> +	u8 isr_status = 0, data = 0;
+> +	int ret;
+> +
+> +	rsi_dbg(INFO_ZONE, "Waiting for interrupts to be cleared..");
+> +	do {
+> +		rsi_sdio_read_register(adapter, RSI_FN1_INT_REGISTER,
+> +				       &isr_status);
+> +		rsi_dbg(INFO_ZONE, ".");
+> +	} while (isr_status);
+
+Never ending loops in kernel are always a bad idea, better to add a
+reasonable timeout if/when something goes wrong.
+
+-- 
+Kalle Valo
