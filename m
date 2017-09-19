@@ -1,89 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33686 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933842AbdIZGrr (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:44297 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751374AbdISMd1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 02:47:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
-References: <20170922212930.620249-1-arnd@arndb.de> <20170922212930.620249-5-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com> <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 25 Sep 2017 23:47:45 -0700
-Message-ID: <CAK8P3a37Ts5q7BvA2JWse87huyAp+=e18CUXEt8731RrBnB+Ow@mail.gmail.com> (sfid-20170926_084938_005503_BE806F91)
-Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-To: David Laight <David.Laight@aculab.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=C5=A1ka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 19 Sep 2017 08:33:27 -0400
+Received: by mail-wm0-f52.google.com with SMTP id 189so18278971wmh.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 05:33:26 -0700 (PDT)
+From: Loic Poulain <loic.poulain@linaro.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH] wcn36xx: Disable 5GHz for wcn3620
+Date: Tue, 19 Sep 2017 14:33:23 +0200
+Message-Id: <1505824403-26798-1-git-send-email-loic.poulain@linaro.org> (sfid-20170919_143330_943156_9DABCF36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 11:32 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Mon, Sep 25, 2017 at 7:41 AM, David Laight <David.Laight@aculab.com> wrote:
->> From: Arnd Bergmann
->>> Sent: 22 September 2017 22:29
->> ...
->>> It seems that this is triggered in part by using strlcpy(), which the
->>> compiler doesn't recognize as copying at most 'len' bytes, since strlcpy
->>> is not part of the C standard.
->>
->> Neither is strncpy().
->>
->> It'll almost certainly be a marker in a header file somewhere,
->> so it should be possibly to teach it about other functions.
->
-> I'm currently travelling and haven't investigated in detail, but from
-> taking a closer look here, I found that the hardened 'strlcpy()'
-> in include/linux/string.h triggers it. There is also a hardened
-> (much shorted) 'strncpy()' that doesn't trigger it in the same file,
-> and having only the extern declaration of strncpy also doesn't.
+wcn3620 can only operate on 2.4GHz band due to RF limitation.
+If wcn36xx digital block is associated with an external IRIS
+RF module, retrieve the id and disable 5GHz band in case of
+wcn3620 id.
 
-And a little more experimenting leads to this simple patch that fixes
-the problem:
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c    | 12 +++++++++++-
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++++++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
---- a/include/linux/string.h
-+++ b/include/linux/string.h
-@@ -254,7 +254,7 @@ __FORTIFY_INLINE size_t strlcpy(char *p, const
-char *q, size_t size)
-        size_t q_size = __builtin_object_size(q, 0);
-        if (p_size == (size_t)-1 && q_size == (size_t)-1)
-                return __real_strlcpy(p, q, size);
--       ret = strlen(q);
-+       ret = __builtin_strlen(q);
-        if (size) {
-                size_t len = (ret >= size) ? size - 1 : ret;
-                if (__builtin_constant_p(len) && len >= p_size)
-
-The problem is apparently that the fortified strlcpy calls the fortified strlen,
-which in turn calls strnlen and that ends up calling the extern '__real_strnlen'
-that gcc cannot reduce to a constant expression for a constant input.
-
-Not sure if that change is the best fix, but it seems to address the problem in
-this driver and probably leads to better code in other places as well.
-
-          Arnd
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index a9220b4..c3bc248 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -1089,7 +1089,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+ 	wcn->hw->wiphy->bands[NL80211_BAND_2GHZ] = &wcn_band_2ghz;
+-	wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] = &wcn_band_5ghz;
++	if (wcn->rf_id != RF_IRIS_WCN3620)
++		wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] = &wcn_band_5ghz;
+ 
+ 	wcn->hw->wiphy->max_scan_ssids = WCN36XX_MAX_SCAN_SSIDS;
+ 	wcn->hw->wiphy->max_scan_ie_len = WCN36XX_MAX_SCAN_IE_LEN;
+@@ -1119,6 +1120,7 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
+ 					  struct platform_device *pdev)
+ {
+ 	struct device_node *mmio_node;
++	struct device_node *iris_node;
+ 	struct resource *res;
+ 	int index;
+ 	int ret;
+@@ -1181,6 +1183,14 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
+ 		goto unmap_ccu;
+ 	}
+ 
++	/* External RF module */
++	iris_node = of_find_node_by_name(mmio_node, "iris");
++	if (iris_node) {
++		if (of_device_is_compatible(iris_node, "qcom,wcn3620"))
++			wcn->rf_id = RF_IRIS_WCN3620;
++		of_node_put(iris_node);
++	}
++
+ 	of_node_put(mmio_node);
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index b52b4da9..0643477 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -94,6 +94,9 @@ enum wcn36xx_ampdu_state {
+ #define WCN36XX_FLAGS(__wcn) (__wcn->hw->flags)
+ #define WCN36XX_MAX_POWER(__wcn) (__wcn->hw->conf.chandef.chan->max_power)
+ 
++#define RF_UNKNOWN	0x0000
++#define RF_IRIS_WCN3620	0x3620
++
+ static inline void buff_to_be(u32 *buf, size_t len)
+ {
+ 	int i;
+@@ -238,6 +241,9 @@ struct wcn36xx {
+ 
+ 	struct sk_buff		*tx_ack_skb;
+ 
++	/* RF module */
++	unsigned		rf_id;
++
+ #ifdef CONFIG_WCN36XX_DEBUGFS
+ 	/* Debug file system entry */
+ 	struct wcn36xx_dfs_entry    dfs;
+-- 
+2.7.4
