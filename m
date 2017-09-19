@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:44372 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751666AbdINThE (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20613 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbdISCv0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 15:37:04 -0400
-Received: by mail-io0-f176.google.com with SMTP id v36so3266162ioi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 12:37:04 -0700 (PDT)
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <1505378361.31630.2.camel@sipsolutions.net>
- <14eb89c4-680b-a1b9-c430-9f92a72bb86c@gmail.com>
- <1505414172.31630.13.camel@sipsolutions.net>
- <6f177c6d-ff79-bc9b-6ed6-e91a1ad96899@gmail.com>
- <1505416964.31630.17.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <7210eb81-be88-8554-deb8-1926606ef64b@gmail.com> (sfid-20170914_213707_535616_4F94187D)
-Date: Thu, 14 Sep 2017 14:37:02 -0500
+        Mon, 18 Sep 2017 22:51:26 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V2 5/5] ath10k: Avoid to set WEP key for TDLS peer
+Date: Tue, 19 Sep 2017 10:52:42 +0800
+Message-ID: <1505789562-25389-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_045129_874160_825928F1)
+In-Reply-To: <TDLS for ath10k patchset v2>
+References: <TDLS for ath10k patchset v2>
 MIME-Version: 1.0
-In-Reply-To: <1505416964.31630.17.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
->> My earlier point is that software roams need to have the exact same
->> behavior as well.  And my understanding is that when we try to
->> Fast-Transition (e.g. issue a CMD_ASSOCIATE), operstate is no longer
->> UP.
-> 
-> I'm not sure - I don't know what the state machine in wpa_s goes
-> through here. Probably easier to test than try to reason about the
-> code...
+TDLS peer do not need WEP key. Setting WEP key will lead
+to TDLS setup failure. Add fix to avoid setting WEP key
+for TDLS peer.
 
-I'm talking about the kernel behavior, not wpa_s.  My guys discovered 
-that the kernel seems to twiddle operstate automagically?  E.g. see 
-description of 
-https://git.kernel.org/pub/scm/network/wireless/iwd.git/commit/?id=4d20db05d7c8806749db574e9231bd5d1c476c7f
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-Regards,
--Denis
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f6702cb..d2530f7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5841,6 +5841,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		ath10k_warn(ar, "Peer %pM disappeared!\n", peer_addr);
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	if (sta && sta->tdls)
++		ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++					  WMI_PEER_AUTHORIZE, 1);
++
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+-- 
+1.7.9.5
