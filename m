@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:52495 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751619AbdIOTiL (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:51213 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751397AbdISDN7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 15:38:11 -0400
+        Mon, 18 Sep 2017 23:13:59 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V3 1/5] mac80211: Enable TDLS peer buffer STA feature
+Date: Tue, 19 Sep 2017 11:15:09 +0800
+Message-ID: <1505790913-28377-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051439_693211_12DA16F7)
+In-Reply-To: <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patchset v3>
+ <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk> <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk> <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk> <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 15 Sep 2017 12:38:09 -0700
-Message-ID: <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com> (sfid-20170915_213814_720610_B2F71590)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Srinath Mannam <srinath.mannam@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>
->> In any case, your patch introduces a regression on systems. Please get
->> it reverted now, and then you can come up with a new approach to fix the
->> double enable of the upstream bridge.
->
-> Who's sending in the revert? I can certainly do it if no one else does,
-> but it needs to be done.
->
-> I'm not seeing any patches coming out of Srinath to fix up the
-> situation, so we should revert the broken patch until a better solution
-> exists.
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-Hmm. I don't have the history here (apparently it never made lkml, for
-example), so I don't even know which commit you're talking about.
+Enable TDLS peer buffer STA feature.
+Set extended capability bit to enable buffer STA when driver
+support it.
 
->From some of the context it looks like commit 40f11adc7cd9 ("PCI:
-Avoid race while enabling upstream bridges"), is that correct?
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ include/net/cfg80211.h |    3 +++
+ net/mac80211/tdls.c    |    5 ++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-           Linus
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f12fa52..edefc25 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3249,6 +3249,8 @@ struct cfg80211_ops {
+  *	beaconing mode (AP, IBSS, Mesh, ...).
+  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
+  *	before connection.
++ * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA: Device support buffer STA when TDLS is
++ *	established.
+  */
+ enum wiphy_flags {
+ 	/* use hole at 0 */
+@@ -3275,6 +3277,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+ 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
++	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
+ };
+ 
+ /**
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 91093d4..f99e379 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -49,6 +49,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 			  !ifmgd->tdls_wider_bw_prohibited;
+ 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
+ 	bool vht = sband && sband->vht_cap.vht_supported;
++	bool buffer_sta =
++		local->hw.wiphy->flags & WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
+ 	u8 *pos = skb_put(skb, 10);
+ 
+ 	*pos++ = WLAN_EID_EXT_CAPABILITY;
+@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 	*pos++ = 0x0;
+ 	*pos++ = 0x0;
+ 	*pos++ = 0x0;
+-	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
++	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
++		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
+ 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
+ 	*pos++ = 0;
+ 	*pos++ = 0;
+-- 
+1.7.9.5
