@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:53745 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752156AbdI1ObB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Sep 2017 10:31:01 -0400
+Received: from mga02.intel.com ([134.134.136.20]:56423 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750972AbdISMfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Sep 2017 08:35:50 -0400
+Date: Tue, 19 Sep 2017 15:35:45 +0300
+From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: Add rcu read side critical sections
+Message-ID: <20170919123545.GM4914@intel.com> (sfid-20170919_143557_447527_41D5AC97)
+References: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
+ <1505765477.13691.20.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <2631e8a6-03f2-69ea-d889-afd9a345e7ef@virtuozzo.com>
-References: <20170922212930.620249-1-arnd@arndb.de> <20170922212930.620249-5-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
- <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
- <CAK8P3a37Ts5q7BvA2JWse87huyAp+=e18CUXEt8731RrBnB+Ow@mail.gmail.com>
- <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com> <CAK8P3a2C7DBTfQZvRi-QQfrfm1GXktFcXQRmXmzpF4SCa+BADA@mail.gmail.com>
- <2631e8a6-03f2-69ea-d889-afd9a345e7ef@virtuozzo.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 28 Sep 2017 07:30:59 -0700
-Message-ID: <CAK8P3a3BiPh+d4vcb4pbbOsZLegp6YGk+BU3L=71sxatTuk-GQ@mail.gmail.com> (sfid-20170928_163219_315372_51132E1E)
-Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: David Laight <David.Laight@aculab.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=C5=A1ka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1505765477.13691.20.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 28, 2017 at 6:09 AM, Andrey Ryabinin
-<aryabinin@virtuozzo.com> wrote:
-> On 09/27/2017 04:26 PM, Arnd Bergmann wrote:
->> On Tue, Sep 26, 2017 at 9:49 AM, Andrey Ryabinin
->> <aryabinin@virtuozzo.com> wrote:
+On Mon, Sep 18, 2017 at 10:11:17PM +0200, Johannes Berg wrote:
+> > I got the following lockdep warning about the rcu_dereference()s in
+> > ieee80211_tx_h_select_key(). After tracing all callers of
+> > ieee80211_tx_h_select_key() I discovered that
+> > ieee80211_get_buffered_bc()
+> > and ieee80211_build_data_template() had the rcu_read_lock/unlock()
+> > but
+> > three other places did not. So I just blindly added them and made the
+> > read side critical section extend as far as the lifetime of 'tx'
+> > which
+> > is where we seem to be stuffing the rcu protected pointers. No real
+> > clue whether this is correct or not.
+> 
+> Heh.
+> 
+> I think we should do it in ieee80211_tx_dequeue(),
 
->> --- a/include/linux/string.h
->> +++ b/include/linux/string.h
->> @@ -227,7 +227,7 @@ static inline const char *kbasename(const char *path)
->>  #define __FORTIFY_INLINE extern __always_inline __attribute__((gnu_inline))
->>  #define __RENAME(x) __asm__(#x)
->>
->> -void fortify_panic(const char *name) __noreturn __cold;
->> +void fortify_panic(const char *name) __cold;
->>  void __read_overflow(void) __compiletime_error("detected read beyond
->> size of object passed as 1st parameter");
->>  void __read_overflow2(void) __compiletime_error("detected read beyond
->> size of object passed as 2nd parameter");
->>  void __read_overflow3(void) __compiletime_error("detected read beyond
->> size of object passed as 3rd parameter");
->>
->> I don't immediately see why the __noreturn changes the behavior here, any idea?
->>
->
->
-> At first I thought that this somehow might be related to __asan_handle_no_return(). GCC calls it
-> before noreturn function. So I made patch to remove generation of these calls (we don't need them in the kernel anyway)
-> but it didn't help. It must be something else than.
+Oh, I guess I didn't trace the call chains far enough. ieee80211_tx()
+does indeed look OK. But unless I made another mistake in my analysis
+ieee80211_tx_prepare_skb() is still busted.
 
-I made a reduced test case yesterday (see http://paste.ubuntu.com/25628030/),
-and it shows the same behavior with and without the sanitizer, it uses 128
-bytes without the noreturn attribute and 480 bytes when its added, the sanitizer
-adds a factor of 1.5x on top. It's possible that I did something wrong while
-reducing, since the original driver file uses very little stack (a few hundred
-bytes) without -fsanitize=kernel-address, but finding out what happens in
-the reduced case may still help understand the other one.
+> if not even in the
+> driver (and document that it's required)
+> 
+> johannes
+> 
+> > @@ -3411,6 +3430,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
+> > ieee80211_hw *hw,
+> >  	ieee80211_tx_result r;
+> >  	struct ieee80211_vif *vif;
+> >  
+> > +	rcu_read_lock();
+> > +
+> >  	spin_lock_bh(&fq->lock);
+> >  
+> >  	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
+> > @@ -3513,6 +3534,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
+> > ieee80211_hw *hw,
+> >  out:
+> >  	spin_unlock_bh(&fq->lock);
+> >  
+> > +	rcu_read_unlock();
+> > 
+> 
+> i.e. this in itself should be sufficient, though you should probably
+> reorder and acquire the spinlock first since that might spin, and you
+> want to keep the RCU section minimal (it's trivial here, after all)
 
-        Arnd
+Good point. I'll respin with that change.
+
+-- 
+Ville Syrjälä
+Intel OTC
