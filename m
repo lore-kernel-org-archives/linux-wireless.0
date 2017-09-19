@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:14799 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751795AbdIVHXS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 03:23:18 -0400
-Date: Fri, 22 Sep 2017 09:23:16 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Colin King <colin.king@canonical.com>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
- object code size Content-Type: text/plain; charset="utf-8" Content-Transfer-Encoding:
- 8bit
-In-Reply-To: <20170921225630.21916-1-colin.king@canonical.com>
-Message-ID: <alpine.DEB.2.20.1709220921350.2024@hadrien> (sfid-20170922_092335_594816_137CFEA3)
-References: <20170921225630.21916-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s3.sipsolutions.net ([5.9.151.49]:51274 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750747AbdISHUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Sep 2017 03:20:53 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-11-19
+Date: Tue, 19 Sep 2017 09:20:47 +0200
+Message-Id: <20170919072048.8484-1-johannes@sipsolutions.net> (sfid-20170919_092100_117918_F3096792)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave,
+
+Here's a new set of two small changes to prevent null pointer
+dereferences on malformed netlink messages.
+
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
 
 
-On Thu, 21 Sep 2017, Colin King wrote:
 
-> From: Colin Ian King <colin.king@canonical.com>
->
-> Don't populate const array ac_to_fifo on the stack in an inlined
-> function, instead make it static.  Makes the object code smaller
-> by over 800 bytes:
->
->    text	   data	    bss	    dec	    hex	filename
->  159029	  33154	   1216	 193399	  2f377	4965-mac.o
->
->    text	   data	    bss	    dec	    hex	filename
->  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
->
-> (gcc version 7.2.0 x86_64)
+The following changes since commit 126f760ca94dae77425695f9f9238b731de86e32:
 
-Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
-change that I got on this file:
+  rds: Fix incorrect statistics counting (2017-09-07 20:07:13 -0700)
 
-     text          data     bss     dec     hex filename
--   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-+   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-decrease of 48
+are available in the git repository at:
 
-julia
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-19
 
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> index de9b6522c43f..65eba2c24292 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> @@ -1480,7 +1480,7 @@ il4965_get_ac_from_tid(u16 tid)
->  static inline int
->  il4965_get_fifo_from_tid(u16 tid)
->  {
-> -	const u8 ac_to_fifo[] = {
-> +	static const u8 ac_to_fifo[] = {
->  		IL_TX_FIFO_VO,
->  		IL_TX_FIFO_VI,
->  		IL_TX_FIFO_BE,
-> --
-> 2.14.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+for you to fetch changes up to 265698d7e6132a2d41471135534f4f36ad15b09c:
+
+  nl80211: fix null-ptr dereference on invalid mesh configuration (2017-09-18 22:51:07 +0200)
+
+----------------------------------------------------------------
+Just two netlink fixes, both allowing privileged users
+to crash the kernel with malformed netlink messages.
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      nl80211: fix null-ptr dereference on invalid mesh configuration
+
+Vladis Dronov (1):
+      nl80211: check for the required netlink attributes presence
+
+ net/wireless/nl80211.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
