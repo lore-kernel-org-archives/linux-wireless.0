@@ -1,159 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:32937 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753090AbdI0N0W (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:7035 "EHLO
+        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751587AbdISDOG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Sep 2017 09:26:22 -0400
+        Mon, 18 Sep 2017 23:14:06 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V3 3/5] ath10k: Enable TDLS peer inactivity detection
+Date: Tue, 19 Sep 2017 11:15:11 +0800
+Message-ID: <1505790913-28377-4-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051440_333764_A41BB127)
+In-Reply-To: <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patchset v3>
+ <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com>
-References: <20170922212930.620249-1-arnd@arndb.de> <20170922212930.620249-5-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
- <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
- <CAK8P3a37Ts5q7BvA2JWse87huyAp+=e18CUXEt8731RrBnB+Ow@mail.gmail.com> <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 27 Sep 2017 06:26:21 -0700
-Message-ID: <CAK8P3a2C7DBTfQZvRi-QQfrfm1GXktFcXQRmXmzpF4SCa+BADA@mail.gmail.com> (sfid-20170927_152634_584818_6208083D)
-Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: David Laight <David.Laight@aculab.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=C5=A1ka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 9:49 AM, Andrey Ryabinin
-<aryabinin@virtuozzo.com> wrote:
->
->
-> On 09/26/2017 09:47 AM, Arnd Bergmann wrote:
->> On Mon, Sep 25, 2017 at 11:32 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
->> +       ret = __builtin_strlen(q);
->
->
-> I think this is not correct. Fortified strlen called here on purpose. If sizeof q is known at compile time
-> and 'q' contains not-null fortified strlen() will panic.
+Enable TDLS peer inactivity detetion feature.
+QCA6174 firmware(version: WLAN.RM.4.4) support TDLS link inactivity detecting.
+Set related parameters in TDLS WMI command to enable this feature.
 
-Ok, got it.
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   52 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 +++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
+ 3 files changed, 76 insertions(+)
 
->>         if (size) {
->>                 size_t len = (ret >= size) ? size - 1 : ret;
->>                 if (__builtin_constant_p(len) && len >= p_size)
->>
->> The problem is apparently that the fortified strlcpy calls the fortified strlen,
->> which in turn calls strnlen and that ends up calling the extern '__real_strnlen'
->> that gcc cannot reduce to a constant expression for a constant input.
->
->
-> Per my observation, it's the code like this:
->         if ()
->                 fortify_panic(__func__);
->
->
-> somehow prevent gcc to merge several "struct i2c_board_info info;" into one stack slot.
-> With the hack bellow, stack usage reduced to ~1,6K:
-
-1.6k is also what I see with my patch, or any other approach I tried
-that changes
-string.h. With the split up em28xx_dvb_init() function (and without
-changes to string.h),
-I got down to a few hundred bytes for the largest handler.
-
-> ---
->  include/linux/string.h | 4 ----
->  1 file changed, 4 deletions(-)
->
-> diff --git a/include/linux/string.h b/include/linux/string.h
-> index 54d21783e18d..9a96ff3ebf94 100644
-> --- a/include/linux/string.h
-> +++ b/include/linux/string.h
-> @@ -261,8 +261,6 @@ __FORTIFY_INLINE __kernel_size_t strlen(const char *p)
->         if (p_size == (size_t)-1)
->                 return __builtin_strlen(p);
->         ret = strnlen(p, p_size);
-> -       if (p_size <= ret)
-> -               fortify_panic(__func__);
->         return ret;
->  }
->
-> @@ -271,8 +269,6 @@ __FORTIFY_INLINE __kernel_size_t strnlen(const char *p, __kernel_size_t maxlen)
->  {
->         size_t p_size = __builtin_object_size(p, 0);
->         __kernel_size_t ret = __real_strnlen(p, maxlen < p_size ? maxlen : p_size);
-> -       if (p_size <= ret && maxlen != ret)
-> -               fortify_panic(__func__);
->         return ret;
-
-I've reduced it further to this change:
-
---- a/include/linux/string.h
-+++ b/include/linux/string.h
-@@ -227,7 +227,7 @@ static inline const char *kbasename(const char *path)
- #define __FORTIFY_INLINE extern __always_inline __attribute__((gnu_inline))
- #define __RENAME(x) __asm__(#x)
-
--void fortify_panic(const char *name) __noreturn __cold;
-+void fortify_panic(const char *name) __cold;
- void __read_overflow(void) __compiletime_error("detected read beyond
-size of object passed as 1st parameter");
- void __read_overflow2(void) __compiletime_error("detected read beyond
-size of object passed as 2nd parameter");
- void __read_overflow3(void) __compiletime_error("detected read beyond
-size of object passed as 3rd parameter");
-
-I don't immediately see why the __noreturn changes the behavior here, any idea?
-
->> Not sure if that change is the best fix, but it seems to address the problem in
->> this driver and probably leads to better code in other places as well.
->>
->
-> Probably it would be better to solve this on the strlcpy side, but I haven't found the way to do this right.
-> Alternative solutions:
->
->  - use memcpy() instead of strlcpy(). All source strings are smaller than I2C_NAME_SIZE, so we could
->    do something like this - memcpy(info.type, "si2168", sizeof("si2168"));
->    Also this should be faster.
-
-This would be very similar to the patch I posted at the start of this
-thread to use strncpy(), right?
-I was hoping that changing strlcpy() here could also improve other
-users that might run into
-the same situation, but stay below the 2048-byte stack frame limit.
-
->  - Move code under different "case:" in the switch(dev->model) to the separate function should help as well.
->    But it might be harder to backport into stables.
-
-Agreed, I posted this in earlier versions of the patch series, see
-https://patchwork.kernel.org/patch/9601025/
-
-The new patch was a result of me trying to come up with a less
-invasive version to
-make it easier to backport, since I would like to backport the last
-patch in the series
-that depends on all the earlier ones.
-
-         Arnd
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index f60b46e..63bb2c4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -412,6 +412,49 @@ static int ath10k_wmi_tlv_event_tx_pause(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++void ath10k_wmi_event_tdls_peer(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct ieee80211_sta *station;
++	const struct wmi_tlv_tdls_peer_event *ev;
++	const void **tb;
++	struct ath10k_vif *arvif;
++
++	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
++	if (IS_ERR(tb)) {
++		ath10k_warn(ar, "tdls peer failed to parse tlv");
++		return;
++	}
++	ev = tb[WMI_TLV_TAG_STRUCT_TDLS_PEER_EVENT];
++	if (!ev) {
++		kfree(tb);
++		ath10k_warn(ar, "tdls peer NULL event");
++		return;
++	}
++
++	switch (ev->peer_reason) {
++	case WMI_TDLS_TEARDOWN_REASON_TX:
++	case WMI_TDLS_TEARDOWN_REASON_RSSI:
++	case WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT:
++		station = ieee80211_find_sta_by_ifaddr(ar->hw,
++						       ev->peer_macaddr.addr,
++						       NULL);
++		if (!station) {
++			ath10k_warn(ar, "did not find station from tdls peer event");
++			kfree(tb);
++			return;
++		}
++		arvif = ath10k_get_arvif(ar, ev->vdev_id);
++		ieee80211_tdls_oper_request(
++					arvif->vif, station->addr,
++					NL80211_TDLS_TEARDOWN,
++					WLAN_REASON_TDLS_TEARDOWN_UNREACHABLE,
++					GFP_ATOMIC
++					);
++		break;
++	}
++	kfree(tb);
++}
++
+ /***********/
+ /* TLV ops */
+ /***********/
+@@ -552,6 +595,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_TLV_TX_PAUSE_EVENTID:
+ 		ath10k_wmi_tlv_event_tx_pause(ar, skb);
+ 		break;
++	case WMI_TLV_TDLS_PEER_EVENTID:
++		ath10k_wmi_event_tdls_peer(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+@@ -2750,6 +2796,12 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
+ 	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
+ 		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
+ 
++	/* WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL means firm will handle TDLS
++	 * link inactivity detecting logic.
++	 */
++	if (state == WMI_TDLS_ENABLE_ACTIVE)
++		state = WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL;
++
+ 	len = sizeof(*tlv) + sizeof(*cmd);
+ 	skb = ath10k_wmi_alloc_skb(ar, len);
+ 	if (!skb)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 22cf011..00d68c5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1641,6 +1641,29 @@ struct wmi_tlv_tx_pause_ev {
+ 	__le32 tid_map;
+ } __packed;
+ 
++struct wmi_tlv_tdls_peer_event {
++	struct wmi_mac_addr    peer_macaddr;
++	__le32 peer_status;
++	__le32 peer_reason;
++	__le32 vdev_id;
++} __packed;
++
++enum wmi_tdls_peer_reason {
++	WMI_TDLS_TEARDOWN_REASON_TX,
++	WMI_TDLS_TEARDOWN_REASON_RSSI,
++	WMI_TDLS_TEARDOWN_REASON_SCAN,
++	WMI_TDLS_DISCONNECTED_REASON_PEER_DELETE,
++	WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT,
++	WMI_TDLS_TEARDOWN_REASON_BAD_PTR,
++	WMI_TDLS_TEARDOWN_REASON_NO_RESPONSE,
++	WMI_TDLS_ENTER_BUF_STA,
++	WMI_TDLS_EXIT_BUF_STA,
++	WMI_TDLS_ENTER_BT_BUSY_MODE,
++	WMI_TDLS_EXIT_BT_BUSY_MODE,
++	WMI_TDLS_SCAN_STARTED_EVENT,
++	WMI_TDLS_SCAN_COMPLETED_EVENT,
++};
++
+ void ath10k_wmi_tlv_attach(struct ath10k *ar);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 7a3606d..74a6c78 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6720,6 +6720,7 @@ enum wmi_tdls_state {
+ 	WMI_TDLS_DISABLE,
+ 	WMI_TDLS_ENABLE_PASSIVE,
+ 	WMI_TDLS_ENABLE_ACTIVE,
++	WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL,
+ };
+ 
+ enum wmi_tdls_peer_state {
+-- 
+1.7.9.5
