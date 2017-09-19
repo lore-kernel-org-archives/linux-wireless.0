@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47770 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751887AbdITMfx (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57594 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751451AbdISDN4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:35:53 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 18 Sep 2017 23:13:56 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [TDLS PATCH V3 0/5] Add TDLS feature for ath10k
+Date: Tue, 19 Sep 2017 11:15:08 +0800
+Message-ID: <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051439_311255_6A4FB998)
+In-Reply-To: <TDLS for ath10k patchset v3>
+References: <TDLS for ath10k patchset v3>
 MIME-Version: 1.0
-Subject: Re: [v2,1/2] qtnfmac: lock access to h/w in tx path
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170918122950.32612-2-sergey.matyukevich.os@quantenna.com>
-References: <20170918122950.32612-2-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Message-Id: <20170920123553.7121D6070F@smtp.codeaurora.org> (sfid-20170920_143557_336629_9C31B8A6)
-Date: Wed, 20 Sep 2017 12:35:53 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-> Fix tx path regression. Lock should be held when queuing packets
-> to h/w fifos in order to properly handle configurations with
-> multiple enabled interfaces.
-> 
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+This patchset is for Rome PCIE chip, it will not affect other hardware
 
-2 patches applied to wireless-drivers.git, thanks.
+Yingying Tang (5):
+  mac80211: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer inactivity detection
+  ath10k: Avoid to set WEP key for TDLS peer
+  ath10k: Avoid to set WEP key for TDLS peer
 
-20da2ec06bfa qtnfmac: lock access to h/w in tx path
-a715b3a0efe7 qtnfmac: cancel scans on wireless interface changes
+ drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
+ include/net/cfg80211.h                    |    3 ++
+ net/mac80211/tdls.c                       |    5 ++-
+ 6 files changed, 94 insertions(+), 2 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/9956607/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
