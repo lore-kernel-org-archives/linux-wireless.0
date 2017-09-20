@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:38641 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751054AbdILQfn (ORCPT
+Received: from mail-io0-f181.google.com ([209.85.223.181]:49475 "EHLO
+        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751390AbdITShK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 12:35:43 -0400
-Received: by mail-it0-f48.google.com with SMTP id c195so30792610itb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Sep 2017 09:35:43 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-Cc: linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <d8c38f27-cdc3-bc91-8900-907744cd1ebf@kernel.dk> (sfid-20170912_183547_026569_83FA9A87)
-Date: Tue, 12 Sep 2017 10:35:33 -0600
+        Wed, 20 Sep 2017 14:37:10 -0400
+Received: by mail-io0-f181.google.com with SMTP id 21so5661778iof.6
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 11:37:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1505232673.5400.243.camel@intel.com>
-Content-Type: text/plain; charset=utf-8
+From: Andrey Konovalov <andreyknvl@google.com>
+Date: Wed, 20 Sep 2017 20:37:08 +0200
+Message-ID: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com> (sfid-20170920_203731_501448_278A9D79)
+Subject: usb/net/p54: trying to register non-static key in p54_unregister_leds
+To: Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2017 10:11 AM, Coelho, Luciano wrote:
-> Hi Jens,
-> 
-> On Tue, 2017-09-12 at 09:48 -0600, Jens Axboe wrote:
->> Hi,
->>
->> I have no wifi in current git (8fac2f96ab8), it simply fails with:
->>
->> [    4.363481] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
->> [    4.363733] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
->> [    4.363744] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
->> [    4.368077] iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
->> [    4.461753] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
->> [ ... ]
->> [    9.510570] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
->> [    9.513903] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
->> [    9.516201] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
->> [    9.530842] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
->>
->> I get the same thing with -27 of the firmware:
->>
->> [   60.990831] Intel(R) Wireless WiFi driver for Linux                          
->> [   60.990833] Copyright(c) 2003- 2015 Intel Corporation                        
->> [   60.991936] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
->> [   60.991941] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
->> [   60.991946] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
->> [   60.991957] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
->> [   60.991964] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
->> [   60.991969] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
->> [   60.991975] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
->> [   61.029852] iwlwifi 0000:04:00.0: loaded firmware version 27.541033.0 op_mode iwlmvm
->> [   61.043660] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
->> [   66.070135] iwlwifi 0000:04:00.0: Failed to load firmware chunk!             
->> [   66.070149] iwlwifi 0000:04:00.0: Could not load the [0] uCode section       
->> [   66.070165] iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110           
->> [   66.083462] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110             
->>
->> Things work fine in 4.13-rc7+, which was the last kernel I ran on my laptop.
-> 
-> This is strange, Linus has been running this same combination with -31
-> (with -27 we had a regression, but it was fixed recently and the fix is
-> in the current master).  I have also tried this combination with both
-> -27 and -31 after my fix and it works fine.
+Hi!
 
-It's 100% reproducible, I booted in and out of current -git and 4.13-rc7+
-a few times and the latter never works while the former works fine. I
-haven't seen this issue before on previous kernels.
+I've got the following report while fuzzing the kernel with syzkaller.
 
-> There are only a couple of other patches that may affect iwlwifi since
-> the previous net-next.git pull request...
-> 
-> I'll try this combination on my machine and see if I can reproduce the
-> problem.
+On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
 
-Let me know if you have something I can try.
-
--- 
-Jens Axboe
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
+4.14.0-rc1-42251-gebb2c2437d80-dirty #205
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ __dump_stack lib/dump_stack.c:16
+ dump_stack+0x292/0x395 lib/dump_stack.c:52
+ register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
+ __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
+ lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
+ flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
+ __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
+ cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
+ p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
+ p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
+ p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
+ usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
+ __device_release_driver drivers/base/dd.c:861
+ device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
+ device_release_driver+0x1e/0x30 drivers/base/dd.c:918
+ bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
+ device_del+0x5c4/0xab0 drivers/base/core.c:1985
+ usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
+ usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
+ hub_port_connect drivers/usb/core/hub.c:4754
+ hub_port_connect_change drivers/usb/core/hub.c:5009
+ port_event drivers/usb/core/hub.c:5115
+ hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
+ process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+ process_scheduled_works kernel/workqueue.c:2179
+ worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
+ kthread+0x3a1/0x470 kernel/kthread.c:231
+ ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
