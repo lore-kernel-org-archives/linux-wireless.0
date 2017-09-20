@@ -1,414 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:54221 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752557AbdI2TsS (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37422 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751669AbdITT1q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 15:48:18 -0400
-Received: by mail-oi0-f65.google.com with SMTP id j126so1071803oia.10
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:18 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 10/10] rtlwifi: Add module parameter ASPM
-Date: Fri, 29 Sep 2017 14:48:00 -0500
-Message-Id: <20170929194800.15617-11-Larry.Finger@lwfinger.net> (sfid-20170929_214820_409832_438CA04D)
-In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+        Wed, 20 Sep 2017 15:27:46 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Andrey Konovalov <andreyknvl@google.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
+        Yong Zhang <yong.zhang0@gmail.com>
+Subject: Re: usb/net/p54: trying to register non-static key in p54_unregister_leds
+Date: Wed, 20 Sep 2017 21:27:42 +0200
+Message-ID: <2277141.bYDD1vAb9W@debian64> (sfid-20170920_212816_631524_D372B13F)
+In-Reply-To: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
+References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Wednesday, September 20, 2017 8:37:08 PM CEST Andrey Konovalov wrote:
+> Hi!
+> 
+> I've got the following report while fuzzing the kernel with syzkaller.
+> 
+> On commit ebb2c2437d8008d46796902ff390653822af6cc4 (Sep 18).
+> 
+> INFO: trying to register non-static key.
+> the code is fine but needs lockdep annotation.
+> turning off the locking correctness validator.
+> CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
+> 4.14.0-rc1-42251-gebb2c2437d80-dirty #205
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+> Workqueue: usb_hub_wq hub_event
+> Call Trace:
+>  __dump_stack lib/dump_stack.c:16
+>  dump_stack+0x292/0x395 lib/dump_stack.c:52
+>  register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
+>  __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
+>  lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
+>  flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
+>  __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
+>  cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
+>  p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
+>  p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
+>  p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
+>  usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
+>  __device_release_driver drivers/base/dd.c:861
+>  device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
+>  device_release_driver+0x1e/0x30 drivers/base/dd.c:918
+>  bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
+>  device_del+0x5c4/0xab0 drivers/base/core.c:1985
+>  usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
+>  usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
+>  hub_port_connect drivers/usb/core/hub.c:4754
+>  hub_port_connect_change drivers/usb/core/hub.c:5009
+>  port_event drivers/usb/core/hub.c:5115
+>  hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
+>  process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+>  process_scheduled_works kernel/workqueue.c:2179
+>  worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
+>  kthread+0x3a1/0x470 kernel/kthread.c:231
+>  ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
+> 
 
-On some platforms, enable ASPM will cause AER error to be logged, thus
-we use a parameter to selectively turn on ASPM.
+It seems this is caused as a result of:
+    -> lock_map_acquire(&work->lockdep_map);
+	    lock_map_release(&work->lockdep_map);
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 6 +++++-
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 3 +++
- 9 files changed, 43 insertions(+), 8 deletions(-)
+    in flush_work() [0]
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-index 57e5d5c1d24b..35de3aeafcc9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-@@ -41,6 +41,7 @@
- 
- static void rtl88e_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -77,7 +78,7 @@ static void rtl88e_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
-@@ -276,6 +277,7 @@ static struct rtl_mod_params rtl88ee_mod_params = {
- 	.swctrl_lps = false,
- 	.fwctrl_lps = false,
- 	.msi_support = true,
-+	.aspm_support = 1,
- 	.debug_level = 0,
- 	.debug_mask = 0,
- };
-@@ -399,6 +401,7 @@ module_param_named(ips, rtl88ee_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl88ee_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl88ee_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(msi, rtl88ee_mod_params.msi_support, bool, 0444);
-+module_param_named(aspm, rtl88ee_mod_params.aspm_support, int, 0444);
- module_param_named(disable_watchdog, rtl88ee_mod_params.disable_watchdog,
- 		   bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-@@ -406,6 +409,7 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 1)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index 38f85bfdf0c7..71a6761d3648 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -44,6 +44,7 @@
- 
- static void rtl92c_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -83,7 +84,7 @@ static void rtl92c_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
-@@ -252,6 +253,7 @@ static struct rtl_mod_params rtl92ce_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
-+	.aspm_support = 1,
- 	.debug_level = 0,
- 	.debug_mask = 0,
- };
-@@ -375,10 +377,12 @@ module_param_named(debug_mask, rtl92ce_mod_params.debug_mask, ullong, 0644);
- module_param_named(ips, rtl92ce_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl92ce_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92ce_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(aspm, rtl92ce_mod_params.aspm_support, int, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index a6549f5f6c59..d5ba2bace79b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -40,6 +40,7 @@
- 
- static void rtl92d_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -79,7 +80,7 @@ static void rtl92d_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
-@@ -254,6 +255,7 @@ static struct rtl_mod_params rtl92de_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = true,
- 	.fwctrl_lps = false,
-+	.aspm_support = 1,
- 	.debug_level = 0,
- 	.debug_mask = 0,
- };
-@@ -369,11 +371,13 @@ module_param_named(debug_level, rtl92de_mod_params.debug_level, int, 0644);
- module_param_named(ips, rtl92de_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(aspm, rtl92de_mod_params.aspm_support, int, 0444);
- module_param_named(debug_mask, rtl92de_mod_params.debug_mask, ullong, 0644);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 0)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index 701493c1f235..ef92a789871d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -44,6 +44,7 @@
- 
- static void rtl92ee_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -83,7 +84,7 @@ static void rtl92ee_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
-@@ -260,6 +261,7 @@ static struct rtl_mod_params rtl92ee_mod_params = {
- 	.fwctrl_lps = true,
- 	.msi_support = true,
- 	.dma64 = false,
-+	.aspm_support = 1,
- 	.debug_level = 0,
- 	.debug_mask = 0,
- };
-@@ -378,6 +380,7 @@ module_param_named(swlps, rtl92ee_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92ee_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(msi, rtl92ee_mod_params.msi_support, bool, 0444);
- module_param_named(dma64, rtl92ee_mod_params.dma64, bool, 0444);
-+module_param_named(aspm, rtl92ee_mod_params.aspm_support, int, 0444);
- module_param_named(disable_watchdog, rtl92ee_mod_params.disable_watchdog,
- 		   bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-@@ -386,6 +389,7 @@ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 1)\n");
- MODULE_PARM_DESC(dma64, "Set to 1 to use DMA 64 (default 0)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index d715d537ca0a..d55554b7fa9a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -41,6 +41,7 @@
- 
- static void rtl92s_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -77,7 +78,7 @@ static void rtl92s_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 2;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
-@@ -297,6 +298,7 @@ static struct rtl_mod_params rtl92se_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = true,
- 	.fwctrl_lps = false,
-+	.aspm_support = 2,
- 	.debug_level = 0,
- 	.debug_mask = 0,
- };
-@@ -422,10 +424,12 @@ module_param_named(debug_mask, rtl92se_mod_params.debug_mask, ullong, 0644);
- module_param_named(ips, rtl92se_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(aspm, rtl92se_mod_params.aspm_support, int, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 0)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index 97b8bd294aa8..a545ea317323 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -46,6 +46,7 @@
- 
- static void rtl8723e_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -85,7 +86,7 @@ static void rtl8723e_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
-@@ -268,6 +269,7 @@ static struct rtl_mod_params rtl8723e_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
-+	.aspm_support = 1,
- 	.debug_level = 0,
- 	.debug_mask = 0,
- 	.msi_support = false,
-@@ -389,6 +391,7 @@ module_param_named(ips, rtl8723e_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl8723e_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl8723e_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(msi, rtl8723e_mod_params.msi_support, bool, 0444);
-+module_param_named(aspm, rtl8723e_mod_params.aspm_support, int, 0444);
- module_param_named(disable_watchdog, rtl8723e_mod_params.disable_watchdog,
- 		   bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-@@ -396,6 +399,7 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index 2b16a1467e78..6a42988aad65 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -46,6 +46,7 @@
- 
- static void rtl8723be_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -82,7 +83,7 @@ static void rtl8723be_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
-@@ -271,6 +272,7 @@ static struct rtl_mod_params rtl8723be_mod_params = {
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
- 	.msi_support = false,
-+	.aspm_support = 1,
- 	.disable_watchdog = false,
- 	.debug_level = 0,
- 	.debug_mask = 0,
-@@ -396,6 +398,7 @@ module_param_named(ips, rtl8723be_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(msi, rtl8723be_mod_params.msi_support, bool, 0444);
-+module_param_named(aspm, rtl8723be_mod_params.aspm_support, int, 0444);
- module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
- 		   bool, 0444);
- module_param_named(ant_sel, rtl8723be_mod_params.ant_sel, int, 0444);
-@@ -404,6 +407,7 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- MODULE_PARM_DESC(disable_watchdog,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index 0894ef48ab87..ab5d462b1a3a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -43,6 +43,7 @@
- 
- static void rtl8821ae_init_aspm_vars(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
- 	/*close ASPM for AMD defaultly */
-@@ -82,7 +83,7 @@ static void rtl8821ae_init_aspm_vars(struct ieee80211_hw *hw)
- 	 * 1 - Support ASPM,
- 	 * 2 - According to chipset.
- 	 */
--	rtlpci->const_support_pciaspm = 1;
-+	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
- }
- 
- /*InitializeVariables8812E*/
-@@ -313,6 +314,7 @@ static struct rtl_mod_params rtl8821ae_mod_params = {
- 	.swctrl_lps = false,
- 	.fwctrl_lps = true,
- 	.msi_support = true,
-+	.aspm_support = 1,
- 	.int_clear = true,
- 	.debug_level = 0,
- 	.debug_mask = 0,
-@@ -444,6 +446,7 @@ module_param_named(ips, rtl8821ae_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl8821ae_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl8821ae_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(msi, rtl8821ae_mod_params.msi_support, bool, 0444);
-+module_param_named(aspm, rtl8821ae_mod_params.aspm_support, int, 0444);
- module_param_named(disable_watchdog, rtl8821ae_mod_params.disable_watchdog,
- 		   bool, 0444);
- module_param_named(int_clear, rtl8821ae_mod_params.int_clear, bool, 0444);
-@@ -452,6 +455,7 @@ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
- MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 1)\n");
-+MODULE_PARM_DESC(aspm, "Set to 1 to enable ASPM (default 1)\n");
- MODULE_PARM_DESC(debug_level, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(debug_mask, "Set debug mask (default 0)");
- MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 4decf1e71ba8..7dfc73b554f1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2262,6 +2262,9 @@ struct rtl_mod_params {
- 	/* default: 0 = dma 32 */
- 	bool dma64;
- 
-+	/* default: 1 = enable aspm */
-+	int aspm_support;
-+
- 	/* default 0: 1 means disable */
- 	bool disable_watchdog;
- 
--- 
-2.13.5
+This was added by:
+
+	commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
+	Author: Stephen Boyd <sboyd@codeaurora.org>
+	Date:   Fri Apr 20 17:28:50 2012 -0700
+
+	workqueue: Catch more locking problems with flush_work()
+    
+Looking at the Stephen's patch, it's clear that it was made
+with "static DECLARE_WORK(work, my_work)" in mind. However
+p54's led_work is "per-device", hence it is stored in the
+devices context p54_common, which is dynamically allocated.
+So, maybe revert Stephen's patch?
+
+[0] <http://elixir.free-electrons.com/linux/latest/source/kernel/workqueue.c#L2853>
