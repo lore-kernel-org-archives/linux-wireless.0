@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f171.google.com ([209.85.217.171]:33734 "EHLO
-        mail-ua0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753994AbdIDTdb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 15:33:31 -0400
-Received: by mail-ua0-f171.google.com with SMTP id g47so3583553uad.0
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Sep 2017 12:33:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <eacde476-6130-6ab1-ea09-ceb2d3a58aaa@broadcom.com>
-References: <AC37C967-209B-4BC3-9AF2-9CC4C27391C0@lairdtech.com> <eacde476-6130-6ab1-ea09-ceb2d3a58aaa@broadcom.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Mon, 4 Sep 2017 12:33:30 -0700
-Message-ID: <CALupW3Ck8ELx89DnZ+z1v7igxX6Zgek8pHHeCfSxuN4wCr0mxA@mail.gmail.com> (sfid-20170904_213334_838322_DFE1131F)
-Subject: Re: [PATCH v2] brcmfmac: Correctly fail to suspend when SDIO does not
- support power on suspend
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Eric Bentley <Eric.Bentley@lairdtech.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57202 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751000AbdITTzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Sep 2017 15:55:10 -0400
+Message-ID: <1505937307.3026.20.camel@sipsolutions.net> (sfid-20170920_215529_257548_2D0F856C)
+Subject: Re: usb/net/p54: trying to register non-static key in
+ p54_unregister_leds
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+        Andrey Konovalov <andreyknvl@google.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
+        Yong Zhang <yong.zhang0@gmail.com>
+Date: Wed, 20 Sep 2017 21:55:07 +0200
+In-Reply-To: <2277141.bYDD1vAb9W@debian64> (sfid-20170920_212816_631524_D372B13F)
+References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
+         <2277141.bYDD1vAb9W@debian64> (sfid-20170920_212816_631524_D372B13F)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 1, 2017 at 1:02 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> Also note that the wifi chip (the term "radio" does not quite cover it) has
-> not really lost power. It is quite common that it is not powered through the
-> SDIO bus. With the power-sequence support in the MMC stack these days the
-> suspend may result in loss of power. Otherwise, it is just the bus that
-> loses power (and clock) and the flags affect what tricks the MMC stack tries
-> to pull to get the device accessible again upon resume.
->
-Arend,
+On Wed, 2017-09-20 at 21:27 +0200, Christian Lamparter wrote:
 
-Indeed - I'm familiar with the platform that Eric is using and it is
-exactly as you say: the chip is powered externally. There's some
-platform issues here that need to be resolved in addition, but the
-change to brcmfmac stands alone OK.
+> It seems this is caused as a result of:
+>     -> lock_map_acquire(&work->lockdep_map);
+> 	    lock_map_release(&work->lockdep_map);
+> 
+>     in flush_work() [0]
 
-> Maybe you can incorporate some of this in the commit message, but you should
-> at least add:
->
-> Fixes: 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
-> Fixes: bdf1340cf20f ("brcmfmac: fix sdio suspend and resume")
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->
->> Signed-off-by: Eric Bentley eric.bentley@lairdtech.com
+Agree.
 
-I've tested the patch on my platforms and works as expected. Eric,
-please add my:
+> This was added by:
+> 
+> 	commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
+> 	Author: Stephen Boyd <sboyd@codeaurora.org>
+> 	Date:   Fri Apr 20 17:28:50 2012 -0700
+> 
+> 	workqueue: Catch more locking problems with flush_work()
 
-Tested-by: Steve deRosier <derosier@gmail.com>
+Yes, but that doesn't matter.
+    
+> Looking at the Stephen's patch, it's clear that it was made
+> with "static DECLARE_WORK(work, my_work)" in mind. However
+> p54's led_work is "per-device", hence it is stored in the
+> devices context p54_common, which is dynamically allocated.
+> So, maybe revert Stephen's patch?
 
-Thanks,
-- Steve
+I disagree - as the lockdep warning says:
+
+> > INFO: trying to register non-static key.
+> > the code is fine but needs lockdep annotation.
+> > turning off the locking correctness validator.
+
+What it needs is to actually correctly go through initializing the work
+at least once.
+
+Without more information, I can't really say what's going on, but I
+assume that something is failing and p54_unregister_leds() is getting
+invoked without p54_init_leds() having been invoked, so essentially
+it's trying to flush a work that was never initialized?
+
+INIT_DELAYED_WORK() does, after all, initialize the lockdep map
+properly via __INIT_WORK().
+
+johannes
