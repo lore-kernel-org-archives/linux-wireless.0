@@ -1,97 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36152 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752177AbdI2Qoe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 12:44:34 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+Received: from mga05.intel.com ([192.55.52.43]:24532 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751660AbdITMLl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Sep 2017 08:11:41 -0400
+Date: Wed, 20 Sep 2017 15:11:37 +0300
+From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 19:44:06 +0300
-Message-Id: <20170929164423.23666-2-luca@coelho.fi> (sfid-20170929_200758_842169_5E9DECC0)
-In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
-References: <20170929164423.23666-1-luca@coelho.fi>
-Subject: [PATCH 01/18] iwlwifi: mvm: don't send identical PHY_CTXT_CMD
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] mac80211: Add rcu read side critical sections
+Message-ID: <20170920121137.GZ4914@intel.com> (sfid-20170920_141144_539527_4A22A0FA)
+References: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
+ <20170920101123.23312-1-ville.syrjala@linux.intel.com>
+ <1505903964.3026.14.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1505903964.3026.14.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, Sep 20, 2017 at 12:39:24PM +0200, Johannes Berg wrote:
+> On Wed, 2017-09-20 at 13:11 +0300, Ville Syrjala wrote:
+> 
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -1770,15 +1770,21 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+> >  	struct ieee80211_tx_data tx;
+> >  	struct sk_buff *skb2;
+> >  
+> > -	if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP)
+> > +	rcu_read_lock();
+> 
+> The documentation says:
+> 
+> /**
+>  * ieee80211_tx_prepare_skb - prepare an 802.11 skb for transmission
+>  * @hw: pointer as obtained from ieee80211_alloc_hw()
+>  * @vif: virtual interface
+>  * @skb: frame to be sent from within the driver
+>  * @band: the band to transmit on
+>  * @sta: optional pointer to get the station to send the frame to
+>  *
+>  * Note: must be called under RCU lock
+>  */
+> 
+> You can't even argue that it should be the function itself doing it,
+> because the (admittedly optional) sta pointer would otherwise not have
+> proper protection after you leave the function ... You can't pass out a
+> sta pointer that's RCU protected.
 
-When we have an AP which supports HT and a single HT
-station is connected, we change the min_width from
-NL80211_CHAN_WIDTH_20_NOHT to NL80211_CHAN_WIDTH_20. This
-of course has no implication on the channel width but still
-sends a command to the firmware.
-Remember the last width that was sent and refrain from
-sending unnecessary commands to the firmware.
+Yeah, I suppose that would need rcu_handoff+some other mechanism to
+make sure it stays around after that.
 
-Sending a PHY_CTXT_CMD to the firmware has a cost since it
-recalculates the presence on the medium and because of that
-it closes the transmit queues for a short while.
+> 
+> Side note: Perhaps some annotation should be there? not sure it's
+> possible - would have to be something like
+> 	struct ieee80211_sta * __rcu *sta;
+> 
+> I guess since the outer pointer isn't protected, only the inner ...
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 14 ++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c |  1 +
- 3 files changed, 17 insertions(+)
+I think just the fact that even the pointers in ieee80211_tx_data don't
+have the __rcu annotation makes it rather hard to see what is really rcu
+protected and what isn't. If every user of those pointers would have to
+do the rcu_dereference() things would be rather more explicit.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d7530474c1d3..d6180463e92f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3406,10 +3406,24 @@ static void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
- 		return;
- 
- 	mutex_lock(&mvm->mutex);
-+
-+	/* we are only changing the min_width, may be a noop */
-+	if (changed == IEEE80211_CHANCTX_CHANGE_MIN_WIDTH) {
-+		if (phy_ctxt->width == ctx->min_def.width)
-+			goto out_unlock;
-+
-+		/* we are just toggling between 20_NOHT and 20 */
-+		if (phy_ctxt->width <= NL80211_CHAN_WIDTH_20 &&
-+		    ctx->min_def.width <= NL80211_CHAN_WIDTH_20)
-+			goto out_unlock;
-+	}
-+
- 	iwl_mvm_bt_coex_vif_change(mvm);
- 	iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &ctx->min_def,
- 				 ctx->rx_chains_static,
- 				 ctx->rx_chains_dynamic);
-+
-+out_unlock:
- 	mutex_unlock(&mvm->mutex);
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index e8be5104b909..2867683f1aa0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -147,6 +147,8 @@ struct iwl_mvm_phy_ctxt {
- 	u16 color;
- 	u32 ref;
- 
-+	enum nl80211_chan_width width;
-+
- 	/*
- 	 * TODO: This should probably be removed. Currently here only for rate
- 	 * scaling algorithm
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-index 7ee8e9077baf..305cd56bf746 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
-@@ -272,6 +272,7 @@ int iwl_mvm_phy_ctxt_changed(struct iwl_mvm *mvm, struct iwl_mvm_phy_ctxt *ctxt,
- 	}
- 
- 	ctxt->channel = chandef->chan;
-+	ctxt->width = chandef->width;
- 	return iwl_mvm_phy_ctxt_apply(mvm, ctxt, chandef,
- 				      chains_static, chains_dynamic,
- 				      action, 0);
+> Therefore, this patch is wrong.
+
+OK, so the problem is in ath9k then.
+
+> I actually think the same is true for ieee80211_tx_dequeue(), but I'm
+> less sure about it - the sta pointer there clearly is somehow safely
+> passed in (even if it's w/o RCU, the driver can potentially make that
+> safe), but the key pointer seems unsafe in this case (as well) if
+> there's no outer RCU protection.
+
+Well, I think this is as far as I want to dig into the matter. I can
+respin the patch once more with just tx_dequeue() fix in there, if you
+want (not sure you do if you think it's wrong as well). After that I'll
+leave it to someone who actually knows what they're doing with mac80211 ;)
+
 -- 
-2.14.1
+Ville Syrjälä
+Intel OTC
