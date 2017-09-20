@@ -1,97 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:37745 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751089AbdILH7J (ORCPT
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:53339 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752052AbdITX2T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 03:59:09 -0400
-Received: by mail-wr0-f176.google.com with SMTP id k20so18809645wre.4
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Sep 2017 00:59:09 -0700 (PDT)
-Subject: Re: [PATCH V2 1/3] brcmfmac: Avoid possible out-of-bounds read
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20170909193020.19061-1-cernekee@chromium.org>
- <deff51ff-40f0-ffa4-afd0-b95465c66a8e@broadcom.com>
- <87tw08mpq1.fsf@purkki.adurom.net> <59B78E94.5040909@broadcom.com>
- <87o9qgicju.fsf@kamboji.qca.qualcomm.com>
-Cc: Kevin Cernekee <cernekee@chromium.org>, franky.lin@broadcom.com,
-        brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59B793C9.2030103@broadcom.com> (sfid-20170912_095913_246580_94700B91)
-Date: Tue, 12 Sep 2017 09:59:05 +0200
-MIME-Version: 1.0
-In-Reply-To: <87o9qgicju.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Wed, 20 Sep 2017 19:28:19 -0400
+Received: by mail-pg0-f48.google.com with SMTP id j70so2525943pgc.10
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 16:28:19 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>,
+        Krzysztof Halasa <khc@pm.waw.pl>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jens Axboe <axboe@fb.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 13/31] timer: Remove meaningless .data/.function assignments
+Date: Wed, 20 Sep 2017 16:27:37 -0700
+Message-Id: <1505950075-50223-14-git-send-email-keescook@chromium.org> (sfid-20170921_013100_585606_38DF2BD7)
+In-Reply-To: <1505950075-50223-1-git-send-email-keescook@chromium.org>
+References: <1505950075-50223-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/12/2017 9:47 AM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> On 9/12/2017 7:48 AM, Kalle Valo wrote:
->>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->>>
->>>> On 09-09-17 21:30, Kevin Cernekee wrote:
->>>>> In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
->>>>> the length of rxframe is validated.  This could lead to uninitialized
->>>>> data being accessed (but not printed).  Since we already have a
->>>>> perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
->>>>> and ch.chspec is not modified by decchspec(), avoid the extra
->>>>> assignment and use ch.chspec in the debug print.
->>>>>
->>>>> Suggested-by: Mattias Nissler <mnissler@chromium.org>
->>>>> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
->>>>> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>>> ---
->>>>>     drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
->>>>>     1 file changed, 1 insertion(+), 2 deletions(-)
->>>>>
->>>>>
->>>>> V1->V2: Clarify changelog re: whether the uninitialized data is printed.
->>>>
->>>> This patch and the others in this series look fine to me.
->>>
->>> Should these go to v4.14?
->>
->> I have no strong opinion. These are certainly improvements, but it
->> does not seem an -rc fix to me. Within this series I would say patch
->> 3/3 adds an additional sanity check in the event processing against an
->> attack so you may consider adding just that one to v4.14
->
-> Ok, I'll queue patch 3 to v4.14.
->
->> and tag it for stable, ie.:
->>
->> Cc: stable@vger.kernel.org # v3.8.x
->
-> But why v3.8.x? I admit that I haven't fully figured out the stable tags
-> yet, but doesn't that mean that it will be only applied to v3.8.x and
-> nothing else? I was expecting it to be:
->
-> Cc: stable@vger.kernel.org # v3.8+
->
+Several timer users needlessly reset their .function/.data fields during
+their timer callback, but nothing else changes them. Some users do not
+use their .data field at all. Each instance is removed here.
 
-It is actually in the stable-kernel-rules documentation [1]:
+Cc: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>
+Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # for staging
+Acked-by: Krzysztof Halasa <khc@pm.waw.pl> # for wan/hdlc*
+Acked-by: Jens Axboe <axboe@kernel.dk> # for amiflop
+---
+ drivers/block/amiflop.c                           | 3 +--
+ drivers/net/wan/hdlc_cisco.c                      | 2 --
+ drivers/net/wan/hdlc_fr.c                         | 2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
+ 4 files changed, 2 insertions(+), 9 deletions(-)
 
-"""
-Also, some patches may have kernel version prerequisites.  This can be
-specified in the following format in the sign-off area:
-
-.. code-block:: none
-
-      Cc: <stable@vger.kernel.org> # 3.3.x
-
-The tag has the meaning of:
-
-.. code-block:: none
-
-      git cherry-pick <this commit>
-
-For each "-stable" tree starting with the specified version.
-"""
-
-The event handling code was added in v3.8.
-
-Regards,
-Arend
-
-[1] https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+diff --git a/drivers/block/amiflop.c b/drivers/block/amiflop.c
+index c4b1cba27178..6680d75bc857 100644
+--- a/drivers/block/amiflop.c
++++ b/drivers/block/amiflop.c
+@@ -323,7 +323,7 @@ static void fd_deselect (int drive)
+ 
+ }
+ 
+-static void motor_on_callback(unsigned long nr)
++static void motor_on_callback(unsigned long ignored)
+ {
+ 	if (!(ciaa.pra & DSKRDY) || --on_attempts == 0) {
+ 		complete_all(&motor_on_completion);
+@@ -344,7 +344,6 @@ static int fd_motor_on(int nr)
+ 		fd_select(nr);
+ 
+ 		reinit_completion(&motor_on_completion);
+-		motor_on_timer.data = nr;
+ 		mod_timer(&motor_on_timer, jiffies + HZ/2);
+ 
+ 		on_attempts = 10;
+diff --git a/drivers/net/wan/hdlc_cisco.c b/drivers/net/wan/hdlc_cisco.c
+index c696d42f4502..6c98d85f2773 100644
+--- a/drivers/net/wan/hdlc_cisco.c
++++ b/drivers/net/wan/hdlc_cisco.c
+@@ -276,8 +276,6 @@ static void cisco_timer(unsigned long arg)
+ 	spin_unlock(&st->lock);
+ 
+ 	st->timer.expires = jiffies + st->settings.interval * HZ;
+-	st->timer.function = cisco_timer;
+-	st->timer.data = arg;
+ 	add_timer(&st->timer);
+ }
+ 
+diff --git a/drivers/net/wan/hdlc_fr.c b/drivers/net/wan/hdlc_fr.c
+index de42faca076a..7da2424c28a4 100644
+--- a/drivers/net/wan/hdlc_fr.c
++++ b/drivers/net/wan/hdlc_fr.c
+@@ -644,8 +644,6 @@ static void fr_timer(unsigned long arg)
+ 			state(hdlc)->settings.t391 * HZ;
+ 	}
+ 
+-	state(hdlc)->timer.function = fr_timer;
+-	state(hdlc)->timer.data = arg;
+ 	add_timer(&state(hdlc)->timer);
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ac5aaafa461c..60f088babf27 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -266,7 +266,7 @@ static void update_scan_time(void)
+ 		last_scanned_shadow[i].time_scan = jiffies;
+ }
+ 
+-static void remove_network_from_shadow(unsigned long arg)
++static void remove_network_from_shadow(unsigned long unused)
+ {
+ 	unsigned long now = jiffies;
+ 	int i, j;
+@@ -287,7 +287,6 @@ static void remove_network_from_shadow(unsigned long arg)
+ 	}
+ 
+ 	if (last_scanned_cnt != 0) {
+-		hAgingTimer.data = arg;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 	}
+ }
+@@ -304,7 +303,6 @@ static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
+ 	int i;
+ 
+ 	if (last_scanned_cnt == 0) {
+-		hAgingTimer.data = (unsigned long)user_void;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 		state = -1;
+ 	} else {
+-- 
+2.7.4
