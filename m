@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50200 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754323AbdIZKBh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 06:01:37 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, toke@toke.dk,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] mac80211: make STA_SLOW_THRESHOLD local
-Date: Tue, 26 Sep 2017 11:59:47 +0200
-Message-Id: <1506419987-22995-1-git-send-email-sgruszka@redhat.com> (sfid-20170926_120321_477619_4BB249F5)
+Received: from smtp.codeaurora.org ([198.145.29.96]:51966 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751673AbdITMrl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Sep 2017 08:47:41 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: make const arrays static to shink object code size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170916153424.28285-1-colin.king@canonical.com>
+References: <20170916153424.28285-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170920124740.CCDD160912@smtp.codeaurora.org> (sfid-20170920_144759_114660_683B65B3)
+Date: Wed, 20 Sep 2017 12:47:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-STA_SLOW_THRESHOLD is used only in one function, so don't need to be
-global define.
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Patch also fixes problem of htmldocs build I encountered:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Don't populate const arrays on the stack, instead make them static
+> Makes the object code smaller by nearly 300 bytes:
+> 
+> Before:
+>    text	   data	    bss	    dec	    hex	filename
+>   69260	  16149	    576	  85985	  14fe1	cfg80211.o
+> 
+> After:
+>    text	   data	    bss	    dec	    hex	filename
+>   68385	  16725	    576	  85686	  14eb6	cfg80211.o
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Error(.//net/mac80211/sta_info.h:416): cannot understand prototype: 'STA_SLOW_THRESHOLD 6000  '
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/sta_info.c |    8 +++++++-
- net/mac80211/sta_info.h |    8 --------
- 2 files changed, 7 insertions(+), 9 deletions(-)
+d157bcfaf854 mwifiex: make const arrays static to shink object code size
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6961501..b79c2d0 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2319,10 +2319,16 @@ unsigned long ieee80211_sta_last_active(struct sta_info *sta)
- 
- static void sta_update_codel_params(struct sta_info *sta, u32 thr)
- {
-+	/* The bandwidth threshold below which the per-station CoDel parameters
-+	 * will be scaled to be more lenient (to prevent starvation of slow
-+	 * stations). Value will be scaled by the number of active stations.
-+	 */
-+	const unsigned int slow_threshold = 6000; /* 6Mbps */
-+
- 	if (!sta->sdata->local->ops->wake_tx_queue)
- 		return;
- 
--	if (thr && thr < STA_SLOW_THRESHOLD * sta->local->num_sta) {
-+	if (thr && thr < slow_threshold * sta->local->num_sta) {
- 		sta->cparams.target = MS2TIME(50);
- 		sta->cparams.interval = MS2TIME(300);
- 		sta->cparams.ecn = false;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 3acbdfa..24eeab8 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -399,14 +399,6 @@ struct ieee80211_sta_rx_stats {
- };
- 
- /**
-- * The bandwidth threshold below which the per-station CoDel parameters will be
-- * scaled to be more lenient (to prevent starvation of slow stations). This
-- * value will be scaled by the number of active stations when it is being
-- * applied.
-- */
--#define STA_SLOW_THRESHOLD 6000 /* 6 Mbps */
--
--/**
-  * struct sta_info - STA information
-  *
-  * This structure collects information about a station that
 -- 
-1.7.1
+https://patchwork.kernel.org/patch/9954375/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
