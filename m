@@ -1,139 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:49835 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751843AbdIOTcd (ORCPT
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:35943 "EHLO
+        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751510AbdITIGe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 15:32:33 -0400
-Received: by mail-pg0-f50.google.com with SMTP id m30so2055861pgn.6
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Sep 2017 12:32:33 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-From: Jens Axboe <axboe@kernel.dk>
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
- <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
- <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
- <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
- <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
-Message-ID: <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk> (sfid-20170915_213238_036693_0CACAE0F)
-Date: Fri, 15 Sep 2017 13:32:26 -0600
+        Wed, 20 Sep 2017 04:06:34 -0400
+Received: by mail-vk0-f68.google.com with SMTP id w23so489712vkw.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 01:06:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1505889853-20493-1-git-send-email-huxinming820@gmail.com>
+References: <1505889853-20493-1-git-send-email-huxinming820@gmail.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Wed, 20 Sep 2017 13:36:32 +0530
+Message-ID: <CAFqt6zbMExWwykzNmU1Q8snvSyX-XJE+QTivrtBZGHEGKqyUSA@mail.gmail.com> (sfid-20170920_100642_380075_957BF577)
+Subject: Re: [PATCH] mwifiex: add device specific ioctl handler
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2017 02:36 PM, Jens Axboe wrote:
-> On 09/14/2017 02:04 PM, Srinath Mannam wrote:
->> Hi Jens Axboe,
->>
->>
->> On Thu, Sep 14, 2017 at 11:14 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>> On 09/14/2017 11:35 AM, Jens Axboe wrote:
->>>> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
->>>>> Hi Bjorn,
->>>>>
->>>>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>
->>>>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
->>>>>>> [+cc linux-pci]
->>>>>>>
->>>>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->>>>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>>>>>>>>
->>>>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>>>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>>>>>>>>> functional changes.
->>>>>>>>>
->>>>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
->>>>>>>>> still enables mastering in that case if it isn't:
->>>>>>>>>
->>>>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
->>>>>>>>> {
->>>>>>>>> [...]
->>>>>>>>>         if (pci_is_enabled(dev)) {
->>>>>>>>>                 if (!dev->is_busmaster)
->>>>>>>>>                         pci_set_master(dev);
->>>>>>>>>                 return;
->>>>>>>>>         }
->>>>>>>>>
->>>>>>>>> so I guess due to the new check we end up with mastering disabled, and
->>>>>>>>> thus the firmware can't load since that's a DMA thing?
->>>>>>>>
->>>>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
->>>>>>>> from working on a pretty standard laptop. It'd suck to have this be in
->>>>>>>> -rc1. Seems like the trivial fix would be:
->>>>>>>>
->>>>>>>>
->>>>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>>>>> index b0002daa50f3..ffbe11dbdd61 100644
->>>>>>>> --- a/drivers/pci/pci.c
->>>>>>>> +++ b/drivers/pci/pci.c
->>>>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->>>>>>>>                 return 0;               /* already enabled */
->>>>>>>>
->>>>>>>>         bridge = pci_upstream_bridge(dev);
->>>>>>>> -       if (bridge && !pci_is_enabled(bridge))
->>>>>>>> +       if (bridge)
->>>>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
->>>>> pci_enable_bridge functoin will causes a nexted lock.
->>>>
->>>> Took a look, and looks like you are right. That code looks like a mess,
->>>> fwiw.
->>>>
->>>> I'd strongly suggest that the bad commit is reverted until a proper
->>>> solution is found, since the simple one-liner could potentially
->>>> introduce a deadlock with your patch applied.
->>>
->>> BTW, your patch looks pretty bad too, introducing a random mutex
->>> deep on code that can be recursive. Why isn't this check in
->>> pci_enable_device_flags() enough to prevent double-enable of
->>> an upstream bridge?
->>>
->>> if (atomic_inc_return(&dev->enable_cnt) > 1)
->>>         return 0;               /* already enabled */
->>>
->> This check only to verify device enable not for the bus master check.
->> But device enable function calls the bridge enable if it has the bridge.
->> Bridge enable function enables both device and bus master.
->>
->> Here the issue might be because, bridge of endpoint has already set
->> device enable without set bus master in some other context. which is
->> wrong.
->> because all bridges should enable with bridge_enable function only.
->> So we see the problem In this context, because "if (bridge &&
->> !pci_is_enabled(bridge))" check stops bridge enable which intern stops
->> bus master.
->> pci_enable_bridge function always makes sure that both device and bus
->> master are enabled in any case. If pci_enable_bridge function is not
->> called means, that bridge is already has device enable flag set. which
->> is not from pci_enable_bridge function.
-> 
-> In any case, your patch introduces a regression on systems. Please get
-> it reverted now, and then you can come up with a new approach to fix the
-> double enable of the upstream bridge.
+On Wed, Sep 20, 2017 at 12:14 PM, Xinming Hu <huxinming820@gmail.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+>
+> Add net_dev ndo_do_ioctl handler, which could be used for
+> downloading host command by utility in manufactory test
+>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 59 +++++++++++++++++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/main.c   | 23 +++++++++++
+>  drivers/net/wireless/marvell/mwifiex/main.h   |  7 +++-
+>  3 files changed, 88 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> index 0edc5d6..86ee399 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> @@ -839,6 +839,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+>                         hostcmd = adapter->curr_cmd->data_buf;
+>                         hostcmd->len = size;
+>                         memcpy(hostcmd->cmd, resp, size);
+> +                       adapter->hostcmd_resp_data.len = size;
+> +                       memcpy(adapter->hostcmd_resp_data.cmd, resp, size);
+>                 }
+>         }
+>         orig_cmdresp_no = le16_to_cpu(resp->command);
+> @@ -1221,6 +1223,63 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
+>  }
+>  EXPORT_SYMBOL_GPL(mwifiex_process_hs_config);
+>
+> +/* This function get hostcmd data from userspace and construct a cmd
+> + * to be download to FW.
+> + */
+> +int mwifiex_process_host_command(struct mwifiex_private *priv,
+> +                                struct ifreq *req)
+> +{
+> +       struct mwifiex_ds_misc_cmd *hostcmd_buf;
+> +       struct host_cmd_ds_command *cmd;
+> +       struct mwifiex_adapter *adapter = priv->adapter;
+> +       int ret;
+> +
+> +       hostcmd_buf = kzalloc(sizeof(*hostcmd_buf), GFP_KERNEL);
 
-Who's sending in the revert? I can certainly do it if no one else does,
-but it needs to be done.
+will it be sizeof(*hostcmd_buf) or sizeof( struct mwifiex_ds_misc_cmd *) ?
 
-I'm not seeing any patches coming out of Srinath to fix up the
-situation, so we should revert the broken patch until a better solution
-exists.
+> +       if (!hostcmd_buf)
+> +               return -ENOMEM;
+> +
+> +       cmd = (void *)hostcmd_buf->cmd;
+> +
+> +       if (copy_from_user(cmd, req->ifr_data,
+> +                          sizeof(cmd->command) + sizeof(cmd->size))) {
+> +               ret = -EFAULT;
+> +               goto done;
+> +       }
+> +
+> +       hostcmd_buf->len = le16_to_cpu(cmd->size);
+> +       if (hostcmd_buf->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
+> +               ret = -EINVAL;
+> +               goto done;
+> +       }
+> +
+> +       if (copy_from_user(cmd, req->ifr_data, hostcmd_buf->len)) {
+> +               ret = -EFAULT;
+> +               goto done;
+> +       }
+> +
+> +       if (mwifiex_send_cmd(priv, 0, 0, 0, hostcmd_buf, true)) {
+> +               dev_err(priv->adapter->dev, "Failed to process hostcmd\n");
+> +               ret = -EFAULT;
+> +               goto done;
+> +       }
+> +
+> +       if (adapter->hostcmd_resp_data.len > hostcmd_buf->len) {
+> +               ret = -EFBIG;
+> +               goto done;
+> +       }
+> +
+> +       if (copy_to_user(req->ifr_data, adapter->hostcmd_resp_data.cmd,
+> +                        adapter->hostcmd_resp_data.len)) {
+> +               ret = -EFAULT;
+> +               goto done;
+> +       }
+> +
+> +       ret = 0;
+> +done:
+> +       kfree(hostcmd_buf);
+> +       return ret;
+> +}
+> +
+>  /*
+>   * This function handles the command response of a sleep confirm command.
+>   *
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index ee40b73..3e7700f 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -1265,12 +1265,35 @@ static struct net_device_stats *mwifiex_get_stats(struct net_device *dev)
+>         return mwifiex_1d_to_wmm_queue[skb->priority];
+>  }
+>
+> +static int mwifiex_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
+> +{
+> +       struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+> +       int ret;
+> +
+> +       if (!priv->adapter->mfg_mode)
+> +               return -EINVAL;
 
--- 
-Jens Axboe
+ret can be used instead of returning -EINVAL.
+
+> +
+> +       mwifiex_dbg(priv->adapter, "ioctl cmd = 0x%x\n", cmd);
+> +
+> +       switch (cmd) {
+> +       case MWIFIEX_HOSTCMD_IOCTL:
+> +               ret = mwifiex_process_host_command(priv, req);
+> +               break;
+> +       default:
+> +               ret = -EINVAL;
+> +               break;
+> +       }
+> +
+> +       return ret;
+> +}
+> +
+>  /* Network device handlers */
+>  static const struct net_device_ops mwifiex_netdev_ops = {
+>         .ndo_open = mwifiex_open,
+>         .ndo_stop = mwifiex_close,
+>         .ndo_start_xmit = mwifiex_hard_start_xmit,
+>         .ndo_set_mac_address = mwifiex_ndo_set_mac_address,
+> +       .ndo_do_ioctl = mwifiex_do_ioctl,
+>         .ndo_validate_addr = eth_validate_addr,
+>         .ndo_tx_timeout = mwifiex_tx_timeout,
+>         .ndo_get_stats = mwifiex_get_stats,
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+> index a76bd79..4639f49 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
+> @@ -160,6 +160,9 @@ enum {
+>  /* Threshold for tx_timeout_cnt before we trigger a card reset */
+>  #define TX_TIMEOUT_THRESHOLD   6
+>
+> +/* IOCTL number used for hostcmd process*/
+> +#define MWIFIEX_HOSTCMD_IOCTL (SIOCDEVPRIVATE + 1)
+> +
+>  #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
+>
+>  /* Address alignment */
+> @@ -912,6 +915,7 @@ struct mwifiex_adapter {
+>         u8 event_received;
+>         u8 data_received;
+>         u16 seq_num;
+> +       struct mwifiex_ds_misc_cmd hostcmd_resp_data;
+>         struct cmd_ctrl_node *cmd_pool;
+>         struct cmd_ctrl_node *curr_cmd;
+>         /* spin lock for command */
+> @@ -1611,7 +1615,8 @@ int mwifiex_get_tdls_list(struct mwifiex_private *priv,
+>  u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
+>                                  u32 pri_chan, u8 chan_bw);
+>  int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
+> -
+> +int mwifiex_process_host_command(struct mwifiex_private *priv,
+> +                                struct ifreq *req);
+>  int mwifiex_tdls_check_tx(struct mwifiex_private *priv, struct sk_buff *skb);
+>  void mwifiex_flush_auto_tdls_list(struct mwifiex_private *priv);
+>  void mwifiex_auto_tdls_update_peer_status(struct mwifiex_private *priv,
+> --
+> 1.9.1
+>
