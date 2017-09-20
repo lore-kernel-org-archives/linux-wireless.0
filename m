@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36196 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752177AbdI2Qoj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53524 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751590AbdITMsY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 12:44:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 19:44:08 +0300
-Message-Id: <20170929164423.23666-4-luca@coelho.fi> (sfid-20170929_200759_103602_D0A6FF0B)
-In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
-References: <20170929164423.23666-1-luca@coelho.fi>
-Subject: [PATCH 03/18] iwlwifi: mvm: add marker cmd response struct.
+        Wed, 20 Sep 2017 08:48:24 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: avoid storing random_mac in private
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1505717702-10342-1-git-send-email-gbhat@marvell.com>
+References: <1505717702-10342-1-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20170920124823.1608660C52@smtp.codeaurora.org> (sfid-20170920_144827_047954_C1A30411)
+Date: Wed, 20 Sep 2017 12:48:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-This helps for documentation and clarifies the code by defining the
-exact response struct for the marker command.
+> Application will keep track of whether MAC address randomization
+> is enabled or not during scan. But at present driver is storing
+> 'random_mac' in mwifiex_private which implies even after scan is
+> done driver has some reference to the earlier 'scan request'. To
+> avoid this, make use of 'mac_addr' variable in 'scan_request' to
+> store 'random_mac'. This structure will be freed by cfg80211 once
+> scan is done.
+> 
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/commands.h | 1 +
- drivers/net/wireless/intel/iwlwifi/fw/api/debug.h    | 9 +++++++++
- 2 files changed, 10 insertions(+)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-index 074868394427..7ebbf097488b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-@@ -504,6 +504,7 @@ enum iwl_legacy_cmds {
- 
- 	/**
- 	 * @MARKER_CMD: trace marker command, uses &struct iwl_mvm_marker
-+	 * with &struct iwl_mvm_marker_rsp
- 	 */
- 	MARKER_CMD = 0xcb,
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-index 9f88b61536bc..0a81fb1b6ed4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-@@ -278,6 +278,15 @@ struct iwl_mvm_marker {
- 	__le32 metadata[0];
- } __packed; /* MARKER_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_mvm_marker_rsp - Response to marker cmd
-+ *
-+ * @gp2: The gp2 clock value in the FW
-+ */
-+struct iwl_mvm_marker_rsp {
-+	__le32 gp2;
-+} __packed;
-+
- /* Operation types for the debug mem access */
- enum {
- 	DEBUG_MEM_OP_READ = 0,
+e251a882c0ba mwifiex: avoid storing random_mac in private
+
 -- 
-2.14.1
+https://patchwork.kernel.org/patch/9955573/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
