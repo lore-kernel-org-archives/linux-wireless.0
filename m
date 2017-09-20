@@ -1,73 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48556 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47462 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751846AbdIHPuF (ORCPT
+        with ESMTP id S1751672AbdITMdV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 11:50:05 -0400
+        Wed, 20 Sep 2017 08:33:21 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2017-09-08
-Date: Fri, 08 Sep 2017 18:50:01 +0300
-Message-ID: <87o9qljil2.fsf@kamboji.qca.qualcomm.com> (sfid-20170908_175059_150132_FA1A4F58)
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [V2, 1/9] qtnfmac: qlink: convert channel width from bitfiled to simple enum
+References: <20170902014451.17766-2-igor.mitsyanko.os@quantenna.com>
+        <20170920122314.5397A60710@smtp.codeaurora.org>
+Date: Wed, 20 Sep 2017 15:33:17 +0300
+In-Reply-To: <20170920122314.5397A60710@smtp.codeaurora.org> (Kalle Valo's
+        message of "Wed, 20 Sep 2017 12:23:14 +0000 (UTC)")
+Message-ID: <871sn1zh0y.fsf@purkki.adurom.net> (sfid-20170920_143324_837277_4C31AEC2)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-few fixes to net tree for 4.14. Note that this pull request contains the
-iwlwifi fix Linus hopes to have by end of the merge window. Please let
-me know if there are any problems.
+> Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
+>
+>> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>> 
+>> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+>
+> No empty commit logs, please. After the first patch I was about to write
+> one myself but after seeing multiple of them I'm not going to do that.
+>
+> 9 patches set to Changes Requested.
 
-Kalle
+BTW, I got a mail undelivered message. Not sure why smtp.codeaurora.org
+could not find the host but reporting it here just in case:
 
-The following changes since commit 8e0deed92406d93ae0365cb8a6134db5721e7aca:
+<avinashp@quantenna.com>: unable to look up host
+    quantenna-com.mail.protection.outlook.com: Name or service not known
 
-  tipc: remove unnecessary call to dev_net() (2017-09-06 21:25:52 -0700)
+<igor.mitsyanko.os@quantenna.com>: unable to look up host
+    quantenna-com.mail.protection.outlook.com: Name or service not known
 
-are available in the git repository at:
+<sergey.matyukevich.os@quantenna.com>: unable to look up host
+    quantenna-com.mail.protection.outlook.com: Name or service not known
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-09-08
-
-for you to fetch changes up to f957dd3c8db2781c8a334b166800788feb618625:
-
-  brcmfmac: feature check for multi-scheduled scan fails on bcm4345 devices (2017-09-08 12:25:24 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.14
-
-Few fixes to regressions introduced in the last one or two releases.
-The iwlwifi fix is for a regression reported by Linus.
-
-rtlwifi
-
-* fix two antenna selection related bugs
-
-iwlwifi
-
-* fix regression with older firmwares
-
-brcmfmac
-
-* workaround firmware crash for bcm4345
-
-----------------------------------------------------------------
-Ian W MORRISON (1):
-      brcmfmac: feature check for multi-scheduled scan fails on bcm4345 devices
-
-Larry Finger (2):
-      rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be
-      rtlwifi: btcoexist: Fix antenna selection code
-
-Luca Coelho (1):
-      iwlwifi: mvm: only send LEDS_CMD when the FW supports it
-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  3 ++-
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/led.c       |  3 ++-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  5 ++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 23 +++++++++++++++-------
- 5 files changed, 25 insertions(+), 10 deletions(-)
+-- 
+Kalle Valo
