@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33377 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbdITVPM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 17:15:12 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH] rtlwifi: rtl8821ae: Fix connection lost problem
-Date: Wed, 20 Sep 2017 16:15:05 -0500
-Message-Id: <20170920211505.26171-1-Larry.Finger@lwfinger.net> (sfid-20170920_231515_605890_6AE7214F)
+Received: from s3.sipsolutions.net ([5.9.151.49]:48278 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751488AbdITKj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Sep 2017 06:39:29 -0400
+Message-ID: <1505903964.3026.14.camel@sipsolutions.net> (sfid-20170920_123936_521929_54C9E48F)
+Subject: Re: [PATCH v2 1/2] mac80211: Add rcu read side critical sections
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ville Syrjala <ville.syrjala@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Date: Wed, 20 Sep 2017 12:39:24 +0200
+In-Reply-To: <20170920101123.23312-1-ville.syrjala@linux.intel.com>
+References: <20170918195919.15860-1-ville.syrjala@linux.intel.com>
+         <20170920101123.23312-1-ville.syrjala@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 40b368af4b75 ("rtlwifi: Fix alignment issues"), the read
-of REG_DBI_READ was changed from 16 to 8 bits. For unknown reasonsi
-this change results in reduced stability for the wireless connection.
-This regression was located using bisection.
+On Wed, 2017-09-20 at 13:11 +0300, Ville Syrjala wrote:
 
-Fixes: 40b368af4b75 ("rtlwifi: Fix alignment issues")
-Reported-and-tested-by: James Cameron <quozl@laptop.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> # 4.11+
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1770,15 +1770,21 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+>  	struct ieee80211_tx_data tx;
+>  	struct sk_buff *skb2;
+>  
+> -	if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP)
+> +	rcu_read_lock();
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 3571ce4bd276..ac2ce86de506 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -1122,7 +1122,7 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
- 	}
- 	if (0 == tmp) {
- 		read_addr = REG_DBI_RDATA + addr % 4;
--		ret = rtl_read_byte(rtlpriv, read_addr);
-+		ret = rtl_read_word(rtlpriv, read_addr);
- 	}
- 	return ret;
- }
--- 
-2.12.3
+The documentation says:
+
+/**
+ * ieee80211_tx_prepare_skb - prepare an 802.11 skb for transmission
+ * @hw: pointer as obtained from ieee80211_alloc_hw()
+ * @vif: virtual interface
+ * @skb: frame to be sent from within the driver
+ * @band: the band to transmit on
+ * @sta: optional pointer to get the station to send the frame to
+ *
+ * Note: must be called under RCU lock
+ */
+
+You can't even argue that it should be the function itself doing it,
+because the (admittedly optional) sta pointer would otherwise not have
+proper protection after you leave the function ... You can't pass out a
+sta pointer that's RCU protected.
+
+Side note: Perhaps some annotation should be there? not sure it's
+possible - would have to be something like
+	struct ieee80211_sta * __rcu *sta;
+
+I guess since the outer pointer isn't protected, only the inner ...
+
+
+Therefore, this patch is wrong.
+
+I actually think the same is true for ieee80211_tx_dequeue(), but I'm
+less sure about it - the sta pointer there clearly is somehow safely
+passed in (even if it's w/o RCU, the driver can potentially make that
+safe), but the key pointer seems unsafe in this case (as well) if
+there's no outer RCU protection.
+
+johannes
