@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38714 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751133AbdINOOc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57362 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751568AbdITLi4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 10:14:32 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Wed, 20 Sep 2017 07:38:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
         Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [EXT] Re: [PATCH 2/2] mwifiex: print URB submit failure error
- after threshold attemtps
-Date: Thu, 14 Sep 2017 14:14:24 +0000
-Message-ID: <6dfc9cfaff734c12bc53ffcb063c4491@SC-EXCH02.marvell.com> (sfid-20170914_161435_428321_8D6FA2BA)
-References: <1504122674-3379-1-git-send-email-gbhat@marvell.com>
-         <1504122674-3379-3-git-send-email-gbhat@marvell.com>
- <1504238727.2361.1.camel@perches.com>
-In-Reply-To: <1504238727.2361.1.camel@perches.com>
-Content-Type: text/plain; charset="us-ascii"
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] mwifiex: add device specific ioctl handler
+References: <1505889853-20493-1-git-send-email-huxinming820@gmail.com>
+        <59C22949.9030304@broadcom.com>
+Date: Wed, 20 Sep 2017 14:38:49 +0300
+In-Reply-To: <59C22949.9030304@broadcom.com> (Arend van Spriel's message of
+        "Wed, 20 Sep 2017 10:39:37 +0200")
+Message-ID: <87ingda9bq.fsf@kamboji.qca.qualcomm.com> (sfid-20170920_133900_873319_4E92BA88)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> On Thu, 2017-08-31 at 01:21 +0530, Ganapathi Bhat wrote:
-> > Current driver prints dev_alloc_skb failures everytime while
-> > submitting RX URBs. This failure might be frequent in some low
-> > resource platforms. So, wait for a threshold failure count before
-> > start priting the error. This change is a follow up for the 'commit
-> > 7b368e3d15c3
-> > ("mwifiex: resubmit failed to submit RX URBs in main thread")'
-> 
-> []
-> 
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c
-> > b/drivers/net/wireless/marvell/mwifiex/usb.c
-> []
-> > @@ -300,9 +300,16 @@ static int mwifiex_usb_submit_rx_urb(struct
-> urb_context *ctx, int size)
-> >  	if (card->rx_cmd_ep != ctx->ep) {
-> >  		ctx->skb = dev_alloc_skb(size);
-> >  		if (!ctx->skb) {
-> > -			mwifiex_dbg(adapter, ERROR,
-> > -				    "%s: dev_alloc_skb failed\n", __func__);
-> > +			if (++card->rx_urb_failure_count >
-> > +			    MWIFIEX_RX_URB_FAILURE_THRESHOLD) {
-> > +				mwifiex_dbg(adapter, ERROR,
-> > +					    "%s: dev_alloc_skb failed, failure
-> count = %u\n",
-> > +					    __func__,
-> > +					    card->rx_urb_failure_count);
-> > +			}
-> >  			return -ENOMEM;
-> 
-> Why not use a ratelimit?
-Since this is for receive, the packets are from AP side and we cannot lower the rate from AP. On some low performance systems this change will be helpful.
+> On 9/20/2017 8:44 AM, Xinming Hu wrote:
+>> From: Xinming Hu <huxm@marvell.com>
+>>
+>> Add net_dev ndo_do_ioctl handler, which could be used for
+>> downloading host command by utility in manufactory test
+>
+> Not sure if we want ioctls in upstream wireless drivers.
 
-Regards,
-Ganapathi
+Yeah, patches adding ioctls to wireless drivers are automatically
+rejected.
+
+> You could look at nl80211 vendor commands, but that is also under
+> scrutiny if common wifi functionality is provided by it. I am pretty
+> sure Kalle has his ideas about this :-)
+
+For manufacturing tests we have nl80211 testmode command and event.
+There are upstream drivers already using it so you even have examples.
+
+-- 
+Kalle Valo
