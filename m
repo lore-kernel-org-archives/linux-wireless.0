@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59392 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750911AbdILBgy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48862 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751554AbdITMo3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Sep 2017 21:36:54 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Himanshu Jha <himanshujha199640@gmail.com>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: remove unnecessary call to memset
-Date: Tue, 12 Sep 2017 01:36:50 +0000
-Message-ID: <23a4568d2e704aef83318f85e7046a8f@SC-EXCH02.marvell.com> (sfid-20170912_033701_859525_38F7E5B2)
-Content-Type: text/plain; charset="gb2312"
+        Wed, 20 Sep 2017 08:44:29 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: rtlwifi: btcoexist: 23b 1ant: fix duplicated code for different
+ branches
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170831144859.2291-1-Larry.Finger@lwfinger.net>
+References: <20170831144859.2291-1-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20170920124429.0F52660134@smtp.codeaurora.org> (sfid-20170920_144432_454764_BF35D51D)
+Date: Wed, 20 Sep 2017 12:44:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSGltYW5zaHUsDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBI
-aW1hbnNodSBKaGEgW21haWx0bzpoaW1hbnNodWpoYTE5OTY0MEBnbWFpbC5jb21dDQo+IFNlbnQ6
-IDIwMTfE6jnUwjExyNUgMjA6NDYNCj4gVG86IGFtaXRrYXJ3YXJAZ21haWwuY29tDQo+IENjOiBO
-aXNoYW50IFNhcm11a2FkYW0gPG5pc2hhbnRzQG1hcnZlbGwuY29tPjsgR2FuYXBhdGhpIEJoYXQN
-Cj4gPGdiaGF0QG1hcnZlbGwuY29tPjsgWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT47DQo+
-IGt2YWxvQGNvZGVhdXJvcmEub3JnOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7DQo+
-IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmc7IEhpbWFuc2h1IEpoYSA8aGltYW5zaHVqaGExOTk2NDBA
-Z21haWwuY29tPg0KPiBTdWJqZWN0OiBbRVhUXSBbUEFUQ0hdIG13aWZpZXg6IHJlbW92ZSB1bm5l
-Y2Vzc2FyeSBjYWxsIHRvIG1lbXNldA0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0NCj4gY2FsbCB0byBtZW1zZXQgdG8gYXNzaWduIDAgdmFsdWUgaW1tZWRpYXRlbHkg
-YWZ0ZXIgYWxsb2NhdGluZyBtZW1vcnkgd2l0aA0KPiBremFsbG9jIGlzIHVubmVjZXNhYXJ5IGFz
-IGt6YWxsb2MgYWxsb2NhdGVzIHRoZSBtZW1vcnkgZmlsbGVkIHdpdGggMCB2YWx1ZS4NCj4gDQoN
-Ckxvb2tzIGZpbmQgdG8gbWUsIFRoYW5rcy4NCg0KUmVnYXJkcywNClNpbW9uDQoNCj4gU2VtYW50
-aWMgcGF0Y2ggdXNlZCB0byByZXNvbHZlIHRoaXMgaXNzdWU6DQo+IA0KPiBAQA0KPiBleHByZXNz
-aW9uIGUsZTI7IGNvbnN0YW50IGM7DQo+IHN0YXRlbWVudCBTOw0KPiBAQA0KPiANCj4gICBlID0g
-a3phbGxvYyhlMiwgYyk7DQo+ICAgaWYoZSA9PSBOVUxMKSBTDQo+IC0gbWVtc2V0KGUsIDAsIGUy
-KTsNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEhpbWFuc2h1IEpoYSA8aGltYW5zaHVqaGExOTk2NDBA
-Z21haWwuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmll
-eC9zY2FuLmMgfCAyIC0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBkZWxldGlvbnMoLSkNCj4gDQo+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvc2Nhbi5j
-DQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3NjYW4uYw0KPiBpbmRl
-eCBjOWQ0MWVkLi44ODM4Yjg4IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-YXJ2ZWxsL213aWZpZXgvc2Nhbi5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZl
-bGwvbXdpZmlleC9zY2FuLmMNCj4gQEAgLTE5MzYsOCArMTkzNiw2IEBAIG13aWZpZXhfYWN0aXZl
-X3NjYW5fcmVxX2Zvcl9wYXNzaXZlX2NoYW4oc3RydWN0DQo+IG13aWZpZXhfcHJpdmF0ZSAqcHJp
-dikNCj4gIAlpZiAoIXVzZXJfc2Nhbl9jZmcpDQo+ICAJCXJldHVybiAtRU5PTUVNOw0KPiANCj4g
-LQltZW1zZXQodXNlcl9zY2FuX2NmZywgMCwgc2l6ZW9mKCp1c2VyX3NjYW5fY2ZnKSk7DQo+IC0N
-Cj4gIAlmb3IgKGlkID0gMDsgaWQgPCBNV0lGSUVYX1VTRVJfU0NBTl9DSEFOX01BWDsgaWQrKykg
-ew0KPiAgCQlpZiAoIXByaXYtPmhpZGRlbl9jaGFuW2lkXS5jaGFuX251bWJlcikNCj4gIAkJCWJy
-ZWFrOw0KPiAtLQ0KPiAyLjcuNA0KDQo=
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> A typo led to this issue, which was detected with the help of Coccinelle.
+> 
+> In addition to fixing the error, the code is refactored to eliminate an
+> if statement.
+> 
+> Addresses-Coverity-ID: 1226788
+> 
+> Reported-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+0f61953dd0f5 rtlwifi: btcoexist: 23b 1ant: fix duplicated code for different branches
+
+-- 
+https://patchwork.kernel.org/patch/9932349/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
