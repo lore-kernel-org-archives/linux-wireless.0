@@ -1,90 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:38763 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752178AbdI3Rij (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48556 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751663AbdITMlZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Sep 2017 13:38:39 -0400
-Received: by mail-pg0-f66.google.com with SMTP id y192so1837352pgd.5
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:39 -0700 (PDT)
-From: silexcommon@gmail.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Alagu Sankar <alagusankar@silex-india.com>
-Subject: [PATCH 06/11] ath10k_sdio: high latency fixes for beacon buffer
-Date: Sat, 30 Sep 2017 23:07:43 +0530
-Message-Id: <1506793068-27445-7-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193803_580056_AF72B819)
-In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+        Wed, 20 Sep 2017 08:41:25 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] b43: fix unitialized reads of ret by initializing the array
+ to zero
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170905181550.23839-1-colin.king@canonical.com>
+References: <20170905181550.23839-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170920124124.7B32460725@smtp.codeaurora.org> (sfid-20170920_144141_986971_2951D13F)
+Date: Wed, 20 Sep 2017 12:41:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Beacon buffer for high latency devices does not use dma. other similar
-buffer allocation methods in the driver have already been modified for
-high latency path. Fix the beacon buffer allocation left out in the
-earlier high latency changes.
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> The u8 char array ret is not being initialized and elements outside
+> the range start to end contain just garbage values from the stack.
+> This results in a later scan of the array to read potentially
+> uninitialized values.  Fix this by initializing the array to zero.
+> This seems to have been an issue since the very first commit.
+> 
+> Detected by CoverityScan CID#139652 ("Uninitialized scalar variable")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Reviewed-by: Michael Buesch <m@bues.ch>
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 31 +++++++++++++++++++++++--------
- 1 file changed, 23 insertions(+), 8 deletions(-)
+2 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f374d1b..c48785b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -944,8 +944,12 @@ static void ath10k_mac_vif_beacon_cleanup(struct ath10k_vif *arvif)
- 	ath10k_mac_vif_beacon_free(arvif);
- 
- 	if (arvif->beacon_buf) {
--		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
--				  arvif->beacon_buf, arvif->beacon_paddr);
-+		if (ar->is_high_latency)
-+			kfree(arvif->beacon_buf);
-+		else
-+			dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
-+					  arvif->beacon_buf,
-+					  arvif->beacon_paddr);
- 		arvif->beacon_buf = NULL;
- 	}
- }
-@@ -5052,10 +5056,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	if (vif->type == NL80211_IFTYPE_ADHOC ||
- 	    vif->type == NL80211_IFTYPE_MESH_POINT ||
- 	    vif->type == NL80211_IFTYPE_AP) {
--		arvif->beacon_buf = dma_zalloc_coherent(ar->dev,
--							IEEE80211_MAX_FRAME_LEN,
--							&arvif->beacon_paddr,
--							GFP_ATOMIC);
-+		if (ar->is_high_latency) {
-+			arvif->beacon_buf = kmalloc(IEEE80211_MAX_FRAME_LEN,
-+						    GFP_KERNEL);
-+			arvif->beacon_paddr = (dma_addr_t)arvif->beacon_buf;
-+		} else {
-+			arvif->beacon_buf =
-+				dma_zalloc_coherent(ar->dev,
-+						    IEEE80211_MAX_FRAME_LEN,
-+						    &arvif->beacon_paddr,
-+						    GFP_ATOMIC);
-+		}
- 		if (!arvif->beacon_buf) {
- 			ret = -ENOMEM;
- 			ath10k_warn(ar, "failed to allocate beacon buffer: %d\n",
-@@ -5244,8 +5255,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 
- err:
- 	if (arvif->beacon_buf) {
--		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
--				  arvif->beacon_buf, arvif->beacon_paddr);
-+		if (ar->is_high_latency)
-+			kfree(arvif->beacon_buf);
-+		else
-+			dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
-+					  arvif->beacon_buf,
-+					  arvif->beacon_paddr);
- 		arvif->beacon_buf = NULL;
- 	}
- 
+e31fbe1034d9 b43: fix unitialized reads of ret by initializing the array to zero
+e3ae1c772046 b43legacy: fix unitialized reads of ret by initializing the array to zero
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9939435/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
