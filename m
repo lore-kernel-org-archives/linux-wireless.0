@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53018 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752230AbdIESPx (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:50122 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdITTdS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 14:15:53 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] b43: fix unitialized reads of ret by initializing the array to zero
-Date: Tue,  5 Sep 2017 19:15:50 +0100
-Message-Id: <20170905181550.23839-1-colin.king@canonical.com> (sfid-20170905_201619_184824_213F6390)
+        Wed, 20 Sep 2017 15:33:18 -0400
+Received: by mail-qt0-f173.google.com with SMTP id o3so2860229qte.6
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 12:33:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Vanessa Ayumi Maegima <van.ayumi@gmail.com>
+Date: Wed, 20 Sep 2017 16:33:17 -0300
+Message-ID: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com> (sfid-20170920_213321_932995_459D66D2)
+Subject: AP6335 with mainline kernel
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com, embed3d@gmail.com,
+        joerg.krause@embedded.rocks,
+        Vanessa Maegima <vanessa.maegima@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi,
 
-The u8 char array ret is not being initialized and elements outside
-the range start to end contain just garbage values from the stack.
-This results in a later scan of the array to read potentially
-uninitialized values.  Fix this by initializing the array to zero.
-This seems to have been an issue since the very first commit.
+I am trying to enable Wifi on imx7d-pico using mainline kernel. imx7d-pico
+has an AP6335 chip.
 
-Detected by CoverityScan CID#139652 ("Uninitialized scalar variable")
+I am facing some issues related to the nvram file. I am using the firmware
+provided by Buildroot (brcmfmac4339-sdio.bin). I get the following error:
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/broadcom/b43/phy_g.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[    8.630380] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+clkctl 0x50
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_g.c b/drivers/net/wireless/broadcom/b43/phy_g.c
-index 822dcaa8ace6..f59c02166462 100644
---- a/drivers/net/wireless/broadcom/b43/phy_g.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_g.c
-@@ -2297,7 +2297,7 @@ static u8 b43_gphy_aci_detect(struct b43_wldev *dev, u8 channel)
- static u8 b43_gphy_aci_scan(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
--	u8 ret[13];
-+	u8 ret[13] = { 0 };
- 	unsigned int channel = phy->channel;
- 	unsigned int i, j, start, end;
- 
--- 
-2.14.1
+I have tried to use the firmware and nvram provided by TechNexion but I get
+the same error.
+
+Is there anyone that could enable Wifi on AP6335 using kernel mainline?
+What nvram file was used?
+
+I am able to use Wifi on the board if I use the firmware, nvram file and kernel
+provided by TechNexion. They use a 4.1 kernel from NXP with the bcmdhd
+driver.
+
+So I know that the hardware is functional.
+
+Any suggestions as how to get it working with a 4.13 and brcmfmac driver is
+appreciated.
+
+Thanks!
+
+Regards,
+Vanessa
