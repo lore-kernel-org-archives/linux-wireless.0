@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34668 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752472AbdI2TsJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48202 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751663AbdITMkE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 15:48:09 -0400
-Received: by mail-oi0-f66.google.com with SMTP id l81so292690oib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 02/10] rtlwifi: Remove redundant semicolon in wifi.h.
-Date: Fri, 29 Sep 2017 14:47:52 -0500
-Message-Id: <20170929194800.15617-3-Larry.Finger@lwfinger.net> (sfid-20170929_214816_130643_75A56AF4)
-In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+        Wed, 20 Sep 2017 08:40:04 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/8] rsi: add p2p support parameters to mac80211
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1504085908-2163-2-git-send-email-amitkarwar@gmail.com>
+References: <1504085908-2163-2-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20170920124003.9A2E860725@smtp.codeaurora.org> (sfid-20170920_144008_134517_65AB6D60)
+Date: Wed, 20 Sep 2017 12:40:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
 
-The semicolon can cause compiler error, if it exists in if...else
-statement.
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> 
+> This patch adds p2p supported parameters to mac80211 hw and
+> wiphy structures during mac80211 registration.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+8 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 1ab1024330fb..90e875beff66 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2857,19 +2857,19 @@ value to host byte ordering.*/
- 	cpu_to_le32( \
- 		LE_BITS_CLEARED_TO_4BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u32)__val) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset)) \
--	);
-+	)
- #define SET_BITS_TO_LE_2BYTE(__pstart, __bitoffset, __bitlen, __val) \
- 	*((__le16 *)(__pstart)) = \
- 	cpu_to_le16( \
- 		LE_BITS_CLEARED_TO_2BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u16)__val) & BIT_LEN_MASK_16(__bitlen)) << (__bitoffset)) \
--	);
-+	)
- #define SET_BITS_TO_LE_1BYTE(__pstart, __bitoffset, __bitlen, __val) \
- 	*((u8 *)(__pstart)) = EF1BYTE \
- 	( \
- 		LE_BITS_CLEARED_TO_1BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u8)__val) & BIT_LEN_MASK_8(__bitlen)) << (__bitoffset)) \
--	);
-+	)
- 
- #define	N_BYTE_ALIGMENT(__value, __aligment) ((__aligment == 1) ? \
- 	(__value) : (((__value + __aligment - 1) / __aligment) * __aligment))
+421eedff1180 rsi: add p2p support parameters to mac80211
+b8bd3a439f35 rsi: add/remove interface enhancements for p2p
+df771911914a rsi: add support for p2p listen
+4671c209ac46 rsi: handle peer connection and disconnection in p2p mode
+eac4eed3224b rsi: tx and rx path enhancements for p2p mode
+efe877aa0f40 rsi: disallow power save config when AP vap running
+c7245c0975f1 rsi: aggregation changes for p2p mode
+af75687286bf rsi: miscellaneous changes for p2p mode
+
 -- 
-2.13.5
+https://patchwork.kernel.org/patch/9929129/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
