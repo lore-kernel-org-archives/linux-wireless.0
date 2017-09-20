@@ -1,77 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:36570 "EHLO
-        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdIEUCe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34250 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751488AbdITLrj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 16:02:34 -0400
-Received: by mail-yw0-f176.google.com with SMTP id w204so16129884ywg.3
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 13:02:34 -0700 (PDT)
+        Wed, 20 Sep 2017 07:47:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
+References: <1505720537-13362-1-git-send-email-gbhat@marvell.com>
+        <87o9q8kuy4.fsf@purkki.adurom.net>
+        <3f3f5c9672a5421db05337a00d9578f2@SC-EXCH02.marvell.com>
+        <87tvzyahht.fsf@kamboji.qca.qualcomm.com>
+        <20170919164316.GA4617@google.com>
+Date: Wed, 20 Sep 2017 14:47:31 +0300
+In-Reply-To: <20170919164316.GA4617@google.com> (Brian Norris's message of
+        "Tue, 19 Sep 2017 09:43:17 -0700")
+Message-ID: <87a81pa8x8.fsf@kamboji.qca.qualcomm.com> (sfid-20170920_134742_506470_EF75B83C)
 MIME-Version: 1.0
-In-Reply-To: <1504510473-13549-1-git-send-email-wright.feng@cypress.com>
-References: <1504510473-13549-1-git-send-email-wright.feng@cypress.com>
-From: Franky Lin <franky.lin@broadcom.com>
-Date: Tue, 5 Sep 2017 13:02:13 -0700
-Message-ID: <CA+8PC_fV70z-ELAEWgg0Q3MM6N7niHozeDh-PWNLYmJ7YY-mVQ@mail.gmail.com> (sfid-20170905_220439_779699_12BA09EE)
-Subject: Re: [PATCH] brcmfmac: return -EPERM when getting error in vendor
- command handler
-To: Wright Feng <wright.feng@cypress.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 4, 2017 at 12:34 AM, Wright Feng <wright.feng@cypress.com> wrote:
-> Firmware returns proprietary error code when getting error in
-> fil_cmd_data_set or fil_cmd_data_get. The vendor tools or
-> utilities which uses libnl may stuck in some commands when wl is down.
-> For example, issue "scan" command after issuing "down" command, the
-> "scan" command will be the blocking call and stuck as no response from
-> libnl. It is caused by that firmware returns BCME_NOTUP(-4) when wl
-> is down, but the -4 is -EINTR in Linux kernel, so libnl catches the error
-> and not passes to upper layer.
-> Because of that, the driver should return Linux error code instead of the
-> proprietary error code, and the tools or utilities need to get the real
-> firmware error code by command "bcmerror" or "bcmerrorstr" after receiving
-> the error.
->
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-> index 8eff275..2b88ba1 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/vendor.c
-> @@ -80,8 +80,12 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
->         else
->                 ret = brcmf_fil_cmd_data_get(ifp, cmdhdr->cmd, dcmd_buf,
->                                              ret_len);
-> -       if (ret != 0)
-> +
-> +       if (ret != 0) {
-> +               brcmf_dbg(INFO, "error(%d), return -EPERM\n", ret);
-> +               ret = -EPERM;
->                 goto exit;
-> +       }
+Brian Norris <briannorris@chromium.org> writes:
 
-It would be better to handle the conversion in brcmf_fil_cmd_data so
-everyone can benefit. Also please try to assign an appropriate error
-code when possible to provide more information to the upper layer. For
-this case "ENETDOWN" seems to be a better fit for BCME_NOTUP.
-
-Thanks,
-Franky
-
->         wr_pointer = dcmd_buf;
->         while (ret_len > 0) {
-> --
-> 1.9.1
+> Hi,
 >
+> On Tue, Sep 19, 2017 at 05:30:06PM +0300, Kalle Valo wrote:
+>> Ganapathi Bhat <gbhat@marvell.com> writes:
+>> 
+>> > Hi Kalle,
+>> >> 
+>> >> > Avoid calculating random MAC address in driver. Instead make use of
+>> >> > 'get_random_mask_addr()' function.
+>> >> >
+>> >> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+>> >> 
+>> >> I don't see 1/2 anywhere. Did it get lost?
+>> >
+>> > Actually there is no 1/2. What I did is: 'git send-email'; CTRL + C
+>
+> It's dependent on this patch though, which kinda should be '1/2':
+>
+> [PATCH] mwifiex: avoid storing random_mac in private
+
+Thanks for pointing out, I'll make sure that I commit these in correct
+order.
+
+>> > (to correct a typo); and then tried sending it again. I think that
+>> > created some problem here. Kindly let me know how to proceed.
+>> 
+>> Ok. I'll wait for review comments and if all goes well I'll apply it in
+>> few days.
+>
+> FWIW, this looks OK to me:
+>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+>
+> It's just a bit strange that we have to keep our own on-stack temporary
+> buffer for this. Maybe this could use an in-place helper too? Or (if
+> it's really legal for us to modify the cfg80211_scan_request in-place)
+> why doesn't the upper-layer nl80211 code do the randomization for us?
+> Many (all?) drivers I see implementing randomization have to do this
+> anyway; they don't use request->mac_addr directly. (Or I suppose some
+> firmware could implement the randomization on its own someday...but
+> would we really trust it?)
+
+Good questions and I was wondering the same when looking at this patch.
+But I wasn't involved in the interface design so I don't really know the
+background here.
+
+I'm planning to apply this patch anyway, any improvements can be done as
+a followup patch.
+
+-- 
+Kalle Valo
