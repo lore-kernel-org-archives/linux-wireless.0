@@ -1,105 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:44630 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751393AbdILJWd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 05:22:33 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 6/7] brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
-Date: Tue, 12 Sep 2017 11:22:22 +0200
-Message-Id: <1505208143-30166-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_112243_920219_21C7F56A)
-In-Reply-To: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1505208143-30166-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:13952
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751728AbdIUVen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 17:34:43 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V3 0/9] qtnfmac: more info on current channel from device
+Date: Thu, 21 Sep 2017 14:34:28 -0700
+Message-Id: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233448_230050_5FD83789)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The field struct brcmf_cfg80211_info::active_scan is set to true upon
-initializing the driver instance, but it is never changed so simply
-get rid of it.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 10 +---------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h |  2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  5 +----
- 3 files changed, 2 insertions(+), 15 deletions(-)
+This patchset has a goal to start using full current channel information
+as reported by wireless device (specifically, center freq 1 and 2 and
+operational BW).
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 34c2945..35e9cac 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1054,7 +1054,6 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- {
- 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	s32 err;
--	u32 passive_scan;
- 	struct brcmf_scan_results *results;
- 	struct escan_info *escan = &cfg->escan_info;
- 
-@@ -1062,13 +1061,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 	escan->ifp = ifp;
- 	escan->wiphy = cfg->wiphy;
- 	escan->escan_state = WL_ESCAN_STATE_SCANNING;
--	passive_scan = cfg->active_scan ? 0 : 1;
--	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
--				    passive_scan);
--	if (err) {
--		brcmf_err("error (%d)\n", err);
--		return err;
--	}
-+
- 	brcmf_scan_config_mpc(ifp, 0);
- 	results = (struct brcmf_scan_results *)cfg->escan_info.escan_buf;
- 	results->version = 0;
-@@ -5767,7 +5760,6 @@ static s32 wl_init_priv(struct brcmf_cfg80211_info *cfg)
- 
- 	cfg->scan_request = NULL;
- 	cfg->pwr_save = true;
--	cfg->active_scan = true;	/* we do active scan per default */
- 	cfg->dongle_up = false;		/* dongle is not up yet */
- 	err = brcmf_init_priv_mem(cfg);
- 	if (err)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 7b2835e..b5b5f0f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -283,7 +283,6 @@ struct brcmf_cfg80211_wowl {
-  * @scan_status: scan activity on the dongle.
-  * @pub: common driver information.
-  * @channel: current channel.
-- * @active_scan: current scan mode.
-  * @int_escan_map: bucket map for which internal e-scan is done.
-  * @ibss_starter: indicates this sta is ibss starter.
-  * @pwr_save: indicate whether dongle to support power save mode.
-@@ -316,7 +315,6 @@ struct brcmf_cfg80211_info {
- 	unsigned long scan_status;
- 	struct brcmf_pub *pub;
- 	u32 channel;
--	bool active_scan;
- 	u32 int_escan_map;
- 	bool ibss_starter;
- 	bool pwr_save;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 2ce675a..8e0b3f4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -692,10 +692,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
- 
- 	/* determine the scan engine parameters */
- 	sparams->bss_type = DOT11_BSSTYPE_ANY;
--	if (p2p->cfg->active_scan)
--		sparams->scan_type = 0;
--	else
--		sparams->scan_type = 1;
-+	sparams->scan_type = BRCMF_SCANTYPE_ACTIVE;
- 
- 	eth_broadcast_addr(sparams->bssid);
- 	sparams->home_time = cpu_to_le32(P2PAPI_SCAN_HOME_TIME_MS);
+It was part of bigger changeset when it was V1.
+
+Changelist V2->V3:
+Do not leave commit messages empty
+
+Changelist V1->V2:
+PATCH 2:
+  - do not rename "chandef" local variable with no purpose
+  - report secondary center frequency in info messages
+PATCH 3:
+  - report secondary center frequency in info messages
+
+Igor Mitsyanko (9):
+  qtnfmac: convert channel width from bitfiled to simple enum
+  qtnfmac: make "Channel change" event report full channel info
+  qtnfmac: retrieve current channel info from EP
+  qtnfmac: do not cache channel info from "connect" command
+  qtnfmac: let wifi card handle channel switch request to the same
+    chan
+  qtnfmac: pass VIF info to SendChannel command
+  qtnfmac: do not cache CSA chandef info
+  qtnfmac: remove unused mac::status field
+  qtnfmac: do not report channel changes until wiphy is registered
+
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  | 69 +++++-----------------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c  | 52 +++++++++++++---
+ drivers/net/wireless/quantenna/qtnfmac/commands.h  |  3 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.h      |  6 --
+ drivers/net/wireless/quantenna/qtnfmac/event.c     | 34 ++++-------
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 45 ++++++++++----
+ .../net/wireless/quantenna/qtnfmac/qlink_util.c    | 68 ++++++++++++++++++---
+ .../net/wireless/quantenna/qtnfmac/qlink_util.h    |  4 ++
+ 8 files changed, 175 insertions(+), 106 deletions(-)
+
 -- 
-1.9.1
+2.9.5
