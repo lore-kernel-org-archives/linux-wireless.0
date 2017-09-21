@@ -1,55 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0137.hostedemail.com ([216.40.44.137]:35497 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751878AbdIVKDN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 06:03:13 -0400
-Message-ID: <1506074588.12311.37.camel@perches.com> (sfid-20170922_120535_121911_8496839D)
-Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
- object code size Content-Type: text/plain; charset="utf-8"
- Content-Transfer-Encoding: 8bit
-From: Joe Perches <joe@perches.com>
-To: Julia Lawall <julia.lawall@lip6.fr>,
-        Colin King <colin.king@canonical.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 22 Sep 2017 03:03:08 -0700
-In-Reply-To: <alpine.DEB.2.20.1709220921350.2024@hadrien>
-References: <20170921225630.21916-1-colin.king@canonical.com>
-         <alpine.DEB.2.20.1709220921350.2024@hadrien>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45722 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751753AbdIUNt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 09:49:59 -0400
+Message-ID: <1506001797.2048.3.camel@sipsolutions.net> (sfid-20170921_155003_576574_537A168D)
+Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
+        linux-wireless@vger.kernel.org
+Date: Thu, 21 Sep 2017 15:49:57 +0200
+In-Reply-To: <20170907154744.28357-1-rschuetz@uni-koblenz.de> (sfid-20170907_175508_102149_80D1890A)
+References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
+         (sfid-20170907_175508_102149_80D1890A)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
-> 
-> On Thu, 21 Sep 2017, Colin King wrote:
-> 
-> > From: Colin Ian King <colin.king@canonical.com>
-> > 
-> > Don't populate const array ac_to_fifo on the stack in an inlined
-> > function, instead make it static.  Makes the object code smaller
-> > by over 800 bytes:
-> > 
-> >    text	   data	    bss	    dec	    hex	filename
-> >  159029	  33154	   1216	 193399	  2f377	4965-mac.o
-> > 
-> >    text	   data	    bss	    dec	    hex	filename
-> >  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
-> > 
-> > (gcc version 7.2.0 x86_64)
-> 
-> Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
-> change that I got on this file:
-> 
->      text          data     bss     dec     hex filename
-> -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> decrease of 48
+On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
+> According to IEEE Std 802.11-2016 (16.2.3.4 Long PHY SIGNAL field)
+> all of
+> the following rates are mandatory for a HR/DSSS PHY: 1 Mb/s, 2 Mb/s,
+> 5.5 Mb/s and 11 Mb/s. Set IEEE80211_RATE_MANDATORY_B flag for all of
+> these
+> instead of just 1 Mb/s to correctly reflect this.
 
-More likely different CONFIG options.
+Applied, but I modified it to use a switch statement.
 
-e.g. allyesconfig vs defconfig with wireless
+johannes
