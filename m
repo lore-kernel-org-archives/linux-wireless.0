@@ -1,58 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:34536 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755036AbdIHMox (ORCPT
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:36742 "EHLO
+        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751531AbdIUNim (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 08:44:53 -0400
-Received: by mail-oi0-f51.google.com with SMTP id l74so9800772oih.1
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Sep 2017 05:44:53 -0700 (PDT)
+        Thu, 21 Sep 2017 09:38:42 -0400
+Received: by mail-vk0-f65.google.com with SMTP id w23so1479327vkw.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 06:38:42 -0700 (PDT)
 MIME-Version: 1.0
-From: Cristian <caravena@gmail.com>
-Date: Fri, 8 Sep 2017 09:44:52 -0300
-Message-ID: <CABwnbUmUeWcRwB-AQtSOSma_jtuVMDq-kwBm_1h3bcSODzAgwg@mail.gmail.com> (sfid-20170908_144520_628584_2B1BD9D5)
-Subject: Update WiFi card by one that does not use _Private_ Firmware
-To: linux-wireless@vger.kernel.org
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-        "Carlos Rojas R." <crojas@computux.cl>, fcalvo@computux.cl,
-        Oscar Fernandez <ooscarr@gmail.com>
+In-Reply-To: <1505998288-2041-1-git-send-email-amitkarwar@gmail.com>
+References: <1505998288-2041-1-git-send-email-amitkarwar@gmail.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Thu, 21 Sep 2017 19:08:40 +0530
+Message-ID: <CAFqt6zYY2WuwU+kQ=HmS5284CspyxF+EFm_jiysCQviSvegC1Q@mail.gmail.com> (sfid-20170921_153846_866886_58A39122)
+Subject: Re: [v2] rsi: sdio suspend and resume support
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, Sep 21, 2017 at 6:21 PM, Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+> From: Karun Eagalapati <karun256@gmail.com>
+>
+> SDIO suspend and resume handlers are implemented and verified
+> that device works after suspend/resume cycle.
+>
+> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> ---
+> v2: Replaced never ending while loop with 20msecs loop(Kalle Valo)
+> ---
+>  drivers/net/wireless/rsi/rsi_91x_sdio.c | 128 +++++++++++++++++++++++++++++++-
+>  drivers/net/wireless/rsi/rsi_sdio.h     |   2 +
+>  2 files changed, 126 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> index 8d3a483..b3f8006 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+> @@ -1059,16 +1059,136 @@ static void rsi_disconnect(struct sdio_func *pfunction)
+>  }
+>
+>  #ifdef CONFIG_PM
+> +static int rsi_set_sdio_pm_caps(struct rsi_hw *adapter)
+> +{
+> +       struct rsi_91x_sdiodev *dev =
+> +               (struct rsi_91x_sdiodev *)adapter->rsi_dev;
+> +       struct sdio_func *func = dev->pfunction;
+> +       int ret;
+> +
+> +       ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+> +       if (ret)
+> +               rsi_dbg(ERR_ZONE, "Set sdio keep pwr flag failed: %d\n", ret);
+> +
+> +       return ret;
+> +}
+> +
+> +static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
+> +{
+> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunc);
+> +       u8 isr_status = 0, data = 0;
+> +       int ret;
+> +       unsigned long t1;
+> +
+> +       rsi_dbg(INFO_ZONE, "Waiting for interrupts to be cleared..");
+> +       t1 = jiffies;
+> +       do {
+> +               rsi_sdio_read_register(adapter, RSI_FN1_INT_REGISTER,
+> +                                      &isr_status);
+> +               rsi_dbg(INFO_ZONE, ".");
+> +       } while ((isr_status) && (jiffies_to_msecs(jiffies - t1) < 20));
+> +       rsi_dbg(INFO_ZONE, "Interrupts cleared\n");
+> +
+> +       sdio_claim_host(pfunc);
+> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+> +       if (ret < 0) {
+> +               rsi_dbg(ERR_ZONE,
+> +                       "%s: Failed to read int enable register\n",
+> +                       __func__);
+> +               goto done;
+> +       }
+> +
+> +       data &= RSI_INT_ENABLE_MASK;
+> +       ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
+> +       if (ret < 0) {
+> +               rsi_dbg(ERR_ZONE,
+> +                       "%s: Failed to write to int enable register\n",
+> +                       __func__);
+> +               goto done;
+> +       }
+> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+> +       if (ret < 0) {
+> +               rsi_dbg(ERR_ZONE,
+> +                       "%s: Failed to read int enable register\n",
+> +                       __func__);
+> +               goto done;
+> +       }
+> +       rsi_dbg(INFO_ZONE, "int enable reg content = %x\n", data);
+> +
+> +done:
+> +       sdio_release_host(pfunc);
+> +       return ret;
+> +}
+> +
+> +static int rsi_sdio_enable_interrupts(struct sdio_func *pfunc)
+> +{
+> +       u8 data;
+> +       int ret;
+> +
+> +       sdio_claim_host(pfunc);
+> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+> +       if (ret < 0) {
+> +               rsi_dbg(ERR_ZONE,
+> +                       "%s: Failed to read int enable register\n", __func__);
+> +               goto done;
+> +       }
+> +
+> +       data |= ~RSI_INT_ENABLE_MASK & 0xff;
+> +
+> +       ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
+> +       if (ret < 0) {
+> +               rsi_dbg(ERR_ZONE,
+> +                       "%s: Failed to write to int enable register\n",
+> +                       __func__);
+> +               goto done;
+> +       }
+> +
+> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+> +       if (ret < 0) {
+> +               rsi_dbg(ERR_ZONE,
+> +                       "%s: Failed to read int enable register\n", __func__);
+> +               goto done;
+> +       }
+> +       rsi_dbg(INFO_ZONE, "int enable reg content = %x\n", data);
+> +
+> +done:
+> +       sdio_release_host(pfunc);
+> +       return ret;
+> +}
+> +
+>  static int rsi_suspend(struct device *dev)
+>  {
+> -       /* Not yet implemented */
+> -       return -ENOSYS;
+> +       int ret;
+> +       struct sdio_func *pfunction = dev_to_sdio_func(dev);
+> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
+> +       struct rsi_common *common;
+> +
+> +       if (!adapter) {
+> +               rsi_dbg(ERR_ZONE, "Device is not ready\n");
+> +               return -ENODEV;
+> +       }
+> +       common = adapter->priv;
+> +       rsi_sdio_disable_interrupts(pfunction);
+> +
+> +       ret = rsi_set_sdio_pm_caps(adapter);
+> +       if (ret)
+> +               rsi_dbg(INFO_ZONE,
+> +                       "Setting power management caps failed\n");
+> +       common->fsm_state = FSM_CARD_NOT_READY;
+> +
+> +       return 0;
 
-My name is Cristian Aravena Romero, [1]Free Software enthusiast in
-Chile. My _Notebook_ has a WiFi card [2]"Intel=C2=AE Centrino=C2=AE Advance=
-d-N
-6235" running from version 3.2 of the Linux kernel and above; and also
-occupies the firmware "iwlwifi-6000g2b-ucode-18.168.6.1.tgz". The
-complete technical information of this WiFi card is [3]here.
-[1] https://launchpad.net/~caravena
-[2] https://www.intel.la/content/www/xl/en/support/network-and-i-o/wireless=
--networking/000005511.html
-[3] https://ark.intel.com/en/products/66890/Intel-Centrino-Advanced-N-6235-=
-Dual-Band
-
-I am interested in buying on ebay.com or aliexpress.com a new WiFi
-card that supports Bluetooh, 802.11ac and most importantly, only use
-Free Software, without firmware *PRIVATIVE*
-
-I was reviewing the internet and found an [0]"Intel -> 8265AC", and
-found it on [2]aliexpress.com but Intel has a bad policy regarding its
-firmware. That is why in the first instance you will be discarding.
-[1] https://ark.intel.com/en/products/94150/Intel-Dual-Band-Wireless-AC-826=
-5
-[2] https://en.aliexpress.com/item/Fenvi-New-Dual-Band-laptop-Wlan-Wi-Fi-Ne=
-twork-For-Intel-Wireless-AC-8265-8265NGW-802/32756150183.html
-
-It's not what I'm looking for!!!...
-
-You could give me a link of a modern WiFi card that works as I said,
-with Bluetooh, 802.11ac and only use Free Software * I can buy on
-ebay.com or aliexpress.com?
-
-Thank you!
-
-Attentive to their requirements,
--
-Cristian
+I think it should be return ret if rsi_set_sdio_pm_caps() fails.
+>  }
+>
+>  static int rsi_resume(struct device *dev)
+>  {
+> -       /* Not yet implemented */
+> -       return -ENOSYS;
+> +       struct sdio_func *pfunction = dev_to_sdio_func(dev);
+> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
+> +       struct rsi_common *common = adapter->priv;
+> +
+> +       common->fsm_state = FSM_MAC_INIT_DONE;
+> +       rsi_sdio_enable_interrupts(pfunction);
+> +
+> +       return 0;
+>  }
+>
+>  static const struct dev_pm_ops rsi_pm_ops = {
+> diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+> index 95e4bed..49c549b 100644
+> --- a/drivers/net/wireless/rsi/rsi_sdio.h
+> +++ b/drivers/net/wireless/rsi/rsi_sdio.h
+> @@ -48,6 +48,8 @@ enum sdio_interrupt_type {
+>
+>  #define RSI_DEVICE_BUFFER_STATUS_REGISTER       0xf3
+>  #define RSI_FN1_INT_REGISTER                    0xf9
+> +#define RSI_INT_ENABLE_REGISTER                        0x04
+> +#define RSI_INT_ENABLE_MASK                    0xfc
+>  #define RSI_SD_REQUEST_MASTER                   0x10000
+>
+>  /* FOR SD CARD ONLY */
+> --
+> 2.7.4
+>
