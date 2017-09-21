@@ -1,144 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:43857 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751268AbdINRpw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 13:45:52 -0400
-Received: by mail-it0-f43.google.com with SMTP id g142so3522743ita.0
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Sep 2017 10:45:52 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
- <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
- <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
- <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
- <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <83ff080c-aa5e-a745-4fdc-6880adad74f5@kernel.dk> (sfid-20170914_194557_217170_7D823794)
-Date: Thu, 14 Sep 2017 11:45:50 -0600
+Received: from mail-cys01nam02on0071.outbound.protection.outlook.com ([104.47.37.71]:39472
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751856AbdIUVfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 17:35:07 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V3 7/9] qtnfmac: do not cache CSA chandef info
+Date: Thu, 21 Sep 2017 14:34:35 -0700
+Message-Id: <20170921213437.27457-8-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233514_875142_E52FC53B)
+In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
+References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2017 11:44 AM, Srinath Mannam wrote:
-> Hi Jens Axboe,
-> 
-> On Thu, Sep 14, 2017 at 11:05 PM, Jens Axboe <axboe@kernel.dk> wrote:
->> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
->>> Hi Bjorn,
->>>
->>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>
->>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
->>>>> [+cc linux-pci]
->>>>>
->>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>>>>>>
->>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>>>>>>> functional changes.
->>>>>>>
->>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
->>>>>>> still enables mastering in that case if it isn't:
->>>>>>>
->>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
->>>>>>> {
->>>>>>> [...]
->>>>>>>         if (pci_is_enabled(dev)) {
->>>>>>>                 if (!dev->is_busmaster)
->>>>>>>                         pci_set_master(dev);
->>>>>>>                 return;
->>>>>>>         }
->>>>>>>
->>>>>>> so I guess due to the new check we end up with mastering disabled, and
->>>>>>> thus the firmware can't load since that's a DMA thing?
->>>>>>
->>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
->>>>>> from working on a pretty standard laptop. It'd suck to have this be in
->>>>>> -rc1. Seems like the trivial fix would be:
->>>>>>
->>>>>>
->>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>>> index b0002daa50f3..ffbe11dbdd61 100644
->>>>>> --- a/drivers/pci/pci.c
->>>>>> +++ b/drivers/pci/pci.c
->>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->>>>>>                 return 0;               /* already enabled */
->>>>>>
->>>>>>         bridge = pci_upstream_bridge(dev);
->>>>>> -       if (bridge && !pci_is_enabled(bridge))
->>>>>> +       if (bridge)
->>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
->>> pci_enable_bridge functoin will causes a nexted lock.
->>
->> Took a look, and looks like you are right. That code looks like a mess,
->> fwiw.
->>
->> I'd strongly suggest that the bad commit is reverted until a proper
->> solution is found, since the simple one-liner could potentially
->> introduce a deadlock with your patch applied.
-> atomic_inc_return(&dev->enable_cnt) in function
-> pci_enable_device_flags enables passed pcie device.
-> !pci_is_enabled(bridge) check in "if (bridge &&
-> !pci_is_enabled(bridge))"  checks for bridge device of previous pcie
-> device.
-> So it will not stop bus_master of bridge device.
-> In your case how many bridges in between endpoint and host bridge?
-> Please provide the details about your use case.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-It's a bog standard Lenovo X1 Carbon, gen4.
+It is never used for anything useful, and all logic is handled by
+either WiFi card or higher layers.
 
-# lspci
-00:00.0 Host bridge: Intel Corporation Sky Lake Host Bridge/DRAM Registers (rev 08)
-00:02.0 VGA compatible controller: Intel Corporation Sky Lake Integrated Graphics (rev 07)
-00:08.0 System peripheral: Intel Corporation Sky Lake Gaussian Mixture Model
-00:13.0 Non-VGA unclassified device: Intel Corporation Device 9d35 (rev 21)
-00:14.0 USB controller: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller (rev 21)
-00:14.2 Signal processing controller: Intel Corporation Sunrise Point-LP Thermal subsystem (rev 21)
-00:16.0 Communication controller: Intel Corporation Sunrise Point-LP CSME HECI (rev 21)
-00:1c.0 PCI bridge: Intel Corporation Device 9d10 (rev f1)
-00:1c.2 PCI bridge: Intel Corporation Device 9d12 (rev f1)
-00:1c.4 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port (rev f1)
-00:1f.0 ISA bridge: Intel Corporation Sunrise Point-LP LPC Controller (rev 21)
-00:1f.2 Memory controller: Intel Corporation Sunrise Point-LP PMC (rev 21)
-00:1f.3 Audio device: Intel Corporation Sunrise Point-LP HD Audio (rev 21)
-00:1f.4 SMBus: Intel Corporation Sunrise Point-LP SMBus (rev 21)
-00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection I219-LM (rev 21)
-04:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
-05:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller (rev 01)
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 12 ------------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c |  2 --
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  1 -
+ drivers/net/wireless/quantenna/qtnfmac/event.c    |  8 +-------
+ 4 files changed, 1 insertion(+), 22 deletions(-)
 
-# lspci -t
--[0000:00]-+-00.0
-           +-02.0
-           +-08.0
-           +-13.0
-           +-14.0
-           +-14.2
-           +-16.0
-           +-1c.0-[02]--
-           +-1c.2-[04]----00.0
-           +-1c.4-[05]----00.0
-           +-1f.0
-           +-1f.2
-           +-1f.3
-           +-1f.4
-           \-1f.6
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 30f8be5..262e8cf 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -809,7 +809,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			       struct cfg80211_csa_settings *params)
+ {
+-	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
+ 	int ret;
+ 
+@@ -830,17 +829,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (vif->vifid != 0) {
+-		if (!(mac->status & QTNF_MAC_CSA_ACTIVE))
+-			return -EOPNOTSUPP;
+-
+-		if (!cfg80211_chandef_identical(&params->chandef,
+-						&mac->csa_chandef))
+-			return -EINVAL;
+-
+-		return 0;
+-	}
+-
+ 	if (!cfg80211_chandef_valid(&params->chandef)) {
+ 		pr_err("%s: invalid channel\n", dev->name);
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 0138dad..42f7e1d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2337,8 +2337,6 @@ int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
+ 
+ 	switch (res_code) {
+ 	case QLINK_CMD_RESULT_OK:
+-		memcpy(&mac->csa_chandef, &params->chandef,
+-		       sizeof(mac->csa_chandef));
+ 		mac->status |= QTNF_MAC_CSA_ACTIVE;
+ 		ret = 0;
+ 		break;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 066fcd1..521ce09 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -147,7 +147,6 @@ struct qtnf_wmac {
+ 	struct qtnf_vif iflist[QTNF_MAX_INTF];
+ 	struct cfg80211_scan_request *scan_req;
+ 	struct cfg80211_chan_def chandef;
+-	struct cfg80211_chan_def csa_chandef;
+ 	struct mutex mac_lock;	/* lock during wmac speicific ops */
+ 	struct timer_list scan_timeout;
+ };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index df58e83..77563b0 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -381,13 +381,7 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+ 		 mac->macid, chandef.chan->hw_value, chandef.center_freq1,
+ 		 chandef.center_freq2, chandef.width);
+ 
+-	if (mac->status & QTNF_MAC_CSA_ACTIVE) {
+-		mac->status &= ~QTNF_MAC_CSA_ACTIVE;
+-		if (chandef.chan->hw_value != mac->csa_chandef.chan->hw_value)
+-			pr_warn("unexpected switch to %u during CSA to %u\n",
+-				chandef.chan->hw_value,
+-				mac->csa_chandef.chan->hw_value);
+-	}
++	mac->status &= ~QTNF_MAC_CSA_ACTIVE;
+ 
+ 	memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
+ 
 -- 
-Jens Axboe
+2.9.5
