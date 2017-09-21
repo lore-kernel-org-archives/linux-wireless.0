@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40628 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751826AbdIVJ4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 05:56:12 -0400
-Date: Fri, 22 Sep 2017 11:56:10 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: iwlegacy:  make const array static to shink
- object code size Content-Type: text/plain; charset="utf-8"
- Content-Transfer-Encoding: 8bit
-Message-ID: <20170922095609.GA27551@redhat.com> (sfid-20170922_115803_130318_E7C20517)
-References: <20170921225630.21916-1-colin.king@canonical.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52560 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751609AbdIULWr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 07:22:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [v2,1/2] qtnfmac: lock access to h/w in tx path
+References: <20170918122950.32612-2-sergey.matyukevich.os@quantenna.com>
+        <20170920123553.7121D6070F@smtp.codeaurora.org>
+        <20170921080147.tvcztifyfwy2lp7g@bars>
+Date: Thu, 21 Sep 2017 14:22:40 +0300
+In-Reply-To: <20170921080147.tvcztifyfwy2lp7g@bars> (Sergey Matyukevich's
+        message of "Thu, 21 Sep 2017 11:01:48 +0300")
+Message-ID: <878th870u7.fsf@codeaurora.org> (sfid-20170921_132250_922244_A1CDD54B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170921225630.21916-1-colin.king@canonical.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 21, 2017 at 11:56:30PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Don't populate const array ac_to_fifo on the stack in an inlined
-> function, instead make it static.  Makes the object code smaller
-> by over 800 bytes:
-> 
->    text	   data	    bss	    dec	    hex	filename
->  159029	  33154	   1216	 193399	  2f377	4965-mac.o
-> 
->    text	   data	    bss	    dec	    hex	filename
->  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
-> 
-> (gcc version 7.2.0 x86_64)
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Content type information was added at the end of the topic, but
-I think Kalle can fix that when he will be committing the patch.
+> Hello Kalle,
+>
+>> > Fix tx path regression. Lock should be held when queuing packets
+>> > to h/w fifos in order to properly handle configurations with
+>> > multiple enabled interfaces.
+>> >
+>> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+>> 
+>> 2 patches applied to wireless-drivers.git, thanks.
+>> 
+>> 20da2ec06bfa qtnfmac: lock access to h/w in tx path
+>> a715b3a0efe7 qtnfmac: cancel scans on wireless interface changes
+>
+> Could you please clarify a couple of points regarding wireless-drivers-next
+> and wireless-drivers trees. I checked development process article at
+> wireless.wiki.kernel.org, but it looks a bit outdated.
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+You mean this page:
+
+https://wireless.wiki.kernel.org/en/developers/process
+
+Yeah, that is outdated :)
+
+> So am I correct assuming the following: - these two fixes were applied
+> to wireless-drivers because I asked to to queue them to 4.14
+
+Correct.
+
+> - these two fixes will show up in wireless-drivers-next at some point
+> in the future after you move wireless-drivers-next forward, rebasing
+> it on top of one of the upcoming "-rc"
+
+I would not use the term "rebase" here, as that means rewriting the
+history which should be avoided on public trees. What I usually do is to
+"merge" (git pull) or "fast forward" (git pull --ff-only).
+
+You are correct that eventually commits from wireless-drivers trickle
+down to wireless-drivers-next, I guess usually it takes something like
+2-4 weeks. Most of them time they trickle down when Dave merges net to
+net-next and I fast forward wireless-drivers-next to latest net-next
+(after Dave has pulled from me). But occasionally I also merge
+wireless-drivers to wireless-drivers-next myself, for example I did that
+last cycle as there were major conflicts on iwlwifi and we wanted to fix
+those early on. The earlier the conflicts are resolved the smoother it
+is for everyone.
+
+So if you have needs for getting the commits from wireless-drivers to
+wireless-drivers-next please let me know and let's see what's the best
+way forward.
+
+Did this help?
+
+-- 
+Kalle Valo
