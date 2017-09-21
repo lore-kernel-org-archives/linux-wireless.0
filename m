@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:49103 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965365AbdIZPLi (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:43945 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751669AbdIUOV2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 11:11:38 -0400
-Received: by mail-wr0-f181.google.com with SMTP id 108so13538207wra.5
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 08:11:37 -0700 (PDT)
-From: Andrey Konovalov <andreyknvl@google.com>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        Andrey Konovalov <andreyknvl@google.com>
-Subject: [PATCH v2] p54: don't unregister leds when they are not initialized
-Date: Tue, 26 Sep 2017 17:11:33 +0200
-Message-Id: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com> (sfid-20170926_171157_510815_7C9B5D4B)
+        Thu, 21 Sep 2017 10:21:28 -0400
+Subject: Re: RTL8192EE PCIe Wireless Network Adapter crashed with linux-4.13
+To: Zwindl <zwindl@protonmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "pkshih@realtek.com" <pkshih@realtek.com>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <2WhCEttl4IJtrTB2AkJYmhbsu-kiR_5fU0A_Z7eWW05rbVE5tB86A_ZS8ek_FQFdgaZw1bfx0wFbxOa0Ydjv1T6BzBkIHtaWTbSptcpB_kg=@protonmail.com>
+ <e8e75755-f8b4-e122-ea4a-99a691405d38@lwfinger.net>
+ <jB0WJNG17mSfKo9m7T26r-b2Gr7mDL4lJ-1cWxeCJ6UCsA4TsxXz4znCLhYY5EASPQciwp1rf_xtwvDR-xzwD-OTApTUFoaVmIvahleDcJk=@protonmail.com>
+ <1eb67d2e-dfbc-a2d0-8949-d4336191c07b@lwfinger.net>
+ <x1duse6v9TTP8Ta7rsTLlZ8DK0Ej7qq9iapef18K0eYSodmCBmfI_mX3c-3ocbPiGzEgV9weOh25dKWSbU5nIetYkfmmUxaxRpUdYFffRZA=@protonmail.com>
+ <35856452-c05c-d116-f91b-0964947ec8ae@lwfinger.net>
+ <2_UKRQjXR9_CXy_99R7fqRbs4VDG0hfFCMvvf4ll2BQV5C_zNiPTnHHNtoYstAGy_UF9X85pl4siU7fnXefmqbhlErxR6FqZQfIf0tADKNg=@protonmail.com>
+ <5e2a695a-ea26-e0a3-d5eb-cf8135c1349e@lwfinger.net>
+ <ZeTD57H3euqWFB5wrD_vYAkdu91l_6Yalbz_mRWtrrb2t17d0cdWOpCaXw33jcPYNKhgqnHbuqHTI9xkVnrkliRTGxraEqWnk5GZ63xKifI=@protonmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5a6aa431-fdde-a329-4168-44490c37f197@lwfinger.net> (sfid-20170921_162204_113396_357E4DB4)
+Date: Thu, 21 Sep 2017 09:21:25 -0500
+MIME-Version: 1.0
+In-Reply-To: <ZeTD57H3euqWFB5wrD_vYAkdu91l_6Yalbz_mRWtrrb2t17d0cdWOpCaXw33jcPYNKhgqnHbuqHTI9xkVnrkliRTGxraEqWnk5GZ63xKifI=@protonmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_register_hw() in p54_register_common() may fail and leds won't
-get initialized. Currently p54_unregister_common() doesn't check that and
-always calls p54_unregister_leds(). The fix is to check priv->registered
-flag before calling p54_unregister_leds().
+On 09/21/2017 06:37 AM, Zwindl wrote:
+> Hi, I've reported to archlinux's bugzilla, and finally found out the flag which 
+> caused that issue, it's the `CONFIG_INTEL_IOMMU_DEFAULT_ON=y` flag, I think may 
+> this is a kernel bug, more details at https://bugs.archlinux.org/task/55665
 
-Found by syzkaller.
+My standard kernel has the following:
 
-INFO: trying to register non-static key.
-the code is fine but needs lockdep annotation.
-turning off the locking correctness validator.
-CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
-4.14.0-rc1-42251-gebb2c2437d80-dirty #205
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-Workqueue: usb_hub_wq hub_event
-Call Trace:
- __dump_stack lib/dump_stack.c:16
- dump_stack+0x292/0x395 lib/dump_stack.c:52
- register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
- __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
- lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
- flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
- __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
- cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
- p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
- p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
- p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
- usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
- __device_release_driver drivers/base/dd.c:861
- device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
- device_release_driver+0x1e/0x30 drivers/base/dd.c:918
- bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
- device_del+0x5c4/0xab0 drivers/base/core.c:1985
- usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
- usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
- hub_port_connect drivers/usb/core/hub.c:4754
- hub_port_connect_change drivers/usb/core/hub.c:5009
- port_event drivers/usb/core/hub.c:5115
- hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
- process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
- process_scheduled_works kernel/workqueue.c:2179
- worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
- kthread+0x3a1/0x470 kernel/kthread.c:231
- ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
+CONFIG_INTEL_IOMMU=y
+# CONFIG_INTEL_IOMMU_SVM is not set
+# CONFIG_INTEL_IOMMU_DEFAULT_ON is not set
 
-Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
----
+I will do some further testing to see if turning CONFIG_INTEL_IOMMU_DEFAULT_ON 
+also breaks my system.
 
-changes in v2:
-- fixed typo in patch subject
-
----
- drivers/net/wireless/intersil/p54/main.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
-index d5a3bf91a03e..ab6d39e12069 100644
---- a/drivers/net/wireless/intersil/p54/main.c
-+++ b/drivers/net/wireless/intersil/p54/main.c
-@@ -852,12 +852,11 @@ void p54_unregister_common(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
- 
--#ifdef CONFIG_P54_LEDS
--	p54_unregister_leds(priv);
--#endif /* CONFIG_P54_LEDS */
--
- 	if (priv->registered) {
- 		priv->registered = false;
-+#ifdef CONFIG_P54_LEDS
-+		p54_unregister_leds(priv);
-+#endif /* CONFIG_P54_LEDS */
- 		ieee80211_unregister_hw(dev);
- 	}
- 
--- 
-2.14.1.821.g8fa685d3b7-goog
+Larry
