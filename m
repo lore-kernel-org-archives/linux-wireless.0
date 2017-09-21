@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58333 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751706AbdIUPxy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 11:53:54 -0400
-Received: from mail-lf0-f71.google.com ([209.85.215.71])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <dariusz.gadomski@canonical.com>)
-        id 1dv3nV-0003VH-GN
-        for linux-wireless@vger.kernel.org; Thu, 21 Sep 2017 15:53:53 +0000
-Received: by mail-lf0-f71.google.com with SMTP id l196so4501286lfl.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 08:53:53 -0700 (PDT)
-Date: Thu, 21 Sep 2017 17:53:48 +0200
-From: Dariusz Gadomski <dariusz.gadomski@canonical.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Jay Vosburgh <jay.vosburgh@canonical.com>
-Subject: Re: Cisco's Wi-Fi Direct Client Policy and iwlwifi (8260)
-Message-ID: <20170921155348.fcos6iootplin6uj@leonard> (sfid-20170921_175358_976241_0546F94A)
-References: <20170818124800.q4r6xtflexkbetzq@leonard>
- <1503076588.15969.320.camel@coelho.fi>
- <1503076802.15969.322.camel@coelho.fi>
+Received: from mail-bn3nam01on0085.outbound.protection.outlook.com ([104.47.33.85]:64638
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751801AbdIUVfK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 17:35:10 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V3 9/9] qtnfmac: do not report channel changes until wiphy is registered
+Date: Thu, 21 Sep 2017 14:34:37 -0700
+Message-Id: <20170921213437.27457-10-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233521_383823_957D0079)
+In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
+References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1503076802.15969.322.camel@coelho.fi>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 18, 2017 at 08:20:02PM +0300, Luca Coelho wrote:
-Hello Luca,
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Thank you and Johannes for looking into this.
+Wireless device may send "channel changed" event before driver
+registered this device with wireless core, which will result in
+warnings.
+Once device is registered, higher layer will query channel info
+manually using .get_channel callback.
 
-> > I'll try to dig the thread I had about this and take it again with our
-> > system engineers to hear what they have to say about it.
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Any news about that thread by any chance?
-
-> > In the meantime, I think it would be helpful if you could contact Cisco
-> > about this issue as well.
-
-I heard from them that since there's a P2P IE transmitted from the
-client then the behavior is correct. They recommended switching the
-option in the AP to xconnect-not-allow which is supposed to allow
-P2P-capable devices to associate as long as they won't use P2P
-functionality.
-
-> Also, as a workaround if you are really not interested in using P2P is
-> to start wpa_supplicant with “p2p_disabled=1” in the configuration. 
-> This should prevent the P2P IE from being sent.
-
-Unfortunately that didn't help. Although I was not able to run any
-P2P-specific commands in wpa_cli (e.g. p2p_find, p2p_listen all
-return FAIL) connecting to the AP in question kept failing.
-Do you have any further hints on debugging this?
-
-> --
-> Cheers,
-> Luca.
-
-Thanks!
-Dariusz
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index b1acc24..7481d5b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -368,6 +368,9 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
++	if (!wiphy->registered)
++		return 0;
++
+ 	qlink_chandef_q2cfg(wiphy, &data->chan, &chandef);
+ 
+ 	if (!cfg80211_chandef_valid(&chandef)) {
+-- 
+2.9.5
