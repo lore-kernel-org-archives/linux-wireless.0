@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:54114 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751443AbdIAIV0 (ORCPT
+Received: from mail-io0-f169.google.com ([209.85.223.169]:48818 "EHLO
+        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbdIUOkR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 04:21:26 -0400
-Message-ID: <1504254083.2361.7.camel@perches.com> (sfid-20170901_102131_460359_CB2B4330)
-Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>
-Date: Fri, 01 Sep 2017 01:21:23 -0700
-In-Reply-To: <87k21irg1g.fsf@kamboji.qca.qualcomm.com>
-References: <20170825082730.31388-1-luca@coelho.fi>
-         <20170825082730.31388-2-luca@coelho.fi>
-         <1504216665.2786.48.camel@perches.com>
-         <1504244238.31031.24.camel@coelho.fi> <1504246520.2361.3.camel@perches.com>
-         <87k21irg1g.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Thu, 21 Sep 2017 10:40:17 -0400
+Received: by mail-io0-f169.google.com with SMTP id n69so11318093ioi.5
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 07:40:16 -0700 (PDT)
+Subject: Re: rtl8821ae keep alive not set, connection lost
+To: James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170912220916.GB32211@us.netrek.org>
+ <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
+ <20170913214649.GC20283@us.netrek.org>
+ <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net>
+ <20170914092738.GG20283@us.netrek.org> <20170919094204.GR26927@us.netrek.org>
+ <20170920093633.GO9946@us.netrek.org>
+ <476b183f-5cc5-9a34-1a85-332dd5244b66@lwfinger.net>
+ <20170920232228.GC9210@us.netrek.org> <20170921080746.GL9210@us.netrek.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <abff13d3-4115-4935-6546-b0fd8c860124@lwfinger.net> (sfid-20170921_164021_227090_B7728904)
+Date: Thu, 21 Sep 2017 09:40:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170921080746.GL9210@us.netrek.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-01 at 11:15 +0300, Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
-> > On Fri, 2017-09-01 at 08:37 +0300, Luca Coelho wrote:
-> > > On Thu, 2017-08-31 at 14:57 -0700, Joe Perches wrote:
-> > > > On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
-> > > > > From: Liad Kaufman <liad.kaufman@intel.com>
-> > > > > There is a debug print that sometimes reaches over
-> > > > > 110 chars, thus generating a warning in those cases.
-[]
-> > It might make sense to add a comment to describe these
-> > trace events coming from TRACE_EVENT(iwlwifi_dbg,
-> > 
-> > All the IWL_DEBUG_<foo> use this trace message maximum.
+On 09/21/2017 03:07 AM, James Cameron wrote:
+> My test kernel "-qb" was write_readback = false in sw.c, with 8-bit
+> read of REG_DBI_RDATA, and has been stable for four hours.  I'll focus
+> on some more testing of this one.  It is a surprise.
 > 
-> Unfortunately the patch is already commited to wireless-drivers-next so
-> we can't change the commit log anymore.
+> http://dev.laptop.org/~quozl/z/1dutXk.txt  (dmesg)
+> 
+> Observe how REG_DBI_FLAG+0 is briefly seen as 1, which doesn't happen
+> with write_readback = true.
 
-No worries about the commit.
-It'd be useful to add a comment to the code.
+Again, thanks for your efforts.
+
+At this point, my system has been up over 17 hours without a single drop. As a 
+result, I will leave the reversion of commit 40b368af4b75 in place. It seems 
+safer than turning off write_readback. After we get more testing, that could 
+still be an option.
+
+Larry
