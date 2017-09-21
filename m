@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36972 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750847AbdI3IMn (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41588 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751793AbdIUPFU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Sep 2017 04:12:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Sep 2017 11:12:34 +0300
-Message-Id: <20170930081234.31940-1-luca@coelho.fi> (sfid-20170930_101223_393037_2BF77C6C)
-In-Reply-To: <20170929120305.20551-4-luca@coelho.fi>
-References: <20170929120305.20551-4-luca@coelho.fi>
-Subject: [PATCH v2 3/5] iwlwifi: mvm: return -ENODATA when reading the temperature with the FW down
+        Thu, 21 Sep 2017 11:05:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Govind Singh <govinds@qti.qualcomm.com>,
+        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Colin Ian King <colin.king@canonical.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        "bartosz.markowski@tieto.com" <bartosz.markowski@tieto.com>
+Subject: Re: [PATCH] ath10: mark PM functions as __maybe_unused
+Date: Thu, 21 Sep 2017 15:05:15 +0000
+Message-ID: <87poak853p.fsf@kamboji.qca.qualcomm.com> (sfid-20170921_170535_461524_8927BC53)
+References: <20170906125904.2588620-1-arnd@arndb.de>
+In-Reply-To: <20170906125904.2588620-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 6 Sep 2017 14:58:53 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Arnd Bergmann <arnd@arndb.de> writes:
 
-It seems that libsensors treats -EIO as a special non-recoverable
-failure when it tries to read the temperature while the firmware is
-not running.  To solve that, change the error code to a milder
--ENODATA.
+> When CONFIG_PM_SLEEP is disabled, we get a compile-time
+> warning:
+>
+> drivers/net/wireless/ath/ath10k/pci.c:3417:12: error: 'ath10k_pci_pm_resu=
+me' defined but not used [-Werror=3Dunused-function]
+>  static int ath10k_pci_pm_resume(struct device *dev)
+>             ^~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath10k/pci.c:3401:12: error: 'ath10k_pci_pm_susp=
+end' defined but not used [-Werror=3Dunused-function]
+>  static int ath10k_pci_pm_suspend(struct device *dev)
+>
+> Rather than fixing the #ifdef, this just marks both functions
+> as __maybe_unused, which is a more robust way to do this.
+>
+> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=196941
+Applied to ath-current branch in ath.git, thanks.
 
-Fixes: c221daf219b1 ("iwlwifi: mvm: add registration to thermal zone")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
+(Having problems with my patchwork script so sending this manually)
 
-In v2:
-   * added a Fixes tag
-
-drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index 4d907f60bce9..1232f63278eb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -631,7 +631,7 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
- 
- 	if (!iwl_mvm_firmware_running(mvm) ||
- 	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
--		ret = -EIO;
-+		ret = -ENODATA;
- 		goto out;
- 	}
- 
--- 
-2.14.1
+--=20
+Kalle Valo=
