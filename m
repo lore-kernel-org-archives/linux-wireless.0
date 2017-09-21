@@ -1,334 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42870 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750926AbdI2MVz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 08:21:55 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>, luca@coelho.fi
-Subject: [PATCH] cfg80211/nl80211: add a port authorized event
-Date: Fri, 29 Sep 2017 14:21:49 +0200
-Message-Id: <20170929122149.29710-1-johannes@sipsolutions.net> (sfid-20170929_142158_954117_98E1A7B7)
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35498 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751875AbdIUOcF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 10:32:05 -0400
+Received: by mail-io0-f196.google.com with SMTP id d16so5563675ioj.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 07:32:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFqt6zYY2WuwU+kQ=HmS5284CspyxF+EFm_jiysCQviSvegC1Q@mail.gmail.com>
+References: <1505998288-2041-1-git-send-email-amitkarwar@gmail.com> <CAFqt6zYY2WuwU+kQ=HmS5284CspyxF+EFm_jiysCQviSvegC1Q@mail.gmail.com>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Thu, 21 Sep 2017 20:02:04 +0530
+Message-ID: <CAEhWJF=eTwUA59VZBoPhxsBvpCm2eM_j1An--Ce_d0XLt8uVFw@mail.gmail.com> (sfid-20170921_163210_441930_375BD1E3)
+Subject: Re: [v2] rsi: sdio suspend and resume support
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+On Thu, Sep 21, 2017 at 7:08 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+> On Thu, Sep 21, 2017 at 6:21 PM, Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+>> From: Karun Eagalapati <karun256@gmail.com>
+>>
+>> SDIO suspend and resume handlers are implemented and verified
+>> that device works after suspend/resume cycle.
+>>
+>> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>> ---
+>> v2: Replaced never ending while loop with 20msecs loop(Kalle Valo)
+>> ---
+>>  drivers/net/wireless/rsi/rsi_91x_sdio.c | 128 +++++++++++++++++++++++++++++++-
+>>  drivers/net/wireless/rsi/rsi_sdio.h     |   2 +
+>>  2 files changed, 126 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+>> index 8d3a483..b3f8006 100644
+>> --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
+>> +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+>> @@ -1059,16 +1059,136 @@ static void rsi_disconnect(struct sdio_func *pfunction)
+>>  }
+>>
+>>  #ifdef CONFIG_PM
+>> +static int rsi_set_sdio_pm_caps(struct rsi_hw *adapter)
+>> +{
+>> +       struct rsi_91x_sdiodev *dev =
+>> +               (struct rsi_91x_sdiodev *)adapter->rsi_dev;
+>> +       struct sdio_func *func = dev->pfunction;
+>> +       int ret;
+>> +
+>> +       ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+>> +       if (ret)
+>> +               rsi_dbg(ERR_ZONE, "Set sdio keep pwr flag failed: %d\n", ret);
+>> +
+>> +       return ret;
+>> +}
+>> +
+>> +static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
+>> +{
+>> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunc);
+>> +       u8 isr_status = 0, data = 0;
+>> +       int ret;
+>> +       unsigned long t1;
+>> +
+>> +       rsi_dbg(INFO_ZONE, "Waiting for interrupts to be cleared..");
+>> +       t1 = jiffies;
+>> +       do {
+>> +               rsi_sdio_read_register(adapter, RSI_FN1_INT_REGISTER,
+>> +                                      &isr_status);
+>> +               rsi_dbg(INFO_ZONE, ".");
+>> +       } while ((isr_status) && (jiffies_to_msecs(jiffies - t1) < 20));
+>> +       rsi_dbg(INFO_ZONE, "Interrupts cleared\n");
+>> +
+>> +       sdio_claim_host(pfunc);
+>> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+>> +       if (ret < 0) {
+>> +               rsi_dbg(ERR_ZONE,
+>> +                       "%s: Failed to read int enable register\n",
+>> +                       __func__);
+>> +               goto done;
+>> +       }
+>> +
+>> +       data &= RSI_INT_ENABLE_MASK;
+>> +       ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
+>> +       if (ret < 0) {
+>> +               rsi_dbg(ERR_ZONE,
+>> +                       "%s: Failed to write to int enable register\n",
+>> +                       __func__);
+>> +               goto done;
+>> +       }
+>> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+>> +       if (ret < 0) {
+>> +               rsi_dbg(ERR_ZONE,
+>> +                       "%s: Failed to read int enable register\n",
+>> +                       __func__);
+>> +               goto done;
+>> +       }
+>> +       rsi_dbg(INFO_ZONE, "int enable reg content = %x\n", data);
+>> +
+>> +done:
+>> +       sdio_release_host(pfunc);
+>> +       return ret;
+>> +}
+>> +
+>> +static int rsi_sdio_enable_interrupts(struct sdio_func *pfunc)
+>> +{
+>> +       u8 data;
+>> +       int ret;
+>> +
+>> +       sdio_claim_host(pfunc);
+>> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+>> +       if (ret < 0) {
+>> +               rsi_dbg(ERR_ZONE,
+>> +                       "%s: Failed to read int enable register\n", __func__);
+>> +               goto done;
+>> +       }
+>> +
+>> +       data |= ~RSI_INT_ENABLE_MASK & 0xff;
+>> +
+>> +       ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
+>> +       if (ret < 0) {
+>> +               rsi_dbg(ERR_ZONE,
+>> +                       "%s: Failed to write to int enable register\n",
+>> +                       __func__);
+>> +               goto done;
+>> +       }
+>> +
+>> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+>> +       if (ret < 0) {
+>> +               rsi_dbg(ERR_ZONE,
+>> +                       "%s: Failed to read int enable register\n", __func__);
+>> +               goto done;
+>> +       }
+>> +       rsi_dbg(INFO_ZONE, "int enable reg content = %x\n", data);
+>> +
+>> +done:
+>> +       sdio_release_host(pfunc);
+>> +       return ret;
+>> +}
+>> +
+>>  static int rsi_suspend(struct device *dev)
+>>  {
+>> -       /* Not yet implemented */
+>> -       return -ENOSYS;
+>> +       int ret;
+>> +       struct sdio_func *pfunction = dev_to_sdio_func(dev);
+>> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
+>> +       struct rsi_common *common;
+>> +
+>> +       if (!adapter) {
+>> +               rsi_dbg(ERR_ZONE, "Device is not ready\n");
+>> +               return -ENODEV;
+>> +       }
+>> +       common = adapter->priv;
+>> +       rsi_sdio_disable_interrupts(pfunction);
+>> +
+>> +       ret = rsi_set_sdio_pm_caps(adapter);
+>> +       if (ret)
+>> +               rsi_dbg(INFO_ZONE,
+>> +                       "Setting power management caps failed\n");
+>> +       common->fsm_state = FSM_CARD_NOT_READY;
+>> +
+>> +       return 0;
+>
+> I think it should be return ret if rsi_set_sdio_pm_caps() fails.
 
-Add an event that indicates that a connection is authorized
-(i.e. the 4 way handshake was performed by the driver). This event
-should be sent by the driver after sending a connect/roamed event.
+This is intentional. We don't want to return error and abort system
+suspend operation due to this.
 
-This is useful for networks that require 802.1X authentication.
-In cases that the driver supports 4 way handshake offload, but the
-802.1X authentication is managed by user space, the driver needs to
-inform user space right after the 802.11 association was completed
-so user space can initialize its 802.1X state machine etc.
-However, it is also possible that the AP will choose to skip the
-802.1X authentication (e.g. when PMKSA caching is used) and proceed
-with the 4 way handshake immediately. In this case the driver needs
-to inform user space that 802.1X authentication is no longer required
-(e.g. to prevent user space from disconnecting since it did not get
-any EAPOLs from the AP).
-
-This is also useful for roaming, in which case it is possible that
-the driver used the Fast Transition protocol so 802.1X is not
-required.
-
-Since there will now be a dedicated notification indicating that the
-connection is authorized, the authorized flag can be removed from the
-roamed event. Drivers can send the new port authorized event right
-after sending the roamed event to indicate the new AP is already
-authorized. This therefore reserves the old PORT_AUTHORIZED attribute.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h       | 21 +++++++++++++++++----
- include/uapi/linux/nl80211.h | 28 ++++++++++++++++-----------
- net/wireless/core.h          |  5 +++++
- net/wireless/nl80211.c       | 34 ++++++++++++++++++++++++++++++---
- net/wireless/nl80211.h       |  2 ++
- net/wireless/sme.c           | 45 +++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/util.c          |  3 +++
- 7 files changed, 119 insertions(+), 19 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index cc1996081463..8b8118a7fadb 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5428,9 +5428,6 @@ cfg80211_connect_timeout(struct net_device *dev, const u8 *bssid,
-  * @req_ie_len: association request IEs length
-  * @resp_ie: association response IEs (may be %NULL)
-  * @resp_ie_len: assoc response IEs length
-- * @authorized: true if the 802.1X authentication was done by the driver or is
-- *	not needed (e.g., when Fast Transition protocol was used), false
-- *	otherwise. Ignored for networks that don't use 802.1X authentication.
-  */
- struct cfg80211_roam_info {
- 	struct ieee80211_channel *channel;
-@@ -5440,7 +5437,6 @@ struct cfg80211_roam_info {
- 	size_t req_ie_len;
- 	const u8 *resp_ie;
- 	size_t resp_ie_len;
--	bool authorized;
- };
- 
- /**
-@@ -5464,6 +5460,23 @@ struct cfg80211_roam_info {
- void cfg80211_roamed(struct net_device *dev, struct cfg80211_roam_info *info,
- 		     gfp_t gfp);
- 
-+/**
-+ * cfg80211_port_authorized - notify cfg80211 of successful security association
-+ *
-+ * @dev: network device
-+ * @bssid: the BSSID of the AP
-+ * @gfp: allocation flags
-+ *
-+ * This function should be called by a driver that supports 4 way handshake
-+ * offload after a security association was successfully established (i.e.,
-+ * the 4 way handshake was completed successfully). The call to this function
-+ * should be preceded with a call to cfg80211_connect_result(),
-+ * cfg80211_connect_done(), cfg80211_connect_bss() or cfg80211_roamed() to
-+ * indicate the 802.11 association.
-+ */
-+void cfg80211_port_authorized(struct net_device *dev, const u8 *bssid,
-+			      gfp_t gfp);
-+
- /**
-  * cfg80211_disconnected - notify cfg80211 that connection was dropped
-  *
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 59ba6ca66a0d..95832ce03a44 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -569,13 +569,14 @@
-  *	authentication/association or not receiving a response from the AP.
-  *	Non-zero %NL80211_ATTR_STATUS_CODE value is indicated in that case as
-  *	well to remain backwards compatible.
-- * @NL80211_CMD_ROAM: notifcation indicating the card/driver roamed by itself.
-- *	When the driver roamed in a network that requires 802.1X authentication,
-- *	%NL80211_ATTR_PORT_AUTHORIZED should be set if the 802.1X authentication
-- *	was done by the driver or if roaming was done using Fast Transition
-- *	protocol (in which case 802.1X authentication is not needed). If
-- *	%NL80211_ATTR_PORT_AUTHORIZED is not set, user space is responsible for
-- *	the 802.1X authentication.
-+ *	When establishing a security association, drivers that support 4 way
-+ *	handshake offload should send %NL80211_CMD_PORT_AUTHORIZED event when
-+ *	the 4 way handshake is completed successfully.
-+ * @NL80211_CMD_ROAM: Notification indicating the card/driver roamed by itself.
-+ *	When a security association was established with the new AP (e.g. if
-+ *	the FT protocol was used for roaming or the driver completed the 4 way
-+ *	handshake), this event should be followed by an
-+ *	%NL80211_CMD_PORT_AUTHORIZED event.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-  *	userspace that a connection was dropped by the AP or due to other
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
-@@ -982,6 +983,12 @@
-  * @NL80211_CMD_DEL_PMK: For offloaded 4-Way handshake, delete the previously
-  *	configured PMK for the authenticator address identified by
-  *	&NL80211_ATTR_MAC.
-+ * @NL80211_CMD_PORT_AUTHORIZED: An event that indicates that the 4 way
-+ *	handshake was completed successfully by the driver. The BSSID is
-+ *	specified with &NL80211_ATTR_MAC. Drivers that support 4 way handshake
-+ *	offload should send this event after indicating 802.11 association with
-+ *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-+ *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -1185,6 +1192,8 @@ enum nl80211_commands {
- 	NL80211_CMD_SET_PMK,
- 	NL80211_CMD_DEL_PMK,
- 
-+	NL80211_CMD_PORT_AUTHORIZED,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2138,10 +2147,7 @@ enum nl80211_commands {
-  *	in %NL80211_CMD_CONNECT to indicate that for 802.1X authentication it
-  *	wants to use the supported offload of the 4-way handshake.
-  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-- * @NL80211_ATTR_PORT_AUTHORIZED: flag attribute used in %NL80211_CMD_ROAMED
-- *	notification indicating that that 802.1X authentication was done by
-- *	the driver or is not needed (because roaming used the Fast Transition
-- *	protocol).
-+ * @NL80211_ATTR_PORT_AUTHORIZED: (reserved)
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 6e809325af3b..35165f42c2a8 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -216,6 +216,7 @@ enum cfg80211_event_type {
- 	EVENT_DISCONNECTED,
- 	EVENT_IBSS_JOINED,
- 	EVENT_STOPPED,
-+	EVENT_PORT_AUTHORIZED,
- };
- 
- struct cfg80211_event {
-@@ -235,6 +236,9 @@ struct cfg80211_event {
- 			u8 bssid[ETH_ALEN];
- 			struct ieee80211_channel *channel;
- 		} ij;
-+		struct {
-+			u8 bssid[ETH_ALEN];
-+		} pa;
- 	};
- };
- 
-@@ -385,6 +389,7 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
- 			bool wextev);
- void __cfg80211_roamed(struct wireless_dev *wdev,
- 		       struct cfg80211_roam_info *info);
-+void __cfg80211_port_authorized(struct wireless_dev *wdev, const u8 *bssid);
- int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
- 			      struct wireless_dev *wdev);
- void cfg80211_autodisconnect_wk(struct work_struct *work);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1e39ba3cfd06..90e212db6889 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13830,9 +13830,7 @@ void nl80211_send_roamed(struct cfg80211_registered_device *rdev,
- 		     info->req_ie)) ||
- 	    (info->resp_ie &&
- 	     nla_put(msg, NL80211_ATTR_RESP_IE, info->resp_ie_len,
--		     info->resp_ie)) ||
--	    (info->authorized &&
--	     nla_put_flag(msg, NL80211_ATTR_PORT_AUTHORIZED)))
-+		     info->resp_ie)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-@@ -13846,6 +13844,36 @@ void nl80211_send_roamed(struct cfg80211_registered_device *rdev,
- 	nlmsg_free(msg);
- }
- 
-+void nl80211_send_port_authorized(struct cfg80211_registered_device *rdev,
-+				  struct net_device *netdev, const u8 *bssid)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_PORT_AUTHORIZED);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, bssid))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_MLME, GFP_KERNEL);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
- 			       struct net_device *netdev, u16 reason,
- 			       const u8 *ie, size_t ie_len, bool from_ap)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index b96933322077..bf9e772a30b9 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -58,6 +58,8 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
- void nl80211_send_roamed(struct cfg80211_registered_device *rdev,
- 			 struct net_device *netdev,
- 			 struct cfg80211_roam_info *info, gfp_t gfp);
-+void nl80211_send_port_authorized(struct cfg80211_registered_device *rdev,
-+				  struct net_device *netdev, const u8 *bssid);
- void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
- 			       struct net_device *netdev, u16 reason,
- 			       const u8 *ie, size_t ie_len, bool from_ap);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 0a49b88070d0..f38ed490e42b 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -960,7 +960,6 @@ void cfg80211_roamed(struct net_device *dev, struct cfg80211_roam_info *info,
- 	ev->rm.resp_ie_len = info->resp_ie_len;
- 	memcpy((void *)ev->rm.resp_ie, info->resp_ie, info->resp_ie_len);
- 	ev->rm.bss = info->bss;
--	ev->rm.authorized = info->authorized;
- 
- 	spin_lock_irqsave(&wdev->event_lock, flags);
- 	list_add_tail(&ev->list, &wdev->event_list);
-@@ -969,6 +968,50 @@ void cfg80211_roamed(struct net_device *dev, struct cfg80211_roam_info *info,
- }
- EXPORT_SYMBOL(cfg80211_roamed);
- 
-+void __cfg80211_port_authorized(struct wireless_dev *wdev, const u8 *bssid)
-+{
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION))
-+		return;
-+
-+	if (WARN_ON(!wdev->current_bss) ||
-+	    WARN_ON(!ether_addr_equal(wdev->current_bss->pub.bssid, bssid)))
-+		return;
-+
-+	nl80211_send_port_authorized(wiphy_to_rdev(wdev->wiphy), wdev->netdev,
-+				     bssid);
-+}
-+
-+void cfg80211_port_authorized(struct net_device *dev, const u8 *bssid,
-+			      gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct cfg80211_event *ev;
-+	unsigned long flags;
-+
-+	if (WARN_ON(!bssid))
-+		return;
-+
-+	ev = kzalloc(sizeof(*ev), gfp);
-+	if (!ev)
-+		return;
-+
-+	ev->type = EVENT_PORT_AUTHORIZED;
-+	memcpy(ev->pa.bssid, bssid, ETH_ALEN);
-+
-+	/*
-+	 * Use the wdev event list so that if there are pending
-+	 * connected/roamed events, they will be reported first.
-+	 */
-+	spin_lock_irqsave(&wdev->event_lock, flags);
-+	list_add_tail(&ev->list, &wdev->event_list);
-+	spin_unlock_irqrestore(&wdev->event_lock, flags);
-+	queue_work(cfg80211_wq, &rdev->event_work);
-+}
-+EXPORT_SYMBOL(cfg80211_port_authorized);
-+
- void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 			     size_t ie_len, u16 reason, bool from_ap)
- {
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 7a1fcc6ee060..ff21c314a609 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -846,6 +846,9 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
- 		case EVENT_STOPPED:
- 			__cfg80211_leave(wiphy_to_rdev(wdev->wiphy), wdev);
- 			break;
-+		case EVENT_PORT_AUTHORIZED:
-+			__cfg80211_port_authorized(wdev, ev->pa.bssid);
-+			break;
- 		}
- 		wdev_unlock(wdev);
- 
--- 
-2.14.1
+Regards,
+Amitkumar Karwar
