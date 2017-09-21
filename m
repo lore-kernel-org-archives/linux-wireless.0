@@ -1,75 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge01.uni-rostock.de ([139.30.8.12]:32077 "EHLO
-        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753183AbdIHOQq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 10:16:46 -0400
-Content-Type: text/plain
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [RFC 4/4] mac80211_hwsim: add radio idx param to netlink callback of radio creation
-Date: Fri, 8 Sep 2017 16:11:37 +0200
-In-Reply-To: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
-References: <20170908141137.3941-1-benjamin.beichler@uni-rostock.de>
-MIME-Version: 1.0
-Message-ID: <c6eda3a2-ad9b-4c33-b3c8-ddc36199ea3e@MAIL1.uni-rostock.de> (sfid-20170908_161759_162528_35DB47F2)
+Received: from s3.sipsolutions.net ([5.9.151.49]:45762 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751714AbdIUNwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 09:52:08 -0400
+Message-ID: <1506001926.2048.5.camel@sipsolutions.net> (sfid-20170921_155212_745730_527B0AEF)
+Subject: Re: [PATCH v2 2/2] wireless: return correct mandatory rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
+        linux-wireless@vger.kernel.org
+Date: Thu, 21 Sep 2017 15:52:06 +0200
+In-Reply-To: <20170908160712.8765-1-rschuetz@uni-koblenz.de> (sfid-20170908_180746_422254_8173A2C4)
+References: <20170907154744.28357-2-rschuetz@uni-koblenz.de>
+         <20170908160712.8765-1-rschuetz@uni-koblenz.de>
+         (sfid-20170908_180746_422254_8173A2C4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the radio index is already a valid NL attribute, this patch simply
-try to read it and create the radio specific to this index by the
-previously used scheme.
+On Fri, 2017-09-08 at 18:07 +0200, Richard Schütz wrote:
+> Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B
+> to get
+> all mandatory rates in 2.4 GHz band. It is safe to do so because ERP
+> mandatory rates are a superset of HR/DSSS mandatory rates. Also limit
+> to
+> OFDM rates for 10 MHz and 5 MHz channels as originally intended by
+> commit
+> 74608aca4d82e.
 
-Since this allows to create radios out of row, we need to search for a
-free index for a new radio, when the index is not present as parameter.
+I don't understand this. Why should all ERP (Clause 18, 11g) rates be
+mandatory for the users of this?
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+The way I see it, this would make us assume that all 2.4 GHz clients
+support ERP in IBSS, which may not be true?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 5dd4be2a8487..faa0e39523aa 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2436,6 +2436,7 @@ struct hwsim_new_radio_params {
- 	bool destroy_on_close;
- 	const char *hwname;
- 	bool no_vif;
-+	int idx;
- };
- 
- static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
-@@ -2645,13 +2646,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	skb_queue_head_init(&data->pending);
- 
- 	SET_IEEE80211_DEV(hw, data->dev);
--	eth_zero_addr(addr);
--	addr[0] = 0x02;
--	addr[3] = idx >> 8;
--	addr[4] = idx;
--	memcpy(data->addresses[0].addr, addr, ETH_ALEN);
--	memcpy(data->addresses[1].addr, addr, ETH_ALEN);
--	data->addresses[1].addr[0] |= 0x40;
-+	memcpy(data->addresses[0].addr, &mac.addr, ETH_ALEN);
-+	memcpy(data->addresses[1].addr, &mac.addr, ETH_ALEN);
-+	data->addresses[0].addr[0] = 0x02;
- 	hw->wiphy->n_addresses = 2;
- 	hw->wiphy->addresses = data->addresses;
- 
-@@ -3304,6 +3301,11 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 		param.regd = hwsim_world_regdom_custom[idx];
- 	}
- 
-+	if (info->attrs[HWSIM_ATTR_RADIO_ID])
-+		param.idx = nla_get_u32(info->attrs[HWSIM_ATTR_RADIO_ID]);
-+	else
-+		param.idx = -1;
-+
- 	return mac80211_hwsim_new_radio(info, &param);
- }
- 
--- 
-2.14.1
+johannes
