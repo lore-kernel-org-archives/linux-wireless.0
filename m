@@ -1,52 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53452 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755286AbdIGMjL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 08:39:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: torvalds@linux-foundation.org, Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-        linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        netdev@vger.kernel.org, davem@davemloft.net,
-        emmanuel.grumbach@intel.com, Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH] iwlwifi: mvm: only send LEDS_CMD when the FW supports it
-References: <CA+55aFxjHSW7v4Ttu7mGPkxdGpR-WtVoxDT5qtwxUC-Dge5a5A@mail.gmail.com>
-        <20170907075152.4522-1-luca@coelho.fi>
-Date: Thu, 07 Sep 2017 15:39:05 +0300
-In-Reply-To: <20170907075152.4522-1-luca@coelho.fi> (Luca Coelho's message of
-        "Thu, 7 Sep 2017 10:51:52 +0300")
-Message-ID: <877exan0nq.fsf@kamboji.qca.qualcomm.com> (sfid-20170907_143952_398820_62386690)
+Received: from mail-cys01nam02on0044.outbound.protection.outlook.com ([104.47.37.44]:42998
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751728AbdIUVep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 17:34:45 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V3 1/9] qtnfmac: convert channel width from bitfiled to simple enum
+Date: Thu, 21 Sep 2017 14:34:29 -0700
+Message-Id: <20170921213437.27457-2-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233452_365629_7AC36EA9)
+In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
+References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-> From: Luca Coelho <luciano.coelho@intel.com>
->
-> The LEDS_CMD command is only supported in some newer FW versions
-> (e.g. iwlwifi-8000C-31.ucode), so we can't send it to older versions
-> (such as iwlwifi-8000C-27.ucode).
->
-> To fix this, check for a new bit in the FW capabilities TLV that tells
-> when the command is supported.
->
-> Note that the current version of -31.ucode in linux-firmware.git
-> (31.532993.0) does not have this capability bit set, so the LED won't
-> work, even though this version should support it.  But we will update
-> this firmware soon, so it won't be a problem anymore.
->
-> Fixes: 7089ae634c50 ("iwlwifi: mvm: use firmware LED command where applicable")
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This will allow to use qlink channel width values to specify BW setting
+corresponding to enum nl80211_chan_width.
+Current user is converted to apply BIT() macro manually to each individual
+qlink_channel_width enumeration value.
 
-Linus, do you want to apply this directly or should we take it via the
-normal route (wireless-drivers -> net)? If your prefer the latter when
-I'm planning to submit this to Dave in a day or two and expecting it to
-get to your tree in about a week, depending of course what is Dave's
-schedule.
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h      | 16 ++++++++--------
+ drivers/net/wireless/quantenna/qtnfmac/qlink_util.c | 16 ++++++++--------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index a8242f6..a69fd470 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -108,14 +108,14 @@ enum qlink_sta_flags {
+ };
+ 
+ enum qlink_channel_width {
+-	QLINK_CHAN_WIDTH_5		= BIT(0),
+-	QLINK_CHAN_WIDTH_10		= BIT(1),
+-	QLINK_CHAN_WIDTH_20_NOHT	= BIT(2),
+-	QLINK_CHAN_WIDTH_20		= BIT(3),
+-	QLINK_CHAN_WIDTH_40		= BIT(4),
+-	QLINK_CHAN_WIDTH_80		= BIT(5),
+-	QLINK_CHAN_WIDTH_80P80		= BIT(6),
+-	QLINK_CHAN_WIDTH_160		= BIT(7),
++	QLINK_CHAN_WIDTH_5 = 0,
++	QLINK_CHAN_WIDTH_10,
++	QLINK_CHAN_WIDTH_20_NOHT,
++	QLINK_CHAN_WIDTH_20,
++	QLINK_CHAN_WIDTH_40,
++	QLINK_CHAN_WIDTH_80,
++	QLINK_CHAN_WIDTH_80P80,
++	QLINK_CHAN_WIDTH_160,
+ };
+ 
+ /* QLINK Command messages related definitions
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
+index cf024c9..369b77d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
+@@ -49,28 +49,28 @@ u8 qlink_chan_width_mask_to_nl(u16 qlink_mask)
+ {
+ 	u8 result = 0;
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_5)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_5))
+ 		result |= BIT(NL80211_CHAN_WIDTH_5);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_10)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_10))
+ 		result |= BIT(NL80211_CHAN_WIDTH_10);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_20_NOHT)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_20_NOHT))
+ 		result |= BIT(NL80211_CHAN_WIDTH_20_NOHT);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_20)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_20))
+ 		result |= BIT(NL80211_CHAN_WIDTH_20);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_40)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_40))
+ 		result |= BIT(NL80211_CHAN_WIDTH_40);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_80)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_80))
+ 		result |= BIT(NL80211_CHAN_WIDTH_80);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_80P80)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_80P80))
+ 		result |= BIT(NL80211_CHAN_WIDTH_80P80);
+ 
+-	if (qlink_mask & QLINK_CHAN_WIDTH_160)
++	if (qlink_mask & BIT(QLINK_CHAN_WIDTH_160))
+ 		result |= BIT(NL80211_CHAN_WIDTH_160);
+ 
+ 	return result;
 -- 
-Kalle Valo
+2.9.5
