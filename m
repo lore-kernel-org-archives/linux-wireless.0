@@ -1,241 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:24208 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752722AbdIYW3u (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:43576 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751652AbdIUSWq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 18:29:50 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2] ath10k: add new cipher suite support
-Date: Mon, 25 Sep 2017 15:29:41 -0700
-Message-ID: <1506378581-13598-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20170926_003151_330406_0DACDDBB)
+        Thu, 21 Sep 2017 14:22:46 -0400
+Received: by mail-io0-f170.google.com with SMTP id k101so12910338iod.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 11:22:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1505937307.3026.20.camel@sipsolutions.net>
+References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
+ <2277141.bYDD1vAb9W@debian64> <1505937307.3026.20.camel@sipsolutions.net>
+From: Andrey Konovalov <andreyknvl@google.com>
+Date: Thu, 21 Sep 2017 20:22:45 +0200
+Message-ID: <CAAeHK+wWRZuCDNhoZJ0ACDhiNQw8tVRp2HW0j1EDH0HOe523xA@mail.gmail.com> (sfid-20170921_202305_100447_3BCF4990)
+Subject: Re: usb/net/p54: trying to register non-static key in p54_unregister_leds
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
+        Yong Zhang <yong.zhang0@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QCA99x0 and QCA4019 family chips support CCMP-256, GCMP-128, and
-GCMP-256 ciphers in hardware, so advertise support for these. As
-firmware does not support group management frame ciphers (BIP),
-handle them in software (mac80211).
+On Wed, Sep 20, 2017 at 9:55 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2017-09-20 at 21:27 +0200, Christian Lamparter wrote:
+>
+>> It seems this is caused as a result of:
+>>     -> lock_map_acquire(&work->lockdep_map);
+>>           lock_map_release(&work->lockdep_map);
+>>
+>>     in flush_work() [0]
+>
+> Agree.
+>
+>> This was added by:
+>>
+>>       commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
+>>       Author: Stephen Boyd <sboyd@codeaurora.org>
+>>       Date:   Fri Apr 20 17:28:50 2012 -0700
+>>
+>>       workqueue: Catch more locking problems with flush_work()
+>
+> Yes, but that doesn't matter.
+>
+>> Looking at the Stephen's patch, it's clear that it was made
+>> with "static DECLARE_WORK(work, my_work)" in mind. However
+>> p54's led_work is "per-device", hence it is stored in the
+>> devices context p54_common, which is dynamically allocated.
+>> So, maybe revert Stephen's patch?
+>
+> I disagree - as the lockdep warning says:
+>
+>> > INFO: trying to register non-static key.
+>> > the code is fine but needs lockdep annotation.
+>> > turning off the locking correctness validator.
+>
+> What it needs is to actually correctly go through initializing the work
+> at least once.
+>
+> Without more information, I can't really say what's going on, but I
+> assume that something is failing and p54_unregister_leds() is getting
+> invoked without p54_init_leds() having been invoked, so essentially
+> it's trying to flush a work that was never initialized?
+>
+> INIT_DELAYED_WORK() does, after all, initialize the lockdep map
+> properly via __INIT_WORK().
 
-Reviewed-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
-v2: fix a bug in assigning n_cipher_suites. fill hw_param n_cipher_suites
-   for all chips.
+Since I'm able to reproduce this, please let me know if you need me to
+collect some debug traces to help with the triage.
 
- drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 43 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.h  |  1 +
- 4 files changed, 57 insertions(+), 2 deletions(-)
+Thanks!
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index a4f635820f35..71de3a28b59c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -74,6 +74,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -97,6 +98,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -119,6 +121,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -141,6 +144,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -163,6 +167,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -188,6 +193,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -216,6 +222,7 @@
- 		.spectral_bin_discard = 4,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 11,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -249,6 +256,7 @@
- 		 */
- 		.vht160_mcs_rx_highest = 1560,
- 		.vht160_mcs_tx_highest = 1560,
-+		.n_cipher_suites = 11,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -281,6 +289,7 @@
- 		 */
- 		.vht160_mcs_rx_highest = 780,
- 		.vht160_mcs_tx_highest = 780,
-+		.n_cipher_suites = 11,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -303,6 +312,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -327,6 +337,7 @@
- 		.spectral_bin_discard = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 8,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -356,6 +367,7 @@
- 		.spectral_bin_discard = 4,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
-+		.n_cipher_suites = 11,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 0c089f6dd3d9..ed30d5b6cd0e 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -550,6 +550,9 @@ struct ath10k_hw_params {
- 	 */
- 	int vht160_mcs_rx_highest;
- 	int vht160_mcs_tx_highest;
-+
-+	/* Number of ciphers supported (i.e First N) in cipher_suites array */
-+	int n_cipher_suites;
- };
- 
- struct htt_rx_desc;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5683f1a5330e..89455231754c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -242,6 +242,16 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		arg.key_cipher = WMI_CIPHER_WEP;
- 		break;
-+	case WLAN_CIPHER_SUITE_CCMP_256:
-+		arg.key_cipher = WMI_CIPHER_AES_CCM;
-+		break;
-+	case WLAN_CIPHER_SUITE_GCMP:
-+	case WLAN_CIPHER_SUITE_GCMP_256:
-+		arg.key_cipher = WMI_CIPHER_AES_GCM;
-+		break;
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
-+	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
- 		WARN_ON(1);
- 		return -EINVAL;
-@@ -5723,7 +5733,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	u32 flags2;
- 
- 	/* this one needs to be done in software */
--	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-+	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256 ||
-+	    key->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
- 		return 1;
- 
- 	if (arvif->nohwcrypt)
-@@ -8074,7 +8087,22 @@ int ath10k_mac_register(struct ath10k *ar)
- 		WLAN_CIPHER_SUITE_WEP104,
- 		WLAN_CIPHER_SUITE_TKIP,
- 		WLAN_CIPHER_SUITE_CCMP,
-+
-+		/* Do not add hardware supported ciphers before this line.
-+		 * Allow software encryption for all chips. Don't forget to
-+		 * update n_cipher_suites below.
-+		 */
- 		WLAN_CIPHER_SUITE_AES_CMAC,
-+		WLAN_CIPHER_SUITE_BIP_CMAC_256,
-+		WLAN_CIPHER_SUITE_BIP_GMAC_128,
-+		WLAN_CIPHER_SUITE_BIP_GMAC_256,
-+
-+		/* Only QCA99x0 and QCA4019 varients support GCMP-128, GCMP-256
-+		 * and CCMP-256 in hardware.
-+		 */
-+		WLAN_CIPHER_SUITE_GCMP,
-+		WLAN_CIPHER_SUITE_GCMP_256,
-+		WLAN_CIPHER_SUITE_CCMP_256,
- 	};
- 	struct ieee80211_supported_band *band;
- 	void *channels;
-@@ -8313,7 +8341,18 @@ int ath10k_mac_register(struct ath10k *ar)
- 	}
- 
- 	ar->hw->wiphy->cipher_suites = cipher_suites;
--	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-+
-+	/* QCA988x and QCA6174 family chips do not support CCMP-256, GCMP-128
-+	 * and GCMP-256 ciphers in hardware. Fetch number of ciphers supported
-+	 * from chip specific hw_param table.
-+	 */
-+	if (!ar->hw_params.n_cipher_suites ||
-+	    ar->hw_params.n_cipher_suites > ARRAY_SIZE(cipher_suites)) {
-+		ath10k_err(ar, "invalid hw_params.n_cipher_suites %d\n",
-+			   ar->hw_params.n_cipher_suites);
-+		ar->hw_params.n_cipher_suites = 8;
-+	}
-+	ar->hw->wiphy->n_cipher_suites = ar->hw_params.n_cipher_suites;
- 
- 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7a3606dde227..c02b21cff38d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4751,6 +4751,7 @@ struct wmi_key_seq_counter {
- #define WMI_CIPHER_WAPI     0x5
- #define WMI_CIPHER_CKIP     0x6
- #define WMI_CIPHER_AES_CMAC 0x7
-+#define WMI_CIPHER_AES_GCM  0x8
- 
- struct wmi_vdev_install_key_cmd {
- 	__le32 vdev_id;
--- 
-1.9.1
+>
+> johannes
+>
+> --
+> You received this message because you are subscribed to the Google Groups "syzkaller" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller+unsubscribe@googlegroups.com.
+> For more options, visit https://groups.google.com/d/optout.
