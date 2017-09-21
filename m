@@ -1,112 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36792 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755382AbdIHOZY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 10:25:24 -0400
-Message-ID: <1504880723.20347.2.camel@sipsolutions.net> (sfid-20170908_162629_195365_9ACCA2ED)
-Subject: Re: [RFC 1/4] mac80211_hwsim: changed hwsim_radios from list to
- hashlist keyed by MAC-Address
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 08 Sep 2017 16:25:23 +0200
-In-Reply-To: <9df35571-bc40-4af0-8a4f-01ba400dbb50@MAIL1.uni-rostock.de>
-References: <9df35571-bc40-4af0-8a4f-01ba400dbb50@MAIL1.uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:57106 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751738AbdIUTft (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Sep 2017 15:35:49 -0400
+Received: by mail-lf0-f53.google.com with SMTP id a18so6738637lfl.13
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 12:35:48 -0700 (PDT)
+From: "=?UTF-8?Q?Joel_Bjurstr=c3=b6m?=" <maxxflow@gmail.com>
+Subject: Re: iwlwifi: ToF usage
+To: linux-wireless@vger.kernel.org, assaf.krauss@intel.com,
+        luciano.coelho@intel.com, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com
+References: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com>
+Message-ID: <d3356a70-b90e-d0cc-6328-17f055b2ed1c@maxxflow.com> (sfid-20170921_213553_171372_99B7D8B7)
+Date: Thu, 21 Sep 2017 21:35:46 +0200
+MIME-Version: 1.0
+In-Reply-To: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-08 at 16:11 +0200, Benjamin Beichler wrote:
-> Use hashlist to improve lookup speed for every received NL-message,
-> especially for higher counts of radios, like 100 or more. The
-> stringhash
-> should be neglible for 6 Bytes MAC-Address, could be improved by
-> using
-> cast to 64bit integer and hash this instead.
+Including some people I've seen mentioned in ToF-related e-mails...
+
+This is what I've tried:
+
+
+-- Responder --
+
+* hostapd running, hostapd.conf:
+	driver=nl80211
+	interface=wlan1
+	hw_mode=g
+	channel=1
+	wmm_enabled=1
+	ssid=tof_test
+	ftm_responder=1
+	ftm_initiator=1
+
+$ cd /sys/kernel/debug/iwlwifi/0000:06:00.0/iwlmvm/netdev:wlan1
+$ echo channel_num=1 > tof_responder_params
+$ echo bssid=bb:bb:bb:bb:bb:bb > tof_responder_params
+$ echo rate=1 > tof_responder_params
+$ echo ftm_per_burst=5 > tof_responder_params
+
+$ echo send_responder_cfg=1 > tof_responder_params
+
+
+-- Initiator --
+
+$ cd /sys/kernel/debug/iwlwifi/0000:06:00.0/iwlmvm/netdev:wlan1
+$ echo send_tof_cfg=1 > tof_enable
+$ echo 'num_of_ap=1' > tof_range_request
+$ echo 'ap=0 1 0 0 bb:bb:bb:bb:bb:bb 0 10 0 5 5 0 0 0 0 -40' \
+	> tof_range_request
+
+$ echo 'send_range_request=1' > tof_range_request
+
+$ cat tof_range_response
+request_id = 0
+status = 2
+last_in_batch = 1
+num_of_aps = 0
+
+
+
+(bb:bb:bb:bb:bb:bb is the responder's BSSID)
+
+Am I even close? Fumbling in the dark here.
+
+The 'status = 2' from tof_range_response comes directly from the FW, 
+AFAICT. What do different values mean?
+
+
+Cheers,
+Joel
+
+
+On 09/14/2017 09:44 PM, Joel B wrote:
+> Hi,
 > 
-> For a more reliable implementation of radio dump, a generation count
-> is inserted,
-> which indicates a change while dump (this was missing before and
-> could lead into problems because of inconsistent NL-dumps).
-
-The idea seems reasonable, but you need major coding style fixes. You
-should also correctly line-break your commit messages.
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
-should be useful.
-
-> +static unsigned int hash_mac(const u8 *mac )
-> +{
-> +	return full_name_hash(&mac_hash_salt,mac,ETH_ALEN);
-> +}
-
-That really should just be using jhash() or so, why bother with string
-hashing?
-
-> +
->  static spinlock_t hwsim_radio_lock;
-> -static LIST_HEAD(hwsim_radios);
-> -static int hwsim_radio_idx;
-> +static DEFINE_HASHTABLE(hwsim_radios,HWSIM_HT_BITS);
-> +static int hwsim_radio_count;
-> +static int hwsim_radio_generation=1;
-
-Why not use rhashtable? That will size itself automatically, no need
-for the bits. In fact, that also removes the whole question of the hash
-algorithm, I think.
-
-Not sure about walking there, but there's rhashtable_walk_*.
-
-> -	list_for_each_entry(data2, &hwsim_radios, list) {
-> +	hash_for_each( hwsim_radios, bucket, data2, list) {
-
-coding style
-
-> +struct mac_address create_mac_from_idx(int idx)
-> +{
-> +	struct mac_address mac;
-> +	eth_zero_addr(mac.addr);
-> +	mac.addr[0] = 0x42;
-> +	mac.addr[3] = idx >> 8;
-> +	mac.addr[4] = idx;
-> +	return mac;
-> +
-> +}
-
-coding style
-
->  static int mac80211_hwsim_new_radio(struct genl_info *info,
->  				    struct hwsim_new_radio_params
-> *param)
->  {
->  	int err;
-> -	u8 addr[ETH_ALEN];
-> +	struct mac_address mac;
->  	struct mac80211_hwsim_data *data;
->  	struct ieee80211_hw *hw;
->  	enum nl80211_band band;
->  	const struct ieee80211_ops *ops = &mac80211_hwsim_ops;
->  	struct net *net;
-> -	int idx;
-> +	int idx,hashkey;
-> +	bool new_id_found=true;
-> +
-
-coding style
-
->  	if (WARN_ON(param->channels > 1 && !param->use_chanctx))
->  		return -EINVAL;
->  
->  	spin_lock_bh(&hwsim_radio_lock);
-> -	idx = hwsim_radio_idx++;
-> +
-> +
-+	if(param->idx == -1){
-
-etc.
-
-[snip]
-
-johannes
+> Starting to play around with the FTM/ToF support in iwlwifi, but 
+> documentation is (understandably) scarce at this point. Using a pair of 
+> 8260:s I had lying around.
+> 
+> Can someone give me some hints on how to work the debugfs API for a 
+> successful measurement?
+> 
+> I've set up one card as AP with hostapd (with ftm_responder=1 and 
+> ftm_initiator=1 in hostapd.conf), the other as a STA.
+> 
+>  From the STA, I've played with 'tof_range_request' in debugfs. Writing 
+> send_range_request=1, which it doesn't choke on or anything, but nothing 
+> seems to happen. Guess I need to set things up a bit first, but how?
+> 
+> If it's possible to get this to work at all at this stage, some hints on 
+> how to do it would be great.
+> 
+> 
+> Thanks,
+> Joel
