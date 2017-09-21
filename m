@@ -1,51 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:49641 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbdISJz1 (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:52347 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751887AbdIUPau (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 05:55:27 -0400
-Received: by mail-wm0-f49.google.com with SMTP id e71so3587392wmg.4
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 02:55:27 -0700 (PDT)
-Subject: Re: [TDLS PATCH V3 1/5] mac80211: Enable TDLS peer buffer STA feature
-To: Johannes Berg <johannes@sipsolutions.net>,
-        yintang@qti.qualcomm.com, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <TDLS for ath10k patchset v3>
- <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
- <1505790913-28377-2-git-send-email-yintang@qti.qualcomm.com>
- <db428527-cb2b-5136-24c2-be2fca9e2407@broadcom.com>
- <1505808914.3026.0.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <06857e7e-5ec1-b0b7-7320-42690e852658@broadcom.com> (sfid-20170919_115530_973728_CFF1975A)
-Date: Tue, 19 Sep 2017 11:55:24 +0200
+        Thu, 21 Sep 2017 11:30:50 -0400
+Received: by mail-qk0-f176.google.com with SMTP id o77so6132198qke.9
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 08:30:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1505808914.3026.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <e9fe560a-fba3-aaa8-8c0a-b3c6f5ce1a74@broadcom.com>
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+ <e9fe560a-fba3-aaa8-8c0a-b3c6f5ce1a74@broadcom.com>
+From: Vanessa Ayumi Maegima <van.ayumi@gmail.com>
+Date: Thu, 21 Sep 2017 12:30:48 -0300
+Message-ID: <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com> (sfid-20170921_173123_901113_53F9B2BB)
+Subject: Re: AP6335 with mainline kernel
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, embed3d@gmail.com,
+        =?UTF-8?B?SsO2cmcgS3JhdXNl?= <joerg.krause@embedded.rocks>,
+        Vanessa Maegima <vanessa.maegima@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-09-17 10:15, Johannes Berg wrote:
-> On Tue, 2017-09-19 at 09:56 +0200, Arend van Spriel wrote:
->>
->>> --- a/include/net/cfg80211.h
->>> +++ b/include/net/cfg80211.h
->>> @@ -3249,6 +3249,8 @@ struct cfg80211_ops {
->>>     *	beaconing mode (AP, IBSS, Mesh, ...).
->>>     * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key
->>> installation
->>>     *	before connection.
->>> + * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA: Device support buffer STA
->>> when TDLS is
->>> + *	established.
->>
->> If I am not mistaken no new wiphy flags are supposed to be added.
->> Although this might be something not reported to user-space, right?
->> Have  a look at struct wiphy::ext_features.
-> 
-> I guess it should just be a HW flag in mac80211? Not sure why userspace
-> even needs to know.
+Hi Arend,
 
-Indeed seems specific to stack functionality in mac80211.
+On Thu, Sep 21, 2017 at 4:26 AM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 20-09-17 21:33, Vanessa Ayumi Maegima wrote:
+>>
+>> Hi,
+>>
+>> I am trying to enable Wifi on imx7d-pico using mainline kernel. imx7d-pico
+>> has an AP6335 chip.
+>>
+>> I am facing some issues related to the nvram file. I am using the firmware
+>> provided by Buildroot (brcmfmac4339-sdio.bin). I get the following error:
+>>
+>> [    8.630380] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+>> clkctl 0x50
+>>
+>> I have tried to use the firmware and nvram provided by TechNexion but I
+>> get
+>> the same error.
+>>
+>> Is there anyone that could enable Wifi on AP6335 using kernel mainline?
+>> What nvram file was used?
+>>
+>> I am able to use Wifi on the board if I use the firmware, nvram file and
+>> kernel
+>> provided by TechNexion. They use a 4.1 kernel from NXP with the bcmdhd
+>> driver.
+>>
+>> So I know that the hardware is functional.
+>>
+>> Any suggestions as how to get it working with a 4.13 and brcmfmac driver
+>> is
+>> appreciated.
+>
+>
+> So the nvram file is specific to the wifi chipset on your platform so best
+> to stick with the provided one. The "HT Avail timeout" most often is an
+> indication that the firmware crashed. So getting more debug output would
+> help us understand how it ended up like that. Can you build the brcmfmac
+> with CONFIG_BRCMDBG and load the driver using:
+>
+> $ insmod brcmfmac.ko debug=0x1416
 
-Regards,
-Arend
+Thanks for the reply!
+
+Here is the log (using 4.14-rc1):
+
+# dmesg | grep brcmfmac
+[   19.297206] brcmfmac: brcmfmac_module_init No platform data available.
+[   19.307075] brcmfmac: brcmf_sdio_probe Enter
+[   19.308384] brcmfmac: F1 signature read @0x18000000=0x16224335
+[   19.309026] brcmfmac: brcmf_chip_recognition found AXI chip: BCM4339, rev=2
+[   19.317115] brcmfmac: brcmf_chip_cores_check  [1 ] core 0x800:46
+base 0x18000000 wrap 0x18100000
+[   19.317141] brcmfmac: brcmf_chip_cores_check  [2 ] core 0x812:46
+base 0x18001000 wrap 0x18101000
+[   19.317165] brcmfmac: brcmf_chip_cores_check  [3 ] core 0x83e:4
+base 0x18002000 wrap 0x18102000
+[   19.317188] brcmfmac: brcmf_chip_cores_check  [4 ] core 0x83c:4
+base 0x18003000 wrap 0x18103000
+[   19.317210] brcmfmac: brcmf_chip_cores_check  [5 ] core 0x81a:20
+base 0x18004000 wrap 0x18104000
+[   19.317233] brcmfmac: brcmf_chip_cores_check  [6 ] core 0x829:21
+base 0x18005000 wrap 0x18105000
+[   19.317256] brcmfmac: brcmf_chip_cores_check  [7 ] core 0x135:0
+base 0x00000000 wrap 0x18109000
+[   19.317279] brcmfmac: brcmf_chip_cores_check  [8 ] core 0x240:0
+base 0x00000000 wrap 0x00000000
+[   19.317298] brcmfmac: brcmf_chip_set_passive Enter
+[   19.322232] brcmfmac: brcmf_chip_get_raminfo RAM: base=0x180000
+size=786432 (0xc0000) sr=0 (0x0)
+[   19.322457] brcmfmac: brcmf_chip_setup ccrev=46, pmurev=23,
+pmucaps=0x39cc5f17
+[   19.322481] brcmfmac: brcmf_get_module_param Enter, bus=0, chip=17209, rev=2
+[   19.322504] brcmfmac: brcmf_sdiod_sgtable_alloc nents=35
+[   19.322531] brcmfmac: brcmf_sdio_kso_init Enter
+[   19.322618] brcmfmac: brcmf_sdio_drivestrengthinit No SDIO driver
+strength init needed for chip 43
+39 rev 2 pmurev 23
+[   19.323235] brcmfmac: brcmf_attach Enter
+[   19.323725] brcmfmac: brcmf_proto_attach Enter
+[   19.323769] brcmfmac: brcmf_fweh_register event handler registered
+for PSM_WATCHDOG
+[   19.324306] brcmfmac: brcmf_sdio_probe completed!!
+[   19.324337] brcmfmac: brcmf_fw_map_chip_to_name: using
+brcm/brcmfmac4339-sdio.bin for chip 0x00433
+9(17209) rev 0x000002
+[   19.335353] brcmfmac: brcmf_fw_get_firmwares_pcie enter: dev=mmc0:0001:1
+[   19.351787] brcmfmac: brcmf_fw_request_code_done enter: dev=mmc0:0001:1
+[   19.353202] brcmfmac: brcmf_fw_request_nvram_done enter: dev=mmc0:0001:1
+[   19.353424] brcmfmac: brcmf_sdio_firmware_callback Enter:
+dev=mmc0:0001:1, err=0
+[   19.353814] brcmfmac: brcmf_sdio_download_code_file Enter
+[   19.388586] brcmfmac: brcmf_sdio_verifymemory Compare RAM dl & ul
+at 0x00180000; size=493599
+[   19.546675] brcmfmac: brcmf_sdio_download_nvram Enter
+[   19.547432] brcmfmac: brcmf_sdio_verifymemory Compare RAM dl & ul
+at 0x0023f730; size=2256
+[   19.548665] brcmfmac: brcmf_chip_set_active Enter
+[   20.562974] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+clkctl 0x50
+[   20.570490] brcmfmac: brcmf_sdio_firmware_callback failed:
+dev=mmc0:0001:1, err=0
+[   20.570739] brcmfmac: brcmf_sdio_remove Enter
+[   20.570775] brcmfmac: brcmf_detach Enter
+[   20.610414] brcmfmac: brcmf_bus_change_state 0 -> 0
+[   20.610441] brcmfmac: brcmf_sdio_bus_stop Enter
+[   21.622477] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+clkctl 0x50
+[   21.630912] brcmfmac: brcmf_proto_detach Enter
+[   21.630967] brcmfmac: brcmf_fweh_unregister event handler cleared
+for PSM_WATCHDOG
+[   22.642457] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+clkctl 0x50
+[   22.680131] brcmfmac: brcmf_chip_set_passive Enter
+[   22.682580] brcmfmac: brcmf_sdio_remove Disconnected
+
+>
+> Regards,
+> Arend
+>>
+>> Thanks!
+>>
+>> Regards,
+>> Vanessa
+>>
+>
