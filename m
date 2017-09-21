@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33883 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752920AbdIEVVE (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:44732 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751678AbdIUSCD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2017 17:21:04 -0400
-Received: by mail-wm0-f54.google.com with SMTP id 137so24505482wmj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2017 14:21:04 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 23/30] brcmfmac: stabilise the value of ->sbwad in use for
- some xfer routines.
-To: Ian Molton <ian@mnementh.co.uk>, linux-wireless@vger.kernel.org
-References: <20170822112550.60311-1-ian@mnementh.co.uk>
- <20170822112550.60311-24-ian@mnementh.co.uk>
-Message-ID: <d2a7c558-c101-ff7e-bd38-2903259943b9@broadcom.com> (sfid-20170905_232110_527853_7AD797CC)
-Date: Tue, 5 Sep 2017 23:21:02 +0200
+        Thu, 21 Sep 2017 14:02:03 -0400
+Received: by mail-qk0-f181.google.com with SMTP id b23so6580722qkg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 11:02:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170822112550.60311-24-ian@mnementh.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Phani Siriki <yvsg.phanis@gmail.com>
+Date: Thu, 21 Sep 2017 13:01:57 -0500
+Message-ID: <CADsGw2Zax=r7QBGYPO+bs0BTmb+JUVZ-Y-X+_gfRrKj8tQy27Q@mail.gmail.com> (sfid-20170921_200207_935243_80982052)
+Subject: Query on iw command to set txq params
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-08-17 13:25, Ian Molton wrote:
-> The IO functions operate within the Chipcommon IO window. Explicitly
-> set this, rather than relying on the last initialisation IO access to
-> leave it set to the right value by chance.
+Hi All
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
->   3 files changed, 10 insertions(+), 4 deletions(-)
+I am trying to apply the path mentioned below to set txq params using
+iw command.
+
+http://www.spinics.net/lists/linux-wireless/msg42585.html
+
+But I am getting below error.
+
+root@teste-VirtualBox:~/old_iw/iw-0.9.17# ./iw list | grep Wiphy
+Wiphy mn00s05
+Wiphy mn00s04
+Wiphy mn00s03
+Wiphy mn00s02
+root@teste-VirtualBox:~/old_iw/iw-0.9.17#
+root@teste-VirtualBox:~/old_iw/iw-0.9.17#
+root@teste-VirtualBox:~/old_iw/iw-0.9.17#
+root@teste-VirtualBox:~/old_iw/iw-0.9.17# ./iw --debug phy mn00s03 set
+txq_params 1
+configuring TX queue for VI
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE ---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 96
+    .nlmsg_type = 2 <ERROR>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 1506013146
+    .nlmsg_pid = 5328
+  [ERRORMSG] 20 octets
+    .error = -22 "Invalid argument"
+  [ORIGINAL MESSAGE] 16 octets
+    .nlmsg_len = 16
+    .nlmsg_type = 30 <0x1e>
+    .nlmsg_flags = 5 <REQUEST,ACK>
+    .nlmsg_seq = 1506013146
+    .nlmsg_pid = 5328
+---------------------------  END NETLINK MESSAGE   ---------------------------
+command failed: Invalid argument (-22)
+root@teste-VirtualBox:~/old_iw/iw-0.9.17#
+
+I am using mininet wifi to create topology with 4 APs.
+
+Could someone suggest how to proceed on this?
+
+Best Regards
+Phani
