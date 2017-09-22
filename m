@@ -1,57 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:40262 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964958AbdIZDTx (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:47594 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752115AbdIVVR4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 23:19:53 -0400
-Date: Mon, 25 Sep 2017 20:19:51 -0700 (PDT)
-Message-Id: <20170925.201951.1512252559012166718.davem@davemloft.net> (sfid-20170926_052405_224986_A2DE04B4)
-To: arnd@arndb.de
-Cc: mchehab@kernel.org, jiri@resnulli.us, arend.vanspriel@broadcom.com,
-        kvalo@codeaurora.org, aryabinin@virtuozzo.com, glider@google.com,
-        dvyukov@google.com, yamada.masahiro@socionext.com, mmarek@suse.com,
-        akpm@linux-foundation.org, keescook@chromium.org,
-        geert@linux-m68k.org, gregkh@linuxfoundation.org,
-        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
-        linux-kbuild@vger.kernel.org, jakub@gcc.gnu.org,
-        marxin@gcc.gnu.org, stable@vger.kernel.org
-Subject: Re: [PATCH v4 8/9] netlink: fix nla_put_{u8,u16,u32} for KASAN
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170922212930.620249-9-arnd@arndb.de>
-References: <20170922212930.620249-1-arnd@arndb.de>
-        <20170922212930.620249-9-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Fri, 22 Sep 2017 17:17:56 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH] ath10k: add new cipher suite support
+Date: Fri, 22 Sep 2017 14:17:50 -0700
+Message-ID: <1506115070-10467-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20170922_231800_704058_7BDBBC1A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 22 Sep 2017 23:29:19 +0200
+QCA99x0 and QCA4019 family chips support CCMP-256, GCMP-128, and
+GCMP-256 ciphers in hardware, so advertise support for these. As
+firmware does not support group management frame ciphers (BIP),
+handle them in software (mac80211).
 
-> When CONFIG_KASAN is enabled, the "--param asan-stack=1" causes rather large
-> stack frames in some functions. This goes unnoticed normally because
-> CONFIG_FRAME_WARN is disabled with CONFIG_KASAN by default as of commit
-> 3f181b4d8652 ("lib/Kconfig.debug: disable -Wframe-larger-than warnings with
-> KASAN=y").
-> 
-> The kernelci.org build bot however has the warning enabled and that led
-> me to investigate it a little further, as every build produces these warnings:
-> 
-> net/wireless/nl80211.c:4389:1: warning: the frame size of 2240 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> net/wireless/nl80211.c:1895:1: warning: the frame size of 3776 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> net/wireless/nl80211.c:1410:1: warning: the frame size of 2208 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> net/bridge/br_netlink.c:1282:1: warning: the frame size of 2544 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> 
-> Most of this problem is now solved in gcc-8, which can consolidate
-> the stack slots for the inline function arguments. On older compilers
-> we can add a workaround by declaring a local variable in each function
-> to pass the inline function argument.
-> 
-> Cc: stable@vger.kernel.org
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |  8 ++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
+ drivers/net/wireless/ath/ath10k/mac.c  | 37 ++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h  |  1 +
+ 4 files changed, 47 insertions(+), 2 deletions(-)
 
-Applied.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a4f635820f35..607759ebdb44 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -74,6 +74,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -97,6 +98,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -119,6 +121,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -141,6 +144,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -163,6 +167,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -188,6 +193,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -303,6 +309,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -327,6 +334,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 0c089f6dd3d9..ed30d5b6cd0e 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -550,6 +550,9 @@ struct ath10k_hw_params {
+ 	 */
+ 	int vht160_mcs_rx_highest;
+ 	int vht160_mcs_tx_highest;
++
++	/* Number of ciphers supported (i.e First N) in cipher_suites array */
++	int n_cipher_suites;
+ };
+ 
+ struct htt_rx_desc;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5683f1a5330e..4c9d3b1a177b 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -242,6 +242,16 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 		arg.key_cipher = WMI_CIPHER_WEP;
+ 		break;
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		arg.key_cipher = WMI_CIPHER_AES_CCM;
++		break;
++	case WLAN_CIPHER_SUITE_GCMP:
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		arg.key_cipher = WMI_CIPHER_AES_GCM;
++		break;
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		WARN_ON(1);
+ 		return -EINVAL;
+@@ -5723,7 +5733,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	u32 flags2;
+ 
+ 	/* this one needs to be done in software */
+-	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
++	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
++	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
++	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256 ||
++	    key->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
+ 		return 1;
+ 
+ 	if (arvif->nohwcrypt)
+@@ -8074,7 +8087,22 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		WLAN_CIPHER_SUITE_WEP104,
+ 		WLAN_CIPHER_SUITE_TKIP,
+ 		WLAN_CIPHER_SUITE_CCMP,
++
++		/* Do not add hardware supported ciphers before this line.
++		 * Allow software encryption for all chips. Don't forget to
++		 * update n_cipher_suites below.
++		 */
+ 		WLAN_CIPHER_SUITE_AES_CMAC,
++		WLAN_CIPHER_SUITE_BIP_CMAC_256,
++		WLAN_CIPHER_SUITE_BIP_GMAC_128,
++		WLAN_CIPHER_SUITE_BIP_GMAC_256,
++
++		/* Only QCA99x0 and QCA4019 varients support GCMP-128, GCMP-256
++		 * and CCMP-256 in hardware.
++		 */
++		WLAN_CIPHER_SUITE_GCMP,
++		WLAN_CIPHER_SUITE_GCMP_256,
++		WLAN_CIPHER_SUITE_CCMP_256,
+ 	};
+ 	struct ieee80211_supported_band *band;
+ 	void *channels;
+@@ -8313,7 +8341,12 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	}
+ 
+ 	ar->hw->wiphy->cipher_suites = cipher_suites;
+-	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
++
++	/* QCA988x and QCA6174 family chips do not support CCMP-256, GCMP-128
++	 * and GCMP-256 ciphers in hardware.
++	 */
++	if (!ar->hw_params.n_cipher_suites)
++		ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 
+ 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 7a3606dde227..c02b21cff38d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4751,6 +4751,7 @@ struct wmi_key_seq_counter {
+ #define WMI_CIPHER_WAPI     0x5
+ #define WMI_CIPHER_CKIP     0x6
+ #define WMI_CIPHER_AES_CMAC 0x7
++#define WMI_CIPHER_AES_GCM  0x8
+ 
+ struct wmi_vdev_install_key_cmd {
+ 	__le32 vdev_id;
+-- 
+1.9.1
