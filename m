@@ -1,97 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28429 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751435AbdIAIaw (ORCPT
+Received: from nsmtp.uni-koblenz.de ([141.26.64.14]:59406 "EHLO
+        nsmtp.uni-koblenz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751826AbdIVKJj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 04:30:52 -0400
-Date: Fri, 1 Sep 2017 11:30:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: shaul.triebitz@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] iwlwifi: mvm: add station before allocating a queue
-Message-ID: <20170901083022.t6e2zlrqfyebrf5t@mwanda> (sfid-20170901_103056_863745_078F39B5)
+        Fri, 22 Sep 2017 06:09:39 -0400
+Subject: Re: [PATCH v2 2/2] wireless: return correct mandatory rates
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170907154744.28357-2-rschuetz@uni-koblenz.de>
+ <20170908160712.8765-1-rschuetz@uni-koblenz.de>
+ <1506001926.2048.5.camel@sipsolutions.net>
+From: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>
+Message-ID: <63eebfc4-2622-87b1-699e-58a222715900@uni-koblenz.de> (sfid-20170922_120943_402229_2B9D5678)
+Date: Fri, 22 Sep 2017 12:09:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506001926.2048.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Shaul Triebitz,
+Am 21.09.2017 um 15:52 schrieb Johannes Berg:
+> On Fri, 2017-09-08 at 18:07 +0200, Richard Schütz wrote:
+>> Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B
+>> to get
+>> all mandatory rates in 2.4 GHz band. It is safe to do so because ERP
+>> mandatory rates are a superset of HR/DSSS mandatory rates. Also limit
+>> to
+>> OFDM rates for 10 MHz and 5 MHz channels as originally intended by
+>> commit
+>> 74608aca4d82e.
+> 
+> I don't understand this. Why should all ERP (Clause 18, 11g) rates be
+> mandatory for the users of this?
+> 
+> The way I see it, this would make us assume that all 2.4 GHz clients
+> support ERP in IBSS, which may not be true?
 
-The patch 732d06e9d9cf: "iwlwifi: mvm: add station before allocating
-a queue" from Jul 10, 2017, leads to the following static checker
-warning:
+I disagree. On a HR/DSSS PHY this would still only return HR/DSSS rates 
+because there should not by any ERP rates present in sband->bitrates in 
+the first place.
 
-	drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1312 iwl_mvm_add_int_sta_common()
-	error: uninitialized symbol 'status'.
+The reason for suggesting this change is that the basic rate set for a 
+mesh STA is initialized with this function if not explicitly configured 
+beforehand.
 
-drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-  1281  static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
-  1282                                        struct iwl_mvm_int_sta *sta,
-  1283                                        const u8 *addr,
-  1284                                        u16 mac_id, u16 color)
-  1285  {
-  1286          struct iwl_mvm_add_sta_cmd cmd;
-  1287          int ret;
-  1288          u32 status;
-                ^^^^^^^^^^
-  1289  
-  1290          lockdep_assert_held(&mvm->mutex);
-  1291  
-  1292          memset(&cmd, 0, sizeof(cmd));
-  1293          cmd.sta_id = sta->sta_id;
-  1294          cmd.mac_id_n_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mac_id,
-  1295                                                               color));
-  1296          if (fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_STA_TYPE))
-  1297                  cmd.station_type = sta->type;
-  1298  
-  1299          if (!iwl_mvm_has_new_tx_api(mvm))
-  1300                  cmd.tfd_queue_msk = cpu_to_le32(sta->tfd_queue_msk);
-  1301          cmd.tid_disable_tx = cpu_to_le16(0xffff);
-  1302  
-  1303          if (addr)
-  1304                  memcpy(cmd.addr, addr, ETH_ALEN);
-  1305  
-  1306          ret = iwl_mvm_send_cmd_pdu_status(mvm, ADD_STA,
-  1307                                            iwl_mvm_add_sta_cmd_size(mvm),
-  1308                                            &cmd, &status);
-                                                         ^^^^^^
-  1309          if (ret)
-  1310                  return ret;
-  1311  
-  1312          switch (status & IWL_ADD_STA_STATUS_MASK) {
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  1313          case ADD_STA_SUCCESS:
-  1314                  IWL_DEBUG_INFO(mvm, "Internal station added.\n");
-  1315                  return 0;
-  1316          default:
-  1317                  ret = -EIO;
-  1318                  IWL_ERR(mvm, "Add internal station failed, status=0x%x\n",
-  1319                          status);
-  1320                  break;
-  1321          }
-  1322          return ret;
-  1323  }
+IEEE Std 802.11-2016 (10.7.4 Basic rate set, basic HT-MCS set, and basic 
+VHT-MCS and NSS set for mesh STA) states: A mesh STA shall not establish 
+a mesh peering with a mesh STA using a different BSSBasicRateSet (see 
+14.2.7 and 14.2.8). The SME of a Mesh STA should use the mandatory PHY 
+rates as the default BSSBasicRateSet in the MLME-START.request primitive 
+to reduce the risk that a candidate peer mesh STA utilizes a different 
+BSSBasicRateSet.
 
-The problem here is this code from iwl_mvm_send_cmd_status()
+Selecting only HR/DSSS mandatory rates for a mesh STA default basic rate 
+set on an ERP PHY violates this requirement in my opinion. 
+wpa_supplicant explicitly configures all ERP mandatory rates for ERP 
+mesh points in its default configuration, whereas iw relies on the 
+kernel to do the selection. This currently leaves us with the 
+unfortunate situation that you can not join such a mesh BSS created by 
+wpa_supplicant using iw without further configuration and the other way 
+round.
 
-drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-   157          cmd->flags |= CMD_WANT_SKB;
-   158  
-   159          ret = iwl_trans_send_cmd(mvm->trans, cmd);
-   160          if (ret == -ERFKILL) {
-   161                  /*
-   162                   * The command failed because of RFKILL, don't update
-   163                   * the status, leave it as success and return 0.
-   164                   */
-   165                  return 0;
-
-We return zero without setting "status".  Shouldn't we set *status = 0;?
-
-   166          } else if (ret) {
-   167                  return ret;
-   168          }
-   169  
-   170          pkt = cmd->resp_pkt;
-
-regards,
-dan carpenter
+-- 
+Richard
