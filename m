@@ -1,196 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53434 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750747AbdISJx5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 05:53:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: remove unused function ieee80211_data_from_8023()
-Date: Tue, 19 Sep 2017 11:53:53 +0200
-Message-Id: <20170919095353.16151-1-johannes@sipsolutions.net> (sfid-20170919_115400_626778_69F9415B)
+Received: from mail-qt0-f179.google.com ([209.85.216.179]:48072 "EHLO
+        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751936AbdIVJDF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Sep 2017 05:03:05 -0400
+Received: by mail-qt0-f179.google.com with SMTP id b1so412662qtc.4
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Sep 2017 02:03:05 -0700 (PDT)
+Subject: Re: [v2] rsi: sdio suspend and resume support
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Souptick Joarder <jrdr.linux@gmail.com>
+References: <1505998288-2041-1-git-send-email-amitkarwar@gmail.com>
+ <CAFqt6zYY2WuwU+kQ=HmS5284CspyxF+EFm_jiysCQviSvegC1Q@mail.gmail.com>
+ <CAEhWJF=eTwUA59VZBoPhxsBvpCm2eM_j1An--Ce_d0XLt8uVFw@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <59C4D1C6.1040601@broadcom.com> (sfid-20170922_110447_192638_3E86A6F3)
+Date: Fri, 22 Sep 2017 11:03:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAEhWJF=eTwUA59VZBoPhxsBvpCm2eM_j1An--Ce_d0XLt8uVFw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 9/21/2017 4:32 PM, Amitkumar Karwar wrote:
+> On Thu, Sep 21, 2017 at 7:08 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>> On Thu, Sep 21, 2017 at 6:21 PM, Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+>>> From: Karun Eagalapati <karun256@gmail.com>
+>>>
+>>> SDIO suspend and resume handlers are implemented and verified
+>>> that device works after suspend/resume cycle.
+>>>
+>>> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+>>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>>> ---
+>>> v2: Replaced never ending while loop with 20msecs loop(Kalle Valo)
+>>> ---
+>>>   drivers/net/wireless/rsi/rsi_91x_sdio.c | 128 +++++++++++++++++++++++++++++++-
+>>>   drivers/net/wireless/rsi/rsi_sdio.h     |   2 +
+>>>   2 files changed, 126 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+>>> index 8d3a483..b3f8006 100644
+>>> --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
+>>> +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+>>> @@ -1059,16 +1059,136 @@ static void rsi_disconnect(struct sdio_func *pfunction)
 
-This function hasn't been used since the removal of iwmc3200wifi
-in 2012. It also appears to have a bug when qos=True, since then
-it'll copy uninitialized stack memory to the SKB.
+[...]
 
-Just remove the function entirely.
+>>>   static int rsi_suspend(struct device *dev)
+>>>   {
+>>> -       /* Not yet implemented */
+>>> -       return -ENOSYS;
+>>> +       int ret;
+>>> +       struct sdio_func *pfunction = dev_to_sdio_func(dev);
+>>> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
+>>> +       struct rsi_common *common;
+>>> +
+>>> +       if (!adapter) {
+>>> +               rsi_dbg(ERR_ZONE, "Device is not ready\n");
+>>> +               return -ENODEV;
+>>> +       }
+>>> +       common = adapter->priv;
+>>> +       rsi_sdio_disable_interrupts(pfunction);
+>>> +
+>>> +       ret = rsi_set_sdio_pm_caps(adapter);
+>>> +       if (ret)
+>>> +               rsi_dbg(INFO_ZONE,
+>>> +                       "Setting power management caps failed\n");
+>>> +       common->fsm_state = FSM_CARD_NOT_READY;
+>>> +
+>>> +       return 0;
+>>
+>> I think it should be return ret if rsi_set_sdio_pm_caps() fails.
+>
+> This is intentional. We don't want to return error and abort system
+> suspend operation due to this.
 
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/driver-api/80211/cfg80211.rst |   3 -
- include/net/cfg80211.h                      |  13 ----
- net/wireless/util.c                         | 115 ----------------------------
- 3 files changed, 131 deletions(-)
+Has it been verified that powering down the SDIO bus during the suspend 
+works for you device. In other words  does the claim in the commit 
+message apply to a sdio host controller not supporting the KEEP_POWER 
+flag as well?
 
-diff --git a/Documentation/driver-api/80211/cfg80211.rst b/Documentation/driver-api/80211/cfg80211.rst
-index 8ffac57e1f5b..eeab91b59457 100644
---- a/Documentation/driver-api/80211/cfg80211.rst
-+++ b/Documentation/driver-api/80211/cfg80211.rst
-@@ -299,9 +299,6 @@ Data path helpers
- .. kernel-doc:: include/net/cfg80211.h
-    :functions: ieee80211_data_to_8023
- 
--.. kernel-doc:: include/net/cfg80211.h
--   :functions: ieee80211_data_from_8023
--
- .. kernel-doc:: include/net/cfg80211.h
-    :functions: ieee80211_amsdu_to_8023s
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index aa9d993e519a..cc1996081463 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4346,19 +4346,6 @@ static inline int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 	return ieee80211_data_to_8023_exthdr(skb, NULL, addr, iftype);
- }
- 
--/**
-- * ieee80211_data_from_8023 - convert an 802.3 frame to 802.11
-- * @skb: the 802.3 frame
-- * @addr: the device MAC address
-- * @iftype: the virtual interface type
-- * @bssid: the network bssid (used only for iftype STATION and ADHOC)
-- * @qos: build 802.11 QoS data frame
-- * Return: 0 on success, or a negative error code.
-- */
--int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
--			     enum nl80211_iftype iftype, const u8 *bssid,
--			     bool qos);
--
- /**
-  * ieee80211_amsdu_to_8023s - decode an IEEE 802.11n A-MSDU frame
-  *
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 4aab793c2f00..7dcdf67cba29 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -529,121 +529,6 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- }
- EXPORT_SYMBOL(ieee80211_data_to_8023_exthdr);
- 
--int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
--			     enum nl80211_iftype iftype,
--			     const u8 *bssid, bool qos)
--{
--	struct ieee80211_hdr hdr;
--	u16 hdrlen, ethertype;
--	__le16 fc;
--	const u8 *encaps_data;
--	int encaps_len, skip_header_bytes;
--	int nh_pos, h_pos;
--	int head_need;
--
--	if (unlikely(skb->len < ETH_HLEN))
--		return -EINVAL;
--
--	nh_pos = skb_network_header(skb) - skb->data;
--	h_pos = skb_transport_header(skb) - skb->data;
--
--	/* convert Ethernet header to proper 802.11 header (based on
--	 * operation mode) */
--	ethertype = (skb->data[12] << 8) | skb->data[13];
--	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
--
--	switch (iftype) {
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_AP_VLAN:
--	case NL80211_IFTYPE_P2P_GO:
--		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
--		/* DA BSSID SA */
--		memcpy(hdr.addr1, skb->data, ETH_ALEN);
--		memcpy(hdr.addr2, addr, ETH_ALEN);
--		memcpy(hdr.addr3, skb->data + ETH_ALEN, ETH_ALEN);
--		hdrlen = 24;
--		break;
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_P2P_CLIENT:
--		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
--		/* BSSID SA DA */
--		memcpy(hdr.addr1, bssid, ETH_ALEN);
--		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
--		memcpy(hdr.addr3, skb->data, ETH_ALEN);
--		hdrlen = 24;
--		break;
--	case NL80211_IFTYPE_OCB:
--	case NL80211_IFTYPE_ADHOC:
--		/* DA SA BSSID */
--		memcpy(hdr.addr1, skb->data, ETH_ALEN);
--		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
--		memcpy(hdr.addr3, bssid, ETH_ALEN);
--		hdrlen = 24;
--		break;
--	default:
--		return -EOPNOTSUPP;
--	}
--
--	if (qos) {
--		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
--		hdrlen += 2;
--	}
--
--	hdr.frame_control = fc;
--	hdr.duration_id = 0;
--	hdr.seq_ctrl = 0;
--
--	skip_header_bytes = ETH_HLEN;
--	if (ethertype == ETH_P_AARP || ethertype == ETH_P_IPX) {
--		encaps_data = bridge_tunnel_header;
--		encaps_len = sizeof(bridge_tunnel_header);
--		skip_header_bytes -= 2;
--	} else if (ethertype >= ETH_P_802_3_MIN) {
--		encaps_data = rfc1042_header;
--		encaps_len = sizeof(rfc1042_header);
--		skip_header_bytes -= 2;
--	} else {
--		encaps_data = NULL;
--		encaps_len = 0;
--	}
--
--	skb_pull(skb, skip_header_bytes);
--	nh_pos -= skip_header_bytes;
--	h_pos -= skip_header_bytes;
--
--	head_need = hdrlen + encaps_len - skb_headroom(skb);
--
--	if (head_need > 0 || skb_cloned(skb)) {
--		head_need = max(head_need, 0);
--		if (head_need)
--			skb_orphan(skb);
--
--		if (pskb_expand_head(skb, head_need, 0, GFP_ATOMIC))
--			return -ENOMEM;
--	}
--
--	if (encaps_data) {
--		memcpy(skb_push(skb, encaps_len), encaps_data, encaps_len);
--		nh_pos += encaps_len;
--		h_pos += encaps_len;
--	}
--
--	memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
--
--	nh_pos += hdrlen;
--	h_pos += hdrlen;
--
--	/* Update skb pointers to various headers since this modified frame
--	 * is going to go through Linux networking code that may potentially
--	 * need things like pointer to IP header. */
--	skb_reset_mac_header(skb);
--	skb_set_network_header(skb, nh_pos);
--	skb_set_transport_header(skb, h_pos);
--
--	return 0;
--}
--EXPORT_SYMBOL(ieee80211_data_from_8023);
--
- static void
- __frame_add_frag(struct sk_buff *skb, struct page *page,
- 		 void *ptr, int len, int size)
--- 
-2.14.1
+Regards,
+Arend
