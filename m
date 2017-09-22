@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48820 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751335AbdINUr0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2017 16:47:26 -0400
-Subject: Re: ROAM/CONNECT event with PORT_AUTHORIZED
-To: Denis Kenzior <denkenz@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Jouni Malinen <j@w1.fi>
-References: <1505378361.31630.2.camel@sipsolutions.net>
- <e4a3ab99-f49a-0849-56d7-71ce19b1f323@broadcom.com>
- <1505389462.31630.6.camel@sipsolutions.net>
- <e418234f-00a0-dd44-7352-d279f49f83e5@gmail.com>
- <1505416658.31630.15.camel@sipsolutions.net>
- <9219316a-5556-6acf-30de-e9aa65a05706@gmail.com>
- <6d0ad07b-ca89-19a1-d3c2-ad94915b942a@candelatech.com>
- <c2a820c4-f169-6a4d-13f3-3df323f1556a@gmail.com>
- <5436d106-0b4a-9158-58bf-ff84b231cd19@candelatech.com>
- <c97ecdb4-fe7a-e79a-d73e-32166beb1e11@gmail.com>
- <8a26a838-adde-08f1-5f64-c98e1d947675@candelatech.com>
- <756be45c-fd13-56a7-b8d4-129c4fd07dc8@gmail.com>
-Cc: Avraham Stern <avraham.stern@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <c33e5aed-be5a-890d-cc50-b5ac87b40d9a@candelatech.com> (sfid-20170914_224729_682601_2055C189)
-Date: Thu, 14 Sep 2017 13:47:25 -0700
+Received: from store.laptop.org ([18.85.44.157]:60262 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751794AbdIVFgF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Sep 2017 01:36:05 -0400
+Date: Fri, 22 Sep 2017 15:35:58 +1000
+From: James Cameron <quozl@laptop.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: rtl8821ae keep alive not set, connection lost
+Message-ID: <20170922053558.GK12195@us.netrek.org> (sfid-20170922_073608_537033_F760A9BC)
+References: <59e28611-9840-8873-2f15-1263e4e93d1c@lwfinger.net>
+ <20170913214649.GC20283@us.netrek.org>
+ <5f16881e-471b-4ffc-5e5e-93785bb999b6@lwfinger.net>
+ <20170914092738.GG20283@us.netrek.org>
+ <20170919094204.GR26927@us.netrek.org>
+ <20170920093633.GO9946@us.netrek.org>
+ <476b183f-5cc5-9a34-1a85-332dd5244b66@lwfinger.net>
+ <20170920232228.GC9210@us.netrek.org>
+ <20170921080746.GL9210@us.netrek.org>
+ <abff13d3-4115-4935-6546-b0fd8c860124@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <756be45c-fd13-56a7-b8d4-129c4fd07dc8@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <abff13d3-4115-4935-6546-b0fd8c860124@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2017 01:35 PM, Denis Kenzior wrote:
-> Hi Ben,
->
-> On 09/14/2017 03:29 PM, Ben Greear wrote:
->> On 09/14/2017 01:26 PM, Denis Kenzior wrote:
->>> Hi Ben,
->>>>
->>>> How do you re-confirm them?  There are definitely cases where SSID/Security is the same but each
->>>> AP has its own DHCP server and roaming between them will require getting a new DHCP address (on
->>>> the same (NAT'd) subnet and with same gateway, likely as not).
->>>>
->>>
->>> Using DHCPREQUEST to verify obtained parameters, or the DHCPv6 equivalent Confirm message.  This obviously requires some integration between the dhcp daemon and
->>> the supplicant.
->>
->> Do you want to allow the just-now-roamed station to use its old IP address(es) while you are
->> confirming?
->
-> I think it is sane to assume that the IP address _should_ be the same. The 802.11 spec expects this even.  This is to handle bizarre networks that don't do this
-> properly.
+On Thu, Sep 21, 2017 at 09:40:14AM -0500, Larry Finger wrote:
+> On 09/21/2017 03:07 AM, James Cameron wrote:
+> >My test kernel "-qb" was write_readback = false in sw.c, with 8-bit
+> >read of REG_DBI_RDATA, and has been stable for four hours.  I'll
+> >focus on some more testing of this one.  It is a surprise.
+> >
+> >http://dev.laptop.org/~quozl/z/1dutXk.txt  (dmesg)
+> >
+> >Observe how REG_DBI_FLAG+0 is briefly seen as 1, which doesn't
+> >happen with write_readback = true.
+> 
+> Again, thanks for your efforts.
+> 
+> At this point, my system has been up over 17 hours without a single
+> drop. As a result, I will leave the reversion of commit 40b368af4b75
+> in place. It seems safer than turning off write_readback. After we
+> get more testing, that could still be an option.
 
-Can you point me to the section in the spec about this?
+Thanks for the reversion commit, I'll point others to it.
 
->> If not, how is this different from just re-doing DHCP like normal?
->>
->
-> You get to use your old IP address.  So e.g. your VoIP call doesn't disappear if you decide to switch access points.
->
->> And if so, you will in some cases be allowing duplicate IP addresses on
->> a network?
->>
->
-> Life is never perfect ;)
+My apologies for sloppy work, the test kernel features got swapped!
+"-qb" above was with write_readback off, and 16-bit read of
+REG_DBI_RDATA, not 8-bit.  Verified with objdump.  It has run for 24
+hours without a drop.
 
-If you are breaking networks while trying to optimize something, then I think you
-are going about it wrong.
+So at conclusion;
 
-Seems like we would need some way for the DHCP server and/or AP to proactively
-notify the station that they can skip DHCP, and default to not skipping.
+- the 16-bit read is good with or without write_readback.
 
-I vaguely recall that FT had some way to verify you were roaming to the same dhcp-domain
-or not, but honestly, it has been a long time since I read through that...
+- the 8-bit read is bad with or without write_readback, and tends to
+  lose connection much quicker without write_readback.
 
-Thanks,
-Ben
+Been a pleasure working with you.  Back to lurk mode.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+James Cameron
+http://quozl.netrek.org/
