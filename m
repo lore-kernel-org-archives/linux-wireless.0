@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44560 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932617AbdIYIXf (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:41746 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752219AbdIVKG5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 04:23:35 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmsmac: make const array ucode_ofdm_rates static,
- reduces object code size
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170922140316.12768-1-colin.king@canonical.com>
-References: <20170922140316.12768-1-colin.king@canonical.com>
+        Fri, 22 Sep 2017 06:06:57 -0400
+Date: Fri, 22 Sep 2017 12:06:20 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
 To: Colin Ian King <colin.king@canonical.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+cc: Joe Perches <joe@perches.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20170925082334.DB0A860618@smtp.codeaurora.org> (sfid-20170925_104608_896198_5F7071EB)
-Date: Mon, 25 Sep 2017 08:23:34 +0000 (UTC)
+Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
+ object code size Content-Type: text/plain; charset="utf-8" Content-Transfer-Encoding:
+ 8bit
+In-Reply-To: <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>
+Message-ID: <alpine.DEB.2.20.1709221206050.3170@hadrien> (sfid-20170922_120718_609799_7576B18D)
+References: <20170921225630.21916-1-colin.king@canonical.com> <alpine.DEB.2.20.1709220921350.2024@hadrien> <1506074588.12311.37.camel@perches.com> <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Don't populate const array ucode_ofdm_rates on the stack, instead make it
-> static. Makes the object code smaller by 100 bytes:
-> 
-> Before:
->    text	   data	    bss	    dec	    hex	filename
->   39482	    564	      0	  40046	   9c6e	phy_cmn.o
-> 
-> After
->    text	   data	    bss	    dec	    hex	filename
->   39326	    620	      0	  39946	   9c0a	phy_cmn.o
-> 
-> (gcc 6.3.0, x86-64)
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+On Fri, 22 Sep 2017, Colin Ian King wrote:
 
-d5633bb2c62a brcmsmac: make const array ucode_ofdm_rates static, reduces object code size
+> On 22/09/17 11:03, Joe Perches wrote:
+> > On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
+> >>
+> >> On Thu, 21 Sep 2017, Colin King wrote:
+> >>
+> >>> From: Colin Ian King <colin.king@canonical.com>
+> >>>
+> >>> Don't populate const array ac_to_fifo on the stack in an inlined
+> >>> function, instead make it static.  Makes the object code smaller
+> >>> by over 800 bytes:
+> >>>
+> >>>    text	   data	    bss	    dec	    hex	filename
+> >>>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
+> >>>
+> >>>    text	   data	    bss	    dec	    hex	filename
+> >>>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
+> >>>
+> >>> (gcc version 7.2.0 x86_64)
+> >>
+> >> Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
+> >> change that I got on this file:
+> >>
+> >>      text          data     bss     dec     hex filename
+> >> -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+> >> +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+> >> decrease of 48
+> >
+> > More likely different CONFIG options.
+> >
+> > e.g. allyesconfig vs defconfig with wireless
+> >
+> yup, I used allyesconfig
 
--- 
-https://patchwork.kernel.org/patch/9966221/
+Mine is also allyesconfig.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+julia
+
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
