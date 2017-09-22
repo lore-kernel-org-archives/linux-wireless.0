@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43666 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754944AbdIGJkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 05:40:45 -0400
-Message-ID: <1504777242.6177.2.camel@sipsolutions.net> (sfid-20170907_114207_566754_37D45C1A)
-Subject: Re: using vulnerability ids in patches
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from youngberry.canonical.com ([91.189.89.112]:51018 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752500AbdIVODW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Sep 2017 10:03:22 -0400
+From: Colin King <colin.king@canonical.com>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 07 Sep 2017 11:40:42 +0200
-In-Reply-To: <7b09c3d4-a18a-6bc3-6445-8911c088258f@broadcom.com> (sfid-20170907_113805_461947_FBD398F8)
-References: <7415a11b-398c-69df-b39f-7b985f07112b@broadcom.com>
-         <1504774743.6177.0.camel@sipsolutions.net>
-         <7b09c3d4-a18a-6bc3-6445-8911c088258f@broadcom.com>
-         (sfid-20170907_113805_461947_FBD398F8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] brcm80211: make const array ucode_ofdm_rates static, reduces object code size
+Date: Fri, 22 Sep 2017 15:03:16 +0100
+Message-Id: <20170922140316.12768-1-colin.king@canonical.com> (sfid-20170922_160540_262526_7F4A32A7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-09-07 at 11:38 +0200, Arend van Spriel wrote:
-> 
-> Ok. So doing this I see a number of instances where the CVE-ID is 
-> mentioned in the commit message, but there are also instances that
-> use  the 'Fixes:' tag. Does it make sense to use that or does it
-> serve another purpose?
+From: Colin Ian King <colin.king@canonical.com>
 
-Huh, I don't think that makes sense - the Fixes: tag should be for the
-commit that introduced the bug. I guess parsers will have to ignore
-garbage so it's probably safe, but I don't think you could mine for CVE
-fixes that way anyway ...
+Don't populate const array ucode_ofdm_rates on the stack, instead make it
+static. Makes the object code smaller by 100 bytes:
 
-johannes
+Before:
+   text	   data	    bss	    dec	    hex	filename
+  39482	    564	      0	  40046	   9c6e	phy_cmn.o
+
+After
+   text	   data	    bss	    dec	    hex	filename
+  39326	    620	      0	  39946	   9c0a	phy_cmn.o
+
+(gcc 6.3.0, x86-64)
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
+index 1c4e9dd57960..3a13d176b221 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -1916,7 +1916,7 @@ void wlc_phy_txpower_update_shm(struct brcms_phy *pi)
+ 				     pi->hwpwr_txcur);
+ 
+ 		for (j = TXP_FIRST_OFDM; j <= TXP_LAST_OFDM; j++) {
+-			const u8 ucode_ofdm_rates[] = {
++			static const u8 ucode_ofdm_rates[] = {
+ 				0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6c
+ 			};
+ 			offset = wlapi_bmac_rate_shm_offset(
+-- 
+2.14.1
