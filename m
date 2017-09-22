@@ -1,115 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:32963 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753997AbdIDRvx (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:14799 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751795AbdIVHXS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 13:51:53 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>,
-        Stable <stable@vger.kernel.org>
-Subject: [PATCH 2/2] rtlwifi: btcoexist: Fix antenna selection code
-Date: Mon,  4 Sep 2017 12:51:34 -0500
-Message-Id: <20170904175134.8331-3-Larry.Finger@lwfinger.net> (sfid-20170904_195214_936898_D3043F06)
-In-Reply-To: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
-References: <20170904175134.8331-1-Larry.Finger@lwfinger.net>
+        Fri, 22 Sep 2017 03:23:18 -0400
+Date: Fri, 22 Sep 2017 09:23:16 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Colin King <colin.king@canonical.com>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
+ object code size Content-Type: text/plain; charset="utf-8" Content-Transfer-Encoding:
+ 8bit
+In-Reply-To: <20170921225630.21916-1-colin.king@canonical.com>
+Message-ID: <alpine.DEB.2.20.1709220921350.2024@hadrien> (sfid-20170922_092335_594816_137CFEA3)
+References: <20170921225630.21916-1-colin.king@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 87d8a9f35202 ("rtlwifi: btcoex: call bind to setup btcoex"),
-the code turns on a call to exhalbtc_bind_bt_coex_withadapter(). This
-routine contains a bug that causes incorrect antenna selection for those
-HP laptops with only one antenna and an incorrectly programmed EFUSE.
-These boxes are the ones that need the ant_sel module parameter.
 
-Fixes: 87d8a9f35202 ("rtlwifi: btcoex: call bind to setup btcoex")
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
-Cc: Stable <stable@vger.kernel.org> # 4.13+
----
 
-Kalle,
+On Thu, 21 Sep 2017, Colin King wrote:
 
-This patch is intended for kernel 4.14.
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Don't populate const array ac_to_fifo on the stack in an inlined
+> function, instead make it static.  Makes the object code smaller
+> by over 800 bytes:
+>
+>    text	   data	    bss	    dec	    hex	filename
+>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
+>
+>    text	   data	    bss	    dec	    hex	filename
+>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
+>
+> (gcc version 7.2.0 x86_64)
 
-Thanks,
+Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
+change that I got on this file:
 
-Larry
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 23 +++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+     text          data     bss     dec     hex filename
+-   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
++   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+decrease of 48
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index c1eacd8352a2..b5e9877d935c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -173,6 +173,16 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
- 
- u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
- {
-+	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
-+
-+	/* override ant_num / ant_path */
-+	if (mod_params->ant_sel) {
-+		rtlpriv->btcoexist.btc_info.ant_num =
-+			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
-+
-+		rtlpriv->btcoexist.btc_info.single_ant_path =
-+			(mod_params->ant_sel == 1 ? 0 : 1);
-+	}
- 	return rtlpriv->btcoexist.btc_info.single_ant_path;
- }
- 
-@@ -183,6 +193,7 @@ u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
- 
- u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
- {
-+	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
- 	u8 num;
- 
- 	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
-@@ -190,6 +201,10 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
- 	else
- 		num = 1;
- 
-+	/* override ant_num / ant_path */
-+	if (mod_params->ant_sel)
-+		num = (mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1) + 1;
-+
- 	return num;
- }
- 
-@@ -876,7 +891,7 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
- {
- 	struct btc_coexist *btcoexist = &gl_bt_coexist;
- 	struct rtl_priv *rtlpriv = adapter;
--	u8 ant_num = 2, chip_type, single_ant_path = 0;
-+	u8 ant_num = 2, chip_type;
- 
- 	if (btcoexist->binded)
- 		return false;
-@@ -911,12 +926,6 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
- 	ant_num = rtl_get_hwpg_ant_num(rtlpriv);
- 	exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_PG, ant_num);
- 
--	/* set default antenna position to main  port */
--	btcoexist->board_info.btdm_ant_pos = BTC_ANTENNA_AT_MAIN_PORT;
--
--	single_ant_path = rtl_get_hwpg_single_ant_path(rtlpriv);
--	exhalbtc_set_single_ant_path(single_ant_path);
--
- 	if (rtl_get_hwpg_package_type(rtlpriv) == 0)
- 		btcoexist->board_info.tfbga_package = false;
- 	else if (rtl_get_hwpg_package_type(rtlpriv) == 1)
--- 
-2.12.3
+julia
+
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> index de9b6522c43f..65eba2c24292 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> @@ -1480,7 +1480,7 @@ il4965_get_ac_from_tid(u16 tid)
+>  static inline int
+>  il4965_get_fifo_from_tid(u16 tid)
+>  {
+> -	const u8 ac_to_fifo[] = {
+> +	static const u8 ac_to_fifo[] = {
+>  		IL_TX_FIFO_VO,
+>  		IL_TX_FIFO_VI,
+>  		IL_TX_FIFO_BE,
+> --
+> 2.14.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
