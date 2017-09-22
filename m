@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:32628 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751230AbdIOLCg (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:46280 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752046AbdIVKFO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 07:02:36 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V1 1/5] mac80211: Enable TDLS peer buffer STA feature
-Date: Fri, 15 Sep 2017 19:03:36 +0800
-Message-ID: <1505473420-22932-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20170915_130239_100508_B07D55ED)
-In-Reply-To: <1505473420-22932-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k>
- <1505473420-22932-1-git-send-email-yintang@qti.qualcomm.com>
+        Fri, 22 Sep 2017 06:05:14 -0400
+Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
+ object code size Content-Type: text/plain; charset="utf-8"
+ Content-Transfer-Encoding: 8bit
+To: Joe Perches <joe@perches.com>, Julia Lawall <julia.lawall@lip6.fr>
+References: <20170921225630.21916-1-colin.king@canonical.com>
+ <alpine.DEB.2.20.1709220921350.2024@hadrien>
+ <1506074588.12311.37.camel@perches.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Colin Ian King <colin.king@canonical.com>
+Message-ID: <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com> (sfid-20170922_120535_879827_874F7FD0)
+Date: Fri, 22 Sep 2017 11:05:11 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1506074588.12311.37.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
-
-Enable TDLS peer buffer STA feature.
-Set extended capability bit to enable buffer STA when driver
-support it.
-
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- include/net/cfg80211.h |    3 +++
- net/mac80211/tdls.c    |    5 ++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f12fa52..edefc25 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3249,6 +3249,8 @@ struct cfg80211_ops {
-  *	beaconing mode (AP, IBSS, Mesh, ...).
-  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
-  *	before connection.
-+ * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_ST: Device support buffer STA when TDLS is
-+ *	established.
-  */
- enum wiphy_flags {
- 	/* use hole at 0 */
-@@ -3275,6 +3277,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
- 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
- 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
-+	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
- };
- 
- /**
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 91093d4..f99e379 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -49,6 +49,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 			  !ifmgd->tdls_wider_bw_prohibited;
- 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
- 	bool vht = sband && sband->vht_cap.vht_supported;
-+	bool buffer_sta =
-+		local->hw.wiphy->flags & WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
- 	u8 *pos = skb_put(skb, 10);
- 
- 	*pos++ = WLAN_EID_EXT_CAPABILITY;
-@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
--	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
-+	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
-+		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
- 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
- 	*pos++ = 0;
- 	*pos++ = 0;
--- 
-1.7.9.5
+On 22/09/17 11:03, Joe Perches wrote:
+> On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
+>>
+>> On Thu, 21 Sep 2017, Colin King wrote:
+>>
+>>> From: Colin Ian King <colin.king@canonical.com>
+>>>
+>>> Don't populate const array ac_to_fifo on the stack in an inlined
+>>> function, instead make it static.  Makes the object code smaller
+>>> by over 800 bytes:
+>>>
+>>>    text	   data	    bss	    dec	    hex	filename
+>>>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
+>>>
+>>>    text	   data	    bss	    dec	    hex	filename
+>>>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
+>>>
+>>> (gcc version 7.2.0 x86_64)
+>>
+>> Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
+>> change that I got on this file:
+>>
+>>      text          data     bss     dec     hex filename
+>> -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+>> +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+>> decrease of 48
+> 
+> More likely different CONFIG options.
+> 
+> e.g. allyesconfig vs defconfig with wireless
+> 
+yup, I used allyesconfig
