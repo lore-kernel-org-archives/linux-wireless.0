@@ -1,81 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:51199 "EHLO
-        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751259AbdIPSxO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Sep 2017 14:53:14 -0400
-Received: by mail-pg0-f54.google.com with SMTP id p5so3125281pgn.7
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Sep 2017 11:53:14 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Luca Coelho <luca@coelho.fi>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
- <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
- <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
- <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
- <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
- <1505505062.32032.1.camel@coelho.fi>
- <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
- <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <913e8f70-699c-8f87-a86c-7030fddd19b7@kernel.dk> (sfid-20170916_205331_442439_F3B6DE64)
-Date: Sat, 16 Sep 2017 12:53:10 -0600
+Received: from mx1.redhat.com ([209.132.183.28]:40628 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751826AbdIVJ4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Sep 2017 05:56:12 -0400
+Date: Fri, 22 Sep 2017 11:56:10 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless: iwlegacy:  make const array static to shink
+ object code size Content-Type: text/plain; charset="utf-8"
+ Content-Transfer-Encoding: 8bit
+Message-ID: <20170922095609.GA27551@redhat.com> (sfid-20170922_115803_130318_E7C20517)
+References: <20170921225630.21916-1-colin.king@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170921225630.21916-1-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2017 09:03 PM, Bjorn Helgaas wrote:
-> On Fri, Sep 15, 2017 at 01:55:57PM -0600, Jens Axboe wrote:
->> On 09/15/2017 01:51 PM, Luca Coelho wrote:
->>> On Fri, 2017-09-15 at 13:48 -0600, Jens Axboe wrote:
->>>> On 09/15/2017 01:38 PM, Linus Torvalds wrote:
->>>>> On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>
->>>>>>> In any case, your patch introduces a regression on systems. Please get
->>>>>>> it reverted now, and then you can come up with a new approach to fix the
->>>>>>> double enable of the upstream bridge.
->>>>>>
->>>>>> Who's sending in the revert? I can certainly do it if no one else does,
->>>>>> but it needs to be done.
->>>>>>
->>>>>> I'm not seeing any patches coming out of Srinath to fix up the
->>>>>> situation, so we should revert the broken patch until a better solution
->>>>>> exists.
->>>>>
->>>>> Hmm. I don't have the history here (apparently it never made lkml, for
->>>>> example), so I don't even know which commit you're talking about.
->>>>>
->>>>> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
->>>>> Avoid race while enabling upstream bridges"), is that correct?
->>>>
->>>> Yes, Luca says that Bjorn already sent in the revert request, I just
->>>> didn't see it since I wasn't CC'ed on it. So looks like we're all
->>>> good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
->>>> commit.
->>>
->>> Strange... AFAICT you *were* CCed on it.  And so was everyone else in
->>> the original thread (+LKML)...
->>
->> Hmm, never showed up here. Very odd!
+On Thu, Sep 21, 2017 at 11:56:30PM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Sorry, I think this is probably because I'm an idiot and sent it from
-> an @google.com account and it got rejected because the DMARC check
-> failed.
+> Don't populate const array ac_to_fifo on the stack in an inlined
+> function, instead make it static.  Makes the object code smaller
+> by over 800 bytes:
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
+> 
+> (gcc version 7.2.0 x86_64)
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Ah, good to know why it didn't show up. Thanks.
+Content type information was added at the end of the topic, but
+I think Kalle can fix that when he will be committing the patch.
 
--- 
-Jens Axboe
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
