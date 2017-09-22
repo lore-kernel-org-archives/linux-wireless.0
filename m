@@ -1,65 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49608 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750864AbdISOjH (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:60649 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752071AbdIVVaa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 10:39:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-Subject: Re: [PATCH] rsi: add driver and firmware version info
-References: <1504094535-6680-1-git-send-email-amitkarwar@gmail.com>
-Date: Tue, 19 Sep 2017 17:39:01 +0300
-In-Reply-To: <1504094535-6680-1-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Wed, 30 Aug 2017 17:32:15 +0530")
-Message-ID: <87mv5qah2y.fsf@kamboji.qca.qualcomm.com> (sfid-20170919_163911_567876_FAC6355B)
+        Fri, 22 Sep 2017 17:30:30 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Jiri Pirko <jiri@resnulli.us>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Michal Marek <mmarek@suse.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
+        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
+        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>
+Subject: [PATCH v4 0/9] bring back stack frame warning with KASAN
+Date: Fri, 22 Sep 2017 23:29:11 +0200
+Message-Id: <20170922212930.620249-1-arnd@arndb.de> (sfid-20170922_233433_278795_5E124112)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+This is a new version of patches I originally submitted back in March
+[1], and last time in June [2]. This time I have basically rewritten
+the entire patch series based on a new approach that came out of GCC
+PR81715 that I opened[3]. The upcoming gcc-8 release is now much better
+at consolidating stack slots for inline function arguments and would
+obsolete most of my workaround patches here, but we still need the
+workarounds for gcc-5, gcc-6 and gcc-7. Many thanks to Jakub Jelinek
+for the analysis and the gcc-8 patch!
 
-> From: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
->
-> We will dump information about driver and firmware versions,
-> firmware file name and operating mode during initialization.
->
-> Signed-off-by: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+This minimal set of patches only makes sure that we do get frame size
+warnings in allmodconfig for x86_64 and arm64 again with a 2048 byte
+limit, even with KASAN enabled, but without the new KASAN_EXTRA option.
 
-[...]
+I set the warning limit with KASAN_EXTRA to 3072, limiting the
+allmodconfig+KASAN_EXTRA build output to around 50 legitimate warnings.
+These are for stack frames up to 31KB that will cause an immediate stack
+overflow, and fixing them would require bringing back my older patches
+and more. We can debate whether we want to apply those as a follow-up,
+or instead remove the option entirely.
 
-> +void rsi_print_version(struct rsi_common *common)
-> +{
-> +	memcpy(common->driver_ver, DRV_VER, ARRAY_SIZE(DRV_VER));
-> +	common->driver_ver[ARRAY_SIZE(DRV_VER)] = '\0';
-> +
-> +	rsi_dbg(ERR_ZONE, "================================================\n");
-> +	rsi_dbg(ERR_ZONE, "================ RSI Version Info ==============\n");
-> +	rsi_dbg(ERR_ZONE, "================================================\n");
-> +	rsi_dbg(ERR_ZONE, "FW Version\t: %d.%d.%d\n",
-> +		common->lmac_ver.major, common->lmac_ver.minor,
-> +		common->lmac_ver.release_num);
-> +	rsi_dbg(ERR_ZONE, "Driver Version\t: %s", common->driver_ver);
-> +	rsi_dbg(ERR_ZONE, "Operating mode\t: %d [%s]",
-> +		common->oper_mode, opmode_str(common->oper_mode));
-> +	rsi_dbg(ERR_ZONE, "Firmware file\t: %s", common->priv->fw_file_name);
-> +	rsi_dbg(ERR_ZONE, "================================================\n");
-> +}
-> +
+Another follow-up series I have reduces the warning limit with
+KASAN to 1536, and without KASAN to 1280 for 64-bit architectures.
 
-[...]
+I hope we can get all patches merged for v4.14 and most of them
+backported into stable kernels. Since we no longer have a dependency
+on a preparation patch, my preference would be for the respective
+subsystem maintainers to pick up the individual patches.
+The last patch introduces a couple of "allmodconfig" build warnings
+on x86 and arm64 unless the other patches get merged first, I'll
+send that again separately once everything else has been taken
+care of.
 
-> +#define DRV_VER				"RS911X.NB0.NL.GNU.LNX.1.0"
+The remaining contents are:
+- -fsanitize-address-use-after-scope is moved to a separate
+  CONFIG_KASAN_EXTRA option that increases the warning limit
+- CONFIG_KASAN_EXTRA is disabled with CONFIG_COMPILE_TEST,
+  improving compile speed and disabling code that leads to
+  valid warnings on gcc-7.0.1
+- KMEMCHECK conflicts with CONFIG_KASAN
+- my inline function workaround is applied to netlink, one
+  ethernet driver and a few media drivers.
+- The rework for the brcmsmac driver from previous versions is
+  still there.
 
-The concept of a driver version does not really work with upstream
-drivers. The history has shown multiple times that the driver version
-won't be updated for years and thus it won't have any meaning. So better
-remove driver_ver from the driver entirely.
+Changes since v3:
+- I dropped all "noinline_if_stackbloat" annotations and used
+  a workaround that introduces additional local variables in the inline
+  functions to copy the function arguments, resulting in much better
+  object code at the expense of having rather odd-looking functions.
+- The v4 patches now don't help with KASAN_EXTRA any more at all,
+  CONFIG_KASAN_EXTRA now depends on CONFIG_DEBUG_KERNEL, as it
+  is more dangerous in production systems than it was before
+- Rewrote the "em28xx" patch to be small enough for a stable backport.
+- The rewritten vt-keyboard patches got merged and are now in
+  stable kernels as well.
+
+Changes since v2:
+- rewrote the vt-keyboard patch based on feedback
+- and made KMEMCHECK mutually exclusive with KASAN
+  (rather than KASAN_EXTRA)
+
+Changes since v1:
+- dropped patches to fix all the CONFIG_KASAN_EXTRA warnings:
+ - READ_ONCE/WRITE_ONCE cause problems in lots of code
+ - typecheck() causes huge problems in a few places
+ - many more uses of noinline_if_stackbloat
+
+     Arnd
+
+[1] https://www.spinics.net/lists/linux-wireless/msg159819.html
+[2] https://www.spinics.net/lists/netdev/msg441918.html
+[3] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715
+
+Arnd Bergmann (9):
+  brcmsmac: make some local variables 'static const' to reduce stack
+    size
+  brcmsmac: split up wlc_phy_workarounds_nphy
+  brcmsmac: reindent split functions
+  em28xx: fix em28xx_dvb_init for KASAN
+  r820t: fix r820t_write_reg for KASAN
+  dvb-frontends: fix i2c access helpers for KASAN
+  rocker: fix rocker_tlv_put_* functions for KASAN
+  netlink: fix nla_put_{u8,u16,u32} for KASAN
+  kasan: rework Kconfig settings
+
+ drivers/media/dvb-frontends/ascot2e.c              |    4 +-
+ drivers/media/dvb-frontends/cxd2841er.c            |    4 +-
+ drivers/media/dvb-frontends/helene.c               |    4 +-
+ drivers/media/dvb-frontends/horus3a.c              |    4 +-
+ drivers/media/dvb-frontends/itd1000.c              |    5 +-
+ drivers/media/dvb-frontends/mt312.c                |    4 +-
+ drivers/media/dvb-frontends/stb0899_drv.c          |    3 +-
+ drivers/media/dvb-frontends/stb6100.c              |    6 +-
+ drivers/media/dvb-frontends/stv0367.c              |    4 +-
+ drivers/media/dvb-frontends/stv090x.c              |    4 +-
+ drivers/media/dvb-frontends/stv6110x.c             |    4 +-
+ drivers/media/dvb-frontends/zl10039.c              |    4 +-
+ drivers/media/tuners/r820t.c                       |   13 +-
+ drivers/media/usb/em28xx/em28xx-dvb.c              |   30 +-
+ drivers/net/ethernet/rocker/rocker_tlv.h           |   48 +-
+ .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        | 1856 ++++++++++----------
+ include/net/netlink.h                              |   73 +-
+ lib/Kconfig.debug                                  |    4 +-
+ lib/Kconfig.kasan                                  |   13 +-
+ lib/Kconfig.kmemcheck                              |    1 +
+ scripts/Makefile.kasan                             |    3 +
+ 21 files changed, 1047 insertions(+), 1044 deletions(-)
 
 -- 
-Kalle Valo
+2.9.0
+
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Jiri Pirko <jiri@resnulli.us>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Alexander Potapenko <glider@google.com>
+Cc: Dmitry Vyukov <dvyukov@google.com>
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Michal Marek <mmarek@suse.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-media@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
+Cc: kasan-dev@googlegroups.com
+Cc: linux-kbuild@vger.kernel.org
+Cc: Jakub Jelinek <jakub@gcc.gnu.org>
+Cc: Martin Liška <marxin@gcc.gnu.org>
