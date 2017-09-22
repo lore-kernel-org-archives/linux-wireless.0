@@ -1,92 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48502 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752775AbdIGFlA (ORCPT
+Received: from smtprelay0016.hostedemail.com ([216.40.44.16]:41280 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751903AbdIVKqZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 01:41:00 -0400
-Message-ID: <1504762851.5400.93.camel@coelho.fi> (sfid-20170907_074117_097075_F9495D62)
-From: Luca Coelho <luca@coelho.fi>
-To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Thu, 07 Sep 2017 08:40:51 +0300
-In-Reply-To: <1504760688.5400.91.camel@intel.com>
-References: <20170905.214143.826912481689443792.davem@davemloft.net>
-         <CA+55aFw0KNTKFrRHk5hthDGTGgL9BGt9G=x_m9Tz7m_-pN+NoA@mail.gmail.com>
-         <1504757495.5400.89.camel@intel.com>
-         <CA+55aFzECjnpFWo_ZfbV+vE-5zRst7JfDC0hxnoitCGN0rmE3Q@mail.gmail.com>
-         <1504760688.5400.91.camel@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 22 Sep 2017 06:46:25 -0400
+Message-ID: <1506077181.12311.39.camel@perches.com> (sfid-20170922_124649_259171_8D2D199F)
+Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
+ object code size Content-Type: text/plain; charset="utf-8"
+ Content-Transfer-Encoding: 8bit
+From: Joe Perches <joe@perches.com>
+To: Julia Lawall <julia.lawall@lip6.fr>,
+        Colin Ian King <colin.king@canonical.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 22 Sep 2017 03:46:21 -0700
+In-Reply-To: <alpine.DEB.2.20.1709221206050.3170@hadrien>
+References: <20170921225630.21916-1-colin.king@canonical.com>
+         <alpine.DEB.2.20.1709220921350.2024@hadrien>
+         <1506074588.12311.37.camel@perches.com>
+         <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>
+         <alpine.DEB.2.20.1709221206050.3170@hadrien>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
-Subject: Re: [GIT] Networking
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-09-07 at 05:04 +0000, Coelho, Luciano wrote:
-> On Wed, 2017-09-06 at 21:57 -0700, Linus Torvalds wrote:
-> > On Wed, Sep 6, 2017 at 9:11 PM, Coelho, Luciano
-> > <luciano.coelho@intel.com> wrote:
+On Fri, 2017-09-22 at 12:06 +0200, Julia Lawall wrote:
+> 
+> On Fri, 22 Sep 2017, Colin Ian King wrote:
+> 
+> > On 22/09/17 11:03, Joe Perches wrote:
+> > > On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
+> > > > 
+> > > > On Thu, 21 Sep 2017, Colin King wrote:
+> > > > 
+> > > > > From: Colin Ian King <colin.king@canonical.com>
+> > > > > 
+> > > > > Don't populate const array ac_to_fifo on the stack in an inlined
+> > > > > function, instead make it static.  Makes the object code smaller
+> > > > > by over 800 bytes:
+> > > > > 
+> > > > >    text	   data	    bss	    dec	    hex	filename
+> > > > >  159029	  33154	   1216	 193399	  2f377	4965-mac.o
+> > > > > 
+> > > > >    text	   data	    bss	    dec	    hex	filename
+> > > > >  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
+> > > > > 
+> > > > > (gcc version 7.2.0 x86_64)
+> > > > 
+> > > > Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
+> > > > change that I got on this file:
+> > > > 
+> > > >      text          data     bss     dec     hex filename
+> > > > -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+> > > > +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
+> > > > decrease of 48
 > > > 
-> > > This seems to be a problem with backwards-compatibility with FW version
-> > > 27.  We are now in version 31[1] and upgrading will probably fix that.
+> > > More likely different CONFIG options.
+> > > 
+> > > e.g. allyesconfig vs defconfig with wireless
+> > > 
 > > 
-> > I can confirm that fw version 31 works.
+> > yup, I used allyesconfig
 > 
-> Great, so I know for sure that this is a backwards-compatibility issue
-> with the FW API.
-> 
-> 
-> > > But obviously the driver should not fail miserably like this with
-> > > version 27, because it claims to support it still.
-> > 
-> > Not just "claims to support it", but if it's what is shipped with a
-> > fairly recent distro like an up-to-date version of F26, I would really
-> > hope that the driver can still work with it.
-> 
-> I totally agree, we support a bunch of older versions for that exact
-> reason.  We just don't really test all the supported versions very
-> often.  We should probably change that.
-> 
-> I'll make sure it still works with version 27.
+> Mine is also allyesconfig.
 
-Okay, I found the offending patch:
+Odd.
 
-commit 7089ae634c50544b29b31faf1a751e8765c8de3b
-Author:Â Â Â Â Â Johannes Berg <johannes.berg@intel.com>
-AuthorDate: Wed Jun 28 16:19:49 2017 +0200
-Commit:Â Â Â Â Â Luca Coelho <luciano.coelho@intel.com>
-CommitDate: Wed Aug 9 09:15:32 2017 +0300
+Here is what I get: (Sorry, no gcc-7)
 
-Â Â Â Â iwlwifi: mvm: use firmware LED command where applicable
-Â Â Â Â 
-Â Â Â Â On devices starting from 8000 series, the host can no longer toggle
-Â Â Â Â the LED through the CSR_LED_REG register, but must do it via the
-Â Â Â Â firmware instead. Add support for this. Note that this means that
-Â Â Â Â the LED cannot be turned on while the firmware is off, so using an
-Â Â Â Â arbitrary LED trigger may not work as expected.
-Â Â Â Â 
-Â Â Â Â Fixes: 503ab8c56ca0 ("iwlwifi: Add 8000 HW family support")
-Â Â Â Â Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Â Â Â Â Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+gcc4: gcc-4.9 (Ubuntu 4.9.4-2ubuntu1) 4.9.4
+gcc5: gcc-5 (Ubuntu 5.4.1-8ubuntu1) 5.4.1 20170304
+gcc6: gcc-6 (Ubuntu 6.3.0-12ubuntu2) 6.3.0 20170406
 
-Reverting it solves the problem.  We introduced a new command to control
-the LED lights and assumed it was available in older FW versions as
-well, which turned out not to be the case.
-
-This patch is not very important (unless you really like blinking lights
--- maybe I'll change my mind when the holidays approach :P). so it is
-fine if you just want to revert it for now.
-
-In any case, I'll send a patch fixing this problem soon.
-
-
---
-Cheers,
-Luca.
+$ size drivers/net/wireless/intel/iwlegacy/4965-mac.o*
+   text	   data	    bss	    dec	    hex	filename
+ 118559	   1766	    152	 120477	  1d69d	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.allyesconfig.new
+ 118623	   1766	    152	 120541	  1d6dd	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.allyesconfig.old
+  51595	   1156	      0	  52751	   ce0f	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.defconfig.new
+  51659	   1156	      0	  52815	   ce4f	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.defconfig.old
+ 141956	  29790	   1216	 172962	  2a3a2	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.allyesconfig.new
+ 142671	  29702	   1216	 173589	  2a615	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.allyesconfig.old
+  51733	   1156	      0	  52889	   ce99	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.defconfig.new
+  51813	   1156	      0	  52969	   cee9	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.defconfig.old
+ 152991	  29790	   1216	 183997	  2cebd	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.allyesconfig.new
+ 153722	  29702	   1216	 184640	  2d140	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.allyesconfig.old
+  51813	   1156	      0	  52969	   cee9	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.defconfig.new
+  51893	   1156	      0	  53049	   cf39	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.defconfig.old
