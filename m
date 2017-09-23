@@ -1,51 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52808 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753484AbdIFMsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:48:38 -0400
-Message-ID: <1504702115.13457.16.camel@sipsolutions.net> (sfid-20170906_144854_264235_DD6F357A)
-Subject: Re: hung task in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefano Brivio <sbrivio@redhat.com>,
-        Matteo Croce <mcroce@redhat.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 06 Sep 2017 14:48:35 +0200
-In-Reply-To: <20170906144019.1c98a636@elisabeth> (sfid-20170906_144115_600908_441D9559)
-References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
-         <20170906144019.1c98a636@elisabeth> (sfid-20170906_144115_600908_441D9559)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:36345 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751030AbdIWThh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Sep 2017 15:37:37 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Andrey Konovalov <andreyknvl@google.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
+        Yong Zhang <yong.zhang0@gmail.com>
+Subject: [RESEND] Re: usb/net/p54: trying to register non-static key in p54_unregister_leds
+Date: Sat, 23 Sep 2017 21:37:34 +0200
+Message-ID: <2589427.Vd4nrgaY4N@debian64> (sfid-20170923_213759_437864_58386BFF)
+In-Reply-To: <CAAeHK+wWRZuCDNhoZJ0ACDhiNQw8tVRp2HW0j1EDH0HOe523xA@mail.gmail.com>
+References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com> <1505937307.3026.20.camel@sipsolutions.net> <CAAeHK+wWRZuCDNhoZJ0ACDhiNQw8tVRp2HW0j1EDH0HOe523xA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll look in a bit - but
+This got rejected by gmail once. Let's see if it works now.
 
-> +			mutex_unlock(&sta->ampdu_mlme.mtx);
->  			___ieee80211_stop_rx_ba_session(
->  				sta, tid, WLAN_BACK_RECIPIENT,
->  				WLAN_REASON_QSTA_TIMEOUT, true);
+On Thursday, September 21, 2017 8:22:45 PM CEST Andrey Konovalov wrote:
+> On Wed, Sep 20, 2017 at 9:55 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2017-09-20 at 21:27 +0200, Christian Lamparter wrote:
+> >
+> >> It seems this is caused as a result of:
+> >>     -> lock_map_acquire(&work->lockdep_map);
+> >>           lock_map_release(&work->lockdep_map);
+> >>
+> >>     in flush_work() [0]
+> >
+> > Agree.
+> >
+> >> This was added by:
+> >>
+> >>       commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
+> >>       Author: Stephen Boyd <sboyd@codeaurora.org>
+> >>       Date:   Fri Apr 20 17:28:50 2012 -0700
+> >>
+> >>       workqueue: Catch more locking problems with flush_work()
+> >
+> > Yes, but that doesn't matter.
+> >
+> >> Looking at the Stephen's patch, it's clear that it was made
+> >> with "static DECLARE_WORK(work, my_work)" in mind. However
+> >> p54's led_work is "per-device", hence it is stored in the
+> >> devices context p54_common, which is dynamically allocated.
+> >> So, maybe revert Stephen's patch?
+> >
+> > I disagree - as the lockdep warning says:
+> >
+> >> > INFO: trying to register non-static key.
+> >> > the code is fine but needs lockdep annotation.
+> >> > turning off the locking correctness validator.
+> >
+> > What it needs is to actually correctly go through initializing the work
+> > at least once.
+> >
+> > Without more information, I can't really say what's going on, but I
+> > assume that something is failing and p54_unregister_leds() is getting
+> > invoked without p54_init_leds() having been invoked, so essentially
+> > it's trying to flush a work that was never initialized?
+> >
+> > INIT_DELAYED_WORK() does, after all, initialize the lockdep map
+> > properly via __INIT_WORK().
 
-This already has three underscores so shouldn't drop.
+Ok, thanks. This does indeed explain it.
 
-> 
-> +			mutex_unlock(&sta->ampdu_mlme.mtx);
->  			___ieee80211_stop_rx_ba_session(
+But this also begs the question: Is this really working then?
+>From what I can tell, if CONFIG_LOCKDEP is not set then there's no BUG
+no WARN, no other splat or any other odd system behaviour. Does
+[cancel | flush]_[delayed_]work[_sync] really "just work" by *accident*,
+as long the delayed_work | work_struct is zeroed out? 
+And should it work in the future as well?
 
-ditto
+> Since I'm able to reproduce this, please let me know if you need me to
+> collect some debug traces to help with the triage.
 
-> +			mutex_unlock(&sta->ampdu_mlme.mtx);
->  			__ieee80211_start_rx_ba_session(sta, 0, 0,
-> 0, 1, tid,
+Do you want to take a shot at making a patch too? At a quick glance, it
+should be enough to move the [#ifdef CONFIG_P54_LEDS ... #endif] block
+in p54_unregister_common() into the if (priv->registered) { block
+(preferably before the ieee80211_unregister_hw(dev).
 
-maybe this one needs a ___ version then?
-
-> +			mutex_unlock(&sta->ampdu_mlme.mtx);
->  			___ieee80211_stop_rx_ba_session(
-> 
-already ___
-
-I'm surprised nobody saw this before - though perhaps Sebastian's
-useless report is the same.
-
-johannes
+Regards,
+Christian
