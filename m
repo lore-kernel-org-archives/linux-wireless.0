@@ -1,70 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33406 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755691AbdIGUgs (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35067 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752709AbdIXSkO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 16:36:48 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] mwifiex: check for mfg_mode in add_virtual_intf
-Date: Fri, 8 Sep 2017 02:02:43 +0530
-Message-ID: <1504816363-31015-1-git-send-email-gbhat@marvell.com> (sfid-20170907_223703_752332_E8A29035)
+        Sun, 24 Sep 2017 14:40:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1506274966.2909.7.camel@sipsolutions.net>
+References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com> <1506265531.2909.5.camel@sipsolutions.net>
+ <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com> <1506274966.2909.7.camel@sipsolutions.net>
+From: Xiang Gao <qasdfgtyuiop@gmail.com>
+Date: Sun, 24 Sep 2017 14:39:53 -0400
+Message-ID: <CAMtaSwRy8Ae2VZoXqWN0bV4tX_j_Wv_ZMY+9tizPCcwEue4vcA@mail.gmail.com> (sfid-20170924_204039_593775_0EA4EED3)
+Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-crypto@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If driver is loaded with 'mfg_mode' enabled, then the sending
-commands are not allowed. So, skip sending commands, to firmware
-in mwifiex_add_virtual_intf if 'mfg_mode' is enabled.
+2017-09-24 13:42 GMT-04:00 Johannes Berg <johannes@sipsolutions.net>:
+> On Sun, 2017-09-24 at 13:21 -0400, Xiang Gao wrote:
+>>
+>> Do you mean to put more characters each line in the description
+>>
+> Huh, sorry, no - my bad. I was thinking of the code, not the
+> description at all.
 
-Fixes: 7311ea850079 ("mwifiex: fix AP start problem for newly added interface")
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v2: addressed Brian's comments.
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+Oh yes, these indentation do looks ugly. Thank you for figuring this
+out. The tab
+width of my editor was set to 4. It should be 8... I will fix these
+problems and resend
+the patch soon, maybe after receiving a bit more feedback.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 32c5074..ad1ebd8 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2959,18 +2959,21 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	}
- 
- 	mwifiex_init_priv_params(priv, dev);
--	mwifiex_set_mac_address(priv, dev);
- 
- 	priv->netdev = dev;
- 
--	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
--			       HostCmd_ACT_GEN_SET, 0, NULL, true);
--	if (ret)
--		goto err_set_bss_mode;
-+	if (!adapter->mfg_mode) {
-+		mwifiex_set_mac_address(priv, dev);
- 
--	ret = mwifiex_sta_init_cmd(priv, false, false);
--	if (ret)
--		goto err_sta_init;
-+		ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
-+				       HostCmd_ACT_GEN_SET, 0, NULL, true);
-+		if (ret)
-+			goto err_set_bss_mode;
-+
-+		ret = mwifiex_sta_init_cmd(priv, false, false);
-+		if (ret)
-+			goto err_sta_init;
-+	}
- 
- 	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
- 	if (adapter->is_hw_11ac_capable)
--- 
-1.9.1
+>
+> For example here:
+>
+>> -int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+>> -                             u8 *data, size_t data_len, u8 *mic)
+>> +int aead_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad, size_t aad_len,
+>> +                                u8 *data, size_t data_len, u8 *auth)
+>>
+>
+> I think you should adjust the indentation to match - or did it just get
+> mangled in my mail? It looks *further* indented now, when it should be
+> less (to after the opening parenthesis). Similarly in various other
+> places.
+>
+> And perhaps for long things like
+>
+>> +static inline struct crypto_aead *ieee80211_aes_key_setup_encrypt(
+>> +                               const u8 key[], size_t key_len,
+>> size_t mic_len)
+>
+>> +struct crypto_aead *aead_key_setup_encrypt(const char *alg,
+>> +                       const u8 key[], size_t key_len, size_t authsize);
+>
+> it might be better to write
+>
+> static inline struct crypto_aead *
+> ieee80211_aes_key_setup_encrypt(const u8 key[], ...)
+>
+> and
+>
+> struct crypto_aead *
+> aead_key_setup_encrypt(const char *alg, ...)
+>
+>
+> respectively, depending on how far you have to indent to break lines
+> etc.
+>
+> Anyway, I'm nitpicking.
+>
+> Unrelated to this, I'm not sure whose tree this should go through -
+> probably Herbert's (or DaveM's with his ACK? not sure if there's a
+> crypto tree?) or so?
+
+Yes, there is one at
+https://git.kernel.org/pub/scm/linux/kernel/git/herbert/cryptodev-2.6.git/
+I'm not sure which tree to go either. I'm also not sure about the
+beginning of the patch title,
+should it be "mac80211:" or "crypto:"?
+
+Options are:
+1. This whole patch goes to either mac80211 tree or crypto tree. I
+don't know which is better.
+2. Make the higher level api only for internal usage in mac80211, i.e.
+move the aead_api.c and aead_api.h to net/mac80211, does not export
+the symbol. And of course, this will go to the mac80211 tree. I
+personally don't want this to be the final solution because I happen
+to be writing a loadable kernel module that uses these higher level
+api.
+3. Maybe split this patch, one for changes in crypto, which will go to
+crypto tree, and the other for mac80211 part, which goes to the
+mac80211 tree?
+
+>
+> johannes
