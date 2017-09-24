@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:56349 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751014AbdIAGPY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 02:15:24 -0400
-Message-ID: <1504246520.2361.3.camel@perches.com> (sfid-20170901_081631_378871_3CBAFDF6)
-Subject: Re: [PATCH 1/2] iwlwifi: fix long debug print
-From: Joe Perches <joe@perches.com>
-To: Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>
-Date: Thu, 31 Aug 2017 23:15:20 -0700
-In-Reply-To: <1504244238.31031.24.camel@coelho.fi>
-References: <20170825082730.31388-1-luca@coelho.fi>
-         <20170825082730.31388-2-luca@coelho.fi>
-         <1504216665.2786.48.camel@perches.com>
-         <1504244238.31031.24.camel@coelho.fi>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54322 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752515AbdIXRmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Sep 2017 13:42:51 -0400
+Message-ID: <1506274966.2909.7.camel@sipsolutions.net> (sfid-20170924_194312_798194_1C2B9535)
+Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Xiang Gao <qasdfgtyuiop@gmail.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-crypto@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Sun, 24 Sep 2017 19:42:46 +0200
+In-Reply-To: <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com> (sfid-20170924_192213_933382_C4E7F059)
+References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com>
+         <1506265531.2909.5.camel@sipsolutions.net>
+         <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com>
+         (sfid-20170924_192213_933382_C4E7F059)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-01 at 08:37 +0300, Luca Coelho wrote:
-> On Thu, 2017-08-31 at 14:57 -0700, Joe Perches wrote:
-> > On Fri, 2017-08-25 at 11:27 +0300, Luca Coelho wrote:
-> > > From: Liad Kaufman <liad.kaufman@intel.com>
-> > > 
-> > > There is a debug print that sometimes reaches over
-> > > 110 chars, thus generating a warning in those cases.
-> > 
-> > What emits a warning here?
+On Sun, 2017-09-24 at 13:21 -0400, Xiang Gao wrote:
 > 
-> We have a WARN_ON in iwl-devtrace-msg.h:
+> Do you mean to put more characters each line in the description
 > 
-> #define MAX_MSG_LEN	110
+Huh, sorry, no - my bad. I was thinking of the code, not the
+description at all.
 
-OK, thanks for the hint.
+For example here:
 
-The commit message is a bit obscure.
+> -int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+> -                             u8 *data, size_t data_len, u8 *mic)
+> +int aead_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad, size_t aad_len,
+> +                                u8 *data, size_t data_len, u8 *auth)
+> 
 
-It might make sense to add a comment to describe these
-trace events coming from TRACE_EVENT(iwlwifi_dbg,
+I think you should adjust the indentation to match - or did it just get
+mangled in my mail? It looks *further* indented now, when it should be
+less (to after the opening parenthesis). Similarly in various other
+places.
 
-All the IWL_DEBUG_<foo> use this trace message maximum.
+And perhaps for long things like
+
+> +static inline struct crypto_aead *ieee80211_aes_key_setup_encrypt(
+> +                               const u8 key[], size_t key_len,
+> size_t mic_len)
+
+> +struct crypto_aead *aead_key_setup_encrypt(const char *alg,
+> +                       const u8 key[], size_t key_len, size_t authsize);
+
+it might be better to write
+
+static inline struct crypto_aead *
+ieee80211_aes_key_setup_encrypt(const u8 key[], ...)
+
+and
+
+struct crypto_aead *
+aead_key_setup_encrypt(const char *alg, ...)
+
+
+respectively, depending on how far you have to indent to break lines
+etc.
+
+Anyway, I'm nitpicking.
+
+Unrelated to this, I'm not sure whose tree this should go through -
+probably Herbert's (or DaveM's with his ACK? not sure if there's a
+crypto tree?) or so?
+
+johannes
