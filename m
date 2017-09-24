@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:63064 "EHLO
-        alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751009AbdISCuM (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:43368 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752624AbdIXRWN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 22:50:12 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V2 4/5] ath10k: Avoid to set WEP key for TDLS peer
-Date: Tue, 19 Sep 2017 10:51:07 +0800
-Message-ID: <1505789468-25330-5-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_045016_749538_42B6D707)
-In-Reply-To: <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patchset v2>
- <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
+        Sun, 24 Sep 2017 13:22:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1506265531.2909.5.camel@sipsolutions.net>
+References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com> <1506265531.2909.5.camel@sipsolutions.net>
+From: Xiang Gao <qasdfgtyuiop@gmail.com>
+Date: Sun, 24 Sep 2017 13:21:52 -0400
+Message-ID: <CAMtaSwR4YTgh9N9x8a12R4dEZNuarjwvfOmnO6vnaDffVV-j3w@mail.gmail.com> (sfid-20170924_193027_450530_BFEEC825)
+Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-crypto@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+2017-09-24 11:05 GMT-04:00 Johannes Berg <johannes@sipsolutions.net>:
+> On Sun, 2017-09-24 at 01:40 -0400, Xiang Gao wrote:
+>> Currently, the aes_ccm.c and aes_gcm.c are almost line by line
+>> copy of each other. This patch reduce code redundancy by moving
+>> the code in these two files to crypto/aead_api.c to make it a
+>> higher level aead api. The aes_ccm.c and aes_gcm.c are removed
+>> and all the functions are now implemented in their headers using
+>> the newly added aead api.
+>>
+> No objection from me, though I'd ask you to respin with the indentation
+> fixed up a bit.
 
-TDLS peer do not need WEP key. Setting WEP key will lead
-to TDLS setup failure. Add fix to avoid setting WEP key
-for TDLS peer.
+Hi Johannes,
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you for you time for the suggestion. I'm not sure if I correctly
+understand you point.
+Do you mean to put more characters each line in the description? Something like:
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 399f9ba..f6702cb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2966,7 +2966,7 @@ static int ath10k_station_assoc(struct ath10k *ar,
- 		}
- 
- 		/* Plumb cached keys only for static WEP */
--		if (arvif->def_wep_key_idx != -1) {
-+		if ((arvif->def_wep_key_idx != -1) && (!sta->tdls)) {
- 			ret = ath10k_install_peer_wep_keys(arvif, sta->addr);
- 			if (ret) {
- 				ath10k_warn(ar, "failed to install peer wep keys for vdev %i: %d\n",
--- 
-1.7.9.5
+> Currently, the aes_ccm.c and aes_gcm.c are almost line by line copy of
+> each other. This patch reduce code redundancy by moving the code in these
+> two files to crypto/aead_api.c to make it a higher level aead api. The
+> file aes_ccm.c and aes_gcm.c are removed and all the functions there are
+> now implemented in their headers using the newly added aead api.
+
+instead of
+
+> Currently, the aes_ccm.c and aes_gcm.c are almost line by line
+> copy of each other. This patch reduce code redundancy by moving
+> the code in these two files to crypto/aead_api.c to make it a
+> higher level aead api. The aes_ccm.c and aes_gcm.c are removed
+> and all the functions are now implemented in their headers using
+> the newly added aead api.
+
+Xiang Gao
+
+>
+> johannes
