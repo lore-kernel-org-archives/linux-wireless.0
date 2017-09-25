@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:56827 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753741AbdIDOXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2017 10:23:47 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name
-Subject: Re: [PATCH 3/3] mac80211: fix VLAN handling with TXQs
-In-Reply-To: <1504517620.9797.3.camel@sipsolutions.net>
-References: <20170622102030.9795-1-johannes@sipsolutions.net> <20170622102030.9795-3-johannes@sipsolutions.net> <87378lvyfz.fsf@toke.dk> <1504517620.9797.3.camel@sipsolutions.net>
-Date: Mon, 04 Sep 2017 16:23:44 +0200
-Message-ID: <87mv6a35lb.fsf@toke.dk> (sfid-20170904_162352_217661_E8850EA1)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:10892 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932578AbdIYHO0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 03:14:26 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [v2] ath9k: remove cast to void pointer
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1504248214-3805-1-git-send-email-himanshujha199640@gmail.com>
+References: <1504248214-3805-1-git-send-email-himanshujha199640@gmail.com>
+To: Himanshu Jha <himanshujha199640@gmail.com>
+CC: <kvalo@codeaurora.org>, <ath9k-devel@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <joe@perches.com>, Himanshu Jha <himanshujha199640@gmail.com>
+Message-ID: <10d2e93c64404c87816c3575c3b94c38@euamsexm01a.eu.qualcomm.com> (sfid-20170925_095440_960320_7EE8E2F9)
+Date: Mon, 25 Sep 2017 09:14:18 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Himanshu Jha <himanshujha199640@gmail.com> wrote:
 
-> On Mon, 2017-08-21 at 15:32 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>=20
->> > +			struct ieee80211_vif *vif;
->> > =C2=A0			struct ieee80211_key_conf *hw_key;
->> > =C2=A0			u32 flags;
->> > -			/* 4 bytes free */
->> > +			codel_time_t enqueue_time;
->>=20
->> A side effect of this is that enqueue_time will be valid in the
->> driver; which is good as far as I'm concerned (I've been thinking
->> about using it to make decisions about when to stop retrying a
->> frame).
->
-> Well, I think we need to do a lot more to allow that, but I guess
-> ultimately it would be possible - though we have this as codel_time_t
-> so the driver doesn't really know the reference etc. immediately.
+> casting to void pointer from any pointer type and vice-versa is done
+> implicitly and therefore casting is not needed in such a case.
+> 
+> Done using Coccinellle.
+> Semantic Patch used :
+> 
+> @r@
+> expression x;
+> void* e;
+> type T;
+> identifier f;
+> @@
+> 
+> (
+>   *((T *)e)
+> |
+>   ((T *)x)[...]
+> |
+>   ((T *)x)->f
+> |
+> - (T *)
+>   e
+> )
+> 
+> 
+> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Well, the driver could be taught how to handle CoDel timestamps, but
-you're right that that would be somewhat cludgy. Which is another reason
-to use the tstamp; guess I'll ask Eric about that.
+Patch applied to ath-next branch of ath.git, thanks.
 
->> If we want to save the four bytes, is there any reason we can't just
->> change the codel code to use skb->tstamp instead?
->
-> I didn't really want to go into that.
->
-> Any comments on the patch itself? I don't think I even merged this
-> yet.
+50c8cd44ed5f ath9k: remove cast to void pointer
 
-Hmm, not apart from agreeing with you that it would be better to not
-drop everything when removing a VLAN. Not sure how often this happens,
-though (and hence how big of a problem it is). What happens in scenarios
-where hostapd is setup to automatically generate a bunch of VLANs for
-every client, for instance?
+-- 
+https://patchwork.kernel.org/patch/9933585/
 
--Toke
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
