@@ -1,63 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:63064 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:24208 "EHLO
         alexa-out-lv-01.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751009AbdISCuO (ORCPT
+        by vger.kernel.org with ESMTP id S1752722AbdIYW3u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 22:50:14 -0400
-From: <yintang@qti.qualcomm.com>
+        Mon, 25 Sep 2017 18:29:50 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V2 2/5] ath10k: Enable TDLS peer buffer STA feature
-Date: Tue, 19 Sep 2017 10:51:05 +0800
-Message-ID: <1505789468-25330-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_045018_420715_65A25EB2)
-In-Reply-To: <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patchset v2>
- <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2] ath10k: add new cipher suite support
+Date: Mon, 25 Sep 2017 15:29:41 -0700
+Message-ID: <1506378581-13598-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20170926_003151_330406_0DACDDBB)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+QCA99x0 and QCA4019 family chips support CCMP-256, GCMP-128, and
+GCMP-256 ciphers in hardware, so advertise support for these. As
+firmware does not support group management frame ciphers (BIP),
+handle them in software (mac80211).
 
-Enable TDLS peer buffer STA feature.
-QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
-it reports this capability through wmi service map in wmi service ready
-event. Set related parameter in TDLS WMI command to enable this feature.
-
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+Reviewed-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     |    3 +++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 +++
- 2 files changed, 6 insertions(+)
+v2: fix a bug in assigning n_cipher_suites. fill hw_param n_cipher_suites
+   for all chips.
 
+ drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
+ drivers/net/wireless/ath/ath10k/mac.c  | 43 ++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h  |  1 +
+ 4 files changed, 57 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a4f635820f35..71de3a28b59c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -74,6 +74,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -97,6 +98,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -119,6 +121,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -141,6 +144,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -163,6 +167,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -188,6 +193,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -216,6 +222,7 @@
+ 		.spectral_bin_discard = 4,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 11,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -249,6 +256,7 @@
+ 		 */
+ 		.vht160_mcs_rx_highest = 1560,
+ 		.vht160_mcs_tx_highest = 1560,
++		.n_cipher_suites = 11,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -281,6 +289,7 @@
+ 		 */
+ 		.vht160_mcs_rx_highest = 780,
+ 		.vht160_mcs_tx_highest = 780,
++		.n_cipher_suites = 11,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -303,6 +312,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -327,6 +337,7 @@
+ 		.spectral_bin_discard = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 8,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -356,6 +367,7 @@
+ 		.spectral_bin_discard = 4,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
++		.n_cipher_suites = 11,
+ 	},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 0c089f6dd3d9..ed30d5b6cd0e 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -550,6 +550,9 @@ struct ath10k_hw_params {
+ 	 */
+ 	int vht160_mcs_rx_highest;
+ 	int vht160_mcs_tx_highest;
++
++	/* Number of ciphers supported (i.e First N) in cipher_suites array */
++	int n_cipher_suites;
+ };
+ 
+ struct htt_rx_desc;
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5683f1a..399f9ba 100644
+index 5683f1a5330e..89455231754c 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8204,6 +8204,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
+@@ -242,6 +242,16 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 		arg.key_cipher = WMI_CIPHER_WEP;
+ 		break;
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		arg.key_cipher = WMI_CIPHER_AES_CCM;
++		break;
++	case WLAN_CIPHER_SUITE_GCMP:
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		arg.key_cipher = WMI_CIPHER_AES_GCM;
++		break;
++	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		WARN_ON(1);
+ 		return -EINVAL;
+@@ -5723,7 +5733,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	u32 flags2;
+ 
+ 	/* this one needs to be done in software */
+-	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
++	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
++	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
++	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256 ||
++	    key->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
+ 		return 1;
+ 
+ 	if (arvif->nohwcrypt)
+@@ -8074,7 +8087,22 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		WLAN_CIPHER_SUITE_WEP104,
+ 		WLAN_CIPHER_SUITE_TKIP,
+ 		WLAN_CIPHER_SUITE_CCMP,
++
++		/* Do not add hardware supported ciphers before this line.
++		 * Allow software encryption for all chips. Don't forget to
++		 * update n_cipher_suites below.
++		 */
+ 		WLAN_CIPHER_SUITE_AES_CMAC,
++		WLAN_CIPHER_SUITE_BIP_CMAC_256,
++		WLAN_CIPHER_SUITE_BIP_GMAC_128,
++		WLAN_CIPHER_SUITE_BIP_GMAC_256,
++
++		/* Only QCA99x0 and QCA4019 varients support GCMP-128, GCMP-256
++		 * and CCMP-256 in hardware.
++		 */
++		WLAN_CIPHER_SUITE_GCMP,
++		WLAN_CIPHER_SUITE_GCMP_256,
++		WLAN_CIPHER_SUITE_CCMP_256,
+ 	};
+ 	struct ieee80211_supported_band *band;
+ 	void *channels;
+@@ -8313,7 +8341,18 @@ int ath10k_mac_register(struct ath10k *ar)
  	}
  
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
+ 	ar->hw->wiphy->cipher_suites = cipher_suites;
+-	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 +
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7616c1c..f60b46e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2747,6 +2747,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	 */
- 	u32 options = 0;
++	/* QCA988x and QCA6174 family chips do not support CCMP-256, GCMP-128
++	 * and GCMP-256 ciphers in hardware. Fetch number of ciphers supported
++	 * from chip specific hw_param table.
++	 */
++	if (!ar->hw_params.n_cipher_suites ||
++	    ar->hw_params.n_cipher_suites > ARRAY_SIZE(cipher_suites)) {
++		ath10k_err(ar, "invalid hw_params.n_cipher_suites %d\n",
++			   ar->hw_params.n_cipher_suites);
++		ar->hw_params.n_cipher_suites = 8;
++	}
++	ar->hw->wiphy->n_cipher_suites = ar->hw_params.n_cipher_suites;
  
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
-+
- 	len = sizeof(*tlv) + sizeof(*cmd);
- 	skb = ath10k_wmi_alloc_skb(ar, len);
- 	if (!skb)
+ 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 7a3606dde227..c02b21cff38d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4751,6 +4751,7 @@ struct wmi_key_seq_counter {
+ #define WMI_CIPHER_WAPI     0x5
+ #define WMI_CIPHER_CKIP     0x6
+ #define WMI_CIPHER_AES_CMAC 0x7
++#define WMI_CIPHER_AES_GCM  0x8
+ 
+ struct wmi_vdev_install_key_cmd {
+ 	__le32 vdev_id;
 -- 
-1.7.9.5
+1.9.1
