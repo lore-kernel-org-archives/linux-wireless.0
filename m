@@ -1,177 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35498 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751875AbdIUOcF (ORCPT
+Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:54266 "EHLO
+        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932817AbdIYJal (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 10:32:05 -0400
-Received: by mail-io0-f196.google.com with SMTP id d16so5563675ioj.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2017 07:32:05 -0700 (PDT)
+        Mon, 25 Sep 2017 05:30:41 -0400
+Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
+        by mx08-00252a01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8P9SOLR012631
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 10:30:40 +0100
+Received: from mail-wm0-f71.google.com (mail-wm0-f71.google.com [74.125.82.71])
+        by mx08-00252a01.pphosted.com with ESMTP id 2d5c3f11qp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 10:30:40 +0100
+Received: by mail-wm0-f71.google.com with SMTP id u138so7952417wmu.2
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 02:30:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAFqt6zYY2WuwU+kQ=HmS5284CspyxF+EFm_jiysCQviSvegC1Q@mail.gmail.com>
-References: <1505998288-2041-1-git-send-email-amitkarwar@gmail.com> <CAFqt6zYY2WuwU+kQ=HmS5284CspyxF+EFm_jiysCQviSvegC1Q@mail.gmail.com>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Thu, 21 Sep 2017 20:02:04 +0530
-Message-ID: <CAEhWJF=eTwUA59VZBoPhxsBvpCm2eM_j1An--Ce_d0XLt8uVFw@mail.gmail.com> (sfid-20170921_163210_441930_375BD1E3)
-Subject: Re: [v2] rsi: sdio suspend and resume support
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
+In-Reply-To: <CAE_XsMJu9k=j=YSCK3SF7bptHc4+eKVhJdYZaQtbhuYqbx_AZg@mail.gmail.com>
+References: <1505208143-30166-2-git-send-email-arend.vanspriel@broadcom.com>
+ <20170925081816.E31B560C6B@smtp.codeaurora.org> <CAE_XsMJu9k=j=YSCK3SF7bptHc4+eKVhJdYZaQtbhuYqbx_AZg@mail.gmail.com>
+From: James Hughes <james.hughes@raspberrypi.org>
+Date: Mon, 25 Sep 2017 10:30:38 +0100
+Message-ID: <CAE_XsMLpow8AT+uYq3WfN6tWw1TPcAbEMouguCgk6wU5fNi5hw@mail.gmail.com> (sfid-20170925_113051_736826_6B4F1CAF)
+Subject: Re: [1/7] brcmfmac: handle FWHALT mailbox indication
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 21, 2017 at 7:08 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
-> On Thu, Sep 21, 2017 at 6:21 PM, Amitkumar Karwar <amitkarwar@gmail.com> wrote:
->> From: Karun Eagalapati <karun256@gmail.com>
+On 25 September 2017 at 10:26, James Hughes
+<james.hughes@raspberrypi.org> wrote:
+> On 25 September 2017 at 09:18, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
 >>
->> SDIO suspend and resume handlers are implemented and verified
->> that device works after suspend/resume cycle.
+>>> The firmware uses a mailbox to communicate to the host what is going
+>>> on. In the driver we validate the bit received. Various people seen
+>>> the following message:
+>>>
+>>>  brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
+>>>
+>>> Bit 4 is cause of this message, but this actually indicates the firmwar=
+e
+>>> has halted. Handle this bit by giving a more meaningful error message.
+>>>
+>>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 >>
->> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->> ---
->> v2: Replaced never ending while loop with 20msecs loop(Kalle Valo)
->> ---
->>  drivers/net/wireless/rsi/rsi_91x_sdio.c | 128 +++++++++++++++++++++++++++++++-
->>  drivers/net/wireless/rsi/rsi_sdio.h     |   2 +
->>  2 files changed, 126 insertions(+), 4 deletions(-)
+>> Failed to compile:
 >>
->> diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
->> index 8d3a483..b3f8006 100644
->> --- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
->> +++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
->> @@ -1059,16 +1059,136 @@ static void rsi_disconnect(struct sdio_func *pfunction)
->>  }
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c: In function =E2=
+=80=98brcmf_p2p_escan=E2=80=99:
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c:695:23: error: =
+=E2=80=98BRCMF_SCANTYPE_ACTIVE=E2=80=99 undeclared (first use in this funct=
+ion)
+>>   sparams->scan_type =3D BRCMF_SCANTYPE_ACTIVE;
+>>                        ^
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c:695:23: note: eac=
+h undeclared identifier is reported only once for each function it appears =
+in
+>> make[6]: *** [drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.o] Er=
+ror 1
+>> make[6]: *** Waiting for unfinished jobs....
+>> make[5]: *** [drivers/net/wireless/broadcom/brcm80211/brcmfmac] Error 2
+>> make[4]: *** [drivers/net/wireless/broadcom/brcm80211] Error 2
+>> make[3]: *** [drivers/net/wireless/broadcom] Error 2
+>> make[2]: *** [drivers/net/wireless] Error 2
+>> make[1]: *** [drivers/net] Error 2
+>> make: *** [drivers] Error 2
 >>
->>  #ifdef CONFIG_PM
->> +static int rsi_set_sdio_pm_caps(struct rsi_hw *adapter)
->> +{
->> +       struct rsi_91x_sdiodev *dev =
->> +               (struct rsi_91x_sdiodev *)adapter->rsi_dev;
->> +       struct sdio_func *func = dev->pfunction;
->> +       int ret;
->> +
->> +       ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
->> +       if (ret)
->> +               rsi_dbg(ERR_ZONE, "Set sdio keep pwr flag failed: %d\n", ret);
->> +
->> +       return ret;
->> +}
->> +
->> +static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
->> +{
->> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunc);
->> +       u8 isr_status = 0, data = 0;
->> +       int ret;
->> +       unsigned long t1;
->> +
->> +       rsi_dbg(INFO_ZONE, "Waiting for interrupts to be cleared..");
->> +       t1 = jiffies;
->> +       do {
->> +               rsi_sdio_read_register(adapter, RSI_FN1_INT_REGISTER,
->> +                                      &isr_status);
->> +               rsi_dbg(INFO_ZONE, ".");
->> +       } while ((isr_status) && (jiffies_to_msecs(jiffies - t1) < 20));
->> +       rsi_dbg(INFO_ZONE, "Interrupts cleared\n");
->> +
->> +       sdio_claim_host(pfunc);
->> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
->> +       if (ret < 0) {
->> +               rsi_dbg(ERR_ZONE,
->> +                       "%s: Failed to read int enable register\n",
->> +                       __func__);
->> +               goto done;
->> +       }
->> +
->> +       data &= RSI_INT_ENABLE_MASK;
->> +       ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
->> +       if (ret < 0) {
->> +               rsi_dbg(ERR_ZONE,
->> +                       "%s: Failed to write to int enable register\n",
->> +                       __func__);
->> +               goto done;
->> +       }
->> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
->> +       if (ret < 0) {
->> +               rsi_dbg(ERR_ZONE,
->> +                       "%s: Failed to read int enable register\n",
->> +                       __func__);
->> +               goto done;
->> +       }
->> +       rsi_dbg(INFO_ZONE, "int enable reg content = %x\n", data);
->> +
->> +done:
->> +       sdio_release_host(pfunc);
->> +       return ret;
->> +}
->> +
->> +static int rsi_sdio_enable_interrupts(struct sdio_func *pfunc)
->> +{
->> +       u8 data;
->> +       int ret;
->> +
->> +       sdio_claim_host(pfunc);
->> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
->> +       if (ret < 0) {
->> +               rsi_dbg(ERR_ZONE,
->> +                       "%s: Failed to read int enable register\n", __func__);
->> +               goto done;
->> +       }
->> +
->> +       data |= ~RSI_INT_ENABLE_MASK & 0xff;
->> +
->> +       ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
->> +       if (ret < 0) {
->> +               rsi_dbg(ERR_ZONE,
->> +                       "%s: Failed to write to int enable register\n",
->> +                       __func__);
->> +               goto done;
->> +       }
->> +
->> +       ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
->> +       if (ret < 0) {
->> +               rsi_dbg(ERR_ZONE,
->> +                       "%s: Failed to read int enable register\n", __func__);
->> +               goto done;
->> +       }
->> +       rsi_dbg(INFO_ZONE, "int enable reg content = %x\n", data);
->> +
->> +done:
->> +       sdio_release_host(pfunc);
->> +       return ret;
->> +}
->> +
->>  static int rsi_suspend(struct device *dev)
->>  {
->> -       /* Not yet implemented */
->> -       return -ENOSYS;
->> +       int ret;
->> +       struct sdio_func *pfunction = dev_to_sdio_func(dev);
->> +       struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
->> +       struct rsi_common *common;
->> +
->> +       if (!adapter) {
->> +               rsi_dbg(ERR_ZONE, "Device is not ready\n");
->> +               return -ENODEV;
->> +       }
->> +       common = adapter->priv;
->> +       rsi_sdio_disable_interrupts(pfunction);
->> +
->> +       ret = rsi_set_sdio_pm_caps(adapter);
->> +       if (ret)
->> +               rsi_dbg(INFO_ZONE,
->> +                       "Setting power management caps failed\n");
->> +       common->fsm_state = FSM_CARD_NOT_READY;
->> +
->> +       return 0;
+>> 7 patches set to Changes Requested.
+>>
+>> 9948825 [1/7] brcmfmac: handle FWHALT mailbox indication
+>> 9948831 [2/7] brcmfmac: disable packet filtering in promiscuous mode
+>> 9948829 [3/7] brcmfmac: cleanup brcmf_cfg80211_escan() function
+>> 9948833 [4/7] brcmfmac: use msecs_to_jiffies() instead of calculation us=
+ing HZ
+>> 9948827 [5/7] brcmfmac: get rid of brcmf_cfg80211_escan() function
+>> 9948823 [6/7] brcmfmac: get rid of struct brcmf_cfg80211_info::active_sc=
+an field
+>> 9948835 [7/7] brcmfmac: move configuration of probe request IEs
+>>
+>> --
+>> https://patchwork.kernel.org/patch/9948825/
+>>
+>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingp=
+atches
+>>
 >
-> I think it should be return ret if rsi_set_sdio_pm_caps() fails.
+> We (Raspberry Pi) currently have an issue open with Cypress to try and
+> determine the cause of the firmware lockup which results in this
+> mailbox error, we have some custom firmware that has better firmware
+> diagnostics which we have been reporting back to Cypress. Not had any
+> progress so far as far as I know. Does this kernel side fix help our
+> users in any way or is it simply a better error message?
+>
+> James
 
-This is intentional. We don't want to return error and abort system
-suspend operation due to this.
-
-Regards,
-Amitkumar Karwar
+Sorry, should have read the patch first, simply a change to the error
+reporting. I'll try and determine how far Cypress have got with the
+firmware.
