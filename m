@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35770 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751667AbdI2LVX (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:56791 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933656AbdIYPj7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 07:21:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 14:21:14 +0300
-Message-Id: <20170929112114.6992-1-luca@coelho.fi> (sfid-20170929_132127_734870_220CCE3A)
-In-Reply-To: <1504693769.13457.6.camel@sipsolutions.net>
-References: <1504693769.13457.6.camel@sipsolutions.net>
-Subject: [PATCH v2] ieee80211: Add WFA TPC report element OUI type
+        Mon, 25 Sep 2017 11:39:59 -0400
+Subject: Re: rtlwifi: rtl8821ae: Fix connection lost problem
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>
+References: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
+ <20170925080623.39A116099A@smtp.codeaurora.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <557cf4d5-22c2-444a-c970-797dc88cae16@lwfinger.net> (sfid-20170925_174027_222889_C570AADE)
+Date: Mon, 25 Sep 2017 10:39:55 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170925080623.39A116099A@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+On 09/25/2017 03:06 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+>> In commit 40b368af4b75 ("rtlwifi: Fix alignment issues"), the read
+>> of REG_DBI_READ was changed from 16 to 8 bits. For unknown reasonsi
+>> this change results in reduced stability for the wireless connection.
+>> This regression was located using bisection.
+>>
+>> Fixes: 40b368af4b75 ("rtlwifi: Fix alignment issues")
+>> Reported-and-tested-by: James Cameron <quozl@laptop.org>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org> # 4.11+
+>> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Should I queue this for 4.14?
+> 
+> (The first commit was v4.11-rc1.)
 
-Add Transmit Power Control OUI type definition for WLAN_OUI_MICROSOFT.
+Yes, please do.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/linux/ieee80211.h | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 55a604ad459f..ee6657a0ed69 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2445,6 +2445,7 @@ enum ieee80211_sa_query_action {
- #define WLAN_OUI_TYPE_MICROSOFT_WPA	1
- #define WLAN_OUI_TYPE_MICROSOFT_WMM	2
- #define WLAN_OUI_TYPE_MICROSOFT_WPS	4
-+#define WLAN_OUI_TYPE_MICROSOFT_TPC	8
- 
- /*
-  * WMM/802.11e Tspec Element
--- 
-2.14.1
+Larry
