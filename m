@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0134.outbound.protection.outlook.com ([104.47.37.134]:40224
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751778AbdIANAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 09:00:39 -0400
-From: Eric Bentley <Eric.Bentley@lairdtech.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Steve deRosier <derosier@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH v2] brcmfmac: Correctly fail to suspend when SDIO does not
- support power on suspend
-Date: Fri, 1 Sep 2017 13:00:36 +0000
-Message-ID: <AC37C967-209B-4BC3-9AF2-9CC4C27391C0@lairdtech.com> (sfid-20170901_150042_942250_8A9108F4)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:52532 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932617AbdIYIU3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 04:20:29 -0400
 MIME-Version: 1.0
+In-Reply-To: <87d16f6weu.fsf@kamboji.qca.qualcomm.com>
+References: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
+ <20170925074509.1168960719@smtp.codeaurora.org> <CAOMdWSLYb_LF=TS0jzCU6DC0KVfOa=pZYdMipBF_ynJ6N_0NmQ@mail.gmail.com>
+ <87d16f6weu.fsf@kamboji.qca.qualcomm.com>
+From: Allen <allen.lkml@gmail.com>
+Date: Mon, 25 Sep 2017 13:50:27 +0530
+Message-ID: <CAOMdWS+-J2QrbWLfeuYPPNsTK6eUvo5ynON+NxZ2o0e9T8y3jw@mail.gmail.com> (sfid-20170925_104606_749518_91E2B24F)
+Subject: Re: [1/1] wireless: broadcom: brcm80211: use setup_timer() helper
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-kernel@vger.kernel.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-UmV0dXJuIGVycm9yIHdoZW4gZmFpbGluZyB0byBzZXQgcG93ZXIgbWFuYWdlbWVudCBjYXBhYmls
-aXRpZXMgZmxhZy4gIFRoaXMgd2lsbA0KY2F1c2UgdGhlIHN1c3BlbmQgdG8gZmFpbCBidXQgdGhl
-IHJhZGlvIHdpbGwgY29udGludWUgdG8gb3BlcmF0ZS4gIEFsbG93aW5nIHRoaXMNCnRvIGZhaWwg
-d2l0aG91dCByZXBvcnRpbmcgZXJyb3Igd2lsbCBjYXVzZSB0aGUgcmFkaW8gdG8gYmUgbm9uLWZ1
-bmN0aW9uYWwgb24gDQpyZXN1bWUgYXMgaXQgd2lsbCBoYXZlIGxvc3QgcG93ZXIuDQoNClNpZ25l
-ZC1vZmYtYnk6IEVyaWMgQmVudGxleSBlcmljLmJlbnRsZXlAbGFpcmR0ZWNoLmNvbQ0KLS0tDQp2
-MjogY29ycmVjdGVkIGVycmFudCAoIHdpdGggew0KLS0tDQpkcml2ZXJzL25ldC93aXJlbGVzcy9i
-cm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2RoLmMgfCA0ICsrKy0NCjEgZmlsZSBjaGFu
-Z2VkLCAzIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9iY21zZGguYyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9iY21zZGguYw0K
-aW5kZXggNzIxMzliNS4uMmY3ZDAzZiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9iY21zZGguYw0KKysrIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2JjbXNkaC5jDQpAQCAtMTI2NCw4
-ICsxMjY0LDEwIEBAIHN0YXRpYyBpbnQgYnJjbWZfb3BzX3NkaW9fc3VzcGVuZChzdHJ1Y3QgZGV2
-aWNlICpkZXYpDQogICAgICAgICAgICAgICAgIGVsc2UNCiAgICAgICAgICAgICAgICAgICAgICAg
-ICBzZGlvX2ZsYWdzIHw9IE1NQ19QTV9XQUtFX1NESU9fSVJROw0KICAgICAgICAgfQ0KLSAgICAg
-ICBpZiAoc2Rpb19zZXRfaG9zdF9wbV9mbGFncyhzZGlvZGV2LT5mdW5jWzFdLCBzZGlvX2ZsYWdz
-KSkNCisgICAgICAgaWYgKHNkaW9fc2V0X2hvc3RfcG1fZmxhZ3Moc2Rpb2Rldi0+ZnVuY1sxXSwg
-c2Rpb19mbGFncykpIHsNCiAgICAgICAgICAgICAgICAgYnJjbWZfZXJyKCJGYWlsZWQgdG8gc2V0
-IHBtX2ZsYWdzICV4XG4iLCBzZGlvX2ZsYWdzKTsNCisgICAgICAgICAgICAgICByZXR1cm4gLUVJ
-TlZBTDsNCisgICAgICAgfQ0KICAgICAgICAgcmV0dXJuIDA7DQp9DQotLQ0KMi42LjAuR0lUDQoN
-Cg==
+>
+> It's a frequent problem to have misconfigured name in patchwork. I guess
+> it happens as the first mail patchwork sees from you is the one stored
+> to the database. And if that mail has an incorrect name, that will be
+> used from that onwards. You have only onetime chance to fix it yourself
+> when you register to patchwork. After that only server admins can fix it
+> and you need to contact kernel.org helpdesk.
+
+  I have registered again and let's hope it picks the full name going forward.
+
+> Apparently in recent versions of patchwork this should work better but
+> kernel.org hasn't updated it yet.
+>
+I'll write to the admins, ensure it is right.
+
+Thank you.
