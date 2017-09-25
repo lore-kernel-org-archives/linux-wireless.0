@@ -1,61 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0066.outbound.protection.outlook.com ([104.47.41.66]:14584
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750998AbdIRKRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 06:17:05 -0400
-Date: Mon, 18 Sep 2017 13:16:54 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 2/2] qtnfmac: abort scans on wireless interface changes
-Message-ID: <20170918101654.5zukak72wvmpm6pp@bars> (sfid-20170918_121709_804828_CFE56481)
-References: <20170918080446.21763-1-sergey.matyukevich.os@quantenna.com>
- <20170918080446.21763-3-sergey.matyukevich.os@quantenna.com>
- <1505724068.13691.0.camel@sipsolutions.net>
- <20170918095713.mfn76hkdbo73k4fu@bars>
- <1505728987.13691.2.camel@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52210 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752111AbdIYMaH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 08:30:07 -0400
+From: "Dedy Lansky" <dlansky@codeaurora.org>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>
+Cc: "wil6210" <wil6210@qca.qualcomm.com>
+Subject: [RFC] Add cfg80211/nl80211 support for AP mode 802.11 FT roaming
+Date: Mon, 25 Sep 2017 15:30:02 +0300
+Message-ID: <000901d335fa$0483f7d0$0d8be770$@codeaurora.org> (sfid-20170925_143059_265312_0DC5E637)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1505728987.13691.2.camel@sipsolutions.net>
+Content-Type: text/plain;
+        charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 18, 2017 at 12:03:07PM +0200, Johannes Berg wrote:
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-> > > > -     if (timer_pending(&mac->scan_timeout))
-> > > > -             del_timer_sync(&mac->scan_timeout);
-> > > >       qtnf_scan_done(mac, le32_to_cpu(status->flags) &
-> > > > QLINK_SCAN_ABORTED);
-> > >
-> > > and that's related perhaps but not really explained in the
-> > > changelog,
-> > > not sure?
-> >
-> > That was minor optimization: to remove pedning timer whenever scan
-> > is canceled. Sure, it worth mentioning in changelog, will do.
-> 
-> I realized (after sending my email) that it actually made a lot of
-> sense, so yeah - and in fact I'm not sure it's just an optimisation,
-> depends on where else you cancel the timer and if that could leave the
-> timer running until after the interface is removed or something.
-> 
-> Btw, I don't really see why you check pending first?
+Drivers which have integrated AP SME can use this to communicate with
+userspace (e.g. hostapd) for the purpose of FT roaming processing.
 
-I don't quite understand the question. Do you mean it makes sense to call
-cfg80211_scan_done first and then cancel timer ?
+cfg80211 API added for driver to indicate received Authentication and
+Reassociation frames from the roaming STA.
+NL80211_CMD_AUTHENTICATE and NL80211_CMD_ASSOCIATE are enhanced to be used
+in AP mode, for indication/response to/from userspace.
 
-> > By the way, is it ok to send corrected single patch in reply to this
-> > discussion ? Or the appropriate way is to resend the whole patch set
-> > ?
-> 
-> Good question. I think it's up to the specific maintainer, I know davem
-> wants a full resend, but Kalle might have his own preference. I for one
-> am willing to deal with both, though a full resend is somewhat easier.
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+---
 
-Ok, understood.
+In FT roaming, 4 way handshake is piggybacked on top of Authentication
+request/response and Reassociation request/response frames.
+This RFC provides API for WLAN drivers to communicate with userspace and
+pass required information (e.g. Information Elements) so FT 4 way handshake
+can be accomplished in userspace.
 
-Regards,
-Sergey
+This RFC describes only documentation and header file changes. In case the
+concept is accepted, a complete patch with implementation changes will be
+provided.
+
+---
+ include/net/cfg80211.h       | 29 +++++++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h | 19 +++++++++++++++++++
+ 2 files changed, 48 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f12fa52..917e3ac 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -6183,6 +6183,35 @@ void cfg80211_nan_func_terminated(struct wireless_dev
+*wdev,
+ 				  enum nl80211_nan_func_term_reason reason,
+ 				  u64 cookie, gfp_t gfp);
+ 
++/**
++ * cfg80211_ft_auth - notify cfg80211 of FT authentication request
++ *
++ * @dev: network device
++ * @req: information about the authentication request
++ *
++ * This function is called by the driver when it receives FT Authentication
++ * frame in AP mode. This is used only with SME-in-device drivers.
++ * req should provide information about the Authentication frame which will
+be
++ * forwarded to userspace.
++ */
++void cfg80211_ft_auth(struct net_device *dev,
++		      struct cfg80211_auth_request *req);
++
++/**
++ * cfg80211_ft_reassoc - notify cfg80211 of FT reassociation request
++ *
++ * @dev: network device
++ * @reassoc_data: Reassociation frame
++ * @reassoc_data_len: Reassociation frame length
++ *
++ * This function is called by the driver when it receives FT Reassociation
++ * frame in AP mode. This is used only with SME-in-device drivers.
++ * reassoc_data contains the Reassociation frame which will be forwarded to
++ * userspace.
++ */
++void cfg80211_ft_reassoc(struct net_device *dev,
++			 const u8 *reassoc_data, size_t reassoc_data_len);
++
+ /* ethtool helper */
+ void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo
+*info);
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 51626b4..65cf0fc 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -496,6 +496,20 @@
+  *	case the %NL80211_ATTR_FRAME attribute is replaced with a
+  *	%NL80211_ATTR_TIMED_OUT flag (and %NL80211_ATTR_MAC to indicate
+which
+  *	pending authentication timed out).
++ *	In AP mode, this is used for FT roaming when driver has AP SME, as
+an
++ *	authentication indication and response.
++ *	When used as an event, this reports reception of an Authentication
++ *	frame from a STA requesting authentication (i.e.
++ *	MLME-AUTHENTICATE.indication). %NL80211_ATTR_MAC is used to specify
++ *	PeerSTAAddress. %NL80211_ATTR_FRAME attribute contains the
+management
++ *	frame.
++ *	When used as a command, it indicates whether authentication is
++ *	successful. WLAN driver should send authentication response to the
++ *	authenticating STA (i.e. MLME-AUTHENTICATE.response).
+%NL80211_ATTR_MAC
++ *	is used to specify PeerSTAAddress. %NL80211_ATTR_STATUS_CODE is used
+to
++ *	indicate success or failure. %NL80211_ATTR_IE contains FT
+Information
++ *	Elements.
++ *
+  * @NL80211_CMD_ASSOCIATE: association request and notification; like
+  *	NL80211_CMD_AUTHENTICATE but for Association and Reassociation
+  *	(similar to MLME-ASSOCIATE.request, MLME-REASSOCIATE.request,
+@@ -504,6 +518,11 @@
+  *	request is for the initial association to an ESS (that attribute not
+  *	included) or for reassociation within the ESS (that attribute is
+  *	included).
++ *	In AP mode, this is used for FT roaming when driver has AP SME, as a
++ *	Reassociation indication and response. like NL80211_CMD_AUTHENTICATE
++ *	but for Reassociation (similar to MLME-REASSOCIATE.indication,
++ *	MLME-REASSOCIATE.response).
++ *
+  * @NL80211_CMD_DEAUTHENTICATE: deauthentication request and notification;
+like
+  *	NL80211_CMD_AUTHENTICATE but for Deauthentication frames (similar to
+  *	MLME-DEAUTHENTICATION.request and MLME-DEAUTHENTICATE.indication
+-- 
+1.9.1
