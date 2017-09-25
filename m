@@ -1,98 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:60779 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751363AbdILIs0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49522 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932135AbdIYH7s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 04:48:26 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.14 2/2] brcmfmac: setup passive scan if requested by user-space
-Date: Tue, 12 Sep 2017 10:47:54 +0200
-Message-Id: <1505206074-28781-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170912_104830_855783_7426628D)
-In-Reply-To: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1505206074-28781-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 25 Sep 2017 03:59:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Allen <allen.lkml@gmail.com>
+Cc: linux-kernel@vger.kernel.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [1/1] wireless: broadcom: brcm80211: use setup_timer() helper
+References: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
+        <20170925074509.1168960719@smtp.codeaurora.org>
+        <CAOMdWSLYb_LF=TS0jzCU6DC0KVfOa=pZYdMipBF_ynJ6N_0NmQ@mail.gmail.com>
+Date: Mon, 25 Sep 2017 10:59:37 +0300
+In-Reply-To: <CAOMdWSLYb_LF=TS0jzCU6DC0KVfOa=pZYdMipBF_ynJ6N_0NmQ@mail.gmail.com>
+        (Allen's message of "Mon, 25 Sep 2017 13:21:11 +0530")
+Message-ID: <87d16f6weu.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_104605_708924_C9CB05D2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver was not properly configuring firmware with regard to the
-type of scan. It always performed an active scan even when user-space
-was requesting for passive scan, ie. the scan request was done without
-any SSIDs specified.
+Allen <allen.lkml@gmail.com> writes:
 
-Cc: stable@vger.kernel.org # v4.0.x
-Reported-by: Huang, Jiangyang <Jiangyang.Huang@itron.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c   | 19 ++++---------------
- .../wireless/broadcom/brcm80211/brcmfmac/fwil_types.h |  5 +++++
- 2 files changed, 9 insertions(+), 15 deletions(-)
+>>
+>> Also your name in patchwork is just "Allen", without your lastname. I can fix
+>> it this time, but please register to patchwork to fix your name. (Annoyingly
+>> patchwork takes the name from it's database, not from the "From:" header)
+>
+>  Ah that's strange. I'll register again.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 26a0de3..4157c90 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -980,7 +980,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 
- 	eth_broadcast_addr(params_le->bssid);
- 	params_le->bss_type = DOT11_BSSTYPE_ANY;
--	params_le->scan_type = 0;
-+	params_le->scan_type = BRCMF_SCANTYPE_ACTIVE;
- 	params_le->channel_num = 0;
- 	params_le->nprobes = cpu_to_le32(-1);
- 	params_le->active_time = cpu_to_le32(-1);
-@@ -988,12 +988,9 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 	params_le->home_time = cpu_to_le32(-1);
- 	memset(&params_le->ssid_le, 0, sizeof(params_le->ssid_le));
- 
--	/* if request is null exit so it will be all channel broadcast scan */
--	if (!request)
--		return;
--
- 	n_ssids = request->n_ssids;
- 	n_channels = request->n_channels;
-+
- 	/* Copy channel array if applicable */
- 	brcmf_dbg(SCAN, "### List of channelspecs to scan ### %d\n",
- 		  n_channels);
-@@ -1030,16 +1027,8 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 			ptr += sizeof(ssid_le);
- 		}
- 	} else {
--		brcmf_dbg(SCAN, "Broadcast scan %p\n", request->ssids);
--		if ((request->ssids) && request->ssids->ssid_len) {
--			brcmf_dbg(SCAN, "SSID %s len=%d\n",
--				  params_le->ssid_le.SSID,
--				  request->ssids->ssid_len);
--			params_le->ssid_le.SSID_len =
--				cpu_to_le32(request->ssids->ssid_len);
--			memcpy(&params_le->ssid_le.SSID, request->ssids->ssid,
--				request->ssids->ssid_len);
--		}
-+		brcmf_dbg(SCAN, "Performing passive scan\n");
-+		params_le->scan_type = BRCMF_SCANTYPE_PASSIVE;
- 	}
- 	/* Adding mask to channel numbers */
- 	params_le->channel_num =
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 8391989..e0d22fe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -45,6 +45,11 @@
- #define BRCMF_SCAN_PARAMS_COUNT_MASK	0x0000ffff
- #define BRCMF_SCAN_PARAMS_NSSID_SHIFT	16
- 
-+/* scan type definitions */
-+#define BRCMF_SCANTYPE_DEFAULT		0xFF
-+#define BRCMF_SCANTYPE_ACTIVE		0
-+#define BRCMF_SCANTYPE_PASSIVE		1
-+
- #define BRCMF_WSEC_MAX_PSK_LEN		32
- #define	BRCMF_WSEC_PASSPHRASE		BIT(0)
- 
+It's a frequent problem to have misconfigured name in patchwork. I guess
+it happens as the first mail patchwork sees from you is the one stored
+to the database. And if that mail has an incorrect name, that will be
+used from that onwards. You have only onetime chance to fix it yourself
+when you register to patchwork. After that only server admins can fix it
+and you need to contact kernel.org helpdesk.
+
+Apparently in recent versions of patchwork this should work better but
+kernel.org hasn't updated it yet.
+
 -- 
-1.9.1
+Kalle Valo
