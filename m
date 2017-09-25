@@ -1,127 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36544 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752522AbdI2QqE (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:46680 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933354AbdIYLUo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2017 12:46:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 29 Sep 2017 19:44:16 +0300
-Message-Id: <20170929164423.23666-12-luca@coelho.fi> (sfid-20170929_200835_881555_02D0C83A)
-In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
-References: <20170929164423.23666-1-luca@coelho.fi>
-Subject: [PATCH 11/18] iwlwifi: acpi: use iwl_acpi_get_wifi_pkg when reading reading SPLC
+        Mon, 25 Sep 2017 07:20:44 -0400
+Received: by mail-oi0-f46.google.com with SMTP id a74so6340739oib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2017 04:20:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87lgl3769o.fsf@kamboji.qca.qualcomm.com>
+References: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
+ <87lgl3769o.fsf@kamboji.qca.qualcomm.com>
+From: Andrey Konovalov <andreyknvl@google.com>
+Date: Mon, 25 Sep 2017 13:20:43 +0200
+Message-ID: <CAAeHK+y61FFKLpePKOhRjd=5QJEWRy9-pank64PuG+aKzafANw@mail.gmail.com> (sfid-20170925_132333_864921_CDB6AF44)
+Subject: Re: usb/wireless/rsi_91x: use-after-free write in __run_timers
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Mon, Sep 25, 2017 at 6:26 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Andrey Konovalov <andreyknvl@google.com> writes:
+>
+>> I've got the following report while fuzzing the kernel with syzkaller.
+>>
+>> On commit 6e80ecdddf4ea6f3cd84e83720f3d852e6624a68 (Sep 21).
+>>
+>> ==================================================================
+>> BUG: KASAN: use-after-free in __run_timers+0xc0e/0xd40
+>> Write of size 8 at addr ffff880069f701b8 by task swapper/0/0
+>>
+>> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.14.0-rc1-42311-g6e80ecdddf4e #234
+>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+>
+> [...]
+>
+>> Allocated by task 1845:
+>>  save_stack_trace+0x1b/0x20 arch/x86/kernel/stacktrace.c:59
+>>  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
+>>  set_track mm/kasan/kasan.c:459
+>>  kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:551
+>>  kmem_cache_alloc_trace+0x11e/0x2d0 mm/slub.c:2772
+>>  kmalloc ./include/linux/slab.h:493
+>>  kzalloc ./include/linux/slab.h:666
+>>  rsi_91x_init+0x98/0x510 drivers/net/wireless/rsi/rsi_91x_main.c:203
+>>  rsi_probe+0xb6/0x13b0 drivers/net/wireless/rsi/rsi_91x_usb.c:665
+>>  usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
+>
+> I'm curious about your setup. Apparently you are running syzkaller on
+> QEMU but what I don't understand is how the rsi device comes into the
+> picture. Did you have a rsi usb device connected to the virtual machine
+> or what? Or does syzkaller do some kind of magic here?
 
-Instead of finding the wifi package with its own code, we can reuse
-the new iwl_acpi_get_wifi_pkg() function when reading the default
-power limit from SPLC.
+I use dummy_hcd and gadgetfs to connect random USB devices to the
+kernel from a userspace application. This happens inside a QEMU
+instance. This simplifies fuzzing, since everything is virtualized,
+but the found bugs can be triggered on a real machine by connecting a
+malicious USB device.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |  2 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 61 +++++----------------------
- 2 files changed, 12 insertions(+), 51 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index f1db619c3ea0..f5c8c856311a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -85,6 +85,8 @@
- #define ACPI_EWRD_WIFI_DATA_SIZE	((ACPI_SAR_PROFILE_NUM - 1) * \
- 					 ACPI_SAR_TABLE_SIZE + 3)
- #define ACPI_WGDS_WIFI_DATA_SIZE	18
-+#define ACPI_SPLC_WIFI_DATA_SIZE	2
-+
- #define ACPI_WGDS_NUM_BANDS		2
- #define ACPI_WGDS_TABLE_SIZE		3
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index a6c4f096cb19..b5fce721b0b0 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -588,67 +588,26 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
- 
- #ifdef CONFIG_ACPI
--static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
--{
--	union acpi_object *data_pkg, *dflt_pwr_limit;
--	int i;
--
--	/* We need at least two elements, one for the revision and one
--	 * for the data itself.  Also check that the revision is
--	 * supported (currently only revision 0).
--	*/
--	if (splc->type != ACPI_TYPE_PACKAGE ||
--	    splc->package.count < 2 ||
--	    splc->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    splc->package.elements[0].integer.value != 0) {
--		IWL_DEBUG_INFO(trans,
--			       "Unsupported structure returned by the SPLC method.  Ignoring.\n");
--		return 0;
--	}
--
--	/* loop through all the packages to find the one for WiFi */
--	for (i = 1; i < splc->package.count; i++) {
--		union acpi_object *domain;
--
--		data_pkg = &splc->package.elements[i];
--
--		/* Skip anything that is not a package with the right
--		 * amount of elements (i.e. at least 2 integers).
--		 */
--		if (data_pkg->type != ACPI_TYPE_PACKAGE ||
--		    data_pkg->package.count < 2 ||
--		    data_pkg->package.elements[0].type != ACPI_TYPE_INTEGER ||
--		    data_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
--			continue;
--
--		domain = &data_pkg->package.elements[0];
--		if (domain->integer.value == ACPI_WIFI_DOMAIN)
--			break;
--
--		data_pkg = NULL;
--	}
--
--	if (!data_pkg) {
--		IWL_DEBUG_INFO(trans,
--			       "No element for the WiFi domain returned by the SPLC method.\n");
--		return 0;
--	}
--
--	dflt_pwr_limit = &data_pkg->package.elements[1];
--	return dflt_pwr_limit->integer.value;
--}
- 
- static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
- {
--	union acpi_object *data;
-+	union acpi_object *data, *wifi_pkg;
- 
- 	data = iwl_acpi_get_object(trans->dev, ACPI_SPLC_METHOD);
- 	if (IS_ERR(data))
- 		return;
- 
--	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, data);
-+	wifi_pkg = iwl_acpi_get_wifi_pkg(trans->dev, data,
-+					 ACPI_SPLC_WIFI_DATA_SIZE);
-+	if (IS_ERR(wifi_pkg) ||
-+	    wifi_pkg->package.elements[1].integer.value != ACPI_TYPE_INTEGER)
-+		goto out;
-+
-+	trans->dflt_pwr_limit = wifi_pkg->package.elements[1].integer.value;
-+
- 	IWL_DEBUG_INFO(trans, "Default power limit set to %lld\n",
- 		       trans->dflt_pwr_limit);
-+out:
- 	kfree(data);
- }
- 
--- 
-2.14.1
+>
+> --
+> Kalle Valo
+>
+> --
+> You received this message because you are subscribed to the Google Groups "syzkaller" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller+unsubscribe@googlegroups.com.
+> For more options, visit https://groups.google.com/d/optout.
