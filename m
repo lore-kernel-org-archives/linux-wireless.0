@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57202 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751000AbdITTzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 15:55:10 -0400
-Message-ID: <1505937307.3026.20.camel@sipsolutions.net> (sfid-20170920_215529_257548_2D0F856C)
-Subject: Re: usb/net/p54: trying to register non-static key in
- p54_unregister_leds
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-        Andrey Konovalov <andreyknvl@google.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
+Received: from smtp.codeaurora.org ([198.145.29.96]:52692 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753650AbdIYEeA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 00:34:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Jiri Pirko <jiri@resnulli.us>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
         Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Stephen Boyd <sboyd@codeaurora.org>, Tejun Heo <tj@kernel.org>,
-        Yong Zhang <yong.zhang0@gmail.com>
-Date: Wed, 20 Sep 2017 21:55:07 +0200
-In-Reply-To: <2277141.bYDD1vAb9W@debian64> (sfid-20170920_212816_631524_D372B13F)
-References: <CAAeHK+xPoNn7i5xOzEqHX6tfDpmpb1rd0hcAxZpTHKi6B8xzsw@mail.gmail.com>
-         <2277141.bYDD1vAb9W@debian64> (sfid-20170920_212816_631524_D372B13F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Michal Marek <mmarek@suse.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
+        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
+        Martin =?utf-8?Q?Li=C5=A1ka?= <marxin@gcc.gnu.org>
+Subject: Re: [PATCH v4 1/9] brcmsmac: make some local variables 'static const' to reduce stack size
+References: <20170922212930.620249-1-arnd@arndb.de>
+        <20170922212930.620249-2-arnd@arndb.de>
+Date: Mon, 25 Sep 2017 07:33:50 +0300
+In-Reply-To: <20170922212930.620249-2-arnd@arndb.de> (Arnd Bergmann's message
+        of "Fri, 22 Sep 2017 23:29:12 +0200")
+Message-ID: <87h8vr75xt.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_063529_155004_9851D8A1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-09-20 at 21:27 +0200, Christian Lamparter wrote:
+Arnd Bergmann <arnd@arndb.de> writes:
 
-> It seems this is caused as a result of:
->     -> lock_map_acquire(&work->lockdep_map);
-> 	    lock_map_release(&work->lockdep_map);
-> 
->     in flush_work() [0]
+> With KASAN and a couple of other patches applied, this driver is one
+> of the few remaining ones that actually use more than 2048 bytes of
+> kernel stack:
+>
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+>
+> Here, I'm reducing the stack size by marking as many local variables as
+> 'static const' as I can without changing the actual code.
+>
+> This is the first of three patches to improve the stack usage in this
+> driver. It would be good to have this backported to stabl kernels
+> to get all drivers in 'allmodconfig' below the 2048 byte limit so
+> we can turn on the frame warning again globally, but I realize that
+> the patch is larger than the normal limit for stable backports.
+>
+> The other two patches do not need to be backported.
+>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Agree.
+I'll queue this and the two following brcmsmac patches for 4.14.
 
-> This was added by:
-> 
-> 	commit 0976dfc1d0cd80a4e9dfaf87bd8744612bde475a
-> 	Author: Stephen Boyd <sboyd@codeaurora.org>
-> 	Date:   Fri Apr 20 17:28:50 2012 -0700
-> 
-> 	workqueue: Catch more locking problems with flush_work()
+Also I'll add (only for this patch):
 
-Yes, but that doesn't matter.
-    
-> Looking at the Stephen's patch, it's clear that it was made
-> with "static DECLARE_WORK(work, my_work)" in mind. However
-> p54's led_work is "per-device", hence it is stored in the
-> devices context p54_common, which is dynamically allocated.
-> So, maybe revert Stephen's patch?
+Cc: <stable@vger.kernel.org>
 
-I disagree - as the lockdep warning says:
-
-> > INFO: trying to register non-static key.
-> > the code is fine but needs lockdep annotation.
-> > turning off the locking correctness validator.
-
-What it needs is to actually correctly go through initializing the work
-at least once.
-
-Without more information, I can't really say what's going on, but I
-assume that something is failing and p54_unregister_leds() is getting
-invoked without p54_init_leds() having been invoked, so essentially
-it's trying to flush a work that was never initialized?
-
-INIT_DELAYED_WORK() does, after all, initialize the lockdep map
-properly via __INIT_WORK().
-
-johannes
+-- 
+Kalle Valo
