@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:45866 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757224AbdIIIOq (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:33448 "EHLO
+        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932578AbdIYHPa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Sep 2017 04:14:46 -0400
-Received: by mail-wm0-f47.google.com with SMTP id f199so14645509wme.0
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Sep 2017 01:14:45 -0700 (PDT)
-Subject: Re: [PATCH 3/3] brcmfmac: Add check for short event packets
-To: Kevin Cernekee <cernekee@chromium.org>, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-References: <20170908191342.28053-1-cernekee@chromium.org>
- <20170908191342.28053-4-cernekee@chromium.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <74c0eedb-f9b9-ad9a-a1ae-315cee7603d4@broadcom.com> (sfid-20170909_101555_550715_61069433)
-Date: Sat, 9 Sep 2017 10:14:44 +0200
+        Mon, 25 Sep 2017 03:15:30 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170908191342.28053-4-cernekee@chromium.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [8/10] ath9k: Use ARRAY_SIZE macro
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1504439110050-1887263060-8-diffsplit-thomas@m3y3r.de>
+References: <1504439110050-1887263060-8-diffsplit-thomas@m3y3r.de>
+To: Thomas Meyer <thomas@m3y3r.de>
+CC: <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <27be6ac3227f4738abf6ebea6410c365@euamsexm01a.eu.qualcomm.com> (sfid-20170925_095441_462817_11073D90)
+Date: Mon, 25 Sep 2017 09:15:21 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08-09-17 21:13, Kevin Cernekee wrote:
-> The length of the data in the received skb is currently passed into
-> brcmf_fweh_process_event() as packet_len, but this value is not checked.
-> event_packet should be followed by DATALEN bytes of additional event
-> data.  Ensure that the received packet actually contains at least
-> DATALEN bytes of additional data, to avoid copying uninitialized memory
-> into event->data.
+Thomas Meyer <thomas@m3y3r.de> wrote:
 
-Franky made an almost identical change which I had queued up for 
-submission. So you beat us to it ;-)
+> Use ARRAY_SIZE macro, rather than explicitly coding some variant of it
+> yourself.
+> Found with: find -type f -name "*.c" -o -name "*.h" | xargs perl -p -i -e
+> 's/\bsizeof\s*\(\s*(\w+)\s*\)\s*\ /\s*sizeof\s*\(\s*\1\s*\[\s*0\s*\]\s*\)
+> /ARRAY_SIZE(\1)/g' and manual check/verification.
+> 
+> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Suggested-by: Mattias Nissler <mnissler@chromium.org>
-> Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
+Patch applied to ath-next branch of ath.git, thanks.
+
+896cbefadf62 ath9k: Use ARRAY_SIZE macro
+
+-- 
+https://patchwork.kernel.org/patch/9936271/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
