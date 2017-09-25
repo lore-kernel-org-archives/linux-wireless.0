@@ -1,81 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0071.outbound.protection.outlook.com ([104.47.37.71]:39472
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751859AbdIUVfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 17:35:08 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V3 8/9] qtnfmac: remove unused mac::status field
-Date: Thu, 21 Sep 2017 14:34:36 -0700
-Message-Id: <20170921213437.27457-9-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233518_443721_C9AFD169)
-In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48558 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932987AbdIYM0a (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 08:26:30 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andrey Konovalov <andreyknvl@google.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Subject: Re: usb/wireless/rsi_91x: use-after-free write in __run_timers
+References: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
+        <87lgl3769o.fsf@kamboji.qca.qualcomm.com>
+        <CAAeHK+y61FFKLpePKOhRjd=5QJEWRy9-pank64PuG+aKzafANw@mail.gmail.com>
+Date: Mon, 25 Sep 2017 15:26:24 +0300
+In-Reply-To: <CAAeHK+y61FFKLpePKOhRjd=5QJEWRy9-pank64PuG+aKzafANw@mail.gmail.com>
+        (Andrey Konovalov's message of "Mon, 25 Sep 2017 13:20:43 +0200")
+Message-ID: <874lrr6k27.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_142735_755709_0F1E995A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Andrey Konovalov <andreyknvl@google.com> writes:
 
-There are no users of this field and it can safely be removed.
+> On Mon, Sep 25, 2017 at 6:26 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Andrey Konovalov <andreyknvl@google.com> writes:
+>>
+>>> I've got the following report while fuzzing the kernel with syzkaller.
+>>>
+>>> On commit 6e80ecdddf4ea6f3cd84e83720f3d852e6624a68 (Sep 21).
+>>>
+>>> ==================================================================
+>>> BUG: KASAN: use-after-free in __run_timers+0xc0e/0xd40
+>>> Write of size 8 at addr ffff880069f701b8 by task swapper/0/0
+>>>
+>>> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.14.0-rc1-42311-g6e80ecdddf4e #234
+>>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+>>
+>> [...]
+>>
+>>> Allocated by task 1845:
+>>>  save_stack_trace+0x1b/0x20 arch/x86/kernel/stacktrace.c:59
+>>>  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
+>>>  set_track mm/kasan/kasan.c:459
+>>>  kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:551
+>>>  kmem_cache_alloc_trace+0x11e/0x2d0 mm/slub.c:2772
+>>>  kmalloc ./include/linux/slab.h:493
+>>>  kzalloc ./include/linux/slab.h:666
+>>>  rsi_91x_init+0x98/0x510 drivers/net/wireless/rsi/rsi_91x_main.c:203
+>>>  rsi_probe+0xb6/0x13b0 drivers/net/wireless/rsi/rsi_91x_usb.c:665
+>>>  usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
+>>
+>> I'm curious about your setup. Apparently you are running syzkaller on
+>> QEMU but what I don't understand is how the rsi device comes into the
+>> picture. Did you have a rsi usb device connected to the virtual machine
+>> or what? Or does syzkaller do some kind of magic here?
+>
+> I use dummy_hcd and gadgetfs to connect random USB devices to the
+> kernel from a userspace application. This happens inside a QEMU
+> instance. This simplifies fuzzing, since everything is virtualized,
+> but the found bugs can be triggered on a real machine by connecting a
+> malicious USB device.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 1 -
- drivers/net/wireless/quantenna/qtnfmac/core.h     | 5 -----
- drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
- 3 files changed, 8 deletions(-)
+That's very cool, thanks for explaining the setup.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 42f7e1d..8f95f98 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2337,7 +2337,6 @@ int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
- 
- 	switch (res_code) {
- 	case QLINK_CMD_RESULT_OK:
--		mac->status |= QTNF_MAC_CSA_ACTIVE;
- 		ret = 0;
- 		break;
- 	case QLINK_CMD_RESULT_ENOTFOUND:
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 521ce09..2cd0150 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -89,10 +89,6 @@ enum qtnf_sta_state {
- 	QTNF_STA_CONNECTED
- };
- 
--enum qtnf_mac_status {
--	QTNF_MAC_CSA_ACTIVE	= BIT(0)
--};
--
- struct qtnf_vif {
- 	struct wireless_dev wdev;
- 	u8 vifid;
-@@ -141,7 +137,6 @@ struct qtnf_wmac {
- 	u8 macid;
- 	u8 wiphy_registered;
- 	u8 macaddr[ETH_ALEN];
--	u32 status;
- 	struct qtnf_bus *bus;
- 	struct qtnf_mac_info macinfo;
- 	struct qtnf_vif iflist[QTNF_MAX_INTF];
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 77563b0..b1acc24 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -381,8 +381,6 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 		 mac->macid, chandef.chan->hw_value, chandef.center_freq1,
- 		 chandef.center_freq2, chandef.width);
- 
--	mac->status &= ~QTNF_MAC_CSA_ACTIVE;
--
- 	memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
- 
- 	for (i = 0; i < QTNF_MAX_INTF; i++) {
 -- 
-2.9.5
+Kalle Valo
