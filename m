@@ -1,89 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0044.outbound.protection.outlook.com ([104.47.33.44]:39568
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751370AbdIOLxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 07:53:30 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 1/2] qtnfmac: lock access to h/w in tx path
-Date: Fri, 15 Sep 2017 14:52:59 +0300
-Message-Id: <20170915115300.12719-2-sergey.matyukevich.os@quantenna.com> (sfid-20170915_135335_622473_0B1EBB10)
-In-Reply-To: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
-References: <20170915115300.12719-1-sergey.matyukevich.os@quantenna.com>
+Received: from smtp-out4.electric.net ([192.162.216.185]:52531 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934544AbdIYOtg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 10:49:36 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Arnd Bergmann' <arnd@arndb.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+CC: Jiri Pirko <jiri@resnulli.us>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Michal Marek <mmarek@suse.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
+        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
+        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
+        Jakub Jelinek <jakub@gcc.gnu.org>,
+        =?Windows-1252?Q?Martin_Li=9Aka?= <marxin@gcc.gnu.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
+Date: Mon, 25 Sep 2017 14:41:30 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com> (sfid-20170925_165005_382544_992627DF)
+References: <20170922212930.620249-1-arnd@arndb.de>
+ <20170922212930.620249-5-arnd@arndb.de>
+In-Reply-To: <20170922212930.620249-5-arnd@arndb.de>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix tx path regression. Lock should be held when queuing packets
-to h/w fifos in order to properly handle configurations with
-multiple enabled interfaces.
+From: Arnd Bergmann
+> Sent: 22 September 2017 22:29
+...
+> It seems that this is triggered in part by using strlcpy(), which the
+> compiler doesn't recognize as copying at most 'len' bytes, since strlcpy
+> is not part of the C standard.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c          | 9 ++++++++-
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h | 2 ++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+Neither is strncpy().
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index 502e72b7cdcc..69131965a298 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -661,14 +661,18 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
- 	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
- 	dma_addr_t txbd_paddr, skb_paddr;
- 	struct qtnf_tx_bd *txbd;
-+	unsigned long flags;
- 	int len, i;
- 	u32 info;
- 	int ret = 0;
- 
-+	spin_lock_irqsave(&priv->tx0_lock, flags);
-+
- 	if (!qtnf_tx_queue_ready(priv)) {
- 		if (skb->dev)
- 			netif_stop_queue(skb->dev);
- 
-+		spin_unlock_irqrestore(&priv->tx0_lock, flags);
- 		return NETDEV_TX_BUSY;
- 	}
- 
-@@ -717,8 +721,10 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
- 		dev_kfree_skb_any(skb);
- 	}
- 
--	qtnf_pcie_data_tx_reclaim(priv);
- 	priv->tx_done_count++;
-+	spin_unlock_irqrestore(&priv->tx0_lock, flags);
-+
-+	qtnf_pcie_data_tx_reclaim(priv);
- 
- 	return NETDEV_TX_OK;
- }
-@@ -1247,6 +1253,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	strcpy(bus->fwname, QTN_PCI_PEARL_FW_NAME);
- 	init_completion(&bus->request_firmware_complete);
- 	mutex_init(&bus->bus_lock);
-+	spin_lock_init(&pcie_priv->tx0_lock);
- 	spin_lock_init(&pcie_priv->irq_lock);
- 	spin_lock_init(&pcie_priv->tx_reclaim_lock);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-index e76a23716ee0..86ac1ccedb52 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-@@ -34,6 +34,8 @@ struct qtnf_pcie_bus_priv {
- 
- 	/* lock for tx reclaim operations */
- 	spinlock_t tx_reclaim_lock;
-+	/* lock for tx0 operations */
-+	spinlock_t tx0_lock;
- 	u8 msi_enabled;
- 	int mps;
- 
--- 
-2.11.0
+It'll almost certainly be a marker in a header file somewhere,
+so it should be possibly to teach it about other functions.
+
+	David
