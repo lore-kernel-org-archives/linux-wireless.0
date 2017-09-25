@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30440 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751411AbdILQLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 12:11:19 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi firmware load broken in current -git
-Date: Tue, 12 Sep 2017 16:11:14 +0000
-Message-ID: <1505232673.5400.243.camel@intel.com> (sfid-20170912_181123_322123_AAECAC42)
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
-In-Reply-To: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:51418 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752428AbdIYE0s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Sep 2017 00:26:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andrey Konovalov <andreyknvl@google.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Subject: Re: usb/wireless/rsi_91x: use-after-free write in __run_timers
+References: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
+Date: Mon, 25 Sep 2017 07:26:43 +0300
+In-Reply-To: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
+        (Andrey Konovalov's message of "Fri, 22 Sep 2017 19:04:27 +0200")
+Message-ID: <87lgl3769o.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_062821_349690_08E9240C)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSmVucywNCg0KT24gVHVlLCAyMDE3LTA5LTEyIGF0IDA5OjQ4IC0wNjAwLCBKZW5zIEF4Ym9l
-IHdyb3RlOg0KPiBIaSwNCj4gDQo+IEkgaGF2ZSBubyB3aWZpIGluIGN1cnJlbnQgZ2l0ICg4ZmFj
-MmY5NmFiOCksIGl0IHNpbXBseSBmYWlscyB3aXRoOg0KPiANCj4gWyAgICA0LjM2MzQ4MV0gaXds
-d2lmaSAwMDAwOjA0OjAwLjA6IERpcmVjdCBmaXJtd2FyZSBsb2FkIGZvciBpd2x3aWZpLTgwMDBD
-LTM0LnVjb2RlIGZhaWxlZCB3aXRoIGVycm9yIC0yDQo+IFsgICAgNC4zNjM3MzNdIGl3bHdpZmkg
-MDAwMDowNDowMC4wOiBEaXJlY3QgZmlybXdhcmUgbG9hZCBmb3IgaXdsd2lmaS04MDAwQy0zMy51
-Y29kZSBmYWlsZWQgd2l0aCBlcnJvciAtMg0KPiBbICAgIDQuMzYzNzQ0XSBpd2x3aWZpIDAwMDA6
-MDQ6MDAuMDogRGlyZWN0IGZpcm13YXJlIGxvYWQgZm9yIGl3bHdpZmktODAwMEMtMzIudWNvZGUg
-ZmFpbGVkIHdpdGggZXJyb3IgLTINCj4gWyAgICA0LjM2ODA3N10gaXdsd2lmaSAwMDAwOjA0OjAw
-LjA6IGxvYWRlZCBmaXJtd2FyZSB2ZXJzaW9uIDMxLjUzMjk5My4wIG9wX21vZGUgaXdsbXZtDQo+
-IFsgICAgNC40NjE3NTNdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBEZXRlY3RlZCBJbnRlbChSKSBE
-dWFsIEJhbmQgV2lyZWxlc3MgQUMgODI2MCwgUkVWPTB4MjA4DQo+IFsgLi4uIF0NCj4gWyAgICA5
-LjUxMDU3MF0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEZhaWxlZCB0byBsb2FkIGZpcm13YXJlIGNo
-dW5rISAgICAgICAgICAgICANCj4gWyAgICA5LjUxMzkwM10gaXdsd2lmaSAwMDAwOjA0OjAwLjA6
-IENvdWxkIG5vdCBsb2FkIHRoZSBbMF0gdUNvZGUgc2VjdGlvbiAgICAgICANCj4gWyAgICA5LjUx
-NjIwMV0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEZhaWxlZCB0byBzdGFydCBJTklUIHVjb2RlOiAt
-MTEwICAgICAgICAgICANCj4gWyAgICA5LjUzMDg0Ml0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEZh
-aWxlZCB0byBydW4gSU5JVCB1Y29kZTogLTExMCAgICAgICAgICAgICANCj4gDQo+IEkgZ2V0IHRo
-ZSBzYW1lIHRoaW5nIHdpdGggLTI3IG9mIHRoZSBmaXJtd2FyZToNCj4gDQo+IFsgICA2MC45OTA4
-MzFdIEludGVsKFIpIFdpcmVsZXNzIFdpRmkgZHJpdmVyIGZvciBMaW51eCAgICAgICAgICAgICAg
-ICAgICAgICAgICAgDQo+IFsgICA2MC45OTA4MzNdIENvcHlyaWdodChjKSAyMDAzLSAyMDE1IElu
-dGVsIENvcnBvcmF0aW9uICAgICAgICAgICAgICAgICAgICAgICAgDQo+IFsgICA2MC45OTE5MzZd
-IGl3bHdpZmkgMDAwMDowNDowMC4wOiBEaXJlY3QgZmlybXdhcmUgbG9hZCBmb3IgaXdsd2lmaS04
-MDAwQy0zNC51Y29kZSBmYWlsZWQgd2l0aCBlcnJvciAtMg0KPiBbICAgNjAuOTkxOTQxXSBpd2x3
-aWZpIDAwMDA6MDQ6MDAuMDogRGlyZWN0IGZpcm13YXJlIGxvYWQgZm9yIGl3bHdpZmktODAwMEMt
-MzMudWNvZGUgZmFpbGVkIHdpdGggZXJyb3IgLTINCj4gWyAgIDYwLjk5MTk0Nl0gaXdsd2lmaSAw
-MDAwOjA0OjAwLjA6IERpcmVjdCBmaXJtd2FyZSBsb2FkIGZvciBpd2x3aWZpLTgwMDBDLTMyLnVj
-b2RlIGZhaWxlZCB3aXRoIGVycm9yIC0yDQo+IFsgICA2MC45OTE5NTddIGl3bHdpZmkgMDAwMDow
-NDowMC4wOiBEaXJlY3QgZmlybXdhcmUgbG9hZCBmb3IgaXdsd2lmaS04MDAwQy0zMS51Y29kZSBm
-YWlsZWQgd2l0aCBlcnJvciAtMg0KPiBbICAgNjAuOTkxOTY0XSBpd2x3aWZpIDAwMDA6MDQ6MDAu
-MDogRGlyZWN0IGZpcm13YXJlIGxvYWQgZm9yIGl3bHdpZmktODAwMEMtMzAudWNvZGUgZmFpbGVk
-IHdpdGggZXJyb3IgLTINCj4gWyAgIDYwLjk5MTk2OV0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IERp
-cmVjdCBmaXJtd2FyZSBsb2FkIGZvciBpd2x3aWZpLTgwMDBDLTI5LnVjb2RlIGZhaWxlZCB3aXRo
-IGVycm9yIC0yDQo+IFsgICA2MC45OTE5NzVdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBEaXJlY3Qg
-ZmlybXdhcmUgbG9hZCBmb3IgaXdsd2lmaS04MDAwQy0yOC51Y29kZSBmYWlsZWQgd2l0aCBlcnJv
-ciAtMg0KPiBbICAgNjEuMDI5ODUyXSBpd2x3aWZpIDAwMDA6MDQ6MDAuMDogbG9hZGVkIGZpcm13
-YXJlIHZlcnNpb24gMjcuNTQxMDMzLjAgb3BfbW9kZSBpd2xtdm0NCj4gWyAgIDYxLjA0MzY2MF0g
-aXdsd2lmaSAwMDAwOjA0OjAwLjA6IERldGVjdGVkIEludGVsKFIpIER1YWwgQmFuZCBXaXJlbGVz
-cyBBQyA4MjYwLCBSRVY9MHgyMDgNCj4gWyAgIDY2LjA3MDEzNV0gaXdsd2lmaSAwMDAwOjA0OjAw
-LjA6IEZhaWxlZCB0byBsb2FkIGZpcm13YXJlIGNodW5rISAgICAgICAgICAgICANCj4gWyAgIDY2
-LjA3MDE0OV0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IENvdWxkIG5vdCBsb2FkIHRoZSBbMF0gdUNv
-ZGUgc2VjdGlvbiAgICAgICANCj4gWyAgIDY2LjA3MDE2NV0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6
-IEZhaWxlZCB0byBzdGFydCBJTklUIHVjb2RlOiAtMTEwICAgICAgICAgICANCj4gWyAgIDY2LjA4
-MzQ2Ml0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEZhaWxlZCB0byBydW4gSU5JVCB1Y29kZTogLTEx
-MCAgICAgICAgICAgICANCj4gDQo+IFRoaW5ncyB3b3JrIGZpbmUgaW4gNC4xMy1yYzcrLCB3aGlj
-aCB3YXMgdGhlIGxhc3Qga2VybmVsIEkgcmFuIG9uIG15IGxhcHRvcC4NCg0KVGhpcyBpcyBzdHJh
-bmdlLCBMaW51cyBoYXMgYmVlbiBydW5uaW5nIHRoaXMgc2FtZSBjb21iaW5hdGlvbiB3aXRoIC0z
-MQ0KKHdpdGggLTI3IHdlIGhhZCBhIHJlZ3Jlc3Npb24sIGJ1dCBpdCB3YXMgZml4ZWQgcmVjZW50
-bHkgYW5kIHRoZSBmaXggaXMNCmluIHRoZSBjdXJyZW50IG1hc3RlcikuICBJIGhhdmUgYWxzbyB0
-cmllZCB0aGlzIGNvbWJpbmF0aW9uIHdpdGggYm90aA0KLTI3IGFuZCAtMzEgYWZ0ZXIgbXkgZml4
-IGFuZCBpdCB3b3JrcyBmaW5lLg0KDQpUaGVyZSBhcmUgb25seSBhIGNvdXBsZSBvZiBvdGhlciBw
-YXRjaGVzIHRoYXQgbWF5IGFmZmVjdCBpd2x3aWZpIHNpbmNlDQp0aGUgcHJldmlvdXMgbmV0LW5l
-eHQuZ2l0IHB1bGwgcmVxdWVzdC4uLg0KDQpJJ2xsIHRyeSB0aGlzIGNvbWJpbmF0aW9uIG9uIG15
-IG1hY2hpbmUgYW5kIHNlZSBpZiBJIGNhbiByZXByb2R1Y2UgdGhlDQpwcm9ibGVtLg0KDQotLQ0K
-Q2hlZXJzLA0KTHVjYS4NCg0K
+Andrey Konovalov <andreyknvl@google.com> writes:
+
+> I've got the following report while fuzzing the kernel with syzkaller.
+>
+> On commit 6e80ecdddf4ea6f3cd84e83720f3d852e6624a68 (Sep 21).
+>
+> ==================================================================
+> BUG: KASAN: use-after-free in __run_timers+0xc0e/0xd40
+> Write of size 8 at addr ffff880069f701b8 by task swapper/0/0
+>
+> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.14.0-rc1-42311-g6e80ecdddf4e #234
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+
+[...]
+
+> Allocated by task 1845:
+>  save_stack_trace+0x1b/0x20 arch/x86/kernel/stacktrace.c:59
+>  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
+>  set_track mm/kasan/kasan.c:459
+>  kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:551
+>  kmem_cache_alloc_trace+0x11e/0x2d0 mm/slub.c:2772
+>  kmalloc ./include/linux/slab.h:493
+>  kzalloc ./include/linux/slab.h:666
+>  rsi_91x_init+0x98/0x510 drivers/net/wireless/rsi/rsi_91x_main.c:203
+>  rsi_probe+0xb6/0x13b0 drivers/net/wireless/rsi/rsi_91x_usb.c:665
+>  usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
+
+I'm curious about your setup. Apparently you are running syzkaller on
+QEMU but what I don't understand is how the rsi device comes into the
+picture. Did you have a rsi usb device connected to the virtual machine
+or what? Or does syzkaller do some kind of magic here?
+
+-- 
+Kalle Valo
