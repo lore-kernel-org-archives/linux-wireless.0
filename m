@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51932 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43360 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932292AbdIRMnc (ORCPT
+        with ESMTP id S932617AbdIYIV6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 08:43:32 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: <yintang@qti.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [TDLS PATCH V1 0/5] Add TDLS feature for ath10k
-References: <1505473420-22932-1-git-send-email-yintang@qti.qualcomm.com>
-Date: Mon, 18 Sep 2017 15:43:28 +0300
-In-Reply-To: <1505473420-22932-1-git-send-email-yintang@qti.qualcomm.com>
-        (yintang@qti.qualcomm.com's message of "Fri, 15 Sep 2017 19:03:35
-        +0800")
-Message-ID: <87wp4wkwi7.fsf@purkki.adurom.net> (sfid-20170918_144338_692899_00B566AF)
+        Mon, 25 Sep 2017 04:21:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [1/1] brcmfmac: use setup_timer() helper
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
+References: <1505997786-12815-1-git-send-email-allen.lkml@gmail.com>
+To: Allen Pais <allen.lkml@gmail.com>
+Cc: linux-kernel@vger.kernel.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, Allen Pais <allen.lkml@gmail.com>
+Message-Id: <20170925082157.9B9C760B72@smtp.codeaurora.org> (sfid-20170925_104608_257734_83C2070C)
+Date: Mon, 25 Sep 2017 08:21:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<yintang@qti.qualcomm.com> writes:
+Allen Pais <allen.lkml@gmail.com> wrote:
 
-> From: Yingying Tang <yintang@qti.qualcomm.com>
->
-> This patchset is for Rome PCIE chip, it will not affect other hardware
->
-> Yingying Tang (5):
->   mac80211: Enable TDLS peer buffer STA feature
->   ath10k: Enable TDLS peer buffer STA feature
->   ath10k: Enable TDLS peer inactivity detection
->   ath10k: Avoid to set WEP key for TDLS peer
->   ath10k: Avoid to set WEP key for TDLS peer
+> Use setup_timer function instead of initializing timer with the
+> function and data fields.
+> 
+> Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 
-There was a problem on patchwork.kernel.org over the weekend, but it
-should be fixed now. Unfortunately your patches didn't make it to
-patchwork, so please resend (as v2).
+Patch applied to wireless-drivers-next.git, thanks.
 
-https://patchwork.kernel.org/project/linux-wireless/list/?state=*
+30ac40763939 brcmfmac: use setup_timer() helper
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9963851/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
