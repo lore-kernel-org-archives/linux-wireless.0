@@ -1,127 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:53339 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752052AbdITX2T (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933294AbdIYI3u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 19:28:19 -0400
-Received: by mail-pg0-f48.google.com with SMTP id j70so2525943pgc.10
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 16:28:19 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>,
-        Krzysztof Halasa <khc@pm.waw.pl>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jens Axboe <axboe@fb.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 13/31] timer: Remove meaningless .data/.function assignments
-Date: Wed, 20 Sep 2017 16:27:37 -0700
-Message-Id: <1505950075-50223-14-git-send-email-keescook@chromium.org> (sfid-20170921_013100_585606_38DF2BD7)
-In-Reply-To: <1505950075-50223-1-git-send-email-keescook@chromium.org>
-References: <1505950075-50223-1-git-send-email-keescook@chromium.org>
+        Mon, 25 Sep 2017 04:29:50 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: iwlegacy: make const array static to shink object code size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170921225630.21916-1-colin.king@canonical.com>
+References: <20170921225630.21916-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20170925082949.EF68E60719@smtp.codeaurora.org> (sfid-20170925_110029_404938_D52906D7)
+Date: Mon, 25 Sep 2017 08:29:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several timer users needlessly reset their .function/.data fields during
-their timer callback, but nothing else changes them. Some users do not
-use their .data field at all. Each instance is removed here.
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Cc: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>
-Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # for staging
-Acked-by: Krzysztof Halasa <khc@pm.waw.pl> # for wan/hdlc*
-Acked-by: Jens Axboe <axboe@kernel.dk> # for amiflop
----
- drivers/block/amiflop.c                           | 3 +--
- drivers/net/wan/hdlc_cisco.c                      | 2 --
- drivers/net/wan/hdlc_fr.c                         | 2 --
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
- 4 files changed, 2 insertions(+), 9 deletions(-)
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Don't populate const array ac_to_fifo on the stack in an inlined
+> function, instead make it static.  Makes the object code smaller
+> by over 800 bytes:
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  159029	  33154	   1216	 193399	  2f377	4965-mac.o
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
+> 
+> (gcc version 7.2.0 x86_64)
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-diff --git a/drivers/block/amiflop.c b/drivers/block/amiflop.c
-index c4b1cba27178..6680d75bc857 100644
---- a/drivers/block/amiflop.c
-+++ b/drivers/block/amiflop.c
-@@ -323,7 +323,7 @@ static void fd_deselect (int drive)
- 
- }
- 
--static void motor_on_callback(unsigned long nr)
-+static void motor_on_callback(unsigned long ignored)
- {
- 	if (!(ciaa.pra & DSKRDY) || --on_attempts == 0) {
- 		complete_all(&motor_on_completion);
-@@ -344,7 +344,6 @@ static int fd_motor_on(int nr)
- 		fd_select(nr);
- 
- 		reinit_completion(&motor_on_completion);
--		motor_on_timer.data = nr;
- 		mod_timer(&motor_on_timer, jiffies + HZ/2);
- 
- 		on_attempts = 10;
-diff --git a/drivers/net/wan/hdlc_cisco.c b/drivers/net/wan/hdlc_cisco.c
-index c696d42f4502..6c98d85f2773 100644
---- a/drivers/net/wan/hdlc_cisco.c
-+++ b/drivers/net/wan/hdlc_cisco.c
-@@ -276,8 +276,6 @@ static void cisco_timer(unsigned long arg)
- 	spin_unlock(&st->lock);
- 
- 	st->timer.expires = jiffies + st->settings.interval * HZ;
--	st->timer.function = cisco_timer;
--	st->timer.data = arg;
- 	add_timer(&st->timer);
- }
- 
-diff --git a/drivers/net/wan/hdlc_fr.c b/drivers/net/wan/hdlc_fr.c
-index de42faca076a..7da2424c28a4 100644
---- a/drivers/net/wan/hdlc_fr.c
-+++ b/drivers/net/wan/hdlc_fr.c
-@@ -644,8 +644,6 @@ static void fr_timer(unsigned long arg)
- 			state(hdlc)->settings.t391 * HZ;
- 	}
- 
--	state(hdlc)->timer.function = fr_timer;
--	state(hdlc)->timer.data = arg;
- 	add_timer(&state(hdlc)->timer);
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ac5aaafa461c..60f088babf27 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -266,7 +266,7 @@ static void update_scan_time(void)
- 		last_scanned_shadow[i].time_scan = jiffies;
- }
- 
--static void remove_network_from_shadow(unsigned long arg)
-+static void remove_network_from_shadow(unsigned long unused)
- {
- 	unsigned long now = jiffies;
- 	int i, j;
-@@ -287,7 +287,6 @@ static void remove_network_from_shadow(unsigned long arg)
- 	}
- 
- 	if (last_scanned_cnt != 0) {
--		hAgingTimer.data = arg;
- 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
- 	}
- }
-@@ -304,7 +303,6 @@ static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
- 	int i;
- 
- 	if (last_scanned_cnt == 0) {
--		hAgingTimer.data = (unsigned long)user_void;
- 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
- 		state = -1;
- 	} else {
+Patch applied to wireless-drivers-next.git, thanks.
+
+9b029e178ea1 iwlegacy: make const array static to shink object code size
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9964889/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
