@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:33320 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751543AbdISL4d (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45528 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934012AbdIYIZA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Sep 2017 07:56:33 -0400
-Received: by mail-io0-f195.google.com with SMTP id j26so4562635iod.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 04:56:32 -0700 (PDT)
+        Mon, 25 Sep 2017 04:25:00 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: Ramon Fontes <ramonreisfontes@gmail.com>
-Date: Tue, 19 Sep 2017 08:56:12 -0300
-Message-ID: <CAK8U23b-i_tYMzVpLiaRrA2PSTGU9Zm=4rQoYRU=WafPkU7ytA@mail.gmail.com> (sfid-20170919_135636_608678_AB2EFAD1)
-Subject: [PATCH] mac80211_hwsim: enabling WDS
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: mwifiex: make const array tos_to_ac static,
+ reduces object code size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170919210500.31330-1-colin.king@canonical.com>
+References: <20170919210500.31330-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20170925082459.B18ED60719@smtp.codeaurora.org> (sfid-20170925_110027_638925_445ADCC0)
+Date: Mon, 25 Sep 2017 08:24:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Colin Ian King <colin.king@canonical.com> wrote:
 
-I'm developing an wireless emulator
-(https://github.com/intrig-unicamp/mininet-wifi) which relies on
-mac80211_hwsim for loading virtual wireless interfaces. In order to
-get access points wirelessly connected I was think to enable WDS (in
-addition to the well known mesh mode).
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Don't populate the read-only const array tos_to_ac on the stack,
+> instead make it static. Makes the object code smaller by 250 bytes:
+> 
+> Before:
+>    text	   data	    bss	    dec	    hex	filename
+>   26104	   2720	    128	  28952	   7118	wmm.o
+> 
+> After:
+>    text	   data	    bss	    dec	    hex	filename
+>   25758	   2816	    128	  28702	   701e	wmm.o
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Then, I went through mac80211_hwsim and I noticed that I could make it
-work with BIT(NL80211_IFTYPE_WDS) in mac80211_hwsim. That said, I
-thought to submit this patch.
+Patch applied to wireless-drivers-next.git, thanks.
 
-ps. I'm not an expert in Linux Kernel and I don't know if something
-else have to be done. It just worked applying this patch.
+7dfb0ebd022b mwifiex: make const array tos_to_ac static, reduces object code size
 
----
- drivers/net/wireless/mac80211_hwsim.c | 2 ++
- 1 file changed, 2 insertions(+)
+-- 
+https://patchwork.kernel.org/patch/9960331/
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c
-b/drivers/net/wireless/mac80211_hwsim.c
-index 6467ffac9811e..1f8229e545190 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -453,6 +453,7 @@ static const struct ieee80211_iface_limit
-hwsim_if_limits[] = {
-                                 BIT(NL80211_IFTYPE_MESH_POINT) |
- #endif
-                                 BIT(NL80211_IFTYPE_AP) |
-+                                BIT(NL80211_IFTYPE_WDS) |
-                                 BIT(NL80211_IFTYPE_P2P_GO) },
-        /* must be last, see hwsim_if_comb */
-        { .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) }
-@@ -2562,6 +2563,7 @@ static int mac80211_hwsim_new_radio(struct
-genl_info *info,
-        hw->offchannel_tx_hw_queue = 4;
-        hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-                                     BIT(NL80211_IFTYPE_AP) |
-+                                    BIT(NL80211_IFTYPE_WDS) |
-                                     BIT(NL80211_IFTYPE_P2P_CLIENT) |
-                                     BIT(NL80211_IFTYPE_P2P_GO) |
-                                     BIT(NL80211_IFTYPE_ADHOC) |
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
