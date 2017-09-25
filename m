@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42047 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750772AbdIRHp6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43829 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933306AbdIYTJV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 03:45:58 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
-Date: Mon, 18 Sep 2017 13:12:17 +0530
-Message-ID: <1505720537-13362-1-git-send-email-gbhat@marvell.com> (sfid-20170918_094601_241859_181EA4DE)
+        Mon, 25 Sep 2017 15:09:21 -0400
+From: <mpubbise@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [PATCH] mac80211: fix bandwidth computation for TDLS peers
+Date: Tue, 26 Sep 2017 00:39:15 +0530
+Message-ID: <1506366555-21862-1-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20170925_211236_568121_80CB0400)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid calculating random MAC address in driver. Instead make
-use of 'get_random_mask_addr()' function.
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Section 11.23.1 of 80211-2016 specification allows TDLS peers
+to operate on wider bandwidths though they are connected to a BSS
+which do not support wider bandwidth operations, provided both the
+peers advertize wider banwidth capabilities.
+
+The existing logic considers the minimum of station's and AP's
+capability for bandwidth computation. The same logic applies for
+TDLS peers as well, this restricts operating on wider bandwidths
+over a TDLS link when the peers are connected to legacy APs.
+
+As an example,
+If 80Mhz VHT capable peers are connected to a 20Mhz 11a AP, then as per
+the existing logic TDLS operation will be restricted to 20Mhz.
+
+Addressing this problem by not considering BSS capability in bandwidth
+computaion if the participating TDLS peers have wider bandwidth
+capability.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ net/mac80211/vht.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 84c1518..2b293b1 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2503,6 +2503,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
- 	struct ieee80211_channel *chan;
- 	struct ieee_types_header *ie;
- 	struct mwifiex_user_scan_cfg *user_scan_cfg;
-+	u8 mac_addr[ETH_ALEN];
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 19ec218..b9276ac 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -386,6 +386,16 @@ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta)
  
- 	mwifiex_dbg(priv->adapter, CMD,
- 		    "info: received scan request on %s\n", dev->name);
-@@ -2529,12 +2530,10 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
- 	priv->scan_request = request;
+ 	bw = ieee80211_sta_cap_rx_bw(sta);
+ 	bw = min(bw, sta->cur_max_bandwidth);
++
++	/* Don't consider AP's bandwidth for TDLS peers, section 11.23.1 of
++	 * IEEE80211-2016 specification makes higher bandwidth operation
++	 * possible on the TDLS link if the peers have wider bandwidth
++	 * capability.
++	 */
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
++	    test_sta_flag(sta, WLAN_STA_TDLS_WIDER_BW))
++		return bw;
++
+ 	bw = min(bw, ieee80211_chan_width_to_rx_bw(bss_width));
  
- 	if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
--		for (i = 0; i < ETH_ALEN; i++) {
--			request->mac_addr[i] &= request->mac_addr_mask[i];
--			request->mac_addr[i] |=
--				get_random_int() & ~(request->mac_addr_mask[i]);
--		}
--		ether_addr_copy(user_scan_cfg->random_mac, request->mac_addr);
-+		get_random_mask_addr(mac_addr, request->mac_addr,
-+				     request->mac_addr_mask);
-+		ether_addr_copy(request->mac_addr, mac_addr);
-+		ether_addr_copy(user_scan_cfg->random_mac, mac_addr);
- 	}
- 
- 	user_scan_cfg->num_ssids = request->n_ssids;
+ 	return bw;
 -- 
-1.9.1
+1.7.9.5
