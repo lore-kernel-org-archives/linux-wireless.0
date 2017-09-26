@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44736 "EHLO sipsolutions.net"
+Received: from mga04.intel.com ([192.55.52.120]:53335 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751605AbdIRUuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 16:50:13 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: fix null-ptr dereference on invalid mesh configuration
-Date: Mon, 18 Sep 2017 22:50:10 +0200
-Message-Id: <20170918205010.16669-1-johannes@sipsolutions.net> (sfid-20170918_225017_285229_54D079C6)
+        id S965054AbdIZH7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Sep 2017 03:59:31 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: linuxwifi <linuxwifi@intel.com>,
+        "gavinli@thegavinli.com" <gavinli@thegavinli.com>,
+        "Berg, Johannes" <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "git@thegavinli.com" <git@thegavinli.com>
+Subject: Re: [PATCH v2] iwlwifi: mvm: allow monitor mode capture in STA mode
+Date: Tue, 26 Sep 2017 07:59:25 +0000
+Message-ID: <1506412757.3276.63.camel@intel.com> (sfid-20170926_100125_155272_F9D702A3)
+References: <20170915051148.2566-1-gavinli@thegavinli.com>
+In-Reply-To: <20170915051148.2566-1-gavinli@thegavinli.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-If TX rates are specified during mesh join, the channel must
-also be specified. Check the channel pointer to avoid a null
-pointer dereference if it isn't.
-
-Reported-by: Jouni Malinen <j@w1.fi>
-Fixes: 8564e38206de ("cfg80211: add checks for beacon rate, extend to mesh")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8ce85420ecb0..dfc8e6fff677 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9987,6 +9987,9 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 		if (err)
- 			return err;
- 
-+		if (!setup.chandef.chan)
-+			return -EINVAL;
-+
- 		err = validate_beacon_tx_rate(rdev, setup.chandef.chan->band,
- 					      &setup.beacon_rate);
- 		if (err)
--- 
-2.14.1
+SGkgR2F2aW4sDQoNCk9uIFRodSwgMjAxNy0wOS0xNCBhdCAyMjoxMSAtMDcwMCwgZ2F2aW5saUB0
+aGVnYXZpbmxpLmNvbSB3cm90ZToNCj4gRnJvbTogR2F2aW4gTGkgPGdpdEB0aGVnYXZpbmxpLmNv
+bT4NCj4NCj4gT3BlbiB1cCB0aGUgZmlsdGVyIGlmIHRoZXJlIGlzIGEgbW9uaXRvciBpbnRlcmZh
+Y2UgY29uZmlndXJlZDsgdGhpcw0KPiBhbGxvd3MgYWxsIHBhY2tldHMgb24gdGhlIGNoYW5uZWwg
+dG8gYmUgY2FwdHVyZWQgZXZlbiBpZiB0aGUgZGV2aWNlIGlzDQo+IGluIFNUQSBtb2RlIGFuZCBh
+c3NvY2lhdGVkIHRvIGEgQlNTLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogR2F2aW4gTGkgPGdpdEB0
+aGVnYXZpbmxpLmNvbT4NCj4gLS0tDQoNClNvcnJ5IGZvciB0aGUgZGVsYXkgaW4gcmVzcG9uZGlu
+Zywgd2Ugd2VyZSBkaXNjdXNzaW5nIHRoaXMgcGF0Y2gNCmludGVybmFsbHkuDQoNClVuZm9ydHVu
+YXRlbHkgdGhpcyBpcyBub3Qgc29tZXRoaW5nIHRoYXQgb3VyIGZpcm13YXJlIG9mZmljaWFsbHkN
+CnN1cHBvcnRzLCBzbyB3ZSBjYW5ub3QgYWxsb3cgaXQgaW4gdGhlIGRyaXZlci4gIFRoZSBmaXJt
+d2FyZSBkb2Vzbid0DQoqYmxvY2sqIHRoaXMgZnJvbSB3b3JraW5nLCBidXQgdGhlcmUgYXJlIG5v
+IGd1YXJhbnRlZXMgdGhhdCBpdCB3aWxsIHdvcmsNCmFuZCB0aGF0IHRoZXJlIHdpbGwgbm90IGJl
+IGFueSBzaWRlLWVmZmVjdHMuDQoNCklmIHRoaXMgd29ya3MgZm9yIHlvdSwgZmVlbCBmcmVlIHRv
+IHVzZSBpdCAodGhhdCdzIG9uZSBvZiB0aGUgYmVhdXRpZXMNCm9mIG9wZW4gc291cmNlKSwgYnV0
+IEkgd29uJ3QgYXBwbHkgaXQgaW4gdGhlIG1haW5saW5lIGRyaXZlci4NCg0KDQotLQ0KQ2hlZXJz
+LA0KTHVjYS4=
