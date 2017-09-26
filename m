@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0088.outbound.protection.outlook.com ([104.47.37.88]:14256
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751801AbdIUVfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 17:35:03 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V3 5/9] qtnfmac: let wifi card handle channel switch request to the same chan
-Date: Thu, 21 Sep 2017 14:34:33 -0700
-Message-Id: <20170921213437.27457-6-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233506_878288_201B8E53)
-In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44576 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934122AbdIZKAA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Sep 2017 06:00:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: Re: [PATCH 1/3] rsi: sdio: add WOWLAN support for S3 suspend state
+References: <1506345695-4654-1-git-send-email-amitkarwar@gmail.com>
+Date: Tue, 26 Sep 2017 12:59:54 +0300
+In-Reply-To: <1506345695-4654-1-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Mon, 25 Sep 2017 18:51:35 +0530")
+Message-ID: <87shf96aqt.fsf@kamboji.qca.qualcomm.com> (sfid-20170926_120015_939687_EAD60E5B)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-No reason to verify channel switch request in driver, it can simply be
-forwarded to wireless device. Device can perform required checks and
-return appropriate error code, and driver may not even have information
-on current operational channel.
+> From: Karun Eagalapati <karun256@gmail.com>
+>
+> WoWLAN is supported in RS9113 device through GPIO pin2.
+> wowlan config frame is internally sent to firmware in mac80211
+> suspend handler. Also beacon miss threshold and keep-alive time
+> values are increased to avoid un-necessary disconnection with AP.
+>
+> Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> ---
+>  drivers/net/wireless/rsi/Kconfig            |   7 ++
+>  drivers/net/wireless/rsi/rsi_91x_core.c     |   9 +-
+>  drivers/net/wireless/rsi/rsi_91x_mac80211.c | 125 ++++++++++++++++++++++++++++
+>  drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  66 +++++++++++++--
+>  drivers/net/wireless/rsi/rsi_91x_sdio.c     |  11 +++
+>  drivers/net/wireless/rsi/rsi_common.h       |   3 +
+>  drivers/net/wireless/rsi/rsi_main.h         |  12 ++-
+>  drivers/net/wireless/rsi/rsi_mgmt.h         |  37 +++++++-
+>  8 files changed, 258 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
+> index 7c5e4ca..0882b4e 100644
+> --- a/drivers/net/wireless/rsi/Kconfig
+> +++ b/drivers/net/wireless/rsi/Kconfig
+> @@ -42,4 +42,11 @@ config RSI_USB
+>  	  This option enables the USB bus support in rsi drivers.
+>  	  Select M (recommended), if you have a RSI 1x1 wireless module.
+>  
+> +config RSI_WOW
+> +	bool "Redpine Signals WOWLAN support"
+> +	depends on RSI_SDIO && RSI_91X
+> +	default y
+> +	---help---
+> +	 Say Y, if you would like to enable wowlan support for RSI module.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 5 -----
- 1 file changed, 5 deletions(-)
+This adds a lot of ifdefs to the code. Is the Kconfig option really
+needed?
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 17b323e..4590f30 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -846,11 +846,6 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		return -EINVAL;
- 	}
- 
--	if (cfg80211_chandef_identical(&params->chandef, &mac->chandef)) {
--		pr_err("%s: switch request to the same channel\n", dev->name);
--		return -EALREADY;
--	}
--
- 	ret = qtnf_cmd_send_chan_switch(mac, params);
- 	if (ret)
- 		pr_warn("%s: failed to switch to channel (%u)\n",
 -- 
-2.9.5
+Kalle Valo
