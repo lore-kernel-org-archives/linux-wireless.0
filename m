@@ -1,186 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54516 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751323AbdIOMr2 (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:40262 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964958AbdIZDTx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 08:47:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 15 Sep 2017 15:47:01 +0300
-Message-Id: <20170915124704.9032-8-luca@coelho.fi> (sfid-20170915_144731_674968_119E2BF2)
-In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
-References: <20170915124704.9032-1-luca@coelho.fi>
-Subject: [PATCH 07/10] iwlwifi: mvm: support firmware debug trigger on frame reorder timeout
+        Mon, 25 Sep 2017 23:19:53 -0400
+Date: Mon, 25 Sep 2017 20:19:51 -0700 (PDT)
+Message-Id: <20170925.201951.1512252559012166718.davem@davemloft.net> (sfid-20170926_052405_224986_A2DE04B4)
+To: arnd@arndb.de
+Cc: mchehab@kernel.org, jiri@resnulli.us, arend.vanspriel@broadcom.com,
+        kvalo@codeaurora.org, aryabinin@virtuozzo.com, glider@google.com,
+        dvyukov@google.com, yamada.masahiro@socionext.com, mmarek@suse.com,
+        akpm@linux-foundation.org, keescook@chromium.org,
+        geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
+        linux-kbuild@vger.kernel.org, jakub@gcc.gnu.org,
+        marxin@gcc.gnu.org, stable@vger.kernel.org
+Subject: Re: [PATCH v4 8/9] netlink: fix nla_put_{u8,u16,u32} for KASAN
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170922212930.620249-9-arnd@arndb.de>
+References: <20170922212930.620249-1-arnd@arndb.de>
+        <20170922212930.620249-9-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 22 Sep 2017 23:29:19 +0200
 
-The trigger that collects data when a frame is released
-because of the timer of the reordering buffer was not
-implemented for 9000 devices.
-Fix this.
+> When CONFIG_KASAN is enabled, the "--param asan-stack=1" causes rather large
+> stack frames in some functions. This goes unnoticed normally because
+> CONFIG_FRAME_WARN is disabled with CONFIG_KASAN by default as of commit
+> 3f181b4d8652 ("lib/Kconfig.debug: disable -Wframe-larger-than warnings with
+> KASAN=y").
+> 
+> The kernelci.org build bot however has the warning enabled and that led
+> me to investigate it a little further, as every build produces these warnings:
+> 
+> net/wireless/nl80211.c:4389:1: warning: the frame size of 2240 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> net/wireless/nl80211.c:1895:1: warning: the frame size of 3776 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> net/wireless/nl80211.c:1410:1: warning: the frame size of 2208 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> net/bridge/br_netlink.c:1282:1: warning: the frame size of 2544 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> 
+> Most of this problem is now solved in gcc-8, which can consolidate
+> the stack slots for the inline function arguments. On older compilers
+> we can add a workaround by declaring a local variable in each function
+> to pass the inline function argument.
+> 
+> Cc: stable@vger.kernel.org
+> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 28 ++---------------------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  6 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  5 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 25 ++++++++++++++++++++
- 5 files changed, 39 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 8b4584541272..d7530474c1d3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4186,31 +4186,6 @@ static void iwl_mvm_event_bar_rx_callback(struct iwl_mvm *mvm,
- 				event->u.ba.ssn);
- }
- 
--static void
--iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
--				     struct ieee80211_vif *vif,
--				     const struct ieee80211_event *event)
--{
--	struct iwl_fw_dbg_trigger_tlv *trig;
--	struct iwl_fw_dbg_trigger_ba *ba_trig;
--
--	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_BA))
--		return;
--
--	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_BA);
--	ba_trig = (void *)trig->data;
--	if (!iwl_fw_dbg_trigger_check_stop(&mvm->fwrt,
--					   ieee80211_vif_to_wdev(vif), trig))
--		return;
--
--	if (!(le16_to_cpu(ba_trig->frame_timeout) & BIT(event->u.ba.tid)))
--		return;
--
--	iwl_fw_dbg_collect_trig(&mvm->fwrt, trig,
--				"Frame from %pM timed out, tid %d",
--				event->u.ba.sta->addr, event->u.ba.tid);
--}
--
- static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif,
- 				       const struct ieee80211_event *event)
-@@ -4225,7 +4200,8 @@ static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
- 		iwl_mvm_event_bar_rx_callback(mvm, vif, event);
- 		break;
- 	case BA_FRAME_TIMEOUT:
--		iwl_mvm_event_frame_timeout_callback(mvm, vif, event);
-+		iwl_mvm_event_frame_timeout_callback(mvm, vif, event->u.ba.sta,
-+						     event->u.ba.tid);
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ec2cf248990b..e8be5104b909 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -586,6 +586,7 @@ enum iwl_mvm_tdls_cs_state {
-  * @queue: queue of this reorder buffer
-  * @last_amsdu: track last ASMDU SN for duplication detection
-  * @last_sub_index: track ASMDU sub frame index for duplication detection
-+ * @tid: the tid
-  * @entries: list of skbs stored
-  * @reorder_time: time the packet was stored in the reorder buffer
-  * @reorder_timer: timer for frames are in the reorder buffer. For AMSDU
-@@ -603,6 +604,7 @@ struct iwl_mvm_reorder_buffer {
- 	int queue;
- 	u16 last_amsdu;
- 	u8 last_sub_index;
-+	u8 tid;
- 	struct sk_buff_head entries[IEEE80211_MAX_AMPDU_BUF];
- 	unsigned long reorder_time[IEEE80211_MAX_AMPDU_BUF];
- 	struct timer_list reorder_timer;
-@@ -1839,6 +1841,10 @@ unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
- 				    bool tdls, bool cmd_q);
- void iwl_mvm_connection_loss(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			     const char *errmsg);
-+void iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
-+					  struct ieee80211_vif *vif,
-+					  const struct ieee80211_sta *sta,
-+					  u16 tid);
- 
- int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b);
- int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 67ffd9774712..a0b406e68d55 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -492,13 +492,18 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
- 
- 	if (expired) {
- 		struct ieee80211_sta *sta;
-+		struct iwl_mvm_sta *mvmsta;
- 
- 		rcu_read_lock();
- 		sta = rcu_dereference(buf->mvm->fw_id_to_mac_id[buf->sta_id]);
-+		mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+
- 		/* SN is set to the last expired frame + 1 */
- 		IWL_DEBUG_HT(buf->mvm,
- 			     "Releasing expired frames for sta %u, sn %d\n",
- 			     buf->sta_id, sn);
-+		iwl_mvm_event_frame_timeout_callback(buf->mvm, mvmsta->vif,
-+						     sta, buf->tid);
- 		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
- 		rcu_read_unlock();
- 	} else {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 411a2055dc45..3711f226220c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2158,6 +2158,7 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
- 		reorder_buf->mvm = mvm;
- 		reorder_buf->queue = i;
- 		reorder_buf->sta_id = sta_id;
-+		reorder_buf->tid = data->tid;
- 		reorder_buf->valid = false;
- 		for (j = 0; j < reorder_buf->buf_size; j++)
- 			__skb_queue_head_init(&reorder_buf->entries[j]);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 328035640669..2da1b088ac01 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1368,6 +1368,31 @@ void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
- 	rcu_read_unlock();
- }
- 
-+void iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
-+					  struct ieee80211_vif *vif,
-+					  const struct ieee80211_sta *sta,
-+					  u16 tid)
-+{
-+	struct iwl_fw_dbg_trigger_tlv *trig;
-+	struct iwl_fw_dbg_trigger_ba *ba_trig;
-+
-+	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_BA))
-+		return;
-+
-+	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_BA);
-+	ba_trig = (void *)trig->data;
-+	if (!iwl_fw_dbg_trigger_check_stop(&mvm->fwrt,
-+					   ieee80211_vif_to_wdev(vif), trig))
-+		return;
-+
-+	if (!(le16_to_cpu(ba_trig->frame_timeout) & BIT(tid)))
-+		return;
-+
-+	iwl_fw_dbg_collect_trig(&mvm->fwrt, trig,
-+				"Frame from %pM timed out, tid %d",
-+				sta->addr, tid);
-+}
-+
- void iwl_mvm_get_sync_time(struct iwl_mvm *mvm, u32 *gp2, u64 *boottime)
- {
- 	bool ps_disabled;
--- 
-2.14.1
+Applied.
