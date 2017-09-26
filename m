@@ -1,112 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:58704 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751912AbdIVKyv (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:40218 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964958AbdIZDTr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 06:54:51 -0400
-Date: Fri, 22 Sep 2017 12:54:14 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Joe Perches <joe@perches.com>
-cc: Colin Ian King <colin.king@canonical.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: iwlegacy: make const array static to shink
- object code size Content-Type: text/plain; charset="utf-8" Content-Transfer-Encoding:
- 8bit
-In-Reply-To: <1506077181.12311.39.camel@perches.com>
-Message-ID: <alpine.DEB.2.20.1709221252430.3170@hadrien> (sfid-20170922_125534_236151_D3949971)
-References: <20170921225630.21916-1-colin.king@canonical.com>         <alpine.DEB.2.20.1709220921350.2024@hadrien>         <1506074588.12311.37.camel@perches.com>         <f6cb5b73-4ed5-92d9-3909-32b8e3aafc45@canonical.com>         <alpine.DEB.2.20.1709221206050.3170@hadrien>
- <1506077181.12311.39.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-1153938889-1506077654=:3170"
+        Mon, 25 Sep 2017 23:19:47 -0400
+Date: Mon, 25 Sep 2017 20:19:44 -0700 (PDT)
+Message-Id: <20170925.201944.383866196624108211.davem@davemloft.net> (sfid-20170926_052404_710500_EF23A438)
+To: arnd@arndb.de
+Cc: jiri@resnulli.us, mchehab@kernel.org, arend.vanspriel@broadcom.com,
+        kvalo@codeaurora.org, aryabinin@virtuozzo.com, glider@google.com,
+        dvyukov@google.com, yamada.masahiro@socionext.com, mmarek@suse.com,
+        akpm@linux-foundation.org, keescook@chromium.org,
+        geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
+        linux-kbuild@vger.kernel.org, jakub@gcc.gnu.org,
+        marxin@gcc.gnu.org, stable@vger.kernel.org
+Subject: Re: [PATCH v4 7/9] rocker: fix rocker_tlv_put_* functions for KASAN
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170922212930.620249-8-arnd@arndb.de>
+References: <20170922212930.620249-1-arnd@arndb.de>
+        <20170922212930.620249-8-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---8323329-1153938889-1506077654=:3170
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 22 Sep 2017 23:29:18 +0200
 
+> Inlining these functions creates lots of stack variables that each take
+> 64 bytes when KASAN is enabled, leading to this warning about potential
+> stack overflow:
+> 
+> drivers/net/ethernet/rocker/rocker_ofdpa.c: In function 'ofdpa_cmd_flow_tbl_add':
+> drivers/net/ethernet/rocker/rocker_ofdpa.c:621:1: error: the frame size of 2752 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+> 
+> gcc-8 can now consolidate the stack slots itself, but on older versions
+> we get the same behavior by using a temporary variable that holds a
+> copy of the inline function argument.
+> 
+> Cc: stable@vger.kernel.org
+> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-
-On Fri, 22 Sep 2017, Joe Perches wrote:
-
-> On Fri, 2017-09-22 at 12:06 +0200, Julia Lawall wrote:
-> >
-> > On Fri, 22 Sep 2017, Colin Ian King wrote:
-> >
-> > > On 22/09/17 11:03, Joe Perches wrote:
-> > > > On Fri, 2017-09-22 at 09:23 +0200, Julia Lawall wrote:
-> > > > >
-> > > > > On Thu, 21 Sep 2017, Colin King wrote:
-> > > > >
-> > > > > > From: Colin Ian King <colin.king@canonical.com>
-> > > > > >
-> > > > > > Don't populate const array ac_to_fifo on the stack in an inlined
-> > > > > > function, instead make it static.  Makes the object code smaller
-> > > > > > by over 800 bytes:
-> > > > > >
-> > > > > >    text	   data	    bss	    dec	    hex	filename
-> > > > > >  159029	  33154	   1216	 193399	  2f377	4965-mac.o
-> > > > > >
-> > > > > >    text	   data	    bss	    dec	    hex	filename
-> > > > > >  158122	  33250	   1216	 192588	  2f04c	4965-mac.o
-> > > > > >
-> > > > > > (gcc version 7.2.0 x86_64)
-> > > > >
-> > > > > Gcc 7 must be much more aggressive about inlining than gcc 4.  Here is the
-> > > > > change that I got on this file:
-> > > > >
-> > > > >      text          data     bss     dec     hex filename
-> > > > > -   76346          1494     152   77992   130a8 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> > > > > +   76298          1494     152   77944   13078 drivers/net/wireless/intel/iwlegacy/4965-mac.o
-> > > > > decrease of 48
-> > > >
-> > > > More likely different CONFIG options.
-> > > >
-> > > > e.g. allyesconfig vs defconfig with wireless
-> > > >
-> > >
-> > > yup, I used allyesconfig
-> >
-> > Mine is also allyesconfig.
->
-> Odd.
->
-> Here is what I get: (Sorry, no gcc-7)
->
-> gcc4: gcc-4.9 (Ubuntu 4.9.4-2ubuntu1) 4.9.4
-> gcc5: gcc-5 (Ubuntu 5.4.1-8ubuntu1) 5.4.1 20170304
-> gcc6: gcc-6 (Ubuntu 6.3.0-12ubuntu2) 6.3.0 20170406
->
-> $ size drivers/net/wireless/intel/iwlegacy/4965-mac.o*
->    text	   data	    bss	    dec	    hex	filename
->  118559	   1766	    152	 120477	  1d69d	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.allyesconfig.new
->  118623	   1766	    152	 120541	  1d6dd	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.allyesconfig.old
-
-My gcc is 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3)
-
-You get a savings of 64 and I got a savings of 48, but it's not that big a
-difference, compared to what the later versions give.
-
-julia
-
->   51595	   1156	      0	  52751	   ce0f	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.defconfig.new
->   51659	   1156	      0	  52815	   ce4f	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc4.defconfig.old
->  141956	  29790	   1216	 172962	  2a3a2	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.allyesconfig.new
->  142671	  29702	   1216	 173589	  2a615	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.allyesconfig.old
->   51733	   1156	      0	  52889	   ce99	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.defconfig.new
->   51813	   1156	      0	  52969	   cee9	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc5.defconfig.old
->  152991	  29790	   1216	 183997	  2cebd	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.allyesconfig.new
->  153722	  29702	   1216	 184640	  2d140	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.allyesconfig.old
->   51813	   1156	      0	  52969	   cee9	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.defconfig.new
->   51893	   1156	      0	  53049	   cf39	drivers/net/wireless/intel/iwlegacy/4965-mac.o.gcc6.defconfig.old
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
---8323329-1153938889-1506077654=:3170--
+Applied.
