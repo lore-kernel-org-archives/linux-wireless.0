@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:33223 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752639AbdIFMZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 08:25:26 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: always update the PM state of a peer on MGMT / DATA frames
-Date: Wed,  6 Sep 2017 15:25:23 +0300
-Message-Id: <20170906122523.17333-1-emmanuel.grumbach@intel.com> (sfid-20170906_142529_187654_5F3ACE15)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33878 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934198AbdIZGl6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Sep 2017 02:41:58 -0400
+From: AceLan Kao <acelan.kao@canonical.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/6] ath9k: set use_msi=1 on Dell Vostro 3262
+Date: Tue, 26 Sep 2017 14:41:36 +0800
+Message-Id: <1506408099-18488-3-git-send-email-acelan.kao@canonical.com> (sfid-20170926_084503_142638_BB023478)
+In-Reply-To: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2016 version of the spec is more generic about when the
-AP should update the power management state of the peer:
-the AP shall update the state based on any management or
-data frames. This means that even non-bufferable management
-frames should be looked at to update to maintain the power
-management state of the peer.
+BIOS on Dell Vostro 3262 blocks legacy interrupts (INTx),
+and only allows MSI for WLAN device.
 
-This can avoid problematic cases for example if a station
-disappears while being asleep and then re-appears. The AP
-would remember it as in power save, but the Authentication
-frame couldn't be used to set the peer as awake again.
-Note that this issues wasn't really critical since at some
-point (after the association) we would have removed the
-station and created another one with all the states cleared.
-
-type=feature
-ticket=none
-
-Change-Id: Iae1fbbd502d64f0c31db3e0f2d81224b29acb5af
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
 ---
- net/mac80211/rx.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fdf616811865..89db6b11af8a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1749,23 +1749,16 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 1667949..6b5d53c 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -112,6 +112,14 @@ static const struct dmi_system_id ath9k_quirks[] __initconst = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 24-3460"),
+ 		},
+ 	},
++	{
++		.callback = set_use_msi,
++		.ident = "Dell Vostro 3262",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
++			DMI_MATCH(DMI_PRODUCT_NAME, "Vostro 3262"),
++		},
++	},
+ 	{}
+ };
  
- 	/*
- 	 * Change STA power saving mode only at the end of a frame
--	 * exchange sequence.
-+	 * exchange sequence, and only for a data or management
-+	 * frame as specified in ieee80211-2016 11.2.3.2
- 	 */
- 	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
- 	    !ieee80211_has_morefrags(hdr->frame_control) &&
--	    !ieee80211_is_back_req(hdr->frame_control) &&
-+	    (ieee80211_is_mgmt(hdr->frame_control) ||
-+	     ieee80211_is_data(hdr->frame_control)) &&
- 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
- 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
--	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
--	    /*
--	     * PM bit is only checked in frames where it isn't reserved,
--	     * in AP mode it's reserved in non-bufferable management frames
--	     * (cf. IEEE 802.11-2012 8.2.4.1.7 Power Management field)
--	     * BAR frames should be ignored as specified in
--	     * IEEE 802.11-2012 10.2.1.2.
--	     */
--	    (!ieee80211_is_mgmt(hdr->frame_control) ||
--	     ieee80211_is_bufferable_mmpdu(hdr->frame_control))) {
-+	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
- 		if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
- 			if (!ieee80211_has_pm(hdr->frame_control))
- 				sta_ps_end(sta);
 -- 
-2.9.3
+2.7.4
