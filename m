@@ -1,47 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13550 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751225AbdIOLFB (ORCPT
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:54329 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031179AbdIZPFu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 07:05:01 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V1 5/5] ath10k: Avoid to set WEP key for TDLS peer
-Date: Fri, 15 Sep 2017 19:05:48 +0800
-Message-ID: <1505473548-22977-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20170915_130509_061641_A34B1D71)
-In-Reply-To: <TDLS for ath10k>
-References: <TDLS for ath10k>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 26 Sep 2017 11:05:50 -0400
+Received: by mail-wr0-f174.google.com with SMTP id g29so13493667wrg.11
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 08:05:49 -0700 (PDT)
+From: Andrey Konovalov <andreyknvl@google.com>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        Andrey Konovalov <andreyknvl@google.com>
+Subject: [PATCH] p54: don't unregister leds when they are inited
+Date: Tue, 26 Sep 2017 17:05:39 +0200
+Message-Id: <384966f3a79915b4617d808c40e63072aa8b868d.1506438160.git.andreyknvl@google.com> (sfid-20170926_170718_298486_4DFAC802)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+ieee80211_register_hw() in p54_register_common() may fail and leds won't
+get initialized. Currently p54_unregister_common() doesn't check that and
+always calls p54_unregister_leds(). The fix is to check priv->registered
+flag before calling p54_unregister_leds().
 
-TDLS peer do not need WEP key. Setting WEP key will lead
-to TDLS setup failure. Add fix to avoid setting WEP key
-for TDLS peer.
+Found by syzkaller.
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
+4.14.0-rc1-42251-gebb2c2437d80-dirty #205
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ __dump_stack lib/dump_stack.c:16
+ dump_stack+0x292/0x395 lib/dump_stack.c:52
+ register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
+ __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
+ lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
+ flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
+ __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
+ cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
+ p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
+ p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
+ p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
+ usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
+ __device_release_driver drivers/base/dd.c:861
+ device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
+ device_release_driver+0x1e/0x30 drivers/base/dd.c:918
+ bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
+ device_del+0x5c4/0xab0 drivers/base/core.c:1985
+ usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
+ usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
+ hub_port_connect drivers/usb/core/hub.c:4754
+ hub_port_connect_change drivers/usb/core/hub.c:5009
+ port_event drivers/usb/core/hub.c:5115
+ hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
+ process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+ process_scheduled_works kernel/workqueue.c:2179
+ worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
+ kthread+0x3a1/0x470 kernel/kthread.c:231
+ ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
+
+Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/intersil/p54/main.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f6702cb..d2530f7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5841,6 +5841,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ath10k_warn(ar, "Peer %pM disappeared!\n", peer_addr);
- 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+index d5a3bf91a03e..ab6d39e12069 100644
+--- a/drivers/net/wireless/intersil/p54/main.c
++++ b/drivers/net/wireless/intersil/p54/main.c
+@@ -852,12 +852,11 @@ void p54_unregister_common(struct ieee80211_hw *dev)
+ {
+ 	struct p54_common *priv = dev->priv;
  
-+	if (sta && sta->tdls)
-+		ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+					  WMI_PEER_AUTHORIZE, 1);
-+
- exit:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
+-#ifdef CONFIG_P54_LEDS
+-	p54_unregister_leds(priv);
+-#endif /* CONFIG_P54_LEDS */
+-
+ 	if (priv->registered) {
+ 		priv->registered = false;
++#ifdef CONFIG_P54_LEDS
++		p54_unregister_leds(priv);
++#endif /* CONFIG_P54_LEDS */
+ 		ieee80211_unregister_hw(dev);
+ 	}
+ 
 -- 
-1.7.9.5
+2.14.1.821.g8fa685d3b7-goog
