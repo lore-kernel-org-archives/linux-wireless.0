@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:60223 "EHLO
-        alexa-out-lv-02.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751396AbdISDOD (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:36825 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964888AbdIZGmN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 23:14:03 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [TDLS PATCH V3 2/5] ath10k: Enable TDLS peer buffer STA feature
-Date: Tue, 19 Sep 2017 11:15:10 +0800
-Message-ID: <1505790913-28377-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20170919_051439_942405_DC895C5D)
-In-Reply-To: <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patchset v3>
- <1505790913-28377-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 26 Sep 2017 02:42:13 -0400
+From: AceLan Kao <acelan.kao@canonical.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 6/6] ath9k: set use_msi=1 on Dell Inspiron 14-3473
+Date: Tue, 26 Sep 2017 14:41:39 +0800
+Message-Id: <1506408099-18488-6-git-send-email-acelan.kao@canonical.com> (sfid-20170926_090027_842626_D7DA1319)
+In-Reply-To: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+BIOS on Dell Inspiron 14-3473 blocks legacy interrupts (INTx),
+and only allows MSI for WLAN device.
 
-Enable TDLS peer buffer STA feature.
-QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
-it reports this capability through wmi service map in wmi service ready
-event. Set related parameter in TDLS WMI command to enable this feature.
-
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     |    3 +++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 +++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath9k/init.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5683f1a..399f9ba 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8204,6 +8204,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e1198e1..d03e1fc 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -136,6 +136,14 @@ static const struct dmi_system_id ath9k_quirks[] __initconst = {
+ 			DMI_MATCH(DMI_PRODUCT_NAME, "Vostro 15-3572"),
+ 		},
+ 	},
++	{
++		.callback = set_use_msi,
++		.ident = "Dell Inspiron 14-3473",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
++			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 14-3473"),
++		},
++	},
+ 	{}
+ };
  
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
-+
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7616c1c..f60b46e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2747,6 +2747,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	 */
- 	u32 options = 0;
- 
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
-+
- 	len = sizeof(*tlv) + sizeof(*cmd);
- 	skb = ath10k_wmi_alloc_skb(ar, len);
- 	if (!skb)
 -- 
-1.7.9.5
+2.7.4
