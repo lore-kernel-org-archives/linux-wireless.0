@@ -1,61 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51418 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752428AbdIYE0s (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:49103 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965365AbdIZPLi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 00:26:48 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andrey Konovalov <andreyknvl@google.com>
-Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
+        Tue, 26 Sep 2017 11:11:38 -0400
+Received: by mail-wr0-f181.google.com with SMTP id 108so13538207wra.5
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 08:11:37 -0700 (PDT)
+From: Andrey Konovalov <andreyknvl@google.com>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Dmitry Vyukov <dvyukov@google.com>,
         Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
-Subject: Re: usb/wireless/rsi_91x: use-after-free write in __run_timers
-References: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
-Date: Mon, 25 Sep 2017 07:26:43 +0300
-In-Reply-To: <CAAeHK+wXCaLZ8=enfsmjg-+FJsW1UhSCz8GUmSWhFxB4orLQ6w@mail.gmail.com>
-        (Andrey Konovalov's message of "Fri, 22 Sep 2017 19:04:27 +0200")
-Message-ID: <87lgl3769o.fsf@kamboji.qca.qualcomm.com> (sfid-20170925_062821_349690_08E9240C)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Andrey Konovalov <andreyknvl@google.com>
+Subject: [PATCH v2] p54: don't unregister leds when they are not initialized
+Date: Tue, 26 Sep 2017 17:11:33 +0200
+Message-Id: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com> (sfid-20170926_171157_510815_7C9B5D4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Konovalov <andreyknvl@google.com> writes:
+ieee80211_register_hw() in p54_register_common() may fail and leds won't
+get initialized. Currently p54_unregister_common() doesn't check that and
+always calls p54_unregister_leds(). The fix is to check priv->registered
+flag before calling p54_unregister_leds().
 
-> I've got the following report while fuzzing the kernel with syzkaller.
->
-> On commit 6e80ecdddf4ea6f3cd84e83720f3d852e6624a68 (Sep 21).
->
-> ==================================================================
-> BUG: KASAN: use-after-free in __run_timers+0xc0e/0xd40
-> Write of size 8 at addr ffff880069f701b8 by task swapper/0/0
->
-> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.14.0-rc1-42311-g6e80ecdddf4e #234
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Found by syzkaller.
 
-[...]
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
+4.14.0-rc1-42251-gebb2c2437d80-dirty #205
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ __dump_stack lib/dump_stack.c:16
+ dump_stack+0x292/0x395 lib/dump_stack.c:52
+ register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
+ __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
+ lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
+ flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
+ __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
+ cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
+ p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
+ p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
+ p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
+ usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
+ __device_release_driver drivers/base/dd.c:861
+ device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
+ device_release_driver+0x1e/0x30 drivers/base/dd.c:918
+ bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
+ device_del+0x5c4/0xab0 drivers/base/core.c:1985
+ usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
+ usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
+ hub_port_connect drivers/usb/core/hub.c:4754
+ hub_port_connect_change drivers/usb/core/hub.c:5009
+ port_event drivers/usb/core/hub.c:5115
+ hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
+ process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+ process_scheduled_works kernel/workqueue.c:2179
+ worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
+ kthread+0x3a1/0x470 kernel/kthread.c:231
+ ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
 
-> Allocated by task 1845:
->  save_stack_trace+0x1b/0x20 arch/x86/kernel/stacktrace.c:59
->  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
->  set_track mm/kasan/kasan.c:459
->  kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:551
->  kmem_cache_alloc_trace+0x11e/0x2d0 mm/slub.c:2772
->  kmalloc ./include/linux/slab.h:493
->  kzalloc ./include/linux/slab.h:666
->  rsi_91x_init+0x98/0x510 drivers/net/wireless/rsi/rsi_91x_main.c:203
->  rsi_probe+0xb6/0x13b0 drivers/net/wireless/rsi/rsi_91x_usb.c:665
->  usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
+Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
+---
 
-I'm curious about your setup. Apparently you are running syzkaller on
-QEMU but what I don't understand is how the rsi device comes into the
-picture. Did you have a rsi usb device connected to the virtual machine
-or what? Or does syzkaller do some kind of magic here?
+changes in v2:
+- fixed typo in patch subject
 
+---
+ drivers/net/wireless/intersil/p54/main.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+index d5a3bf91a03e..ab6d39e12069 100644
+--- a/drivers/net/wireless/intersil/p54/main.c
++++ b/drivers/net/wireless/intersil/p54/main.c
+@@ -852,12 +852,11 @@ void p54_unregister_common(struct ieee80211_hw *dev)
+ {
+ 	struct p54_common *priv = dev->priv;
+ 
+-#ifdef CONFIG_P54_LEDS
+-	p54_unregister_leds(priv);
+-#endif /* CONFIG_P54_LEDS */
+-
+ 	if (priv->registered) {
+ 		priv->registered = false;
++#ifdef CONFIG_P54_LEDS
++		p54_unregister_leds(priv);
++#endif /* CONFIG_P54_LEDS */
+ 		ieee80211_unregister_hw(dev);
+ 	}
+ 
 -- 
-Kalle Valo
+2.14.1.821.g8fa685d3b7-goog
