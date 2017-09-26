@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33548 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753640AbdIGQk1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2017 12:40:27 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: iwlwifi: mvm: only send LEDS_CMD when the FW supports it
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170907075152.4522-1-luca@coelho.fi>
-References: <20170907075152.4522-1-luca@coelho.fi>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: torvalds@linux-foundation.org, linux-wireless@vger.kernel.org,
-        johannes@sipsolutions.net, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org, netdev@vger.kernel.org,
-        davem@davemloft.net, emmanuel.grumbach@intel.com,
-        Luca Coelho <luciano.coelho@intel.com>
-Message-Id: <20170907164027.2C5926073D@smtp.codeaurora.org> (sfid-20170907_184124_590001_FEB8A4F8)
-Date: Thu,  7 Sep 2017 16:40:27 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:46690 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030470AbdIZLtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Sep 2017 07:49:47 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, toke@toke.dk,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2] mac80211: fix STA_SLOW_THRESHOLD htmldocs failure
+Date: Tue, 26 Sep 2017 13:48:05 +0200
+Message-Id: <1506426485-7539-1-git-send-email-sgruszka@redhat.com> (sfid-20170926_135118_481139_C5F85564)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luca@coelho.fi> wrote:
+Patch fixes htmldocs build problem:
 
-> From: Luca Coelho <luciano.coelho@intel.com>
-> 
-> The LEDS_CMD command is only supported in some newer FW versions
-> (e.g. iwlwifi-8000C-31.ucode), so we can't send it to older versions
-> (such as iwlwifi-8000C-27.ucode).
-> 
-> To fix this, check for a new bit in the FW capabilities TLV that tells
-> when the command is supported.
-> 
-> Note that the current version of -31.ucode in linux-firmware.git
-> (31.532993.0) does not have this capability bit set, so the LED won't
-> work, even though this version should support it.  But we will update
-> this firmware soon, so it won't be a problem anymore.
-> 
-> Fixes: 7089ae634c50 ("iwlwifi: mvm: use firmware LED command where applicable")
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Error(.//net/mac80211/sta_info.h:416): cannot understand prototype: 'STA_SLOW_THRESHOLD 6000  '
 
-Patch applied to wireless-drivers.git, thanks.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2: just fix documentation build, do not move the code.
 
-2eabc84d2f8e iwlwifi: mvm: only send LEDS_CMD when the FW supports it
+ net/mac80211/sta_info.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 3acbdfa..a35c964 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -398,7 +398,7 @@ struct ieee80211_sta_rx_stats {
+ 	u64 msdu[IEEE80211_NUM_TIDS + 1];
+ };
+ 
+-/**
++/*
+  * The bandwidth threshold below which the per-station CoDel parameters will be
+  * scaled to be more lenient (to prevent starvation of slow stations). This
+  * value will be scaled by the number of active stations when it is being
 -- 
-https://patchwork.kernel.org/patch/9941719/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.1
