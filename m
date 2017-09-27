@@ -1,91 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.linuxprofi.at ([93.83.54.199]:42836 "EHLO
+Received: from zimbra.linuxprofi.at ([93.83.54.199]:59034 "EHLO
         zimbra.linuxprofi.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752481AbdIYLvM (ORCPT
+        with ESMTP id S1751569AbdI0FUI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2017 07:51:12 -0400
-Subject: Re: [PATCH RESEND] wireless: iwlwifi: fix minor code style issues
-To: "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "trivial@kernel.org" <trivial@kernel.org>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-References: <912deca9-79b6-7a44-6859-dbe532d90fed@boehmwalder.at>
- <1506340012.3276.17.camel@intel.com>
-From: =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= <christoph@boehmwalder.at>
-Message-ID: <a0f4c1eb-9193-db54-7c1b-f24eac8735c9@boehmwalder.at> (sfid-20170925_135211_415974_AB876459)
-Date: Mon, 25 Sep 2017 13:51:03 +0200
+        Wed, 27 Sep 2017 01:20:08 -0400
+Date: Wed, 27 Sep 2017 07:19:58 +0200
+In-Reply-To: <1506474814-18118-1-git-send-email-miaoqing@codeaurora.org>
+References: <1506474814-18118-1-git-send-email-miaoqing@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1506340012.3276.17.camel@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="qbavKdHUe78mEN2dlqNB5dqi0r9h6jUnU"
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCH] ath9k: fix tx99 potential info leak
+To: miaoqing@codeaurora.org, kvalo@qca.qualcomm.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        sssa@qti.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+From: =?ISO-8859-1?Q?Christoph_B=F6hmwalder?= <christoph@boehmwalder.at>
+Message-ID: <01A373FA-9C6A-45B0-B793-8C87BE0DF079@boehmwalder.at> (sfid-20170927_072012_544111_5477FF15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---qbavKdHUe78mEN2dlqNB5dqi0r9h6jUnU
-Content-Type: multipart/mixed; boundary="o7xtbWEJ0wwTCb4l1raXgwV1ww5DrK0Ik";
- protected-headers="v1"
-From: =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= <christoph@boehmwalder.at>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "trivial@kernel.org" <trivial@kernel.org>,
- "Berg, Johannes" <johannes.berg@intel.com>,
- "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Message-ID: <a0f4c1eb-9193-db54-7c1b-f24eac8735c9@boehmwalder.at>
-Subject: Re: [PATCH RESEND] wireless: iwlwifi: fix minor code style issues
-References: <912deca9-79b6-7a44-6859-dbe532d90fed@boehmwalder.at>
- <1506340012.3276.17.camel@intel.com>
-In-Reply-To: <1506340012.3276.17.camel@intel.com>
+Am 27. September 2017 03:13:34 MESZ schrieb miaoqing@codeaurora.org:
+>From: Miaoqing Pan <miaoqing@codeaurora.org>
+>
+>When the user sets count to zero the string buffer would remain
+>completely uninitialized which causes the kernel to parse its
+>own stack data, potentially leading to an info leak. In addition
+>to that, the string might be not terminated properly when the
+>user data does not contain a 0-terminator.
+>
+>Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+>---
+> drivers/net/wireless/ath/ath9k/tx99.c | 5 +++++
+> 1 file changed, 5 insertions(+)
+>
+>diff --git a/drivers/net/wireless/ath/ath9k/tx99.c
+>b/drivers/net/wireless/ath/ath9k/tx99.c
+>index 49ed1af..fe3a826 100644
+>--- a/drivers/net/wireless/ath/ath9k/tx99.c
+>+++ b/drivers/net/wireless/ath/ath9k/tx99.c
+>@@ -179,6 +179,9 @@ static ssize_t write_file_tx99(struct file *file,
+>const char __user *user_buf,
+> 	ssize_t len;
+> 	int r;
+> 
+>+	if (count < 1)
+>+		return -EINVAL;
+>+
+> 	if (sc->cur_chan->nvifs > 1)
+> 		return -EOPNOTSUPP;
+> 
+>@@ -186,6 +189,8 @@ static ssize_t write_file_tx99(struct file *file,
+>const char __user *user_buf,
+> 	if (copy_from_user(buf, user_buf, len))
+> 		return -EFAULT;
+> 
+>+	buf[len] = '\0';
+>+
 
---o7xtbWEJ0wwTCb4l1raXgwV1ww5DrK0Ik
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I think it would be more appropriate here to check if buf[len] == '\0' and return an error otherwise.
 
-> Why are you already resending this?
+> 	if (strtobool(buf, &start))
+> 		return -EINVAL;
+> 
+>-- 
+>1.9.1
 
-Sorry, I guess I was too impatient. I also messed up the spelling in a
-"To:" line and forgot trivial@kernel.org the first time I sent it, so I
-figured I'd just fix it in a resend.
-
-I'll make sure to wait a little longer next time.
 
 --
 Regards,
 Christoph
-
-
---o7xtbWEJ0wwTCb4l1raXgwV1ww5DrK0Ik--
-
---qbavKdHUe78mEN2dlqNB5dqi0r9h6jUnU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJZyO2sAAoJEM3PQE6B9NDDfNkQAKZ0MGLvg/kLAf+PR+KN9L3F
-csQfr3buNPyh6sVwFGiM9FT0IWnSmt1fN+F/Lqe3SWU6Lnk/Q1Y5u8t4iglP5dpU
-/VatqBmu/JWSUjRt/24NNW+9gidBPD0reOAIDSbXPdgiPt6ujlQk8f2BaWQrIBFa
-5+nA5ZfyvRMSlflfJxlwYhd7RRfXwWdzc1gwHBofzpa07vmRAo09Ujtb4tb0PpCF
-nnwhhDbR8e0HtZy0wdJ/OWxVKp3cUedLU1uRcpgPlfGucskzNJGFxzDe5PRULV6b
-yp1SWmaGK75qC4HyqQYWOb839pINLBFeNAUcj+eVTnFBsLGmZz9Jcl4twPVbuKWU
-9HlJNK+uj48H0JlEEGmYQhvyJL9Px6OKKtsaFVHBXYC4TQmbXQANaeIPCCMR5Icf
-ayN/os9mjbcf0kO19NY+vRQU6477NaUrMxNlk9pwbWD5q6y3oh/lR76Q7c8iaY5h
-0wpzAx7aGURvsMcRMZpi/CaaUcz/mAjb/FbjY/MPqYrNbOAa7mQHTeHn2qFg6rPb
-sR7MRfm06Ai0bgPc9Jie5M2XYsA+Opqcp9vY2n9y3jwYgf1hFUmBWNjruEePF47K
-S/ZWjTZbHeauTBO1djGR36tFZMlpFiCUjg+RxaMQGwxz9bhFAliy7WyuIwehTXCM
-vGXjrbg/zk/54lJ2OGK7
-=yTa+
------END PGP SIGNATURE-----
-
---qbavKdHUe78mEN2dlqNB5dqi0r9h6jUnU--
