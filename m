@@ -1,70 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:45031 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbdIOIsf (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32937 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753090AbdI0N0W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 04:48:35 -0400
-Received: by mail-io0-f170.google.com with SMTP id v36so6784440ioi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Sep 2017 01:48:35 -0700 (PDT)
+        Wed, 27 Sep 2017 09:26:22 -0400
 MIME-Version: 1.0
-From: Ernst Wegner <ernstwegner95@gmail.com>
-Date: Fri, 15 Sep 2017 10:48:34 +0200
-Message-ID: <CAF11ideB1ButOi1r8dmkbQZzSjmVrO247+pMOuxy60pO+BkuiA@mail.gmail.com> (sfid-20170915_104839_253575_11130D3E)
-Subject: What makes USB WiFi so difficult in Linux and may I help out?
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com>
+References: <20170922212930.620249-1-arnd@arndb.de> <20170922212930.620249-5-arnd@arndb.de>
+ <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
+ <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
+ <CAK8P3a37Ts5q7BvA2JWse87huyAp+=e18CUXEt8731RrBnB+Ow@mail.gmail.com> <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 27 Sep 2017 06:26:21 -0700
+Message-ID: <CAK8P3a2C7DBTfQZvRi-QQfrfm1GXktFcXQRmXmzpF4SCa+BADA@mail.gmail.com> (sfid-20170927_152634_584818_6208083D)
+Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: David Laight <David.Laight@aculab.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Jiri Pirko <jiri@resnulli.us>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Michal Marek <mmarek@suse.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
+        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
+        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
+        Jakub Jelinek <jakub@gcc.gnu.org>,
+        =?UTF-8?Q?Martin_Li=C5=A1ka?= <marxin@gcc.gnu.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear list!
+On Tue, Sep 26, 2017 at 9:49 AM, Andrey Ryabinin
+<aryabinin@virtuozzo.com> wrote:
+>
+>
+> On 09/26/2017 09:47 AM, Arnd Bergmann wrote:
+>> On Mon, Sep 25, 2017 at 11:32 PM, Arnd Bergmann <arnd@arndb.de> wrote:
 
-I recently suffer from attempts to use some USB WiFi sticks to connect
-to a wireless network using Linux. I tried that with a number of
-distros, but found that there seem to be kind of the same problems all
-the way from Linux 2.6.x to 4.x. Most USB WiFi sticks don't work
-reliably.
+>> +       ret = __builtin_strlen(q);
+>
+>
+> I think this is not correct. Fortified strlen called here on purpose. If sizeof q is known at compile time
+> and 'q' contains not-null fortified strlen() will panic.
 
-As I am a developer also (and very interested in these things) I would
-be willing to help debugging drivers and possibly fix them. But I
-don't really know where to start searching. So some hints would be
-very welcome.
+Ok, got it.
 
-Currently I try to get this one here to work:
+>>         if (size) {
+>>                 size_t len = (ret >= size) ? size - 1 : ret;
+>>                 if (__builtin_constant_p(len) && len >= p_size)
+>>
+>> The problem is apparently that the fortified strlcpy calls the fortified strlen,
+>> which in turn calls strnlen and that ends up calling the extern '__real_strnlen'
+>> that gcc cannot reduce to a constant expression for a constant input.
+>
+>
+> Per my observation, it's the code like this:
+>         if ()
+>                 fortify_panic(__func__);
+>
+>
+> somehow prevent gcc to merge several "struct i2c_board_info info;" into one stack slot.
+> With the hack bellow, stack usage reduced to ~1,6K:
 
-Bus 001 Device 006: ID 148f:5370 Ralink Technology, Corp. RT5370
-Wireless Adapter
+1.6k is also what I see with my patch, or any other approach I tried
+that changes
+string.h. With the split up em28xx_dvb_init() function (and without
+changes to string.h),
+I got down to a few hundred bytes for the largest handler.
 
-I am on Debian 9 with a pretty recent kernel:
+> ---
+>  include/linux/string.h | 4 ----
+>  1 file changed, 4 deletions(-)
+>
+> diff --git a/include/linux/string.h b/include/linux/string.h
+> index 54d21783e18d..9a96ff3ebf94 100644
+> --- a/include/linux/string.h
+> +++ b/include/linux/string.h
+> @@ -261,8 +261,6 @@ __FORTIFY_INLINE __kernel_size_t strlen(const char *p)
+>         if (p_size == (size_t)-1)
+>                 return __builtin_strlen(p);
+>         ret = strnlen(p, p_size);
+> -       if (p_size <= ret)
+> -               fortify_panic(__func__);
+>         return ret;
+>  }
+>
+> @@ -271,8 +269,6 @@ __FORTIFY_INLINE __kernel_size_t strnlen(const char *p, __kernel_size_t maxlen)
+>  {
+>         size_t p_size = __builtin_object_size(p, 0);
+>         __kernel_size_t ret = __real_strnlen(p, maxlen < p_size ? maxlen : p_size);
+> -       if (p_size <= ret && maxlen != ret)
+> -               fortify_panic(__func__);
+>         return ret;
 
-Linux debian 4.9.0-3-amd64 #1 SMP Debian 4.9.30-2+deb9u3 (2017-08-06)
-x86_64 GNU/Linux
+I've reduced it further to this change:
 
-I was able to get this stick to work kind of. Actually, it drops the
-connection every couple of minutes, without any error messages in
-dmesg or syslog, actually. But I was able to reach that state only
-after applying some tweaks like disabling hardware encrypt, i.e.
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -227,7 +227,7 @@ static inline const char *kbasename(const char *path)
+ #define __FORTIFY_INLINE extern __always_inline __attribute__((gnu_inline))
+ #define __RENAME(x) __asm__(#x)
 
-options rt2800usb nohwcrypt=y
+-void fortify_panic(const char *name) __noreturn __cold;
++void fortify_panic(const char *name) __cold;
+ void __read_overflow(void) __compiletime_error("detected read beyond
+size of object passed as 1st parameter");
+ void __read_overflow2(void) __compiletime_error("detected read beyond
+size of object passed as 2nd parameter");
+ void __read_overflow3(void) __compiletime_error("detected read beyond
+size of object passed as 3rd parameter");
 
-and
+I don't immediately see why the __noreturn changes the behavior here, any idea?
 
-[device]
-wifi.scan-rand-mac-address=no
+>> Not sure if that change is the best fix, but it seems to address the problem in
+>> this driver and probably leads to better code in other places as well.
+>>
+>
+> Probably it would be better to solve this on the strlcpy side, but I haven't found the way to do this right.
+> Alternative solutions:
+>
+>  - use memcpy() instead of strlcpy(). All source strings are smaller than I2C_NAME_SIZE, so we could
+>    do something like this - memcpy(info.type, "si2168", sizeof("si2168"));
+>    Also this should be faster.
 
-So any pointers would be welcome.
+This would be very similar to the patch I posted at the start of this
+thread to use strncpy(), right?
+I was hoping that changing strlcpy() here could also improve other
+users that might run into
+the same situation, but stay below the 2048-byte stack frame limit.
 
-I am not afraid to dig into the code of the driver and recompile.
+>  - Move code under different "case:" in the switch(dev->model) to the separate function should help as well.
+>    But it might be harder to backport into stables.
 
-I could also possibly add or enable some debugging code so I will get
-some more debugging output to see what actually happens when I loose
-the connection, i.e. if this is an external event, a special kind of
-package, overload, ...
+Agreed, I posted this in earlier versions of the patch series, see
+https://patchwork.kernel.org/patch/9601025/
 
-And finally: This isn't the only USB Wifi stick which has serious
-problems with Linux. The Internet is full of this including drivers
-for some sticks which don't work at all and don't go anywhere for
-month. Obviously it's not the sticks to blame, as they all work fine
-on Windows. So what's the underlying story here which I am missing?
+The new patch was a result of me trying to come up with a less
+invasive version to
+make it easier to backport, since I would like to backport the last
+patch in the series
+that depends on all the earlier ones.
 
-Regards,
-Torsten
+         Arnd
