@@ -1,45 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48388 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751529AbdITMkm (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:46946 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031618AbdI0DWL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:40:42 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rsi: fix a dereference on adapter before it has been null checked
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170908152452.3594-1-colin.king@canonical.com>
-References: <20170908152452.3594-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20170920124041.DE3EA60134@smtp.codeaurora.org> (sfid-20170920_144102_320250_B62FBA5F)
-Date: Wed, 20 Sep 2017 12:40:41 +0000 (UTC)
+        Tue, 26 Sep 2017 23:22:11 -0400
+Date: Tue, 26 Sep 2017 20:22:10 -0700 (PDT)
+Message-Id: <20170926.202210.1950476620729316091.davem@davemloft.net> (sfid-20170927_053403_055748_3957D990)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2017-09-25
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <878th36ttx.fsf@kamboji.qca.qualcomm.com>
+References: <878th36ttx.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 25 Sep 2017 11:55:22 +0300
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The assignment of dev is dereferencing adapter before adapter has
-> been null checked, potentially leading to a null pointer dereference.
-> Fix this by simply moving the assignment of dev to a later point
-> after the sanity null check of adapter.
-> 
-> Detected by CoverityScan CID#1398383 ("Dereference before null check")
-> 
-> Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> here a pull request to net for 4.14, more info in the signed tag below.
+> Please let me know if there are any problems.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-6508497cbdc7 rsi: fix a dereference on adapter before it has been null checked
-
--- 
-https://patchwork.kernel.org/patch/9944509/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pulled, thanks Kalle.
