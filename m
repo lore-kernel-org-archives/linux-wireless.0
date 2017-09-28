@@ -1,243 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:7741 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750864AbdIRT7X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 15:59:23 -0400
-From: Ville Syrjala <ville.syrjala@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?=
-        <ville.syrjala@linux.intel.com>
-Subject: [PATCH 1/2] mac80211: Add rcu read side critical sections
-Date: Mon, 18 Sep 2017 22:59:18 +0300
-Message-Id: <20170918195919.15860-1-ville.syrjala@linux.intel.com> (sfid-20170918_215930_481189_9384AA76)
+Received: from youngberry.canonical.com ([91.189.89.112]:54500 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751999AbdI1I22 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Sep 2017 04:28:28 -0400
+Received: from mail-wm0-f71.google.com ([74.125.82.71])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <chia-lin.kao@canonical.com>)
+        id 1dxUBH-0006FF-UR
+        for linux-wireless@vger.kernel.org; Thu, 28 Sep 2017 08:28:27 +0000
+Received: by mail-wm0-f71.google.com with SMTP id 10so342645wmv.16
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Sep 2017 01:28:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <878th14kde.fsf@kamboji.qca.qualcomm.com>
+References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+ <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
+ <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
+ <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
+From: AceLan Kao <acelan.kao@canonical.com>
+Date: Thu, 28 Sep 2017 16:28:26 +0800
+Message-ID: <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com> (sfid-20170928_102846_657202_1F8A1BBB)
+Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Hi Christoph,
 
-I got the following lockdep warning about the rcu_dereference()s in
-ieee80211_tx_h_select_key(). After tracing all callers of
-ieee80211_tx_h_select_key() I discovered that ieee80211_get_buffered_bc()
-and ieee80211_build_data_template() had the rcu_read_lock/unlock() but
-three other places did not. So I just blindly added them and made the
-read side critical section extend as far as the lifetime of 'tx' which
-is where we seem to be stuffing the rcu protected pointers. No real clue
-whether this is correct or not.
+I'm okay with ether ways, but just worrying the regression if we
+switch to use MSI by default.
 
-[  854.573700] ../net/mac80211/tx.c:594 suspicious rcu_dereference_check() usage!
-[  854.573704]
-               other info that might help us debug this:
+Hi Daniel,
 
-[  854.573707]
-               rcu_scheduler_active = 2, debug_locks = 1
-[  854.573712] 6 locks held by kworker/u2:0/2877:
-[  854.573715]  #0:  ("%s"wiphy_name(local->hw.wiphy)){++++.+}, at: [<c1067f37>] process_one_work+0x127/0x580
-[  854.573742]  #1:  ((&sdata->work)){+.+.+.}, at: [<c1067f37>] process_one_work+0x127/0x580
-[  854.573758]  #2:  (&wdev->mtx){+.+.+.}, at: [<f83271c3>] ieee80211_sta_work+0x23/0x1c70 [mac80211]
-[  854.573902]  #3:  (&local->sta_mtx){+.+.+.}, at: [<f82c9b10>] __sta_info_flush+0x60/0x160 [mac80211]
-[  854.573947]  #4:  (&(&txq->axq_lock)->rlock){+.-...}, at: [<f825729c>] ath_tx_node_cleanup+0x5c/0x180 [ath9k]
-[  854.573973]  #5:  (&(&fq->lock)->rlock){+.-...}, at: [<f82fb064>] ieee80211_tx_dequeue+0x24/0xa80 [mac80211]
-[  854.574023]
-               stack backtrace:
-[  854.574028] CPU: 0 PID: 2877 Comm: kworker/u2:0 Not tainted 4.13.0-mgm-ovl+ #52
-[  854.574032] Hardware name: FUJITSU SIEMENS LIFEBOOK S6120/FJNB16C, BIOS Version 1.26  05/10/2004
-[  854.574070] Workqueue: phy0 ieee80211_iface_work [mac80211]
-[  854.574076] Call Trace:
-[  854.574086]  dump_stack+0x16/0x19
-[  854.574092]  lockdep_rcu_suspicious+0xcb/0xf0
-[  854.574131]  ieee80211_tx_h_select_key+0x1b5/0x500 [mac80211]
-[  854.574171]  ieee80211_tx_dequeue+0x283/0xa80 [mac80211]
-[  854.574181]  ath_tid_dequeue+0x84/0xf0 [ath9k]
-[  854.574189]  ath_tx_node_cleanup+0xb8/0x180 [ath9k]
-[  854.574199]  ath9k_sta_state+0x48/0xf0 [ath9k]
-[  854.574207]  ? ath9k_del_ps_key.isra.19+0x60/0x60 [ath9k]
-[  854.574240]  drv_sta_state+0xaf/0x8c0 [mac80211]
-[  854.574275]  __sta_info_destroy_part2+0x10b/0x140 [mac80211]
-[  854.574309]  __sta_info_flush+0xd5/0x160 [mac80211]
-[  854.574349]  ieee80211_set_disassoc+0xd3/0x570 [mac80211]
-[  854.574390]  ieee80211_sta_connection_lost+0x30/0x60 [mac80211]
-[  854.574431]  ieee80211_sta_work+0x1ff/0x1c70 [mac80211]
-[  854.574436]  ? mark_held_locks+0x62/0x90
-[  854.574443]  ? _raw_spin_unlock_irqrestore+0x55/0x70
-[  854.574447]  ? trace_hardirqs_on_caller+0x11c/0x1a0
-[  854.574452]  ? trace_hardirqs_on+0xb/0x10
-[  854.574459]  ? dev_mc_net_exit+0xe/0x20
-[  854.574467]  ? skb_dequeue+0x48/0x70
-[  854.574504]  ieee80211_iface_work+0x2d8/0x320 [mac80211]
-[  854.574509]  process_one_work+0x1d1/0x580
-[  854.574513]  ? process_one_work+0x127/0x580
-[  854.574519]  worker_thread+0x31/0x380
-[  854.574525]  kthread+0xd9/0x110
-[  854.574529]  ? process_one_work+0x580/0x580
-[  854.574534]  ? kthread_create_on_node+0x30/0x30
-[  854.574540]  ret_from_fork+0x19/0x24
+I've tried your patch, but it doesn't work for me.
+Wifi can scan AP, but can't get connected.
+It keeps showing
+[   48.362297] wlp2s0: authenticate with 3c:ce:73:48:0e:40
+[   48.374445] wlp2s0: send auth to 3c:ce:73:48:0e:40 (try 1/3)
+[   49.824071] wlp2s0: send auth to 3c:ce:73:48:0e:40 (try 2/3)
+[   50.848143] wlp2s0: send auth to 3c:ce:73:48:0e:40 (try 3/3)
+[   51.840078] wlp2s0: authentication with 3c:ce:73:48:0e:40 timed out
+[   52.038561] wlp2s0: authenticate with 3c:ce:73:48:04:80
+[   52.058930] wlp2s0: send auth to 3c:ce:73:48:04:80 (try 1/3)
+[   52.832063] wlp2s0: send auth to 3c:ce:73:48:04:80 (try 2/3)
+[   53.824135] wlp2s0: send auth to 3c:ce:73:48:04:80 (try 3/3)
+[   54.816067] wlp2s0: authentication with 3c:ce:73:48:04:80 timed out
+[   55.904797] wlp2s0: authenticate with 3c:ce:73:48:04:80
+[   55.921771] wlp2s0: send auth to 3c:ce:73:48:04:80 (try 1/3)
+[   56.800151] wlp2s0: send auth to 3c:ce:73:48:04:80 (try 2/3)
+[   57.824072] wlp2s0: send auth to 3c:ce:73:48:04:80 (try 3/3)
 
-[  854.574548] =============================
-[  854.574551] WARNING: suspicious RCU usage
-[  854.574555] 4.13.0-mgm-ovl+ #52 Not tainted
-[  854.574558] -----------------------------
-[  854.574561] ../net/mac80211/tx.c:608 suspicious rcu_dereference_check() usage!
-[  854.574564]
-               other info that might help us debug this:
+02:00.0 Network controller [0280]: Qualcomm Atheros QCA9565 / AR9565
+Wireless Network Adapter [168c:0036] (rev 01)
+       Subsystem: Dell QCA9565 / AR9565 Wireless Network Adapter [1028:020e]
+       Kernel driver in use: ath9k
+       Kernel modules: ath9k
 
-[  854.574568]
-               rcu_scheduler_active = 2, debug_locks = 1
-[  854.574572] 6 locks held by kworker/u2:0/2877:
-[  854.574574]  #0:  ("%s"wiphy_name(local->hw.wiphy)){++++.+}, at: [<c1067f37>] process_one_work+0x127/0x580
-[  854.574590]  #1:  ((&sdata->work)){+.+.+.}, at: [<c1067f37>] process_one_work+0x127/0x580
-[  854.574606]  #2:  (&wdev->mtx){+.+.+.}, at: [<f83271c3>] ieee80211_sta_work+0x23/0x1c70 [mac80211]
-[  854.574657]  #3:  (&local->sta_mtx){+.+.+.}, at: [<f82c9b10>] __sta_info_flush+0x60/0x160 [mac80211]
-[  854.574702]  #4:  (&(&txq->axq_lock)->rlock){+.-...}, at: [<f825729c>] ath_tx_node_cleanup+0x5c/0x180 [ath9k]
-[  854.574721]  #5:  (&(&fq->lock)->rlock){+.-...}, at: [<f82fb064>] ieee80211_tx_dequeue+0x24/0xa80 [mac80211]
-[  854.574771]
-               stack backtrace:
-[  854.574775] CPU: 0 PID: 2877 Comm: kworker/u2:0 Not tainted 4.13.0-mgm-ovl+ #52
-[  854.574779] Hardware name: FUJITSU SIEMENS LIFEBOOK S6120/FJNB16C, BIOS Version 1.26  05/10/2004
-[  854.574814] Workqueue: phy0 ieee80211_iface_work [mac80211]
-[  854.574821] Call Trace:
-[  854.574825]  dump_stack+0x16/0x19
-[  854.574830]  lockdep_rcu_suspicious+0xcb/0xf0
-[  854.574869]  ieee80211_tx_h_select_key+0x44e/0x500 [mac80211]
-[  854.574908]  ieee80211_tx_dequeue+0x283/0xa80 [mac80211]
-[  854.574919]  ath_tid_dequeue+0x84/0xf0 [ath9k]
-[  854.574927]  ath_tx_node_cleanup+0xb8/0x180 [ath9k]
-[  854.574936]  ath9k_sta_state+0x48/0xf0 [ath9k]
-[  854.574945]  ? ath9k_del_ps_key.isra.19+0x60/0x60 [ath9k]
-[  854.574978]  drv_sta_state+0xaf/0x8c0 [mac80211]
-[  854.575012]  __sta_info_destroy_part2+0x10b/0x140 [mac80211]
-[  854.575046]  __sta_info_flush+0xd5/0x160 [mac80211]
-[  854.575087]  ieee80211_set_disassoc+0xd3/0x570 [mac80211]
-[  854.575127]  ieee80211_sta_connection_lost+0x30/0x60 [mac80211]
-[  854.575168]  ieee80211_sta_work+0x1ff/0x1c70 [mac80211]
-[  854.575173]  ? mark_held_locks+0x62/0x90
-[  854.575178]  ? _raw_spin_unlock_irqrestore+0x55/0x70
-[  854.575182]  ? trace_hardirqs_on_caller+0x11c/0x1a0
-[  854.575187]  ? trace_hardirqs_on+0xb/0x10
-[  854.575192]  ? dev_mc_net_exit+0xe/0x20
-[  854.575197]  ? skb_dequeue+0x48/0x70
-[  854.575233]  ieee80211_iface_work+0x2d8/0x320 [mac80211]
-[  854.575238]  process_one_work+0x1d1/0x580
-[  854.575243]  ? process_one_work+0x127/0x580
-[  854.575248]  worker_thread+0x31/0x380
-[  854.575253]  kthread+0xd9/0x110
-[  854.575257]  ? process_one_work+0x580/0x580
-[  854.575262]  ? kthread_create_on_node+0x30/0x30
-[  854.575267]  ret_from_fork+0x19/0x24
+Do you have a chance to see if my patch works on your side?
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
----
- net/mac80211/tx.c | 31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+Best regards,
+AceLan Kao.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 94826680cf2b..073022ee2462 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1770,15 +1770,21 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_data tx;
- 	struct sk_buff *skb2;
- 
--	if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP)
-+	rcu_read_lock();
-+
-+	if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP) {
-+		rcu_read_unlock();
- 		return false;
-+	}
- 
- 	info->band = band;
- 	info->control.vif = vif;
- 	info->hw_queue = vif->hw_queue[skb_get_queue_mapping(skb)];
- 
--	if (invoke_tx_handlers(&tx))
-+	if (invoke_tx_handlers(&tx)) {
-+		rcu_read_unlock();
- 		return false;
-+	}
- 
- 	if (sta) {
- 		if (tx.sta)
-@@ -1792,9 +1798,12 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
- 	if (WARN_ON(skb2 != skb || !skb_queue_empty(&tx.skbs))) {
- 		ieee80211_free_txskb(hw, skb2);
- 		ieee80211_purge_tx_queue(hw, &tx.skbs);
-+		rcu_read_unlock();
- 		return false;
- 	}
- 
-+	rcu_read_unlock();
-+
- 	return true;
- }
- EXPORT_SYMBOL(ieee80211_tx_prepare_skb);
-@@ -1818,14 +1827,18 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 		return true;
- 	}
- 
-+	rcu_read_lock();
-+
- 	/* initialises tx */
- 	led_len = skb->len;
- 	res_prepare = ieee80211_tx_prepare(sdata, &tx, sta, skb);
- 
- 	if (unlikely(res_prepare == TX_DROP)) {
- 		ieee80211_free_txskb(&local->hw, skb);
-+		rcu_read_unlock();
- 		return true;
- 	} else if (unlikely(res_prepare == TX_QUEUED)) {
-+		rcu_read_unlock();
- 		return true;
- 	}
- 
-@@ -1835,16 +1848,22 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 		info->hw_queue =
- 			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
- 
--	if (invoke_tx_handlers_early(&tx))
-+	if (invoke_tx_handlers_early(&tx)) {
-+		rcu_read_unlock();
- 		return false;
-+	}
- 
--	if (ieee80211_queue_skb(local, sdata, tx.sta, tx.skb))
-+	if (ieee80211_queue_skb(local, sdata, tx.sta, tx.skb)) {
-+		rcu_read_unlock();
- 		return true;
-+	}
- 
- 	if (!invoke_tx_handlers_late(&tx))
- 		result = __ieee80211_tx(local, &tx.skbs, led_len,
- 					tx.sta, txpending);
- 
-+	rcu_read_unlock();
-+
- 	return result;
- }
- 
-@@ -3411,6 +3430,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	ieee80211_tx_result r;
- 	struct ieee80211_vif *vif;
- 
-+	rcu_read_lock();
-+
- 	spin_lock_bh(&fq->lock);
- 
- 	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
-@@ -3513,6 +3534,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- out:
- 	spin_unlock_bh(&fq->lock);
- 
-+	rcu_read_unlock();
-+
- 	return skb;
- }
- EXPORT_SYMBOL(ieee80211_tx_dequeue);
--- 
-2.13.5
+2017-09-26 22:14 GMT+08:00 Kalle Valo <kvalo@codeaurora.org>:
+> Christoph Hellwig <hch@infradead.org> writes:
+>
+>> On Tue, Sep 26, 2017 at 03:26:51PM +0800, AceLan Kao wrote:
+>>> Ath9k is an old driver for old chips, and they work fine with legacy INTx.
+>>> But some new platforms are using it, so I think we should list those
+>>> new platforms which blocks INTx in the driver.
+>>
+>> And unless they are broken and need a quirk they should work even better
+>> with MSI if the device advertises MSI support in the PCI capabilities.
+>
+> Daniel Drake (CCed) already found problems with the MSI implementation:
+>
+> https://lkml.kernel.org/r/20170925041153.26574-1-drake@endlessm.com
+>
+> --
+> Kalle Valo
