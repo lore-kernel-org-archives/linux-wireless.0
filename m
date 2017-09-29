@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59056 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754614AbdIHGzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 02:55:42 -0400
-Message-ID: <1504853740.6177.10.camel@sipsolutions.net> (sfid-20170908_085613_360648_DA28B60E)
-Subject: Re: [PATCH 2/2] wireless: return correct mandatory rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 08 Sep 2017 08:55:40 +0200
-In-Reply-To: <20170907154744.28357-2-rschuetz@uni-koblenz.de> (sfid-20170907_175517_817760_1C44F457)
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-         <20170907154744.28357-2-rschuetz@uni-koblenz.de>
-         (sfid-20170907_175517_817760_1C44F457)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35742 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750807AbdI2K44 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Sep 2017 06:56:56 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Karthik Ananthapadmanabha <karthida@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: Random MAC address during scanning
+Date: Fri, 29 Sep 2017 16:23:10 +0530
+Message-ID: <1506682390-27716-1-git-send-email-gbhat@marvell.com> (sfid-20170929_125702_066419_3953DE74)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
-> Use IEEE80211_RATE_MANDATORY_G instead of IEEE80211_RATE_MANDATORY_B
-> for comparison to get all mandatory rates in 2.4 GHz band. It is safe
-> to do so because ERP mandatory rates are a superset of HR/DSSS
-> mandatory rates.
+From: Karthik Ananthapadmanabha <karthida@marvell.com>
 
-This I don't understand - what "comparison" are you talking about?
+Driver will advertise RANDOM_MAC support only if the device
+supports this feature.
 
-> Also force IEEE80211_RATE_MANDATORY_A for 10 MHz and 5 MHz channels
-> as they use "half-clocked" respectively "quarter-clocked" operation
-> of the OFDM rates (IEEE Std 802.11-2016, 17.1.1).
+Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 ++++++----
+ drivers/net/wireless/marvell/mwifiex/fw.h       |  1 +
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-I don't think this is correct - the way the flags are used, anything on
-2.4 GHz would never bother to check the MANDATORY_A flag.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 32c5074..f22f7b8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -4306,10 +4306,12 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	wiphy->features |= NL80211_FEATURE_HT_IBSS |
+ 			   NL80211_FEATURE_INACTIVITY_TIMER |
+ 			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
+-			   NL80211_FEATURE_NEED_OBSS_SCAN |
+-			   NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
+-			   NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
+-			   NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
++			   NL80211_FEATURE_NEED_OBSS_SCAN;
++
++	if (ISSUPP_RANDOM_MAC(adapter->fw_cap_info))
++		wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
++				   NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
++				   NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
+ 
+ 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
+ 		wiphy->features |= NL80211_FEATURE_TDLS_CHANNEL_SWITCH;
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 9e75522..6b765f3 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -238,6 +238,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define ISSUPP_DRCS_ENABLED(FwCapInfo) (FwCapInfo & BIT(15))
+ #define ISSUPP_SDIO_SPA_ENABLED(FwCapInfo) (FwCapInfo & BIT(16))
+ #define ISSUPP_ADHOC_ENABLED(FwCapInfo) (FwCapInfo & BIT(25))
++#define ISSUPP_RANDOM_MAC(FwCapInfo) (FwCapInfo & BIT(27))
+ 
+ #define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
+ 				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
+-- 
+1.9.1
