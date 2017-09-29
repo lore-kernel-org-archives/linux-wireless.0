@@ -1,36 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42636 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754268AbdIRNRM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36332 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752438AbdI2Qoy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 09:17:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: use get_random_mask_addr() helper
-References: <1505720537-13362-1-git-send-email-gbhat@marvell.com>
-Date: Mon, 18 Sep 2017 16:17:07 +0300
-In-Reply-To: <1505720537-13362-1-git-send-email-gbhat@marvell.com> (Ganapathi
-        Bhat's message of "Mon, 18 Sep 2017 13:12:17 +0530")
-Message-ID: <87o9q8kuy4.fsf@purkki.adurom.net> (sfid-20170918_151715_643732_26937645)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 29 Sep 2017 12:44:54 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:14 +0300
+Message-Id: <20170929164423.23666-10-luca@coelho.fi> (sfid-20170929_200759_299407_5DC7C65E)
+In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
+References: <20170929164423.23666-1-luca@coelho.fi>
+Subject: [PATCH 09/18] iwlwifi: acpi: move ACPI-related definitions to acpi.h
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> Avoid calculating random MAC address in driver. Instead make
-> use of 'get_random_mask_addr()' function.
->
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+The ACPI table size definitions were spread around the different files
+that used them.  Move them all to a common place.
 
-I don't see 1/2 anywhere. Did it get lost?
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h      | 20 +++++++++----
+ drivers/net/wireless/intel/iwlwifi/fw/api/power.h |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 36 ++++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 13 ++++----
+ 4 files changed, 40 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+index a6d2907f75f5..be3f49d5713a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+@@ -63,8 +63,6 @@
+ 
+ #include <linux/acpi.h>
+ 
+-#ifdef CONFIG_ACPI
+-
+ #define ACPI_WRDS_METHOD	"WRDS"
+ #define ACPI_EWRD_METHOD	"EWRD"
+ #define ACPI_WGDS_METHOD	"WGDS"
+@@ -73,13 +71,25 @@
+ 
+ #define ACPI_WIFI_DOMAIN	(0x07)
+ 
+-#define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
+-#define ACPI_EWRD_WIFI_DATA_SIZE	((IWL_MVM_SAR_PROFILE_NUM - 1) * \
+-					 IWL_MVM_SAR_TABLE_SIZE + 3)
++#define ACPI_SAR_TABLE_SIZE		10
++#define ACPI_SAR_PROFILE_NUM		4
++
++#define ACPI_GEO_TABLE_SIZE		6
++#define ACPI_NUM_GEO_PROFILES		3
++#define ACPI_GEO_PER_CHAIN_SIZE		3
++
++#define ACPI_SAR_NUM_CHAIN_LIMITS	2
++#define ACPI_SAR_NUM_SUB_BANDS		5
++
++#define ACPI_WRDS_WIFI_DATA_SIZE	(ACPI_SAR_TABLE_SIZE + 2)
++#define ACPI_EWRD_WIFI_DATA_SIZE	((ACPI_SAR_PROFILE_NUM - 1) * \
++					 ACPI_SAR_TABLE_SIZE + 3)
+ #define ACPI_WGDS_WIFI_DATA_SIZE	18
+ #define ACPI_WGDS_NUM_BANDS		2
+ #define ACPI_WGDS_TABLE_SIZE		3
+ 
++#ifdef CONFIG_ACPI
++
+ void *iwl_acpi_get_object(struct device *dev, acpi_string method);
+ 
+ #else /* CONFIG_ACPI */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index a06afb5605d2..a3c77e01863b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -357,8 +357,7 @@ struct iwl_dev_tx_power_cmd {
+ 	u8 reserved[3];
+ } __packed; /* TX_REDUCED_POWER_API_S_VER_4 */
+ 
+-#define IWL_NUM_GEO_PROFILES	3
+-#define IWL_GEO_PER_CHAIN_SIZE	3
++#define IWL_NUM_GEO_PROFILES   3
+ 
+ /**
+  * enum iwl_geo_per_chain_offset_operation - type of operation
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 6c8bcf03afc7..789aa7b74110 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -588,7 +588,7 @@ static int iwl_mvm_sar_set_profile(struct iwl_mvm *mvm,
+ 
+ 	profile->enabled = enabled;
+ 
+-	for (i = 0; i < IWL_MVM_SAR_TABLE_SIZE; i++) {
++	for (i = 0; i < ACPI_SAR_TABLE_SIZE; i++) {
+ 		if ((table[i].type != ACPI_TYPE_INTEGER) ||
+ 		    (table[i].integer.value > U8_MAX))
+ 			return -EINVAL;
+@@ -732,7 +732,7 @@ static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
+ 			break;
+ 
+ 		/* go to the next table */
+-		pos += IWL_MVM_SAR_TABLE_SIZE;
++		pos += ACPI_SAR_TABLE_SIZE;
+ 	}
+ 
+ out_free:
+@@ -757,8 +757,8 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
+ 		goto out_free;
+ 	}
+ 
+-	for (i = 0; i < IWL_NUM_GEO_PROFILES; i++) {
+-		for (j = 0; j < IWL_MVM_GEO_TABLE_SIZE; j++) {
++	for (i = 0; i < ACPI_NUM_GEO_PROFILES; i++) {
++		for (j = 0; j < ACPI_GEO_TABLE_SIZE; j++) {
+ 			union acpi_object *entry;
+ 
+ 			entry = &wifi_pkg->package.elements[idx++];
+@@ -783,25 +783,25 @@ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
+ 		.v3.set_mode = cpu_to_le32(IWL_TX_POWER_MODE_SET_CHAINS),
+ 	};
+ 	int i, j, idx;
+-	int profs[IWL_NUM_CHAIN_LIMITS] = { prof_a, prof_b };
++	int profs[ACPI_SAR_NUM_CHAIN_LIMITS] = { prof_a, prof_b };
+ 	int len = sizeof(cmd);
+ 
+-	BUILD_BUG_ON(IWL_NUM_CHAIN_LIMITS < 2);
+-	BUILD_BUG_ON(IWL_NUM_CHAIN_LIMITS * IWL_NUM_SUB_BANDS !=
+-		     IWL_MVM_SAR_TABLE_SIZE);
++	BUILD_BUG_ON(ACPI_SAR_NUM_CHAIN_LIMITS < 2);
++	BUILD_BUG_ON(ACPI_SAR_NUM_CHAIN_LIMITS * ACPI_SAR_NUM_SUB_BANDS !=
++		     ACPI_SAR_TABLE_SIZE);
+ 
+ 	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_TX_POWER_ACK))
+ 		len = sizeof(cmd.v3);
+ 
+-	for (i = 0; i < IWL_NUM_CHAIN_LIMITS; i++) {
++	for (i = 0; i < ACPI_SAR_NUM_CHAIN_LIMITS; i++) {
+ 		struct iwl_mvm_sar_profile *prof;
+ 
+ 		/* don't allow SAR to be disabled (profile 0 means disable) */
+ 		if (profs[i] == 0)
+ 			return -EPERM;
+ 
+-		/* we are off by one, so allow up to IWL_MVM_SAR_PROFILE_NUM */
+-		if (profs[i] > IWL_MVM_SAR_PROFILE_NUM)
++		/* we are off by one, so allow up to ACPI_SAR_PROFILE_NUM */
++		if (profs[i] > ACPI_SAR_PROFILE_NUM)
+ 			return -EINVAL;
+ 
+ 		/* profiles go from 1 to 4, so decrement to access the array */
+@@ -816,8 +816,8 @@ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
+ 		}
+ 
+ 		IWL_DEBUG_RADIO(mvm, "  Chain[%d]:\n", i);
+-		for (j = 0; j < IWL_NUM_SUB_BANDS; j++) {
+-			idx = (i * IWL_NUM_SUB_BANDS) + j;
++		for (j = 0; j < ACPI_SAR_NUM_SUB_BANDS; j++) {
++			idx = (i * ACPI_SAR_NUM_SUB_BANDS) + j;
+ 			cmd.v3.per_chain_restriction[i][j] =
+ 				cpu_to_le16(prof->table[idx]);
+ 			IWL_DEBUG_RADIO(mvm, "    Band[%d] = %d * .125dBm\n",
+@@ -853,7 +853,7 @@ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
+ 
+ 	resp = (void *)cmd.resp_pkt->data;
+ 	ret = le32_to_cpu(resp->profile_idx);
+-	if (WARN_ON(ret > IWL_NUM_GEO_PROFILES)) {
++	if (WARN_ON(ret > ACPI_NUM_GEO_PROFILES)) {
+ 		ret = -EIO;
+ 		IWL_WARN(mvm, "Invalid geographic profile idx (%d)\n", ret);
+ 	}
+@@ -881,10 +881,12 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
+ 
+ 	IWL_DEBUG_RADIO(mvm, "Sending GEO_TX_POWER_LIMIT\n");
+ 
+-	BUILD_BUG_ON(IWL_NUM_GEO_PROFILES * ACPI_WGDS_NUM_BANDS *
++	BUILD_BUG_ON(ACPI_NUM_GEO_PROFILES * ACPI_WGDS_NUM_BANDS *
+ 		     ACPI_WGDS_TABLE_SIZE !=  ACPI_WGDS_WIFI_DATA_SIZE);
+ 
+-	for (i = 0; i < IWL_NUM_GEO_PROFILES; i++) {
++	BUILD_BUG_ON(ACPI_NUM_GEO_PROFILES > IWL_NUM_GEO_PROFILES);
++
++	for (i = 0; i < ACPI_NUM_GEO_PROFILES; i++) {
+ 		struct iwl_per_chain_offset *chain =
+ 			(struct iwl_per_chain_offset *)&cmd.table[i];
+ 
+@@ -892,7 +894,7 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
+ 			u8 *value;
+ 
+ 			value = &mvm->geo_profiles[i].values[j *
+-				IWL_GEO_PER_CHAIN_SIZE];
++				ACPI_GEO_PER_CHAIN_SIZE];
+ 			chain[j].max_tx_power = cpu_to_le16(value[0]);
+ 			chain[j].chain_a = value[1];
+ 			chain[j].chain_b = value[2];
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 2867683f1aa0..d6c9e8a8df5b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -89,6 +89,7 @@
+ #include "tof.h"
+ #include "fw/runtime.h"
+ #include "fw/dbg.h"
++#include "fw/acpi.h"
+ 
+ #define IWL_MVM_MAX_ADDRESSES		5
+ /* RSSI offset for WkP */
+@@ -684,17 +685,13 @@ enum iwl_mvm_queue_status {
+ #define IWL_MVM_NUM_CIPHERS             10
+ 
+ #ifdef CONFIG_ACPI
+-#define IWL_MVM_SAR_TABLE_SIZE		10
+-#define IWL_MVM_SAR_PROFILE_NUM		4
+-#define IWL_MVM_GEO_TABLE_SIZE		6
+-
+ struct iwl_mvm_sar_profile {
+ 	bool enabled;
+-	u8 table[IWL_MVM_SAR_TABLE_SIZE];
++	u8 table[ACPI_SAR_TABLE_SIZE];
+ };
+ 
+ struct iwl_mvm_geo_profile {
+-	u8 values[IWL_MVM_GEO_TABLE_SIZE];
++	u8 values[ACPI_GEO_TABLE_SIZE];
+ };
+ #endif
+ 
+@@ -1014,8 +1011,8 @@ struct iwl_mvm {
+ 
+ 	struct delayed_work cs_tx_unblock_dwork;
+ #ifdef CONFIG_ACPI
+-	struct iwl_mvm_sar_profile sar_profiles[IWL_MVM_SAR_PROFILE_NUM];
+-	struct iwl_mvm_geo_profile geo_profiles[IWL_NUM_GEO_PROFILES];
++	struct iwl_mvm_sar_profile sar_profiles[ACPI_SAR_PROFILE_NUM];
++	struct iwl_mvm_geo_profile geo_profiles[ACPI_NUM_GEO_PROFILES];
+ #endif
+ };
+ 
 -- 
-Kalle Valo
+2.14.1
