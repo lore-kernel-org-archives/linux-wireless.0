@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50728 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751554AbdITMrO (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35882 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750715AbdI2MDP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:47:14 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: remove unnecessary call to memset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1505133964-376-1-git-send-email-himanshujha199640@gmail.com>
-References: <1505133964-376-1-git-send-email-himanshujha199640@gmail.com>
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: amitkarwar@gmail.com, nishants@marvell.com, gbhat@marvell.com,
-        huxm@marvell.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
-Message-Id: <20170920124713.5A68B60725@smtp.codeaurora.org> (sfid-20170920_144720_546629_2D50059D)
-Date: Wed, 20 Sep 2017 12:47:13 +0000 (UTC)
+        Fri, 29 Sep 2017 08:03:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 15:03:00 +0300
+Message-Id: <20170929120305.20551-1-luca@coelho.fi> (sfid-20170929_140319_204411_23DD99C5)
+Subject: [PATCH 0/5] iwlwifi: fixes intended for 4.14 2017-09-29
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Himanshu Jha <himanshujha199640@gmail.com> wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> call to memset to assign 0 value immediately after allocating
-> memory with kzalloc is unnecesaary as kzalloc allocates the memory
-> filled with 0 value.
-> 
-> Semantic patch used to resolve this issue:
-> 
-> @@
-> expression e,e2; constant c;
-> statement S;
-> @@
-> 
->   e = kzalloc(e2, c);
->   if(e == NULL) S
-> - memset(e, 0, e2);
-> 
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+Hi,
 
-Patch applied to wireless-drivers-next.git, thanks.
+Another batch of fixes intended for 4.14.  This one is a bit smaller
+than the previous one.
 
-85dafc129196 mwifiex: remove unnecessary call to memset
+These are the fixes:
+
+* Fix support for 3168 device series;
+* Fix a potential crash when using FW debugging recording;
+* Improve channel flags parsing to avoid warnings on too long traces;
+* Return -ENODATA when the temperature is not available, since the
+  -EIO we were returning was causing fatal errors in userspace;
+* Avoid printing too many messages in dmesg when using monitor mode,
+  since this can become very noisy and completely flood the logs;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Chaya Rachel Ivgi (1):
+  iwlwifi: nvm: set the correct offsets to 3168 series
+
+Golan Ben Ami (1):
+  iwlwifi: stop dbgc recording before stopping DMA
+
+Johannes Berg (1):
+  iwlwifi: nvm-parse: unify channel flags printing
+
+Luca Coelho (1):
+  iwlwifi: mvm: return -ENODATA when reading the temperature with the FW
+    down
+
+Shaul Triebitz (1):
+  iwlwifi: mvm: do not print security error in monitor mode
+
+ drivers/net/wireless/intel/iwlwifi/cfg/7000.c      |   1 +
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |   2 +-
+ .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    |   2 +
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c        |   7 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |  15 +++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  16 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 137 ++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   7 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |  21 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |   2 +-
+ 15 files changed, 132 insertions(+), 95 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/9947331/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.1
