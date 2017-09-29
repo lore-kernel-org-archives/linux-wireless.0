@@ -1,132 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:54979 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752395AbdIVVco (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36304 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752438AbdI2Qov (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2017 17:32:44 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jiri Pirko <jiri@resnulli.us>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
-        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>,
-        stable@vger.kernel.org
-Subject: [PATCH v4 7/9] rocker: fix rocker_tlv_put_* functions for KASAN
-Date: Fri, 22 Sep 2017 23:29:18 +0200
-Message-Id: <20170922212930.620249-8-arnd@arndb.de> (sfid-20170922_233333_578074_D41FD6C3)
-In-Reply-To: <20170922212930.620249-1-arnd@arndb.de>
-References: <20170922212930.620249-1-arnd@arndb.de>
+        Fri, 29 Sep 2017 12:44:51 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:13 +0300
+Message-Id: <20170929164423.23666-9-luca@coelho.fi> (sfid-20170929_200759_145286_22B57038)
+In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
+References: <20170929164423.23666-1-luca@coelho.fi>
+Subject: [PATCH 08/18] iwlwifi: acpi: move ACPI method definitions to acpi.h
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inlining these functions creates lots of stack variables that each take
-64 bytes when KASAN is enabled, leading to this warning about potential
-stack overflow:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-drivers/net/ethernet/rocker/rocker_ofdpa.c: In function 'ofdpa_cmd_flow_tbl_add':
-drivers/net/ethernet/rocker/rocker_ofdpa.c:621:1: error: the frame size of 2752 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+Instead of defining each method where they are used and re-defining
+WIFI_DOMAIN in each one of them, move all the definitions to a central
+place and define the domain only a single time.
 
-gcc-8 can now consolidate the stack slots itself, but on older versions
-we get the same behavior by using a temporary variable that holds a
-copy of the inline function argument.
-
-Cc: stable@vger.kernel.org
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/ethernet/rocker/rocker_tlv.h | 48 ++++++++++++++++++++------------
- 1 file changed, 30 insertions(+), 18 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h       | 15 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  8 ++------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 11 -----------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  5 +----
+ 4 files changed, 18 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/ethernet/rocker/rocker_tlv.h b/drivers/net/ethernet/rocker/rocker_tlv.h
-index a63ef82e7c72..dfae3c9d57c6 100644
---- a/drivers/net/ethernet/rocker/rocker_tlv.h
-+++ b/drivers/net/ethernet/rocker/rocker_tlv.h
-@@ -139,40 +139,52 @@ rocker_tlv_start(struct rocker_desc_info *desc_info)
- int rocker_tlv_put(struct rocker_desc_info *desc_info,
- 		   int attrtype, int attrlen, const void *data);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+index e7612a1a8e1a..a6d2907f75f5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+@@ -65,6 +65,21 @@
  
--static inline int rocker_tlv_put_u8(struct rocker_desc_info *desc_info,
--				    int attrtype, u8 value)
-+static inline int
-+rocker_tlv_put_u8(struct rocker_desc_info *desc_info, int attrtype, u8 value)
- {
--	return rocker_tlv_put(desc_info, attrtype, sizeof(u8), &value);
-+	u8 tmp = value; /* work around GCC PR81715 */
+ #ifdef CONFIG_ACPI
+ 
++#define ACPI_WRDS_METHOD	"WRDS"
++#define ACPI_EWRD_METHOD	"EWRD"
++#define ACPI_WGDS_METHOD	"WGDS"
++#define ACPI_WRDD_METHOD	"WRDD"
++#define ACPI_SPLC_METHOD	"SPLC"
 +
-+	return rocker_tlv_put(desc_info, attrtype, sizeof(u8), &tmp);
++#define ACPI_WIFI_DOMAIN	(0x07)
++
++#define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
++#define ACPI_EWRD_WIFI_DATA_SIZE	((IWL_MVM_SAR_PROFILE_NUM - 1) * \
++					 IWL_MVM_SAR_TABLE_SIZE + 3)
++#define ACPI_WGDS_WIFI_DATA_SIZE	18
++#define ACPI_WGDS_NUM_BANDS		2
++#define ACPI_WGDS_TABLE_SIZE		3
++
+ void *iwl_acpi_get_object(struct device *dev, acpi_string method);
+ 
+ #else /* CONFIG_ACPI */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 5165af25f010..2ece3c531b88 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -946,10 +946,6 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ IWL_EXPORT_SYMBOL(iwl_parse_nvm_mcc_info);
+ 
+ #ifdef CONFIG_ACPI
+-#define WRDD_METHOD		"WRDD"
+-#define WRDD_WIFI		(0x07)
+-#define WRDD_WIGIG		(0x10)
+-
+ static u32 iwl_wrdd_get_mcc(struct device *dev, union acpi_object *wrdd)
+ {
+ 	union acpi_object *mcc_pkg, *domain_type, *mcc_value;
+@@ -975,7 +971,7 @@ static u32 iwl_wrdd_get_mcc(struct device *dev, union acpi_object *wrdd)
+ 		}
+ 
+ 		domain_type = &mcc_pkg->package.elements[0];
+-		if (domain_type->integer.value == WRDD_WIFI)
++		if (domain_type->integer.value == ACPI_WIFI_DOMAIN)
+ 			break;
+ 
+ 		mcc_pkg = NULL;
+@@ -994,7 +990,7 @@ int iwl_get_bios_mcc(struct device *dev, char *mcc)
+ 	union acpi_object *data;
+ 	u32 mcc_val;
+ 
+-	data = iwl_acpi_get_object(dev, WRDD_METHOD);
++	data = iwl_acpi_get_object(dev, ACPI_WRDD_METHOD);
+ 	if (IS_ERR(data))
+ 		return PTR_ERR(data);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index b2a9e7de15b7..6c8bcf03afc7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -579,17 +579,6 @@ static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
  }
  
--static inline int rocker_tlv_put_u16(struct rocker_desc_info *desc_info,
--				     int attrtype, u16 value)
-+static inline int
-+rocker_tlv_put_u16(struct rocker_desc_info *desc_info, int attrtype, u16 value)
- {
--	return rocker_tlv_put(desc_info, attrtype, sizeof(u16), &value);
-+	u16 tmp = value;
-+
-+	return rocker_tlv_put(desc_info, attrtype, sizeof(u16), &tmp);
- }
+ #ifdef CONFIG_ACPI
+-#define ACPI_WRDS_METHOD		"WRDS"
+-#define ACPI_EWRD_METHOD		"EWRD"
+-#define ACPI_WGDS_METHOD		"WGDS"
+-#define ACPI_WIFI_DOMAIN		(0x07)
+-#define ACPI_WRDS_WIFI_DATA_SIZE	(IWL_MVM_SAR_TABLE_SIZE + 2)
+-#define ACPI_EWRD_WIFI_DATA_SIZE	((IWL_MVM_SAR_PROFILE_NUM - 1) * \
+-					 IWL_MVM_SAR_TABLE_SIZE + 3)
+-#define ACPI_WGDS_WIFI_DATA_SIZE	18
+-#define ACPI_WGDS_NUM_BANDS		2
+-#define ACPI_WGDS_TABLE_SIZE		3
+-
+ static int iwl_mvm_sar_set_profile(struct iwl_mvm *mvm,
+ 				   union acpi_object *table,
+ 				   struct iwl_mvm_sar_profile *profile,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 09fb27e9adf5..a6c4f096cb19 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -588,9 +588,6 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
  
--static inline int rocker_tlv_put_be16(struct rocker_desc_info *desc_info,
--				      int attrtype, __be16 value)
-+static inline int
-+rocker_tlv_put_be16(struct rocker_desc_info *desc_info, int attrtype, __be16 value)
+ #ifdef CONFIG_ACPI
+-#define ACPI_SPLC_METHOD	"SPLC"
+-#define ACPI_SPLC_DOMAIN_WIFI	(0x07)
+-
+ static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
  {
--	return rocker_tlv_put(desc_info, attrtype, sizeof(__be16), &value);
-+	__be16 tmp = value;
-+
-+	return rocker_tlv_put(desc_info, attrtype, sizeof(__be16), &tmp);
- }
+ 	union acpi_object *data_pkg, *dflt_pwr_limit;
+@@ -625,7 +622,7 @@ static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
+ 			continue;
  
--static inline int rocker_tlv_put_u32(struct rocker_desc_info *desc_info,
--				     int attrtype, u32 value)
-+static inline int
-+rocker_tlv_put_u32(struct rocker_desc_info *desc_info, int attrtype, u32 value)
- {
--	return rocker_tlv_put(desc_info, attrtype, sizeof(u32), &value);
-+	u32 tmp = value;
-+
-+	return rocker_tlv_put(desc_info, attrtype, sizeof(u32), &tmp);
- }
+ 		domain = &data_pkg->package.elements[0];
+-		if (domain->integer.value == ACPI_SPLC_DOMAIN_WIFI)
++		if (domain->integer.value == ACPI_WIFI_DOMAIN)
+ 			break;
  
--static inline int rocker_tlv_put_be32(struct rocker_desc_info *desc_info,
--				      int attrtype, __be32 value)
-+static inline int
-+rocker_tlv_put_be32(struct rocker_desc_info *desc_info, int attrtype, __be32 value)
- {
--	return rocker_tlv_put(desc_info, attrtype, sizeof(__be32), &value);
-+	__be32 tmp = value;
-+
-+	return rocker_tlv_put(desc_info, attrtype, sizeof(__be32), &tmp);
- }
- 
--static inline int rocker_tlv_put_u64(struct rocker_desc_info *desc_info,
--				     int attrtype, u64 value)
-+static inline int
-+rocker_tlv_put_u64(struct rocker_desc_info *desc_info, int attrtype, u64 value)
- {
--	return rocker_tlv_put(desc_info, attrtype, sizeof(u64), &value);
-+	u64 tmp = value;
-+
-+	return rocker_tlv_put(desc_info, attrtype, sizeof(u64), &tmp);
- }
- 
- static inline struct rocker_tlv *
+ 		data_pkg = NULL;
 -- 
-2.9.0
+2.14.1
