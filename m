@@ -1,92 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nsmtp.uni-koblenz.de ([141.26.64.14]:49012 "EHLO
-        nsmtp.uni-koblenz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754141AbdIHKK1 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36134 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751899AbdI2Qoc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2017 06:10:27 -0400
-Subject: Re: [PATCH 2/2] wireless: return correct mandatory rates
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
- <20170907154744.28357-2-rschuetz@uni-koblenz.de>
- <1504853740.6177.10.camel@sipsolutions.net>
- <5aed0ea0-f127-bd1e-ca06-db7edbf56680@uni-koblenz.de>
- <1504861413.6177.16.camel@sipsolutions.net>
-From: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>
-Message-ID: <f9e34cbf-e0e1-3faa-39dd-58ad6968d276@uni-koblenz.de> (sfid-20170908_121033_618006_271E3B06)
-Date: Fri, 8 Sep 2017 12:10:23 +0200
+        Fri, 29 Sep 2017 12:44:32 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:05 +0300
+Message-Id: <20170929164423.23666-1-luca@coelho.fi> (sfid-20170929_200756_068273_D51C41D7)
 MIME-Version: 1.0
-In-Reply-To: <1504861413.6177.16.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 00/18] iwlwifi: updates intended for v4.15 2017-09-29
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 08.09.2017 um 11:03 schrieb Johannes Berg:
-> On Fri, 2017-09-08 at 10:43 +0200, Richard Schütz wrote:
->> Am 08.09.2017 um 08:55 schrieb Johannes Berg:
->>> On Thu, 2017-09-07 at 17:47 +0200, Richard Schütz wrote:
->>>> Use IEEE80211_RATE_MANDATORY_G instead of
->>>> IEEE80211_RATE_MANDATORY_B
->>>> for comparison to get all mandatory rates in 2.4 GHz band. It is
->>>> safe
->>>> to do so because ERP mandatory rates are a superset of HR/DSSS
->>>> mandatory rates.
->>>
->>> This I don't understand - what "comparison" are you talking about?
->>
->> Sorry, I meant the condition that checks for the presence of
->> mandatory_flag at the bottom of the function.
-> 
-> Ah, sorry, I got confused with the other patch.
-> 
->> Do we actually allow 10 MHz and 5 MHz operation in the 2.4 GHz band?
->> As  far as I can tell that has only been specified for OFDM PHYs,
->> which use the 5 GHz band and are covered by
->> IEEE80211_RATE_MANDATORY_A, but I am not a hundred per cent sure
->> about that. Cc'ing Simon Wunderlich who originally implemented
->> checking of scan_width here.
-> 
-> Clearly we do allow that, since the existing check is:
-> 
->          if (sband->band == NL80211_BAND_2GHZ) {
->                  if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
->                      scan_width == NL80211_BSS_CHAN_WIDTH_10)
->                          mandatory_flag = IEEE80211_RATE_MANDATORY_G;
-> 
-> That wouldn't make any sense if we didn't have 5/10 MHz on 2.4 GHz.
-> 
->> The main intention of this patch series is to fix mandatory rates
->> returned for normal operation in 2.4 GHz band. Currently only 1 Mb/s
->> is returned here, which is wrong for both HR/DSSS and ERP PHYs.
-> 
-> The patch is still wrong wrt. 5/10 MHz though.
-> 
-> I think what you really wanted to do is the following:
-> 
->   * rename RATE_MANDATORY_B to RATE_MANDATORY_HR_DSSS
->   * combine RATE_MANDATORY_G/_A to RATE_MANDATORY_OFDM
-> 
-> Then, what you need to do, is change the checks in
-> ieee80211_mandatory_rates() to be
-> 
->          if (sband->band == NL80211_BAND_2GHZ) {
->                  if (scan_width == NL80211_BSS_CHAN_WIDTH_5 ||
->                      scan_width == NL80211_BSS_CHAN_WIDTH_10)
->                          mandatory_flag = IEEE80211_RATE_MANDATORY_OFDM;
->                  else
->                          mandatory_flag = IEEE80211_RATE_MANDATORY_HR_DSSS;
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This would leave us with 1, 2, 5.5 and 11 Mb/s for ERP PHYs again when 
-it really should be 1, 2, 5.5, 6, 11, 12 and 24 Mb/s.
+Hi,
 
->          } else {
->                  mandatory_flag = IEEE80211_RATE_MANDATORY_OFDM;
->          }
-> 
-> That would actually fix a bug in a way because right now the code
-> treats HR/DSSS rates (1, 2, 5.5, 11) for 2.4 GHz narrow-band operation
-> as mandatory, which seems wrong.
+Here's the second set of patches intended for 4.15.  Nothing major,
+mostly just cleanups.
+
+These are the changes:
+
+* ACPI code refactoring;
+* Some coding-style fixes;
+* Avoid redundant command to the firmware;
+* Add a struct with the format of one FW command;
+* Change an error log to a warning when the FW API is not aligned with
+  the driver (important during development);
+* Change a WARN_ON to WARN_ONCE to make it more descriptive and less
+  noisy (i.e. no repeated warnings on a firmware triggered error);
+* Dump PCI registers when an error occurs, to make it easier to debug;
+
+Since I have not sent a pull-req for the previous batch yet, I'll send
+them all together next week.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Christoph B�hmwalder (1):
+  iwlwifi: fix minor code style issues
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: don't send identical PHY_CTXT_CMD
+
+Johannes Berg (3):
+  iwlwifi: fw: api: remove excess enum value documentation
+  iwlwifi: fix indentation in a000 family configuration
+  iwlwifi: mvm: warn on invalid statistics size
+
+Luca Coelho (10):
+  iwlwifi: acpi: add common code to read from ACPI
+  iwlwifi: acpi: move ACPI method definitions to acpi.h
+  iwlwifi: acpi: move ACPI-related definitions to acpi.h
+  iwlwifi: acpi: generalize iwl_mvm_sar_find_wifi_pkg()
+  iwlwifi: acpi: use iwl_acpi_get_wifi_pkg when reading reading SPLC
+  iwlwifi: acpi: make iwl_get_bios_mcc() use the common acpi functions
+  iwlwifi: acpi: remove a couple of unnecessary ifdefs
+  iwlwifi: acpi: move function to get mcc into acpi code
+  iwlwifi: acpi: move code that reads SPLC to acpi
+  iwlwifi: remove dflt_pwr_limit from the transport
+
+Mordechay Goodstein (1):
+  iwlwifi: mvm: add marker cmd response struct.
+
+Rajat Jain (1):
+  iwlwifi: pcie: dump registers when HW becomes inaccessible
+
+Sara Sharon (1):
+  iwlwifi: mvm: change warning to warn_once()
+
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   1 +
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c      | 100 +++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c       | 210 +++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h       | 138 ++++++++++++++
+ .../net/wireless/intel/iwlwifi/fw/api/commands.h   |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/debug.h  |   9 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/power.h  |   3 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/sta.h    |   4 -
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.h     |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  91 +--------
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  17 --
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   2 -
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 207 ++++----------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  14 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  17 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  20 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c  |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   3 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  97 +---------
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  88 +++++++++
+ 24 files changed, 590 insertions(+), 452 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.h
 
 -- 
-Richard
+2.14.1
