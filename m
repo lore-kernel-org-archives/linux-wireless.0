@@ -1,231 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:35211 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751254AbdIQTk1 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35982 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751224AbdI2MDZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Sep 2017 15:40:27 -0400
-Received: by mail-lf0-f68.google.com with SMTP id c8so3538389lfe.2
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Sep 2017 12:40:26 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v3 03/11] ath10k: per target configurablity of various items
-Date: Sun, 17 Sep 2017 21:40:05 +0200
-Message-Id: <20170917194013.8658-4-erik.stromdahl@gmail.com> (sfid-20170917_214042_903046_74C556D2)
-In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+        Fri, 29 Sep 2017 08:03:25 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 15:03:04 +0300
+Message-Id: <20170929120305.20551-5-luca@coelho.fi> (sfid-20170929_140328_218383_F66C7C38)
+In-Reply-To: <20170929120305.20551-1-luca@coelho.fi>
+References: <20170929120305.20551-1-luca@coelho.fi>
+Subject: [PATCH 4/5] iwlwifi: nvm-parse: unify channel flags printing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added ability to set bus type and configure the max number of
-peers in the ath10k_hw_params struct.
+From: Johannes Berg <johannes.berg@intel.com>
 
-With this functionality it is possible to have a different
-hw configuration depending on bus type for the same radio
-chipset.
+The current channel flags printing is very strange and messy,
+in LAR we sometimes print the channel number and sometimes the
+frequency, in both we print a calculated value (whether ad-hoc
+is supported or not) etc.
 
-E.g. SDIO and USB devices using the same chipset as PCIe
-devices will potentially use different board files and perhaps
-other configuration parameters.
+Unify all this to
+ * print the channel number, not the frequency
+ * remove the band print (2.4/5.2 GHz, it's obvious)
+ * remove the calculated Ad-Hoc print
 
-One such parameter is the max number of peers.
-Instead of using a default value (suitable for PCIe devices)
-derived from the WMI op version, a per target value can be
-used instead.
+Doing all of this also gets the length of the string to a max
+of 101 characters, which is below the max of 110 for tracing,
+and thus avoids the warning that came up on certain channels
+with certain flag combinations.
 
-This is needed by the QCA9377 USB device in order to prevent
-the target fw to crash after HTT RX ring cfg is issued.
-
-Apparently, the QCA9377 HL device does not seem to handle the
-same amount of peers as the LL devices.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c    | 33 +++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath10k/core.h    |  7 -------
- drivers/net/wireless/ath/ath10k/hw.h      | 22 +++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
- 4 files changed, 49 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 98 +++++++++-------------
+ 1 file changed, 39 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index f1924c974a12..a4a326c89e0d 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1663,9 +1663,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
- 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
- 		hw_params = &ath10k_hw_params_list[i];
- 
--		if (hw_params->id == ar->target_version &&
--		    hw_params->dev_id == ar->dev_id)
--			break;
-+		if (ar->is_high_latency) {
-+			/* High latency devices will use different fw depending
-+			 * on if it is a USB or SDIO device.
-+			 */
-+			if (hw_params->bus == ar->hif.bus &&
-+			    hw_params->id == ar->target_version &&
-+			    hw_params->dev_id == ar->dev_id)
-+				break;
-+		} else {
-+			if (hw_params->id == ar->target_version &&
-+			    hw_params->dev_id == ar->dev_id)
-+				break;
-+		}
- 	}
- 
- 	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
-@@ -1764,6 +1774,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
- static int ath10k_core_init_firmware_features(struct ath10k *ar)
- {
- 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
-+	int max_num_peers;
- 
- 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
- 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
-@@ -1843,7 +1854,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 
- 	switch (fw_file->wmi_op_version) {
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
--		ar->max_num_peers = TARGET_NUM_PEERS;
-+		max_num_peers = TARGET_NUM_PEERS;
- 		ar->max_num_stations = TARGET_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
-@@ -1855,10 +1866,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
- 		if (ath10k_peer_stats_enabled(ar)) {
--			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
-+			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
- 		} else {
--			ar->max_num_peers = TARGET_10X_NUM_PEERS;
-+			max_num_peers = TARGET_10X_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
- 		}
- 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
-@@ -1867,7 +1878,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
--		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
-+		max_num_peers = TARGET_TLV_NUM_PEERS;
- 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
- 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
-@@ -1878,7 +1889,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_4:
--		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
-+		max_num_peers = TARGET_10_4_NUM_PEERS;
- 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
- 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
- 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
-@@ -1896,10 +1907,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-+	default:
- 		WARN_ON(1);
- 		return -EINVAL;
- 	}
- 
-+	if (ar->hw_params.max_num_peers)
-+		ar->max_num_peers = ar->hw_params.max_num_peers;
-+	else
-+		ar->max_num_peers = max_num_peers;
-+
- 	/* Backwards compatibility for firmwares without
- 	 * ATH10K_FW_IE_HTT_OP_VERSION.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index dc9ecf773d51..64dadcd6e531 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -88,13 +88,6 @@
- 
- struct ath10k;
- 
--enum ath10k_bus {
--	ATH10K_BUS_PCI,
--	ATH10K_BUS_AHB,
--	ATH10K_BUS_SDIO,
--	ATH10K_BUS_USB,
--};
--
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- {
- 	switch (bus) {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 0c089f6dd3d9..8cf7b963f3d4 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -20,6 +20,13 @@
- 
- #include "targaddrs.h"
- 
-+enum ath10k_bus {
-+	ATH10K_BUS_PCI,
-+	ATH10K_BUS_AHB,
-+	ATH10K_BUS_SDIO,
-+	ATH10K_BUS_USB,
-+};
-+
- #define ATH10K_FW_DIR			"ath10k"
- 
- #define QCA988X_2_0_DEVICE_ID   (0x003c)
-@@ -550,6 +557,18 @@ struct ath10k_hw_params {
- 	 */
- 	int vht160_mcs_rx_highest;
- 	int vht160_mcs_tx_highest;
-+
-+	/* max_num_peers can be used to override the setting derived from
-+	 * the WMI op version. If this value is non-zero, it will always
-+	 * be used instead of the default value derived from the WMI op
-+	 * version.
-+	 */
-+	int max_num_peers;
-+
-+	/* Specifies whether or not the device is a high latency device */
-+	bool is_high_latency;
-+
-+	enum ath10k_bus bus;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 3014beef4873..35638404c24e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -206,8 +206,36 @@ enum iwl_nvm_channel_flags {
+ 	NVM_CHANNEL_DC_HIGH		= BIT(12),
  };
  
- struct htt_rx_desc;
-@@ -660,6 +679,9 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
- #define TARGET_TLV_NUM_WOW_PATTERNS		22
- 
-+/* Target specific defines for QCA9377 high latency firmware */
-+#define TARGET_QCA9377_HL_NUM_PEERS		15
++static inline void iwl_nvm_print_channel_flags(struct device *dev, u32 level,
++					       int chan, u16 flags)
++{
+ #define CHECK_AND_PRINT_I(x)	\
+-	((ch_flags & NVM_CHANNEL_##x) ? # x " " : "")
++	((flags & NVM_CHANNEL_##x) ? " " #x : "")
 +
- /* Diagnostic Window */
- #define CE_DIAG_PIPE	7
++	if (!(flags & NVM_CHANNEL_VALID)) {
++		IWL_DEBUG_DEV(dev, level, "Ch. %d: 0x%x: No traffic\n",
++			      chan, flags);
++		return;
++	}
++
++	/* Note: already can print up to 101 characters, 110 is the limit! */
++	IWL_DEBUG_DEV(dev, level,
++		      "Ch. %d: 0x%x:%s%s%s%s%s%s%s%s%s%s%s%s\n",
++		      chan, flags,
++		      CHECK_AND_PRINT_I(VALID),
++		      CHECK_AND_PRINT_I(IBSS),
++		      CHECK_AND_PRINT_I(ACTIVE),
++		      CHECK_AND_PRINT_I(RADAR),
++		      CHECK_AND_PRINT_I(INDOOR_ONLY),
++		      CHECK_AND_PRINT_I(GO_CONCURRENT),
++		      CHECK_AND_PRINT_I(UNIFORM),
++		      CHECK_AND_PRINT_I(20MHZ),
++		      CHECK_AND_PRINT_I(40MHZ),
++		      CHECK_AND_PRINT_I(80MHZ),
++		      CHECK_AND_PRINT_I(160MHZ),
++		      CHECK_AND_PRINT_I(DC_HIGH));
++#undef CHECK_AND_PRINT_I
++}
  
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7616c1c4bbd3..34e977049f00 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1406,7 +1406,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
+ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
+ 				 u16 nvm_flags, const struct iwl_cfg *cfg)
+@@ -302,12 +330,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 			 * supported, hence we still want to add them to
+ 			 * the list of supported channels to cfg80211.
+ 			 */
+-			IWL_DEBUG_EEPROM(dev,
+-					 "Ch. %d Flags %x [%sGHz] - No traffic\n",
+-					 nvm_chan[ch_idx],
+-					 ch_flags,
+-					 (ch_idx >= num_2ghz_channels) ?
+-					 "5.2" : "2.4");
++			iwl_nvm_print_channel_flags(dev, IWL_DL_EEPROM,
++						    nvm_chan[ch_idx], ch_flags);
+ 			continue;
+ 		}
  
- 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
--	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
-+	cfg->num_peers = __cpu_to_le32(ar->max_num_peers);
+@@ -337,27 +361,10 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 		else
+ 			channel->flags = 0;
  
- 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
- 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-@@ -1417,7 +1417,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+-		IWL_DEBUG_EEPROM(dev,
+-				 "Ch. %d [%sGHz] flags 0x%x %s%s%s%s%s%s%s%s%s%s%s%s(%ddBm): Ad-Hoc %ssupported\n",
+-				 channel->hw_value,
+-				 is_5ghz ? "5.2" : "2.4",
+-				 ch_flags,
+-				 CHECK_AND_PRINT_I(VALID),
+-				 CHECK_AND_PRINT_I(IBSS),
+-				 CHECK_AND_PRINT_I(ACTIVE),
+-				 CHECK_AND_PRINT_I(RADAR),
+-				 CHECK_AND_PRINT_I(INDOOR_ONLY),
+-				 CHECK_AND_PRINT_I(GO_CONCURRENT),
+-				 CHECK_AND_PRINT_I(UNIFORM),
+-				 CHECK_AND_PRINT_I(20MHZ),
+-				 CHECK_AND_PRINT_I(40MHZ),
+-				 CHECK_AND_PRINT_I(80MHZ),
+-				 CHECK_AND_PRINT_I(160MHZ),
+-				 CHECK_AND_PRINT_I(DC_HIGH),
+-				 channel->max_power,
+-				 ((ch_flags & NVM_CHANNEL_IBSS) &&
+-				  !(ch_flags & NVM_CHANNEL_RADAR))
+-					? "" : "not ");
++		iwl_nvm_print_channel_flags(dev, IWL_DL_EEPROM,
++					    channel->hw_value, ch_flags);
++		IWL_DEBUG_EEPROM(dev, "Ch. %d: %ddBm\n",
++				 channel->hw_value, channel->max_power);
  	}
  
- 	cfg->num_peer_keys = __cpu_to_le32(2);
--	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
-+	cfg->num_tids = __cpu_to_le32(ar->max_num_peers * 2);
- 	cfg->ast_skid_limit = __cpu_to_le32(0x10);
- 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
- 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
+ 	return n_channels;
+@@ -873,12 +880,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		new_rule = false;
+ 
+ 		if (!(ch_flags & NVM_CHANNEL_VALID)) {
+-			IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+-				      "Ch. %d Flags %x [%sGHz] - No traffic\n",
+-				      nvm_chan[ch_idx],
+-				      ch_flags,
+-				      (ch_idx >= NUM_2GHZ_CHANNELS) ?
+-				      "5.2" : "2.4");
++			iwl_nvm_print_channel_flags(dev, IWL_DL_LAR,
++						    nvm_chan[ch_idx], ch_flags);
+ 			continue;
+ 		}
+ 
+@@ -914,31 +917,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		prev_center_freq = center_freq;
+ 		prev_reg_rule_flags = reg_rule_flags;
+ 
+-		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+-			      "Ch. %d [%sGHz] %s%s%s%s%s%s%s%s%s%s%s%s(0x%02x)\n",
+-			      center_freq,
+-			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
+-			      CHECK_AND_PRINT_I(VALID),
+-			      CHECK_AND_PRINT_I(IBSS),
+-			      CHECK_AND_PRINT_I(ACTIVE),
+-			      CHECK_AND_PRINT_I(RADAR),
+-			      CHECK_AND_PRINT_I(INDOOR_ONLY),
+-			      CHECK_AND_PRINT_I(GO_CONCURRENT),
+-			      CHECK_AND_PRINT_I(UNIFORM),
+-			      CHECK_AND_PRINT_I(20MHZ),
+-			      CHECK_AND_PRINT_I(40MHZ),
+-			      CHECK_AND_PRINT_I(80MHZ),
+-			      CHECK_AND_PRINT_I(160MHZ),
+-			      CHECK_AND_PRINT_I(DC_HIGH),
+-			      ch_flags);
+-		IWL_DEBUG_DEV(dev, IWL_DL_LAR,
+-			      "Ch. %d [%sGHz] reg_flags 0x%x: %s\n",
+-			      center_freq,
+-			      band == NL80211_BAND_5GHZ ? "5.2" : "2.4",
+-			      reg_rule_flags,
+-			      ((ch_flags & NVM_CHANNEL_ACTIVE) &&
+-			       !(ch_flags & NVM_CHANNEL_RADAR))
+-					 ? "Ad-Hoc" : "");
++		iwl_nvm_print_channel_flags(dev, IWL_DL_LAR,
++					    nvm_chan[ch_idx], ch_flags);
+ 	}
+ 
+ 	regd->n_reg_rules = valid_rules;
 -- 
 2.14.1
