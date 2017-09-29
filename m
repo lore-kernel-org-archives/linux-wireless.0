@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60828 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934953AbdIZH0y (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36218 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752131AbdI2Qol (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 03:26:54 -0400
-Received: from mail-wm0-f72.google.com ([74.125.82.72])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <chia-lin.kao@canonical.com>)
-        id 1dwkGb-0001yY-89
-        for linux-wireless@vger.kernel.org; Tue, 26 Sep 2017 07:26:53 +0000
-Received: by mail-wm0-f72.google.com with SMTP id e64so10994097wmi.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Sep 2017 00:26:53 -0700 (PDT)
+        Fri, 29 Sep 2017 12:44:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:09 +0300
+Message-Id: <20170929164423.23666-5-luca@coelho.fi> (sfid-20170929_200759_228036_3CC52BF1)
+In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
+References: <20170929164423.23666-1-luca@coelho.fi>
 MIME-Version: 1.0
-In-Reply-To: <20170926064456.GA28611@infradead.org>
-References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
- <1506408099-18488-2-git-send-email-acelan.kao@canonical.com> <20170926064456.GA28611@infradead.org>
-From: AceLan Kao <acelan.kao@canonical.com>
-Date: Tue, 26 Sep 2017 15:26:51 +0800
-Message-ID: <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com> (sfid-20170926_092739_200089_64E2B00B)
-Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
-To: Christoph Hellwig <hch@infradead.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 04/18] iwlwifi: fix minor code style issues
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ath9k is an old driver for old chips, and they work fine with legacy INTx.
-But some new platforms are using it, so I think we should list those
-new platforms which blocks INTx in the driver.
+From: Christoph Böhmwalder <christoph@boehmwalder.at>
 
-BTW, new chips use ath10k driver.
+Fixes three trivial issues as reported by checkpatch.pl, namely two
+switch/case indentation issues and one alignment issue in a multiline
+comment.
 
-2017-09-26 14:44 GMT+08:00 Christoph Hellwig <hch@infradead.org>:
-> On Tue, Sep 26, 2017 at 02:41:35PM +0800, AceLan Kao wrote:
->> Some platform(BIOS) blocks legacy interrupts (INTx), and only allows MSI
->> for WLAN device. So adding a quirk to list those machines and set
->> use_msi automatically.
->> Adding Dell Inspiron 24-3460 to the quirk.
->
-> Huh?  Using MSI should be the default, and skipping MSI should be
-> a quirk if needed at all (usually it should be autodetected)
+Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 99676d6c4713..ccdb247d68c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -832,7 +832,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			capa->standard_phy_calibration_size =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+-		 case IWL_UCODE_TLV_SEC_RT:
++		case IWL_UCODE_TLV_SEC_RT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
+ 					    tlv_len);
+ 			drv->fw.type = IWL_FW_MVM;
+@@ -864,7 +864,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 						FW_PHY_CFG_RX_CHAIN) >>
+ 						FW_PHY_CFG_RX_CHAIN_POS;
+ 			break;
+-		 case IWL_UCODE_TLV_SECURE_SEC_RT:
++		case IWL_UCODE_TLV_SECURE_SEC_RT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
+ 					    tlv_len);
+ 			drv->fw.type = IWL_FW_MVM;
+@@ -1335,7 +1335,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 
+ 	/* Runtime instructions and 2 copies of data:
+ 	 * 1) unmodified from disk
+-	 * 2) backup cache for save/restore during power-downs */
++	 * 2) backup cache for save/restore during power-downs
++	 */
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		if (iwl_alloc_ucode(drv, pieces, i))
+ 			goto out_free_fw;
+-- 
+2.14.1
