@@ -1,90 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0045.outbound.protection.outlook.com ([104.47.33.45]:56553
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751846AbdIUVfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2017 17:35:02 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V3 4/9] qtnfmac: do not cache channel info from "connect" command
-Date: Thu, 21 Sep 2017 14:34:32 -0700
-Message-Id: <20170921213437.27457-5-igor.mitsyanko.os@quantenna.com> (sfid-20170921_233515_286786_B236C57E)
-In-Reply-To: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-References: <20170921213437.27457-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:35922 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750954AbdI2MDU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Sep 2017 08:03:20 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 15:03:02 +0300
+Message-Id: <20170929120305.20551-3-luca@coelho.fi> (sfid-20170929_140323_317377_C1E9C574)
+In-Reply-To: <20170929120305.20551-1-luca@coelho.fi>
+References: <20170929120305.20551-1-luca@coelho.fi>
+Subject: [PATCH 2/5] iwlwifi: stop dbgc recording before stopping DMA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-This makes no sense because real operational channel is choosen based
-on AP operation, not on what STA is configured to.
+Today we stop the device and the DMA without stopping the dbgc
+recording before. This causes host crashes when the DMA
+rate is high.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Stop dbgc recording when clearing the fw debug configuration
+to fix this.
+
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 15 +--------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  6 ++++--
- 2 files changed, 5 insertions(+), 16 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c |  7 ++-----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h | 15 +++++++++++++++
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 0ef1285..17b323e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -613,8 +613,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	     struct cfg80211_connect_params *sme)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
--	struct qtnf_wmac *mac = wiphy_priv(wiphy);
--	struct cfg80211_chan_def chandef;
- 	struct qtnf_bss_config *bss_cfg;
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 6afc7a799892..f5dd7d83cd0a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1086,7 +1086,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
  
-@@ -627,18 +625,6 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 	bss_cfg = &vif->bss_cfg;
- 	memset(bss_cfg, 0, sizeof(*bss_cfg));
+ 	if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
+ 		/* stop recording */
+-		iwl_set_bits_prph(fwrt->trans, MON_BUFF_SAMPLE_CTL, 0x100);
++		iwl_fw_dbg_stop_recording(fwrt);
  
--	if (sme->channel) {
--		/* FIXME: need to set proper nl80211_channel_type value */
--		cfg80211_chandef_create(&chandef, sme->channel,
--					NL80211_CHAN_HT20);
--		/* fall-back to minimal safe chandef description */
--		if (!cfg80211_chandef_valid(&chandef))
--			cfg80211_chandef_create(&chandef, sme->channel,
--						NL80211_CHAN_HT20);
--
--		memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
--	}
--
- 	bss_cfg->ssid_len = sme->ssid_len;
- 	memcpy(&bss_cfg->ssid, sme->ssid, bss_cfg->ssid_len);
- 	bss_cfg->auth_type = sme->auth_type;
-@@ -663,6 +649,7 @@ qtnf_connect(struct wiphy *wiphy, struct net_device *dev,
- 		bss_cfg->connect_flags |= QLINK_STA_CONNECT_USE_RRM;
+ 		iwl_fw_error_dump(fwrt);
  
- 	memcpy(&bss_cfg->crypto, &sme->crypto, sizeof(bss_cfg->crypto));
+@@ -1104,10 +1104,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
+ 		u32 in_sample = iwl_read_prph(fwrt->trans, DBGC_IN_SAMPLE);
+ 		u32 out_ctrl = iwl_read_prph(fwrt->trans, DBGC_OUT_CTRL);
+ 
+-		/* stop recording */
+-		iwl_write_prph(fwrt->trans, DBGC_IN_SAMPLE, 0);
+-		udelay(100);
+-		iwl_write_prph(fwrt->trans, DBGC_OUT_CTRL, 0);
++		iwl_fw_dbg_stop_recording(fwrt);
+ 		/* wait before we collect the data till the DBGC stop */
+ 		udelay(500);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index 0f810ea89d31..9c889a32fe24 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -68,6 +68,8 @@
+ #include <linux/workqueue.h>
+ #include <net/cfg80211.h>
+ #include "runtime.h"
++#include "iwl-prph.h"
++#include "iwl-io.h"
+ #include "file.h"
+ #include "error-dump.h"
+ 
+@@ -194,8 +196,21 @@ _iwl_fw_dbg_trigger_simple_stop(struct iwl_fw_runtime *fwrt,
+ 					iwl_fw_dbg_get_trigger((fwrt)->fw,\
+ 							       (trig)))
+ 
++static inline void iwl_fw_dbg_stop_recording(struct iwl_fw_runtime *fwrt)
++{
++	if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		iwl_set_bits_prph(fwrt->trans, MON_BUFF_SAMPLE_CTL, 0x100);
++	} else {
++		iwl_write_prph(fwrt->trans, DBGC_IN_SAMPLE, 0);
++		udelay(100);
++		iwl_write_prph(fwrt->trans, DBGC_OUT_CTRL, 0);
++	}
++}
 +
- 	if (sme->bssid)
- 		ether_addr_copy(bss_cfg->bssid, sme->bssid);
- 	else
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 806b88b..c55bae1 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2055,8 +2055,10 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 
- 	ether_addr_copy(cmd->bssid, bss_cfg->bssid);
- 
--	if (vif->mac->chandef.chan)
--		cmd->channel = cpu_to_le16(vif->mac->chandef.chan->hw_value);
-+	if (sme->channel)
-+		cmd->channel = cpu_to_le16(sme->channel->hw_value);
-+	else
-+		cmd->channel = 0;
- 
- 	cmd->bg_scan_period = cpu_to_le16(bss_cfg->bg_scan_period);
+ static inline void iwl_fw_dump_conf_clear(struct iwl_fw_runtime *fwrt)
+ {
++	iwl_fw_dbg_stop_recording(fwrt);
++
+ 	fwrt->dump.conf = FW_DBG_INVALID;
+ }
  
 -- 
-2.9.5
+2.14.1
