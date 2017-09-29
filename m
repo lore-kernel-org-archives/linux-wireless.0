@@ -1,115 +1,549 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56868 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932260AbdIFO1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 10:27:54 -0400
-Date: Wed, 6 Sep 2017 16:27:48 +0200
-From: Stefano Brivio <sbrivio@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Matteo Croce <mcroce@redhat.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: hung task in mac80211
-Message-ID: <20170906162748.071b040e@elisabeth> (sfid-20170906_162837_876017_44665EDC)
-In-Reply-To: <1504702728.13457.17.camel@sipsolutions.net>
-References: <CAGnkfhwi9MmtLneeU23iWEGLj9cb1ODb3KzzOqTDvA6nNVsugg@mail.gmail.com>
-        <1504702728.13457.17.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from paleale.coelho.fi ([176.9.41.70]:36276 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752438AbdI2Qot (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Sep 2017 12:44:49 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:12 +0300
+Message-Id: <20170929164423.23666-8-luca@coelho.fi> (sfid-20170929_200758_909037_139CB021)
+In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
+References: <20170929164423.23666-1-luca@coelho.fi>
+Subject: [PATCH 07/18] iwlwifi: acpi: add common code to read from ACPI
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 06 Sep 2017 14:58:48 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> +void __ieee80211_start_rx_ba_session(struct sta_info *sta,
-> +				     u8 dialog_token, u16 timeout,
-> +				     u16 start_seq_num, u16 ba_policy, u16 tid,
-> +				     u16 buf_size, bool tx, bool auto_seq)
-> +{
-> +	mutex_lock(&sta->ampdu_mlme.mtx);
-> +	___ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
-> +					 start_seq_num, ba_policy, tid,
-> +					 buf_size, tx, auto_seq);
-> +	mutex_unlock(&sta->ampdu_mlme.mtx);
-> +}
-> +
+There are many places where the same process of invoking a method from
+ACPI is used, causing a lot of duplicate code.  To improve this,
+introduce a new function to get an ACPI object by invoking an ACPI
+method that can be reused.
 
-Sorry for the extended bothering :) but here, you're extending quite a
-bit the scope of the lock also when__ieee80211_start_rx_ba_session() is
-called by ieee80211_process_addba_request(). No idea what the hit can
-be, but we can't safely assume it's nothing either. What about simply
-introducing a 'ampdu_mlme_lock_held' argument instead? Something like:
+Additionally, since this function needs to be called when we only have
+the trans, the opmode or the device, introduce a new debug macro that
+gets the device as a parameter so it can be used in the new function.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 2b36eff5d97e..35a9eff1ec66 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -248,7 +248,8 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
- void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 				     u8 dialog_token, u16 timeout,
- 				     u16 start_seq_num, u16 ba_policy, u16 tid,
--				     u16 buf_size, bool tx, bool auto_seq)
-+				     u16 buf_size, bool tx, bool auto_seq,
-+				     bool ampdu_mlme_lock_held)
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c       |  97 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h       |  78 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.h     |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  37 ++------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 105 ++++-----------------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  33 ++-----
+ 7 files changed, 211 insertions(+), 141 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index 35a32a3ec882..91b90e77d6d9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -13,6 +13,7 @@ iwlwifi-objs		+= iwl-trans.o
+ iwlwifi-objs		+= fw/notif-wait.o
+ iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
+ iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o fw/nvm.o
++iwlwifi-$(CONFIG_ACPI) += fw/acpi.o
+ 
+ iwlwifi-objs += $(iwlwifi-m)
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+new file mode 100644
+index 000000000000..a7b2a48618cd
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+@@ -0,0 +1,97 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2017        Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program;
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <linuxwifi@intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2017        Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++
++#include "iwl-drv.h"
++#include "iwl-debug.h"
++#include "acpi.h"
++
++void *iwl_acpi_get_object(struct device *dev, acpi_string method)
++{
++	acpi_handle root_handle;
++	acpi_handle handle;
++	struct acpi_buffer buf = {ACPI_ALLOCATE_BUFFER, NULL};
++	acpi_status status;
++
++	root_handle = ACPI_HANDLE(dev);
++	if (!root_handle) {
++		IWL_DEBUG_DEV_RADIO(dev,
++				    "Could not retrieve root port ACPI handle\n");
++		return ERR_PTR(-ENOENT);
++	}
++
++	/* Get the method's handle */
++	status = acpi_get_handle(root_handle, method, &handle);
++	if (ACPI_FAILURE(status)) {
++		IWL_DEBUG_DEV_RADIO(dev, "%s method not found\n", method);
++		return ERR_PTR(-ENOENT);
++	}
++
++	/* Call the method with no arguments */
++	status = acpi_evaluate_object(handle, NULL, NULL, &buf);
++	if (ACPI_FAILURE(status)) {
++		IWL_DEBUG_DEV_RADIO(dev, "%s invocation failed (0x%x)\n",
++				    method, status);
++		return ERR_PTR(-ENOENT);
++	}
++
++	return buf.pointer;
++}
++IWL_EXPORT_SYMBOL(iwl_acpi_get_object);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+new file mode 100644
+index 000000000000..e7612a1a8e1a
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+@@ -0,0 +1,78 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2017        Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program;
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <linuxwifi@intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2017        Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#ifndef __iwl_fw_acpi__
++#define __iwl_fw_acpi__
++
++#include <linux/acpi.h>
++
++#ifdef CONFIG_ACPI
++
++void *iwl_acpi_get_object(struct device *dev, acpi_string method);
++
++#else /* CONFIG_ACPI */
++
++static inline void *iwl_acpi_get_object(struct device *dev, acpi_string method)
++{
++	return ERR_PTR(-ENOENT);
++}
++
++#endif /* CONFIG_ACPI */
++#endif /* __iwl_fw_acpi__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-debug.h b/drivers/net/wireless/intel/iwlwifi/iwl-debug.h
+index cd77c6971753..c023fcf5d452 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-debug.h
+@@ -216,6 +216,7 @@ do {                                            			\
+ #define IWL_DEBUG_TX_REPLY(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_REPLY, f, ## a)
+ #define IWL_DEBUG_TX_QUEUES(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_QUEUES, f, ## a)
+ #define IWL_DEBUG_RADIO(p, f, a...)	IWL_DEBUG(p, IWL_DL_RADIO, f, ## a)
++#define IWL_DEBUG_DEV_RADIO(p, f, a...)	IWL_DEBUG_DEV(p, IWL_DL_RADIO, f, ## a)
+ #define IWL_DEBUG_POWER(p, f, a...)	IWL_DEBUG(p, IWL_DL_POWER, f, ## a)
+ #define IWL_DEBUG_11H(p, f, a...)	IWL_DEBUG(p, IWL_DL_11H, f, ## a)
+ #define IWL_DEBUG_RPM(p, f, a...)	IWL_DEBUG(p, IWL_DL_RPM, f, ## a)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 4574a126c1ae..5165af25f010 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -68,13 +68,14 @@
+ #include <linux/export.h>
+ #include <linux/etherdevice.h>
+ #include <linux/pci.h>
+-#include <linux/acpi.h>
++
+ #include "iwl-drv.h"
+ #include "iwl-modparams.h"
+ #include "iwl-nvm-parse.h"
+ #include "iwl-prph.h"
+ #include "iwl-io.h"
+ #include "iwl-csr.h"
++#include "fw/acpi.h"
+ 
+ /* NVM offsets (in words) definitions */
+ enum wkp_nvm_offsets {
+@@ -990,37 +991,15 @@ static u32 iwl_wrdd_get_mcc(struct device *dev, union acpi_object *wrdd)
+ 
+ int iwl_get_bios_mcc(struct device *dev, char *mcc)
  {
- 	struct ieee80211_local *local = sta->sdata->local;
- 	struct tid_ampdu_rx *tid_agg_rx;
-@@ -311,7 +312,8 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	       buf_size, sta->sta.addr);
+-	acpi_handle root_handle;
+-	acpi_handle handle;
+-	struct acpi_buffer wrdd = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_status status;
++	union acpi_object *data;
+ 	u32 mcc_val;
  
- 	/* examine state machine */
--	mutex_lock(&sta->ampdu_mlme.mtx);
-+	if (!ampdu_mlme_lock_held)
-+		mutex_lock(&sta->ampdu_mlme.mtx);
+-	root_handle = ACPI_HANDLE(dev);
+-	if (!root_handle) {
+-		IWL_DEBUG_EEPROM(dev,
+-				 "Could not retrieve root port ACPI handle\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Get the method's handle */
+-	status = acpi_get_handle(root_handle, (acpi_string)WRDD_METHOD,
+-				 &handle);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_EEPROM(dev, "WRD method not found\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Call WRDD with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &wrdd);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_EEPROM(dev, "WRDC invocation failed (0x%x)\n",
+-				 status);
+-		return -ENOENT;
+-	}
++	data = iwl_acpi_get_object(dev, WRDD_METHOD);
++	if (IS_ERR(data))
++		return PTR_ERR(data);
  
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
-@@ -415,7 +417,8 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
- 		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
- 	}
--	mutex_unlock(&sta->ampdu_mlme.mtx);
-+	if (!ampdu_mlme_lock_held)
-+		mutex_unlock(&sta->ampdu_mlme.mtx);
+-	mcc_val = iwl_wrdd_get_mcc(dev, wrdd.pointer);
+-	kfree(wrdd.pointer);
++	mcc_val = iwl_wrdd_get_mcc(dev, data);
++	kfree(data);
+ 	if (!mcc_val)
+ 		return -ENOENT;
  
- end_no_lock:
- 	if (tx)
-@@ -445,7 +448,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 83485493a79a..b2a9e7de15b7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -66,7 +66,6 @@
+  *****************************************************************************/
+ #include <net/mac80211.h>
+ #include <linux/netdevice.h>
+-#include <linux/acpi.h>
  
- 	__ieee80211_start_rx_ba_session(sta, dialog_token, timeout,
- 					start_seq_num, ba_policy, tid,
--					buf_size, true, false);
-+					buf_size, true, false, false);
+ #include "iwl-trans.h"
+ #include "iwl-op-mode.h"
+@@ -76,6 +75,7 @@
+ #include "iwl-io.h" /* for iwl_mvm_rx_card_state_notif */
+ #include "iwl-prph.h"
+ #include "iwl-eeprom-parse.h"
++#include "fw/acpi.h"
+ 
+ #include "mvm.h"
+ #include "fw/dbg.h"
+@@ -660,37 +660,15 @@ static union acpi_object *iwl_mvm_sar_find_wifi_pkg(struct iwl_mvm *mvm,
+ 
+ static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
+ {
+-	union acpi_object *wifi_pkg, *table;
+-	acpi_handle root_handle;
+-	acpi_handle handle;
+-	struct acpi_buffer wrds = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_status status;
++	union acpi_object *wifi_pkg, *table, *data;
+ 	bool enabled;
+ 	int ret;
+ 
+-	root_handle = ACPI_HANDLE(mvm->dev);
+-	if (!root_handle) {
+-		IWL_DEBUG_RADIO(mvm,
+-				"Could not retrieve root port ACPI handle\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Get the method's handle */
+-	status = acpi_get_handle(root_handle, (acpi_string)ACPI_WRDS_METHOD,
+-				 &handle);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_RADIO(mvm, "WRDS method not found\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Call WRDS with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &wrds);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_RADIO(mvm, "WRDS invocation failed (0x%x)\n", status);
+-		return -ENOENT;
+-	}
++	data = iwl_acpi_get_object(mvm->dev, ACPI_WRDS_METHOD);
++	if (IS_ERR(data))
++		return PTR_ERR(data);
+ 
+-	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, wrds.pointer,
++	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, data,
+ 					     ACPI_WRDS_WIFI_DATA_SIZE);
+ 	if (IS_ERR(wifi_pkg)) {
+ 		ret = PTR_ERR(wifi_pkg);
+@@ -712,45 +690,22 @@ static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
+ 	 */
+ 	ret = iwl_mvm_sar_set_profile(mvm, table, &mvm->sar_profiles[0],
+ 				      enabled);
+-
+ out_free:
+-	kfree(wrds.pointer);
++	kfree(data);
+ 	return ret;
  }
  
- void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif,
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index c92df492e898..59ba67e8942f 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -335,7 +335,7 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 				       sta->ampdu_mlme.tid_rx_manage_offl))
- 			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
- 							IEEE80211_MAX_AMPDU_BUF,
--							false, true);
-+							false, true, true);
+ static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
+ {
+-	union acpi_object *wifi_pkg;
+-	acpi_handle root_handle;
+-	acpi_handle handle;
+-	struct acpi_buffer ewrd = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_status status;
++	union acpi_object *wifi_pkg, *data;
+ 	bool enabled;
+ 	int i, n_profiles, ret;
  
- 		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
- 				       sta->ampdu_mlme.tid_rx_manage_offl))
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2197c62a0a6e..5d494ac65853 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1759,7 +1759,8 @@ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 				     u8 dialog_token, u16 timeout,
- 				     u16 start_seq_num, u16 ba_policy, u16 tid,
--				     u16 buf_size, bool tx, bool auto_seq);
-+				     u16 buf_size, bool tx, bool auto_seq,
-+				     bool ampdu_mlme_lock_held);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
- 					 enum ieee80211_agg_stop_reason reason);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
-
+-	root_handle = ACPI_HANDLE(mvm->dev);
+-	if (!root_handle) {
+-		IWL_DEBUG_RADIO(mvm,
+-				"Could not retrieve root port ACPI handle\n");
+-		return -ENOENT;
+-	}
++	data = iwl_acpi_get_object(mvm->dev, ACPI_EWRD_METHOD);
++	if (IS_ERR(data))
++		return PTR_ERR(data);
+ 
+-	/* Get the method's handle */
+-	status = acpi_get_handle(root_handle, (acpi_string)ACPI_EWRD_METHOD,
+-				 &handle);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_RADIO(mvm, "EWRD method not found\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Call EWRD with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &ewrd);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_RADIO(mvm, "EWRD invocation failed (0x%x)\n", status);
+-		return -ENOENT;
+-	}
+-
+-	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, ewrd.pointer,
++	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, data,
+ 					     ACPI_EWRD_WIFI_DATA_SIZE);
+ 	if (IS_ERR(wifi_pkg)) {
+ 		ret = PTR_ERR(wifi_pkg);
+@@ -792,43 +747,21 @@ static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
+ 	}
+ 
+ out_free:
+-	kfree(ewrd.pointer);
++	kfree(data);
+ 	return ret;
+ }
+ 
+ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
+ {
+-	union acpi_object *wifi_pkg;
+-	acpi_handle root_handle;
+-	acpi_handle handle;
+-	struct acpi_buffer wgds = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_status status;
++	union acpi_object *wifi_pkg, *data;
+ 	int i, j, ret;
+ 	int idx = 1;
+ 
+-	root_handle = ACPI_HANDLE(mvm->dev);
+-	if (!root_handle) {
+-		IWL_DEBUG_RADIO(mvm,
+-				"Could not retrieve root port ACPI handle\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Get the method's handle */
+-	status = acpi_get_handle(root_handle, (acpi_string)ACPI_WGDS_METHOD,
+-				 &handle);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_RADIO(mvm, "WGDS method not found\n");
+-		return -ENOENT;
+-	}
+-
+-	/* Call WGDS with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &wgds);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_RADIO(mvm, "WGDS invocation failed (0x%x)\n", status);
+-		return -ENOENT;
+-	}
++	data = iwl_acpi_get_object(mvm->dev, ACPI_WGDS_METHOD);
++	if (IS_ERR(data))
++		return PTR_ERR(data);
+ 
+-	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, wgds.pointer,
++	wifi_pkg = iwl_mvm_sar_find_wifi_pkg(mvm, data,
+ 					     ACPI_WGDS_WIFI_DATA_SIZE);
+ 	if (IS_ERR(wifi_pkg)) {
+ 		ret = PTR_ERR(wifi_pkg);
+@@ -851,7 +784,7 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
+ 	}
+ 	ret = 0;
+ out_free:
+-	kfree(wgds.pointer);
++	kfree(data);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index e0966f656376..09fb27e9adf5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -73,6 +73,8 @@
+ #include <linux/pci-aspm.h>
+ #include <linux/acpi.h>
+ 
++#include "fw/acpi.h"
++
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+ #include "internal.h"
+@@ -641,37 +643,16 @@ static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
+ 
+ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
+ {
+-	acpi_handle pxsx_handle;
+-	acpi_handle handle;
+-	struct acpi_buffer splc = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_status status;
+-
+-	pxsx_handle = ACPI_HANDLE(&pdev->dev);
+-	if (!pxsx_handle) {
+-		IWL_DEBUG_INFO(trans,
+-			       "Could not retrieve root port ACPI handle\n");
+-		return;
+-	}
++	union acpi_object *data;
+ 
+-	/* Get the method's handle */
+-	status = acpi_get_handle(pxsx_handle, (acpi_string)ACPI_SPLC_METHOD,
+-				 &handle);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_INFO(trans, "SPLC method not found\n");
++	data = iwl_acpi_get_object(trans->dev, ACPI_SPLC_METHOD);
++	if (IS_ERR(data))
+ 		return;
+-	}
+-
+-	/* Call SPLC with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &splc);
+-	if (ACPI_FAILURE(status)) {
+-		IWL_ERR(trans, "SPLC invocation failed (0x%x)\n", status);
+-		return;
+-	}
+ 
+-	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, splc.pointer);
++	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, data);
+ 	IWL_DEBUG_INFO(trans, "Default power limit set to %lld\n",
+ 		       trans->dflt_pwr_limit);
+-	kfree(splc.pointer);
++	kfree(data);
+ }
+ 
+ #else /* CONFIG_ACPI */
 -- 
-Stefano
+2.14.1
