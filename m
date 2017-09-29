@@ -1,69 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41820 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751626AbdITMNK (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:30056 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752131AbdI2Qq3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 08:13:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>
-Subject: Re: [PATCH 1/2] mwifiex: resubmit failed to submit RX URBs in main thread
-References: <1504122674-3379-1-git-send-email-gbhat@marvell.com>
-        <1504122674-3379-2-git-send-email-gbhat@marvell.com>
-Date: Wed, 20 Sep 2017 15:13:05 +0300
-In-Reply-To: <1504122674-3379-2-git-send-email-gbhat@marvell.com> (Ganapathi
-        Bhat's message of "Thu, 31 Aug 2017 01:21:13 +0530")
-Message-ID: <8760cdzhym.fsf@purkki.adurom.net> (sfid-20170920_141313_342227_0242D0F2)
+        Fri, 29 Sep 2017 12:46:29 -0400
+Subject: [PATCH] ath10k: check power save support in STA mode through FW IE
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 29 Sep 2017 19:46:18 +0300
+Message-ID: <150670357817.24239.7065449335785410650.stgit@potku.adurom.net> (sfid-20170929_200836_396075_4626C0DE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> writes:
+From: Venkateswara Naralasetty <vnaralas@qti.qualcomm.com>
 
-> From: James Cao <jcao@marvell.com>
->
-> Current driver has 6 Rx data URBs. Once any packet received
-> kernel calls our callback, in which the same URB will be
-> resubmitted after Rx indication. In URB submission function a new
-> skb will be allocated since the previous one is passed to upper
-> layer (freed later). Since the skb is from a special pool (not
-> regular memory), skb allocation may fail when kernel holds a lot
-> of Rx packets on some low resource platforms.
+Currently ath10k host enables power save support in station mode by
+default for all firmwares but Power save for station mode still not supported
+in some of the firmware versions. Which results in firmware crash while
+issueing multiple scan commands.
 
-The special pool being GFP_ATOMIC allocations or what?
+Fix this problem by introducing new FW feature flag to check power save
+support in firmware and then the firmware image can tell to ath10k that power
+save mode is not supported in station mode.
 
-> The URB will not be resubmitted in this no free skb case. If driver
-> fails to resubmit all 6 URBs, Rx will stop. To cover this scenario
-> check and resubmit Rx URBs in main thread.
->
-> Signed-off-by: James Cao <jcao@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Venkateswara Naralasetty <vnaralas@qti.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    1 +
+ drivers/net/wireless/ath/ath10k/core.h |    3 +++
+ drivers/net/wireless/ath/ath10k/mac.c  |    9 +++++++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-[...]
-
-> @@ -278,6 +279,16 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
->  			break;
->  		}
->  
-> +		/* Try to resubmit RX URB if sunmission failed earlier */
-> +		if (!atomic_read(&adapter->rx_pending) &&
-> +		    adapter->iface_type == MWIFIEX_USB) {
-> +			usb_card = adapter->card;
-> +			if (atomic_read(&usb_card->rx_data_urb_pending) <
-> +			    MWIFIEX_RX_DATA_URB &&
-> +			    adapter->if_ops.submit_rem_rx_urbs)
-> +				adapter->if_ops.submit_rem_rx_urbs(adapter);
-> +		}
-
-To me this just feels wrong. Normally the proceduce is to drop the frame
-if allocations fail, not try to reallocate. I need more convincing that
-this really is the right approach.
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a4f635820f35..7cc426c41817 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -377,6 +377,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_BTCOEX_PARAM] = "btcoex-param",
+ 	[ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR] = "skip-null-func-war",
+ 	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
++	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
+ };
+ 
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 949ebb3e967b..643041ef3271 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -612,6 +612,9 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST = 16,
+ 
++	/* Firmware does not support power save in station mode. */
++	ATH10K_FW_FEATURE_NO_PS = 17,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5683f1a5330e..10fb83784832 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8146,8 +8146,13 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			BIT(NL80211_IFTYPE_P2P_GO);
+ 
+ 	ieee80211_hw_set(ar->hw, SIGNAL_DBM);
+-	ieee80211_hw_set(ar->hw, SUPPORTS_PS);
+-	ieee80211_hw_set(ar->hw, SUPPORTS_DYNAMIC_PS);
++
++	if (!test_bit(ATH10K_FW_FEATURE_NO_PS,
++		      ar->running_fw->fw_file.fw_features)) {
++		ieee80211_hw_set(ar->hw, SUPPORTS_PS);
++		ieee80211_hw_set(ar->hw, SUPPORTS_DYNAMIC_PS);
++	}
++
+ 	ieee80211_hw_set(ar->hw, MFP_CAPABLE);
+ 	ieee80211_hw_set(ar->hw, REPORTS_TX_ACK_STATUS);
+ 	ieee80211_hw_set(ar->hw, HAS_RATE_CONTROL);
