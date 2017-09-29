@@ -1,66 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43904 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S970459AbdIZUX6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Sep 2017 16:23:58 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Retry pci probe on failure.
-Date: Tue, 26 Sep 2017 13:23:55 -0700
-Message-Id: <1506457435-26945-1-git-send-email-greearb@candelatech.com> (sfid-20170926_222519_797069_656A26A3)
+Received: from mga03.intel.com ([134.134.136.65]:63883 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750847AbdI2CKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Sep 2017 22:10:15 -0400
+Date: Fri, 29 Sep 2017 10:12:20 +0800
+From: Philip Li <philip.li@intel.com>
+To: kbuild-all@01.org
+Subject: [0-Day CI notification] 0-Day kernel test service will be shut down
+ from Sep 30 3PM to Oct 5
+Message-ID: <20170929021220.GA22640@intel.com> (sfid-20170929_041021_905584_B4502C00)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi all, this is Philip who maintains the 0-Day kernel test service. Thanks for
+subscribing to 0-Day kernel testing. We will have lab power down from Oct 1
+to Oct 5, so that the service will be shut down from Asia Pacific Time Sep 30 3PM
+and will recover from Oct 6 as soon as we can. Sorry for any inconvenience caused
+due to the service shut down.
 
-This works around a problem we see when sometimes the wifi NIC does
-not respond the first time.  This seems to happen especially often on
-some of the 9984 NICs in mid-range platforms.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e0a7b338..8f3c5b1 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3492,8 +3492,8 @@ static const struct ath10k_bus_ops ath10k_pci_bus_ops = {
- 	.get_num_banks	= ath10k_pci_get_num_banks,
- };
- 
--static int ath10k_pci_probe(struct pci_dev *pdev,
--			    const struct pci_device_id *pci_dev)
-+static int __ath10k_pci_probe(struct pci_dev *pdev,
-+			      const struct pci_device_id *pci_dev)
- {
- 	int ret = 0;
- 	struct ath10k *ar;
-@@ -3668,6 +3668,22 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	return ret;
- }
- 
-+static int ath10k_pci_probe(struct pci_dev *pdev,
-+			    const struct pci_device_id *pci_dev)
-+{
-+	int cnt = 0;
-+	int rv;
-+	do {
-+		rv = __ath10k_pci_probe(pdev, pci_dev);
-+		if (rv == 0)
-+			return rv;
-+		pr_err("ath10k: failed to probe PCI : %d, retry-count: %d\n", rv, cnt);
-+		udelay(10000); /* let the ath10k firmware gerbil take a small break */
-+	} while (cnt++ < 10);
-+	return rv;
-+}
-+
-+
- static void ath10k_pci_remove(struct pci_dev *pdev)
- {
- 	struct ath10k *ar = pci_get_drvdata(pdev);
--- 
-2.4.11
+Thanks
