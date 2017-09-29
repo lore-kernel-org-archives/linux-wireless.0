@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50606 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752485AbdIFK3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Sep 2017 06:29:31 -0400
-Message-ID: <1504693769.13457.6.camel@sipsolutions.net> (sfid-20170906_122934_412328_23ECB30E)
-Subject: Re: [PATCH 05/10] ieee80211: Add WFA TPC report element OUI type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
+Received: from paleale.coelho.fi ([176.9.41.70]:35770 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751667AbdI2LVX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Sep 2017 07:21:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
         Avraham Stern <avraham.stern@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 06 Sep 2017 12:29:29 +0200
-In-Reply-To: <20170805084438.12550-6-luca@coelho.fi>
-References: <20170805084438.12550-1-luca@coelho.fi>
-         <20170805084438.12550-6-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Fri, 29 Sep 2017 14:21:14 +0300
+Message-Id: <20170929112114.6992-1-luca@coelho.fi> (sfid-20170929_132127_734870_220CCE3A)
+In-Reply-To: <1504693769.13457.6.camel@sipsolutions.net>
+References: <1504693769.13457.6.camel@sipsolutions.net>
+Subject: [PATCH v2] ieee80211: Add WFA TPC report element OUI type
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-08-05 at 11:44 +0300, Luca Coelho wrote:
-> From: Avraham Stern <avraham.stern@intel.com>
-> 
-> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-A commit log would be good :)
+Add Transmit Power Control OUI type definition for WLAN_OUI_MICROSOFT.
 
-johannes
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/linux/ieee80211.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 55a604ad459f..ee6657a0ed69 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2445,6 +2445,7 @@ enum ieee80211_sa_query_action {
+ #define WLAN_OUI_TYPE_MICROSOFT_WPA	1
+ #define WLAN_OUI_TYPE_MICROSOFT_WMM	2
+ #define WLAN_OUI_TYPE_MICROSOFT_WPS	4
++#define WLAN_OUI_TYPE_MICROSOFT_TPC	8
+ 
+ /*
+  * WMM/802.11e Tspec Element
+-- 
+2.14.1
