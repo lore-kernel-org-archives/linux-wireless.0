@@ -1,188 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34148 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbdITGoY (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36238 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752337AbdI2Qoo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 02:44:24 -0400
-Received: by mail-pg0-f66.google.com with SMTP id u18so1158432pgo.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Sep 2017 23:44:24 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: add device specific ioctl handler
-Date: Wed, 20 Sep 2017 06:44:13 +0000
-Message-Id: <1505889853-20493-1-git-send-email-huxinming820@gmail.com> (sfid-20170920_084428_888483_6F13B835)
+        Fri, 29 Sep 2017 12:44:44 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:10 +0300
+Message-Id: <20170929164423.23666-6-luca@coelho.fi> (sfid-20170929_200759_263610_90C57CF7)
+In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
+References: <20170929164423.23666-1-luca@coelho.fi>
+Subject: [PATCH 05/18] iwlwifi: pcie: dump registers when HW becomes inaccessible
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Rajat Jain <rajatja@google.com>
 
-Add net_dev ndo_do_ioctl handler, which could be used for
-downloading host command by utility in manufactory test
+We conclude the HW became inaccessible when we timeout waiting for
+a bit to be set in a memory mapped register (CSR_GP_CNTRL). This
+conclusion may not be true because the bit may not get set due to:
+- a firmware issue
+- a driver issue
+- a PCI bus issue
+- a platform issue
+There are a lot of such reports with really no good debug information
+beyond this message to help us.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Add some debug information and attempt to dump the different register
+spaces at such a failure:
+
+* Dump some configuration space of device - this will tell us if
+something very basic is broken in the PCIe bus (so that configuration
+accesses are failing). If this works, the PCIe bus seems OK. If this
+does not work, it is definitely an PCIe issue.
+
+* Dump some memory mapped registers - if we're reading some sane'ish
+values, this will tell us that the PCIe bus is OK, but may be a firmware
+/ driver issue. If this does not work, it may be a PCI configuration
+issue or a driver/firmware issue.
+
+* Dump parent and device's AER registers, will give us some straws to
+chew on.
+
+This is the sample output:
+[   13.082651] ------------[ cut here ]------------
+[   13.086791] iwlwifi 0000:01:00.0: iwlwifi transaction failed, dumping registers
+[   13.086793] iwlwifi 0000:01:00.0: iwlwifi device config registers:
+[   13.086893] iwlwifi 0000:01:00.0: 00000000: 095a8086 00100406 02800059 00000000 00000004 00000000 00000000 00000000
+[   13.086895] iwlwifi 0000:01:00.0: 00000020: 00000000 00000000 00000000 50108086 00000000 000000c8 00000000 00000100
+[   13.086901] iwlwifi 0000:01:00.0: iwlwifi device memory mapped registers:
+[   13.086989] iwlwifi 0000:01:00.0: 00000000: ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
+[   13.086991] iwlwifi 0000:01:00.0: 00000020: ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
+[   13.086999] iwlwifi 0000:01:00.0: iwlwifi device AER capability structure:
+[   13.087033] iwlwifi 0000:01:00.0: 00000000: 14010001 00100000 00000000 00462031 00002000 00002000 00000014 40000001
+[   13.087034] iwlwifi 0000:01:00.0: 00000020: 0000000f d140000c 00000000
+[   13.087036] iwlwifi 0000:01:00.0: iwlwifi parent port (0000:00:1c.0) config registers:
+[   13.087074] iwlwifi 0000:00:1c.0: 00000000: 9d108086 00100506 060400f1 00810010 00000000 00000000 00010100 200000f0
+[   13.087075] iwlwifi 0000:00:1c.0: 00000020: d140d140 0001fff1 00000000 00000000 00000000 00000040 00000000 0006010b
+[   13.087087] ------------[ cut here ]------------
+[   13.087095] WARNING: CPU: 0 PID: 1759 at drivers/net/wireless/iwl7000/iwlwifi/pcie/trans.c:2082 iwl_trans_pcie_reclaim+0x1ee4/0x2b9a [iwlwifi]()
+[   13.087096] Timeout waiting for hardware access (CSR_GP_CNTRL 0xffffffff)
+
+Signed-off-by: Rajat Jain <rajatja@google.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 59 +++++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.c   | 23 +++++++++++
- drivers/net/wireless/marvell/mwifiex/main.h   |  7 +++-
- 3 files changed, 88 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 88 ++++++++++++++++++++++
+ 2 files changed, 89 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 0edc5d6..86ee399 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -839,6 +839,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 			hostcmd = adapter->curr_cmd->data_buf;
- 			hostcmd->len = size;
- 			memcpy(hostcmd->cmd, resp, size);
-+			adapter->hostcmd_resp_data.len = size;
-+			memcpy(adapter->hostcmd_resp_data.cmd, resp, size);
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 9caff1ec29e1..d749abeca3ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -443,6 +443,7 @@ struct iwl_trans_pcie {
+ 	bool bc_table_dword;
+ 	bool scd_set_active;
+ 	bool sw_csum_tx;
++	bool pcie_dbg_dumped_once;
+ 	u32 rx_page_order;
+ 
+ 	/*protect hw register */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 2e3e013ec95a..71b1854ee342 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -88,6 +88,92 @@
+ #define IWL_FW_MEM_EXTENDED_START	0x40000
+ #define IWL_FW_MEM_EXTENDED_END		0x57FFF
+ 
++static void iwl_trans_pcie_err_dump(struct iwl_trans *trans)
++{
++#define PCI_DUMP_SIZE	64
++#define PREFIX_LEN	32
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct pci_dev *pdev = trans_pcie->pci_dev;
++	u32 i, pos, alloc_size, *ptr, *buf;
++	char *prefix;
++
++	if (trans_pcie->pcie_dbg_dumped_once)
++		return;
++
++	/* Should be a multiple of 4 */
++	BUILD_BUG_ON(PCI_DUMP_SIZE > 4096 || PCI_DUMP_SIZE & 0x3);
++	/* Alloc a max size buffer */
++	if (PCI_ERR_ROOT_ERR_SRC +  4 > PCI_DUMP_SIZE)
++		alloc_size = PCI_ERR_ROOT_ERR_SRC +  4 + PREFIX_LEN;
++	else
++		alloc_size = PCI_DUMP_SIZE + PREFIX_LEN;
++	buf = kmalloc(alloc_size, GFP_ATOMIC);
++	if (!buf)
++		return;
++	prefix = (char *)buf + alloc_size - PREFIX_LEN;
++
++	IWL_ERR(trans, "iwlwifi transaction failed, dumping registers\n");
++
++	/* Print wifi device registers */
++	sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
++	IWL_ERR(trans, "iwlwifi device config registers:\n");
++	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
++		if (pci_read_config_dword(pdev, i, ptr))
++			goto err_out;
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++
++	IWL_ERR(trans, "iwlwifi device memory mapped registers:\n");
++	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
++		*ptr = iwl_read32(trans, i);
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	if (pos) {
++		IWL_ERR(trans, "iwlwifi device AER capability structure:\n");
++		for (i = 0, ptr = buf; i < PCI_ERR_ROOT_COMMAND; i += 4, ptr++)
++			if (pci_read_config_dword(pdev, pos + i, ptr))
++				goto err_out;
++		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET,
++			       32, 4, buf, i, 0);
++	}
++
++	/* Print parent device registers next */
++	pdev = pdev->bus->self;
++	sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
++
++	IWL_ERR(trans, "iwlwifi parent port (%s) config registers:\n",
++		pci_name(pdev));
++	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
++		if (pci_read_config_dword(pdev, i, ptr))
++			goto err_out;
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++
++	/* Print root port AER registers */
++	pos = 0;
++	pdev = pcie_find_root_port(pdev);
++	if (pdev)
++		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	if (pos) {
++		IWL_ERR(trans, "iwlwifi root port (%s) AER cap structure:\n",
++			pci_name(pdev));
++		sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
++		for (i = 0, ptr = buf; i <= PCI_ERR_ROOT_ERR_SRC; i += 4, ptr++)
++			if (pci_read_config_dword(pdev, pos + i, ptr))
++				goto err_out;
++		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32,
++			       4, buf, i, 0);
++	}
++
++	trans_pcie->pcie_dbg_dumped_once = 1;
++	kfree(buf);
++	return;
++
++err_out:
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++	IWL_ERR(trans, "Read failed at 0x%X\n", i);
++	kfree(buf);
++}
++
+ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -649,6 +735,7 @@ static int iwl_pcie_load_firmware_chunk(struct iwl_trans *trans,
+ 				 trans_pcie->ucode_write_complete, 5 * HZ);
+ 	if (!ret) {
+ 		IWL_ERR(trans, "Failed to load firmware chunk!\n");
++		iwl_trans_pcie_err_dump(trans);
+ 		return -ETIMEDOUT;
  	}
- 	orig_cmdresp_no = le16_to_cpu(resp->command);
-@@ -1221,6 +1223,63 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
- }
- EXPORT_SYMBOL_GPL(mwifiex_process_hs_config);
  
-+/* This function get hostcmd data from userspace and construct a cmd
-+ * to be download to FW.
-+ */
-+int mwifiex_process_host_command(struct mwifiex_private *priv,
-+				 struct ifreq *req)
-+{
-+	struct mwifiex_ds_misc_cmd *hostcmd_buf;
-+	struct host_cmd_ds_command *cmd;
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	int ret;
-+
-+	hostcmd_buf = kzalloc(sizeof(*hostcmd_buf), GFP_KERNEL);
-+	if (!hostcmd_buf)
-+		return -ENOMEM;
-+
-+	cmd = (void *)hostcmd_buf->cmd;
-+
-+	if (copy_from_user(cmd, req->ifr_data,
-+			   sizeof(cmd->command) + sizeof(cmd->size))) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	hostcmd_buf->len = le16_to_cpu(cmd->size);
-+	if (hostcmd_buf->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
-+	if (copy_from_user(cmd, req->ifr_data, hostcmd_buf->len)) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, 0, 0, 0, hostcmd_buf, true)) {
-+		dev_err(priv->adapter->dev, "Failed to process hostcmd\n");
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	if (adapter->hostcmd_resp_data.len > hostcmd_buf->len) {
-+		ret = -EFBIG;
-+		goto done;
-+	}
-+
-+	if (copy_to_user(req->ifr_data, adapter->hostcmd_resp_data.cmd,
-+			 adapter->hostcmd_resp_data.len)) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	ret = 0;
-+done:
-+	kfree(hostcmd_buf);
-+	return ret;
-+}
-+
- /*
-  * This function handles the command response of a sleep confirm command.
-  *
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index ee40b73..3e7700f 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1265,12 +1265,35 @@ static struct net_device_stats *mwifiex_get_stats(struct net_device *dev)
- 	return mwifiex_1d_to_wmm_queue[skb->priority];
- }
- 
-+static int mwifiex_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	int ret;
-+
-+	if (!priv->adapter->mfg_mode)
-+		return -EINVAL;
-+
-+	mwifiex_dbg(priv->adapter, "ioctl cmd = 0x%x\n", cmd);
-+
-+	switch (cmd) {
-+	case MWIFIEX_HOSTCMD_IOCTL:
-+		ret = mwifiex_process_host_command(priv, req);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
- /* Network device handlers */
- static const struct net_device_ops mwifiex_netdev_ops = {
- 	.ndo_open = mwifiex_open,
- 	.ndo_stop = mwifiex_close,
- 	.ndo_start_xmit = mwifiex_hard_start_xmit,
- 	.ndo_set_mac_address = mwifiex_ndo_set_mac_address,
-+	.ndo_do_ioctl = mwifiex_do_ioctl,
- 	.ndo_validate_addr = eth_validate_addr,
- 	.ndo_tx_timeout = mwifiex_tx_timeout,
- 	.ndo_get_stats = mwifiex_get_stats,
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index a76bd79..4639f49 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -160,6 +160,9 @@ enum {
- /* Threshold for tx_timeout_cnt before we trigger a card reset */
- #define TX_TIMEOUT_THRESHOLD	6
- 
-+/* IOCTL number used for hostcmd process*/
-+#define MWIFIEX_HOSTCMD_IOCTL (SIOCDEVPRIVATE + 1)
-+
- #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
- 
- /* Address alignment */
-@@ -912,6 +915,7 @@ struct mwifiex_adapter {
- 	u8 event_received;
- 	u8 data_received;
- 	u16 seq_num;
-+	struct mwifiex_ds_misc_cmd hostcmd_resp_data;
- 	struct cmd_ctrl_node *cmd_pool;
- 	struct cmd_ctrl_node *curr_cmd;
- 	/* spin lock for command */
-@@ -1611,7 +1615,8 @@ int mwifiex_get_tdls_list(struct mwifiex_private *priv,
- u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
- 				 u32 pri_chan, u8 chan_bw);
- int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
--
-+int mwifiex_process_host_command(struct mwifiex_private *priv,
-+				 struct ifreq *req);
- int mwifiex_tdls_check_tx(struct mwifiex_private *priv, struct sk_buff *skb);
- void mwifiex_flush_auto_tdls_list(struct mwifiex_private *priv);
- void mwifiex_auto_tdls_update_peer_status(struct mwifiex_private *priv,
+@@ -1868,6 +1955,7 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+ 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (unlikely(ret < 0)) {
++		iwl_trans_pcie_err_dump(trans);
+ 		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
+ 		WARN_ONCE(1,
+ 			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
 -- 
-1.9.1
+2.14.1
