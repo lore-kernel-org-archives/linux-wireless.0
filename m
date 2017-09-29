@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:53440 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751387AbdITIjl (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34666 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752405AbdI2TsI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Sep 2017 04:39:41 -0400
-Received: by mail-qk0-f174.google.com with SMTP id t184so1993295qke.10
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Sep 2017 01:39:41 -0700 (PDT)
-Subject: Re: [PATCH] mwifiex: add device specific ioctl handler
-To: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>
-References: <1505889853-20493-1-git-send-email-huxinming820@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59C22949.9030304@broadcom.com> (sfid-20170920_103946_805822_11AAC506)
-Date: Wed, 20 Sep 2017 10:39:37 +0200
-MIME-Version: 1.0
-In-Reply-To: <1505889853-20493-1-git-send-email-huxinming820@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Fri, 29 Sep 2017 15:48:08 -0400
+Received: by mail-oi0-f67.google.com with SMTP id l81so292678oib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2017 12:48:08 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 01/10] rtlwifi: Fix MAX MPDU of VHT capability
+Date: Fri, 29 Sep 2017 14:47:51 -0500
+Message-Id: <20170929194800.15617-2-Larry.Finger@lwfinger.net> (sfid-20170929_214809_305353_814E7F2E)
+In-Reply-To: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
+References: <20170929194800.15617-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/20/2017 8:44 AM, Xinming Hu wrote:
-> From: Xinming Hu <huxm@marvell.com>
->
-> Add net_dev ndo_do_ioctl handler, which could be used for
-> downloading host command by utility in manufactory test
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Not sure if we want ioctls in upstream wireless drivers. You could look 
-at nl80211 vendor commands, but that is also under scrutiny if common 
-wifi functionality is provided by it. I am pretty sure Kalle has his 
-ideas about this :-)
+We must choose only one of VHT_CAP among
+IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895,
+IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 and
+IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454.
 
-Regards,
-Arend
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index ea18aa7afecb..fcf6e31d0fb9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -249,8 +249,6 @@ static void _rtl_init_hw_vht_capab(struct ieee80211_hw *hw,
+ 
+ 		vht_cap->vht_supported = true;
+ 		vht_cap->cap =
+-			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895 |
+-			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
+ 			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
+ 			IEEE80211_VHT_CAP_SHORT_GI_80 |
+ 			IEEE80211_VHT_CAP_TXSTBC |
+@@ -283,8 +281,6 @@ static void _rtl_init_hw_vht_capab(struct ieee80211_hw *hw,
+ 
+ 		vht_cap->vht_supported = true;
+ 		vht_cap->cap =
+-			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895 |
+-			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
+ 			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
+ 			IEEE80211_VHT_CAP_SHORT_GI_80 |
+ 			IEEE80211_VHT_CAP_TXSTBC |
+-- 
+2.13.5
