@@ -1,59 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:36313 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750805AbdIITad (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:32780 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750826AbdI2CVn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Sep 2017 15:30:33 -0400
-Received: by mail-pf0-f181.google.com with SMTP id e199so8831118pfh.3
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Sep 2017 12:30:33 -0700 (PDT)
-From: Kevin Cernekee <cernekee@chromium.org>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, mnissler@chromium.org
-Subject: [PATCH V2 1/3] brcmfmac: Avoid possible out-of-bounds read
-Date: Sat,  9 Sep 2017 12:30:18 -0700
-Message-Id: <20170909193020.19061-1-cernekee@chromium.org> (sfid-20170909_213037_442232_FED34112)
+        Thu, 28 Sep 2017 22:21:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170928080614.GZ17200@yexl-desktop>
+References: <20170924054015.8958-1-qasdfgtyuiop@gmail.com> <20170928080614.GZ17200@yexl-desktop>
+From: Xiang Gao <qasdfgtyuiop@gmail.com>
+Date: Thu, 28 Sep 2017 22:21:21 -0400
+Message-ID: <CAMtaSwQHT0pP+YRx2WSL2kyZ__iJzrkF4jCrLBVzTjO40u4EgQ@mail.gmail.com> (sfid-20170929_042159_617437_40579080)
+Subject: Re: [lkp-robot] [mac80211] 31e9170bde: hwsim.sta_dynamic_down_up.fail
+To: kernel test robot <xiaolong.ye@intel.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-crypto@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org, lkp@01.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_p2p_notify_rx_mgmt_p2p_probereq(), chanspec is assigned before
-the length of rxframe is validated.  This could lead to uninitialized
-data being accessed (but not printed).  Since we already have a
-perfectly good endian-swapped copy of rxframe->chanspec in ch.chspec,
-and ch.chspec is not modified by decchspec(), avoid the extra
-assignment and use ch.chspec in the debug print.
-
-Suggested-by: Mattias Nissler <mnissler@chromium.org>
-Signed-off-by: Kevin Cernekee <cernekee@chromium.org>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Thanks, I will look into it.
+Xiang Gao
 
 
-V1->V2: Clarify changelog re: whether the uninitialized data is printed.
-
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 2ce675ab40ef..1c450c0727cb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1853,7 +1853,6 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
- 	struct brcmf_cfg80211_vif *vif = ifp->vif;
- 	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
--	u16 chanspec = be16_to_cpu(rxframe->chanspec);
- 	struct brcmu_chan ch;
- 	u8 *mgmt_frame;
- 	u32 mgmt_frame_len;
-@@ -1906,7 +1905,7 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	cfg80211_rx_mgmt(&vif->wdev, freq, 0, mgmt_frame, mgmt_frame_len, 0);
- 
- 	brcmf_dbg(INFO, "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
--		  mgmt_frame_len, e->datalen, chanspec, freq);
-+		  mgmt_frame_len, e->datalen, ch.chspec, freq);
- 
- 	return 0;
- }
--- 
-2.14.1.581.gf28d330327-goog
+2017-09-28 4:06 GMT-04:00 kernel test robot <xiaolong.ye@intel.com>:
+>
+> FYI, we noticed the following commit:
+>
+> commit: 31e9170bdeb6ebe66426337b4e2b9924683a412b ("mac80211: aead api to reduce redundancy")
+> url: https://github.com/0day-ci/linux/commits/Xiang-Gao/mac80211-aead-api-to-reduce-redundancy/20170926-053110
+> base: https://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git master
+>
+> in testcase: hwsim
+> with following parameters:
+>
+>         group: hwsim-10
+>
+>
+>
+> on test machine: qemu-system-x86_64 -enable-kvm -cpu host -smp 2 -m 2G
+>
+> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
+>
+>
+> 2017-09-27 16:04:27     ./run-tests.py sta_dynamic_down_up
+> DEV: wlan0: 02:00:00:00:00:00
+> DEV: wlan1: 02:00:00:00:01:00
+> DEV: wlan2: 02:00:00:00:02:00
+> APDEV: wlan3
+> APDEV: wlan4
+> START sta_dynamic_down_up 1/1
+> Test: Dynamically added wpa_supplicant interface down/up
+> Starting AP wlan3
+> Create a dynamic wpa_supplicant interface and connect
+> Connect STA wlan5 to AP
+> dev1->dev2 unicast data delivery failed
+> Traceback (most recent call last):
+>   File "./run-tests.py", line 453, in main
+>     t(dev, apdev)
+>   File "/lkp/benchmarks/hwsim/tests/hwsim/test_sta_dynamic.py", line 122, in test_sta_dynamic_down_up
+>     hwsim_utils.test_connectivity(wpas, hapd)
+>   File "/lkp/benchmarks/hwsim/tests/hwsim/hwsim_utils.py", line 165, in test_connectivity
+>     raise Exception(last_err)
+> Exception: dev1->dev2 unicast data delivery failed
+> FAIL sta_dynamic_down_up 5.397413 2017-09-27 16:04:32.540689
+> passed 0 test case(s)
+> skipped 0 test case(s)
+> failed tests: sta_dynamic_down_up
+>
+>
+>
+> To reproduce:
+>
+>         git clone https://github.com/intel/lkp-tests.git
+>         cd lkp-tests
+>         bin/lkp qemu -k <bzImage> job-script  # job-script is attached in this email
+>
+>
+>
+> Thanks,
+> Xiaolong
