@@ -1,66 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from store.laptop.org ([18.85.44.157]:57569 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751003AbdILWT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2017 18:19:57 -0400
-Date: Wed, 13 Sep 2017 08:09:16 +1000
-From: James Cameron <quozl@laptop.org>
-To: linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: rtl8821ae keep alive not set, connection lost
-Message-ID: <20170912220916.GB32211@us.netrek.org> (sfid-20170913_002001_084723_13FE9F6F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from paleale.coelho.fi ([176.9.41.70]:36598 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752522AbdI2QqO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Sep 2017 12:46:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 29 Sep 2017 19:44:23 +0300
+Message-Id: <20170929164423.23666-19-luca@coelho.fi> (sfid-20170929_200835_998912_E86AF1CB)
+In-Reply-To: <20170929164423.23666-1-luca@coelho.fi>
+References: <20170929164423.23666-1-luca@coelho.fi>
+Subject: [PATCH 18/18] iwlwifi: remove dflt_pwr_limit from the transport
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Summary: 40b368af4b75 ("rtlwifi: Fix alignment issues") breaks
-rtl8821ae keep alive, causing "Connection to AP lost" and deauth, but
-why?
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Wireless connection is lost after a few seconds or minutes, on every
-OLPC NL3 laptop with rtl8821ae, with any stable kernel after 4.10.1,
-and any kernel with 40b368af4b75.
+The default power limit read from the SPLC method in ACPI doesn't
+have anything to do with the transport and is only used in the opmode,
+so we can remove it from the trans.  Additionally, this value is only
+user when the opmode is starting, so we don't need to store it
+anywhere.
 
-dmesg contains
+Remove the dflt_pwr_limit element from the trans and move call to
+iwl_acpi_get_pwr_limit() call to mvm.
 
-  wlp2s0: Connection to AP 2c:b0:5d:a6:86:eb lost
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c   | 20 ++++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c  |  3 ---
+ 3 files changed, 12 insertions(+), 13 deletions(-)
 
-iw event shows
-
-  wlp2s0: del station 2c:b0:5d:a6:86:eb
-  wlp2s0 (phy #0): deauth 74:c6:3b:09:b5:0d -> 2c:b0:5d:a6:86:eb reason 4: Disassociated due to inactivity
-  wlp2s0 (phy #0): disconnected (local request)
-
-Workaround is to bounce the link, then reconnect;
-
-  ip link set wlp2s0 down
-  ip link set wlp2s0 up
-  iw dev wlp2s0 connect qz
-
-A nearby monitor host captures a deauthentication packet sent by the
-device.
-
-Bisection showed cause is 40b368af4b75 ("rtlwifi: Fix alignment
-issues") which changes the width of DBI register read.
-
-On the face of it, 40b368af4b75 looks correct, especially compared
-against same function in rtl8723be.
-
-I've no idea why reverting fixes the problem.  I'm hoping someone here
-might speculate and suggest ways to test.
-
-As keep alive is set through this path, my guess is that keep alive is
-not being set in the device.  Or perhaps reading 16-bits perturbs
-another register.  Is there a way to test?
-
-http://dev.laptop.org/~quozl/z/1drtGD.txt dmesg of 4.13
-
-http://dev.laptop.org/~quozl/z/1drt7c.txt dmesg with 4.13 and revert
-of 40b368af4b75
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 91ec077900f6..bba4f54cbbbb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -749,8 +749,6 @@ struct iwl_trans {
+ 	struct lockdep_map sync_cmd_lockdep_map;
+ #endif
+ 
+-	u64 dflt_pwr_limit;
+-
+ 	const struct iwl_fw_dbg_dest_tlv *dbg_dest_tlv;
+ 	const struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_CONF_MAX];
+ 	struct iwl_fw_dbg_trigger_tlv * const *dbg_trigger_tlv;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index d855920f5456..e82b4462722b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -86,6 +86,7 @@
+ #include "time-event.h"
+ #include "fw-api.h"
+ #include "fw/api/scan.h"
++#include "fw/acpi.h"
+ 
+ #define DRV_DESCRIPTION	"The new Intel(R) wireless AGN driver for Linux"
+ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+@@ -488,18 +489,21 @@ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
+ static void iwl_mvm_async_handlers_wk(struct work_struct *wk);
+ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk);
+ 
+-static u32 calc_min_backoff(struct iwl_trans *trans, const struct iwl_cfg *cfg)
++static u32 iwl_mvm_min_backoff(struct iwl_mvm *mvm)
+ {
+-	const struct iwl_pwr_tx_backoff *pwr_tx_backoff = cfg->pwr_tx_backoffs;
++	const struct iwl_pwr_tx_backoff *backoff = mvm->cfg->pwr_tx_backoffs;
++	u64 dflt_pwr_limit;
+ 
+-	if (!pwr_tx_backoff)
++	if (!backoff)
+ 		return 0;
+ 
+-	while (pwr_tx_backoff->pwr) {
+-		if (trans->dflt_pwr_limit >= pwr_tx_backoff->pwr)
+-			return pwr_tx_backoff->backoff;
++	dflt_pwr_limit = iwl_acpi_get_pwr_limit(mvm->dev);
+ 
+-		pwr_tx_backoff++;
++	while (backoff->pwr) {
++		if (dflt_pwr_limit >= backoff->pwr)
++			return backoff->backoff;
++
++		backoff++;
+ 	}
+ 
+ 	return 0;
+@@ -769,7 +773,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		goto out_free;
+ 	mvm->hw_registered = true;
+ 
+-	min_backoff = calc_min_backoff(trans, cfg);
++	min_backoff = iwl_mvm_min_backoff(mvm);
+ 	iwl_mvm_thermal_initialize(mvm, min_backoff);
+ 
+ 	err = iwl_mvm_dbgfs_register(mvm, dbgfs_dir);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index d81f2414fd8e..ce7254ec0514 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -78,7 +78,6 @@
+ #include "iwl-trans.h"
+ #include "iwl-drv.h"
+ #include "internal.h"
+-#include "fw/acpi.h"
+ 
+ #define IWL_PCI_DEVICE(dev, subdev, cfg) \
+ 	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
+@@ -651,8 +650,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto out_free_trans;
+ 	}
+ 
+-	iwl_trans->dflt_pwr_limit = iwl_acpi_get_pwr_limit(iwl_trans->dev);
+-
+ 	/* register transport layer debugfs here */
+ 	ret = iwl_trans_pcie_dbgfs_register(iwl_trans);
+ 	if (ret)
 -- 
-James Cameron
-http://quozl.netrek.org/
+2.14.1
