@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from civicrm.laptop.org ([18.85.44.157]:60472 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750972AbdISDBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2017 23:01:20 -0400
-Date: Tue, 19 Sep 2017 13:01:13 +1000
-From: James Cameron <quozl@laptop.org>
-To: yintang@qti.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [TDLS PATCH V2 1/5] mac80211: Enable TDLS peer buffer STA feature
-Message-ID: <20170919030113.GO26927@us.netrek.org> (sfid-20170919_050123_610626_95F1B2AA)
-References: <1505789468-25330-1-git-send-email-yintang@qti.qualcomm.com>
- <1505789468-25330-2-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1505789468-25330-2-git-send-email-yintang@qti.qualcomm.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:36972 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750847AbdI3IMn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Sep 2017 04:12:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Sep 2017 11:12:34 +0300
+Message-Id: <20170930081234.31940-1-luca@coelho.fi> (sfid-20170930_101223_393037_2BF77C6C)
+In-Reply-To: <20170929120305.20551-4-luca@coelho.fi>
+References: <20170929120305.20551-4-luca@coelho.fi>
+Subject: [PATCH v2 3/5] iwlwifi: mvm: return -ENODATA when reading the temperature with the FW down
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 19, 2017 at 10:51:04AM +0800, yintang@qti.qualcomm.com wrote:
-> From: Yingying Tang <yintang@qti.qualcomm.com>
-> 
-> Enable TDLS peer buffer STA feature.
-> Set extended capability bit to enable buffer STA when driver
-> support it.
-> 
-> Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
-> ---
->  include/net/cfg80211.h |    3 +++
->  net/mac80211/tdls.c    |    5 ++++-
->  2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index f12fa52..edefc25 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3249,6 +3249,8 @@ struct cfg80211_ops {
->   *	beaconing mode (AP, IBSS, Mesh, ...).
->   * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
->   *	before connection.
-> + * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_ST: Device support buffer STA when TDLS is
+From: Luca Coelho <luciano.coelho@intel.com>
 
-"_ST:" should be "_STA:"
+It seems that libsensors treats -EIO as a special non-recoverable
+failure when it tries to read the temperature while the firmware is
+not running.  To solve that, change the error code to a milder
+-ENODATA.
 
-> + *	established.
->   */
->  enum wiphy_flags {
->  	/* use hole at 0 */
-> @@ -3275,6 +3277,7 @@ enum wiphy_flags {
->  	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
->  	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
->  	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
-> +	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
->  };
->  
->  /**
-> [...]
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=196941
 
+Fixes: c221daf219b1 ("iwlwifi: mvm: add registration to thermal zone")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+
+In v2:
+   * added a Fixes tag
+
+drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 4d907f60bce9..1232f63278eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -631,7 +631,7 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
+ 
+ 	if (!iwl_mvm_firmware_running(mvm) ||
+ 	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
+-		ret = -EIO;
++		ret = -ENODATA;
+ 		goto out;
+ 	}
+ 
 -- 
-James Cameron
-http://quozl.netrek.org/
+2.14.1
