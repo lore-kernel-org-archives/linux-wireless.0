@@ -1,74 +1,349 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:37173 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751863AbdIAQtO (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33381 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752591AbdI3Rip (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2017 12:49:14 -0400
-Date: Fri, 1 Sep 2017 11:49:11 -0500
-From: Rob Herring <robh@kernel.org>
-To: Antony Antony <antony@phenome.org>
-Cc: Chen-Yu Tsai <wens@csie.org>, Kalle Valo <kvalo@codeaurora.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Icenowy Zheng <icenowy@aosc.io>,
-        devicetree <devicetree@vger.kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Maxime Ripard <maxime.ripard@free-electrons.com>
-Subject: Re: [PATCH] Documentation: dt-binding: net: wireless: add
- bcm43430-fmac
-Message-ID: <20170901164911.aiu5ej5u546z5kow@rob-hp-laptop> (sfid-20170901_184917_527828_6021F033)
-References: <20170829214309.34466-1-antony@phenome.org>
- <CAGb2v66=JvS9wHkUNBwd+vHwx4NAQsaWyhx1OyEokSZizo+7-g@mail.gmail.com>
- <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170830120218.ms3xuhp4qsibistv@AntonyAntony.local>
+        Sat, 30 Sep 2017 13:38:45 -0400
+Received: by mail-pf0-f196.google.com with SMTP id m28so1628171pfi.0
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:45 -0700 (PDT)
+From: silexcommon@gmail.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Alagu Sankar <alagusankar@silex-india.com>
+Subject: [PATCH 09/11] ath10k_sdio: virtual scatter gather for receive
+Date: Sat, 30 Sep 2017 23:07:46 +0530
+Message-Id: <1506793068-27445-10-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193809_743623_8E862619)
+In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 02:02:18PM +0200, Antony Antony wrote:
-> hi,
-> 
-> On Wed, Aug 30, 2017 at 10:28:20AM +0800, Chen-Yu Tsai wrote:
-> > On Wed, Aug 30, 2017 at 5:43 AM, Antony Antony <antony@phenome.org> wrote:
-> 
-> > > a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > > @@ -6,7 +6,9 @@ connects the device to the system.
-> > >
-> > >  Required properties:
-> > >
-> > > - - compatible : Should be "brcm,bcm4329-fmac".
-> > > + - compatible : should be one of the following:
-> > > +       * "brcm,bcm4329-fmac"
-> > > +       * "brcm,bcm43430-fmac"
-> > 
-> > You updated the bindings, but not the driver. So it's not actually
-> > going to work. More specifically, OOB interrupts won't work.
-> >
-> 
-> understood, ignore this patch for now. Thanks Chen-Yu.
-> 
-> > IIRC, The compatible string for this particular case, as it was
-> > originally proposed, only serves as a placeholder for the driver
-> > to check against. None of the instances in sunxi device trees
-> > match the actual chip model. Actual model matching is done
-> > through SDIO, as you've already seen.
-> 
-> yes it seems SDIO driveer code is smarter, once it initialize 
-> brcm,bcm4329-fmac it ignore the DT info and read the chip details to locate 
-> firmware file.
-> 
-> I also noticed other boards using bcm4329-fmac in similar situations.
-> https://patchwork.kernel.org/patch/9739181/
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/amlogic/meson-gxbb-nanopi-k2.dts?h=v4.13-rc7
-> 
-> I will resend "NanoPi NEO Plus2" dts with "brcm,bcm4329-fmac" and see where 
-> it goes. 
+From: Alagu Sankar <alagusankar@silex-india.com>
 
-Adding the compatible or instead of? The former would be better. You 
-should still have the actual chip in case you do have some difference to 
-handle.
+The existing implementation of initiating multiple sdio transfers for
+receive bundling is slowing down the receive speed. Combining the
+transfers using a scatter gather method would be ideal. This results in
+significant performance improvement.
 
-Rob
+Since the sg implementation for sdio transfers are not reliable due to
+buffer start and size alignment, a virtual scatter gather implementation
+is used.
+
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.h  |   1 +
+ drivers/net/wireless/ath/ath10k/sdio.c | 122 ++++++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/sdio.h |   5 +-
+ 3 files changed, 93 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 24663b0..5d87908 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -58,6 +58,7 @@ enum ath10k_htc_tx_flags {
+ };
+ 
+ enum ath10k_htc_rx_flags {
++	ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK = 0x01,
+ 	ATH10K_HTC_FLAG_TRAILER_PRESENT = 0x02,
+ 	ATH10K_HTC_FLAG_BUNDLE_MASK     = 0xF0
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index bb6fa67..45df9db 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -35,6 +35,7 @@
+ #include "sdio.h"
+ 
+ #define ATH10K_SDIO_DMA_BUF_SIZE	(32 * 1024)
++#define ATH10K_SDIO_VSG_BUF_SIZE	(32 * 1024)
+ 
+ static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf,
+ 			    u32 len, bool incr);
+@@ -430,6 +431,7 @@ static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
+ 	int ret;
+ 
+ 	payload_len = le16_to_cpu(htc_hdr->len);
++	skb->len = payload_len + sizeof(struct ath10k_htc_hdr);
+ 
+ 	if (trailer_present) {
+ 		trailer = skb->data + sizeof(*htc_hdr) +
+@@ -468,12 +470,13 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 	enum ath10k_htc_ep_id id;
+ 	int ret, i, *n_lookahead_local;
+ 	u32 *lookaheads_local;
++	int lookahd_idx = 0;
+ 
+ 	for (i = 0; i < ar_sdio->n_rx_pkts; i++) {
+ 		lookaheads_local = lookaheads;
+ 		n_lookahead_local = n_lookahead;
+ 
+-		id = ((struct ath10k_htc_hdr *)&lookaheads[i])->eid;
++		id = ((struct ath10k_htc_hdr *)&lookaheads[lookahd_idx++])->eid;
+ 
+ 		if (id >= ATH10K_HTC_EP_COUNT) {
+ 			ath10k_warn(ar, "invalid endpoint in look-ahead: %d\n",
+@@ -496,6 +499,7 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 			/* Only read lookahead's from RX trailers
+ 			 * for the last packet in a bundle.
+ 			 */
++			lookahd_idx--;
+ 			lookaheads_local = NULL;
+ 			n_lookahead_local = NULL;
+ 		}
+@@ -529,11 +533,11 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 	return ret;
+ }
+ 
+-static int ath10k_sdio_mbox_alloc_pkt_bundle(struct ath10k *ar,
+-					     struct ath10k_sdio_rx_data *rx_pkts,
+-					     struct ath10k_htc_hdr *htc_hdr,
+-					     size_t full_len, size_t act_len,
+-					     size_t *bndl_cnt)
++static int ath10k_sdio_mbox_alloc_bundle(struct ath10k *ar,
++					 struct ath10k_sdio_rx_data *rx_pkts,
++					 struct ath10k_htc_hdr *htc_hdr,
++					 size_t full_len, size_t act_len,
++					 size_t *bndl_cnt)
+ {
+ 	int ret, i;
+ 
+@@ -574,6 +578,7 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
+ 	size_t full_len, act_len;
+ 	bool last_in_bundle;
+ 	int ret, i;
++	int pkt_cnt = 0;
+ 
+ 	if (n_lookaheads > ATH10K_SDIO_MAX_RX_MSGS) {
+ 		ath10k_warn(ar,
+@@ -616,16 +621,22 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
+ 			 * optimally fetched as a full bundle.
+ 			 */
+ 			size_t bndl_cnt;
+-
+-			ret = ath10k_sdio_mbox_alloc_pkt_bundle(ar,
+-								&ar_sdio->rx_pkts[i],
+-								htc_hdr,
+-								full_len,
+-								act_len,
+-								&bndl_cnt);
+-
+-			n_lookaheads += bndl_cnt;
+-			i += bndl_cnt;
++			struct ath10k_sdio_rx_data *rx_pkts =
++				&ar_sdio->rx_pkts[pkt_cnt];
++
++			ret = ath10k_sdio_mbox_alloc_bundle(ar,
++							    rx_pkts,
++							    htc_hdr,
++							    full_len,
++							    act_len,
++							    &bndl_cnt);
++
++			if (ret) {
++				ath10k_warn(ar, "alloc_bundle error %d\n", ret);
++				goto err;
++			}
++
++			pkt_cnt += bndl_cnt;
+ 			/*Next buffer will be the last in the bundle */
+ 			last_in_bundle = true;
+ 		}
+@@ -634,14 +645,18 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
+ 		 * ATH10K_HTC_FLAG_BUNDLE_MASK flag set, all bundled
+ 		 * packet skb's have been allocated in the previous step.
+ 		 */
+-		ret = ath10k_sdio_mbox_alloc_rx_pkt(&ar_sdio->rx_pkts[i],
++		if (htc_hdr->flags & ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK)
++			full_len += ATH10K_HIF_MBOX_BLOCK_SIZE;
++
++		ret = ath10k_sdio_mbox_alloc_rx_pkt(&ar_sdio->rx_pkts[pkt_cnt],
+ 						    act_len,
+ 						    full_len,
+ 						    last_in_bundle,
+ 						    last_in_bundle);
++		pkt_cnt++;
+ 	}
+ 
+-	ar_sdio->n_rx_pkts = i;
++	ar_sdio->n_rx_pkts = pkt_cnt;
+ 
+ 	return 0;
+ 
+@@ -655,41 +670,71 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
+ 	return ret;
+ }
+ 
+-static int ath10k_sdio_mbox_rx_packet(struct ath10k *ar,
+-				      struct ath10k_sdio_rx_data *pkt)
++static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
+ {
+ 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
+-	struct sk_buff *skb = pkt->skb;
++	struct ath10k_sdio_rx_data *pkt = &ar_sdio->rx_pkts[0];
++	struct sk_buff *skb;
+ 	int ret;
+ 
++	skb = pkt->skb;
+ 	ret = ath10k_sdio_read(ar, ar_sdio->mbox_info.htc_addr,
+ 			       skb->data, pkt->alloc_len, false);
+-	pkt->status = ret;
+-	if (!ret)
++	if (ret) {
++		ar_sdio->n_rx_pkts = 0;
++		ath10k_sdio_mbox_free_rx_pkt(pkt);
++	} else {
++		pkt->status = ret;
+ 		skb_put(skb, pkt->act_len);
++	}
+ 
+ 	return ret;
+ }
+ 
+-static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
++static int ath10k_sdio_mbox_rx_fetch_bundle(struct ath10k *ar)
+ {
+ 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
++	struct ath10k_sdio_rx_data *pkt;
+ 	int ret, i;
++	u32 pkt_offset, virt_pkt_len;
+ 
++	virt_pkt_len = 0;
+ 	for (i = 0; i < ar_sdio->n_rx_pkts; i++) {
+-		ret = ath10k_sdio_mbox_rx_packet(ar,
+-						 &ar_sdio->rx_pkts[i]);
+-		if (ret)
++		virt_pkt_len += ar_sdio->rx_pkts[i].alloc_len;
++	}
++	if (virt_pkt_len < ATH10K_SDIO_DMA_BUF_SIZE) {
++		ret = ath10k_sdio_read(ar, ar_sdio->mbox_info.htc_addr,
++				       ar_sdio->vsg_buffer, virt_pkt_len,
++				       false);
++		if (ret) {
++			i = 0;
+ 			goto err;
++		}
++	} else {
++		ath10k_err(ar, "size exceeding limit %d\n", virt_pkt_len);
++	}
++
++	pkt_offset = 0;
++	for (i = 0; i < ar_sdio->n_rx_pkts; i++) {
++		struct sk_buff *skb = ar_sdio->rx_pkts[i].skb;
++
++		pkt = &ar_sdio->rx_pkts[i];
++		memcpy(skb->data, ar_sdio->vsg_buffer + pkt_offset,
++		       pkt->alloc_len);
++		pkt->status = 0;
++		skb_put(skb, pkt->act_len);
++		pkt_offset += pkt->alloc_len;
+ 	}
+ 
+ 	return 0;
+ 
+ err:
+ 	/* Free all packets that was not successfully fetched. */
+-	for (; i < ar_sdio->n_rx_pkts; i++)
++	for (i = 0; i < ar_sdio->n_rx_pkts; i++)
+ 		ath10k_sdio_mbox_free_rx_pkt(&ar_sdio->rx_pkts[i]);
+ 
++	ar_sdio->n_rx_pkts = 0;
++
+ 	return ret;
+ }
+ 
+@@ -732,7 +777,10 @@ static int ath10k_sdio_mbox_rxmsg_pending_handler(struct ath10k *ar,
+ 			 */
+ 			*done = false;
+ 
+-		ret = ath10k_sdio_mbox_rx_fetch(ar);
++		if (ar_sdio->n_rx_pkts > 1)
++			ret = ath10k_sdio_mbox_rx_fetch_bundle(ar);
++		else
++			ret = ath10k_sdio_mbox_rx_fetch(ar);
+ 
+ 		/* Process fetched packets. This will potentially update
+ 		 * n_lookaheads depending on if the packets contain lookahead
+@@ -1136,7 +1184,7 @@ static int ath10k_sdio_bmi_get_rx_lookahead(struct ath10k *ar)
+ 					 MBOX_HOST_INT_STATUS_ADDRESS,
+ 					 &rx_word);
+ 		if (ret) {
+-			ath10k_warn(ar, "unable to read RX_LOOKAHEAD_VALID: %d\n", ret);
++			ath10k_warn(ar, "unable to read rx_lookahd: %d\n", ret);
+ 			return ret;
+ 		}
+ 
+@@ -1480,7 +1528,7 @@ static int ath10k_sdio_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
+ 		skb = items[i].transfer_context;
+ 		padded_len = ath10k_sdio_calc_txrx_padded_len(ar_sdio,
+ 							      skb->len);
+-		skb_trim(skb, padded_len);
++		skb->len = padded_len;
+ 
+ 		/* Write TX data to the end of the mbox address space */
+ 		address = ar_sdio->mbox_addr[eid] + ar_sdio->mbox_size[eid] -
+@@ -1508,7 +1556,8 @@ static int ath10k_sdio_hif_enable_intrs(struct ath10k *ar)
+ 	/* Enable all but CPU interrupts */
+ 	regs->int_status_en = FIELD_PREP(MBOX_INT_STATUS_ENABLE_ERROR_MASK, 1) |
+ 			      FIELD_PREP(MBOX_INT_STATUS_ENABLE_CPU_MASK, 1) |
+-			      FIELD_PREP(MBOX_INT_STATUS_ENABLE_COUNTER_MASK, 1);
++			      FIELD_PREP(MBOX_INT_STATUS_ENABLE_COUNTER_MASK,
++					 1);
+ 
+ 	/* NOTE: There are some cases where HIF can do detection of
+ 	 * pending mbox messages which is disabled now.
+@@ -2024,6 +2073,12 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 		goto err_free_bmi_buf;
+ 	}
+ 
++	ar_sdio->vsg_buffer = kzalloc(ATH10K_SDIO_VSG_BUF_SIZE, GFP_KERNEL);
++	if (!ar_sdio->vsg_buffer) {
++		ret = -ENOMEM;
++		goto err_free_bmi_buf;
++	}
++
+ 	ar_sdio->func = func;
+ 	sdio_set_drvdata(func, ar_sdio);
+ 
+@@ -2081,7 +2136,7 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 	}
+ 
+ 	/* TODO: remove this once SDIO support is fully implemented */
+-	ath10k_warn(ar, "WARNING: ath10k SDIO support is incomplete, don't expect anything to work!\n");
++	ath10k_warn(ar, "WARNING: ath10k SDIO support is experimental\n");
+ 
+ 	return 0;
+ 
+@@ -2115,6 +2170,7 @@ static void ath10k_sdio_remove(struct sdio_func *func)
+ 	ath10k_core_unregister(ar);
+ 	ath10k_core_destroy(ar);
+ 	kfree(ar_sdio->dma_buffer);
++	kfree(ar_sdio->vsg_buffer);
+ }
+ 
+ static const struct sdio_device_id ath10k_sdio_devices[] = {
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
+index 718b8b7..8b6a86a 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.h
++++ b/drivers/net/wireless/ath/ath10k/sdio.h
+@@ -149,8 +149,8 @@ struct ath10k_sdio_irq_proc_regs {
+ 	u8 rx_lookahead_valid;
+ 	u8 host_int_status2;
+ 	u8 gmbox_rx_avail;
+-	__le32 rx_lookahead[2];
+-	__le32 rx_gmbox_lookahead_alias[2];
++	__le32 rx_lookahead[2 * ATH10K_HIF_MBOX_NUM_MAX];
++	__le32 int_status_enable;
+ };
+ 
+ struct ath10k_sdio_irq_enable_regs {
+@@ -207,6 +207,7 @@ struct ath10k_sdio {
+ 	struct ath10k *ar;
+ 	struct ath10k_sdio_irq_data irq_data;
+ 
++	u8 *vsg_buffer;
+ 	u8 *dma_buffer;
+ 
+ 	/* protects access to dma_buffer */
+-- 
+1.9.1
