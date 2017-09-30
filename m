@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54630 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751323AbdIOMrl (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35702 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752217AbdI3Ril (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Sep 2017 08:47:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Sat, 30 Sep 2017 13:38:41 -0400
+Received: by mail-pf0-f194.google.com with SMTP id i23so1766249pfi.2
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Sep 2017 10:38:41 -0700 (PDT)
+From: silexcommon@gmail.com
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 15 Sep 2017 15:47:04 +0300
-Message-Id: <20170915124704.9032-11-luca@coelho.fi> (sfid-20170915_144743_976234_698AFF3D)
-In-Reply-To: <20170915124704.9032-1-luca@coelho.fi>
-References: <20170915124704.9032-1-luca@coelho.fi>
-Subject: [PATCH 10/10] iwlwifi: remove redundant reading from NVM file
+        Alagu Sankar <alagusankar@silex-india.com>
+Subject: [PATCH 07/11] ath10k_sdio: fix rssi indication
+Date: Sat, 30 Sep 2017 23:07:44 +0530
+Message-Id: <1506793068-27445-8-git-send-email-alagusankar@silex-india.com> (sfid-20170930_193803_815759_5C872FEE)
+In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+From: Alagu Sankar <alagusankar@silex-india.com>
 
-The driver reads xtal_calib from NVM file, but actually never uses it.
-This is only used in dvm driver.
+Receive descriptor of sdio device does not include the rssi. notify
+mac80211 accordingly. Without the fix, the rssi value indicated by
+iw changes between the actual value and -95.
 
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 3014beef4873..4574a126c1ae 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -89,10 +89,6 @@ enum wkp_nvm_offsets {
- 	SKU = 2,
- 	N_HW_ADDRS = 3,
- 	NVM_CHANNELS = 0x1E0 - NVM_SW_SECTION,
--
--	/* NVM calibration section offset (in words) definitions */
--	NVM_CALIB_SECTION = 0x2B8,
--	XTAL_CALIB = 0x316 - NVM_CALIB_SECTION
- };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index f025363..21adcad 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1646,9 +1646,16 @@ static bool ath10k_htt_rx_proc_rx_ind_hl(struct ath10k_htt *htt,
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	rx_status = IEEE80211_SKB_RXCB(skb);
+ 	rx_status->chains |= BIT(0);
+-	rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
+-			    rx->ppdu.combined_rssi;
+-	rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
++
++	if (ar->hif.bus == ATH10K_BUS_SDIO) {
++		/* SDIO firmware does not provide signal */
++		rx_status->signal = 0;
++		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
++	} else {
++		rx_status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
++			rx->ppdu.combined_rssi;
++		rx_status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
++	}
  
- enum ext_nvm_offsets {
-@@ -748,9 +744,6 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 			kfree(data);
- 			return NULL;
- 		}
--		/* in family 8000 Xtal calibration values moved to OTP */
--		data->xtal_calib[0] = *(nvm_calib + XTAL_CALIB);
--		data->xtal_calib[1] = *(nvm_calib + XTAL_CALIB + 1);
- 		lar_enabled = true;
- 		ch_section = &nvm_sw[NVM_CHANNELS];
- 	} else {
+ 	spin_lock_bh(&ar->data_lock);
+ 	ch = ar->scan_channel;
 -- 
-2.14.1
+1.9.1
