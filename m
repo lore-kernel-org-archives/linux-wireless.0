@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34278 "EHLO
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:36566 "EHLO
         mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751109AbdJNIQJ (ORCPT
+        with ESMTP id S1751773AbdJAWrU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Oct 2017 04:16:09 -0400
-Date: Sat, 14 Oct 2017 09:16:07 +0100
-From: Christos Gkekas <chris.gekas@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k: debug: Simplify error checking
-Message-ID: <20171014081607.GB3961@inspiron> (sfid-20171014_101911_320455_30425A0B)
-References: <1507498152-4058-1-git-send-email-chris.gekas@gmail.com>
- <87infjw6us.fsf@purkki.adurom.net>
+        Sun, 1 Oct 2017 18:47:20 -0400
+Received: by mail-wr0-f195.google.com with SMTP id k10so2738163wrk.3
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Oct 2017 15:47:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87infjw6us.fsf@purkki.adurom.net>
+In-Reply-To: <1506793068-27445-3-git-send-email-alagusankar@silex-india.com>
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com> <1506793068-27445-3-git-send-email-alagusankar@silex-india.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Sun, 1 Oct 2017 15:47:18 -0700
+Message-ID: <CALLGbR+-G6pKcSPZo=xxJ66iQ0aMJo9xWWq8raSTt5rSASrM=w@mail.gmail.com> (sfid-20171002_004552_595687_1EADD2BC)
+Subject: Re: [PATCH 02/11] ath10k_sdio: wb396 reference card fix
+To: silexcommon@gmail.com
+Cc: ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Alagu Sankar <alagusankar@silex-india.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/10/17 15:49:15 +0300, Kalle Valo wrote:
-> Christos Gkekas <chris.gekas@gmail.com> writes:
-> 
-> > Variable val is unsigned so checking whether it is less than zero is
-> > redundant.
-> >
-> > Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/debug.c | 5 +----
-> >  1 file changed, 1 insertion(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> > index 01fa301..3b93c23 100644
-> > --- a/drivers/net/wireless/ath/ath9k/debug.c
-> > +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> > @@ -1164,10 +1164,7 @@ static ssize_t write_file_tpc(struct file *file, const char __user *user_buf,
-> >  		return -EFAULT;
-> >  
-> >  	buf[len] = '\0';
-> > -	if (kstrtoul(buf, 0, &val))
-> > -		return -EINVAL;
-> > -
-> > -	if (val < 0 || val > 1)
-> > +	if (kstrtoul(buf, 0, &val) || val > 1)
-> >  		return -EINVAL;
-> 
-> Same as with the ath10k patch, please keep the two if statements
-> separate.
-> 
-> -- 
-> Kalle Valo
+Hi Alagu,
 
-Thanks, will submit an new, updated patch.
 
-Christos Gkekas
+On Sat, Sep 30, 2017 at 10:37 AM, <silexcommon@gmail.com> wrote:
+>
+> From: Alagu Sankar <alagusankar@silex-india.com>
+>
+> The QCA9377-3 WB396 sdio reference card does not get initialized
+> due to the conflict in uart gpio pins. This fix is not required
+> for other QCA9377 sdio cards.
+>
+> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index b4f66cd..86247c8 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1708,8 +1708,15 @@ static int ath10k_init_uart(struct ath10k *ar)
+>                 return ret;
+>         }
+>
+> -       if (!uart_print)
+> +       if (!uart_print) {
+> +               /* Hack: override dbg TX pin to avoid side effects of default
+> +                * GPIO_6 in QCA9377 WB396 reference card
+> +                */
+> +               if (ar->hif.bus == ATH10K_BUS_SDIO)
+> +                       ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
+> +                                          ar->hw_params.uart_pin);
+
+If it is indeed a "hack", then I don't think the maintainer should
+accept this upstream. If you want it upstream you need a clean enough
+implementation that doesn't need to be labeled a "hack".
+
+Your commit message states that this is only needed for a very
+specific card and not for other QCA9377 sdio cards. Yet, you're doing
+this for all ATH10K_BUS_SDIO devices. Not good. I think that it's a
+quirk and it's limited to a particular implementation of the device.
+My suggestion: if it can be automatically determined, then do so
+explicitly. If not, then it needs to be a DT setting or a module
+parameter or something like that so the platform maker can decide to
+do it. Having it affect all users of a SDIO QCA9377 when it doesn't
+apply doesn't seem like a good idea to me.
+
+
+- Steve
