@@ -1,77 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:49349 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932318AbdJXJ2y (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:33852 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbdJBJGp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 05:28:54 -0400
-Received: by mail-pg0-f66.google.com with SMTP id g6so14057557pgn.6
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 02:28:54 -0700 (PDT)
-Date: Tue, 24 Oct 2017 02:28:52 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Simon Kelley <simon@thekelleys.org.uk>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/wireless: atmel: Convert timers to use timer_setup()
-Message-ID: <20171024092852.GA47097@beast> (sfid-20171024_113332_414405_9798EB6D)
+        Mon, 2 Oct 2017 05:06:45 -0400
+Received: by mail-lf0-f66.google.com with SMTP id h80so1969805lfe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Oct 2017 02:06:44 -0700 (PDT)
+Subject: Re: [PATCH 02/11] ath10k_sdio: wb396 reference card fix
+To: Alagu Sankar <alagusankar@silex-india.com>,
+        Steve deRosier <derosier@gmail.com>
+Cc: silexcommon@gmail.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+ <1506793068-27445-3-git-send-email-alagusankar@silex-india.com>
+ <CALLGbR+-G6pKcSPZo=xxJ66iQ0aMJo9xWWq8raSTt5rSASrM=w@mail.gmail.com>
+ <bc6a860a4d655c65583a9da26cb4c63e@silex-india.com>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <427bfce1-5adb-9cad-b674-e42f8005bb02@gmail.com> (sfid-20171002_110459_463768_722ACABC)
+Date: Mon, 2 Oct 2017 11:06:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bc6a860a4d655c65583a9da26cb4c63e@silex-india.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+Hi Alagu,
 
-Cc: Simon Kelley <simon@thekelleys.org.uk>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/atmel/atmel.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+On 2017-10-02 09:02, Alagu Sankar wrote:
+> Hi Steve,
+> 
+> On 2017-10-02 04:17, Steve deRosier wrote:
+>> Hi Alagu,
+>>
+>>
+>> On Sat, Sep 30, 2017 at 10:37 AM, <silexcommon@gmail.com> wrote:
+>>>
+>>> From: Alagu Sankar <alagusankar@silex-india.com>
+>>>
+>>> The QCA9377-3 WB396 sdio reference card does not get initialized
+>>> due to the conflict in uart gpio pins. This fix is not required
+>>> for other QCA9377 sdio cards.
+>>>
+>>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++++-
+>>>  1 file changed, 8 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+>>> index b4f66cd..86247c8 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>>> @@ -1708,8 +1708,15 @@ static int ath10k_init_uart(struct ath10k *ar)
+>>>                 return ret;
+>>>         }
+>>>
+>>> -       if (!uart_print)
+>>> +       if (!uart_print) {
+>>> +               /* Hack: override dbg TX pin to avoid side effects of default
+>>> +                * GPIO_6 in QCA9377 WB396 reference card
+>>> +                */
+>>> +               if (ar->hif.bus == ATH10K_BUS_SDIO)
+>>> +                       ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
+>>> +                                          ar->hw_params.uart_pin);
+>>
+>> If it is indeed a "hack", then I don't think the maintainer should
+>> accept this upstream. If you want it upstream you need a clean enough
+>> implementation that doesn't need to be labeled a "hack".
+> 
+> It is a hack as per the qcacld reference driver.
+> 
+>> Your commit message states that this is only needed for a very
+>> specific card and not for other QCA9377 sdio cards. Yet, you're doing
+>> this for all ATH10K_BUS_SDIO devices. Not good. I think that it's a
+>> quirk and it's limited to a particular implementation of the device.
+>> My suggestion: if it can be automatically determined, then do so
+>> explicitly. If not, then it needs to be a DT setting or a module
+>> parameter or something like that so the platform maker can decide to
+>> do it. Having it affect all users of a SDIO QCA9377 when it doesn't
+>> apply doesn't seem like a good idea to me.
+>>
+>>
+>> - Steve
+> 
+> Got it. The qcacld reference driver had it for all the QCA9377 sdio cards.
+> But we found it to be a problem only for the WB396 reference card. Will
+> have this checked again and release a v2 patch accordingly.
+> 
+While you are at it, you might as well change the commit comments to:
 
-diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
-index e816d53c2c05..c9dd5e44c9c6 100644
---- a/drivers/net/wireless/atmel/atmel.c
-+++ b/drivers/net/wireless/atmel/atmel.c
-@@ -586,7 +586,7 @@ static int atmel_validate_channel(struct atmel_private *priv, int channel);
- static void atmel_management_frame(struct atmel_private *priv,
- 				   struct ieee80211_hdr *header,
- 				   u16 frame_len, u8 rssi);
--static void atmel_management_timer(u_long a);
-+static void atmel_management_timer(struct timer_list *t);
- static void atmel_send_command(struct atmel_private *priv, int command,
- 			       void *cmd, int cmd_size);
- static int atmel_send_command_wait(struct atmel_private *priv, int command,
-@@ -1579,8 +1579,7 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
- 	priv->default_beacon_period = priv->beacon_period = 100;
- 	priv->listen_interval = 1;
- 
--	setup_timer(&priv->management_timer, atmel_management_timer,
--		    (unsigned long)dev);
-+	timer_setup(&priv->management_timer, atmel_management_timer, 0);
- 	spin_lock_init(&priv->irqlock);
- 	spin_lock_init(&priv->timerlock);
- 
-@@ -3434,10 +3433,9 @@ static void atmel_management_frame(struct atmel_private *priv,
- }
- 
- /* run when timer expires */
--static void atmel_management_timer(u_long a)
-+static void atmel_management_timer(struct timer_list *t)
- {
--	struct net_device *dev = (struct net_device *) a;
--	struct atmel_private *priv = netdev_priv(dev);
-+	struct atmel_private *priv = from_timer(priv, t, management_timer);
- 	unsigned long flags;
- 
- 	/* Check if the card has been yanked. */
--- 
-2.7.4
+"ath10k: sdio: <description>"
 
+or perhaps just:
 
--- 
-Kees Cook
-Pixel Security
+"ath10k: <description>"
+
+> Best Regards,
+> Alagu Sankar
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
