@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 7.mo3.mail-out.ovh.net ([46.105.57.200]:60749 "EHLO
-        7.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751710AbdJSLX3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57144 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751065AbdJBNE0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2017 07:23:29 -0400
-Received: from player158.ha.ovh.net (b6.ovh.net [213.186.33.56])
-        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 5EE51161353
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 08:33:57 +0200 (CEST)
+        Mon, 2 Oct 2017 09:04:26 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 19 Oct 2017 08:33:51 +0200
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Joe Perches <joe@perches.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcma: use bcma_debug and pr_cont in MIPS driver
-In-Reply-To: <1508377091.6806.32.camel@perches.com>
-References: <20171016125432.11655-1-zajec5@gmail.com>
- <50b62ff7-40c2-6980-27f8-4776b059800c@hauke-m.de>
- <1508377091.6806.32.camel@perches.com>
-Message-ID: <e7eb6c80162d43998386fe2b22814125@milecki.pl> (sfid-20171019_132333_093363_EED41C13)
+Subject: Re: rtlwifi: rtl8821ae: Fix connection lost problem
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
+References: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stable <stable@vger.kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20171002130425.77E9760767@smtp.codeaurora.org> (sfid-20171002_150234_491348_99D70DFA)
+Date: Mon,  2 Oct 2017 13:04:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-10-19 03:38, Joe Perches wrote:
-> On Mon, 2017-10-16 at 23:21 +0200, Hauke Mehrtens wrote:
->> On 10/16/2017 02:54 PM, Rafał Miłecki wrote:
->> > From: Rafał Miłecki <rafal@milecki.pl>
->> >
->> > Using bcma_debug gives a device-specific prefix for messages and pr_cont
->> > is a common helper for continuing a line.
->> >
->> > Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->> 
->> Acked-By: Hauke Mehrtens <hauke@hauke-m.de>
->> 
->> > ---
->> >  drivers/bcma/driver_mips.c | 7 ++++---
->> >  1 file changed, 4 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
->> > index 89af807cf29c..5904ef1aa624 100644
->> > --- a/drivers/bcma/driver_mips.c
->> > +++ b/drivers/bcma/driver_mips.c
->> > @@ -184,10 +184,11 @@ static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
->> >  {
->> >  	int i;
->> >  	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
->> > -	printk(KERN_DEBUG KBUILD_MODNAME ": core 0x%04x, irq :", dev->id.id);
->> > +
->> > +	bcma_debug(dev->bus, "core 0x%04x, irq :", dev->id.id);
->> >  	for (i = 0; i <= 6; i++)
->> > -		printk(" %s%s", irq_name[i], i == irq ? "*" : " ");
->> > -	printk("\n");
->> > +		pr_cont(" %s%s", irq_name[i], i == irq ? "*" : " ");
->> > +	pr_cont("\n");
->> >  }
->> >
->> >  static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
->> >
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> In commit 40b368af4b75 ("rtlwifi: Fix alignment issues"), the read
+> of REG_DBI_READ was changed from 16 to 8 bits. For unknown reasonsi
+> this change results in reduced stability for the wireless connection.
+> This regression was located using bisection.
 > 
-> This isn't the same code as it depends on #define DEBUG
-> and will not output the first line in most cases.
+> Fixes: 40b368af4b75 ("rtlwifi: Fix alignment issues")
+> Reported-and-tested-by: James Cameron <quozl@laptop.org>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> # 4.11+
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-Oh, I didn't think about bcma_debug (pr_debug) being no_printk indeed.
-AFAIU it will indeed make pr_cont default to the KERN_DEFAULT.
+Patch applied to wireless-drivers.git, thanks.
 
-I'll try to test your code today or tomorrow, thanks!
+b8b8b16352cd rtlwifi: rtl8821ae: Fix connection lost problem
+
+-- 
+https://patchwork.kernel.org/patch/9962615/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
