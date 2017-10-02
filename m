@@ -1,35 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55340 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752068AbdJJHqe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48782 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751357AbdJBNxt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 03:46:34 -0400
-Message-ID: <1507621591.26041.60.camel@sipsolutions.net> (sfid-20171010_094638_696183_2B7BC17D)
-Subject: Re: Contributing to Linux-wireless drivers.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Himanshu Jha <himanshujha199640@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 10 Oct 2017 09:46:31 +0200
-In-Reply-To: <20171010060504.GA3130@himanshu-Vostro-3559> (sfid-20171010_080517_115691_454C8713)
-References: <20171010060504.GA3130@himanshu-Vostro-3559>
-         (sfid-20171010_080517_115691_454C8713)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 2 Oct 2017 09:53:49 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v4,
+ 1/9] brcmsmac: make some local variables 'static const' to reduce
+ stack size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170922212930.620249-2-arnd@arndb.de>
+References: <20170922212930.620249-2-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Jiri Pirko <jiri@resnulli.us>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Michal Marek <mmarek@suse.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
+        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
+        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>
+Message-Id: <20171002135348.7AFA560AFB@smtp.codeaurora.org> (sfid-20171002_155708_279251_06CE656B)
+Date: Mon,  2 Oct 2017 13:53:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-10-10 at 11:35 +0530, Himanshu Jha wrote:
-> 
-> The wiki page https://wireless.wiki.kernel.org/ is not working
-> correctly, for every page it shows 
-> 
-> "This topic does not exist yet
-> You've followed a link to a topic that doesn't exist yet. If
-> permissions
-> allow, you may create it by clicking on “Create this page”.
-> Earlier I used to visit this without any issues, don't know what is
-> the problem now ?
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-FWIW, I fixed this - some idiot deleted almost all pages on the wiki.
+> With KASAN and a couple of other patches applied, this driver is one
+> of the few remaining ones that actually use more than 2048 bytes of
+> kernel stack:
+> 
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
+> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
+> 
+> Here, I'm reducing the stack size by marking as many local variables as
+> 'static const' as I can without changing the actual code.
+> 
+> This is the first of three patches to improve the stack usage in this
+> driver. It would be good to have this backported to stabl kernels
+> to get all drivers in 'allmodconfig' below the 2048 byte limit so
+> we can turn on the frame warning again globally, but I realize that
+> the patch is larger than the normal limit for stable backports.
+> 
+> The other two patches do not need to be backported.
+> 
+> Cc: <stable@vger.kernel.org>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-johannes
+Patch applied to wireless-drivers.git, thanks.
+
+c503dd38f850 brcmsmac: make some local variables 'static const' to reduce stack size
+
+-- 
+https://patchwork.kernel.org/patch/9967145/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
