@@ -1,92 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59456 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751639AbdJFRSm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44814 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbdJBNql (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 13:18:42 -0400
-Message-ID: <1507310319.19300.28.camel@sipsolutions.net> (sfid-20171006_191921_152379_2DFDE1A2)
-Subject: Re: [RFC] mac80211: Add airtime fairness accounting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Fri, 06 Oct 2017 19:18:39 +0200
-In-Reply-To: <87lgkoqrhs.fsf@toke.dk>
-References: <20171006115232.28688-1-toke@toke.dk>
-         <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 2 Oct 2017 09:46:41 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
+Cc: Sathya Perla <sathya.perla@broadcom.com>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+        <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
+Date: Mon, 02 Oct 2017 16:46:29 +0300
+In-Reply-To: <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
+ (=?utf-8?B?IkrDqXLDqW15?=
+        Lefaure"'s message of "Sun, 1 Oct 2017 15:30:43 -0400")
+Message-ID: <87h8vh64sq.fsf@codeaurora.org> (sfid-20171002_154704_411222_BA4B32E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-10-06 at 16:29 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Fri, 2017-10-06 at 13:52 +0200, Toke Høiland-Jørgensen wrote:
-> > > This adds accounting of each station's airtime usage to mac80211.
-> > > On
-> > > the RX side, airtime is calculated from the packet length and
-> > > duration.
-> > 
-> > I think you should probably try to get something here from the
-> > driver?
-> > Doing the calculations is really awkward, because you have to take
-> > into account aggregation, etc.
-> 
-> Well, calculating the duration from the rate and size is what ath9k
-> is currently doing, and that has all the information available to do
-> so (I did verify that the airtime was almost identical on the TX and
-> RX side for the same traffic).
+J=C3=A9r=C3=A9my Lefaure <jeremy.lefaure@lse.epita.fr> writes:
 
-It's still iffy - with aggregation you might have a better idea of the
-total airtime, but not really see - in the higher layers - all the
-padding that comes between A-MPDUs etc. I think many drivers could do
-better by exposing the total airtime from the device/firmware, whereas
-exposing _all_ the little details that you need to calculate it post-
-facto will be really difficult, and make the calculation really hard.
+> Using the ARRAY_SIZE macro improves the readability of the code. Also,
+> it is not always useful to use a variable to store this constant
+> calculated at compile time.
+>
+> Found with Coccinelle with the following semantic patch:
+> @r depends on (org || report)@
+> type T;
+> T[] E;
+> position p;
+> @@
+> (
+>  (sizeof(E)@p /sizeof(*E))
+> |
+>  (sizeof(E)@p /sizeof(E[...]))
+> |
+>  (sizeof(E)@p /sizeof(T))
+> )
+>
+> Signed-off-by: J=C3=A9r=C3=A9my Lefaure <jeremy.lefaure@lse.epita.fr>
+> ---
+>  drivers/net/ethernet/emulex/benet/be_cmds.c        |   4 +-
+>  drivers/net/ethernet/intel/i40e/i40e_adminq.h      |   3 +-
+>  drivers/net/ethernet/intel/i40evf/i40e_adminq.h    |   3 +-
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_x550.c      |   3 +-
+>  drivers/net/ethernet/intel/ixgbevf/vf.c            |  17 +-
+>  drivers/net/usb/kalmia.c                           |   9 +-
+>  .../broadcom/brcm80211/brcmsmac/phy/phytbl_n.c     | 473 ++++++---------=
+------
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   9 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   |  12 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/table.c |  14 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/table.c |  34 +-
+>  include/net/bond_3ad.h                             |   3 +-
+>  net/ipv6/seg6_local.c                              |   6 +-
+>  13 files changed, 177 insertions(+), 413 deletions(-)
 
-> But yeah, I guess that is not necessarily the case for all drivers?
-> Maybe having a field that the driver can fill in is better (that also
-> has the nice property that a driver that doesn't supply any airtime
-> information won't get the scheduling; which is probably desirable).
+We have a tree for wireless so usually it's better to submit wireless
+changes on their own but here I assume Dave will apply this to his tree.
+If not, please resubmit the wireless part in a separate patch.
 
-I think that'd be better, yes. Perhaps for some simple cases a helper
-function can be provided, but I'd want to actually know about those
-drivers before adding that.
-
-> You're right that it does nothing for one-way UDP, of course. But not
-> a lot of traffic is actually one-way (most is either TCP or something
-> like Quic that also has a feedback loop). So in most of our tests we
-> saw a pretty nice effect from TCP back-pressure.
-
-Yeah that makes some sense. I'm a bit concerned about pathological
-corner cases, you don't really know about the protocol used on top. Can
-a client starve itself by sending things? And perhaps, if it has a dumb
-higher layer protocol, it'll retransmit rather than back off, if it
-doesn't get the higher layer ACK?
-
-> > Then again, I'm not even sure yet why you care about the AC at all?
-> > Should fairness really be something that's within an AC?
-> 
-> No, ideally it shouldn't. This is mostly an artifact of how ath9k
-> schedules TXQs independently for each AC. This means that if (say)
-> three stations are back-logged on the BE queue, and one of those also
-> has the occasional packet on the VO queue, if the deficit is shared
-> between all levels, every time a VO packet arrives that station
-> effectively gets its deficit reset to zero, meaning it will get too
-> much airtime.
-> 
-> Having a separate deficit for each AC level is a crude workaround for
-> this, which is what we went with for the initial version in ath9k;
-> and this patch is just a straight-forward port of that. But I guess
-> this is a good opportunity to figure out how to solve this properly;
-> I'll think about how to do that (ideas welcome!)...
-
-So ... no, I don't understand. You have a TXQ per _TID_, so splitting
-up this per _AC_ still doesn't make sense since you have two TXQs for
-each AC?
-
-But then again I'm not sure I've sufficiently wrapped my head around
-the whole algorithm, so ...
-
-johannes
+--=20
+Kalle Valo
