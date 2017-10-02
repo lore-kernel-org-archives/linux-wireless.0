@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60378 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754049AbdJJBGB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 21:06:01 -0400
-Date: Mon, 09 Oct 2017 18:05:55 -0700 (PDT)
-Message-Id: <20171009.180555.71645109792027520.davem@davemloft.net> (sfid-20171010_030620_640639_403E6A3B)
-To: keescook@chromium.org
-Cc: tglx@linutronix.de, khc@pm.waw.pl, aditya.shankar@microchip.com,
-        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
-        axboe@fb.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] timer: Remove meaningless .data/.function assignments
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20171010001032.GA119829@beast>
-References: <20171010001032.GA119829@beast>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from up.icubehost.com ([185.62.36.194]:51052 "EHLO up.icubehost.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750936AbdJBHoV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Oct 2017 03:44:21 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 02 Oct 2017 13:14:18 +0530
+From: Alagu Sankar <alagusankar@silex-india.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: silexcommon@gmail.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/11] ath10k_sdio: sdio htt data transfer fixes
+In-Reply-To: <59D1EC94.2020307@broadcom.com>
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+ <1506793068-27445-2-git-send-email-alagusankar@silex-india.com>
+ <59D1EC94.2020307@broadcom.com>
+Message-ID: <f4255671cb5e7b52f823e26ba6816d2f@silex-india.com> (sfid-20171002_094238_744510_80F135D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kees Cook <keescook@chromium.org>
-Date: Mon, 9 Oct 2017 17:10:32 -0700
+Hi Arend,
 
-> Several timer users needlessly reset their .function/.data fields during
-> their timer callback, but nothing else changes them. Some users do not
-> use their .data field at all. Each instance is removed here.
+On 2017-10-02 13:06, Arend van Spriel wrote:
+> On 9/30/2017 7:37 PM, silexcommon@gmail.com wrote:
+>> From: Alagu Sankar <alagusankar@silex-india.com>
+>> 
 > 
-> Cc: Krzysztof Halasa <khc@pm.waw.pl>
-> Cc: Aditya Shankar <aditya.shankar@microchip.com>
-> Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Jens Axboe <axboe@fb.com>
-> Cc: netdev@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: devel@driverdev.osuosl.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # for staging
-> Acked-by: Krzysztof Halasa <khc@pm.waw.pl> # for wan/hdlc*
-> Acked-by: Jens Axboe <axboe@kernel.dk> # for amiflop
-> ---
-> This should go via the timer/core tree, please. It's been acked by each
-> of the maintainers. Thanks!
+> [...]
+> 
+>> 
+>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+> 
+> Not really have a specific remark for this patch, but for the entire
+> series. These patches are sent using an anonymous email address, apart
+> from 'silex' being in there, which does not show up in the certificate
+> of origin. Just wondering if this is acceptable?
+> 
+> Regards,
+> Arend
+> 
+>> ---
+>>   drivers/net/wireless/ath/ath10k/core.c   | 20 +++++++++++++++++---
+>>   drivers/net/wireless/ath/ath10k/htt_rx.c |  6 ++++--
+>>   drivers/net/wireless/ath/ath10k/htt_tx.c | 24 
+>> +++++++++++++++++++-----
+>>   3 files changed, 40 insertions(+), 10 deletions(-)
+> 
+Could not use git send-email from the official ID due to mail server 
+restrictions. If this is not acceptable, I will figure out a way to 
+overcome this.
 
-For networking bits:
-
-Acked-by: David S. Miller <davem@davemloft.net>
+Regards,
+Alagu Sankar
