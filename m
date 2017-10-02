@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:11312 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752311AbdJ0JZz (ORCPT
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:55964 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750715AbdJBHgy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 05:25:55 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 2 Oct 2017 03:36:54 -0400
+Received: by mail-qk0-f175.google.com with SMTP id q8so4338980qkl.12
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Oct 2017 00:36:54 -0700 (PDT)
+Subject: Re: [PATCH 01/11] ath10k_sdio: sdio htt data transfer fixes
+To: silexcommon@gmail.com, ath10k@lists.infradead.org
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+ <1506793068-27445-2-git-send-email-alagusankar@silex-india.com>
+Cc: linux-wireless@vger.kernel.org,
+        Alagu Sankar <alagusankar@silex-india.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <59D1EC94.2020307@broadcom.com> (sfid-20171002_093510_725557_8CB6BAA5)
+Date: Mon, 2 Oct 2017 09:36:52 +0200
 MIME-Version: 1.0
-Subject: Re: [v7,2/5] ath10k: Enable TDLS peer buffer STA feature
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1508835074-3384-3-git-send-email-yintang@qti.qualcomm.com>
-References: <1508835074-3384-3-git-send-email-yintang@qti.qualcomm.com>
-To: <yintang@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <1e51ea390a67441faf15f5696e0afea8@euamsexm01a.eu.qualcomm.com> (sfid-20171027_112612_601578_26137AFF)
-Date: Fri, 27 Oct 2017 11:25:49 +0200
+In-Reply-To: <1506793068-27445-2-git-send-email-alagusankar@silex-india.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-yintang@qti.qualcomm.com wrote:
+On 9/30/2017 7:37 PM, silexcommon@gmail.com wrote:
+> From: Alagu Sankar <alagusankar@silex-india.com>
+>
 
-> From: Yingying Tang <yintang@qti.qualcomm.com>
-> 
-> Enable TDLS peer buffer STA feature.
-> QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
-> it reports this capability through wmi service map in wmi service ready
-> event. Set related parameter in TDLS WMI command to enable this feature.
-> 
-> Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+[...]
 
-Depends on:
+>
+> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
 
-a9cd27b34d66 mac80211: enable TDLS peer buffer STA feature
+Not really have a specific remark for this patch, but for the entire 
+series. These patches are sent using an anonymous email address, apart 
+from 'silex' being in there, which does not show up in the certificate 
+of origin. Just wondering if this is acceptable?
 
-Currently in mac80211-next.
+Regards,
+Arend
 
-4 patches set to Awaiting Upstream.
-
-10023753 [v7,2/5] ath10k: Enable TDLS peer buffer STA feature
-10023743 [v7,3/5] ath10k: Enable TDLS peer inactivity detection
-10023725 [v7,4/5] ath10k: Avoid to set WEP key for TDLS peer
-10023737 [v7,5/5] ath10k: Fix TDLS peer TX data failure issue on encryped AP
-
--- 
-https://patchwork.kernel.org/patch/10023753/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> ---
+>   drivers/net/wireless/ath/ath10k/core.c   | 20 +++++++++++++++++---
+>   drivers/net/wireless/ath/ath10k/htt_rx.c |  6 ++++--
+>   drivers/net/wireless/ath/ath10k/htt_tx.c | 24 +++++++++++++++++++-----
+>   3 files changed, 40 insertions(+), 10 deletions(-)
