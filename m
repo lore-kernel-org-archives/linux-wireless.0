@@ -1,94 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:47611 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751837AbdJ3Nkm (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:32836 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbdJBJCz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 09:40:42 -0400
+        Mon, 2 Oct 2017 05:02:55 -0400
+Received: by mail-lf0-f65.google.com with SMTP id j73so1877457lfg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Oct 2017 02:02:54 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: Re: [PATCH 00/11] SDIO support for ath10k
+To: silexcommon@gmail.com, ath10k@lists.infradead.org
+Cc: Alagu Sankar <alagusankar@silex-india.com>,
+        linux-wireless@vger.kernel.org
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+Message-ID: <b4bbf022-77d7-f907-f35b-7afacfc227e5@gmail.com> (sfid-20171002_110109_703044_3A8EE1C6)
+Date: Mon, 2 Oct 2017 11:02:52 +0200
 MIME-Version: 1.0
-In-Reply-To: <5c4844e8-b519-888d-c772-4f925a4f2a66@users.sourceforge.net>
-References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net> <5c4844e8-b519-888d-c772-4f925a4f2a66@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 31 Oct 2017 00:40:20 +1100
-Message-ID: <CAGRGNgUt05VmCEAiZwv4y7bQz_X_8F39irsQhgfJJh+dapYEZw@mail.gmail.com> (sfid-20171030_144129_390994_175C7EA1)
-Subject: Re: [PATCH 5/5] wlcore: Use common error handling code in wl1271_op_suspend()
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
-        James Minor <james.minor@ni.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors <kernel-janitors@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
+Hi Alagu,
 
-On Mon, Oct 30, 2017 at 7:16 AM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sun, 29 Oct 2017 20:36:39 +0100
->
-> Add a jump target so that a specific error message is stored only once
-> at the end of this function implementation.
-> Replace two calls of the macro "wl1271_warning" by goto statements.
->
-> This issue was detected by using the Coccinelle software.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+It is great to see that we are finally about have fully working
+mainline support for QCA9377 SDIO chipsets!
 
-This patch is bogus, moving error messages around like this is just bizarre.
+Great job!
 
-These are both reporting different failures, so the error messages
-should be different.
+On 2017-09-30 19:37, silexcommon@gmail.com wrote:
+> From: Alagu Sankar <alagusankar@silex-india.com>
+> 
+> This patchset, generated against master-pending branch, enables a fully
+> functional SDIO interface driver for ath10k.  Patches have been verified on
+> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access Point
+> and P2P modes.
+> 
+> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
+> with the board data from respective SDIO card vendors. Receive performance
+> matches the QCA reference driver when used with SDIO3.0 enabled platforms.
+> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
+> 
+Can you share any scripts etc. (wrapping hostapd and wpa_supplicant stuff)
+or provide some more info about you test setup?
 
-> ---
->  drivers/net/wireless/ti/wlcore/main.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index 12a9d6509382..a110f61110d5 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -1732,8 +1732,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
->                 ret = wl1271_configure_suspend(wl, wlvif, wow);
->                 if (ret < 0) {
->                         mutex_unlock(&wl->mutex);
-> -                       wl1271_warning("couldn't prepare device to suspend");
+I made a quick socat based test on an old laptop (I don't think it has SDIO
+3.0 support) and I did unfortunately not get the same figures as you did :(
 
-"couldn't configure device for suspend"?
+> This patchset differs from the previous high latency patches, specific to SDIO.
+> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instructs the
+> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Without
+> this flag, the management frames are not sent out by the firmware. Possibility
+> of management frames being sent via WMI and data frames through the reduced Tx
+> completion needs to be probed further.
+> 
+Ah, so that explains why I couldn't see any messages in the air.
 
-> -                       return ret;
-> +                       goto report_preparation_failure;
->                 }
->         }
->
-> @@ -1752,10 +1751,8 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
->         wl1271_ps_elp_sleep(wl);
->         mutex_unlock(&wl->mutex);
->
-> -       if (ret < 0) {
-> -               wl1271_warning("couldn't prepare device to suspend");
-
-"couldn't enable power saving"?
-
-> -               return ret;
-> -       }
-> +       if (ret < 0)
-> +               goto report_preparation_failure;
->
->         /* flush any remaining work */
->         wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> Further improvements can be done on the transmit path by implementing packet
+> bundle. Scatter Gather is another area of improvement for both Transmit and
+> Receive, but may not work on all platforms
+> 
+> Known issues: Surprise removal of the card, when the device is in connected
+> state, delays sdio function remove due to delayed WMI command failures.
+> Existing ath10k framework can not differentiate between a kernel module
+> removal and the surprise removal of teh card.
+> 
+> Alagu Sankar (11):
+>    ath10k_sdio: sdio htt data transfer fixes
+>    ath10k_sdio: wb396 reference card fix
+>    ath10k_sdio: DMA bounce buffers for read write
+>    ath10k_sdio: reduce transmit msdu count
+>    ath10k_sdio: use clean packet headers
+>    ath10k_sdio: high latency fixes for beacon buffer
+>    ath10k_sdio: fix rssi indication
+>    ath10k_sdio: common read write
+>    ath10k_sdio: virtual scatter gather for receive
+>    ath10k_sdio: enable firmware crash dump
+>    ath10k_sdio: hif start once addition
+> 
+>   drivers/net/wireless/ath/ath10k/core.c    |  35 ++-
+>   drivers/net/wireless/ath/ath10k/debug.c   |   3 +
+>   drivers/net/wireless/ath/ath10k/htc.c     |   4 +-
+>   drivers/net/wireless/ath/ath10k/htc.h     |   1 +
+>   drivers/net/wireless/ath/ath10k/htt_rx.c  |  19 +-
+>   drivers/net/wireless/ath/ath10k/htt_tx.c  |  24 +-
+>   drivers/net/wireless/ath/ath10k/hw.c      |   2 +
+>   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
+>   drivers/net/wireless/ath/ath10k/mac.c     |  31 ++-
+>   drivers/net/wireless/ath/ath10k/sdio.c    | 398 ++++++++++++++++++++++--------
+>   drivers/net/wireless/ath/ath10k/sdio.h    |  10 +-
+>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |   2 +-
+>   12 files changed, 403 insertions(+), 127 deletions(-)
+> 
