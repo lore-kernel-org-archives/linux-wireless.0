@@ -1,99 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35965 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932280AbdJYJVN (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:48709 "EHLO
+        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750962AbdJBEV6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 05:21:13 -0400
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        vkanchan@qti.qualcomm.com, amarnath@qti.qualcomm.com,
-        usdutt@qti.qualcomm.com, vamsin@qti.qualcomm.com,
-        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-From: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-To: johannes@sipsolutions.net
-Subject: [PATCH] nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
-Date: Wed, 25 Oct 2017 14:50:48 +0530
-Message-Id: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org> (sfid-20171025_112153_034094_786FC168)
+        Mon, 2 Oct 2017 00:21:58 -0400
+Received: by mail-oi0-f50.google.com with SMTP id 125so7290782oie.5
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Oct 2017 21:21:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com>
+References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+ <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
+ <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
+ <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
+ <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Mon, 2 Oct 2017 12:21:57 +0800
+Message-ID: <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com> (sfid-20171002_062036_885348_628B8FD7)
+Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
+To: AceLan Kao <acelan.kao@canonical.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use NL80211_CMD_UPDATE_CONNECT_PARAMS to update new ERP information,
-Association IEs and the Authentication type to driver / firmware which
-will be used in subsequent roamings.
+Hi AceLan,
 
-Signed-off-by: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
----
- include/net/cfg80211.h |  5 +++++
- net/wireless/nl80211.c | 39 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 44 insertions(+)
+On Thu, Sep 28, 2017 at 4:28 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
+> Hi Daniel,
+>
+> I've tried your patch, but it doesn't work for me.
+> Wifi can scan AP, but can't get connected.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b903ef7..e34faa5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2156,9 +2156,14 @@ struct cfg80211_connect_params {
-  * have to be updated as part of update_connect_params() call.
-  *
-  * @UPDATE_ASSOC_IES: Indicates whether association request IEs are updated
-+ * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
-+ *	username, erp sequence number and rrk) are updated
-+ * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
-  */
- enum cfg80211_connect_params_changed {
- 	UPDATE_ASSOC_IES		= BIT(0),
-+	UPDATE_FILS_ERP_INFO		= BIT(1),
-+	UPDATE_AUTH_TYPE		= BIT(2),
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c5d95c3..c5e11d6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9165,6 +9165,45 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
- 		changed |= UPDATE_ASSOC_IES;
- 	}
- 
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_REALM] &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
-+		connect.fils_erp_username =
-+			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_USERNAME]);
-+		connect.fils_erp_username_len =
-+			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_USERNAME]);
-+		connect.fils_erp_realm =
-+			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_REALM]);
-+		connect.fils_erp_realm_len =
-+			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_REALM]);
-+		connect.fils_erp_next_seq_num =
-+			nla_get_u16(
-+			   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM]);
-+		connect.fils_erp_rrk =
-+			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_RRK]);
-+		connect.fils_erp_rrk_len =
-+			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_RRK]);
-+		changed |= UPDATE_FILS_ERP_INFO;
-+	} else if (info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] ||
-+		   info->attrs[NL80211_ATTR_FILS_ERP_REALM] ||
-+		   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] ||
-+		   info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
-+		return -EINVAL;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
-+		u32 auth_type =
-+			nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
-+		if (!nl80211_valid_auth_type(rdev, auth_type,
-+					     NL80211_CMD_CONNECT))
-+			return -EINVAL;
-+		connect.auth_type = auth_type;
-+		changed |= UPDATE_AUTH_TYPE;
-+	}
-+
- 	wdev_lock(dev->ieee80211_ptr);
- 	if (!wdev->current_bss)
- 		ret = -ENOLINK;
--- 
-1.9.1
+Can you please clarify which patch(es) you have tried?
+
+This is the base patch which adds the infrastructure to request
+specific MSI IRQ vectors:
+https://marc.info/?l=linux-wireless&m=150631274108016&w=2
+
+This is the ath9k MSI patch which makes use of that:
+https://github.com/endlessm/linux/commit/739c7a924db8f4434a9617657
+
+If you were already able to use ath9k MSI interrupts without specific
+consideration for which MSI vector numbers were used, these are the
+possible explanations that spring to mind:
+
+1. You got lucky and it picked a vector number that is 4-aligned. You
+can check this in the "lspci -vvv" output. You'll see something like:
+Capabilities: [50] MSI: Enable+ Count=1/4 Maskable+ 64bit+
+        Address: 00000000fee0300c  Data: 4142
+The lower number is the vector number. In my example here 0x42 (66) is
+not 4-aligned so the failure condition will be hit.
+
+2. You are using interrupt remapping, which I suspect may provide a
+high likelihood of MSI interrupt vectors being 4-aligned. See if
+/proc/interrupts shows the IRQ type as IR-PCI-MSI
+Unfortunately interrupt remapping is not available here,
+https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
+
+3. My assumption that all ath9k hardware corrupts the MSI vector
+number could wrong. However we've seen this on different wifi modules
+in laptops produced by different OEMs and ODMs, so it seems to be a
+somewhat widespread problem at least.
+
+4. My assumption that ath9k hardware is corrupting the MSI vector
+number could be wrong; maybe another component is to blame, could it
+be a BIOS issue? Admittedly I don't really know how I can debug the
+layers inbetween seeing the MSI Message Data value disagree with the
+vector number being handled inside do_IRQ().
+
+Daniel
