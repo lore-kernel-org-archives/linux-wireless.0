@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53896 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932583AbdJRKNq (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:50022 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbdJBQTm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 06:13:46 -0400
-Message-ID: <1508321623.2674.11.camel@sipsolutions.net> (sfid-20171018_121350_415193_4AA01D17)
-Subject: Re: [PATCH] wil6210: disallow changing RSN in beacon change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>, Jouni Malinen <j@w1.fi>
-Date: Wed, 18 Oct 2017 12:13:43 +0200
-In-Reply-To: <18712cc3-3c69-ff9a-e64b-a988463d1965@codeaurora.org>
-References: <20171017194253.10212-1-johannes@sipsolutions.net>
-         <18712cc3-3c69-ff9a-e64b-a988463d1965@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 2 Oct 2017 12:19:42 -0400
+Date: Mon, 2 Oct 2017 18:19:36 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Daniel Drake <drake@endlessm.com>
+cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        x86@kernel.org, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, linux@endlessm.com
+Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
+ allocation
+In-Reply-To: <alpine.DEB.2.20.1710021540030.2185@nanos>
+Message-ID: <alpine.DEB.2.20.1710021817500.9529@nanos> (sfid-20171002_181956_833410_2876A9F2)
+References: <alpine.DEB.2.20.1709271555430.2027@nanos> <20171002085732.4039-1-drake@endlessm.com> <alpine.DEB.2.20.1710021540030.2185@nanos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> On Mon, 2 Oct 2017, Daniel Drake wrote:
+>   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
+>      requires to make the affinity change from the interrupt context of the
+>      current active vector in order not to lose interrupts or worst case
+>      getting into a stale state.
+> 
+>      That works for single vectors, but trying to move all vectors in one
+>      go is more or less impossible, as there is no reliable way to
+>      determine that none of the other vectors is on flight.
+> 
+>      There might be some 'workarounds' for that, but I rather avoid that
+>      unless we get an official documented one from Intel/AMD.
 
-> This is not dead code, we reach it in several scenarios, mainly WPS
-> tests.
+Thinking more about it. That might be actually a non issue for MSI, but we
+have that modus operandi in the current code and we need to address that
+first before even thinking about multi MSI support.
 
-Interesting.
+Thanks,
 
-> hostapd uses change_beacon to change the security of the AP so this
-> needs to be supported. 
-
-I didn't think this made sense - Jouni? Does hostapd kick off all
-stations in this case?
-
-> We do need to restart the AP in this case which will
-> disconnect existing clients, but this cannot be helped...
-
-Why not restart the AP entirely then from userspace? Hmm. I wonder what
-would happen with mac80211 - I guess keys would have to removed etc?
-Does this just work by accident because mac80211 removes the keys with
-stations? What about GTK(s) though?
-
-> As a side note, hostapd can also use change_beacon to change the
-> SSID.
-
-When does that happen?
-
-> It does so by updating the SSID IE in the probe response frame. We
-> have a pending patch that detects this and updates the FW but we also
-> need to update wdev->ssid otherwise the wireless_dev will be out of
-> date (not sure if it will cause any problems...)
-
-Logic-wise it won't, but we do expose this to userspace and that'd be
-confusing, so we have to update it I guess.
-
-johannes
+	tglx
