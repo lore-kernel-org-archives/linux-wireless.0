@@ -1,80 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:46959 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753319AbdJaOyz (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33136 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751062AbdJBNHi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 10:54:55 -0400
-Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
- <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
- <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
-Message-ID: <92bd2ece-dd71-b115-22c1-9a105df3612c@dd-wrt.com> (sfid-20171031_155506_789069_AF3667CF)
-Date: Tue, 31 Oct 2017 15:54:51 +0100
+        Mon, 2 Oct 2017 09:07:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr> <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 2 Oct 2017 16:07:36 +0300
+Message-ID: <CAHp75VfC2e+h8GCiB-1Rbe=_z3siBBo0WfqEf3qz8yWh8Cm3RQ@mail.gmail.com> (sfid-20171002_150607_025199_9C0182DC)
+Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
+To: =?UTF-8?B?SsOpcsOpbXkgTGVmYXVyZQ==?= <jeremy.lefaure@lse.epita.fr>
+Cc: Sathya Perla <sathya.perla@broadcom.com>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org, USB <linux-usb@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the same is for the MIC
-
-+               /* MIC */
-+               if ((status->flag & RX_FLAG_MIC_STRIPPED) &&
-+                   enctype == HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
-+                       skb_trim(msdu, msdu->len - 8);
-
-
-this code looks wrong too
-
-Am 30.10.2017 um 10:32 schrieb Sebastian Gottschall:
-> will check it tomorrow including gcmp-256, ccmp-256. was out for 
-> weekend :-)
->
-> Am 30.10.2017 um 09:39 schrieb Kalle Valo:
->> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>
->>> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
->>> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
->>> on host (mac80211) rather than firmware. Rebuild cipher header
->>> in every received data frames (that are notified through those
->>> HTT interfaces) from the rx_hdr_status tlv available in the
->>> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
->>> flag for the packets which requires mac80211 PN/TSC check support
->>> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
->>> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
->>> rebuilding of cipher header to perform PN/TSC check for replay
->>> attack.
->>>
->>> Please note that removing crypto tail for CCMP-256, GCMP and 
->>> GCMP-256 ciphers
->>> in raw mode needs to be fixed. Since Rx with these ciphers in raw
->>> mode does not work in the current form even without this patch and
->>> removing crypto tail for these chipers needs clean up, raw mode related
->>> issues in CCMP-256, GCMP and GCMP-256 can be addressed in follow up
->>> patches.
->>>
->>> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> Patch applied to ath-current branch of ath.git, thanks.
->>
->> 7eccb738fce5 ath10k: rebuild crypto header in rx data frames
->>
+On Sun, Oct 1, 2017 at 10:30 PM, J=C3=A9r=C3=A9my Lefaure
+<jeremy.lefaure@lse.epita.fr> wrote:
+> Using the ARRAY_SIZE macro improves the readability of the code. Also,
+> it is not always useful to use a variable to store this constant
+> calculated at compile time.
 >
 
--- 
-Mit freundlichen Grüssen / Regards
+> +       {&gainctrl_lut_core0_rev0, ARRAY_SIZE(gainctrl_lut_core0_rev0), 2=
+6, 192,
+> +        32},
 
-Sebastian Gottschall / CTO
+For all such cases I would rather put on one line disregard checkpatch
+warning for better readability.
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+--=20
+With Best Regards,
+Andy Shevchenko
