@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:32769 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753408AbdJHTab (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Oct 2017 15:30:31 -0400
-From: Christos Gkekas <chris.gekas@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Christos Gkekas <chris.gekas@gmail.com>
-Subject: [PATCH] ath10k: spectral: Simplify error checking
-Date: Sun,  8 Oct 2017 20:30:26 +0100
-Message-Id: <1507491026-28690-1-git-send-email-chris.gekas@gmail.com> (sfid-20171008_213052_914514_55F654B9)
+Received: from mail-sn1nam01on0086.outbound.protection.outlook.com ([104.47.32.86]:32780
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751625AbdJBPek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Oct 2017 11:34:40 -0400
+Date: Mon, 2 Oct 2017 18:34:29 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl80211: look for HT/VHT capabilities in beacon's tail
+Message-ID: <20171002153428.dhh47qlza7agrru4@bars> (sfid-20171002_173451_505508_D23935DF)
+References: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Variable val is unsigned so checking whether it is less than zero is
-redundant.
+On Wed, Aug 30, 2017 at 01:52:25PM -0700, igor.mitsyanko.os@quantenna.com wrote:
 
-Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
----
- drivers/net/wireless/ath/ath10k/spectral.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+> There are no HT/VHT capabilities in cfg80211_ap_settings::beacon_ies,
+> these should be looked for in beacon's tail instead.
+> 
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> ---
+> 
+> This is true for hostapd (at least the one in mainline): it does not
+> include HT/VHT caps and WLAN_EID_SUPP_RATES into beacon_ies.
+> But worth noting that there is no clear documentation that I could find
+> on what IEs could and could not be included into beacon_ies.
+> 
+>  net/wireless/nl80211.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
-index dd9cc09..1867937 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.c
-+++ b/drivers/net/wireless/ath/ath10k/spectral.c
-@@ -403,10 +403,7 @@ static ssize_t write_file_spectral_count(struct file *file,
- 		return -EFAULT;
- 
- 	buf[len] = '\0';
--	if (kstrtoul(buf, 0, &val))
--		return -EINVAL;
--
--	if (val < 0 || val > 255)
-+	if (kstrtoul(buf, 0, &val) || val > 255)
- 		return -EINVAL;
- 
- 	mutex_lock(&ar->conf_mutex);
--- 
-2.7.4
+Hello Johannes,
+
+Any comments on this change ?
+
+Regards,
+Sergey
