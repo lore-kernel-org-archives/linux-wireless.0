@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0043.outbound.protection.outlook.com ([104.47.37.43]:43328
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750959AbdJ2Pce (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 11:32:34 -0400
-Date: Sun, 29 Oct 2017 18:32:12 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: Re: [1/5] qtnfmac: modify full Tx queue error reporting
-Message-ID: <20171029153211.4ynfo6wrh7q76efd@bars> (sfid-20171029_163242_004086_E516BCFF)
-References: <20171015205327.9966-2-sergey.matyukevich.os@quantenna.com>
- <20171027084814.B3FCB60314@smtp.codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171027084814.B3FCB60314@smtp.codeaurora.org>
+Received: from hermes.aosc.io ([199.195.250.187]:39269 "EHLO hermes.aosc.io"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751409AbdJCRAd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Oct 2017 13:00:33 -0400
+From: Icenowy Zheng <icenowy@aosc.io>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Chen-Yu Tsai <wens@csie.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
+        Icenowy Zheng <icenowy@aosc.io>
+Subject: [PATCH v3 0/2] Allwinner XR819 SDIO Wi-Fi DT binding and OPi Zero XR819 IRQ
+Date: Wed,  4 Oct 2017 00:59:42 +0800
+Message-Id: <20171003165944.13056-1-icenowy@aosc.io> (sfid-20171003_190143_205533_662CF974)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+The Allwinner XR819 SDIO Wi-Fi chip supports an out-of-band interrupt line,
+and the in-band interrupt is also supported.
 
-> Failed to apply:
-> 
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c).
-> error: could not build fake ancestor
-> Applying: qtnfmac: modify full Tx queue recovery
-> Patch failed at 0001 qtnfmac: modify full Tx queue recovery
-> The copy of the patch that failed is found in: .git/rebase-apply/patch
-> 
-> 5 patches set to Changes Requested.
-> 
-> 10007281 [1/5] qtnfmac: modify full Tx queue error reporting
-> 10007279 [2/5] qtnfmac: enable registration of more mgmt frames
-> 10007283 [3/5] qtnfmac: drop nonexistent function declaration
-> 10007285 [4/5] qtnfmac: modify full Tx queue recovery
-> 10007287 [5/5] qtnfmac: advertise support of inactivity timeout
+However the current out-of-tree driver uses the out-of-band interrupt by
+default.
 
-My assumption is that by default all the patches should cleanly apply to wireless-drivers-next.
-I could apply the patch in question to wireless-drivers-next without any issues.
-Rebase of the whole series on top of wireless-drivers-next looks good as well.
-I will resend rebased patches as v2. Meanwhile do you have any idea what could go wrong ?
-The error message looks scary...
+This patchset adds the device tree binding for the chip as well as the
+out-of-band interrupt, then adds the interrupt to the device tree of
+Orange Pi Zero.
 
-Regards,
-Sergey
+Icenowy Zheng (1):
+  dt-bindings: add device tree binding for Allwinner XR819 SDIO Wi-Fi
+
+Sergey Matyukevich (1):
+  ARM: sun8i: h2+: specify wifi interrupts for Orange Pi Zero
+
+ .../bindings/net/wireless/allwinner,xr819.txt      | 38 ++++++++++++++++++++++
+ arch/arm/boot/dts/sun8i-h2-plus-orangepi-zero.dts  |  3 ++
+ 2 files changed, 41 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+
+-- 
+2.13.5
