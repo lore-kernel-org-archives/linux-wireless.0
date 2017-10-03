@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44961 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751368AbdJQOKt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 10:10:49 -0400
-Received: from mail-vk0-f50.google.com ([209.85.213.50])
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <jesse.sung@canonical.com>)
-        id 1e4Sa0-0007yM-L5
-        for linux-wireless@vger.kernel.org; Tue, 17 Oct 2017 14:10:48 +0000
-Received: by mail-vk0-f50.google.com with SMTP id r82so1172484vke.6
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2017 07:10:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAH10aOgfNZbhUYfRa7VRPwvzDNTYtmeDYnDEMtq+6HPqbq94hg@mail.gmail.com>
-References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
- <1508233890.10607.70.camel@sipsolutions.net> <CAH10aOj8xTPDyEufGS47hytnT8RSL+qSbiRVmePrMpaaUu7gPQ@mail.gmail.com>
- <1508237298.10607.76.camel@sipsolutions.net> <CAH10aOjmMdN2pGP8FDwZQ6BRcu2O5PiGjk+kKb6bAa7nS=ap8g@mail.gmail.com>
- <1508246019.10607.77.camel@sipsolutions.net> <CAH10aOgfNZbhUYfRa7VRPwvzDNTYtmeDYnDEMtq+6HPqbq94hg@mail.gmail.com>
-From: Jesse Sung <jesse.sung@canonical.com>
-Date: Tue, 17 Oct 2017 22:10:47 +0800
-Message-ID: <CAH10aOizMKboDOW27gvz=YEcRT1_tMj+W6iwJ47n=T=-Q7U14A@mail.gmail.com> (sfid-20171017_161053_181432_00B2D558)
-Subject: Re: Commit 0711d638 breaks mwifiex
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Received: from m12-13.163.com ([220.181.12.13]:51626 "EHLO m12-13.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750869AbdJCCWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Oct 2017 22:22:20 -0400
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: davem@davemloft.net, herbert@gondor.apana.org.au,
+        nhorman@tuxdriver.com, vyasevich@gmail.com, luto@kernel.org,
+        kvalo@codeaurora.org
+Cc: linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH] Fix a sleep-in-atomic bug in shash_setkey_unaligned
+Date: Tue,  3 Oct 2017 10:22:44 +0800
+Message-Id: <1506997364-26541-1-git-send-email-baijiaju1990@163.com> (sfid-20171003_042227_894927_CDD29099)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 10:08 PM, Jesse Sung <jesse.sung@canonical.com> wrote:
-> On Tue, Oct 17, 2017 at 9:13 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->>
->> On Tue, 2017-10-17 at 21:07 +0800, Jesse Sung wrote:
->> >
->> > > Not really quite sure about it yet, but that should address the
->> > > issue?
->> >
->> > A very rough test by issuing reassociate in wpa_cli:
->> > mwifiex works after reassociate - looks good
->>
->> Ok. Discussing this with Ilan, we realized that this was buggy, and
->> came up with this patch instead:
->>
->> https://p.sipsolutions.net/8f9d5917a5cbe4b3.txt
->>
->> Can you also give that a spin?
->
-> Issued four reassociate, the network interface is still alive. Also with this
-> patch it stays with BSSID1 and I don't see any "Association request to
-> the driver failed" in the process.
+For the same reason, the orinoco driver may sleep in interrupt handler, 
+and the function call path is:
+orinoco_rx_isr_tasklet
+  orinoco_rx
+    orinoco_mic
+      crypto_shash_setkey
+        shash_setkey_unaligned
+          kmalloc(GFP_KERNEL)
 
-Correction: I can still see "Association request to the driver failed" and
-switching between BSSIDs with more reassociates but I think that shouldn't
-be an issue?
+To fix it, GFP_KERNEL is replaced with GFP_ATOMIC.
+This bug is found by my static analysis tool and my code review.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+---
+ crypto/shash.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/crypto/shash.c b/crypto/shash.c
+index 5e31c8d..8fcecc6 100644
+--- a/crypto/shash.c
++++ b/crypto/shash.c
+@@ -41,7 +41,7 @@ static int shash_setkey_unaligned(struct crypto_shash *tfm, const u8 *key,
+ 	int err;
+ 
+ 	absize = keylen + (alignmask & ~(crypto_tfm_ctx_alignment() - 1));
+-	buffer = kmalloc(absize, GFP_KERNEL);
++	buffer = kmalloc(absize, GFP_ATOMIC);
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+-- 
+1.7.9.5
