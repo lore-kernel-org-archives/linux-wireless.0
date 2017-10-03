@@ -1,152 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:49056 "EHLO
-        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932519AbdJPXhr (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46644 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750797AbdJCSRl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 19:37:47 -0400
-Received: by mail-pf0-f169.google.com with SMTP id b79so16944231pfk.5
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 16:37:47 -0700 (PDT)
-Date: Mon, 16 Oct 2017 16:37:44 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: iwlegacy: Convert timers to use timer_setup()
-Message-ID: <20171016233744.GA101655@beast> (sfid-20171017_013805_023318_E1B33724)
+        Tue, 3 Oct 2017 14:17:41 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 2E04740A5A2
+        for <linux-wireless@vger.kernel.org>; Tue,  3 Oct 2017 11:17:41 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: lockdep splat on 4.13.3 (plus hacks)
+Message-ID: <c54e3dd0-8e6e-41f2-cd0f-960cb623e8fa@candelatech.com> (sfid-20171003_201745_437567_75BD2C4F)
+Date: Tue, 3 Oct 2017 11:17:40 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+We are seeing deadlocks related to wifi in our 4.13.3+ kernels,
+so I enabled lockdep and immediately saw this.  Anyone know if this
+is a known issue?  Otherwise, I guess it could be related to some local
+patch I have added...
 
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c |  2 +-
- drivers/net/wireless/intel/iwlegacy/3945-rs.c  | 10 +++-------
- drivers/net/wireless/intel/iwlegacy/4965-mac.c |  9 ++++-----
- drivers/net/wireless/intel/iwlegacy/common.c   |  4 ++--
- drivers/net/wireless/intel/iwlegacy/common.h   |  2 +-
- 5 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 329f3a63dadd..4b53ebf00c7f 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -3429,7 +3429,7 @@ il3945_setup_deferred_work(struct il_priv *il)
- 
- 	il3945_hw_setup_deferred_work(il);
- 
--	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
-+	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
- 		     (void (*)(unsigned long))il3945_irq_tasklet,
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-rs.c b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-index b2f35dfbc01b..e8983c6a2b7b 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-@@ -181,9 +181,9 @@ il3945_rate_scale_flush_wins(struct il3945_rs_sta *rs_sta)
- #define IL_AVERAGE_PACKETS             1500
- 
- static void
--il3945_bg_rate_scale_flush(unsigned long data)
-+il3945_bg_rate_scale_flush(struct timer_list *t)
- {
--	struct il3945_rs_sta *rs_sta = (void *)data;
-+	struct il3945_rs_sta *rs_sta = from_timer(rs_sta, t, rate_scale_flush);
- 	struct il_priv *il __maybe_unused = rs_sta->il;
- 	int unflushed = 0;
- 	unsigned long flags;
-@@ -360,9 +360,6 @@ il3945_rs_rate_init(struct il_priv *il, struct ieee80211_sta *sta, u8 sta_id)
- 	rs_sta->flush_time = RATE_FLUSH;
- 	rs_sta->last_tx_packets = 0;
- 
--	rs_sta->rate_scale_flush.data = (unsigned long)rs_sta;
--	rs_sta->rate_scale_flush.function = il3945_bg_rate_scale_flush;
--
- 	for (i = 0; i < RATE_COUNT_3945; i++)
- 		il3945_clear_win(&rs_sta->win[i]);
- 
-@@ -415,8 +412,7 @@ il3945_rs_alloc_sta(void *il_priv, struct ieee80211_sta *sta, gfp_t gfp)
- 	rs_sta = &psta->rs_sta;
- 
- 	spin_lock_init(&rs_sta->lock);
--	init_timer(&rs_sta->rate_scale_flush);
--
-+	timer_setup(&rs_sta->rate_scale_flush, il3945_bg_rate_scale_flush, 0);
- 	D_RATE("leave\n");
- 
- 	return rs_sta;
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 65eba2c24292..de63f2518f23 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4074,9 +4074,9 @@ il4965_hdl_alive(struct il_priv *il, struct il_rx_buf *rxb)
-  * used for calibrating the TXPOWER.
-  */
- static void
--il4965_bg_stats_periodic(unsigned long data)
-+il4965_bg_stats_periodic(struct timer_list *t)
- {
--	struct il_priv *il = (struct il_priv *)data;
-+	struct il_priv *il = from_timer(il, t, stats_periodic);
- 
- 	if (test_bit(S_EXIT_PENDING, &il->status))
- 		return;
-@@ -6258,10 +6258,9 @@ il4965_setup_deferred_work(struct il_priv *il)
- 
- 	INIT_WORK(&il->txpower_work, il4965_bg_txpower_work);
- 
--	setup_timer(&il->stats_periodic, il4965_bg_stats_periodic,
--		    (unsigned long)il);
-+	timer_setup(&il->stats_periodic, il4965_bg_stats_periodic, 0);
- 
--	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
-+	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
- 		     (void (*)(unsigned long))il4965_irq_tasklet,
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 8d5acda92a9b..558bb16bfd46 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4844,9 +4844,9 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
-  * we reset the firmware. If everything is fine just rearm the timer.
-  */
- void
--il_bg_watchdog(unsigned long data)
-+il_bg_watchdog(struct timer_list *t)
- {
--	struct il_priv *il = (struct il_priv *)data;
-+	struct il_priv *il = from_timer(il, t, watchdog);
- 	int cnt;
- 	unsigned long timeout;
- 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index 18c60c92e3a3..dc6a74a05983 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -1832,7 +1832,7 @@ int il_enqueue_hcmd(struct il_priv *il, struct il_host_cmd *cmd);
-  * PCI						     *
-  *****************************************************/
- 
--void il_bg_watchdog(unsigned long data);
-+void il_bg_watchdog(struct timer_list *t);
- u32 il_usecs_to_beacons(struct il_priv *il, u32 usec, u32 beacon_interval);
- __le32 il_add_beacon_time(struct il_priv *il, u32 base, u32 addon,
- 			  u32 beacon_interval);
--- 
-2.7.4
+[  476.172823] ============================================
+[  476.176863] WARNING: possible recursive locking detected
+[  476.180895] 4.13.3+ #1 Not tainted
+[  476.183025] --------------------------------------------
+[  476.187053] kworker/u8:2/281 is trying to acquire lock:
+[  476.190993]  (&sta->ampdu_mlme.mtx){+.+...}, at: [<ffffffffa09cd4e8>] __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
+[  476.201004]
+                but task is already holding lock:
+[  476.204270]  (&sta->ampdu_mlme.mtx){+.+...}, at: [<ffffffffa09c93a6>] ieee80211_ba_session_work+0x46/0x2b0 [mac80211]
+[  476.213645]
+                other info that might help us debug this:
+[  476.217587]  Possible unsafe locking scenario:
 
+[  476.220930]        CPU0
+[  476.222082]        ----
+[  476.223236]   lock(&sta->ampdu_mlme.mtx);
+[  476.225957]   lock(&sta->ampdu_mlme.mtx);
+[  476.228673]
+                 *** DEADLOCK ***
+
+[  476.230689]  May be due to missing lock nesting notation
+
+[  476.234879] 3 locks held by kworker/u8:2/281:
+[  476.237941]  #0:  ("%s"wiphy_name(local->hw.wiphy)){++++.+}, at: [<ffffffff8113df8f>] process_one_work+0x14f/0x6a0
+[  476.247033]  #1:  ((&sta->ampdu_mlme.work)){+.+...}, at: [<ffffffff8113df8f>] process_one_work+0x14f/0x6a0
+[  476.255393]  #2:  (&sta->ampdu_mlme.mtx){+.+...}, at: [<ffffffffa09c93a6>] ieee80211_ba_session_work+0x46/0x2b0 [mac80211]
+[  476.265170]
+                stack backtrace:
+[  476.266928] CPU: 0 PID: 281 Comm: kworker/u8:2 Not tainted 4.13.3+ #1
+[  476.272073] Hardware name: _ _/ , BIOS 5.11 08/26/2016
+[  476.275927] Workqueue: phy1 ieee80211_ba_session_work [mac80211]
+[  476.280640] Call Trace:
+[  476.281792]  dump_stack+0x85/0xc7
+[  476.283811]  __lock_acquire+0x14ba/0x1520
+[  476.286526]  ? __save_stack_trace+0x6e/0xd0
+[  476.289412]  ? ret_from_fork+0x2a/0x40
+[  476.291867]  lock_acquire+0xac/0x200
+[  476.294145]  ? lock_acquire+0xac/0x200
+[  476.296610]  ? __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
+[  476.301766]  ? __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
+[  476.306910]  __mutex_lock+0x69/0x930
+[  476.309194]  ? __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
+[  476.314343]  ? rcu_read_lock_sched_held+0x6d/0x80
+[  476.317766]  ? __sdata_dbg+0x14a/0x1a0 [mac80211]
+[  476.321181]  mutex_lock_nested+0x16/0x20
+[  476.323810]  ? mutex_lock_nested+0x16/0x20
+[  476.326626]  __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
+[  476.331627]  ieee80211_ba_session_work+0x157/0x2b0 [mac80211]
+[  476.336078]  ? process_one_work+0x14f/0x6a0
+[  476.338985]  process_one_work+0x1ce/0x6a0
+[  476.341696]  worker_thread+0x46/0x400
+[  476.344061]  kthread+0x10f/0x150
+[  476.346001]  ? process_one_work+0x6a0/0x6a0
+[  476.348886]  ? kthread_create_on_node+0x40/0x40
+[  476.352122]  ret_from_fork+0x2a/0x40
+
+Thanks,
+Ben
 
 -- 
-Kees Cook
-Pixel Security
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
