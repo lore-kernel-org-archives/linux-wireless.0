@@ -1,81 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:44133 "EHLO
-        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932213AbdJ3T3t (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56170 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752335AbdJCPXn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 15:29:49 -0400
+        Tue, 3 Oct 2017 11:23:43 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 1/2] mwifiex: kill useless list_empty checks
+Date: Tue, 3 Oct 2017 20:49:43 +0530
+Message-ID: <1507043984-9832-1-git-send-email-gbhat@marvell.com> (sfid-20171003_172347_842414_EBBE2115)
 MIME-Version: 1.0
-In-Reply-To: <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com>
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
- <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com> <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 30 Oct 2017 12:29:47 -0700
-Message-ID: <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com> (sfid-20171030_203004_116971_B97787DF)
-Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
- at 0000000000010007
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Network Development <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 29, 2017 at 4:48 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->
-> Here are 3 dmesgs related to wireless and 1 from ethernet.
+From: Douglas Anderson <dianders@chromium.org>
 
-Fengguang, these would be lovelier still _if_ you have DEBUG_INFO
-enabled on the kernel, and your script were to find things like
-"symbol+0xhex/0xhex", and run "./scripts/faddr2line" on them.
+There's absolutely no reason to check to see if a list is empty
+before iterating through it.  It's just like writing code like
+this:
 
-So
+if (count != 0) {
+  for (i = 0; i < count; i++) {
+     ...
+  }
+}
 
-> [  235.425464] BUG: unable to handle kernel paging request at 0000000000010007
-> [  235.425470] IP: run_timer_softirq+0x13a/0x470
+The loop will already be avoided if "count == 0" so there was no
+reason to check.
 
-would also then have
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/11n.c           | 9 ---------
+ drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 6 ------
+ drivers/net/wireless/marvell/mwifiex/init.c          | 4 ----
+ drivers/net/wireless/marvell/mwifiex/tdls.c          | 7 -------
+ 4 files changed, 26 deletions(-)
 
-   run_timer_softirq at timer.c:XYZ
-
-which would make it easier to see exactly _what_ it is that faults. As
-it is, I think there's a fair number of inlining that makes it hard to
-see the cause, but that faddrtoline would make very obvious.
-
-Finding that "symbol+xyz/abc" pattern should be fairly easy to
-automate, and should fit the 0day model fairly well. No?
-
-In this case, the trapping instruction ends up decoding to
-
-   0: 4c 8d 6c c5 90        lea    -0x70(%rbp,%rax,8),%r13
-   5: 49 8b 45 00          mov    0x0(%r13),%rax
-   9: 48 85 c0              test   %rax,%rax
-   c: 74 de                je     0xffffffffffffffec
-   e: 4d 8b 7d 00          mov    0x0(%r13),%r15
-  12: 4d 89 7c 24 08        mov    %r15,0x8(%r12)
-  17: 0f 1f 44 00 00        nopl   0x0(%rax,%rax,1)
-  1c: 49 8b 07              mov    (%r15),%rax
-  1f: 49 8b 57 08          mov    0x8(%r15),%rdx
-  23: 48 85 c0              test   %rax,%rax
-  26: 48 89 02              mov    %rax,(%rdx)
-  29: 74 04                je     0x2f
-  2b:* 48 89 50 08          mov    %rdx,0x8(%rax) <-- trapping instruction
-  2f: 41 f6 47 2a 20        testb  $0x20,0x2a(%r15)
-  34: 49 c7 47 08 00 00 00 movq   $0x0,0x8(%r15)
-
-and %rax has the value 0xffff, so yes, it will trap at 0x10007.
-
-It's not trivial to see just *wjhat* access it is.
-
-I *think* that "testb $32" is checking for TIMER_IRQSAFE in
-expire_timers(), and that the oops is due to the list operations in
-detach_timer() (inlined).
-
-Which doesn't really help: it looks like the timer lists are corrupt.
-With some luck, some register state could have the timer function
-pointer in it, and we'd get a hint of *which* timer this is, but that
-doesn't look to be the case here either.
-
-I'm not seeing anything to really help debug this here.
-
-               Linus
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index 7252069..8772e39 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -658,12 +658,6 @@ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-	if (list_empty(&priv->rx_reorder_tbl_ptr)) {
+-		dev_dbg(priv->adapter->dev,
+-			"mwifiex_11n_delba: rx_reorder_tbl_ptr empty\n");
+-		goto exit;
+-	}
+-
+ 	list_for_each_entry(rx_reor_tbl_ptr, &priv->rx_reorder_tbl_ptr, list) {
+ 		if (rx_reor_tbl_ptr->tid == tid) {
+ 			dev_dbg(priv->adapter->dev,
+@@ -854,9 +848,6 @@ u8 mwifiex_get_sec_chan_offset(int chan)
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_stream_tbl_ptr;
+ 
+-	if (list_empty(&priv->tx_ba_stream_tbl_ptr))
+-		return;
+-
+ 	list_for_each_entry(tx_ba_stream_tbl_ptr,
+ 			    &priv->tx_ba_stream_tbl_ptr, list) {
+ 		if (tx_ba_stream_tbl_ptr->ba_status == BA_SETUP_COMPLETE) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 274dd5a..d87df2d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -835,12 +835,6 @@ void mwifiex_update_rxreor_flags(struct mwifiex_adapter *adapter, u8 flags)
+ 			continue;
+ 
+ 		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, lock_flags);
+-		if (list_empty(&priv->rx_reorder_tbl_ptr)) {
+-			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+-					       lock_flags);
+-			continue;
+-		}
+-
+ 		list_for_each_entry(tbl, &priv->rx_reorder_tbl_ptr, list)
+ 			tbl->flags = flags;
+ 		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, lock_flags);
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index e11919d..1176706 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -579,10 +579,6 @@ static void mwifiex_delete_bss_prio_tbl(struct mwifiex_private *priv)
+ 
+ 		{
+ 			spin_lock_irqsave(lock, flags);
+-			if (list_empty(head)) {
+-				spin_unlock_irqrestore(lock, flags);
+-				continue;
+-			}
+ 			list_for_each_entry_safe(bssprio_node, tmp_node, head,
+ 						 list) {
+ 				if (bssprio_node->priv == priv) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
+index e76af286..9fe0bae 100644
+--- a/drivers/net/wireless/marvell/mwifiex/tdls.c
++++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
+@@ -1413,13 +1413,6 @@ void mwifiex_check_auto_tdls(unsigned long context)
+ 
+ 	priv->check_tdls_tx = false;
+ 
+-	if (list_empty(&priv->auto_tdls_list)) {
+-		mod_timer(&priv->auto_tdls_timer,
+-			  jiffies +
+-			  msecs_to_jiffies(MWIFIEX_TIMER_10S));
+-		return;
+-	}
+-
+ 	spin_lock_irqsave(&priv->auto_tdls_lock, flags);
+ 	list_for_each_entry(tdls_peer, &priv->auto_tdls_list, list) {
+ 		if ((jiffies - tdls_peer->rssi_jiffies) >
+-- 
+1.9.1
