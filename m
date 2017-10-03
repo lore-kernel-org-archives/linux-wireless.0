@@ -1,93 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52916 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752392AbdJMUkp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 16:40:45 -0400
-Message-ID: <59E124EB.6090602@candelatech.com> (sfid-20171013_224117_594672_AFAA1038)
-Date: Fri, 13 Oct 2017 13:41:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54678 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750865AbdJCWpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Oct 2017 18:45:09 -0400
+Date: Tue, 3 Oct 2017 19:45:06 -0300
+From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Andy Lutomirski <luto@kernel.org>,
+        Jia-Ju Bai <baijiaju1990@163.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Neil Horman <nhorman@tuxdriver.com>, vyasevich@gmail.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-sctp@vger.kernel.org,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2] Fix a sleep-in-atomic bug in shash_setkey_unaligned
+Message-ID: <20171003224505.GE19750@localhost.localdomain> (sfid-20171004_004519_198000_9A0CCC92)
+References: <1506997522-26684-1-git-send-email-baijiaju1990@163.com>
+ <CALCETrWdXjTTTywbb3duCEsLYNxkeGx7bf3SM4PYKeErCyiUNQ@mail.gmail.com>
+ <20171003052643.GB22750@gondor.apana.org.au>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: Retry pci probe on failure.
-References: <1507068826-14677-1-git-send-email-greearb@candelatech.com> <87a80vnrsb.fsf@kamboji.qca.qualcomm.com> <CAJ-Vmon0SszxH22Zb+O5RVQSommFFuc5XmG+at9=xbGagOb7PQ@mail.gmail.com>
-In-Reply-To: <CAJ-Vmon0SszxH22Zb+O5RVQSommFFuc5XmG+at9=xbGagOb7PQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171003052643.GB22750@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/13/2017 08:50 AM, Adrian Chadd wrote:
-> On 13 October 2017 at 05:41, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> greearb@candelatech.com writes:
->>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> This works around a problem we see when sometimes the wifi NIC does
->>> not respond the first time.  This seems to happen especially often on
->>> some of the 9984 NICs in mid-range platforms.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>
->> [...]
->>
->>> -static int ath10k_pci_probe(struct pci_dev *pdev,
->>> -                         const struct pci_device_id *pci_dev)
->>> +static int __ath10k_pci_probe(struct pci_dev *pdev,
->>> +                           const struct pci_device_id *pci_dev)
->>>   {
->>>        int ret = 0;
->>>        struct ath10k *ar;
->>> @@ -3672,6 +3672,22 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
->>>        return ret;
->>>   }
->>>
->>> +static int ath10k_pci_probe(struct pci_dev *pdev,
->>> +                         const struct pci_device_id *pci_dev)
->>> +{
->>> +     int cnt = 0;
->>> +     int rv;
->>> +     do {
->>> +             rv = __ath10k_pci_probe(pdev, pci_dev);
->>> +             if (rv == 0)
->>> +                     return rv;
->>> +             pr_err("ath10k: failed to probe PCI : %d, retry-count: %d\n", rv, cnt);
->>> +             mdelay(10); /* let the ath10k firmware gerbil take a small break */
->>> +     } while (cnt++ < 10);
->>> +     return rv;
->>> +}
->>
->> This is a sledgehammer approach and it causes reload for all error
->> cases, like when hardware is broken or memory allocation is failing.
->>
->> When the problem happens does it always fail at the the same place? Is
->> it hw reset or something else? It's better to retry the invidiual action
->> than to do this hack. Or is it just some more delay needed somewhere?
->
-> I am seeing WMI timeouts during initial firmware load and wait on
-> QCA9984 + BCM7444S SoC.
-> My guess is the WMI wakeup time is not "right" enough and needs to be
-> extended a little bit.
->
-> But then, I have played a lot of whackamole with WMI timeouts during
-> my loooong porting effort..
+On Tue, Oct 03, 2017 at 01:26:43PM +0800, Herbert Xu wrote:
+> On Mon, Oct 02, 2017 at 09:18:24PM -0700, Andy Lutomirski wrote:
+> > > On Oct 2, 2017, at 7:25 PM, Jia-Ju Bai <baijiaju1990@163.com> wrote:
+> > >
+> > > The SCTP program may sleep under a spinlock, and the function call path is:
+> > > sctp_generate_t3_rtx_event (acquire the spinlock)
+> > >  sctp_do_sm
+> > >    sctp_side_effects
+> > >      sctp_cmd_interpreter
+> > >        sctp_make_init_ack
+> > >          sctp_pack_cookie
+> > >            crypto_shash_setkey
+> > >              shash_setkey_unaligned
+> > >                kmalloc(GFP_KERNEL)
+> > 
+> > I'm going to go out on a limb here: why on Earth is out crypto API so
+> > full of indirection that we allocate memory at all here?
+> 
+> The crypto API operates on a one key per-tfm basis.  So normally
+> tfm allocation and key setting is done once only and not done on
+> the data path.
+> 
+> I have looked at the SCTP code and it appears to fit this paradigm.
+> That is, we should be able to allocate the tfm and set the key when
+> the key is actually generated via get_random_bytes, rather than every
+> time the key is used which is not only a waste but as you see runs
+> into API issues.
 
-The failure I saw was a failure to wake pci, and from comments, it seems that
-the current wait is longer than what should be required, and it warns on slow
-wakes, and I never saw that warning.  So I assume that waiting longer would not help.
+Fair point, but
 
-I saw it fail twice in a row to wake pci and then succeed on the third try, for instance,
-when testing my patch.
+> 
+> Usually if you're invoking setkey from a non-sleeping code-path
+> you're probably doing something wrong.
 
-As for a big hammer, I guess we could check for certain return codes if you think
-that is better than just retrying all failures?
+Usually but not always. There are 3 calls to that function on SCTP
+code:
+- pack a cookie, which is sent on an INIT_ACK packet to the client
+- unpack the cookie above, after it is sent back by the client on a
+  COOKIE_ECHO packet
+- send a chunk authenticated by a hash
+
+the first two happen during softirq processing, while processing a
+packet that was received.
+
+As I explained on the other email, SCTP code is not supposed to store
+any information about the peer between the 1st and the 2nd moments
+above, to be less vulnerable to DoS attacks (it's planned so by the
+RFC), thus why it uses the cookie.
+
+The 3rd one we probably can improve, but I don't think we can do much
+about the 2 first ones from the SCTP side.
+
+Note on sctp_sf_do_5_1B_init() how sctp_make_init_ack() is explicitly
+called with GFP_ATOMIC, and also on sctp_sf_do_unexpected_init().
+Though we can't propagate that to crypto_shash_setkey.
+
+Ideas?
 
 Thanks,
-Ben
+Marcelo
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> 
+> As someone else noted recently, there is no single forum for
+> reviewing code that uses the crypto API so buggy code like this
+> is not surprising.
+> 
+> > We're synchronously computing a hash of a small amount of data using
+> > either HMAC-SHA1 or HMAC-SHA256 (determined at runtime) if I read it
+> > right.  There's a sane way to do this that doesn't need kmalloc,
+> > alloca, or fancy indirection.  And then there's crypto_shash_xyz().
+> 
+> There are some legitimate cases where you want to use a different
+> key for every hashing operation.  But so far these are uses have
+> been very few so there has been no need to provide an API for them.
+> 
+> Cheers,
+> -- 
+> Email: Herbert Xu <herbert@gondor.apana.org.au>
+> Home Page: http://gondor.apana.org.au/~herbert/
+> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-sctp" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
