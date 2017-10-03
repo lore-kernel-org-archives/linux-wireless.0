@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56191 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdJ0JTE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 05:19:04 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: drivers/wireless: ath: Convert timers to use timer_setup()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20171024092954.GA47365@beast>
-References: <20171024092954.GA47365@beast>
-To: Kees Cook <keescook@chromium.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Message-ID: <df4525f9d784450fabe4bf685af6992e@euamsexm01a.eu.qualcomm.com> (sfid-20171027_111908_997992_C31B2F59)
-Date: Fri, 27 Oct 2017 11:18:56 +0200
+Received: from hermes.aosc.io ([199.195.250.187]:39310 "EHLO hermes.aosc.io"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752386AbdJCRAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Oct 2017 13:00:48 -0400
+From: Icenowy Zheng <icenowy@aosc.io>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Chen-Yu Tsai <wens@csie.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com,
+        Sergey Matyukevich <geomatsi@gmail.com>,
+        Icenowy Zheng <icenowy@aosc.io>
+Subject: [PATCH v3 2/2] ARM: sun8i: h2+: specify wifi interrupts for Orange Pi Zero
+Date: Wed,  4 Oct 2017 00:59:44 +0800
+Message-Id: <20171003165944.13056-3-icenowy@aosc.io> (sfid-20171003_190117_660324_10532CA1)
+In-Reply-To: <20171003165944.13056-1-icenowy@aosc.io>
+References: <20171003165944.13056-1-icenowy@aosc.io>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
+From: Sergey Matyukevich <geomatsi@gmail.com>
 
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
-> 
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+The Orange Pi Zero board has Allwinner XR819 SDIO wifi chip. The board
+dts file provides a node enabling mmc1 controller, and a out-of-band
+interrupt line of the chip is also connected, although the chip also
+supports in-band interrupt.
 
-There were some conflicts but luckily 3-way merge was able to automatically
-solve them. But please do check the patch from my pending branch:
+The current out-of-tree driver is hardcoded to use out-of-band interrupt
+as default, and it needs to be modified to use the in-band interrupt.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=master-pending&id=dd08329d31a4c150f8aab8274033901baaf3e923
+This commit adds the out-of-band interrupt line into the device tree.
 
+Signed-off-by: Sergey Matyukevich <geomatsi@gmail.com>
+[Icenowy: Changed vendor prefix to allwinner and modify commit message]
+Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+---
+Changes in v3 by Icenowy:
+- Change the compatible string vendor prefix to "allwinner".
+- Modify the commit message.
+Changes in v2 by Sergey:
+- Adds the compatible string.
+
+ arch/arm/boot/dts/sun8i-h2-plus-orangepi-zero.dts | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/sun8i-h2-plus-orangepi-zero.dts b/arch/arm/boot/dts/sun8i-h2-plus-orangepi-zero.dts
+index b1502df7b509..6595617204b3 100644
+--- a/arch/arm/boot/dts/sun8i-h2-plus-orangepi-zero.dts
++++ b/arch/arm/boot/dts/sun8i-h2-plus-orangepi-zero.dts
+@@ -127,6 +127,9 @@
+ 	 */
+ 	xr819: sdio_wifi@1 {
+ 		reg = <1>;
++		compatible = "allwinner,xr819";
++		interrupt-parent = <&pio>;
++		interrupts = <6 10 IRQ_TYPE_EDGE_RISING>;
+ 	};
+ };
+ 
 -- 
-https://patchwork.kernel.org/patch/10023835/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.5
