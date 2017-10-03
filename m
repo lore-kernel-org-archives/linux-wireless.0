@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44605 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751801AbdJPF6q (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 01:58:46 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V6 4/5] ath10k: Avoid to set WEP key for TDLS peer
-Date: Mon, 16 Oct 2017 14:00:32 +0800
-Message-ID: <1508133633-23214-5-git-send-email-yintang@qti.qualcomm.com> (sfid-20171016_075850_293695_7F9EF1F3)
-In-Reply-To: <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patches V6>
- <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56314 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750865AbdJCWdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Oct 2017 18:33:15 -0400
+Date: Tue, 3 Oct 2017 19:33:08 -0300
+From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: davem@davemloft.net, herbert@gondor.apana.org.au,
+        nhorman@tuxdriver.com, vyasevich@gmail.com, luto@kernel.org,
+        kvalo@codeaurora.org, linux-crypto@vger.kernel.org,
+        netdev@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] Fix a sleep-in-atomic bug in shash_setkey_unaligned
+Message-ID: <20171003223308.GD19750@localhost.localdomain> (sfid-20171004_003323_699784_A8FBE603)
+References: <1506997522-26684-1-git-send-email-baijiaju1990@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506997522-26684-1-git-send-email-baijiaju1990@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On Tue, Oct 03, 2017 at 10:25:22AM +0800, Jia-Ju Bai wrote:
+> The SCTP program may sleep under a spinlock, and the function call path is:
+> sctp_generate_t3_rtx_event (acquire the spinlock)
+>   sctp_do_sm
+>     sctp_side_effects
+>       sctp_cmd_interpreter
+>         sctp_make_init_ack
+>           sctp_pack_cookie
+>             crypto_shash_setkey
+>               shash_setkey_unaligned
+>                 kmalloc(GFP_KERNEL)
 
-TDLS peer do not need WEP key. Setting WEP key will lead
-to TDLS setup failure. Add fix to avoid setting WEP key
-for TDLS peer.
+Are you sure this can happen?
+The host is not supposed to store any information when replying to an
+INIT packet (which generated the INIT_ACK listed above). That said,
+it's weird to see the timer function triggering so.
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Checking now, that code is dead actually:
+$ git grep -A 2 SCTP_CMD_GEN_INIT_ACK
+sm_sideeffect.c:                case SCTP_CMD_GEN_INIT_ACK:
+sm_sideeffect.c-                        /* Generate an INIT ACK chunk.
+*/
+sm_sideeffect.c-                        new_obj =
+sctp_make_init_ack(asoc, chunk, GFP_ATOMIC,
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1672043..a984a72 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2966,7 +2966,7 @@ static int ath10k_station_assoc(struct ath10k *ar,
- 		}
- 
- 		/* Plumb cached keys only for static WEP */
--		if (arvif->def_wep_key_idx != -1) {
-+		if ((arvif->def_wep_key_idx != -1) && (!sta->tdls)) {
- 			ret = ath10k_install_peer_wep_keys(arvif, sta->addr);
- 			if (ret) {
- 				ath10k_warn(ar, "failed to install peer wep keys for vdev %i: %d\n",
--- 
-1.7.9.5
+Nobody is triggering a call to sctp_cmd_interpreter with
+SCTP_CMD_GEN_INIT_ACK command, which would generate the callstack
+above.
+
+  Marcelo
