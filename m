@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42116 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751964AbdJPNWx (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:54955 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751171AbdJCVqa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 09:22:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pkshih <pkshih@realtek.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        "Souptick Joarder" <jrdr.linux@gmail.com>,
-        "devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kernel-janitors\@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: Two rtlwifi drivers?
-References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
-        <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
-        <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
-        <87k202qcjr.fsf@kamboji.qca.qualcomm.com>
-        <20171011131310.GF32250@kroah.com>
-        <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com>
-        <20171012103450.GA24647@kroah.com>
-        <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
-Date: Mon, 16 Oct 2017 16:22:48 +0300
-In-Reply-To: <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
-        (pkshih@realtek.com's message of "Mon, 16 Oct 2017 02:41:38 +0000")
-Message-ID: <87bml7mdlj.fsf@kamboji.qca.qualcomm.com> (sfid-20171016_152257_092000_4319BACC)
+        Tue, 3 Oct 2017 17:46:30 -0400
+Date: Tue, 3 Oct 2017 23:46:26 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Daniel Drake <drake@endlessm.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, x86@kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        linux@endlessm.com
+Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
+ allocation
+In-Reply-To: <20171003213434.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1710032344590.2278@nanos> (sfid-20171003_234645_848206_749821B3)
+References: <alpine.DEB.2.20.1709271555430.2027@nanos> <20171002085732.4039-1-drake@endlessm.com> <alpine.DEB.2.20.1710021540030.2185@nanos> <alpine.DEB.2.20.1710021817500.9529@nanos> <alpine.DEB.2.20.1710032306170.2278@nanos>
+ <20171003213434.GI25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi PK,
+On Tue, 3 Oct 2017, Bjorn Helgaas wrote:
+> On Tue, Oct 03, 2017 at 11:07:58PM +0200, Thomas Gleixner wrote:
+> > On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> > > On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> > > > On Mon, 2 Oct 2017, Daniel Drake wrote:
+> > > >   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
+> > > >      requires to make the affinity change from the interrupt context of the
+> > > >      current active vector in order not to lose interrupts or worst case
+> > > >      getting into a stale state.
+> > > > 
+> > > >      That works for single vectors, but trying to move all vectors in one
+> > > >      go is more or less impossible, as there is no reliable way to
+> > > >      determine that none of the other vectors is on flight.
+> > > > 
+> > > >      There might be some 'workarounds' for that, but I rather avoid that
+> > > >      unless we get an official documented one from Intel/AMD.
+> > > 
+> > > Thinking more about it. That might be actually a non issue for MSI, but we
+> > > have that modus operandi in the current code and we need to address that
+> > > first before even thinking about multi MSI support.
+> > 
+> > But even if its possible, it's very debatable whether it's worth the effort
+> > when this driver just can use the legacy INTx.and be done with it.
+> 
+> Daniel said "Legacy interrupts do not work on that module, so MSI
+> support is required," so I assume he means INTx doesn't work.  Maybe
 
-you got good answers already so only short reply from me:
+Hmm, I missed that detail obviously.
 
-Pkshih <pkshih@realtek.com> writes:
+> the driver could poll?  I don't know how much slower that would be,
+> but at least it would penalize the broken device, not everybody.
 
-> 3) Coming drivers -- rtl8723de and rtl8821ce
->    We're developing the two drivers, and rtl8723de and rtl8821ce will
->    be ready on 2017Q4 and 2018Q1 respectively. The drivers are based on
->    rtl8822be that in staging now, so the line of code will be fewer.
->    The new files will be a new IC folder and IC supported files of 
->    three modules that btcoexist, phydm and halmac. Could I submit
->    them to wirless tree when they're ready?
+That would definitely be prefered.
 
-My recommendation is to avoid accumulating patches at all cost and start
-submitting them as soon as you can. This way you get patches committed
-much more smoother. So do not wait until _all_ patches are ready,
-instead start submitting patches as soon as you have _some_ patches
-ready. In other words, keep the delta between mainline and your
-not-yet-submitted patches as small as possible.
+Thanks,
 
-And the patches don't need to be bug free as you can always fix bugs
-later. Just mention in the commit logs that this is preparation for some
-new feature and not fully tested yet. We do that all the time, for
-example Intel's iwlwifi has support for hardware which have not reached
-customers yet.
-
-> On the way, I'll attend netdev workshop in Korea, so we can meet there
-> if you attend too.
-
-I'm also attending Netdev 2.2, looking forward to meeting you there.
-
--- 
-Kalle Valo
+	tglx
