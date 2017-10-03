@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63037 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbdJDIoo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 04:44:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 0/3] linux-firmware: ath10k update 20170918
-Date: Wed, 4 Oct 2017 08:44:39 +0000
-Message-ID: <87lgkrxpxk.fsf@kamboji.qca.qualcomm.com> (sfid-20171004_104456_649576_DC2B9C08)
-References: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com>
-In-Reply-To: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
-        Valo's message of "Mon, 18 Sep 2017 18:00:54 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from blatinox.fr ([51.254.120.209]:41817 "EHLO vps202351.ovh.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751250AbdJCBid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Oct 2017 21:38:33 -0400
+Date: Mon, 2 Oct 2017 21:22:14 -0400
+From: =?UTF-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Sathya Perla <sathya.perla@broadcom.com>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org, USB <linux-usb@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
+Message-ID: <20171002212214.30d7013a@blatinox-laptop.localdomain> (sfid-20171003_033846_353042_AD7A294F)
+In-Reply-To: <CAHp75VfC2e+h8GCiB-1Rbe=_z3siBBo0WfqEf3qz8yWh8Cm3RQ@mail.gmail.com>
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+        <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
+        <CAHp75VfC2e+h8GCiB-1Rbe=_z3siBBo0WfqEf3qz8yWh8Cm3RQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Mon, 2 Oct 2017 16:07:36 +0300
+Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
 
-> Few firmware fixes to user reported issues for ath10k, but the other "fix=
-"
-> being a revert back to older firmware. Also a small board-2.bin update.
->
-> Kalle Valo (3):
->   ath10k: QCA6174 hw3.0: update firmware-6.bin to
->     WLAN.RM.4.4.1-00051-QCARMSWP-1
->   ath10k: QCA6174 hw3.0: update board-2.bin
->   Revert "ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2"
->
->  WHENCE                                            |   4 +-
->  ath10k/QCA6174/hw3.0/board-2.bin                  | Bin 477060 -> 501748=
- bytes
->  ath10k/QCA6174/hw3.0/firmware-6.bin               | Bin 711408 -> 727776=
- bytes
->  ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt |  97 +++++-----------=
-------
->  ath10k/QCA988X/hw2.0/firmware-5.bin               | Bin 249384 -> 248188=
- bytes
->  5 files changed, 25 insertions(+), 76 deletions(-)
+> > +       {&gainctrl_lut_core0_rev0, ARRAY_SIZE(gainctrl_lut_core0_rev0), 26, 192,
+> > +        32},  
+> 
+> For all such cases I would rather put on one line disregard checkpatch
+> warning for better readability.
+I agree that it would be better. I didn't know that it was possible to
+not follow this rule for anything else than a string.
 
-Ping? These fix serious regressions reported by many so it would be
-really good to get these to linux-firmware soon.
+I am waiting for more comments and I will send a v2.
 
---=20
-Kalle Valo=
+Thank you,
+Jérémy
