@@ -1,112 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:54945 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751515AbdJ1VcV (ORCPT
+Received: from mail.free-electrons.com ([62.4.15.54]:57996 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbdJDKLu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Oct 2017 17:32:21 -0400
-Received: by mail-wm0-f54.google.com with SMTP id r68so9496373wmr.3
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Oct 2017 14:32:20 -0700 (PDT)
-Subject: Re: Commit 0711d638 breaks mwifiex
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Brian Norris <briannorris@chromium.org>
-Cc: Jesse Sung <jesse.sung@canonical.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
-        linux-wireless@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>
-References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
- <1508233890.10607.70.camel@sipsolutions.net>
- <CAH10aOj8xTPDyEufGS47hytnT8RSL+qSbiRVmePrMpaaUu7gPQ@mail.gmail.com>
- <1508237298.10607.76.camel@sipsolutions.net>
- <20171026211313.GA46251@google.com>
- <1509135034.2283.8.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <98bea6e4-146e-4fdf-77fc-1c53d40088e7@broadcom.com> (sfid-20171028_233226_144506_63191432)
-Date: Sat, 28 Oct 2017 23:32:18 +0200
+        Wed, 4 Oct 2017 06:11:50 -0400
+Date: Wed, 4 Oct 2017 12:11:45 +0200
+From: Maxime Ripard <maxime.ripard@free-electrons.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Icenowy Zheng <icenowy@aosc.io>, Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>, Chen-Yu Tsai <wens@csie.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com
+Subject: Re: [PATCH v3 1/2] dt-bindings: add device tree binding for
+ Allwinner XR819 SDIO Wi-Fi
+Message-ID: <20171004101145.kgjufpcktodppuy3@flea> (sfid-20171004_121222_134025_E380B8C8)
+References: <20171003165944.13056-1-icenowy@aosc.io>
+ <20171003165944.13056-2-icenowy@aosc.io>
+ <871smjxp46.fsf@kamboji.qca.qualcomm.com>
+ <E46F3A20-294A-497E-AF71-C77A67AFDB8C@aosc.io>
+ <59D4B1C8.8020105@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1509135034.2283.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="z5ahan4c2wuj2t6k"
+In-Reply-To: <59D4B1C8.8020105@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-10-17 22:10, Johannes Berg wrote:
-> Hi,
-> 
->> IIUC, mwifiex hasn't told the firmware to do anything at this point --
->> the -EALREADY check is practically the first thing it does within
->> connect(). So it just quits the connect() request and tries to carry on
->> as usual. It will only do something different if the upper layers tell
->> it to do so afterward (e.g., calling disconnect()).
-> 
-> Yeah, that makes sense.
-> 
->> Yes, that's definitely what's happening. And it's explicitly called out
->> in the supplicant's nl80211 driver that this is intentional:
->>
->> [...]
-> 
-> Right.
-> 
->> This is the main code path for supplicant commands like "Reattach",
->> which boil down to (for non SME drivers):
->>
->> wpas_request_connection()
->>    ...
->>   -> wpa_supplicant_connect()
->>     -> wpa_supplicant_associate()
->>       -> wpas_start_assoc_cb()
->>         -> wpa_drv_associate()
->>           -> wpa_driver_nl80211_associate()
->>             -> wpa_driver_nl80211_connect()
->>
->> Now for the part I'm not so familiar with: is this really the *expected*
->> flow for full-MAC drivers in reattach, reassociate, and roaming flows?
->> All of those seem to boil down to this same connect() (and fallback to
->> disconnect()+connect() if -EALREADY) flow.
-> 
-> We never implemented a "ROAM" command, so there's not all that much
-> choice.
-> 
->> But it doesn't seem like all full-MAC drivers do the same thing. Some
->> seem to just blaze ahead with a connect attempt (maybe some firmwares
->> automatically interpret this for us?) and never return -EALREADY at all.
-> 
-> Agree, some seem to just do some form of roaming on this, which really
-> just means they disconnect internally - or perhaps they even try to
-> roam if it's the same network?
-> 
->> Sorry if this is slightly off-topic, but I'm trying to understand what
->> the general expectations are here, based on my relatively narrow
->> experience with a few drivers.
-> 
-> I don't really know either! There aren't that many direct cfg80211
-> drivers that don't use mac80211, so there's not that much experience.
-> 
-> You're probably well positioned to say what the behaviour _should_ be
-> though? :-)
-> 
-> I tend to think we should actually do the EALREADY from cfg80211, so
-> that wpa_s will always be forced to go through this roundabout code
-> path, but also finally implement a ROAM command, to let drivers have
-> that option?
-> 
-> Note also that we've always sort of envisioned that drivers
-> implementing CONNECT would do BSS selection themselves, but I think
-> there's no automatic way of doing that with wpa_s, and it may not even
-> be desirable in many cases (unless you really need the power saving
-> advantage) since it gets us into a situation where we have all these
-> different algorithms etc.
 
-wpa_s can issue a CONNECT without bssid (nor bssid_hint) leaving it up 
-to the driver to select the BSS. I am pretty sure I hit that scenario 
-although not sure what exact criteria are for wpa_s. Maybe it depended 
-on WIPHY_FLAG_SUPPORTS_FW_ROAM.
+--z5ahan4c2wuj2t6k
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Regarding BSS selection I added bss_select feature. An effort which 
-actually was triggered by a chromebook project. Guess the number of 
-drivers implementing that can be counted on one ...finger ;-)
+On Wed, Oct 04, 2017 at 10:02:48AM +0000, Arend van Spriel wrote:
+> On 10/4/2017 11:03 AM, Icenowy Zheng wrote:
+> >=20
+> >=20
+> > =E4=BA=8E 2017=E5=B9=B410=E6=9C=884=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=8D=
+=885:02:17, Kalle Valo <kvalo@codeaurora.org> =E5=86=99=E5=88=B0:
+> > > Icenowy Zheng <icenowy@aosc.io> writes:
+> > >=20
+> > > > Allwinner XR819 is a SDIO Wi-Fi chip, which has the functionality to
+> > > use
+> > > > an out-of-band interrupt pin instead of SDIO in-band interrupt.
+> > > >=20
+> > > > Add the device tree binding of this chip, in order to make it
+> > > possible
+> > > > to add this interrupt pin to device trees.
+> > > >=20
+> > > > Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+> > > > Acked-by: Rob Herring <robh@kernel.org>
+> > > > ---
+> > > > Changes in v3:
+> > > > - Renames the node name.
+> > > > - Adds ACK from Rob.
+> > > > Changes in v2:
+> > > > - Removed status property in example.
+> > > > - Added required property reg.
+> > > >=20
+> > > >   .../bindings/net/wireless/allwinner,xr819.txt      | 38
+> > > ++++++++++++++++++++++
+> > > >   1 file changed, 38 insertions(+)
+> > > >   create mode 100644
+> > > Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+> > >=20
+> > > Like I asked already last time, AFAICS there is no upstream xr819
+> > > wireless driver in drivers/net/wireless directory. Do we still accept
+> > > bindings like this for out-of-tree drivers?
+> >=20
+> > See esp8089.
+> >=20
+> > There's also no in-tree driver for it.
+>=20
+> The question is whether we should. The above might be a precedent, but it
+> may not necessarily be the way to go. The commit message for esp8089 seems
+> to hint that there is intent to have an in-tree driver:
+>=20
+> """
+>     Note that at this point there only is an out of tree driver for this
+>     hardware, there is no clear timeline / path for merging this. Still
+>     I believe it would be good to specify the binding for this in tree
+>     now, so that any future migration to an in tree driver will not cause
+>     compatiblity issues.
+>=20
+>     Cc: Icenowy Zheng <icenowy@aosc.xyz>
+>     Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>     Signed-off-by: Rob Herring <robh@kernel.org>
+> """
+>=20
+> Regardless the bindings are in principle independent of the kernel and ju=
+st
+> describing hardware. I think there have been discussions to move the
+> bindings to their own repository, but apparently it was decided otherwise.
 
-Regards,
-Arend
+Yeah, I guess especially how it could be merged with the cw1200 driver
+would be very relevant to that commit log.
+
+Maxime
+
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
+
+--z5ahan4c2wuj2t6k
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBAgAGBQJZ1LPhAAoJEBx+YmzsjxAg2YUQAJMxy9OzeXuAwzmK4xUR24Jo
+Qa/0A+F6F6LzksbVJKLywrRFSEsJ6i++SUzZYygz6jMwwQl7OApg4Dj/qd+2jK/Q
+LpgzeyXzgkcpOz2SHGeZZGiGn4YHVt/o1xSEkp2TWarL0iJ1Ckyt51Rs/fq2suoE
+qJr/dgyIDR3ZW3ek2Z2JcANCJ3y0q4KdD9lYCiB9ZBSHDs02ksleD5K/7gBArX7B
+tk+j+RK6r4A+UhnIC4T1GjWmcJRIkqAjjuaxFE4cFuKa2UvT2yKfoty9KHGfjgrU
+Sd71nqBe654ADx3f7nAgH3RehgNlY+JV/2LAW0WWCv+vgB4rFlMZicKNm1XQXFsZ
+/qM++w6bzAVyfiRXosOVtBOx7ocTHA2gNkyZT/Eh7PMn9Yt6ftMROL98S23eaXhE
+ONjFoIt6HyCU+wu5Kka1L9YizE0dHT4l/hBu4m3j7OEgZaTg+wJflDlNvemuA/AD
+jdOcM85UJM1azqjO7MmaaCF8UKQYgAHfiyh3j8vhPNjJ4TvNaMXri622a2ZojWJE
+aj0Za2DzNmHSwrlU9CuItNS6WSwphtH3t65LLi/2uxsZUOr0hYdV5uNE1A1n6g1X
+m9YAaDshKu4fBYpT9c9guWrET18OKcgxq+SZT3WrXgriVqYtEB6dxEe/gbp9c+lW
+mJZBjzQkNFJepMq8fggE
+=FjDQ
+-----END PGP SIGNATURE-----
+
+--z5ahan4c2wuj2t6k--
