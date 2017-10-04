@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:24839 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751801AbdJPF6f (ORCPT
+Received: from zimbra.linuxprofi.at ([93.83.54.199]:33262 "EHLO
+        zimbra.linuxprofi.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751412AbdJDP5V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 01:58:35 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V6 1/5] mac80211: Enable TDLS peer buffer STA feature
-Date: Mon, 16 Oct 2017 14:00:29 +0800
-Message-ID: <1508133633-23214-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20171016_075844_306502_036ED199)
-In-Reply-To: <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patches V6>
- <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com>
+        Wed, 4 Oct 2017 11:57:21 -0400
+From: =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
+To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        luciano.coelho@intel.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
+Subject: [PATCH 2/3] wireless: iwlwifi: function definition cosmetic fix
+Date: Wed,  4 Oct 2017 17:56:59 +0200
+Message-Id: <20171004155700.18048-3-christoph@boehmwalder.at> (sfid-20171004_175845_127768_A1FEF27F)
+In-Reply-To: <20171004155700.18048-1-christoph@boehmwalder.at>
+References: <20171004155700.18048-1-christoph@boehmwalder.at>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+Separate the function from the previous definition with a newline and
+put the `static` keyword on the same line, as it just looks nicer.
 
-Enable TDLS peer buffer STA feature.
-Set extended capability bit to enable buffer STA when driver
-support it.
-
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
 ---
- include/net/mac80211.h |    4 ++++
- net/mac80211/tdls.c    |    5 ++++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f8149ca..5928123 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2067,6 +2067,9 @@ struct ieee80211_txq {
-  *	The stack will not do fragmentation.
-  *	The callback for @set_frag_threshold should be set as well.
-  *
-+ * @IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA: Hardware support buffer STA when
-+ *	TDLS is established.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2109,6 +2112,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TX_FRAG_LIST,
- 	IEEE80211_HW_REPORTS_LOW_ACK,
- 	IEEE80211_HW_SUPPORTS_TX_FRAG,
-+	IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 91093d4..8231466 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -47,6 +47,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 			   NL80211_FEATURE_TDLS_CHANNEL_SWITCH;
- 	bool wider_band = ieee80211_hw_check(&local->hw, TDLS_WIDER_BW) &&
- 			  !ifmgd->tdls_wider_bw_prohibited;
-+	bool buffer_sta = ieee80211_hw_check(&local->hw,
-+					     SUPPORTS_TDLS_BUFFER_STA);
- 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
- 	bool vht = sband && sband->vht_cap.vht_supported;
- 	u8 *pos = skb_put(skb, 10);
-@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
--	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
-+	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
-+		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
- 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
- 	*pos++ = 0;
- 	*pos++ = 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+index 0eb815ae97e8..249ee1c7b02f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+@@ -325,8 +325,8 @@ static u16 channel_id_to_txp(struct iwl_phy_db *phy_db, u16 ch_id)
+ 	}
+ 	return 0xff;
+ }
+-static
+-int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
++
++static int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
+ 				u32 type, u8 **data, u16 *size, u16 ch_id)
+ {
+ 	struct iwl_phy_db_entry *entry;
 -- 
-1.7.9.5
+2.13.5
