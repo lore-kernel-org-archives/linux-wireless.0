@@ -1,39 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56402 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932148AbdJWRyh (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:37101 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbdJDPyA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 13:54:37 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 457B240A5CB
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Oct 2017 10:54:35 -0700 (PDT)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: A good way to get CSI info to user-space?
-Message-ID: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com> (sfid-20171023_195440_976958_B20E3A62)
-Date: Mon, 23 Oct 2017 10:54:35 -0700
+        Wed, 4 Oct 2017 11:54:00 -0400
+Received: by mail-lf0-f68.google.com with SMTP id q132so4910749lfe.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 08:53:59 -0700 (PDT)
+Subject: Re: [PATCH 00/11] SDIO support for ath10k
+To: Alagu Sankar <alagusankar@silex-india.com>, silexcommon@gmail.com,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+ <b4bbf022-77d7-f907-f35b-7afacfc227e5@gmail.com>
+ <59D47E1B.5000009@silex-india.com>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <045fef88-855e-0590-eec6-488762b3cfd6@gmail.com> (sfid-20171004_175405_525679_61B4ACFC)
+Date: Wed, 4 Oct 2017 17:53:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <59D47E1B.5000009@silex-india.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-I have been poking at ath10k to get some CSI reporting working.
-The CSI reports are a bit over 2k bytes in length, and they could
-happen quite often.  As far as I can tell, there is no good way in
-the kernel to make this available.
 
-I was thinking maybe a callback into the mac80211 stack, which would
-then send a netlink event might be a useful way to implement this?
+On 2017-10-04 08:22, Alagu Sankar wrote:
+> Hi Erik,
+> 
+> We will work to have this support mainlined as soon as possible. Would appreciate your support
+> in making sure that the patches do not affect the USB high latency path.
+> 
+I have added the patches in my own ath-repo and I have tested with the
+WUSB6100M without any problems.
 
-Any other suggestions on this?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> On 02-10-2017 14:32, Erik Stromdahl wrote:
+>> Hi Alagu,
+>>
+>> It is great to see that we are finally about have fully working
+>> mainline support for QCA9377 SDIO chipsets!
+>>
+>> Great job!
+>>
+>> On 2017-09-30 19:37, silexcommon@gmail.com wrote:
+>>> From: Alagu Sankar <alagusankar@silex-india.com>
+>>>
+>>> This patchset, generated against master-pending branch, enables a fully
+>>> functional SDIO interface driver for ath10k.  Patches have been verified on
+>>> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access Point
+>>> and P2P modes.
+>>>
+>>> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
+>>> with the board data from respective SDIO card vendors. Receive performance
+>>> matches the QCA reference driver when used with SDIO3.0 enabled platforms.
+>>> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
+>>>
+>> Can you share any scripts etc. (wrapping hostapd and wpa_supplicant stuff)
+>> or provide some more info about you test setup?
+>>
+> I am not using any specific scripts for this. The standard ones from the ath10k configuration page
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/configuration works just fine with the
+> NL80211 path.
+>> I made a quick socat based test on an old laptop (I don't think it has SDIO
+>> 3.0 support) and I did unfortunately not get the same figures as you did :(
+>>
+> If it is SDIO v1.x, then the max bus speed is only 100Mbit/s.  With v2.x it is 200Mbit/s and 3.x it is
+> 832 Mbit/s.  Throughput primarily depends on it. We used i.MX6 SoloX Sabre SDB platform
+> which supports SDIO3.x and could see the maximum performance.
+>>> This patchset differs from the previous high latency patches, specific to SDIO.
+>>> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instructs the
+>>> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Without
+>>> this flag, the management frames are not sent out by the firmware. Possibility
+>>> of management frames being sent via WMI and data frames through the reduced Tx
+>>> completion needs to be probed further.
+>>>
+>> Ah, so that explains why I couldn't see any messages in the air.
+>>
+>>> Further improvements can be done on the transmit path by implementing packet
+>>> bundle. Scatter Gather is another area of improvement for both Transmit and
+>>> Receive, but may not work on all platforms
+>>>
+>>> Known issues: Surprise removal of the card, when the device is in connected
+>>> state, delays sdio function remove due to delayed WMI command failures.
+>>> Existing ath10k framework can not differentiate between a kernel module
+>>> removal and the surprise removal of teh card.
+>>>
+>>> Alagu Sankar (11):
+>>>    ath10k_sdio: sdio htt data transfer fixes
+>>>    ath10k_sdio: wb396 reference card fix
+>>>    ath10k_sdio: DMA bounce buffers for read write
+>>>    ath10k_sdio: reduce transmit msdu count
+>>>    ath10k_sdio: use clean packet headers
+>>>    ath10k_sdio: high latency fixes for beacon buffer
+>>>    ath10k_sdio: fix rssi indication
+>>>    ath10k_sdio: common read write
+>>>    ath10k_sdio: virtual scatter gather for receive
+>>>    ath10k_sdio: enable firmware crash dump
+>>>    ath10k_sdio: hif start once addition
+>>>
+>>>   drivers/net/wireless/ath/ath10k/core.c    |  35 ++-
+>>>   drivers/net/wireless/ath/ath10k/debug.c   |   3 +
+>>>   drivers/net/wireless/ath/ath10k/htc.c     |   4 +-
+>>>   drivers/net/wireless/ath/ath10k/htc.h     |   1 +
+>>>   drivers/net/wireless/ath/ath10k/htt_rx.c  |  19 +-
+>>>   drivers/net/wireless/ath/ath10k/htt_tx.c  |  24 +-
+>>>   drivers/net/wireless/ath/ath10k/hw.c      |   2 +
+>>>   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
+>>>   drivers/net/wireless/ath/ath10k/mac.c     |  31 ++-
+>>>   drivers/net/wireless/ath/ath10k/sdio.c    | 398 ++++++++++++++++++++++--------
+>>>   drivers/net/wireless/ath/ath10k/sdio.h    |  10 +-
+>>>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |   2 +-
+>>>   12 files changed, 403 insertions(+), 127 deletions(-)
+>>>
+>>
+> 
