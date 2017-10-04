@@ -1,35 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:54713 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbdJMUzN (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:46435 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751274AbdJDX15 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 16:55:13 -0400
-Received: by mail-wr0-f170.google.com with SMTP id o44so1852831wrf.11
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Oct 2017 13:55:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <59E124EB.6090602@candelatech.com>
-References: <1507068826-14677-1-git-send-email-greearb@candelatech.com>
- <87a80vnrsb.fsf@kamboji.qca.qualcomm.com> <CAJ-Vmon0SszxH22Zb+O5RVQSommFFuc5XmG+at9=xbGagOb7PQ@mail.gmail.com>
- <59E124EB.6090602@candelatech.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Fri, 13 Oct 2017 13:55:11 -0700
-Message-ID: <CAJ-Vmo=dK0BSwE99Bx+qE2b1qokg_MyXTvhZTFLPcSbRwFGOfA@mail.gmail.com> (sfid-20171013_225551_270301_2BBCD772)
-Subject: Re: [PATCH v2] ath10k: Retry pci probe on failure.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 4 Oct 2017 19:27:57 -0400
+Received: by mail-pf0-f173.google.com with SMTP id r68so7042143pfj.3
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:27:57 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Harish Patil <harish.patil@cavium.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <len.brown@intel.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Mark Gross <mark.gross@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@codeaurora.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Tejun Heo <tj@kernel.org>,
+        Ursula Braun <ubraun@linux.vnet.ibm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 00/13] timer: Start conversion to timer_setup()
+Date: Wed,  4 Oct 2017 16:26:54 -0700
+Message-Id: <1507159627-127660-1-git-send-email-keescook@chromium.org> (sfid-20171005_013421_025423_7CF773DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[snip]
+Hi,
 
-* WMI setup stuff fails locally because of memory fragmentation when
-you reload the driver. Heh. Sigh.
-* I also see the PCI wakeup failures, so I'm going to go poke that
-soon and see what I find.
+This is the first of many timer infrastructure cleanups to simplify the
+timer API[1]. All of these patches are expected to land via the timer
+tree, so Acks (or corrections) appreciated.
 
+These patches refactor various users of timer API that are NOT just using
+init_timer() or setup_timer() (which is the vast majority of users,
+and are being converted separately). These changes are focused on the
+lesser-used init_timer_*(), TIMER_*INITIALIZER(), and DEFINE_TIMER()
+methods of preparing a timer.
 
+Thanks!
 
--adrian
+-Kees
+
+[1] https://git.kernel.org/linus/686fef928bba6be13cabe639f154af7d72b63120
