@@ -1,63 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:12276 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755650AbdJJIJg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 04:09:36 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V5 2/5] ath10k: Enable TDLS peer buffer STA feature
-Date: Tue, 10 Oct 2017 16:11:17 +0800
-Message-ID: <1507623080-9311-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_100939_947943_D5640181)
-In-Reply-To: <1507623080-9311-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patch>
- <1507623080-9311-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga07.intel.com ([134.134.136.100]:32275 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750866AbdJDTSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 15:18:55 -0400
+Message-ID: <1507144731.908.108.camel@intel.com> (sfid-20171004_211920_936971_16A79A61)
+Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Joe Perches <joe@perches.com>,
+        Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
+        <christoph@boehmwalder.at>, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 04 Oct 2017 22:18:51 +0300
+In-Reply-To: <1507139722.4434.12.camel@perches.com>
+References: <20171004155700.18048-1-christoph@boehmwalder.at>
+         <20171004155700.18048-2-christoph@boehmwalder.at>
+         <1507134405.4434.10.camel@perches.com> <1507135159.908.96.camel@intel.com>
+         <1507139722.4434.12.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On Wed, 2017-10-04 at 10:55 -0700, Joe Perches wrote:
+> On Wed, 2017-10-04 at 19:39 +0300, Luciano Coelho wrote:
+> > On Wed, 2017-10-04 at 09:26 -0700, Joe Perches wrote:
+> 
+> []
+> > > This might be more intelligble as separate tests
+> > > 
+> > > static bool is_valid_channel(u16 ch_id)
+> > > {
+> > > 	if (ch_id <= 14)
+> > > 		return true;
+> > > 
+> > > 	if ((ch_id % 4 == 0) &&
+> > > 	    ((ch_id >= 36 && ch_id <= 64) ||
+> > > 	     (ch_id >= 100 && ch_id <= 140)))
+> > > 		return true;
+> > > 
+> > > 	if ((ch_id % 4 == 1) &&
+> > > 	    (chid >= 145 && ch_id <= 165))
+> > > 		return true;
+> > > 
+> > > 	return false;
+> > > }
+> > > 
+> > > The compiler should produce the same object code.
+> > 
+> > Yeah, it may be a bit easier to read, but I don't want to start
+> > getting
+> > "fixes" to working and reasonable code.  There's nothing wrong with
+> > the
+> > existing function (except maybe for the int vs. boolean) so let's
+> > not
+> > change it.
+> > 
+> > A good time to change this would be the next time someone adds yet
+> > another range of valid channels here. ;)
+> 
+> <shrug>  Your choice.
+> 
+> I like code I can read and understand at a glance.
 
-Enable TDLS peer buffer STA feature.
-QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
-it reports this capability through wmi service map in wmi service ready
-event. Set related parameter in TDLS WMI command to enable this feature.
+I do too, but I don't think the original is that hard to read, really. 
+Each "if" you add is already corresponding to one separate line in the
+original code...
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c     |    3 +++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 +++
- 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5683f1a..399f9ba 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8204,6 +8204,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
- 	}
- 
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
-+
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7616c1c..f60b46e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2747,6 +2747,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	 */
- 	u32 options = 0;
- 
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
-+
- 	len = sizeof(*tlv) + sizeof(*cmd);
- 	skb = ath10k_wmi_alloc_skb(ar, len);
- 	if (!skb)
--- 
-1.7.9.5
+> At case somebody needs to add channels, likely nobody
+> would do the change suggested but would just add
+> another test to the already odd looking block.
+
+Yeah, that would most likely be the case, but if I saw that and thought
+there was a better way to write it, believe me, I would definitely
+nitpick the patch and ask the author to reorg the code so it would look
+nicer.
+
+
+> And constants should be on the right side of the tests.
+
+Sure, in a new patch, we would definitely pay attention to that.  But
+now, is it worth having one more patch go through the entire machinery
+to change a relatively clear, extremely simple function just because
+you could write it in a different way? My answer is a resounding no,
+sorry.
+
+--
+Luca.
