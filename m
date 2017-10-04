@@ -1,80 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35452 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754930AbdJSOcs (ORCPT
+Received: from smtprelay0229.hostedemail.com ([216.40.44.229]:35232 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750966AbdJDQ0t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2017 10:32:48 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Grant Grundler <grundler@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: ath10k: fix core PCI suspend when WoWLAN is supported but
- disabled
-Date: Thu, 19 Oct 2017 14:32:45 +0000
-Message-ID: <87vajbgqcz.fsf@kamboji.qca.qualcomm.com> (sfid-20171019_163336_469880_2854D56B)
-References: <20170919232416.108247-1-briannorris@chromium.org>
-        <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
-In-Reply-To: <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
-        (Kalle Valo's message of "Fri, 13 Oct 2017 13:37:37 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 4 Oct 2017 12:26:49 -0400
+Message-ID: <1507134405.4434.10.camel@perches.com> (sfid-20171004_182728_735040_753AA614)
+Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
+From: Joe Perches <joe@perches.com>
+To: Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
+        <christoph@boehmwalder.at>, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, luciano.coelho@intel.com,
+        kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 04 Oct 2017 09:26:45 -0700
+In-Reply-To: <20171004155700.18048-2-christoph@boehmwalder.at>
+References: <20171004155700.18048-1-christoph@boehmwalder.at>
+         <20171004155700.18048-2-christoph@boehmwalder.at>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Wed, 2017-10-04 at 17:56 +0200, Christoph Böhmwalder wrote:
+> Change a usage of int in a boolean context to use the bool type instead, as it
+> makes the intent of the function clearer and helps clarify its semantics.
+> 
+> Also eliminate the if/else and just return the boolean result directly,
+> making the code more readable.
+> 
+> Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 12 +++++-------
+>  1 file changed, 5 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> index b7cd813ba70f..0eb815ae97e8 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> @@ -267,14 +267,12 @@ int iwl_phy_db_set_section(struct iwl_phy_db *phy_db,
+>  }
+>  IWL_EXPORT_SYMBOL(iwl_phy_db_set_section);
+>  
+> -static int is_valid_channel(u16 ch_id)
+> +static bool is_valid_channel(u16 ch_id)
+>  {
+> -	if (ch_id <= 14 ||
+> -	    (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
+> -	    (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
+> -	    (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1))
+> -		return 1;
+> -	return 0;
+> +	return (ch_id <= 14 ||
+> +	       (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
+> +	       (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
+> +	       (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1));
+>  }
 
-> Brian Norris <briannorris@chromium.org> wrote:
->
->> For devices where the FW supports WoWLAN but user-space has not
->> configured it, we don't do any PCI-specific suspend/resume operations,
->> because mac80211 doesn't call drv_suspend() when !wowlan. This has
->> particularly bad effects for some platforms, because we don't stop the
->> power-save timer, and if this timer goes off after the PCI controller
->> has suspended the link, Bad Things will happen.
->>=20
->> Commit 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
->> got some of this right, in that it understood there was a problem on
->> non-WoWLAN firmware. But it forgot the $subject case.
->>=20
->> Fix this by moving all the PCI driver suspend/resume logic exclusively
->> into the driver PM hooks. This shouldn't affect WoWLAN support much
->> (this just gets executed later on).
->>=20
->> I would just as well kill the entirety of ath10k_hif_suspend(), as it's
->> not even implemented on the USB or SDIO drivers. I expect that we don't
->> need the callback, except to return "supported" (i.e., 0) or "not
->> supported" (i.e., -EOPNOTSUPP).
->>=20
->> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
->> Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
->> Signed-off-by: Brian Norris <briannorris@chromium.org>
->> Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>
->> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
->> Cc: Michal Kazior <michal.kazior@tieto.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->
-> Patch applied to ath-next branch of ath.git, thanks.
->
-> 96378bd2c6cd ath10k: fix core PCI suspend when WoWLAN is supported but di=
-sabled
+This might be more intelligble as separate tests
 
-Kbuild found a build problem, I suspect it's caused by this patch:
+static bool is_valid_channel(u16 ch_id)
+{
+	if (ch_id <= 14)
+		return true;
 
-drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
-declaration of function 'ath10k_pci_suspend'
-[-Werror=3Dimplicit-function-declaration]
+	if ((ch_id % 4 == 0) &&
+	    ((ch_id >= 36 && ch_id <= 64) ||
+	     (ch_id >= 100 && ch_id <= 140)))
+		return true;
 
-drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
-declaration of function 'ath10k_pci_resume'
-[-Werror=3Dimplicit-function-declaration]
+	if ((ch_id % 4 == 1) &&
+	    (chid >= 145 && ch_id <= 165))
+		return true;
 
-http://lists.infradead.org/pipermail/ath10k/2017-October/010269.html
+	return false;
+}
 
-The .config.gz there doesn't have CONFIG_PM set, maybe that's the
-problem?
-
---=20
-Kalle Valo=
+The compiler should produce the same object code.
