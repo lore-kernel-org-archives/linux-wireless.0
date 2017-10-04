@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:60925 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751408AbdJEKN6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 06:13:58 -0400
-Date: Thu, 5 Oct 2017 12:13:49 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Daniel Drake <drake@endlessm.com>
-cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        x86@kernel.org, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, linux@endlessm.com,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andy Shevchenko <andy@infradead.org>
-Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
- allocation
-In-Reply-To: <20171005042316.12261-1-drake@endlessm.com>
-Message-ID: <alpine.DEB.2.20.1710051046040.2083@nanos> (sfid-20171005_121412_194643_21519A6C)
-References: <alpine.DEB.2.20.1710021540030.2185@nanos> <20171005042316.12261-1-drake@endlessm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga03.intel.com ([134.134.136.65]:15241 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750937AbdJDQVM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 12:21:12 -0400
+Message-ID: <1507134068.908.94.camel@intel.com> (sfid-20171004_182147_501571_39E1E670)
+Subject: Re: [PATCH 0/3] iwlwifi: cosmetic fixes
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
+        <christoph@boehmwalder.at>, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 04 Oct 2017 19:21:08 +0300
+In-Reply-To: <20171004155700.18048-1-christoph@boehmwalder.at>
+References: <20171004155700.18048-1-christoph@boehmwalder.at>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Oct 2017, Daniel Drake wrote:
-> On Mon, Oct 2, 2017 at 10:38 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > What's wrong with just using the legacy INTx emulation if you cannot
-> > allocate 4 MSI vectors?
+On Wed, 2017-10-04 at 17:56 +0200, Christoph Böhmwalder wrote:
+> Fix several code style issues, some of which were reported by
+> checkpatch.pl.
 > 
-> The Legacy interrupt simply doesn't work for the wifi on at least 8 new Acer
-> laptop products based on Intel Apollo Lake.
-> Plus 4 Dell systems included in the patches in this thread:
-> https://lkml.org/lkml/2017/9/26/55
-> (the 2 which I can find specs for are also Apollo Lake)
->
-> We have tried taking the mini-PCIe wifi module out of one of the affected
-> Acer products and moved it to another computer, where it is working fine
-> with legacy interrupts. So this suggests that the wifi module itself is OK,
-> but we are facing a hardware limitation or BIOS limitation on the affected
-> products. In the Dell thread it says "Some platform(BIOS) blocks legacy
-> interrupts (INTx)".
->
-> If you have any suggestions for how we might solve this without getting into
-> the MSI mess then that would be much appreciated. If the BIOS blocks the
-> interrupts, can Linux unblock them?
+> The changes are:
+> * One instance of an `int` variable being used in a boolean context,
+> chaned to
+>   use the more appropriate `bool` type.
+> * One very minor fix, removing a newline between a function
+> definition and its
+>   associated `static` keyword
+> * One fix wrapping a macro in curly braces
+> 
+> 
+> Christoph Böhmwalder (3):
+>   wireless: iwlwifi: use bool instead of int
+>   wireless: iwlwifi: function definition cosmetic fix
+>   wireless: iwlwifi: wrap macro into braces
+> 
+>  drivers/net/wireless/intel/iwlwifi/iwl-io.c     |  2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 16 +++++++------
+> ---
+>  2 files changed, 8 insertions(+), 10 deletions(-)
 
-I'm pretty sure we can. Cc'ed Rafael and Andy. They might know, if not they
-certainly know whom to ask @Intel.
+Sorry, but this kind of series just generates churn.  Especially when 2
+out of 3 patches are broken.  I applied your previous patch because it
+was really trivial, but I really don't want to encourage this kind of
+drive-by "fixes" that only cause additional work.
 
-> Just for reference I'm attaching my latest attempt at enabling MULTI_PCI_MSI.
-> It would definitely need further work if we proceed here - so far I've
-> ignored the affinity considerations that you explained, and it's not
-> particularly clean.
+I generally only accept this kind of changes when people are changing
+code close or related to it.
 
-Yeah, I know how that looks. When I rewrote the allocator I initialy had
-that multi-vector mode implemented and then ditched it due to the affinity
-setting mess and because its hard vs. the global best effort reservation
-mode, which is way more important to have than multi MSI.
-
->  int irq_matrix_alloc(struct irq_matrix *m, const struct cpumask *msk,
-> -		     bool reserved, unsigned int *mapped_cpu);
-> +		     bool reserved, unsigned int *mapped_cpu, unsigned int num,
-> +		     unsigned int align_mask);
-
-That's not needed. We can assume that multivector allocations must be
-aligned in the following way:
-
-	count = __roundup_pow_of_two(count);
-	mask = ilog2(count);
-
-That's a sane assumption in general.
-
-Thanks,
-
-	tglx
+--
+Luca.
