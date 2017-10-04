@@ -1,57 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59296 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751639AbdJFRMj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 13:12:39 -0400
-Message-ID: <1507309955.19300.23.camel@sipsolutions.net> (sfid-20171006_191256_891942_B00CF4E0)
-Subject: Re: [Make-wifi-fast] [RFC] mac80211: Add airtime fairness accounting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jonathan Morton <chromatix99@gmail.com>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Date: Fri, 06 Oct 2017 19:12:35 +0200
-In-Reply-To: <CAJq5cE0YewMkTcuWM_tRjJnP2vLa_cvoQEsgz8JhGLHxOOSRsw@mail.gmail.com> (sfid-20171006_161834_329224_D41F44FB)
-References: <20171006115232.28688-1-toke@toke.dk>
-         <1507298832.19300.20.camel@sipsolutions.net>
-         <CAJq5cE0YewMkTcuWM_tRjJnP2vLa_cvoQEsgz8JhGLHxOOSRsw@mail.gmail.com>
-         (sfid-20171006_161834_329224_D41F44FB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from up.icubehost.com ([185.62.36.194]:37754 "EHLO up.icubehost.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750866AbdJDGWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 02:22:24 -0400
+Subject: Re: [PATCH 00/11] SDIO support for ath10k
+To: Erik Stromdahl <erik.stromdahl@gmail.com>, silexcommon@gmail.com,
+        ath10k@lists.infradead.org
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+ <b4bbf022-77d7-f907-f35b-7afacfc227e5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Alagu Sankar <alagusankar@silex-india.com>
+Message-ID: <59D47E1B.5000009@silex-india.com> (sfid-20171004_082228_011698_9838A091)
+Date: Wed, 4 Oct 2017 11:52:19 +0530
+MIME-Version: 1.0
+In-Reply-To: <b4bbf022-77d7-f907-f35b-7afacfc227e5@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[please don't use html format, the linux lists drop it]
+Hi Erik,
 
-> As I understand it, this code is mainly intended for stations that
-> serve as an AP, rather than as a client.
+We will work to have this support mainlined as soon as possible. Would 
+appreciate your support
+in making sure that the patches do not affect the USB high latency path.
 
-Sure, it's pointless in all other cases since there's only one (L2)
-station to talk to.
-
-> Since the MAC layer is the one with easiest access to the real
-> airtime statistics (much easier than, say, a qdisc), there is no
-> better place to implement it.
-
-I'm not arguing anything else, what are you trying to say?
-
-> If RTS/CTS probes are in use, then the AP does in fact have control
-> over receive bandwidth on a per station basis, at least in theory.
-
-That's super theoretical, there's no chipset I know of that'd easily
-let you use this to control it. You'd also use up airtime for a bunch
-of RTS retransmits - they really aren't intended for that type of
-usage.
-
-> But I think this is simply an attempt to balance total airtime
-> between stations by accounting for airtime used in both directions,
-> even if one of those directions isn't controlled so strictly.
-
-My concern is that you don't have _any_ control over the TX from the
-station, so the client can effectively starve itself by sending "too
-much". I'm concerned that this can lead to pathological corner cases
-where the client tries to retransmit things because there was no proper
-ACK etc.?
-
-johannes
+On 02-10-2017 14:32, Erik Stromdahl wrote:
+> Hi Alagu,
+>
+> It is great to see that we are finally about have fully working
+> mainline support for QCA9377 SDIO chipsets!
+>
+> Great job!
+>
+> On 2017-09-30 19:37, silexcommon@gmail.com wrote:
+>> From: Alagu Sankar <alagusankar@silex-india.com>
+>>
+>> This patchset, generated against master-pending branch, enables a fully
+>> functional SDIO interface driver for ath10k.  Patches have been 
+>> verified on
+>> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, 
+>> Access Point
+>> and P2P modes.
+>>
+>> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
+>> with the board data from respective SDIO card vendors. Receive 
+>> performance
+>> matches the QCA reference driver when used with SDIO3.0 enabled 
+>> platforms.
+>> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
+>>
+> Can you share any scripts etc. (wrapping hostapd and wpa_supplicant 
+> stuff)
+> or provide some more info about you test setup?
+>
+I am not using any specific scripts for this. The standard ones from the 
+ath10k configuration page
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/configuration 
+works just fine with the
+NL80211 path.
+> I made a quick socat based test on an old laptop (I don't think it has 
+> SDIO
+> 3.0 support) and I did unfortunately not get the same figures as you 
+> did :(
+>
+If it is SDIO v1.x, then the max bus speed is only 100Mbit/s.  With v2.x 
+it is 200Mbit/s and 3.x it is
+832 Mbit/s.  Throughput primarily depends on it. We used i.MX6 SoloX 
+Sabre SDB platform
+which supports SDIO3.x and could see the maximum performance.
+>> This patchset differs from the previous high latency patches, 
+>> specific to SDIO.
+>> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This 
+>> instructs the
+>> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. 
+>> Without
+>> this flag, the management frames are not sent out by the firmware. 
+>> Possibility
+>> of management frames being sent via WMI and data frames through the 
+>> reduced Tx
+>> completion needs to be probed further.
+>>
+> Ah, so that explains why I couldn't see any messages in the air.
+>
+>> Further improvements can be done on the transmit path by implementing 
+>> packet
+>> bundle. Scatter Gather is another area of improvement for both 
+>> Transmit and
+>> Receive, but may not work on all platforms
+>>
+>> Known issues: Surprise removal of the card, when the device is in 
+>> connected
+>> state, delays sdio function remove due to delayed WMI command failures.
+>> Existing ath10k framework can not differentiate between a kernel module
+>> removal and the surprise removal of teh card.
+>>
+>> Alagu Sankar (11):
+>>    ath10k_sdio: sdio htt data transfer fixes
+>>    ath10k_sdio: wb396 reference card fix
+>>    ath10k_sdio: DMA bounce buffers for read write
+>>    ath10k_sdio: reduce transmit msdu count
+>>    ath10k_sdio: use clean packet headers
+>>    ath10k_sdio: high latency fixes for beacon buffer
+>>    ath10k_sdio: fix rssi indication
+>>    ath10k_sdio: common read write
+>>    ath10k_sdio: virtual scatter gather for receive
+>>    ath10k_sdio: enable firmware crash dump
+>>    ath10k_sdio: hif start once addition
+>>
+>>   drivers/net/wireless/ath/ath10k/core.c    |  35 ++-
+>>   drivers/net/wireless/ath/ath10k/debug.c   |   3 +
+>>   drivers/net/wireless/ath/ath10k/htc.c     |   4 +-
+>>   drivers/net/wireless/ath/ath10k/htc.h     |   1 +
+>>   drivers/net/wireless/ath/ath10k/htt_rx.c  |  19 +-
+>>   drivers/net/wireless/ath/ath10k/htt_tx.c  |  24 +-
+>>   drivers/net/wireless/ath/ath10k/hw.c      |   2 +
+>>   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
+>>   drivers/net/wireless/ath/ath10k/mac.c     |  31 ++-
+>>   drivers/net/wireless/ath/ath10k/sdio.c    | 398 
+>> ++++++++++++++++++++++--------
+>>   drivers/net/wireless/ath/ath10k/sdio.h    |  10 +-
+>>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |   2 +-
+>>   12 files changed, 403 insertions(+), 127 deletions(-)
+>>
+>
