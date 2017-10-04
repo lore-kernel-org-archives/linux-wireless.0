@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46700 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750978AbdJaJqH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48198 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751981AbdJDJC1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 05:46:07 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 0/3] mwifiex: fix usage issues with spinlocks
-Date: Tue, 31 Oct 2017 15:12:44 +0530
-Message-ID: <1509442967-14149-1-git-send-email-gbhat@marvell.com> (sfid-20171031_104611_806928_AFBF846A)
+        Wed, 4 Oct 2017 05:02:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Icenowy Zheng <icenowy@aosc.io>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-sunxi@googlegroups.com
+Subject: Re: [PATCH v3 1/2] dt-bindings: add device tree binding for Allwinner XR819 SDIO Wi-Fi
+References: <20171003165944.13056-1-icenowy@aosc.io>
+        <20171003165944.13056-2-icenowy@aosc.io>
+Date: Wed, 04 Oct 2017 12:02:17 +0300
+In-Reply-To: <20171003165944.13056-2-icenowy@aosc.io> (Icenowy Zheng's message
+        of "Wed, 4 Oct 2017 00:59:43 +0800")
+Message-ID: <871smjxp46.fsf@kamboji.qca.qualcomm.com> (sfid-20171004_110321_114680_63EC2CD3)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series fixes issues with usage of few of the spinlocks
-used by the driver. To summarise it fixes below issues:
+Icenowy Zheng <icenowy@aosc.io> writes:
 
-1. Driver does access the elements returned by the list, without
-acquiring the lock.
+> Allwinner XR819 is a SDIO Wi-Fi chip, which has the functionality to use
+> an out-of-band interrupt pin instead of SDIO in-band interrupt.
+>
+> Add the device tree binding of this chip, in order to make it possible
+> to add this interrupt pin to device trees.
+>
+> Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+> Acked-by: Rob Herring <robh@kernel.org>
+> ---
+> Changes in v3:
+> - Renames the node name.
+> - Adds ACK from Rob.
+> Changes in v2:
+> - Removed status property in example.
+> - Added required property reg.
+>
+>  .../bindings/net/wireless/allwinner,xr819.txt      | 38 ++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
 
-2. Driver release the lock during iteration of the list and hold
-it back before starting the next iteration.
-
-3. Driver release the lock while the element is still in process.
-
-Karthik Ananthapadmanabha (3):
-  mwifiex: cleanup rx_pkt_lock usage in 11n_rxreorder.c
-  mwifiex: cleanup tx_ba_stream_tbl_lock usage
-  mwifiex: cleanup rx_reorder_tbl_lock usage
-
- drivers/net/wireless/marvell/mwifiex/11n.c         | 45 +++++++++++++---------
- .../net/wireless/marvell/mwifiex/11n_rxreorder.c   | 42 +++++++++++++-------
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c    |  3 ++
- 3 files changed, 58 insertions(+), 32 deletions(-)
+Like I asked already last time, AFAICS there is no upstream xr819
+wireless driver in drivers/net/wireless directory. Do we still accept
+bindings like this for out-of-tree drivers?
 
 -- 
-1.9.1
+Kalle Valo
