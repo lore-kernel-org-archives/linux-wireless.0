@@ -1,97 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.137]:46018 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751072AbdJ0HSv (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:45034 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751587AbdJDX2H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:18:51 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Len Brown <lenb@kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v9 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Fri, 27 Oct 2017 15:17:32 +0800
-Message-Id: <20171027071739.21927-1-jeffy.chen@rock-chips.com> (sfid-20171027_091857_804694_62123830)
+        Wed, 4 Oct 2017 19:28:07 -0400
+Received: by mail-pf0-f177.google.com with SMTP id t62so5849965pfd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:28:07 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Harish Patil <harish.patil@cavium.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Len Brown <len.brown@intel.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Mark Gross <mark.gross@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@codeaurora.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Ursula Braun <ubraun@linux.vnet.ibm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 13/13] workqueue: Convert callback to use from_timer()
+Date: Wed,  4 Oct 2017 16:27:07 -0700
+Message-Id: <1507159627-127660-14-git-send-email-keescook@chromium.org> (sfid-20171005_012920_847241_3BCEB699)
+In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In preparation for unconditionally passing the struct timer_list pointer
+to all timer callbacks, switch workqueue to use from_timer() and pass the
+timer pointer explicitly.
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Lai Jiangshan <jiangshanlai@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ include/linux/workqueue.h | 15 ++++++++-------
+ kernel/workqueue.c        |  7 +++----
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Rewrite the commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Use "wakeup" instead of "wake"
-Rebase.
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (7):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie driver for Gru
-  PCI: Make pci_platform_pm_ops's callbacks optional
-  PCI / PM: Move acpi wakeup code to pci core
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-
- Documentation/devicetree/bindings/pci/pci.txt |   8 ++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
- drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
- drivers/of/of_pci_irq.c                       |  13 ++-
- drivers/pci/Makefile                          |   2 +-
- drivers/pci/pci-acpi.c                        | 121 ++++++++++++-------------
- drivers/pci/pci-driver.c                      |   9 ++
- drivers/pci/pci-of.c                          | 126 ++++++++++++++++++++++++++
- drivers/pci/pci.c                             | 112 +++++++++++++++++++----
- drivers/pci/pci.h                             |  31 +++++--
- drivers/pci/probe.c                           |  12 ++-
- drivers/pci/remove.c                          |   2 +
- include/linux/pci.h                           |   2 +
- 13 files changed, 360 insertions(+), 97 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index f4960260feaf..f3c47a05fd06 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -17,7 +17,7 @@ struct workqueue_struct;
+ 
+ struct work_struct;
+ typedef void (*work_func_t)(struct work_struct *work);
+-void delayed_work_timer_fn(unsigned long __data);
++void delayed_work_timer_fn(struct timer_list *t);
+ 
+ /*
+  * The first word is the work queue pointer and the flags rolled into
+@@ -175,8 +175,8 @@ struct execute_work {
+ 
+ #define __DELAYED_WORK_INITIALIZER(n, f, tflags) {			\
+ 	.work = __WORK_INITIALIZER((n).work, (f)),			\
+-	.timer = __TIMER_INITIALIZER(delayed_work_timer_fn,		\
+-				     (unsigned long)&(n),		\
++	.timer = __TIMER_INITIALIZER((TIMER_FUNC_TYPE)delayed_work_timer_fn,\
++				     (TIMER_DATA_TYPE)&(n.timer),	\
+ 				     (tflags) | TIMER_IRQSAFE),		\
+ 	}
+ 
+@@ -241,8 +241,9 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
+ #define __INIT_DELAYED_WORK(_work, _func, _tflags)			\
+ 	do {								\
+ 		INIT_WORK(&(_work)->work, (_func));			\
+-		__setup_timer(&(_work)->timer, delayed_work_timer_fn,	\
+-			      (unsigned long)(_work),			\
++		__setup_timer(&(_work)->timer,				\
++			      (TIMER_FUNC_TYPE)delayed_work_timer_fn,	\
++			      (TIMER_DATA_TYPE)&(_work)->timer,		\
+ 			      (_tflags) | TIMER_IRQSAFE);		\
+ 	} while (0)
+ 
+@@ -250,8 +251,8 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
+ 	do {								\
+ 		INIT_WORK_ONSTACK(&(_work)->work, (_func));		\
+ 		__setup_timer_on_stack(&(_work)->timer,			\
+-				       delayed_work_timer_fn,		\
+-				       (unsigned long)(_work),		\
++				       (TIMER_FUNC_TYPE)delayed_work_timer_fn,\
++				       (TIMER_DATA_TYPE)&(_work)->timer,\
+ 				       (_tflags) | TIMER_IRQSAFE);	\
+ 	} while (0)
+ 
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index a5361fc6215d..c77fdf6bf24f 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -1492,9 +1492,9 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
+ }
+ EXPORT_SYMBOL(queue_work_on);
+ 
+-void delayed_work_timer_fn(unsigned long __data)
++void delayed_work_timer_fn(struct timer_list *t)
+ {
+-	struct delayed_work *dwork = (struct delayed_work *)__data;
++	struct delayed_work *dwork = from_timer(dwork, t, timer);
+ 
+ 	/* should have been called from irqsafe timer with irq already off */
+ 	__queue_work(dwork->cpu, dwork->wq, &dwork->work);
+@@ -1508,8 +1508,7 @@ static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
+ 	struct work_struct *work = &dwork->work;
+ 
+ 	WARN_ON_ONCE(!wq);
+-	WARN_ON_ONCE(timer->function != delayed_work_timer_fn ||
+-		     timer->data != (unsigned long)dwork);
++	WARN_ON_ONCE(timer->function != (TIMER_FUNC_TYPE)delayed_work_timer_fn);
+ 	WARN_ON_ONCE(timer_pending(timer));
+ 	WARN_ON_ONCE(!list_empty(&work->entry));
+ 
 -- 
-2.11.0
+2.7.4
