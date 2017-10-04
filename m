@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48094 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751070AbdJ0JkX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 05:40:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Thorsten Leemhuis <linux@leemhuis.info>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k-regression due to "ath10k: fix napi_poll budget overflow"
- c9353bf483d3
-Date: Fri, 27 Oct 2017 09:40:19 +0000
-Message-ID: <877evh53p8.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20171027_114142_760326_3403BC82)
-References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
-        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
-        <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info>
-In-Reply-To: <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info> (Thorsten
-        Leemhuis's message of "Sun, 8 Oct 2017 10:27:35 +0200")
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:30489 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750966AbdJDQjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 12:39:24 -0400
+Message-ID: <1507135159.908.96.camel@intel.com> (sfid-20171004_184047_887852_629EE3B1)
+Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Joe Perches <joe@perches.com>,
+        Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
+        <christoph@boehmwalder.at>, johannes.berg@intel.com,
+        emmanuel.grumbach@intel.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 04 Oct 2017 19:39:19 +0300
+In-Reply-To: <1507134405.4434.10.camel@perches.com>
+References: <20171004155700.18048-1-christoph@boehmwalder.at>
+         <20171004155700.18048-2-christoph@boehmwalder.at>
+         <1507134405.4434.10.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-KyBsaW51eC13aXJlbGVzcw0KDQpUaG9yc3RlbiBMZWVtaHVpcyA8bGludXhAbGVlbWh1aXMuaW5m
-bz4gd3JpdGVzOg0KDQo+IExvISBPbiAwMy4xMC4yMDE3IDAxOjQwLCBSeWFuIEhzdSB3cm90ZToN
-Cj4+IE9uIDEwLzAxLzIwMTcgMDE6NTkgQU0sIFRob3JzdGVuIExlZW1odWlzIHdyb3RlOg0KPj4+
-IExvISBUaGUgd2lmaSBjb25uZWN0aW9uIG9mIG15IERlbGwgWFBTMTMgKDkzNjApIHdpdGggaXRz
-IFFDQTYxNzQNCj4+PiBzb21ldGltZXMgc3VkZGVubHkgc3RvcHMgd29ya2luZyBzaW5jZSBJIHN3
-aXRjaGVkIHRvIDQuMTQtcmMyKy4gRXZlcnkNCj4+PiB0aW1lIGl0IGhhcHBlbnMsIHRoZXJlIGlz
-IHRoaXMgZXJyb3IgbWVzc2FnZSBpbiBkbWVzZzoNCj4+Pj4gYXRoMTBrX3BjaSAwMDAwOjNhOjAw
-LjA6IGZhaWxlZCB0byBleHRyYWN0IGFtc2R1OiAtMTENCj4+PiBJIGhhdmUgdG8gc3dpdGNoIHdp
-Zmkgb2ZmIGFuZCBvbiB3aXRoIHRoZSBob3RrZXkgdG8gcmVjb25uZWN0LiBJIGNhbg0KPj4+IHRy
-aWdnZXIgdGhlIGFib3J0cyBieSBzdGFydGluZyBhIGJpZyBkb3dubG9hZCBhbmQgd2FpdGluZyBh
-IGZldyBtaW51dGVzLg0KPj4+IFNvbWV0aW1lcyB0aGUgY29ubmVjdGlvbnMgYWJvcnRzIGR1cmlu
-ZyBub3JtYWwgbG9hZC4gSW5zdGFsbGluZyB0aGUNCj4+PiBsYXRlc3QgZmlybXdhcmUgZGlkbid0
-IGhlbHAuIFRoZSB3aWZpIHdvcmtzIGp1c3QgZmluZSB3aXRoIDQuMTMuMy4gV2hpbGUNCj4+PiBp
-bnZlc3RpZ2F0aW5nIHRoaXMgSSBub3RpY2VkIGEgZmV3IG1lc3NhZ2VzIGluIGRtZXNnIHRoYXQg
-b25seSBhcHBlYXIgaW4NCj4+PiA0LjE0LXJjIChJIHVzZWQgMzVkYmJhMzFiZTUyKToNCj4+IFlv
-dSBkbyBydW4gdGhlIDQuMTMuMyB2LnMgNC4xNC1yYyB3aXRoIHRoZSBzYW1lIFFDQTYxNzQgZmly
-bXdyYWUsIHJpZ2h0Pw0KPj4gSnVzdCB3YW50IHRvIHVuZGVyc3RhbmQgdGhlIHRlc3Qgc2V0dXAg
-aGVyZSBzbyB0aGF0IEkgY291bGQgZ2l2ZSBpdA0KPj4gYSB0cnkgbXlzZWxmLCBhbmQgaW4gMTFh
-YyBvciAxMW4gbW9kZSB5b3UncmUgdGVzdGluZz8NCj4NCj4gWXVwLCBzYW1lIGZpcm13YXJlIChy
-ZXByb2R1Y2VkIGl0IHdpdGgNCj4gZmlybXdhcmUtNi5iaW5fV0xBTi5STS40LjQuMS0wMDA1OC1R
-Q0FSTVNXUC0xIGJlZm9yZSBiaXNlY3RpbmcpLiBBbmQgdGhlDQo+IHByb2JsZW0gc2hvd2VkIHVw
-IHdpdGggMmcgYW5kIDVnIG5ldHdvcmtzLiBCdXQgd2hpbGUgaW52ZXN0aWdhdGluZyBpdCBJDQo+
-IG5vdGljZWQgdGhlIHByb2JsZW0gZG9lcyBub3Qgc2hvdyB1cCB3aXRoIGFsbCB3aWZpIHJvdXRl
-cnMuIEl0IGhhcHBlbnMNCj4gd2l0aCBteSBGcml0eiFCb3ggNjQ5MCBDYWJsZSBhbmQgYW5vdGhl
-ciBGcml0eiFCb3ggSSB0cmllZCwgYnV0IG5vdCB3aXRoDQo+IHRoZSB3aWZpIG5ldHdvcmsgYXQg
-d29yayAobm8gaWRlYSB3aGF0IGtpbmQgb2Ygcm91dGVycyBhcmUgaW5zdGFsbGVkDQo+IHRoZXJl
-OyBJIGNhbiB0cnkgdG8gZmluZCBvdXQgaWYgaXQgbWF0dGVycykuDQo+DQo+Pj4+IDNhOjAwLjAg
-TmV0d29yayBjb250cm9sbGVyIFswMjgwXTogUXVhbGNvbW0gQXRoZXJvcyBRQ0E2MTc0DQo+Pj4+
-IDgwMi4xMWFjIFdpcmVsZXNzIE5ldHdvcmsgQWRhcHRlciBbMTY4YzowMDNlXSAocmV2IDMyKQ0K
-Pj4gW+KApl0gV291bGQgeW91IG1pbmQgZG8gYSBiaXNlY3QgdG8gbG9jYXRlIHRoZSBmYWlsdXJl
-LCBwbGVhc2U/DQo+DQo+IERpZCB0aGF0IHllc3RlcmRheSBhbmQgaXQgdHVybmVkIG91dCBpdCdz
-IGR1ZSB0byBjb21taXQgYzkzNTNiZjQ4M2QzDQo+IChhdGgxMGs6IGZpeCBuYXBpX3BvbGwgYnVk
-Z2V0IG92ZXJmbG93KS4gUmV2ZXJ0aW5nIGl0IG9uIHRvcCBvZiBsaW51eA0KPiBtYXN0ZXIgZnJv
-bSB5ZXN0ZXJkYXkgbWFkZSB0aGUgd2lmaSBjb25uZWN0aW9uIHN0YWJsZSBhZ2FpbiBmb3IgbWUu
-DQoNClNvcnJ5LCBJIGhhdmUgbm90IGJlZW4gYWJsZSB0byBmb2xsb3cgdGhpcyBkaXNjdXNzaW9u
-IHZlcnkgY2xvc2VseSBidXQNCndhcyB0aGUgY29uY2x1c2lvbj8gU2hvdWxkIHdlIHNob3VsZCBy
-ZXZlcnQgYzkzNTNiZjQ4M2QzIGZvciA0LjE0IG9yDQp3aGF0PyBJIHNob3VsZCBzdGlsbCBoYXZl
-IHRpbWUgdG8gZG8gdGhhdCwgYnV0IG5vdCBtdWNoLg0KDQotLSANCkthbGxlIFZhbG8=
+On Wed, 2017-10-04 at 09:26 -0700, Joe Perches wrote:
+> On Wed, 2017-10-04 at 17:56 +0200, Christoph Böhmwalder wrote:
+> > Change a usage of int in a boolean context to use the bool type
+> > instead, as it
+> > makes the intent of the function clearer and helps clarify its
+> > semantics.
+> > 
+> > Also eliminate the if/else and just return the boolean result
+> > directly,
+> > making the code more readable.
+> > 
+> > Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
+> > ---
+> >  drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 12 +++++-------
+> >  1 file changed, 5 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> > b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> > index b7cd813ba70f..0eb815ae97e8 100644
+> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+> > @@ -267,14 +267,12 @@ int iwl_phy_db_set_section(struct iwl_phy_db
+> > *phy_db,
+> >  }
+> >  IWL_EXPORT_SYMBOL(iwl_phy_db_set_section);
+> >  
+> > -static int is_valid_channel(u16 ch_id)
+> > +static bool is_valid_channel(u16 ch_id)
+> >  {
+> > -	if (ch_id <= 14 ||
+> > -	    (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
+> > -	    (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
+> > -	    (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1))
+> > -		return 1;
+> > -	return 0;
+> > +	return (ch_id <= 14 ||
+> > +	       (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
+> > +	       (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
+> > +	       (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1));
+> >  }
+> 
+> This might be more intelligble as separate tests
+> 
+> static bool is_valid_channel(u16 ch_id)
+> {
+> 	if (ch_id <= 14)
+> 		return true;
+> 
+> 	if ((ch_id % 4 == 0) &&
+> 	    ((ch_id >= 36 && ch_id <= 64) ||
+> 	     (ch_id >= 100 && ch_id <= 140)))
+> 		return true;
+> 
+> 	if ((ch_id % 4 == 1) &&
+> 	    (chid >= 145 && ch_id <= 165))
+> 		return true;
+> 
+> 	return false;
+> }
+> 
+> The compiler should produce the same object code.
+
+Yeah, it may be a bit easier to read, but I don't want to start getting
+"fixes" to working and reasonable code.  There's nothing wrong with the
+existing function (except maybe for the int vs. boolean) so let's not
+change it.
+
+A good time to change this would be the next time someone adds yet
+another range of valid channels here. ;)
+
+--
+Luca.
