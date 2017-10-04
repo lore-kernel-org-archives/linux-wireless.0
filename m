@@ -1,158 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:45735 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932438AbdJVVne (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53759 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751942AbdJDJJZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Oct 2017 17:43:34 -0400
-Message-Id: <20171022214053.576969587@linutronix.de> (sfid-20171022_234524_818913_C69D2AA4)
-Date: Sun, 22 Oct 2017 23:40:09 +0200
-From: Anna-Maria Gleixner <anna-maria@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with softirq
- hrtimer
-References: <20171022213938.940451689@linutronix.de>
+        Wed, 4 Oct 2017 05:09:25 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath9k: make const array reg_hole_list static,
+ reduces object code size
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170919204019.30804-1-colin.king@canonical.com>
+References: <20170919204019.30804-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <0458c03b374e494892d03dd4b6a889c9@euamsexm01e.eu.qualcomm.com> (sfid-20171004_110943_436832_5A331DB6)
+Date: Wed, 4 Oct 2017 11:09:11 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
-callback in softirq context and remove the hrtimer_tasklet.
+> Don't populate the read-only array reg_hole_list on the stack, instead make
+> it static.  Makes the object code smaller by over 200 bytes:
+> 
+> Before:
+>    text	   data	    bss	    dec	    hex	filename
+>   57518	  15248	      0	  72766	  11c3e	debug.o
+> 
+> After:
+>    text	   data	    bss	    dec	    hex	filename
+>   57218	  15344	      0	  72562	  11b72	debug.o
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
+Patch applied to ath-next branch of ath.git, thanks.
 
----
- drivers/net/wireless/mac80211_hwsim.c |   44 +++++++++++++++-------------------
- 1 file changed, 20 insertions(+), 24 deletions(-)
+eba0f28473b2 ath9k: make const array reg_hole_list static, reduces object code size
 
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -537,7 +537,7 @@ struct mac80211_hwsim_data {
- 	unsigned int rx_filter;
- 	bool started, idle, scanning;
- 	struct mutex mutex;
--	struct tasklet_hrtimer beacon_timer;
-+	struct hrtimer beacon_timer;
- 	enum ps_mode {
- 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
- 	} ps;
-@@ -1418,7 +1418,7 @@ static void mac80211_hwsim_stop(struct i
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	data->started = false;
--	tasklet_hrtimer_cancel(&data->beacon_timer);
-+	hrtimer_cancel(&data->beacon_timer);
- 	wiphy_debug(hw->wiphy, "%s\n", __func__);
- }
- 
-@@ -1541,14 +1541,12 @@ static enum hrtimer_restart
- mac80211_hwsim_beacon(struct hrtimer *timer)
- {
- 	struct mac80211_hwsim_data *data =
--		container_of(timer, struct mac80211_hwsim_data,
--			     beacon_timer.timer);
-+		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
- 	struct ieee80211_hw *hw = data->hw;
- 	u64 bcn_int = data->beacon_int;
--	ktime_t next_bcn;
- 
- 	if (!data->started)
--		goto out;
-+		return HRTIMER_NORESTART;
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		hw, IEEE80211_IFACE_ITER_NORMAL,
-@@ -1560,11 +1558,9 @@ mac80211_hwsim_beacon(struct hrtimer *ti
- 		data->bcn_delta = 0;
- 	}
- 
--	next_bcn = ktime_add(hrtimer_get_expires(timer),
--			     ns_to_ktime(bcn_int * 1000));
--	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
--out:
--	return HRTIMER_NORESTART;
-+	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
-+			ns_to_ktime(bcn_int * NSEC_PER_USEC));
-+	return HRTIMER_RESTART;
- }
- 
- static const char * const hwsim_chanwidths[] = {
-@@ -1638,15 +1634,15 @@ static int mac80211_hwsim_config(struct
- 	mutex_unlock(&data->mutex);
- 
- 	if (!data->started || !data->beacon_int)
--		tasklet_hrtimer_cancel(&data->beacon_timer);
--	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
-+		hrtimer_cancel(&data->beacon_timer);
-+	else if (!hrtimer_is_queued(&data->beacon_timer)) {
- 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
- 		u32 bcn_int = data->beacon_int;
- 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
- 
--		tasklet_hrtimer_start(&data->beacon_timer,
--				      ns_to_ktime(until_tbtt * 1000),
--				      HRTIMER_MODE_REL);
-+		hrtimer_start(&data->beacon_timer,
-+			      ns_to_ktime(until_tbtt * 1000),
-+			      HRTIMER_MODE_REL_SOFT);
- 	}
- 
- 	return 0;
-@@ -1709,7 +1705,7 @@ static void mac80211_hwsim_bss_info_chan
- 			    info->enable_beacon, info->beacon_int);
- 		vp->bcn_en = info->enable_beacon;
- 		if (data->started &&
--		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
-+		    !hrtimer_is_queued(&data->beacon_timer) &&
- 		    info->enable_beacon) {
- 			u64 tsf, until_tbtt;
- 			u32 bcn_int;
-@@ -1717,9 +1713,9 @@ static void mac80211_hwsim_bss_info_chan
- 			tsf = mac80211_hwsim_get_tsf(hw, vif);
- 			bcn_int = data->beacon_int;
- 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
--			tasklet_hrtimer_start(&data->beacon_timer,
--					      ns_to_ktime(until_tbtt * 1000),
--					      HRTIMER_MODE_REL);
-+			hrtimer_start(&data->beacon_timer,
-+				      ns_to_ktime(until_tbtt * 1000),
-+				      HRTIMER_MODE_REL_SOFT);
- 		} else if (!info->enable_beacon) {
- 			unsigned int count = 0;
- 			ieee80211_iterate_active_interfaces_atomic(
-@@ -1728,7 +1724,7 @@ static void mac80211_hwsim_bss_info_chan
- 			wiphy_debug(hw->wiphy, "  beaconing vifs remaining: %u",
- 				    count);
- 			if (count == 0) {
--				tasklet_hrtimer_cancel(&data->beacon_timer);
-+				hrtimer_cancel(&data->beacon_timer);
- 				data->beacon_int = 0;
- 			}
- 		}
-@@ -2720,9 +2716,9 @@ static int mac80211_hwsim_new_radio(stru
- 				    data->debugfs,
- 				    data, &hwsim_simulate_radar);
- 
--	tasklet_hrtimer_init(&data->beacon_timer,
--			     mac80211_hwsim_beacon,
--			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
-+		     HRTIMER_MODE_ABS_SOFT);
-+	data->beacon_timer.function = mac80211_hwsim_beacon;
- 
- 	spin_lock_bh(&hwsim_radio_lock);
- 	list_add_tail(&data->list, &hwsim_radios);
+-- 
+https://patchwork.kernel.org/patch/9960183/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
