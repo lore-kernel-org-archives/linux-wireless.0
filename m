@@ -1,118 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:60161 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750871AbdJDEwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 00:52:24 -0400
-Message-ID: <1507092741.908.56.camel@intel.com> (sfid-20171004_065228_955576_A44B3091)
-Subject: Re: iwlwifi: ToF usage
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Joel =?ISO-8859-1?Q?Bjurstr=F6m?= <maxxflow@gmail.com>,
-        linux-wireless@vger.kernel.org, assaf.krauss@intel.com,
-        johannes.berg@intel.com, emmanuel.grumbach@intel.com
-Cc: linuxwifi@intel.com
-Date: Wed, 04 Oct 2017 07:52:21 +0300
-In-Reply-To: <d3356a70-b90e-d0cc-6328-17f055b2ed1c@maxxflow.com>
-References: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com>
-         <d3356a70-b90e-d0cc-6328-17f055b2ed1c@maxxflow.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:43096 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751518AbdJDX2F (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 19:28:05 -0400
+Received: by mail-pf0-f178.google.com with SMTP id d2so3846427pfh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:28:05 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-mips@linux-mips.org, linux-watchdog@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Harish Patil <harish.patil@cavium.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <len.brown@intel.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Mark Gross <mark.gross@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@codeaurora.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Tejun Heo <tj@kernel.org>,
+        Ursula Braun <ubraun@linux.vnet.ibm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        linux1394-devel@lists.sourceforge.net, linux-pm@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 09/13] timer: Remove users of expire and data arguments to DEFINE_TIMER
+Date: Wed,  4 Oct 2017 16:27:03 -0700
+Message-Id: <1507159627-127660-10-git-send-email-keescook@chromium.org> (sfid-20171005_013035_443899_144B28E0)
+In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joel,
+The expire and data arguments of DEFINE_TIMER are only used in two places
+and are ignored by the code (malta-display.c only uses mod_timer(),
+never add_timer(), so the preset expires value is ignored). Set both
+sets of arguments to zero.
 
-Unfortunately we don't have full support for ToF on the mainline kernel
-yet.  But you can try to use one of our Core releases (which is a
-backports-based tree) that you can find here:
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: Wim Van Sebroeck <wim@iguana.be>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-mips@linux-mips.org
+Cc: linux-watchdog@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ arch/mips/mti-malta/malta-display.c | 6 +++---
+ drivers/watchdog/alim7101_wdt.c     | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-You could try the release/Core30 branch, for example.
-
---
-Cheers,
-Luca.
-
-On Thu, 2017-09-21 at 21:35 +0200, Joel Bjurström wrote:
-> Including some people I've seen mentioned in ToF-related e-mails...
-> 
-> This is what I've tried:
-> 
-> 
-> -- Responder --
-> 
-> * hostapd running, hostapd.conf:
-> 	driver=nl80211
-> 	interface=wlan1
-> 	hw_mode=g
-> 	channel=1
-> 	wmm_enabled=1
-> 	ssid=tof_test
-> 	ftm_responder=1
-> 	ftm_initiator=1
-> 
-> $ cd /sys/kernel/debug/iwlwifi/0000:06:00.0/iwlmvm/netdev:wlan1
-> $ echo channel_num=1 > tof_responder_params
-> $ echo bssid=bb:bb:bb:bb:bb:bb > tof_responder_params
-> $ echo rate=1 > tof_responder_params
-> $ echo ftm_per_burst=5 > tof_responder_params
-> 
-> $ echo send_responder_cfg=1 > tof_responder_params
-> 
-> 
-> -- Initiator --
-> 
-> $ cd /sys/kernel/debug/iwlwifi/0000:06:00.0/iwlmvm/netdev:wlan1
-> $ echo send_tof_cfg=1 > tof_enable
-> $ echo 'num_of_ap=1' > tof_range_request
-> $ echo 'ap=0 1 0 0 bb:bb:bb:bb:bb:bb 0 10 0 5 5 0 0 0 0 -40' \
-> 	> tof_range_request
-> 
-> $ echo 'send_range_request=1' > tof_range_request
-> 
-> $ cat tof_range_response
-> request_id = 0
-> status = 2
-> last_in_batch = 1
-> num_of_aps = 0
-> 
-> 
-> 
-> (bb:bb:bb:bb:bb:bb is the responder's BSSID)
-> 
-> Am I even close? Fumbling in the dark here.
-> 
-> The 'status = 2' from tof_range_response comes directly from the FW, 
-> AFAICT. What do different values mean?
-> 
-> Cheers,
-> Joel
-> 
-> 
-> On 09/14/2017 09:44 PM, Joel B wrote:
-> > Hi,
-> > 
-> > Starting to play around with the FTM/ToF support in iwlwifi, but 
-> > documentation is (understandably) scarce at this point. Using a
-> > pair of 
-> > 8260:s I had lying around.
-> > 
-> > Can someone give me some hints on how to work the debugfs API for
-> > a 
-> > successful measurement?
-> > 
-> > I've set up one card as AP with hostapd (with ftm_responder=1 and 
-> > ftm_initiator=1 in hostapd.conf), the other as a STA.
-> > 
-> >  From the STA, I've played with 'tof_range_request' in debugfs.
-> > Writing 
-> > send_range_request=1, which it doesn't choke on or anything, but
-> > nothing 
-> > seems to happen. Guess I need to set things up a bit first, but
-> > how?
-> > 
-> > If it's possible to get this to work at all at this stage, some
-> > hints on 
-> > how to do it would be great.
-> > 
-> > 
-> > Thanks,
-> > Joel
+diff --git a/arch/mips/mti-malta/malta-display.c b/arch/mips/mti-malta/malta-display.c
+index d4f807191ecd..ac813158b9b8 100644
+--- a/arch/mips/mti-malta/malta-display.c
++++ b/arch/mips/mti-malta/malta-display.c
+@@ -36,10 +36,10 @@ void mips_display_message(const char *str)
+ 	}
+ }
+ 
+-static void scroll_display_message(unsigned long data);
+-static DEFINE_TIMER(mips_scroll_timer, scroll_display_message, HZ, 0);
++static void scroll_display_message(unsigned long unused);
++static DEFINE_TIMER(mips_scroll_timer, scroll_display_message, 0, 0);
+ 
+-static void scroll_display_message(unsigned long data)
++static void scroll_display_message(unsigned long unused)
+ {
+ 	mips_display_message(&display_string[display_count++]);
+ 	if (display_count == max_display_count)
+diff --git a/drivers/watchdog/alim7101_wdt.c b/drivers/watchdog/alim7101_wdt.c
+index 665e0e7dfe1e..3c1f6ac68ea9 100644
+--- a/drivers/watchdog/alim7101_wdt.c
++++ b/drivers/watchdog/alim7101_wdt.c
+@@ -71,7 +71,7 @@ MODULE_PARM_DESC(use_gpio,
+ 		"Use the gpio watchdog (required by old cobalt boards).");
+ 
+ static void wdt_timer_ping(unsigned long);
+-static DEFINE_TIMER(timer, wdt_timer_ping, 0, 1);
++static DEFINE_TIMER(timer, wdt_timer_ping, 0, 0);
+ static unsigned long next_heartbeat;
+ static unsigned long wdt_is_open;
+ static char wdt_expect_close;
+@@ -87,7 +87,7 @@ MODULE_PARM_DESC(nowayout,
+  *	Whack the dog
+  */
+ 
+-static void wdt_timer_ping(unsigned long data)
++static void wdt_timer_ping(unsigned long unused)
+ {
+ 	/* If we got a heartbeat pulse within the WDT_US_INTERVAL
+ 	 * we agree to ping the WDT
+-- 
+2.7.4
