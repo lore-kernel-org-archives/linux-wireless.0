@@ -1,102 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43406 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932342AbdJ0Ulj (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63037 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbdJDIoo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 16:41:39 -0400
-Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
- mask if not usable"
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Oleksij Rempel <linux@rempel-privat.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>, kirtika@google.com
-References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
- <1507708948.1998.15.camel@sipsolutions.net>
- <2c293255-aa79-75a0-1c28-994f864cddf4@candelatech.com>
- <1508312033.2674.9.camel@sipsolutions.net>
- <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
- <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de>
- <1508358869.2674.55.camel@sipsolutions.net>
- <9791c86a-a15f-4c99-ab84-ce00b242d70f@candelatech.com>
- <1508360527.2674.61.camel@sipsolutions.net>
- <0bfb289d-a9fa-03d9-f9c7-cc0d01b0bd43@candelatech.com>
- <1508944670.2421.49.camel@sipsolutions.net>
- <db23762d-3e65-7707-ca78-ad7e7bc7dfa6@candelatech.com>
- <1509135311.2283.12.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <a1adb2ea-44c4-67ae-1044-08c4dc16bb9a@candelatech.com> (sfid-20171027_224143_059788_47AD9A11)
-Date: Fri, 27 Oct 2017 13:41:36 -0700
+        Wed, 4 Oct 2017 04:44:44 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 0/3] linux-firmware: ath10k update 20170918
+Date: Wed, 4 Oct 2017 08:44:39 +0000
+Message-ID: <87lgkrxpxk.fsf@kamboji.qca.qualcomm.com> (sfid-20171004_104456_649576_DC2B9C08)
+References: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com>
+In-Reply-To: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
+        Valo's message of "Mon, 18 Sep 2017 18:00:54 +0300")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <1509135311.2283.12.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2017 01:15 PM, Johannes Berg wrote:
-> On Wed, 2017-10-25 at 09:13 -0700, Ben Greear wrote:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
+
+> Few firmware fixes to user reported issues for ath10k, but the other "fix=
+"
+> being a revert back to older firmware. Also a small board-2.bin update.
 >
->>> Well it resulted in a WARN_ON because if the AP didn't have those
->>> rates, we'd not find any usable rates while trying to transmit a frame,
->>> and then ended up warning and falling down to the lowest possible rate.
->>>
->>> I don't think I agree that configuring this should reject the
->>> association, and I've already implemented the behaviour of dropping the
->>> user's rate set in this case in the patch we're discussing.
->>
->> So, as long as we are associating to a VHT AP, then we could still set the
->> tx-rateset to (only) VHT MCS 8 and allow association, even if there are no additional
->> rates set.  There is at least one common rate, so theoretically, the
->> station and AP can communicate.
->>
->> If we tried to associate this same station to an HT AP, then your work-around
->> code could kick in and throw away the user's rateset configuration, preferably
->> with a fairly noticeable warning message since you are overriding the user's
->> preferred tx rateset?
+> Kalle Valo (3):
+>   ath10k: QCA6174 hw3.0: update firmware-6.bin to
+>     WLAN.RM.4.4.1-00051-QCARMSWP-1
+>   ath10k: QCA6174 hw3.0: update board-2.bin
+>   Revert "ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2"
 >
-> There's only a debug message now, and I actually compare to the basic
-> rates. Like I said, we could fix that to compare to real rates, but
-> that gets a little trickier since we don't select from all possible
-> rates when we try to send management frames, only from legacy rates, so
-> we'd have to modify that code too.
+>  WHENCE                                            |   4 +-
+>  ath10k/QCA6174/hw3.0/board-2.bin                  | Bin 477060 -> 501748=
+ bytes
+>  ath10k/QCA6174/hw3.0/firmware-6.bin               | Bin 711408 -> 727776=
+ bytes
+>  ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt |  97 +++++-----------=
+------
+>  ath10k/QCA988X/hw2.0/firmware-5.bin               | Bin 249384 -> 248188=
+ bytes
+>  5 files changed, 25 insertions(+), 76 deletions(-)
 
-ath10k ignores the tx rateset pretty much entirely when sending management
-frames, so even if you set the tx rateset to have only VHT MCS 8,
-management frames are still sent with legacy ratesets.
+Ping? These fix serious regressions reported by many so it would be
+really good to get these to linux-firmware soon.
 
-My end goal about this part is to be able to configure a single tx rate
-and have that be allowed again, at least with ath10k.
-
-Maybe a new flag for drivers like ath10k that at least somewhat ignore
-the tx-rateset for management frames, and this flag would allow us to
-bypass the cannot-set-single-rate check?
-
->>> This kind of problem is why I absolutely dislike out-of-band state that
->>> affects the connection, rather than giving it in the connection
->>> command(s) (connect, auth, associate, whatever). We're stuck with it
->>> now, and needed to redefine that this selection may be dropped if not
->>> usable.
->>
->> You could start allowing the user to configure the full advertised and
->> transmit rateset for each of these actions (and probe too), and user-space can add the fields
->> to their netlink commands.  At least going forward, this might help
->> make the behaviour more as expected.  If you would like to implement at
->> least the basics in cfg/mac80211, I would be happy to work on the supplicant
->> end of things.
->
-> I'm not sure we can really remove this, there are users out there (e.g.
-> Chrome's shill, IIRC), so we'd be stuck with two ways of doing things
-> ... that's not so much better really :)
-
-I am not saying you should remove the existing support, but since it is clunky
-at best, you can add support for specifying the rates and those rates, if specified,
-can take precedence over whatever was previously set (or auto-configured).
-
-The kernel code will still be somewhat convoluted, but at least user-space
-using newer API might have a more deterministic behaviour.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--=20
+Kalle Valo=
