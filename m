@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36136 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751525AbdJXNic (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:45134 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752289AbdJDPNq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 09:38:32 -0400
-Message-ID: <1508852310.2639.29.camel@sipsolutions.net> (sfid-20171024_153836_879156_07C31C24)
-Subject: Re: A good way to get CSI info to user-space?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
+        Wed, 4 Oct 2017 11:13:46 -0400
+Subject: Re: QCA988x and kernel 4.13
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+References: <c6294832-ff1e-595c-da8b-dac59b12a976@gmail.com>
+ <7549b77b-3619-f8a5-48d6-eb7e330ba80e@dd-wrt.com>
+ <48aebea8-9231-b41e-cbaa-d592d8540c53@candelatech.com>
+ <87d163xpoe.fsf@kamboji.qca.qualcomm.com>
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        svp <s.pooheer@gmail.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 24 Oct 2017 15:38:30 +0200
-In-Reply-To: <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
-References: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com>
-         <1508790635.2639.24.camel@sipsolutions.net>
-         <76d6a1ad-2dc4-0542-808f-4be459c3508a@candelatech.com>
-         <1508824462.2639.25.camel@sipsolutions.net>
-         <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <78f5383d-0187-628e-cf56-de6234fdb9b0@candelatech.com> (sfid-20171004_171350_772632_A4D64E0B)
+Date: Wed, 4 Oct 2017 08:13:43 -0700
+MIME-Version: 1.0
+In-Reply-To: <87d163xpoe.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-10-24 at 06:36 -0700, Ben Greear wrote:
-> 
-> On 10/23/2017 10:54 PM, Johannes Berg wrote:
-> > On Mon, 2017-10-23 at 13:59 -0700, Ben Greear wrote:
-> > 
-> > > > The CSI data has variable length [1] but it's fundamentally always tied
-> > > > to a specific frame and as such we've always attached it to that frame
-> > > > using a radiotap vendor namespace.
-> > > > 
-> > > > You can easily implement that in a mac80211 driver since it has support
-> > > > for that via RX_FLAG_RADIOTAP_VENDOR_DATA and the associated struct
-> > > > ieee80211_vendor_radiotap that you put into the skb's head.
-> > > > 
-> > > > Why should anything else be needed?
-> > > 
-> > > So this would only show up in user-space in something like a pkt-capture?
-> > 
-> > Sure. But since you can easily add virtual monitor interfaces at any
-> > time, that doesn't really mean anything.
-> 
-> Adding a monitor device is a pretty big hammer on ath10k, at least, and
-> probably not something one would want running continuously in a production
-> environment.
 
-We keep having this discussion. You need to fix this, it should be
-really simple to fix this - just remove all checks for CONF_MONITOR
-from ath10k and make it use WANT_MONITOR_VIF instead if it doesn't
-already.
 
-> The CSI data is one part, but tx-beamforming is another area of interest.
-> 
-> If I get a chance, I'll try to add a way to pass some of this opaque
-> info up through netlink events.  I'm thinking something like:
-> 
-> mac80211_nl_send_opaque_event(mac80211-handle, int data-type, u8* data, int data_len);
+On 10/04/2017 01:50 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> On 10/01/2017 07:06 AM, Sebastian Gottschall wrote:
+>>> you have to update to the latest mac80211 code. there is a well
+>>> known bug in mac80211 which causes a deadlock with ath10k
+>>
+>> Do you have a pointer to the patch that fixes this?  I'd like to check if it has
+>> made it into 4.13 stable yet...
+>
+> I think it's this one:
+>
+> mac80211: fix deadlock in driver-managed RX BA session start
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bde59c475e0883e4c4294bcd9b9c7e08ae18c828
+>
+> Adding linux-wireless so that someone can correct me in case I'm wrong.
 
-I will not accept this upstream.
+That did seem to fix my problems...
 
-johannes
+Thanks,
+ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
