@@ -1,80 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41018 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751550AbdJPJk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 05:40:26 -0400
-Date: Mon, 16 Oct 2017 11:40:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Andrey Konovalov <andreyknvl@google.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
-Subject: Re: usb/net/rt2x00: warning in rt2800_eeprom_word_index
-Message-ID: <20171016094024.GD2553@redhat.com> (sfid-20171016_114042_635234_06A57BD3)
-References: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
- <20171012072529.GB2686@redhat.com>
- <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
+Received: from zimbra.linuxprofi.at ([93.83.54.199]:33204 "EHLO
+        zimbra.linuxprofi.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750797AbdJDP5P (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 11:57:15 -0400
+From: =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
+To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        luciano.coelho@intel.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
+Subject: [PATCH 0/3] iwlwifi: cosmetic fixes
+Date: Wed,  4 Oct 2017 17:56:57 +0200
+Message-Id: <20171004155700.18048-1-christoph@boehmwalder.at> (sfid-20171004_180300_498224_C0DD16CA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry
+Fix several code style issues, some of which were reported by checkpatch.pl.
 
-On Sat, Oct 14, 2017 at 04:38:03PM +0200, Dmitry Vyukov wrote:
-> On Thu, Oct 12, 2017 at 9:25 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > Hi
-> >
-> > On Mon, Oct 09, 2017 at 07:50:53PM +0200, Andrey Konovalov wrote:
-> >> I've got the following report while fuzzing the kernel with syzkaller.
-> >>
-> >> On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
-> >>
-> >> I'm not sure whether this is a bug in the driver, or just a way to
-> >> report misbehaving device. In the latter case this shouldn't be a
-> >> WARN() call, since WARN() means bug in the kernel.
-> >
-> > This is about wrong EEPROM, which reported 3 tx streams on
-> > non 3 antenna device. I think WARN() is justified and thanks
-> > to the call trace I was actually able to to understand what
-> > happened.
-> >
-> > In general I do not think WARN() only means a kernel bug, it
-> > can be F/W or H/W bug too.
-> 
-> Hi Stanislaw,
-> 
-> Printing messages is fine. Printing stacks is fine. Just please make
-> them distinguishable from kernel bugs and don't kill the whole
-> possibility of automated Linux kernel testing. That's an important
-> capability.
+The changes are:
+* One instance of an `int` variable being used in a boolean context, chaned to
+  use the more appropriate `bool` type.
+* One very minor fix, removing a newline between a function definition and its
+  associated `static` keyword
+* One fix wrapping a macro in curly braces
 
-We do not distinguish between bugs and other problems when WARN() is
-used in (wireless) drivers, what I think is correct, taking comment from
-include/asm-generic/bug.h :
 
-/*
- * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report
- * significant issues that need prompt attention if they should ever
- * appear at runtime.  Use the versions with printk format strings
- * to provide better diagnostics.
- */
+Christoph Böhmwalder (3):
+  wireless: iwlwifi: use bool instead of int
+  wireless: iwlwifi: function definition cosmetic fix
+  wireless: iwlwifi: wrap macro into braces
 
-Historically we have BUG() to mark the bugs, but usage if it is not
-recommended as it can kill the system, so for anything that can
-be recovered in runtime - WARN() is recommended.
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 16 +++++++---------
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-Perhaps we can introduce another helper like PROBLEM() for marking
-situations when something is wrong, but it is not a bug. However I'm
-not even sure at what extent it can be used, since for many cases
-if not the most, driver author can not tell apriori if the problem
-is a bug in the driver or HW/FW misbehaviour (or maybe particular
-issue can happen because of both).
-
-Thanks
-Stanislaw
+-- 
+2.13.5
