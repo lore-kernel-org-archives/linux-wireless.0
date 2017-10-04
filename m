@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47608 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752372AbdJaIbd (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:20289 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbdJDIzw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 04:31:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Anil Nair <anilcoll90@gmail.com>, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: PROBLEM: Issue with wireless driver after resume from suspend.
-References: <20171031065122.GA24662@gmail.com>
-        <1509434604.4492.192.camel@coelho.fi>
-Date: Tue, 31 Oct 2017 10:31:28 +0200
-In-Reply-To: <1509434604.4492.192.camel@coelho.fi> (Luca Coelho's message of
-        "Tue, 31 Oct 2017 09:23:24 +0200")
-Message-ID: <87a807sopr.fsf@purkki.adurom.net> (sfid-20171031_093138_159616_AF8E3AE6)
+        Wed, 4 Oct 2017 04:55:52 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+CC: "silexcommon@gmail.com" <silexcommon@gmail.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Alagu Sankar <alagusankar@silex-india.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/11] ath10k_sdio: sdio htt data transfer fixes
+Date: Wed, 4 Oct 2017 08:55:47 +0000
+Message-ID: <878tgrxpf1.fsf@kamboji.qca.qualcomm.com> (sfid-20171004_105600_863209_7DBBA921)
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+        <1506793068-27445-2-git-send-email-alagusankar@silex-india.com>
+        <59D1EC94.2020307@broadcom.com>
+In-Reply-To: <59D1EC94.2020307@broadcom.com> (Arend van Spriel's message of
+        "Mon, 2 Oct 2017 09:36:52 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
->> I am having a issue with the wireless driver in my laptop. Attached
->> information
->> pertaining to the issue.
+> On 9/30/2017 7:37 PM, silexcommon@gmail.com wrote:
+>> From: Alagu Sankar <alagusankar@silex-india.com>
+>>
 >
-> It would be useful to specify which wireless card you are using.  In
-> this case, the problem seems to be with ath10k.
+> [...]
+>
+>>
+>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+>
+> Not really have a specific remark for this patch, but for the entire
+> series. These patches are sent using an anonymous email address, apart
+> from 'silex' being in there, which does not show up in the certificate
+> of origin. Just wondering if this is acceptable?
 
-For ath10k issues please also CC ath10k list:
+As long as there's the "correct" From header as the first line in the
+commit log, which git then uses as the author instead of the From line
+from email header. And I see Alagu doing that here so there shouldn't be
+any problems.
 
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/support
-
-And please copy the relevant errors from the logs to the email, faster
-that way.
-
--- 
-Kalle Valo
+--=20
+Kalle Valo=
