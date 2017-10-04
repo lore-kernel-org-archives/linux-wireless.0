@@ -1,61 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52212 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752542AbdJRHgz (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:47496 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751526AbdJDX2G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 03:36:55 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: validate user rate mask before configuring driver
-Date: Wed, 18 Oct 2017 09:36:51 +0200
-Message-Id: <20171018073651.4725-1-johannes@sipsolutions.net> (sfid-20171018_093658_342007_73E02FE0)
+        Wed, 4 Oct 2017 19:28:06 -0400
+Received: by mail-pf0-f179.google.com with SMTP id u12so7044982pfl.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:28:06 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kees Cook <keescook@chromium.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Harish Patil <harish.patil@cavium.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <len.brown@intel.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Mark Gross <mark.gross@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@codeaurora.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Tejun Heo <tj@kernel.org>,
+        Ursula Braun <ubraun@linux.vnet.ibm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 11/13] timer: Remove expires argument from __TIMER_INITIALIZER()
+Date: Wed,  4 Oct 2017 16:27:05 -0700
+Message-Id: <1507159627-127660-12-git-send-email-keescook@chromium.org> (sfid-20171005_012938_470975_90447375)
+In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The expires field is normally initialized during the first mod_timer()
+call. It was unused by all callers, so remove it from the macro.
 
-Ben reported that when the user rate mask is rejected for not
-matching any basic rate, the driver had already been configured.
-This is clearly an oversight in my original change, fix this by
-doing the validation before calling the driver.
-
-Reported-by: Ben Greear <greearb@candelatech.com>
-Fixes: e8e4f5280ddd ("mac80211: reject/clear user rate mask if not usable")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- net/mac80211/cfg.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ include/linux/kthread.h   | 2 +-
+ include/linux/timer.h     | 5 ++---
+ include/linux/workqueue.h | 2 +-
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a354f1939e49..fb15d3b97cb2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2727,12 +2727,6 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 	if (!ieee80211_sdata_running(sdata))
- 		return -ENETDOWN;
- 
--	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
--		ret = drv_set_bitrate_mask(local, sdata, mask);
--		if (ret)
--			return ret;
--	}
--
- 	/*
- 	 * If active validate the setting and reject it if it doesn't leave
- 	 * at least one basic rate usable, since we really have to be able
-@@ -2748,6 +2742,12 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 			return -EINVAL;
+diff --git a/include/linux/kthread.h b/include/linux/kthread.h
+index 82e197eeac91..0d622b350d3f 100644
+--- a/include/linux/kthread.h
++++ b/include/linux/kthread.h
+@@ -117,7 +117,7 @@ struct kthread_delayed_work {
+ #define KTHREAD_DELAYED_WORK_INIT(dwork, fn) {				\
+ 	.work = KTHREAD_WORK_INIT((dwork).work, (fn)),			\
+ 	.timer = __TIMER_INITIALIZER(kthread_delayed_work_timer_fn,	\
+-				     0, (unsigned long)&(dwork),	\
++				     (unsigned long)&(dwork),		\
+ 				     TIMER_IRQSAFE),			\
  	}
  
-+	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
-+		ret = drv_set_bitrate_mask(local, sdata, mask);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
- 		struct ieee80211_supported_band *sband = wiphy->bands[i];
- 		int j;
+diff --git a/include/linux/timer.h b/include/linux/timer.h
+index 91e5a2cc81b5..10685c33e679 100644
+--- a/include/linux/timer.h
++++ b/include/linux/timer.h
+@@ -63,10 +63,9 @@ struct timer_list {
+ 
+ #define TIMER_TRACE_FLAGMASK	(TIMER_MIGRATING | TIMER_DEFERRABLE | TIMER_PINNED | TIMER_IRQSAFE)
+ 
+-#define __TIMER_INITIALIZER(_function, _expires, _data, _flags) { \
++#define __TIMER_INITIALIZER(_function, _data, _flags) {		\
+ 		.entry = { .next = TIMER_ENTRY_STATIC },	\
+ 		.function = (_function),			\
+-		.expires = (_expires),				\
+ 		.data = (_data),				\
+ 		.flags = (_flags),				\
+ 		__TIMER_LOCKDEP_MAP_INITIALIZER(		\
+@@ -75,7 +74,7 @@ struct timer_list {
+ 
+ #define DEFINE_TIMER(_name, _function)				\
+ 	struct timer_list _name =				\
+-		__TIMER_INITIALIZER(_function, 0, 0, 0)
++		__TIMER_INITIALIZER(_function, 0, 0)
+ 
+ void init_timer_key(struct timer_list *timer, unsigned int flags,
+ 		    const char *name, struct lock_class_key *key);
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index 1c49431f3121..f4960260feaf 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -176,7 +176,7 @@ struct execute_work {
+ #define __DELAYED_WORK_INITIALIZER(n, f, tflags) {			\
+ 	.work = __WORK_INITIALIZER((n).work, (f)),			\
+ 	.timer = __TIMER_INITIALIZER(delayed_work_timer_fn,		\
+-				     0, (unsigned long)&(n),		\
++				     (unsigned long)&(n),		\
+ 				     (tflags) | TIMER_IRQSAFE),		\
+ 	}
+ 
 -- 
-2.14.2
+2.7.4
