@@ -1,52 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44010 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932100AbdJJIUi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 04:20:38 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [2/2] rtlwifi: silence underflow warning
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170929075234.dgyuiwbowu3jq6r4@mwanda>
-References: <20170929075234.dgyuiwbowu3jq6r4@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20171010082038.41B46609A1@smtp.codeaurora.org> (sfid-20171010_102046_347077_70544F8F)
-Date: Tue, 10 Oct 2017 08:20:38 +0000 (UTC)
+Received: from mga04.intel.com ([192.55.52.120]:60161 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750871AbdJDEwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 00:52:24 -0400
+Message-ID: <1507092741.908.56.camel@intel.com> (sfid-20171004_065228_955576_A44B3091)
+Subject: Re: iwlwifi: ToF usage
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Joel =?ISO-8859-1?Q?Bjurstr=F6m?= <maxxflow@gmail.com>,
+        linux-wireless@vger.kernel.org, assaf.krauss@intel.com,
+        johannes.berg@intel.com, emmanuel.grumbach@intel.com
+Cc: linuxwifi@intel.com
+Date: Wed, 04 Oct 2017 07:52:21 +0300
+In-Reply-To: <d3356a70-b90e-d0cc-6328-17f055b2ed1c@maxxflow.com>
+References: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com>
+         <d3356a70-b90e-d0cc-6328-17f055b2ed1c@maxxflow.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Hi Joel,
 
-> My static checker complains that we have an upper bound but no lower
-> bound.  I suspect neither are really required but it doesn't hurt to add
-> a check for negatives.
+Unfortunately we don't have full support for ToF on the mainline kernel
+yet.  But you can try to use one of our Core releases (which is a
+backports-based tree) that you can find here:
+
+You could try the release/Core30 branch, for example.
+
+--
+Cheers,
+Luca.
+
+On Thu, 2017-09-21 at 21:35 +0200, Joel Bjurström wrote:
+> Including some people I've seen mentioned in ToF-related e-mails...
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> This is what I've tried:
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index c53cbf3d52bd..294a6b43d1bc 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -453,7 +453,8 @@ static void _rtl_add_wowlan_patterns(struct ieee80211_hw *hw,
->  	for (i = 0; i < wow->n_patterns; i++) {
->  		memset(&rtl_pattern, 0, sizeof(struct rtl_wow_pattern));
->  		memset(mask, 0, MAX_WOL_BIT_MASK_SIZE);
-> -		if (patterns[i].pattern_len > MAX_WOL_PATTERN_SIZE) {
-> +		if (patterns[i].pattern_len < 0 ||
-> +		    patterns[i].pattern_len > MAX_WOL_PATTERN_SIZE) {
->  			RT_TRACE(rtlpriv, COMP_POWER, DBG_WARNING,
->  				 "Pattern[%d] is too long\n", i);
->  			continue;
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-64e79426c204 rtlwifi: silence underflow warning
-
--- 
-https://patchwork.kernel.org/patch/9977201/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> 
+> -- Responder --
+> 
+> * hostapd running, hostapd.conf:
+> 	driver=nl80211
+> 	interface=wlan1
+> 	hw_mode=g
+> 	channel=1
+> 	wmm_enabled=1
+> 	ssid=tof_test
+> 	ftm_responder=1
+> 	ftm_initiator=1
+> 
+> $ cd /sys/kernel/debug/iwlwifi/0000:06:00.0/iwlmvm/netdev:wlan1
+> $ echo channel_num=1 > tof_responder_params
+> $ echo bssid=bb:bb:bb:bb:bb:bb > tof_responder_params
+> $ echo rate=1 > tof_responder_params
+> $ echo ftm_per_burst=5 > tof_responder_params
+> 
+> $ echo send_responder_cfg=1 > tof_responder_params
+> 
+> 
+> -- Initiator --
+> 
+> $ cd /sys/kernel/debug/iwlwifi/0000:06:00.0/iwlmvm/netdev:wlan1
+> $ echo send_tof_cfg=1 > tof_enable
+> $ echo 'num_of_ap=1' > tof_range_request
+> $ echo 'ap=0 1 0 0 bb:bb:bb:bb:bb:bb 0 10 0 5 5 0 0 0 0 -40' \
+> 	> tof_range_request
+> 
+> $ echo 'send_range_request=1' > tof_range_request
+> 
+> $ cat tof_range_response
+> request_id = 0
+> status = 2
+> last_in_batch = 1
+> num_of_aps = 0
+> 
+> 
+> 
+> (bb:bb:bb:bb:bb:bb is the responder's BSSID)
+> 
+> Am I even close? Fumbling in the dark here.
+> 
+> The 'status = 2' from tof_range_response comes directly from the FW, 
+> AFAICT. What do different values mean?
+> 
+> Cheers,
+> Joel
+> 
+> 
+> On 09/14/2017 09:44 PM, Joel B wrote:
+> > Hi,
+> > 
+> > Starting to play around with the FTM/ToF support in iwlwifi, but 
+> > documentation is (understandably) scarce at this point. Using a
+> > pair of 
+> > 8260:s I had lying around.
+> > 
+> > Can someone give me some hints on how to work the debugfs API for
+> > a 
+> > successful measurement?
+> > 
+> > I've set up one card as AP with hostapd (with ftm_responder=1 and 
+> > ftm_initiator=1 in hostapd.conf), the other as a STA.
+> > 
+> >  From the STA, I've played with 'tof_range_request' in debugfs.
+> > Writing 
+> > send_range_request=1, which it doesn't choke on or anything, but
+> > nothing 
+> > seems to happen. Guess I need to set things up a bit first, but
+> > how?
+> > 
+> > If it's possible to get this to work at all at this stage, some
+> > hints on 
+> > how to do it would be great.
+> > 
+> > 
+> > Thanks,
+> > Joel
