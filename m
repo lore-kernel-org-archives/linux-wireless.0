@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42882 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751658AbdJaHX1 (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:59251 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750966AbdJDQfh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 03:23:27 -0400
-Message-ID: <1509434604.4492.192.camel@coelho.fi> (sfid-20171031_082331_768530_CE1414DD)
-From: Luca Coelho <luca@coelho.fi>
-To: Anil Nair <anilcoll90@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 31 Oct 2017 09:23:24 +0200
-In-Reply-To: <20171031065122.GA24662@gmail.com>
-References: <20171031065122.GA24662@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: PROBLEM: Issue with wireless driver after resume from suspend.
+        Wed, 4 Oct 2017 12:35:37 -0400
+Subject: Re: QCA988x and kernel 4.13
+To: Ben Greear <greearb@candelatech.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: svp <s.pooheer@gmail.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <c6294832-ff1e-595c-da8b-dac59b12a976@gmail.com>
+ <7549b77b-3619-f8a5-48d6-eb7e330ba80e@dd-wrt.com>
+ <48aebea8-9231-b41e-cbaa-d592d8540c53@candelatech.com>
+ <87d163xpoe.fsf@kamboji.qca.qualcomm.com>
+ <78f5383d-0187-628e-cf56-de6234fdb9b0@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <62fdf553-8c2e-538e-3743-511e9bfa7721@dd-wrt.com> (sfid-20171004_183541_541142_7792A340)
+Date: Wed, 4 Oct 2017 18:35:29 +0200
+MIME-Version: 1.0
+In-Reply-To: <78f5383d-0187-628e-cf56-de6234fdb9b0@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-10-31 at 12:21 +0530, Anil Nair wrote:
-> ï»¿Hi All,
+Am 04.10.2017 um 17:13 schrieb Ben Greear:
+>
+>
+> On 10/04/2017 01:50 AM, Kalle Valo wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>> On 10/01/2017 07:06 AM, Sebastian Gottschall wrote:
+>>>> you have to update to the latest mac80211 code. there is a well
+>>>> known bug in mac80211 which causes a deadlock with ath10k
+>>>
+>>> Do you have a pointer to the patch that fixes this?  I'd like to 
+>>> check if it has
+>>> made it into 4.13 stable yet...
+>>
+>> I think it's this one:
+>>
+>> mac80211: fix deadlock in driver-managed RX BA session start
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bde59c475e0883e4c4294bcd9b9c7e08ae18c828 
+>>
+>>
+>> Adding linux-wireless so that someone can correct me in case I'm wrong.
+>
+> That did seem to fix my problems...
+>
+> Thanks,
+> ben
+>
+consider that this bug does at least exist since may. so older kernels 
+might be affected too
 
-Hi,
 
+-- 
+Mit freundlichen Grüssen / Regards
 
-> I am having a issue with the wireless driver in my laptop. Attached
-> information
-> pertaining to the issue.
+Sebastian Gottschall / CTO
 
-It would be useful to specify which wireless card you are using.  In
-this case, the problem seems to be with ath10k.
-
-
---
-Cheers,
-Luca.
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
