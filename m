@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39326 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965804AbdJRFpC (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:44171 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751408AbdJESCx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 01:45:02 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Network Development <netdev@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/58] networking: Convert timers to use timer_setup()
-References: <1508200182-104605-1-git-send-email-keescook@chromium.org>
-        <87mv4pvowa.fsf@purkki.adurom.net>
-        <CAGXu5j+fcARk=yWh9Bbkn0C-4PHd+pKSPGV+5qPx88H6prvUoA@mail.gmail.com>
-Date: Wed, 18 Oct 2017 08:44:57 +0300
-In-Reply-To: <CAGXu5j+fcARk=yWh9Bbkn0C-4PHd+pKSPGV+5qPx88H6prvUoA@mail.gmail.com>
-        (Kees Cook's message of "Tue, 17 Oct 2017 12:47:26 -0700")
-Message-ID: <87h8ux2ena.fsf@codeaurora.org> (sfid-20171018_074529_480053_C08CEBB3)
+        Thu, 5 Oct 2017 14:02:53 -0400
+Received: by mail-pf0-f169.google.com with SMTP id 74so988834pfu.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Oct 2017 11:02:53 -0700 (PDT)
+Date: Thu, 5 Oct 2017 11:02:50 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Himanshu Jha <himanshujha199640@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, amitkarwar@gmail.com,
+        nishants@marvell.com, gbhat@marvell.com, huxm@marvell.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: Use put_unaligned_le32
+Message-ID: <20171005180248.GA94139@google.com> (sfid-20171005_200328_977200_6094EB60)
+References: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com>
+ <874lre5a86.fsf@codeaurora.org>
+ <20171005083433.GA11485@himanshu-Vostro-3559>
+ <87zi963s1p.fsf@codeaurora.org>
+ <20171005152233.GA6250@himanshu-Vostro-3559>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005152233.GA6250@himanshu-Vostro-3559>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> writes:
+On Thu, Oct 05, 2017 at 08:52:33PM +0530, Himanshu Jha wrote:
+> There are various instances where a function used in file say for eg
+> int func_align (void* a)
+> is used and it is defined in align.h
+> But many files don't *directly* include align.h and rather include
+> any other header which includes align.h
 
-> On Tue, Oct 17, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> + linux-wireless
->>
->> Hi Kees,
->>
->> Kees Cook <keescook@chromium.org> writes:
->>
->>> This is the current set of outstanding networking patches to perform
->>> conversions to the new timer interface (rebased to -next). This is not
->>> all expected conversions, but it contains everything needed in networking
->>> to eliminate init_timer(), and all the non-standard setup_*_timer() uses.
->>
->> So this also includes patches which I had queued for
->> wireless-drivers-next:
->>
->> https://patchwork.kernel.org/patch/9986253/
->> https://patchwork.kernel.org/patch/9986245/
->>
->> And looking at patchwork[1] I have even more timer_setup() related
->> patches from you. It would be really helpful if you could clearly
->> document to which tree you want the patches to be applied. I don't care
->
-> Hi! Sorry about that. It's been a bit tricky to juggle everything.
+I believe the general rule is that you should included headers for all
+symbols you use, and not rely on implicit includes.
 
-Yeah, I understand.
+The modification to the general rule is that not all headers are
+intended to be included directly, and in such cases there's likely a
+parent header that is the more appropriate target.
 
->> if it's net-next or wireless-drivers-next as long as it's not the both
->> (meaning that both Dave and me apply the same patch, which would be
->> bad). The thing is that I really do not have time to figure out for
->> every patch via which tree it's supposed to go.
->
-> Which split is preferred? I had been trying to separate wireless from
-> the rest of net (but missed some cases).
+In this case, the key is CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS. It
+seems that asm-generic/unaligned.h is set up to include different
+headers, based on the expected architecture behavior.
 
-So what we try to follow is that I apply all patches for
-drivers/net/wireless to my wireless-drivers trees, with exception of
-Johannes taking mac80211_hwsim.c patches to his mac80211 trees. And
-Johannes of course takes all patches for net/wireless and net/mac80211.
+I wonder if include/linux/unaligned/access_ok.h should have a safety
+check (e.g., raise an #error if
+!CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS?).
 
-So in general I prefer that I take all drivers/net/wireless patches and
-make it obvious for Dave that he can ignore those patches (not mix
-wireless-drivers and net patches into same set etc). But like I said,
-it's ok to push API changes like these via Dave's net trees as well if
-you want (and if Dave is ok with that). The chances of conflicts is low,
-and if there are be any those would be easy to fix either by me or Dave.
+> Is compiling the file the only way to check if apppropriate header is
+> included or is there some other way to check for it.
 
->> For now I'll just drop all your timer_setup() related patches from my
->> queue and I'll assume Dave will take those. Ok?
->>
->> [1] https://patchwork.kernel.org/project/linux-wireless/list/
->
-> I guess I'll wait to see what Dave says.
+I believe it's mostly manual. Implicit includes have been a problem for
+anyone who refactors header files.
 
-Ok, I don't drop the patches from my queue quite yet then.
-
--- 
-Kalle Valo
+Brian
