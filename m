@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53178 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1757969AbdJMNZS (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:37418 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751388AbdJEIem (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:25:18 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Beni Lev <beni.lev@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Oct 2017 16:24:57 +0300
-Message-Id: <20171013132502.10473-5-luca@coelho.fi> (sfid-20171013_152605_632756_5A91DD0B)
-In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
-References: <20171013132502.10473-1-luca@coelho.fi>
-Subject: [PATCH 4/9] iwlwifi: mvm: allow reading UMAC error data from SMEM in A000 devices
+        Thu, 5 Oct 2017 04:34:42 -0400
+Date: Thu, 5 Oct 2017 14:04:33 +0530
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: amitkarwar@gmail.com, nishants@marvell.com, gbhat@marvell.com,
+        huxm@marvell.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: Use put_unaligned_le32
+Message-ID: <20171005083433.GA11485@himanshu-Vostro-3559> (sfid-20171005_103539_785639_F08B146B)
+References: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com>
+ <874lre5a86.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874lre5a86.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Beni Lev <beni.lev@intel.com>
+On Thu, Oct 05, 2017 at 10:23:37AM +0300, Kalle Valo wrote:
+> Himanshu Jha <himanshujha199640@gmail.com> writes:
+> 
+> > Use put_unaligned_le32 rather than using byte ordering function and
+> > memcpy which makes code clear.
+> > Also, add the header file where it is declared.
+> >
+> > Done using Coccinelle and semantic patch used is :
+> >
+> > @ rule1 @
+> > identifier tmp; expression ptr,x; type T;
+> > @@
+> >
+> > - tmp = cpu_to_le32(x);
+> >
+> >   <+... when != tmp
+> > - memcpy(ptr, (T)&tmp, ...);
+> > + put_unaligned_le32(x,ptr);
+> >   ...+>
+> >
+> > @ depends on rule1 @
+> > type j; identifier tmp;
+> > @@
+> >
+> > - j tmp;
+> >   ...when != tmp
+> >
+> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 10 ++++------
+> >  1 file changed, 4 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> > index 0edc5d6..e28e119 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> > @@ -17,6 +17,7 @@
+> >   * this warranty disclaimer.
+> >   */
+> >  
+> > +#include <linux/unaligned/access_ok.h>
+> 
+> I don't think this is correct. Should it be asm/unaligned.h?
 
-Currently, UMAC error data reading is restricted to DCCM.
-A000 NICs use SMEM for this data.
+Would mind explainig me as to why it is incorrect! Also, it defined in
+both the header files but, why is asm/unaligned.h preferred ?
 
-Signed-off-by: Beni Lev <beni.lev@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 2da1b088ac01..4ade688db63b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -459,7 +459,8 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
- 
- 	base = mvm->umac_error_event_table;
- 
--	if (base < 0x800000) {
-+	if (base < (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000 ?
-+		    0x400000 : 0x800000)) {
- 		IWL_ERR(mvm,
- 			"Not valid error log pointer 0x%08X for %s uCode\n",
- 			base,
--- 
-2.14.2
+> -- 
+> Kalle Valo
