@@ -1,233 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752905AbdJaBFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 21:05:13 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 9/9] qtnfmac: pass all CONNECT cmd params to wireless card for processing
-Date: Mon, 30 Oct 2017 18:04:55 -0700
-Message-Id: <20171031010455.27772-10-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020523_173323_46DE12A6)
-In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:54849 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751444AbdJEAuX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 20:50:23 -0400
+Received: by mail-pg0-f50.google.com with SMTP id c137so7408140pga.11
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 17:50:22 -0700 (PDT)
+Date: Wed, 4 Oct 2017 17:50:20 -0700
+From: Kees Cook <keescook@chromium.org>
+To: linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH] net/wireless/ray_cs: Convert timers to use
+Message-ID: <20171005005020.GA23219@beast> (sfid-20171005_030633_617069_4DDF102E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-Specifically, following parameters are needed for wireless device
-configuration but were not available to it before:
-- HT/VHT capabilities and capabilities masks.
-- full channel info (not just IEEE number)
-- BSSID hint
-- previous BSSID for reassoc request
-
-Move Management Frame Protection setting from common encr info
-structure into STA-specific .connect command parameters.
-
-Make sure that all new qlink structure definitions are alignment-safe.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 63 +++++++++++++++--------
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 32 +++++++++---
- 2 files changed, 65 insertions(+), 30 deletions(-)
+This requires commit 686fef928bba ("timer: Prepare to change timer
+callback argument type") in v4.14-rc3, but should be otherwise
+stand-alone.
+---
+ drivers/net/wireless/ray_cs.c | 53 ++++++++++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index c2f0b75..8bc8dd6 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -221,7 +221,6 @@ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
- 	aen = &cmd->aen;
- 	aen->auth_type = s->auth_type;
- 	aen->privacy = !!s->privacy;
--	aen->mfp = 0;
- 	aen->wpa_versions = cpu_to_le32(s->crypto.wpa_versions);
- 	aen->cipher_group = cpu_to_le32(s->crypto.cipher_group);
- 	aen->n_ciphers_pairwise = cpu_to_le32(s->crypto.n_ciphers_pairwise);
-@@ -2029,17 +2028,36 @@ int qtnf_cmd_send_del_sta(struct qtnf_vif *vif,
- 	return ret;
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 170cd504e8ff..d8afcdfca1ed 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -92,7 +92,7 @@ static const struct iw_handler_def ray_handler_def;
+ /***** Prototypes for raylink functions **************************************/
+ static void authenticate(ray_dev_t *local);
+ static int build_auth_frame(ray_dev_t *local, UCHAR *dest, int auth_type);
+-static void authenticate_timeout(u_long);
++static void authenticate_timeout(struct timer_list *t);
+ static int get_free_ccs(ray_dev_t *local);
+ static int get_free_tx_ccs(ray_dev_t *local);
+ static void init_startup_params(ray_dev_t *local);
+@@ -102,7 +102,7 @@ static int ray_init(struct net_device *dev);
+ static int interrupt_ecf(ray_dev_t *local, int ccs);
+ static void ray_reset(struct net_device *dev);
+ static void ray_update_parm(struct net_device *dev, UCHAR objid, UCHAR *value, int len);
+-static void verify_dl_startup(u_long);
++static void verify_dl_startup(struct timer_list *t);
+ 
+ /* Prototypes for interrpt time functions **********************************/
+ static irqreturn_t ray_interrupt(int reg, void *dev_id);
+@@ -120,9 +120,8 @@ static void associate(ray_dev_t *local);
+ 
+ /* Card command functions */
+ static int dl_startup_params(struct net_device *dev);
+-static void join_net(u_long local);
+-static void start_net(u_long local);
+-/* void start_net(ray_dev_t *local); */
++static void join_net(struct timer_list *t);
++static void start_net(struct timer_list *t);
+ 
+ /*===========================================================================*/
+ /* Parameters that can be set with 'insmod' */
+@@ -323,7 +322,7 @@ static int ray_probe(struct pcmcia_device *p_dev)
+ 	dev_dbg(&p_dev->dev, "ray_cs ray_attach calling ether_setup.)\n");
+ 	netif_stop_queue(dev);
+ 
+-	init_timer(&local->timer);
++	timer_setup(&local->timer, NULL, 0);
+ 
+ 	this_device = p_dev;
+ 	return ray_config(p_dev);
+@@ -570,8 +569,7 @@ static int dl_startup_params(struct net_device *dev)
+ 	local->card_status = CARD_DL_PARAM;
+ 	/* Start kernel timer to wait for dl startup to complete. */
+ 	local->timer.expires = jiffies + HZ / 2;
+-	local->timer.data = (long)local;
+-	local->timer.function = verify_dl_startup;
++	local->timer.function = (TIMER_FUNC_TYPE)verify_dl_startup;
+ 	add_timer(&local->timer);
+ 	dev_dbg(&link->dev,
+ 	      "ray_cs dl_startup_params started timer for verify_dl_startup\n");
+@@ -641,9 +639,9 @@ static void init_startup_params(ray_dev_t *local)
+ } /* init_startup_params */
+ 
+ /*===========================================================================*/
+-static void verify_dl_startup(u_long data)
++static void verify_dl_startup(struct timer_list *t)
+ {
+-	ray_dev_t *local = (ray_dev_t *) data;
++	ray_dev_t *local = from_timer(local, t, timer);
+ 	struct ccs __iomem *pccs = ccs_base(local) + local->dl_param_ccs;
+ 	UCHAR status;
+ 	struct pcmcia_device *link = local->finder;
+@@ -676,16 +674,16 @@ static void verify_dl_startup(u_long data)
+ 		return;
+ 	}
+ 	if (local->sparm.b4.a_network_type == ADHOC)
+-		start_net((u_long) local);
++		start_net(&local->timer);
+ 	else
+-		join_net((u_long) local);
++		join_net(&local->timer);
+ } /* end verify_dl_startup */
+ 
+ /*===========================================================================*/
+ /* Command card to start a network */
+-static void start_net(u_long data)
++static void start_net(struct timer_list *t)
+ {
+-	ray_dev_t *local = (ray_dev_t *) data;
++	ray_dev_t *local = from_timer(local, t, timer);
+ 	struct ccs __iomem *pccs;
+ 	int ccsindex;
+ 	struct pcmcia_device *link = local->finder;
+@@ -710,9 +708,9 @@ static void start_net(u_long data)
+ 
+ /*===========================================================================*/
+ /* Command card to join a network */
+-static void join_net(u_long data)
++static void join_net(struct timer_list *t)
+ {
+-	ray_dev_t *local = (ray_dev_t *) data;
++	ray_dev_t *local = from_timer(local, t, timer);
+ 
+ 	struct ccs __iomem *pccs;
+ 	int ccsindex;
+@@ -1639,13 +1637,13 @@ static int get_free_ccs(ray_dev_t *local)
+ } /* get_free_ccs */
+ 
+ /*===========================================================================*/
+-static void authenticate_timeout(u_long data)
++static void authenticate_timeout(struct timer_list *t)
+ {
+-	ray_dev_t *local = (ray_dev_t *) data;
++	ray_dev_t *local = from_timer(local, t, timer);
+ 	del_timer(&local->timer);
+ 	printk(KERN_INFO "ray_cs Authentication with access point failed"
+ 	       " - timeout\n");
+-	join_net((u_long) local);
++	join_net(&local->timer);
  }
  
-+static void qtnf_cmd_channel_tlv_add(struct sk_buff *cmd_skb,
-+				     const struct ieee80211_channel *sc)
-+{
-+	struct qlink_tlv_channel *qchan;
-+	u32 flags = 0;
-+
-+	qchan = skb_put_zero(cmd_skb, sizeof(*qchan));
-+	qchan->hdr.type = cpu_to_le16(QTN_TLV_ID_CHANNEL);
-+	qchan->hdr.len = cpu_to_le16(sizeof(*qchan) - sizeof(qchan->hdr));
-+	qchan->center_freq = cpu_to_le16(sc->center_freq);
-+	qchan->hw_value = cpu_to_le16(sc->hw_value);
-+
-+	if (sc->flags & IEEE80211_CHAN_NO_IR)
-+		flags |= QLINK_CHAN_NO_IR;
-+
-+	if (sc->flags & IEEE80211_CHAN_RADAR)
-+		flags |= QLINK_CHAN_RADAR;
-+
-+	qchan->flags = cpu_to_le32(flags);
-+}
-+
- int qtnf_cmd_send_scan(struct qtnf_wmac *mac)
- {
- 	struct sk_buff *cmd_skb;
- 	u16 res_code = QLINK_CMD_RESULT_OK;
- 	struct ieee80211_channel *sc;
- 	struct cfg80211_scan_request *scan_req = mac->scan_req;
--	struct qlink_tlv_channel *qchan;
- 	int n_channels;
- 	int count = 0;
- 	int ret;
--	u32 flags;
+ /*===========================================================================*/
+@@ -1945,17 +1943,16 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
  
- 	if (scan_req->n_ssids > QTNF_MAX_SSID_LIST_LENGTH) {
- 		pr_err("MAC%u: too many SSIDs in scan request\n", mac->macid);
-@@ -2081,22 +2099,8 @@ int qtnf_cmd_send_scan(struct qtnf_wmac *mac)
- 			pr_debug("MAC%u: scan chan=%d, freq=%d, flags=%#x\n",
- 				 mac->macid, sc->hw_value, sc->center_freq,
- 				 sc->flags);
--			qchan = skb_put_zero(cmd_skb, sizeof(*qchan));
--			flags = 0;
--
--			qchan->hdr.type = cpu_to_le16(QTN_TLV_ID_CHANNEL);
--			qchan->hdr.len = cpu_to_le16(sizeof(*qchan) -
--					sizeof(struct qlink_tlv_hdr));
--			qchan->center_freq = cpu_to_le16(sc->center_freq);
--			qchan->hw_value = cpu_to_le16(sc->hw_value);
--
--			if (sc->flags & IEEE80211_CHAN_NO_IR)
--				flags |= QLINK_CHAN_NO_IR;
+ 				del_timer(&local->timer);
+ 				local->timer.expires = jiffies + HZ * 5;
+-				local->timer.data = (long)local;
+ 				if (status == CCS_START_NETWORK) {
+ 					dev_dbg(&link->dev,
+ 					      "ray_cs interrupt network \"%s\" start failed\n",
+ 					      memtmp);
+-					local->timer.function = start_net;
++					local->timer.function = (TIMER_FUNC_TYPE)start_net;
+ 				} else {
+ 					dev_dbg(&link->dev,
+ 					      "ray_cs interrupt network \"%s\" join failed\n",
+ 					      memtmp);
+-					local->timer.function = join_net;
++					local->timer.function = (TIMER_FUNC_TYPE)join_net;
+ 				}
+ 				add_timer(&local->timer);
+ 			}
+@@ -1967,7 +1964,7 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
+ 			} else {
+ 				dev_dbg(&link->dev, "ray_cs association failed,\n");
+ 				local->card_status = CARD_ASSOC_FAILED;
+-				join_net((u_long) local);
++				join_net(&local->timer);
+ 			}
+ 			break;
+ 		case CCS_TX_REQUEST:
+@@ -2420,12 +2417,11 @@ static void authenticate(ray_dev_t *local)
  
--			if (sc->flags & IEEE80211_CHAN_RADAR)
--				flags |= QLINK_CHAN_RADAR;
--
--			qchan->flags = cpu_to_le32(flags);
-+			qtnf_cmd_channel_tlv_add(cmd_skb, sc);
- 			n_channels--;
- 			count++;
- 		}
-@@ -2140,10 +2144,15 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 	del_timer(&local->timer);
+ 	if (build_auth_frame(local, local->bss_id, OPEN_AUTH_REQUEST)) {
+-		local->timer.function = join_net;
++		local->timer.function = (TIMER_FUNC_TYPE)join_net;
+ 	} else {
+-		local->timer.function = authenticate_timeout;
++		local->timer.function = (TIMER_FUNC_TYPE)authenticate_timeout;
+ 	}
+ 	local->timer.expires = jiffies + HZ * 2;
+-	local->timer.data = (long)local;
+ 	add_timer(&local->timer);
+ 	local->authentication_state = AWAITING_RESPONSE;
+ } /* end authenticate */
+@@ -2468,7 +2464,7 @@ static void rx_authenticate(ray_dev_t *local, struct rcs __iomem *prcs,
+ 				} else {
+ 					pr_debug("Authentication refused\n");
+ 					local->card_status = CARD_AUTH_REFUSED;
+-					join_net((u_long) local);
++					join_net(&local->timer);
+ 					local->authentication_state =
+ 					    UNAUTHENTICATED;
+ 				}
+@@ -2506,8 +2502,7 @@ static void associate(ray_dev_t *local)
  
- 	ether_addr_copy(cmd->bssid, vif->bssid);
- 
--	if (sme->channel)
--		cmd->channel = cpu_to_le16(sme->channel->hw_value);
-+	if (sme->bssid_hint)
-+		ether_addr_copy(cmd->bssid_hint, sme->bssid_hint);
- 	else
--		cmd->channel = 0;
-+		eth_zero_addr(cmd->bssid_hint);
-+
-+	if (sme->prev_bssid)
-+		ether_addr_copy(cmd->prev_bssid, sme->prev_bssid);
-+	else
-+		eth_zero_addr(cmd->prev_bssid);
- 
- 	if ((sme->bg_scan_period > 0) &&
- 	    (sme->bg_scan_period <= QTNF_MAX_BG_SCAN_PERIOD))
-@@ -2161,11 +2170,18 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 		connect_flags |= QLINK_STA_CONNECT_USE_RRM;
- 
- 	cmd->flags = cpu_to_le32(connect_flags);
-+	memcpy(&cmd->ht_capa, &sme->ht_capa, sizeof(cmd->ht_capa));
-+	memcpy(&cmd->ht_capa_mask, &sme->ht_capa_mask,
-+	       sizeof(cmd->ht_capa_mask));
-+	memcpy(&cmd->vht_capa, &sme->vht_capa, sizeof(cmd->vht_capa));
-+	memcpy(&cmd->vht_capa_mask, &sme->vht_capa_mask,
-+	       sizeof(cmd->vht_capa_mask));
-+	cmd->pbss = sme->pbss;
- 
- 	aen = &cmd->aen;
- 	aen->auth_type = sme->auth_type;
- 	aen->privacy = !!sme->privacy;
--	aen->mfp = sme->mfp;
-+	cmd->mfp = sme->mfp;
- 	aen->wpa_versions = cpu_to_le32(sme->crypto.wpa_versions);
- 	aen->cipher_group = cpu_to_le32(sme->crypto.cipher_group);
- 	aen->n_ciphers_pairwise = cpu_to_le32(sme->crypto.n_ciphers_pairwise);
-@@ -2192,6 +2208,9 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 		qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_ASSOC_REQ,
- 					sme->ie, sme->ie_len);
- 
-+	if (sme->channel)
-+		qtnf_cmd_channel_tlv_add(cmd_skb, sme->channel);
-+
- 	qtnf_bus_lock(vif->mac->bus);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index e07f776..a432fb0 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -19,7 +19,7 @@
- 
- #include <linux/ieee80211.h>
- 
--#define QLINK_PROTO_VER		5
-+#define QLINK_PROTO_VER		6
- 
- #define QLINK_MACID_RSVD		0xFF
- #define QLINK_VIFID_RSVD		0xFF
-@@ -148,9 +148,9 @@ struct qlink_auth_encr {
- 	__le16 control_port_ethertype;
- 	u8 auth_type;
- 	u8 privacy;
--	u8 mfp;
- 	u8 control_port;
- 	u8 control_port_no_encrypt;
-+	u8 rsvd[2];
- } __packed;
- 
- /* QLINK Command messages related definitions
-@@ -404,20 +404,36 @@ enum qlink_sta_connect_flags {
- /**
-  * struct qlink_cmd_connect - data for QLINK_CMD_CONNECT command
-  *
-- * @flags: for future use.
-- * @channel: channel which should be used to connect.
-+ * @bssid: BSSID of the BSS to connect to.
-+ * @bssid_hint: recommended AP BSSID for initial connection to the BSS or
-+ *	00:00:00:00:00:00 if not specified.
-+ * @prev_bssid: previous BSSID, if specified (not 00:00:00:00:00:00) indicates
-+ *	a request to reassociate.
-  * @bg_scan_period: period of background scan.
-+ * @flags: one of &enum qlink_sta_connect_flags.
-+ * @ht_capa: HT Capabilities overrides.
-+ * @ht_capa_mask: The bits of ht_capa which are to be used.
-+ * @vht_capa: VHT Capability overrides
-+ * @vht_capa_mask: The bits of vht_capa which are to be used.
-  * @aen: authentication information.
-- * @bssid: BSSID of the BSS to connect to.
-+ * @mfp: whether to use management frame protection.
-  * @payload: variable portion of connection request.
-  */
- struct qlink_cmd_connect {
- 	struct qlink_cmd chdr;
--	__le32 flags;
--	__le16 channel;
-+	u8 bssid[ETH_ALEN];
-+	u8 bssid_hint[ETH_ALEN];
-+	u8 prev_bssid[ETH_ALEN];
- 	__le16 bg_scan_period;
-+	__le32 flags;
-+	struct ieee80211_ht_cap ht_capa;
-+	struct ieee80211_ht_cap ht_capa_mask;
-+	struct ieee80211_vht_cap vht_capa;
-+	struct ieee80211_vht_cap vht_capa_mask;
- 	struct qlink_auth_encr aen;
--	u8 bssid[ETH_ALEN];
-+	u8 mfp;
-+	u8 pbss;
-+	u8 rsvd[2];
- 	u8 payload[0];
- } __packed;
- 
+ 		del_timer(&local->timer);
+ 		local->timer.expires = jiffies + HZ * 2;
+-		local->timer.data = (long)local;
+-		local->timer.function = join_net;
++		local->timer.function = (TIMER_FUNC_TYPE)join_net;
+ 		add_timer(&local->timer);
+ 		local->card_status = CARD_ASSOC_FAILED;
+ 		return;
 -- 
-2.9.5
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
