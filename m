@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52950 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752210AbdJFJmw (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:56518 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751132AbdJEAlO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 05:42:52 -0400
-Message-ID: <1507282969.19300.4.camel@sipsolutions.net> (sfid-20171006_114306_734858_B190F1B8)
-Subject: Re: [RFC v2 1/2] fq: support filtering a given tin
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 06 Oct 2017 11:42:49 +0200
-In-Reply-To: <87h8vdslpr.fsf@toke.dk>
-References: <20171005131803.12328-1-johannes@sipsolutions.net>
-         <87h8vdslpr.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 4 Oct 2017 20:41:14 -0400
+Date: Wed, 04 Oct 2017 17:41:11 -0700 (PDT)
+Message-Id: <20171004.174111.1056977714603579000.davem@davemloft.net> (sfid-20171005_024125_999979_E4943067)
+To: keescook@chromium.org
+Cc: tglx@linutronix.de, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        sre@kernel.org, harish.patil@cavium.com, manish.chopra@cavium.com,
+        kvalo@qca.qualcomm.com, linuxppc-dev@lists.ozlabs.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        akpm@linux-foundation.org, arnd@arndb.de, cmetcalf@mellanox.com,
+        geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        linux@roeck-us.net, heiko.carstens@de.ibm.com,
+        jejb@linux.vnet.ibm.com, john.stultz@linaro.org,
+        jwi@linux.vnet.ibm.com, jiangshanlai@gmail.com,
+        len.brown@intel.com, mark.gross@intel.com,
+        martin.petersen@oracle.com, schwidefsky@de.ibm.com, mdr@sgi.com,
+        oleg@redhat.com, paulus@samba.org, pavel@ucw.cz, pmladek@suse.com,
+        rjw@rjwysocki.net, ralf@linux-mips.org, stefanr@s5r6.in-berlin.de,
+        sboyd@codeaurora.org, sudipm.mukherjee@gmail.com, tj@kernel.org,
+        ubraun@linux.vnet.ibm.com, viresh.kumar@linaro.org, wim@iguana.be,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 05/13] timer: Remove init_timer_deferrable() in favor
+ of timer_setup()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1507159627-127660-6-git-send-email-keescook@chromium.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+        <1507159627-127660-6-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-10-05 at 16:39 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
+From: Kees Cook <keescook@chromium.org>
+Date: Wed,  4 Oct 2017 16:26:59 -0700
+
+> This refactors the only users of init_timer_deferrable() to use
+> the new timer_setup() and from_timer(). Removes definition of
+> init_timer_deferrable().
 > 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Add to the FQ API a way to filter a given tin, in order to
-> > remove frames that fulfil certain criteria according to a
-> > filter function.
-> > 
-> > This will be used by mac80211 to remove frames belonging to
-> > an AP VLAN interface that's being removed.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> Yup, this version looks reasonable to me :)
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: Sebastian Reichel <sre@kernel.org>
+> Cc: Harish Patil <harish.patil@cavium.com>
+> Cc: Manish Chopra <manish.chopra@cavium.com>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Cc: netdev@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Do you know if anyone feels responsible for the fq code?
+For networking:
 
-Should I Cc netdev on these patches?
-
-johannes
+Acked-by: David S. Miller <davem@davemloft.net>
