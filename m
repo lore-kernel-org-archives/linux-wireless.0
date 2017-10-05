@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:60736 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934855AbdJQJvg (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:56404 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751132AbdJEAlB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 05:51:36 -0400
-Message-ID: <1508233890.10607.70.camel@sipsolutions.net> (sfid-20171017_115140_216992_AD84F94E)
-Subject: Re: Commit 0711d638 breaks mwifiex
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jesse Sung <jesse.sung@canonical.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ilan Peer <ilan.peer@intel.com>
-Cc: Anthony Wong <anthony.wong@canonical.com>,
-        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
-        linux-wireless@vger.kernel.org
-Date: Tue, 17 Oct 2017 11:51:30 +0200
-In-Reply-To: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com> (sfid-20171017_110449_063483_9C0F4028)
-References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
-         (sfid-20171017_110449_063483_9C0F4028)
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 4 Oct 2017 20:41:01 -0400
+Date: Wed, 04 Oct 2017 17:40:55 -0700 (PDT)
+Message-Id: <20171004.174055.1185097411151057568.davem@davemloft.net> (sfid-20171005_024120_161478_01BABF25)
+To: keescook@chromium.org
+Cc: tglx@linutronix.de, akpm@linux-foundation.org, arnd@arndb.de,
+        benh@kernel.crashing.org, cmetcalf@mellanox.com,
+        geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        linux@roeck-us.net, harish.patil@cavium.com,
+        heiko.carstens@de.ibm.com, jejb@linux.vnet.ibm.com,
+        john.stultz@linaro.org, jwi@linux.vnet.ibm.com,
+        kvalo@qca.qualcomm.com, jiangshanlai@gmail.com,
+        len.brown@intel.com, manish.chopra@cavium.com,
+        mark.gross@intel.com, martin.petersen@oracle.com,
+        schwidefsky@de.ibm.com, mpe@ellerman.id.au, mdr@sgi.com,
+        netdev@vger.kernel.org, oleg@redhat.com, paulus@samba.org,
+        pavel@ucw.cz, pmladek@suse.com, rjw@rjwysocki.net,
+        ralf@linux-mips.org, sre@kernel.org, stefanr@s5r6.in-berlin.de,
+        sboyd@codeaurora.org, sudipm.mukherjee@gmail.com, tj@kernel.org,
+        ubraun@linux.vnet.ibm.com, viresh.kumar@linaro.org, wim@iguana.be,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 10/13] timer: Remove expires and data arguments from
+ DEFINE_TIMER
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1507159627-127660-11-git-send-email-keescook@chromium.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+        <1507159627-127660-11-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Kees Cook <keescook@chromium.org>
+Date: Wed,  4 Oct 2017 16:27:04 -0700
 
-> While working on an issue that marvell module stops connecting to AP,
-> bisect reveals that the issue starts to happen from commit 0711d638,
-> which uses wdev->ssid_len instead of wdev->current_bss to determine
-> if driver's .disconnect() should be called.
+> Drop the arguments from the macro and adjust all callers with the
+> following script:
 > 
-> It happens because mwifiex_cfg80211_connect() returns -EALREADY
-> when it finds wdev->current_bss is valid:
+>   perl -pi -e 's/DEFINE_TIMER\((.*), 0, 0\);/DEFINE_TIMER($1);/g;' \
+>     $(git grep DEFINE_TIMER | cut -d: -f1 | sort -u | grep -v timer.h)
 > 
-> if (priv->wdev.current_bss) {
->     [PRINT LOG]
->     return -EALREADY;
-> }
-> 
-> This would make cfg80211_connect() set wdev->ssid_len to 0, and thus
-> mwifiex_cfg80211_disconnect() won't be called by
-> cfg80211_disconnect().
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Acked-by: Geert Uytterhoeven <geert@linux-m68k.org> # for m68k parts
 
-Hmm, none of this makes much sense to me right now.
+For networking:
 
-Does mwifiex treat this -EALREADY as *keeping* an old connection, or
-tearing it down entirely?
-
-Because right now clearly cfg80211 assumes, on the one hand, that no
-connection is kept (resetting ssid_len), but on the other hand it got
-here with current_bss set - so perhaps we should reject that before in
-cfg80211, rather than in mwifiex?
-
-I think your fix is invalid because we then reset ssid_len and still
-keep an old connection (current_bss) which will lead to strange nl80211
-behaviour when getting interface data etc.
-
-johannes
+Acked-by: David S. Miller <davem@davemloft.net>
