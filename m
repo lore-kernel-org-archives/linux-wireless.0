@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:39254 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751591AbdJRNuC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 09:50:02 -0400
-Received: from mail-it0-f70.google.com ([209.85.214.70])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1e4ojR-0007qn-FS
-        for linux-wireless@vger.kernel.org; Wed, 18 Oct 2017 13:50:01 +0000
-Received: by mail-it0-f70.google.com with SMTP id y15so4683067ita.22
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 06:50:01 -0700 (PDT)
-Date: Wed, 18 Oct 2017 08:49:58 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: =?utf-8?B?0JDQvdC00YDQtdC5INCY0LLQsNC90L7Qsg==?= <wowz89@mail.ru>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: Update regulatory rules for Kazakhstan (KZ) on
- 5GHz
-Message-ID: <20171018134958.lrllao7yvhusscxw@ubuntu-xps13> (sfid-20171018_155008_780564_CB0FE214)
-References: <1508325977.297437473@f42.i.mail.ru>
+Received: from mail-co1nam03on0072.outbound.protection.outlook.com ([104.47.40.72]:18160
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751932AbdJEVys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Oct 2017 17:54:48 -0400
+Subject: Re: [PATCH] mwifiex: Use put_unaligned_le32
+To: Himanshu Jha <himanshujha199640@gmail.com>,
+        Brian Norris <briannorris@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, amitkarwar@gmail.com,
+        nishants@marvell.com, gbhat@marvell.com, huxm@marvell.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com>
+ <874lre5a86.fsf@codeaurora.org> <20171005083433.GA11485@himanshu-Vostro-3559>
+ <87zi963s1p.fsf@codeaurora.org> <20171005152233.GA6250@himanshu-Vostro-3559>
+ <20171005180248.GA94139@google.com>
+ <20171005190730.GA8043@himanshu-Vostro-3559>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <357bb728-f324-5c9f-c92c-08c57f22ce75@quantenna.com> (sfid-20171005_235522_091134_8385F4A9)
+Date: Thu, 5 Oct 2017 14:54:38 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1508325977.297437473@f42.i.mail.ru>
+In-Reply-To: <20171005190730.GA8043@himanshu-Vostro-3559>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 02:26:17PM +0300, Андрей Иванов wrote:
-> Please add support for 5 GHz in Kazakhstan
->         (5170 - 5250 @ 80), (20), AUTO-BW
-> 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-> 	(5650 - 5730 @ 80), (30), DFS
-> 	(5735 - 5835 @ 80), (30)
+On 10/05/2017 12:07 PM, Himanshu Jha wrote:
+>>
+>> In this case, the key is CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS. It
+>> seems that asm-generic/unaligned.h is set up to include different
+>> headers, based on the expected architecture behavior.
+>>
+> Yes, asm-generic/unaligned.h looks more appopriate and is most generic
+> implementation of unaligned accesses and  arc specific.
+> 
 
-We got a very similar submission not that long ago, and I had some
-questions which were never answered.
-
-http://lists.infradead.org/pipermail/wireless-regdb/2017-August/001086.html
-
-That one provided a link to some documentation for Kazakhstan, but the
-information there seemed incomplete to me. Can you answer the questions
-I asked there, or provide a link to a more complete source of
-information for the regulations in Kazakhstan?
-
-Thanks,
-Seth
+Probably the idea is that each ARCH knows exactly what is the best way 
+to do unaligned access, so common code (like drivers) should include 
+ARCH-specific asm/unaligned.h only. It will then decide how to do that 
+and will include asm-generic/unaligned.h itself, if required.
