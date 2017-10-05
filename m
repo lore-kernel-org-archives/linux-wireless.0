@@ -1,140 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49930 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751951AbdJCP0P (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:56600 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751132AbdJEAlh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Oct 2017 11:26:15 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 2/2] mwifiex: minor cleanups w/ sta_list_spinlock in cfg80211.c
-Date: Tue, 3 Oct 2017 20:49:44 +0530
-Message-ID: <1507043984-9832-2-git-send-email-gbhat@marvell.com> (sfid-20171003_172619_902072_2C3C53EA)
-In-Reply-To: <1507043984-9832-1-git-send-email-gbhat@marvell.com>
-References: <1507043984-9832-1-git-send-email-gbhat@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 4 Oct 2017 20:41:37 -0400
+Date: Wed, 04 Oct 2017 17:41:34 -0700 (PDT)
+Message-Id: <20171004.174134.1260012045520624727.davem@davemloft.net> (sfid-20171005_024148_046528_5E7EE195)
+To: keescook@chromium.org
+Cc: tglx@linutronix.de, cmetcalf@mellanox.com, netdev@vger.kernel.org,
+        akpm@linux-foundation.org, arnd@arndb.de, benh@kernel.crashing.org,
+        geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        linux@roeck-us.net, harish.patil@cavium.com,
+        heiko.carstens@de.ibm.com, jejb@linux.vnet.ibm.com,
+        john.stultz@linaro.org, jwi@linux.vnet.ibm.com,
+        kvalo@qca.qualcomm.com, jiangshanlai@gmail.com,
+        len.brown@intel.com, manish.chopra@cavium.com,
+        mark.gross@intel.com, martin.petersen@oracle.com,
+        schwidefsky@de.ibm.com, mpe@ellerman.id.au, mdr@sgi.com,
+        oleg@redhat.com, paulus@samba.org, pavel@ucw.cz, pmladek@suse.com,
+        rjw@rjwysocki.net, ralf@linux-mips.org, sre@kernel.org,
+        stefanr@s5r6.in-berlin.de, sboyd@codeaurora.org,
+        sudipm.mukherjee@gmail.com, tj@kernel.org,
+        ubraun@linux.vnet.ibm.com, viresh.kumar@linaro.org, wim@iguana.be,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 04/13] timer: Remove init_timer_pinned() in favor of
+ timer_setup()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1507159627-127660-5-git-send-email-keescook@chromium.org>
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+        <1507159627-127660-5-git-send-email-keescook@chromium.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Douglas Anderson <dianders@chromium.org>
+From: Kees Cook <keescook@chromium.org>
+Date: Wed,  4 Oct 2017 16:26:58 -0700
 
-The sta_list_spinlock looks to be used to control locking of the
-list. Specifically when someone has the lock they may be allowed
-to modify or delete elements of the list.
+> This refactors the only users of init_timer_pinned() to use
+> the new timer_setup() and from_timer(). Drops the definition of
+> init_timer_pinned().
+> 
+> Cc: Chris Metcalf <cmetcalf@mellanox.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-That implies that we shouldn't access the fields of the elements
-returned by mwifiex_get_sta_entry() after we've released the
-spinlock. Let's make some small changes so this is true.
+For networking:
 
-It's unlikely that this matters since it looks to be just error
-handling, but it's nice to be clean.
-
-Signed-off-by: Douglas Anderson <dianders@chromium.org>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 14 +++++++++-----
- drivers/net/wireless/marvell/mwifiex/sta_event.c |  6 ++----
- 2 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index cc7d777..3638b613 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3794,9 +3794,8 @@ static int mwifiex_cfg80211_set_coalesce(struct wiphy *wiphy,
- 
- 	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
- 	sta_ptr = mwifiex_get_sta_entry(priv, addr);
--	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--
- 	if (!sta_ptr) {
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		wiphy_err(wiphy, "%s: Invalid TDLS peer %pM\n",
- 			  __func__, addr);
- 		return -ENOENT;
-@@ -3804,15 +3803,18 @@ static int mwifiex_cfg80211_set_coalesce(struct wiphy *wiphy,
- 
- 	if (!(sta_ptr->tdls_cap.extcap.ext_capab[3] &
- 	      WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH)) {
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		wiphy_err(wiphy, "%pM do not support tdls cs\n", addr);
- 		return -ENOENT;
- 	}
- 
- 	if (sta_ptr->tdls_status == TDLS_CHAN_SWITCHING ||
- 	    sta_ptr->tdls_status == TDLS_IN_OFF_CHAN) {
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		wiphy_err(wiphy, "channel switch is running, abort request\n");
- 		return -EALREADY;
- 	}
-+	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 
- 	chan = chandef->chan->hw_value;
- 	second_chan_offset = mwifiex_get_sec_chan_offset(chan);
-@@ -3833,18 +3835,20 @@ static int mwifiex_cfg80211_set_coalesce(struct wiphy *wiphy,
- 
- 	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
- 	sta_ptr = mwifiex_get_sta_entry(priv, addr);
--	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--
- 	if (!sta_ptr) {
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		wiphy_err(wiphy, "%s: Invalid TDLS peer %pM\n",
- 			  __func__, addr);
- 	} else if (!(sta_ptr->tdls_status == TDLS_CHAN_SWITCHING ||
- 		     sta_ptr->tdls_status == TDLS_IN_BASE_CHAN ||
- 		     sta_ptr->tdls_status == TDLS_IN_OFF_CHAN)) {
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		wiphy_err(wiphy, "tdls chan switch not initialize by %pM\n",
- 			  addr);
--	} else
-+	} else {
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		mwifiex_stop_tdls_cs(priv, addr);
-+	}
- }
- 
- static int
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index 839df8a..d8db412 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -359,13 +359,12 @@ static void mwifiex_process_uap_tx_pause(struct mwifiex_private *priv,
- 	} else {
- 		spin_lock_irqsave(&priv->sta_list_spinlock, flags);
- 		sta_ptr = mwifiex_get_sta_entry(priv, tp->peermac);
--		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--
- 		if (sta_ptr && sta_ptr->tx_pause != tp->tx_pause) {
- 			sta_ptr->tx_pause = tp->tx_pause;
- 			mwifiex_update_ralist_tx_pause(priv, tp->peermac,
- 						       tp->tx_pause);
- 		}
-+		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 	}
- }
- 
-@@ -396,14 +395,13 @@ static void mwifiex_process_sta_tx_pause(struct mwifiex_private *priv,
- 		if (mwifiex_is_tdls_link_setup(status)) {
- 			spin_lock_irqsave(&priv->sta_list_spinlock, flags);
- 			sta_ptr = mwifiex_get_sta_entry(priv, tp->peermac);
--			spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
--
- 			if (sta_ptr && sta_ptr->tx_pause != tp->tx_pause) {
- 				sta_ptr->tx_pause = tp->tx_pause;
- 				mwifiex_update_ralist_tx_pause(priv,
- 							       tp->peermac,
- 							       tp->tx_pause);
- 			}
-+			spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 		}
- 	}
- }
--- 
-1.9.1
+Acked-by: David S. Miller <davem@davemloft.net>
