@@ -1,158 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56533 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755672AbdJJIJj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34310 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751254AbdJEGrg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 04:09:39 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V5 3/5] ath10k: Enable TDLS peer inactivity detection
-Date: Tue, 10 Oct 2017 16:11:18 +0800
-Message-ID: <1507623080-9311-4-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_100943_195636_3E66189B)
-In-Reply-To: <1507623080-9311-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patch>
- <1507623080-9311-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 5 Oct 2017 02:47:36 -0400
+Message-ID: <1507186052.2387.11.camel@sipsolutions.net> (sfid-20171005_084756_978774_4A66AAB8)
+Subject: Re: [PATCH] net/mac80211/mesh_plink: Convert timers to use
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>
+Date: Thu, 05 Oct 2017 08:47:32 +0200
+In-Reply-To: <20171005004952.GA23133@beast> (sfid-20171005_024956_516988_77418294)
+References: <20171005004952.GA23133@beast>
+         (sfid-20171005_024956_516988_77418294)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On Wed, 2017-10-04 at 17:49 -0700, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list
+> pointer to all timer callbacks, switch to using the new timer_setup()
+> and from_timer() to pass the timer pointer explicitly. This requires
+> adding a pointer back to the sta_info since container_of() can't
+> resolve the sta_info.
 
-Enable TDLS peer inactivity detetion feature.
-QCA6174 firmware(version: WLAN.RM.4.4) support TDLS link inactivity detecting.
-Set related parameters in TDLS WMI command to enable this feature.
+The subject seems to be lacking something ... :-)
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   52 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 +++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
- 3 files changed, 76 insertions(+)
+> This requires commit 686fef928bba ("timer: Prepare to change timer
+> callback argument type") in v4.14-rc3, but should be otherwise
+> stand-alone.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index f60b46e..63bb2c4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -412,6 +412,49 @@ static int ath10k_wmi_tlv_event_tx_pause(struct ath10k *ar,
- 	return 0;
- }
- 
-+void ath10k_wmi_event_tdls_peer(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct ieee80211_sta *station;
-+	const struct wmi_tlv_tdls_peer_event *ev;
-+	const void **tb;
-+	struct ath10k_vif *arvif;
-+
-+	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
-+	if (IS_ERR(tb)) {
-+		ath10k_warn(ar, "tdls peer failed to parse tlv");
-+		return;
-+	}
-+	ev = tb[WMI_TLV_TAG_STRUCT_TDLS_PEER_EVENT];
-+	if (!ev) {
-+		kfree(tb);
-+		ath10k_warn(ar, "tdls peer NULL event");
-+		return;
-+	}
-+
-+	switch (ev->peer_reason) {
-+	case WMI_TDLS_TEARDOWN_REASON_TX:
-+	case WMI_TDLS_TEARDOWN_REASON_RSSI:
-+	case WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT:
-+		station = ieee80211_find_sta_by_ifaddr(ar->hw,
-+						       ev->peer_macaddr.addr,
-+						       NULL);
-+		if (!station) {
-+			ath10k_warn(ar, "did not find station from tdls peer event");
-+			kfree(tb);
-+			return;
-+		}
-+		arvif = ath10k_get_arvif(ar, ev->vdev_id);
-+		ieee80211_tdls_oper_request(
-+					arvif->vif, station->addr,
-+					NL80211_TDLS_TEARDOWN,
-+					WLAN_REASON_TDLS_TEARDOWN_UNREACHABLE,
-+					GFP_ATOMIC
-+					);
-+		break;
-+	}
-+	kfree(tb);
-+}
-+
- /***********/
- /* TLV ops */
- /***********/
-@@ -552,6 +595,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_TLV_TX_PAUSE_EVENTID:
- 		ath10k_wmi_tlv_event_tx_pause(ar, skb);
- 		break;
-+	case WMI_TLV_TDLS_PEER_EVENTID:
-+		ath10k_wmi_event_tdls_peer(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -2750,6 +2796,12 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
- 		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
- 
-+	/* WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL means firm will handle TDLS
-+	 * link inactivity detecting logic.
-+	 */
-+	if (state == WMI_TDLS_ENABLE_ACTIVE)
-+		state = WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL;
-+
- 	len = sizeof(*tlv) + sizeof(*cmd);
- 	skb = ath10k_wmi_alloc_skb(ar, len);
- 	if (!skb)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 22cf011..00d68c5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1641,6 +1641,29 @@ struct wmi_tlv_tx_pause_ev {
- 	__le32 tid_map;
- } __packed;
- 
-+struct wmi_tlv_tdls_peer_event {
-+	struct wmi_mac_addr    peer_macaddr;
-+	__le32 peer_status;
-+	__le32 peer_reason;
-+	__le32 vdev_id;
-+} __packed;
-+
-+enum wmi_tdls_peer_reason {
-+	WMI_TDLS_TEARDOWN_REASON_TX,
-+	WMI_TDLS_TEARDOWN_REASON_RSSI,
-+	WMI_TDLS_TEARDOWN_REASON_SCAN,
-+	WMI_TDLS_DISCONNECTED_REASON_PEER_DELETE,
-+	WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT,
-+	WMI_TDLS_TEARDOWN_REASON_BAD_PTR,
-+	WMI_TDLS_TEARDOWN_REASON_NO_RESPONSE,
-+	WMI_TDLS_ENTER_BUF_STA,
-+	WMI_TDLS_EXIT_BUF_STA,
-+	WMI_TDLS_ENTER_BT_BUSY_MODE,
-+	WMI_TDLS_EXIT_BT_BUSY_MODE,
-+	WMI_TDLS_SCAN_STARTED_EVENT,
-+	WMI_TDLS_SCAN_COMPLETED_EVENT,
-+};
-+
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7a3606d..74a6c78 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6720,6 +6720,7 @@ enum wmi_tdls_state {
- 	WMI_TDLS_DISABLE,
- 	WMI_TDLS_ENABLE_PASSIVE,
- 	WMI_TDLS_ENABLE_ACTIVE,
-+	WMI_TDLS_ENABLE_ACTIVE_EXTERNAL_CONTROL,
- };
- 
- enum wmi_tdls_peer_state {
--- 
-1.7.9.5
+I still can't apply that because that's not in net-next right now.
+
+>  static inline void mesh_plink_timer_set(struct sta_info *sta, u32
+> timeout)
+>  {
+>  	sta->mesh->plink_timer.expires = jiffies +
+> msecs_to_jiffies(timeout);
+> -	sta->mesh->plink_timer.data = (unsigned long) sta;
+> -	sta->mesh->plink_timer.function = mesh_plink_timer;
+> +	sta->mesh->plink_sta = sta;
+> +	sta->mesh->plink_timer.function =
+> (TIMER_FUNC_TYPE)mesh_plink_timer;
+>  	sta->mesh->plink_timeout = timeout;
+>  	add_timer(&sta->mesh->plink_timer);
+
+Wouldn't it be better to convert this to timer_setup() now?
+
+That add_timer() should probably also be mod_timer() anyway?
+
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index 69615016d5bf..5e5de9455e4e 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -332,7 +332,7 @@ struct sta_info *sta_info_alloc(struct
+> ieee80211_sub_if_data *sdata,
+>  		spin_lock_init(&sta->mesh->plink_lock);
+>  		if (ieee80211_vif_is_mesh(&sdata->vif) &&
+>  		    !sdata->u.mesh.user_mpm)
+> -			init_timer(&sta->mesh->plink_timer);
+> +			timer_setup(&sta->mesh->plink_timer, NULL,
+> 0);
+>  		sta->mesh->nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
+>  	}
+
+You just have to make mesh_plink_timer() non-static, put a prototype
+into mesh.h and then you can use the proper timer_setup() here with the
+function?
+
+Also, the sta->mesh->plink_sta assignment should be here I'd say, no
+point rewriting it all the time.
+
+I guess you were shooting for minimal, and I suppose we can do the
+cleanups later too ...
+
+johannes
