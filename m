@@ -1,56 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:51798 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751936AbdJ3UhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 16:37:16 -0400
-Date: Mon, 30 Oct 2017 21:37:10 +0100
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Network Development <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
- at 0000000000010007
-Message-ID: <20171030203710.mk2t7hqgjjabu6wy@wfg-t540p.sh.intel.com> (sfid-20171030_213922_389410_7A9EBE69)
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
- <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
- <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com>
- <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
+Received: from s3.sipsolutions.net ([144.76.63.242]:37786 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751625AbdJELiM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Oct 2017 07:38:12 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/2] mac80211: only remove AP VLAN frames from TXQ
+Date: Thu,  5 Oct 2017 13:38:08 +0200
+Message-Id: <20171005113808.3889-2-johannes@sipsolutions.net> (sfid-20171005_133816_069825_66FDBFDB)
+In-Reply-To: <20171005113808.3889-1-johannes@sipsolutions.net>
+References: <20171005113808.3889-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 30, 2017 at 12:29:47PM -0700, Linus Torvalds wrote:
->On Sun, Oct 29, 2017 at 4:48 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->>
->> Here are 3 dmesgs related to wireless and 1 from ethernet.
->
->Fengguang, these would be lovelier still _if_ you have DEBUG_INFO
->enabled on the kernel, and your script were to find things like
->"symbol+0xhex/0xhex", and run "./scripts/faddr2line" on them.
->
->So
->
->> [  235.425464] BUG: unable to handle kernel paging request at 0000000000010007
->> [  235.425470] IP: run_timer_softirq+0x13a/0x470
->
->would also then have
->
->   run_timer_softirq at timer.c:XYZ
->
->which would make it easier to see exactly _what_ it is that faults. As
->it is, I think there's a fair number of inlining that makes it hard to
->see the cause, but that faddrtoline would make very obvious.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Good idea and tips! It'll definitely help debug the issues where
-bisect cannot help.
+When removing an AP VLAN interface, mac80211 currently purges
+the entire TXQ for the AP interface. Fix this by using the FQ
+API introduced in the previous patch to filter frames.
 
->Finding that "symbol+xyz/abc" pattern should be fairly easy to
->automate, and should fit the 0day model fairly well. No?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/iface.c       | 25 +++----------------------
+ net/mac80211/tx.c          | 34 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 39 insertions(+), 22 deletions(-)
 
-Sure. We'll add DEBUG_INFO and automate faddr2line.
-
-Regards,
-Fengguang
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9675814f64db..68f874e73561 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2009,6 +2009,8 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 			struct txq_info *txq, int tid);
+ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 			 struct txq_info *txqi);
++void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata);
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+ 			 const u8 *extra, size_t extra_len, const u8 *bssid,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2619daa29961..13b16f90e1cf 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -793,9 +793,7 @@ static int ieee80211_open(struct net_device *dev)
+ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 			      bool going_down)
+ {
+-	struct ieee80211_sub_if_data *txq_sdata = sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct fq *fq = &local->fq;
+ 	unsigned long flags;
+ 	struct sk_buff *skb, *tmp;
+ 	u32 hw_reconf_flags = 0;
+@@ -939,9 +937,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		txq_sdata = container_of(sdata->bss,
+-					 struct ieee80211_sub_if_data, u.ap);
+-
+ 		mutex_lock(&local->mtx);
+ 		list_del(&sdata->u.vlan.list);
+ 		mutex_unlock(&local->mtx);
+@@ -998,8 +993,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		skb_queue_purge(&sdata->skb_queue);
+ 	}
+ 
+-	sdata->bss = NULL;
+-
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+ 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
+@@ -1012,22 +1005,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+-	if (txq_sdata->vif.txq) {
+-		struct txq_info *txqi = to_txq_info(txq_sdata->vif.txq);
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		ieee80211_txq_remove_vlan(local, sdata);
+ 
+-		/*
+-		 * FIXME FIXME
+-		 *
+-		 * We really shouldn't purge the *entire* txqi since that
+-		 * contains frames for the other AP_VLANs (and possibly
+-		 * the AP itself) as well, but there's no API in FQ now
+-		 * to be able to filter.
+-		 */
+-
+-		spin_lock_bh(&fq->lock);
+-		ieee80211_txq_purge(local, txqi);
+-		spin_unlock_bh(&fq->lock);
+-	}
++	sdata->bss = NULL;
+ 
+ 	if (local->open_count == 0)
+ 		ieee80211_clear_tx_pending(local);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 94826680cf2b..7b8154474b9e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1396,6 +1396,40 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+ 		       fq_flow_get_default_func);
+ }
+ 
++static bool fq_vlan_filter_func(struct fq *fq, struct fq_tin *tin,
++				struct fq_flow *flow, struct sk_buff *skb,
++				void *data)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	return info->control.vif == data;
++}
++
++void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata)
++{
++	struct fq *fq = &local->fq;
++	struct txq_info *txqi;
++	struct fq_tin *tin;
++	struct ieee80211_sub_if_data *ap;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP_VLAN))
++		return;
++
++	ap = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap);
++
++	if (!ap->vif.txq)
++		return;
++
++	txqi = to_txq_info(ap->vif.txq);
++	tin = &txqi->tin;
++
++	spin_lock_bh(&fq->lock);
++	fq_tin_filter(fq, tin, fq_vlan_filter_func, &sdata->vif,
++		      fq_skb_free_func);
++	spin_unlock_bh(&fq->lock);
++}
++
+ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 			struct sta_info *sta,
+ 			struct txq_info *txqi, int tid)
+-- 
+2.14.2
