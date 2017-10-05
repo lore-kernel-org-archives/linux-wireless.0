@@ -1,71 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23087 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752430AbdJ0Noy (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:53330 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdJERjM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 09:44:54 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 5 Oct 2017 13:39:12 -0400
+Received: by mail-pf0-f182.google.com with SMTP id n73so1596611pfg.10
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Oct 2017 10:39:12 -0700 (PDT)
+Date: Thu, 5 Oct 2017 10:39:10 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2] net/mac80211/mesh_plink: Convert timers to use
+ timer_setup()
+Message-ID: <20171005173910.GA72335@beast> (sfid-20171005_193936_671244_FB3BF479)
 MIME-Version: 1.0
-Subject: Re: ath10k: fix build errors with !CONFIG_PM
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20171019184517.GA76422@google.com>
-References: <20171019184517.GA76422@google.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Grant Grundler <grundler@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Message-ID: <1444f65cd21b474f808e370a9f831d5e@euamsexm01a.eu.qualcomm.com> (sfid-20171027_154623_398019_0F3AED57)
-Date: Fri, 27 Oct 2017 15:44:46 +0200
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly. This requires adding a pointer back
+to the sta_info since container_of() can't resolve the sta_info.
 
-> Build errors have been reported with CONFIG_PM=n:
-> 
-> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
-> declaration of function 'ath10k_pci_suspend'
-> [-Werror=implicit-function-declaration]
-> 
-> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
-> declaration of function 'ath10k_pci_resume'
-> [-Werror=implicit-function-declaration]
-> 
-> These are caused by the combination of the following two commits:
-> 
-> 6af1de2e4ec4 ("ath10k: mark PM functions as __maybe_unused")
-> 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is supported but
-> disabled")
-> 
-> Both build fine on their own.
-> 
-> But now that ath10k_pci_pm_{suspend,resume}() is compiled
-> unconditionally, we should also compile ath10k_pci_{suspend,resume}()
-> unconditionally.
-> 
-> And drop the #ifdef around ath10k_pci_hif_{suspend,resume}() too; they
-> are trivial (empty), so we're not saving much space by compiling them
-> out. And the alternatives would be to sprinkle more __maybe_unused, or
-> spread the #ifdef's further.
-> 
-> Build tested with the following combinations:
-> CONFIG_PM=y && CONFIG_PM_SLEEP=y
-> CONFIG_PM=y && CONFIG_PM_SLEEP=n
-> CONFIG_PM=n
-> 
-> Fixes: 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is supported but disabled")
-> Fixes: 096ad2a15fd8 ("Merge branch 'ath-next'")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+This requires commit 686fef928bba ("timer: Prepare to change timer
+callback argument type") in v4.14-rc3, but should be otherwise
+stand-alone.
 
-Patch applied to ath-next branch of ath.git, thanks.
+v2:
+- make mesh_plink_timer non-static and use it in timer_setup() call directly.
+---
+ net/mac80211/mesh.h       |  1 +
+ net/mac80211/mesh_plink.c | 10 ++++------
+ net/mac80211/sta_info.c   |  4 +++-
+ net/mac80211/sta_info.h   |  2 ++
+ 4 files changed, 10 insertions(+), 7 deletions(-)
 
-20665a9076d4 ath10k: fix build errors with !CONFIG_PM
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7e5f271e3c30..465b7853edc0 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -275,6 +275,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 			   u8 *hw_addr, struct ieee802_11_elems *ie);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+ u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
++void mesh_plink_timer(struct timer_list *t);
+ void mesh_plink_broken(struct sta_info *sta);
+ u32 mesh_plink_deactivate(struct sta_info *sta);
+ u32 mesh_plink_open(struct sta_info *sta);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index f69c6c38ca43..e79adb4164f3 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -604,8 +604,9 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_mbss_info_change_notify(sdata, changed);
+ }
+ 
+-static void mesh_plink_timer(unsigned long data)
++void mesh_plink_timer(struct timer_list *t)
+ {
++	struct mesh_sta *mesh = from_timer(mesh, t, plink_timer);
+ 	struct sta_info *sta;
+ 	u16 reason = 0;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -617,7 +618,7 @@ static void mesh_plink_timer(unsigned long data)
+ 	 * del_timer_sync() this timer after having made sure
+ 	 * it cannot be readded (by deleting the plink.)
+ 	 */
+-	sta = (struct sta_info *) data;
++	sta = mesh->plink_sta;
+ 
+ 	if (sta->sdata->local->quiescing)
+ 		return;
+@@ -697,11 +698,8 @@ static void mesh_plink_timer(unsigned long data)
+ 
+ static inline void mesh_plink_timer_set(struct sta_info *sta, u32 timeout)
+ {
+-	sta->mesh->plink_timer.expires = jiffies + msecs_to_jiffies(timeout);
+-	sta->mesh->plink_timer.data = (unsigned long) sta;
+-	sta->mesh->plink_timer.function = mesh_plink_timer;
+ 	sta->mesh->plink_timeout = timeout;
+-	add_timer(&sta->mesh->plink_timer);
++	mod_timer(&sta->mesh->plink_timer, jiffies + msecs_to_jiffies(timeout));
+ }
+ 
+ static bool llid_in_use(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 69615016d5bf..6c254a9d5f11 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -329,10 +329,12 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 		sta->mesh = kzalloc(sizeof(*sta->mesh), gfp);
+ 		if (!sta->mesh)
+ 			goto free;
++		sta->mesh->plink_sta = sta;
+ 		spin_lock_init(&sta->mesh->plink_lock);
+ 		if (ieee80211_vif_is_mesh(&sdata->vif) &&
+ 		    !sdata->u.mesh.user_mpm)
+-			init_timer(&sta->mesh->plink_timer);
++			timer_setup(&sta->mesh->plink_timer, mesh_plink_timer,
++				    0);
+ 		sta->mesh->nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
+ 	}
+ #endif
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 3acbdfa9f649..21d9760ce5c3 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -344,6 +344,7 @@ DECLARE_EWMA(mesh_fail_avg, 20, 8)
+  * @plink_state: peer link state
+  * @plink_timeout: timeout of peer link
+  * @plink_timer: peer link watch timer
++ * @plink_sta: peer link watch timer's sta_info
+  * @t_offset: timing offset relative to this host
+  * @t_offset_setpoint: reference timing offset of this sta to be used when
+  * 	calculating clockdrift
+@@ -356,6 +357,7 @@ DECLARE_EWMA(mesh_fail_avg, 20, 8)
+  */
+ struct mesh_sta {
+ 	struct timer_list plink_timer;
++	struct sta_info *plink_sta;
+ 
+ 	s64 t_offset;
+ 	s64 t_offset_setpoint;
+-- 
+2.7.4
+
 
 -- 
-https://patchwork.kernel.org/patch/10018169/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kees Cook
+Pixel Security
