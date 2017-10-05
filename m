@@ -1,103 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:48503 "EHLO mail.toke.dk"
+Received: from mail.kernel.org ([198.145.29.99]:53666 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750931AbdJGLW1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Oct 2017 07:22:27 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: Add airtime fairness accounting
-In-Reply-To: <1507310319.19300.28.camel@sipsolutions.net>
-References: <20171006115232.28688-1-toke@toke.dk> <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk> <1507310319.19300.28.camel@sipsolutions.net>
-Date: Sat, 07 Oct 2017 13:22:23 +0200
-Message-ID: <87infrqk28.fsf@toke.dk> (sfid-20171007_132231_499752_1BFADE53)
+        id S1751849AbdJEBCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 21:02:22 -0400
+Date: Thu, 5 Oct 2017 03:02:18 +0200
+From: Sebastian Reichel <sre@kernel.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Harish Patil <harish.patil@cavium.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <len.brown@intel.com>,
+        Mark Gross <mark.gross@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Michael Reed <mdr@sgi.com>, Oleg Nesterov <oleg@redhat.com>,
+        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@codeaurora.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Tejun Heo <tj@kernel.org>,
+        Ursula Braun <ubraun@linux.vnet.ibm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
+        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 05/13] timer: Remove init_timer_deferrable() in favor of
+ timer_setup()
+Message-ID: <20171005010218.v3aw4d3y66jn3bbo@earth> (sfid-20171005_030247_561188_06E7B928)
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+ <1507159627-127660-6-git-send-email-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="ioctv6qfrc7mty7c"
+In-Reply-To: <1507159627-127660-6-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Fri, 2017-10-06 at 16:29 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> Well, calculating the duration from the rate and size is what ath9k
->> is currently doing, and that has all the information available to do
->> so (I did verify that the airtime was almost identical on the TX and
->> RX side for the same traffic).
->
-> It's still iffy - with aggregation you might have a better idea of the
-> total airtime, but not really see - in the higher layers - all the
-> padding that comes between A-MPDUs etc. I think many drivers could do
-> better by exposing the total airtime from the device/firmware, whereas
-> exposing _all_ the little details that you need to calculate it post-
-> facto will be really difficult, and make the calculation really hard.
+--ioctv6qfrc7mty7c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Guess you are right that it will be difficult to get a completely
-accurate number. But as David Lang notes, as long as we are off by the
-same amount for all stations, that is fine - we're just interested in
-relative numbers.
+Hi,
 
->> But yeah, I guess that is not necessarily the case for all drivers?
->> Maybe having a field that the driver can fill in is better (that also
->> has the nice property that a driver that doesn't supply any airtime
->> information won't get the scheduling; which is probably desirable).
->
-> I think that'd be better, yes. Perhaps for some simple cases a helper
-> function can be provided, but I'd want to actually know about those
-> drivers before adding that.
+On Wed, Oct 04, 2017 at 04:26:59PM -0700, Kees Cook wrote:
+> This refactors the only users of init_timer_deferrable() to use
+> the new timer_setup() and from_timer(). Removes definition of
+> init_timer_deferrable().
 
-Right, I'll add a field to rx_status instead that drivers can use.
+[...]
 
->> You're right that it does nothing for one-way UDP, of course. But not
->> a lot of traffic is actually one-way (most is either TCP or something
->> like Quic that also has a feedback loop). So in most of our tests we
->> saw a pretty nice effect from TCP back-pressure.
->
-> Yeah that makes some sense. I'm a bit concerned about pathological
-> corner cases, you don't really know about the protocol used on top.
-> Can a client starve itself by sending things? And perhaps, if it has a
-> dumb higher layer protocol, it'll retransmit rather than back off, if
-> it doesn't get the higher layer ACK?
+>  drivers/hsi/clients/ssi_protocol.c           | 32 ++++++++++++++++------------
 
-I suppose a station that keeps sending flooding the airwaves (say, an
-upstream CBR UDP flow with no feedback loop, at a rate higher than it
-has bandwidth for) can lock itself out to some extent. I'll see if I can
-get this to happen in my testbed with the ath9k code and report back on
-what happens.
+Acked-by: Sebastian Reichel <sre@kernel.org>
 
-But for anything TCP-like with a feedback loop, the starvation will be
-temporary as the lack of ACKs will cause the sender to eventually slow
-down enough to get below its fair share.
+-- Sebastian
 
->> Having a separate deficit for each AC level is a crude workaround for
->> this, which is what we went with for the initial version in ath9k;
->> and this patch is just a straight-forward port of that. But I guess
->> this is a good opportunity to figure out how to solve this properly;
->> I'll think about how to do that (ideas welcome!)...
->
-> So ... no, I don't understand. You have a TXQ per _TID_, so splitting
-> up this per _AC_ still doesn't make sense since you have two TXQs for
-> each AC?
+--ioctv6qfrc7mty7c
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Yeah, but ath9k schedules all TIDs on the same AC together. So if
-station A has two TIDs active and station B one, the scheduling order
-will be A1, A2, B1, basically. This is fine as long as they are all on
-the same AC and scheduled together (in which case A1 and A2 will just
-share the same deficit).
+-----BEGIN PGP SIGNATURE-----
 
-But if there is only one TXQ active, every time that queue is scheduled,
-the scheduler will loop until its deficit becomes positive (which is
-generally good; that is how we make sure the scheduler is
-work-conserving). However, if the deficit is shared with another
-scheduling group (which in ath9k is another AC), the station in the
-group by itself will not be limited to its fair share, because every
-time it is scheduled by itself, its deficit is "reset".
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlnVhJQACgkQ2O7X88g7
++poqtw/+NVd8QRs2QuA6PAGWHUwxaYVABpFWmmT6auUlvyFDZ3dfZJID5IF3k1iT
+na5dX3a4nAKolDTmc7NOxWF7vEH/L/ONlRhfTt69PFg9oAk5KNjS1RdEx1bdxGRU
+rUBXQwOc2zi9LqxB2Hd8GQXOOhxbw0gICl4wrLCoUdkGNJs5fPpR6zVG8PGbntpq
+WWjDPDja6L+D6+pMhGADYfYj7Xtkfm0GWn3bycnHFKvFB61feCjknnH33QHR2Ayt
+O7gqcCR5aaYf6EadcVT4wR+ZRYl/7sZt102ziwKAsy2eztiOIsj4N8aRV2oR8riz
+CGwIx8ANBkrdn6OG8XFy6BfPzSZcBXqg6L/WreDPHJa2xZAzOds566XysTlDVnS2
+mmPZzXYhzdSJT5SgWxOwzPE3LH6wgG3id80kaCHFqive8gfGI6rh6Y8zQUk3umvg
+ksAklh+tTffWw6oBVT5P2GdyJUHx53Mbb3msk6NyH/G5DmGE0ikcWNcSHg8gcjVt
+KKArZaKBako7TLOE9Xklfx43wLM7GM5RtR6oDCeUfKKG8sF1PLaANmp0SnJeWP2X
+FjPA+SlOO9G/qT++PIkxsB2T6sFZrF/TNXi5exM7V6mYdTxvwJ8OVsKNMQKyxOKq
+rFI2Ntch9Trc5vcvXqlrW84i2bzA1b0jfzO1nkKoKm0XF8UHUKo=
+=6loN
+-----END PGP SIGNATURE-----
 
-Ideally, I would prefer the scheduling to be "two-pass": First, decide
-which physical station to send to, then decide which TID on that station
-to service. But because everything is done at the TID/TXQ level, that is
-not quite trivial to achieve I think...
-
--Toke
+--ioctv6qfrc7mty7c--
