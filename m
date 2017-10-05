@@ -1,97 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37468 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:40548 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbdJ0UKm (ORCPT
+        with ESMTP id S1751310AbdJENSG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 16:10:42 -0400
-Message-ID: <1509135034.2283.8.camel@sipsolutions.net> (sfid-20171027_221045_985391_70E07ED1)
-Subject: Re: Commit 0711d638 breaks mwifiex
+        Thu, 5 Oct 2017 09:18:06 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Jesse Sung <jesse.sung@canonical.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
-        linux-wireless@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>
-Date: Fri, 27 Oct 2017 22:10:34 +0200
-In-Reply-To: <20171026211313.GA46251@google.com> (sfid-20171026_231319_253350_7EC09DC5)
-References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
-         <1508233890.10607.70.camel@sipsolutions.net>
-         <CAH10aOj8xTPDyEufGS47hytnT8RSL+qSbiRVmePrMpaaUu7gPQ@mail.gmail.com>
-         <1508237298.10607.76.camel@sipsolutions.net>
-         <20171026211313.GA46251@google.com> (sfid-20171026_231319_253350_7EC09DC5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 2/2] mac80211: only remove AP VLAN frames from TXQ
+Date: Thu,  5 Oct 2017 15:18:03 +0200
+Message-Id: <20171005131803.12328-2-johannes@sipsolutions.net> (sfid-20171005_151809_462745_C535EAB1)
+In-Reply-To: <20171005131803.12328-1-johannes@sipsolutions.net>
+References: <20171005131803.12328-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> IIUC, mwifiex hasn't told the firmware to do anything at this point --
-> the -EALREADY check is practically the first thing it does within
-> connect(). So it just quits the connect() request and tries to carry on
-> as usual. It will only do something different if the upper layers tell
-> it to do so afterward (e.g., calling disconnect()).
+When removing an AP VLAN interface, mac80211 currently purges
+the entire TXQ for the AP interface. Fix this by using the FQ
+API introduced in the previous patch to filter frames.
 
-Yeah, that makes sense.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/iface.c       | 25 +++----------------------
+ net/mac80211/tx.c          | 34 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 39 insertions(+), 22 deletions(-)
 
-> Yes, that's definitely what's happening. And it's explicitly called out
-> in the supplicant's nl80211 driver that this is intentional:
-> 
-> [...]
-
-Right.
-
-> This is the main code path for supplicant commands like "Reattach",
-> which boil down to (for non SME drivers):
-> 
-> wpas_request_connection()
->   ...
->  -> wpa_supplicant_connect()
->    -> wpa_supplicant_associate()
->      -> wpas_start_assoc_cb()
->        -> wpa_drv_associate()
->          -> wpa_driver_nl80211_associate()
->            -> wpa_driver_nl80211_connect()
-> 
-> Now for the part I'm not so familiar with: is this really the *expected*
-> flow for full-MAC drivers in reattach, reassociate, and roaming flows?
-> All of those seem to boil down to this same connect() (and fallback to
-> disconnect()+connect() if -EALREADY) flow.
-
-We never implemented a "ROAM" command, so there's not all that much
-choice.
-
-> But it doesn't seem like all full-MAC drivers do the same thing. Some
-> seem to just blaze ahead with a connect attempt (maybe some firmwares
-> automatically interpret this for us?) and never return -EALREADY at all.
-
-Agree, some seem to just do some form of roaming on this, which really
-just means they disconnect internally - or perhaps they even try to
-roam if it's the same network?
-
-> Sorry if this is slightly off-topic, but I'm trying to understand what
-> the general expectations are here, based on my relatively narrow
-> experience with a few drivers.
-
-I don't really know either! There aren't that many direct cfg80211
-drivers that don't use mac80211, so there's not that much experience.
-
-You're probably well positioned to say what the behaviour _should_ be
-though? :-)
-
-I tend to think we should actually do the EALREADY from cfg80211, so
-that wpa_s will always be forced to go through this roundabout code
-path, but also finally implement a ROAM command, to let drivers have
-that option?
-
-Note also that we've always sort of envisioned that drivers
-implementing CONNECT would do BSS selection themselves, but I think
-there's no automatic way of doing that with wpa_s, and it may not even
-be desirable in many cases (unless you really need the power saving
-advantage) since it gets us into a situation where we have all these
-different algorithms etc.
-
-johannes
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9675814f64db..68f874e73561 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2009,6 +2009,8 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 			struct txq_info *txq, int tid);
+ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 			 struct txq_info *txqi);
++void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata);
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+ 			 const u8 *extra, size_t extra_len, const u8 *bssid,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2619daa29961..13b16f90e1cf 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -793,9 +793,7 @@ static int ieee80211_open(struct net_device *dev)
+ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 			      bool going_down)
+ {
+-	struct ieee80211_sub_if_data *txq_sdata = sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct fq *fq = &local->fq;
+ 	unsigned long flags;
+ 	struct sk_buff *skb, *tmp;
+ 	u32 hw_reconf_flags = 0;
+@@ -939,9 +937,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		txq_sdata = container_of(sdata->bss,
+-					 struct ieee80211_sub_if_data, u.ap);
+-
+ 		mutex_lock(&local->mtx);
+ 		list_del(&sdata->u.vlan.list);
+ 		mutex_unlock(&local->mtx);
+@@ -998,8 +993,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		skb_queue_purge(&sdata->skb_queue);
+ 	}
+ 
+-	sdata->bss = NULL;
+-
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+ 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
+@@ -1012,22 +1005,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+-	if (txq_sdata->vif.txq) {
+-		struct txq_info *txqi = to_txq_info(txq_sdata->vif.txq);
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		ieee80211_txq_remove_vlan(local, sdata);
+ 
+-		/*
+-		 * FIXME FIXME
+-		 *
+-		 * We really shouldn't purge the *entire* txqi since that
+-		 * contains frames for the other AP_VLANs (and possibly
+-		 * the AP itself) as well, but there's no API in FQ now
+-		 * to be able to filter.
+-		 */
+-
+-		spin_lock_bh(&fq->lock);
+-		ieee80211_txq_purge(local, txqi);
+-		spin_unlock_bh(&fq->lock);
+-	}
++	sdata->bss = NULL;
+ 
+ 	if (local->open_count == 0)
+ 		ieee80211_clear_tx_pending(local);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 94826680cf2b..7b8154474b9e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1396,6 +1396,40 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+ 		       fq_flow_get_default_func);
+ }
+ 
++static bool fq_vlan_filter_func(struct fq *fq, struct fq_tin *tin,
++				struct fq_flow *flow, struct sk_buff *skb,
++				void *data)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	return info->control.vif == data;
++}
++
++void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata)
++{
++	struct fq *fq = &local->fq;
++	struct txq_info *txqi;
++	struct fq_tin *tin;
++	struct ieee80211_sub_if_data *ap;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP_VLAN))
++		return;
++
++	ap = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap);
++
++	if (!ap->vif.txq)
++		return;
++
++	txqi = to_txq_info(ap->vif.txq);
++	tin = &txqi->tin;
++
++	spin_lock_bh(&fq->lock);
++	fq_tin_filter(fq, tin, fq_vlan_filter_func, &sdata->vif,
++		      fq_skb_free_func);
++	spin_unlock_bh(&fq->lock);
++}
++
+ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 			struct sta_info *sta,
+ 			struct txq_info *txqi, int tid)
+-- 
+2.14.2
