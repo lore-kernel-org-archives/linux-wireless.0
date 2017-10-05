@@ -1,69 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44652 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755430AbdJKICb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 04:02:31 -0400
-Message-ID: <1507708948.1998.15.camel@sipsolutions.net> (sfid-20171011_100440_048918_C443C234)
-Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
- mask if not usable"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>, kirtika@google.com,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Wed, 11 Oct 2017 10:02:28 +0200
-In-Reply-To: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com> (sfid-20171010_225427_620459_2849A16B)
-References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
-         (sfid-20171010_225427_620459_2849A16B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:52980
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751314AbdJEBi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 21:38:26 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 8/8] qtnfmac: do not cache current channel info in driver's state
+Date: Wed,  4 Oct 2017 18:38:13 -0700
+Message-Id: <20171005013813.13332-9-igor.mitsyanko.os@quantenna.com> (sfid-20171005_033831_246768_D7DC1222)
+In-Reply-To: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
+References: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-> #iw dev vap206 set bitrates legacy-5 ht-mcs-5 0 vht-mcs-5
-> command failed: Invalid argument (-22)
-> 
-> But, it actually *does* successfully set the rate in the driver
-> first, which is confusing at best.
+Linux Wireless device structure already has current channel
+information that can be used when needed. Start using it.
+Since driver's channel info is not used anymore, remove it.
 
-Huh?
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 7 ++-----
+ drivers/net/wireless/quantenna/qtnfmac/core.h     | 1 -
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 2 --
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-> So, I think we should relax this check, at least for ath10k.
-
-Well, yes and no. I don't think we should make ath10k special here, and
-this fixes a real problem - namely that you can set up the system so
-that you have no usable rates at all, and then you just get a WARN_ON
-and start using the lowest possible rate...
-
-> commit e8e4f5280ddd0a7b43a795f90a0758e3c99df6a6
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Wed Mar 8 11:12:10 2017 +0100
-> 
->      mac80211: reject/clear user rate mask if not usable
-> 
->      If the user rate mask results in no (basic) rates being usable,
->      clear it. Also, if we're already operating when it's set, reject
->      it instead.
-> 
->      Technically, selecting basic rates as the criterion is a bit too
->      restrictive, but calculating the usable rates over all stations
->      (e.g. in AP mode) is harder, and all stations must support the
->      basic rates. Similarly, in client mode, the basic rates will be
->      used anyway for control frames.
-
-I guess you could implement this part? I.e. iterating the clients and
-checking that they all support the rate that is set. However, then you
-also need to implement that this gets reset when a new client that
-doesn't support this rate connects.
-
-Overall, this isn't very well defined for AP mode...
-
-Perhaps it'd be better - as you pointed out in the other thread - to
-have API to force a rate per station? We already have that for iwlwifi
-in debugfs, so perhaps that'd be something to consider for this too,
-I'm not sure there would be a real need to have it in nl80211?
-
-johannes
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index cf0f19ef..028bed1 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -630,15 +630,15 @@ qtnf_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ 		 int idx, struct survey_info *survey)
+ {
+ 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct ieee80211_supported_band *sband;
+-	struct cfg80211_chan_def *chandef;
++	const struct cfg80211_chan_def *chandef = &wdev->chandef;
+ 	struct ieee80211_channel *chan;
+ 	struct qtnf_chan_stats stats;
+ 	struct qtnf_vif *vif;
+ 	int ret;
+ 
+ 	vif = qtnf_netdev_get_priv(dev);
+-	chandef = &mac->chandef;
+ 
+ 	sband = wiphy->bands[NL80211_BAND_2GHZ];
+ 	if (sband && idx >= sband->n_channels) {
+@@ -705,7 +705,6 @@ static int
+ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		 struct cfg80211_chan_def *chandef)
+ {
+-	struct qtnf_wmac *mac = wiphy_priv(wiphy);
+ 	struct net_device *ndev = wdev->netdev;
+ 	struct qtnf_vif *vif;
+ 	int ret;
+@@ -728,8 +727,6 @@ qtnf_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		ret = -ENODATA;
+ 	}
+ 
+-	memcpy(&mac->chandef, chandef, sizeof(mac->chandef));
+-
+ out:
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 5234a9e..44a2cbb 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -126,7 +126,6 @@ struct qtnf_wmac {
+ 	struct qtnf_mac_info macinfo;
+ 	struct qtnf_vif iflist[QTNF_MAX_INTF];
+ 	struct cfg80211_scan_request *scan_req;
+-	struct cfg80211_chan_def chandef;
+ 	struct mutex mac_lock;	/* lock during wmac speicific ops */
+ 	struct timer_list scan_timeout;
+ };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index d7fb076..f639ea3 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -372,8 +372,6 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
+ 		 mac->macid, chandef.chan->hw_value, chandef.center_freq1,
+ 		 chandef.center_freq2, chandef.width);
+ 
+-	memcpy(&mac->chandef, &chandef, sizeof(mac->chandef));
+-
+ 	for (i = 0; i < QTNF_MAX_INTF; i++) {
+ 		vif = &mac->iflist[i];
+ 		if (vif->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED)
+-- 
+2.9.5
