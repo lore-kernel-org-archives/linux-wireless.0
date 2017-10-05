@@ -1,66 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49624 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbdJBNz5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37782 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751500AbdJELiM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 09:55:57 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v4,2/9] brcmsmac: split up wlc_phy_workarounds_nphy
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170922212930.620249-3-arnd@arndb.de>
-References: <20170922212930.620249-3-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
-        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>
-Message-Id: <20171002135556.82A7D60B7C@smtp.codeaurora.org> (sfid-20171002_155708_573522_A70EB487)
-Date: Mon,  2 Oct 2017 13:55:56 +0000 (UTC)
+        Thu, 5 Oct 2017 07:38:12 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/2] fq: support filtering a given tin
+Date: Thu,  5 Oct 2017 13:38:07 +0200
+Message-Id: <20171005113808.3889-1-johannes@sipsolutions.net> (sfid-20171005_133816_831618_F6473326)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> The stack consumption in this driver is still relatively high, with one
-> remaining warning if the warning level is lowered to 1536 bytes:
-> 
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: error: the frame size of 1880 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
-> 
-> The affected function is actually a collection of three separate implementations,
-> and each of them is fairly large by itself. Splitting them up is done easily
-> and improves readability at the same time.
-> 
-> I'm leaving the original indentation to make the review easier.
-> 
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Add to the FQ API a way to filter a given tin, in order to
+remove frames that fulfil certain criteria according to a
+filter function.
 
-I'll queue this for v4.15. Depends on:
+This will be used by mac80211 to remove frames belonging to
+an AP VLAN interface that's being removed.
 
-c503dd38f850 brcmsmac: make some local variables 'static const' to reduce stack size
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/fq.h      |  7 ++++
+ include/net/fq_impl.h | 92 ++++++++++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 83 insertions(+), 16 deletions(-)
 
+diff --git a/include/net/fq.h b/include/net/fq.h
+index 6d8521a30c5c..ac944a686840 100644
+--- a/include/net/fq.h
++++ b/include/net/fq.h
+@@ -90,6 +90,13 @@ typedef void fq_skb_free_t(struct fq *,
+ 			   struct fq_flow *,
+ 			   struct sk_buff *);
+ 
++/* Return %true to filter (drop) the frame. */
++typedef bool fq_skb_filter_t(struct fq *,
++			     struct fq_tin *,
++			     struct fq_flow *,
++			     struct sk_buff *,
++			     void *);
++
+ typedef struct fq_flow *fq_flow_get_default_t(struct fq *,
+ 					      struct fq_tin *,
+ 					      int idx,
+diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
+index 4e6131cd3f43..b27f13d22a90 100644
+--- a/include/net/fq_impl.h
++++ b/include/net/fq_impl.h
+@@ -12,24 +12,9 @@
+ 
+ /* functions that are embedded into includer */
+ 
+-static struct sk_buff *fq_flow_dequeue(struct fq *fq,
+-				       struct fq_flow *flow)
++static void fq_rejigger_backlog(struct fq *fq, struct fq_flow *flow)
+ {
+-	struct fq_tin *tin = flow->tin;
+ 	struct fq_flow *i;
+-	struct sk_buff *skb;
+-
+-	lockdep_assert_held(&fq->lock);
+-
+-	skb = __skb_dequeue(&flow->queue);
+-	if (!skb)
+-		return NULL;
+-
+-	tin->backlog_bytes -= skb->len;
+-	tin->backlog_packets--;
+-	flow->backlog -= skb->len;
+-	fq->backlog--;
+-	fq->memory_usage -= skb->truesize;
+ 
+ 	if (flow->backlog == 0) {
+ 		list_del_init(&flow->backlogchain);
+@@ -43,6 +28,34 @@ static struct sk_buff *fq_flow_dequeue(struct fq *fq,
+ 		list_move_tail(&flow->backlogchain,
+ 			       &i->backlogchain);
+ 	}
++}
++
++static void fq_adjust_removal(struct fq *fq,
++			      struct fq_flow *flow,
++			      struct sk_buff *skb)
++{
++	struct fq_tin *tin = flow->tin;
++
++	tin->backlog_bytes -= skb->len;
++	tin->backlog_packets--;
++	flow->backlog -= skb->len;
++	fq->backlog--;
++	fq->memory_usage -= skb->truesize;
++}
++
++static struct sk_buff *fq_flow_dequeue(struct fq *fq,
++				       struct fq_flow *flow)
++{
++	struct sk_buff *skb;
++
++	lockdep_assert_held(&fq->lock);
++
++	skb = __skb_dequeue(&flow->queue);
++	if (!skb)
++		return NULL;
++
++	fq_adjust_removal(fq, flow, skb);
++	fq_rejigger_backlog(fq, flow);
+ 
+ 	return skb;
+ }
+@@ -188,6 +201,53 @@ static void fq_tin_enqueue(struct fq *fq,
+ 	}
+ }
+ 
++static void fq_flow_filter(struct fq *fq,
++			   struct fq_flow *flow,
++			   fq_skb_filter_t filter_func,
++			   void *filter_data,
++			   fq_skb_free_t free_func)
++{
++	struct fq_tin *tin = flow->tin;
++	struct sk_buff *skb, *tmp;
++
++	lockdep_assert_held(&fq->lock);
++
++	skb_queue_walk_safe(&flow->queue, skb, tmp) {
++		if (!filter_func(fq, tin, flow, skb, filter_data))
++			continue;
++
++		__skb_unlink(skb, &flow->queue);
++		fq_adjust_removal(fq, flow, skb);
++		free_func(fq, tin, flow, skb);
++	}
++
++	fq_rejigger_backlog(fq, flow);
++}
++
++static void fq_tin_filter(struct fq *fq,
++			  struct fq_tin *tin,
++			  fq_skb_filter_t filter_func,
++			  void *filter_data,
++			  fq_skb_free_t free_func)
++{
++	struct list_head *head;
++	struct fq_flow *flow;
++
++	lockdep_assert_held(&fq->lock);
++
++	for (;;) {
++		head = &tin->new_flows;
++		if (list_empty(head)) {
++			head = &tin->old_flows;
++			if (list_empty(head))
++				break;
++		}
++
++		flow = list_first_entry(head, struct fq_flow, flowchain);
++		fq_flow_filter(fq, flow, filter_func, filter_data, free_func);
++	}
++}
++
+ static void fq_flow_reset(struct fq *fq,
+ 			  struct fq_flow *flow,
+ 			  fq_skb_free_t free_func)
 -- 
-https://patchwork.kernel.org/patch/9967141/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.2
