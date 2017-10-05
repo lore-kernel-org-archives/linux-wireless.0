@@ -1,57 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:58255 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750981AbdJAWBg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50286 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751271AbdJEG6I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Oct 2017 18:01:36 -0400
-Date: Mon, 2 Oct 2017 09:01:31 +1100
-From: "Tobin C. Harding" <me@tobin.cc>
-To: =?iso-8859-1?B?Suly6W15?= Lefaure <jeremy.lefaure@lse.epita.fr>
-Cc: alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, dm-devel@redhat.com,
-        brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz,
-        intel-wired-lan@lists.osuosl.org, linux-media@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        intel-gvt-dev@lists.freedesktop.org, devel@acpica.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org
-Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
-Message-ID: <20171001220131.GA11812@eros> (sfid-20171002_000019_194010_0C5D5D44)
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+        Thu, 5 Oct 2017 02:58:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Icenowy Zheng <icenowy@aosc.io>
+Cc: linux-arm-kernel@lists.infradead.org,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        devicetree@vger.kernel.org, netdev@vger.kernel.org,
+        linux-sunxi@googlegroups.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Chen-Yu Tsai <wens@csie.org>,
+        Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v3 1/2] dt-bindings: add device tree binding for Allwinner XR819 SDIO Wi-Fi
+References: <20171003165944.13056-1-icenowy@aosc.io>
+        <20171003165944.13056-2-icenowy@aosc.io>
+        <871smjxp46.fsf@kamboji.qca.qualcomm.com>
+        <E46F3A20-294A-497E-AF71-C77A67AFDB8C@aosc.io>
+        <59D4B1C8.8020105@broadcom.com> <20171004101145.kgjufpcktodppuy3@flea>
+        <C4895259-FCDE-4B21-BB15-8F150FC53BE3@aosc.io>
+Date: Thu, 05 Oct 2017 09:58:01 +0300
+In-Reply-To: <C4895259-FCDE-4B21-BB15-8F150FC53BE3@aosc.io> (Icenowy Zheng's
+        message of "Wed, 04 Oct 2017 18:15:11 +0800")
+Message-ID: <878tgq5beu.fsf@codeaurora.org> (sfid-20171005_085828_557820_03A4BFDA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 01, 2017 at 03:30:38PM -0400, Jérémy Lefaure wrote:
-> Hi everyone,
-> Using ARRAY_SIZE improves the code readability. I used coccinelle (I
-> made a change to the array_size.cocci file [1]) to find several places
-> where ARRAY_SIZE could be used instead of other macros or sizeof
-> division.
-> 
-> I tried to divide the changes into a patch per subsystem (excepted for
-> staging). If one of the patch should be split into several patches, let
-> me know.
-> 
-> In order to reduce the size of the To: and Cc: lines, each patch of the
-> series is sent only to the maintainers and lists concerned by the patch.
-> This cover letter is sent to every list concerned by this series.
+Icenowy Zheng <icenowy@aosc.io> writes:
 
-Why don't you just send individual patches for each subsystem? I'm not a maintainer but I don't see
-how any one person is going to be able to apply this whole series, it is making it hard for
-maintainers if they have to pick patches out from among the series (if indeed any will bother
-doing that).
+> =E4=BA=8E 2017=E5=B9=B410=E6=9C=884=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=8D=88=
+6:11:45, Maxime Ripard
+> <maxime.ripard@free-electrons.com> =E5=86=99=E5=88=B0:
+>>On Wed, Oct 04, 2017 at 10:02:48AM +0000, Arend van Spriel wrote:
+>>> On 10/4/2017 11:03 AM, Icenowy Zheng wrote:
+>>> >=20
+>>> >=20
+>>> > =E4=BA=8E 2017=E5=B9=B410=E6=9C=884=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=
+=8D=885:02:17, Kalle Valo <kvalo@codeaurora.org>
+>>=E5=86=99=E5=88=B0:
+>>> > > Icenowy Zheng <icenowy@aosc.io> writes:
+>>> > >=20
+>>> > > > Allwinner XR819 is a SDIO Wi-Fi chip, which has the
+>>functionality to
+>>> > > use
+>>> > > > an out-of-band interrupt pin instead of SDIO in-band interrupt.
+>>> > > >=20
+>>> > > > Add the device tree binding of this chip, in order to make it
+>>> > > possible
+>>> > > > to add this interrupt pin to device trees.
+>>> > > >=20
+>>> > > > Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+>>> > > > Acked-by: Rob Herring <robh@kernel.org>
+>>> > > > ---
+>>> > > > Changes in v3:
+>>> > > > - Renames the node name.
+>>> > > > - Adds ACK from Rob.
+>>> > > > Changes in v2:
+>>> > > > - Removed status property in example.
+>>> > > > - Added required property reg.
+>>> > > >=20
+>>> > > >   .../bindings/net/wireless/allwinner,xr819.txt      | 38
+>>> > > ++++++++++++++++++++++
+>>> > > >   1 file changed, 38 insertions(+)
+>>> > > >   create mode 100644
+>>> > >
+>>Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
+>>> > >=20
+>>> > > Like I asked already last time, AFAICS there is no upstream xr819
+>>> > > wireless driver in drivers/net/wireless directory. Do we still
+>>accept
+>>> > > bindings like this for out-of-tree drivers?
+>>> >=20
+>>> > See esp8089.
+>>> >=20
+>>> > There's also no in-tree driver for it.
+>>>=20
+>>> The question is whether we should. The above might be a precedent,
+>>but it
+>>> may not necessarily be the way to go. The commit message for esp8089
+>>seems
+>>> to hint that there is intent to have an in-tree driver:
+>>>=20
+>>> """
+>>>     Note that at this point there only is an out of tree driver for
+>>this
+>>>     hardware, there is no clear timeline / path for merging this.
+>>Still
+>>>     I believe it would be good to specify the binding for this in
+>>tree
+>>>     now, so that any future migration to an in tree driver will not
+>>cause
+>>>     compatiblity issues.
+>>>=20
+>>>     Cc: Icenowy Zheng <icenowy@aosc.xyz>
+>>>     Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>     Signed-off-by: Rob Herring <robh@kernel.org>
+>>> """
+>>>=20
+>>> Regardless the bindings are in principle independent of the kernel
+>>and just
+>>> describing hardware. I think there have been discussions to move the
+>>> bindings to their own repository, but apparently it was decided
+>>otherwise.
+>>
+>>Yeah, I guess especially how it could be merged with the cw1200 driver
+>>would be very relevant to that commit log.
+>
+> The cw1200 driver seems to still have some legacy platform
+> data. Maybe they should also be convert to DT.
+> (Or maybe compatible =3D "allwinner,xr819" is enough, as
+> xr819 is a specified variant of cw1200 family)
 
-I get that this will be more work for you but AFAIK we are optimizing for maintainers.
+Ah, so the upstream cw1200 driver supports xr819? Has anyone tested
+that? Or does cw1200 more changes than just adding the DT support?
 
-Good luck,
-Tobin.
+--=20
+Kalle Valo
