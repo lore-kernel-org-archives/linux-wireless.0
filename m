@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:50845 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753327AbdJMBRF (ORCPT
+Received: from smtprelay0076.hostedemail.com ([216.40.44.76]:42974 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751280AbdJEMTL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 21:17:05 -0400
-Received: by mail-oi0-f54.google.com with SMTP id q4so11795209oic.7
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Oct 2017 18:17:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFv23Q=dFRfxXQnY3pu_zV-yK9yaw-t3-Kn2q9YFFuyB9jJMog@mail.gmail.com>
-References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
- <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
- <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
- <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
- <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com>
- <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com>
- <CAFv23QkLJ0m112Y8iAGv+6DyFT52Hqnxq5Fy=ryWTWxu8oTXdw@mail.gmail.com> <CAFv23Q=dFRfxXQnY3pu_zV-yK9yaw-t3-Kn2q9YFFuyB9jJMog@mail.gmail.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Fri, 13 Oct 2017 09:17:04 +0800
-Message-ID: <CAD8Lp46ZHN656P_aROGs5WyxNckga7rBUrcDJpEApwtRvA0yhg@mail.gmail.com> (sfid-20171013_031938_655779_F6088C0C)
-Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Thu, 5 Oct 2017 08:19:11 -0400
+Message-ID: <1507205947.4434.23.camel@perches.com> (sfid-20171005_141939_188830_02606220)
+Subject: Re: [PATCH] rsi: fix integer overflow warning
+From: Joe Perches <joe@perches.com>
+To: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-kernel@vger.kernel.org
+Date: Thu, 05 Oct 2017 05:19:07 -0700
+In-Reply-To: <20171005120547.328687-1-arnd@arndb.de>
+References: <20171005120547.328687-1-arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 13, 2017 at 9:12 AM, AceLan Kao <acelan.kao@canonical.com> wrote:
-> Hi Daniel,
->
-> After applied the 2 commits you mentioned in the email, ath9k works.
->
-> https://marc.info/?l=linux-wireless&m=150631274108016&w=2
-> https://github.com/endlessm/linux/commit/739c7a924db8f4434a9617657
+On Thu, 2017-10-05 at 14:05 +0200, Arnd Bergmann wrote:
+> gcc produces a harmless warning about a recently introduced
+> signed integer overflow:
+> 
+> drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_prepare_mgmt_desc':
+> include/uapi/linux/swab.h:13:15: error: integer overflow in expression [-Werror=overflow]
+>   (((__u16)(x) & (__u16)0x00ffU) << 8) |   \
+>    ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+> include/uapi/linux/swab.h:104:2: note: in expansion of macro '___constant_swab16'
+>   ___constant_swab16(x) :   \
+>   ^~~~~~~~~~~~~~~~~~
+> include/uapi/linux/byteorder/big_endian.h:34:43: note: in expansion of macro '__swab16'
+>  #define __cpu_to_le16(x) ((__force __le16)__swab16((x)))
 
-Thanks for testing. However the approach was basically rejected in this thread:
-  [PATCH] PCI MSI: allow alignment restrictions on vector allocation
-  https://marc.info/?t=150631283200001&r=1&w=2
+[]
 
-So we still need an upstream solution.
+> The problem is that the 'mask' value is a signed integer that gets
+> turned into a negative number when truncated to 16 bits. Making it
+> an unsigned constant avoids this.
 
-I am curious what Qualcomm have to say about their hardware corrupting
-the MSI Message Data value. Is there any news on them submitting the
-MSI support patch?
+I would expect there are more of these.
 
-Separately we have the option of seeing if Intel can help us unblock
-the legacy interrupt (assuming it was simply blocked by the BIOS), or
-adding an interrupt-polling fallback path to ath9k.
+Perhaps this define in include/uapi/linux/swab.h:
 
-Daniel
+#define __swab16(x)				\
+	(__builtin_constant_p((__u16)(x)) ?	\
+	___constant_swab16(x) :			\
+	__fswab16(x))
+
+should be
+
+#define __swab16(x)				\
+	(__builtin_c
+onstant_p((__u16)(x)) ?	\
+	___constant_swab16((__u16)(x)) :
+		\
+	__fswab16((__u16)(x)))
