@@ -1,56 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:43932 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932253AbdJYJ2I (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:38522 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751331AbdJEMNk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 05:28:08 -0400
-Subject: Re: [PATCH v2] ath10k: rebuild crypto header in Rx data frames
-To: Kalle Valo <kvalo@qca.qualcomm.com>, Jasmine Strong <jas@eero.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1508867652-16199-1-git-send-email-kvalo@qca.qualcomm.com>
- <720ce165-4a06-1d6e-6158-7983d75eea8a@dd-wrt.com>
- <CAGyitvNvCFAfuRg=uKLvZeZVzxsQ14GeXR702FHwu+RLLE_WAQ@mail.gmail.com>
- <87d15boasv.fsf@qca.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <2d87e371-33e7-2918-e149-40311e32b7f6@dd-wrt.com> (sfid-20171025_112900_473759_9B28F799)
-Date: Wed, 25 Oct 2017 11:28:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <87d15boasv.fsf@qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 5 Oct 2017 08:13:40 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1e0523-0002pr-7n
+        for linux-wireless@vger.kernel.org; Thu, 05 Oct 2017 14:13:39 +0200
+Message-ID: <1507205618.2387.19.camel@sipsolutions.net> (sfid-20171005_141343_627525_0BA9C0DF)
+Subject: converting mac80211 to TXQs entirely
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Oct 2017 14:13:38 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 25.10.2017 um 11:07 schrieb Kalle Valo:
-> (fixing top posting)
->
-> Jasmine Strong <jas@eero.com> writes:
->
->> On Tue, Oct 24, 2017 at 1:41 PM, Sebastian Gottschall
->> <s.gottschall@dd-wrt.com> wrote:
->>
->>> patch works. tested in sta and ap mode so far on 9984
->> Seems to work okay on mixed networks of 9882, 4019 and 9888.
-> Thanks Sebastian and Jasmine for testing this, very much appreciated. We
-> have a v3 coming up soon which should fix GCMP, GCMP-256 and CCMP-256 as
-> well.
+Hi,
 
-i have my own v3, but will wait for your version to check how much its 
-different from mine
-
-i'm also able to test gmp / aes 256 using 2 QCA 9984 devices
+Part 1 is just a dump of my notes analysing the current TX scheme.
 
 
--- 
-Mit freundlichen Grüssen / Regards
+driver setup
+============
 
-Sebastian Gottschall / CTO
+non-QUEUE_CONTROL drivers
+ * have >= 4 queues
+   - per-AC queues [0-3]
+ * have < 4 queues
+   - all goes to queue 0
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+QUEUE_CONTROL drivers
+ * hwsim (doesn't handle CAB correctly)
+   - each vif: 0...3
+   - each cab: 0
+   - offchannel: 4
+ * TI (doesn't set HOST_BROADCAST_PS_BUFFERING)
+   - each vif: 4 queues (separate)
+   - each cab: separate queue
+   - offchannel: separate from all others
+ * iwldvm/iwlmvm (doesn't set HOST_BROADCAST_PS_BUFFERING)
+   - each vif: 4 queues (separate)
+   - each cab: separate queue
+   - offchannel: separate from all others (AUX)
+ * ath9k (uses TXQ, sets HOST_BROADCAST_PS_BUFFERING)
+   - each vif: 4 queues (shared based on chanctx)
+   - each cab: all the same (# queues - 2)
+   - offchannel: separate from all others
+ * ath10k (may use TXQ, doesn't set HOST_BROADCAST_PS_BUFFERING)
+   - each vif: 1 queue for all ACs
+   - each cab: same queue as for ACs
+   - offchannel: separate from all others
+
+
+current TX scheme
+=================
+HOST_BROADCAST_PS_BUFFERING && IEEE80211_TX_CTL_SEND_AFTER_DTIM
+ --> queue for ieee80211_get_buffered_bc()
+
+!AP_LINK_PS && sta sleeping
+ --> queue on sta->ps_tx_buf[ac] for wakeup/poll
+ --> send on poll with IEEE80211_TX_CTRL_PS_RESPONSE
+ --> send on wakeup as normal frame (with or without TXQ)
+     [NB: with TXQs, this is buggy due to waking old TXQ before tx_filtered]
+
+finally
+ --> send directly (with or without TXQ)
+
+if filtered TX status
+ --> append to tx_filtered[ac] and use that before ps_tx_buf[ac]
+
+TXQ scheme (where used)
+=======================
+
+MONITOR || IEEE80211_TX_CTL_SEND_AFTER_DTIM || IEEE80211_TX_CTRL_PS_RESPONSE || non-data
+ --> send directly (to TX queue number as given above)
+have STA
+ --> per-STA/TID TXQ
+otherwise
+ --> per-VIF TXQ (for VLAN use AP instead)
