@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-13.163.com ([220.181.12.13]:51626 "EHLO m12-13.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750869AbdJCCWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 22:22:20 -0400
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: davem@davemloft.net, herbert@gondor.apana.org.au,
-        nhorman@tuxdriver.com, vyasevich@gmail.com, luto@kernel.org,
-        kvalo@codeaurora.org
-Cc: linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] Fix a sleep-in-atomic bug in shash_setkey_unaligned
-Date: Tue,  3 Oct 2017 10:22:44 +0800
-Message-Id: <1506997364-26541-1-git-send-email-baijiaju1990@163.com> (sfid-20171003_042227_894927_CDD29099)
+Received: from mout.kundenserver.de ([217.72.192.75]:51986 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751239AbdJEMGD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Oct 2017 08:06:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] rsi: fix integer overflow warning
+Date: Thu,  5 Oct 2017 14:05:24 +0200
+Message-Id: <20171005120547.328687-1-arnd@arndb.de> (sfid-20171005_140621_878991_805ACBC7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the same reason, the orinoco driver may sleep in interrupt handler, 
-and the function call path is:
-orinoco_rx_isr_tasklet
-  orinoco_rx
-    orinoco_mic
-      crypto_shash_setkey
-        shash_setkey_unaligned
-          kmalloc(GFP_KERNEL)
+gcc produces a harmless warning about a recently introduced
+signed integer overflow:
 
-To fix it, GFP_KERNEL is replaced with GFP_ATOMIC.
-This bug is found by my static analysis tool and my code review.
+drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_prepare_mgmt_desc':
+include/uapi/linux/swab.h:13:15: error: integer overflow in expression [-Werror=overflow]
+  (((__u16)(x) & (__u16)0x00ffU) << 8) |   \
+   ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+include/uapi/linux/swab.h:104:2: note: in expansion of macro '___constant_swab16'
+  ___constant_swab16(x) :   \
+  ^~~~~~~~~~~~~~~~~~
+include/uapi/linux/byteorder/big_endian.h:34:43: note: in expansion of macro '__swab16'
+ #define __cpu_to_le16(x) ((__force __le16)__swab16((x)))
+                                           ^~~~~~~~
+include/linux/byteorder/generic.h:89:21: note: in expansion of macro '__cpu_to_le16'
+ #define cpu_to_le16 __cpu_to_le16
+                     ^~~~~~~~~~~~~
+drivers/net/wireless/rsi/rsi_91x_hal.c:136:3: note: in expansion of macro 'cpu_to_le16'
+   cpu_to_le16((tx_params->vap_id << RSI_DESC_VAP_ID_OFST) &
+   ^~~~~~~~~~~
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+The problem is that the 'mask' value is a signed integer that gets
+turned into a negative number when truncated to 16 bits. Making it
+an unsigned constant avoids this.
+
+Fixes: eac4eed3224b ("rsi: tx and rx path enhancements for p2p mode")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- crypto/shash.c |    2 +-
+ drivers/net/wireless/rsi/rsi_mgmt.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/crypto/shash.c b/crypto/shash.c
-index 5e31c8d..8fcecc6 100644
---- a/crypto/shash.c
-+++ b/crypto/shash.c
-@@ -41,7 +41,7 @@ static int shash_setkey_unaligned(struct crypto_shash *tfm, const u8 *key,
- 	int err;
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index b9d0802c1b0f..e21723013f8d 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -189,7 +189,7 @@
+ 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE | \
+ 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
  
- 	absize = keylen + (alignmask & ~(crypto_tfm_ctx_alignment() - 1));
--	buffer = kmalloc(absize, GFP_KERNEL);
-+	buffer = kmalloc(absize, GFP_ATOMIC);
- 	if (!buffer)
- 		return -ENOMEM;
- 
+-#define RSI_DESC_VAP_ID_MASK		0xC000
++#define RSI_DESC_VAP_ID_MASK		0xC000u
+ #define RSI_DESC_VAP_ID_OFST		14
+ #define RSI_DATA_DESC_MAC_BBP_INFO	BIT(0)
+ #define RSI_DATA_DESC_NO_ACK_IND	BIT(9)
 -- 
-1.7.9.5
+2.9.0
