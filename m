@@ -1,93 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:64324 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751315AbdJ2UOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 16:14:47 -0400
-Subject: [PATCH 4/5] wlcore: Use common error handling code in
- wlcore_set_beacon_template()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
-        James Minor <james.minor@ni.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
-Message-ID: <f50c8edf-834d-9003-5a3c-dc83ec4016ce@users.sourceforge.net> (sfid-20171029_211510_440171_907F6FA6)
-Date: Sun, 29 Oct 2017 21:14:30 +0100
+Received: from youngberry.canonical.com ([91.189.89.112]:60189 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751221AbdJEGjP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Oct 2017 02:39:15 -0400
+Received: from mail-wm0-f69.google.com ([74.125.82.69])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <chia-lin.kao@canonical.com>)
+        id 1dzzoP-0005B5-Ux
+        for linux-wireless@vger.kernel.org; Thu, 05 Oct 2017 06:39:13 +0000
+Received: by mail-wm0-f69.google.com with SMTP id i124so2230795wmf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 23:39:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com>
+References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+ <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
+ <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
+ <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
+ <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com> <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com>
+From: AceLan Kao <acelan.kao@canonical.com>
+Date: Thu, 5 Oct 2017 14:39:12 +0800
+Message-ID: <CAFv23QkLJ0m112Y8iAGv+6DyFT52Hqnxq5Fy=ryWTWxu8oTXdw@mail.gmail.com> (sfid-20171005_083932_362588_8564362F)
+Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
+To: Daniel Drake <drake@endlessm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 29 Oct 2017 20:16:22 +0100
+Hi all,
 
-Adjust jump targets so that a bit of exception handling can be better
-reused at the end of this function.
+Please drop my patches, Qualcomm is working internally and will submit
+the MSI patch by themselves.
+Thanks.
 
-This issue was detected by using the Coccinelle software.
+Hi Daniel,
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/ti/wlcore/main.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+I'll try your patches tomorrow.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 0365b5e40a8d..12a9d6509382 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4024,10 +4024,9 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 	wl1271_debug(DEBUG_MASTER, "beacon updated");
- 
- 	ret = wl1271_ssid_set(wlvif, beacon, ieoffset);
--	if (ret < 0) {
--		dev_kfree_skb(beacon);
--		goto out;
--	}
-+	if (ret < 0)
-+		goto free_skb;
-+
- 	min_rate = wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
- 	tmpl_id = is_ap ? CMD_TEMPL_AP_BEACON :
- 		CMD_TEMPL_BEACON;
-@@ -4035,10 +4034,8 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 				      beacon->data,
- 				      beacon->len, 0,
- 				      min_rate);
--	if (ret < 0) {
--		dev_kfree_skb(beacon);
--		goto out;
--	}
-+	if (ret < 0)
-+		goto free_skb;
- 
- 	wlvif->wmm_enabled =
- 		cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
-@@ -4051,7 +4048,7 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 	 * by usermode, don't use the beacon data.
- 	 */
- 	if (test_bit(WLVIF_FLAG_AP_PROBE_RESP_SET, &wlvif->flags))
--		goto end_bcn;
-+		goto free_skb;
- 
- 	/* remove TIM ie from probe response */
- 	wl12xx_remove_ie(beacon, WLAN_EID_TIM, ieoffset);
-@@ -4081,9 +4078,8 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 					      beacon->data,
- 					      beacon->len, 0,
- 					      min_rate);
--end_bcn:
-+free_skb:
- 	dev_kfree_skb(beacon);
--out:
- 	return ret;
- }
- 
--- 
-2.14.3
+Best regards,
+AceLan Kao.
+
+2017-10-02 12:21 GMT+08:00 Daniel Drake <drake@endlessm.com>:
+> Hi AceLan,
+>
+> On Thu, Sep 28, 2017 at 4:28 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
+>> Hi Daniel,
+>>
+>> I've tried your patch, but it doesn't work for me.
+>> Wifi can scan AP, but can't get connected.
+>
+> Can you please clarify which patch(es) you have tried?
+>
+> This is the base patch which adds the infrastructure to request
+> specific MSI IRQ vectors:
+> https://marc.info/?l=linux-wireless&m=150631274108016&w=2
+>
+> This is the ath9k MSI patch which makes use of that:
+> https://github.com/endlessm/linux/commit/739c7a924db8f4434a9617657
+>
+> If you were already able to use ath9k MSI interrupts without specific
+> consideration for which MSI vector numbers were used, these are the
+> possible explanations that spring to mind:
+>
+> 1. You got lucky and it picked a vector number that is 4-aligned. You
+> can check this in the "lspci -vvv" output. You'll see something like:
+> Capabilities: [50] MSI: Enable+ Count=1/4 Maskable+ 64bit+
+>         Address: 00000000fee0300c  Data: 4142
+> The lower number is the vector number. In my example here 0x42 (66) is
+> not 4-aligned so the failure condition will be hit.
+>
+> 2. You are using interrupt remapping, which I suspect may provide a
+> high likelihood of MSI interrupt vectors being 4-aligned. See if
+> /proc/interrupts shows the IRQ type as IR-PCI-MSI
+> Unfortunately interrupt remapping is not available here,
+> https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
+>
+> 3. My assumption that all ath9k hardware corrupts the MSI vector
+> number could wrong. However we've seen this on different wifi modules
+> in laptops produced by different OEMs and ODMs, so it seems to be a
+> somewhat widespread problem at least.
+>
+> 4. My assumption that ath9k hardware is corrupting the MSI vector
+> number could be wrong; maybe another component is to blame, could it
+> be a BIOS issue? Admittedly I don't really know how I can debug the
+> layers inbetween seeing the MSI Message Data value disagree with the
+> vector number being handled inside do_IRQ().
+>
+> Daniel
