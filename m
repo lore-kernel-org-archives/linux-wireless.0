@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:61202 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751665AbdJ2UL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 16:11:58 -0400
-Subject: [PATCH 1/5] wlcore: Use common error handling code in wlcore_nvs_cb()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
-        James Minor <james.minor@ni.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
-Message-ID: <7b40d50f-cdac-bd47-5070-894140f7ceb3@users.sourceforge.net> (sfid-20171029_211215_090330_D8C6BBD3)
-Date: Sun, 29 Oct 2017 21:11:39 +0100
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:35343 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751667AbdJETHl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Oct 2017 15:07:41 -0400
+Date: Fri, 6 Oct 2017 00:37:30 +0530
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, amitkarwar@gmail.com,
+        nishants@marvell.com, gbhat@marvell.com, huxm@marvell.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: Use put_unaligned_le32
+Message-ID: <20171005190730.GA8043@himanshu-Vostro-3559> (sfid-20171005_210808_742923_D874316E)
+References: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com>
+ <874lre5a86.fsf@codeaurora.org>
+ <20171005083433.GA11485@himanshu-Vostro-3559>
+ <87zi963s1p.fsf@codeaurora.org>
+ <20171005152233.GA6250@himanshu-Vostro-3559>
+ <20171005180248.GA94139@google.com>
 MIME-Version: 1.0
-In-Reply-To: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005180248.GA94139@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 29 Oct 2017 18:38:04 +0100
+On Thu, Oct 05, 2017 at 11:02:50AM -0700, Brian Norris wrote:
+> On Thu, Oct 05, 2017 at 08:52:33PM +0530, Himanshu Jha wrote:
+> > There are various instances where a function used in file say for eg
+> > int func_align (void* a)
+> > is used and it is defined in align.h
+> > But many files don't *directly* include align.h and rather include
+> > any other header which includes align.h
+> 
+> I believe the general rule is that you should included headers for all
+> symbols you use, and not rely on implicit includes.
+> 
+> The modification to the general rule is that not all headers are
+> intended to be included directly, and in such cases there's likely a
+> parent header that is the more appropriate target.
+> 
+> In this case, the key is CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS. It
+> seems that asm-generic/unaligned.h is set up to include different
+> headers, based on the expected architecture behavior.
+>
+Yes, asm-generic/unaligned.h looks more appopriate and is most generic
+implementation of unaligned accesses and  arc specific.
 
-Add a jump target so that a bit of exception handling can be better reused
-at the end of this function.
+Let's see what Kalle Valo recommends! And then I will send v2 of the
+patch.
 
-This issue was detected by using the Coccinelle software.
+Thanks for the information!
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/ti/wlcore/main.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Himanshu Jha
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index c346c021b999..48380d48ef09 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -6496,16 +6496,14 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	ret = wl12xx_get_hw_info(wl);
- 	if (ret < 0) {
- 		wl1271_error("couldn't get hw info");
--		wl1271_power_off(wl);
--		goto out_free_nvs;
-+		goto power_off;
- 	}
- 
- 	ret = request_threaded_irq(wl->irq, hardirq_fn, wlcore_irq,
- 				   wl->irq_flags, pdev->name, wl);
- 	if (ret < 0) {
- 		wl1271_error("interrupt configuration failed");
--		wl1271_power_off(wl);
--		goto out_free_nvs;
-+		goto power_off;
- 	}
- 
- #ifdef CONFIG_PM
-@@ -6551,6 +6549,11 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- out:
- 	release_firmware(fw);
- 	complete_all(&wl->nvs_loading_complete);
-+	return;
-+
-+power_off:
-+	wl1271_power_off(wl);
-+	goto out_free_nvs;
- }
- 
- int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
--- 
-2.14.3
+> I wonder if include/linux/unaligned/access_ok.h should have a safety
+> check (e.g., raise an #error if
+> !CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS?).
+> 
+> > Is compiling the file the only way to check if apppropriate header is
+> > included or is there some other way to check for it.
+> 
+> I believe it's mostly manual. Implicit includes have been a problem for
+> anyone who refactors header files.
+> 
+> Brian
