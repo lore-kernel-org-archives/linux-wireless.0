@@ -1,73 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:46435 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751274AbdJDX15 (ORCPT
+Received: from smtp-out4.electric.net ([192.162.216.185]:61489 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751380AbdJEPMK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 19:27:57 -0400
-Received: by mail-pf0-f173.google.com with SMTP id r68so7042143pfj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:27:57 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Tejun Heo <tj@kernel.org>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 00/13] timer: Start conversion to timer_setup()
-Date: Wed,  4 Oct 2017 16:26:54 -0700
-Message-Id: <1507159627-127660-1-git-send-email-keescook@chromium.org> (sfid-20171005_013421_025423_7CF773DC)
+        Thu, 5 Oct 2017 11:12:10 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Joe Perches' <joe@perches.com>, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+CC: Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] rsi: fix integer overflow warning
+Date: Thu, 5 Oct 2017 15:12:05 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD008ACEE@AcuExch.aculab.com> (sfid-20171005_171234_671632_C3733126)
+References: <20171005120547.328687-1-arnd@arndb.de>
+ <1507205947.4434.23.camel@perches.com>
+In-Reply-To: <1507205947.4434.23.camel@perches.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Joe Perches
+> Sent: 05 October 2017 13:19
+> On Thu, 2017-10-05 at 14:05 +0200, Arnd Bergmann wrote:
+> > gcc produces a harmless warning about a recently introduced
+> > signed integer overflow:
+> >
+> > drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_prepare_mgmt_desc':
+> > include/uapi/linux/swab.h:13:15: error: integer overflow in expression [-Werror=overflow]
+> >   (((__u16)(x) & (__u16)0x00ffU) << 8) |   \
+> >    ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+> > include/uapi/linux/swab.h:104:2: note: in expansion of macro '___constant_swab16'
+> >   ___constant_swab16(x) :   \
+> >   ^~~~~~~~~~~~~~~~~~
+> > include/uapi/linux/byteorder/big_endian.h:34:43: note: in expansion of macro '__swab16'
+> >  #define __cpu_to_le16(x) ((__force __le16)__swab16((x)))
+> 
+> []
+> 
+> > The problem is that the 'mask' value is a signed integer that gets
+> > turned into a negative number when truncated to 16 bits. Making it
+> > an unsigned constant avoids this.
+> 
+> I would expect there are more of these.
+> 
+> Perhaps this define in include/uapi/linux/swab.h:
+> 
+> #define __swab16(x)				\
+> 	(__builtin_constant_p((__u16)(x)) ?	\
+> 	___constant_swab16(x) :			\
+> 	__fswab16(x))
+> 
+> should be
+> 
+> #define __swab16(x)				\
+> 	(__builtin_constant_p((__u16)(x)) ?	\
+> 	___constant_swab16((__u16)(x)) :	\
+> 	__fswab16((__u16)(x)))
 
-This is the first of many timer infrastructure cleanups to simplify the
-timer API[1]. All of these patches are expected to land via the timer
-tree, so Acks (or corrections) appreciated.
+You probably don't want the cast in the call to __fswab16() since
+that is likely to generate an explicit and with 0xffff.
+You will likely also get one if the argument is _u16 (not unsigned int).
 
-These patches refactor various users of timer API that are NOT just using
-init_timer() or setup_timer() (which is the vast majority of users,
-and are being converted separately). These changes are focused on the
-lesser-used init_timer_*(), TIMER_*INITIALIZER(), and DEFINE_TIMER()
-methods of preparing a timer.
-
-Thanks!
-
--Kees
-
-[1] https://git.kernel.org/linus/686fef928bba6be13cabe639f154af7d72b63120
+	David
