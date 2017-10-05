@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:60554 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758139AbdJMMFK (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:60712 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750756AbdJEEiC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 08:05:10 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] cfg80211: fix CFG80211_EXTRA_REGDB_KEYDIR typo
-Date: Fri, 13 Oct 2017 14:04:31 +0200
-Message-Id: <20171013120446.4079666-2-arnd@arndb.de> (sfid-20171013_140540_504684_904ABE0D)
-In-Reply-To: <20171013120446.4079666-1-arnd@arndb.de>
-References: <20171013120446.4079666-1-arnd@arndb.de>
+        Thu, 5 Oct 2017 00:38:02 -0400
+Date: Wed, 04 Oct 2017 21:37:58 -0700 (PDT)
+Message-Id: <20171004.213758.2210486785503998906.davem@davemloft.net> (sfid-20171005_063806_626682_505FC3AE)
+To: herbert@gondor.apana.org.au
+Cc: marcelo.leitner@gmail.com, luto@kernel.org, baijiaju1990@163.com,
+        nhorman@tuxdriver.com, vyasevich@gmail.com, kvalo@codeaurora.org,
+        linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] Fix a sleep-in-atomic bug in shash_setkey_unaligned
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20171005034054.GB31996@gondor.apana.org.au>
+References: <20171003052643.GB22750@gondor.apana.org.au>
+        <20171003224505.GE19750@localhost.localdomain>
+        <20171005034054.GB31996@gondor.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The missing CONFIG_ prefix means this macro is never defined,
-leading to a possible Kbuild warning:
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Thu, 5 Oct 2017 11:40:54 +0800
 
-net/wireless/reg.c:666:20: error: 'load_keys_from_buffer' defined but not used [-Werror=unused-function]
- static void __init load_keys_from_buffer(const u8 *p, unsigned int buflen)
+> On Tue, Oct 03, 2017 at 07:45:06PM -0300, Marcelo Ricardo Leitner wrote:
+>>
+>> > Usually if you're invoking setkey from a non-sleeping code-path
+>> > you're probably doing something wrong.
+>> 
+>> Usually but not always. There are 3 calls to that function on SCTP
+>> code:
+>> - pack a cookie, which is sent on an INIT_ACK packet to the client
+>> - unpack the cookie above, after it is sent back by the client on a
+>>   COOKIE_ECHO packet
+>> - send a chunk authenticated by a hash
+> 
+> I'm not talking about the code-path in question.  I'm talking
+> about the function which generates the secret key in the first
+> place.  AFAICS that's only called in GFP_KERNEL context.  What
+> am I missing?
 
-When we use the correct symbol, the warning also goes away.
-
-Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- net/wireless/reg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 58319c82ecb3..3871998059de 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -723,7 +723,7 @@ static int __init load_builtin_regdb_keys(void)
- #ifdef CONFIG_CFG80211_USE_KERNEL_REGDB_KEYS
- 	load_keys_from_buffer(shipped_regdb_certs, shipped_regdb_certs_len);
- #endif
--#ifdef CFG80211_EXTRA_REGDB_KEYDIR
-+#ifdef CONFIG_CFG80211_EXTRA_REGDB_KEYDIR
- 	if (CONFIG_CFG80211_EXTRA_REGDB_KEYDIR[0] != '\0')
- 		load_keys_from_buffer(extra_regdb_certs, extra_regdb_certs_len);
- #endif
--- 
-2.9.0
+The setkey happens in functions like sctp_pack_cookie() and
+sctp_unpack_cookie(), which seems to run from software interrupts.
