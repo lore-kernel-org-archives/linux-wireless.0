@@ -1,104 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53934 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1760936AbdJRGck (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 02:32:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: sara.sharon@intel.com, linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 18 Oct 2017 09:31:12 +0300
-Message-Id: <20171018063112.934-1-luca@coelho.fi> (sfid-20171018_083247_769718_0E5A36AA)
-In-Reply-To: <20171013132502.10473-8-luca@coelho.fi>
-References: <20171013132502.10473-8-luca@coelho.fi>
-Subject: [PATCH v2 7/9] iwlwifi: mvm: add missing lq_color
+Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:52980
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751259AbdJEBiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Oct 2017 21:38:25 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 7/8] qtnfmac: make encryption info a part of CONNECT command.
+Date: Wed,  4 Oct 2017 18:38:12 -0700
+Message-Id: <20171005013813.13332-8-igor.mitsyanko.os@quantenna.com> (sfid-20171005_033840_039931_9A5D9CC3)
+In-Reply-To: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
+References: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-In the compressed BA notif, the driver didn't parse out
-the LQ color, so statistics for the rates tried were
-always thrown out. Add it so it gets correctly used.
+Encryption info is a constant part of STA settings, no point
+to pass it as an optional TLV.
+Remove QTN_TLV_ID_CRYPTO type as it's not used anymore.
 
-While at it, fix the name of the relevant field in the
-struct.
-
-Fixes: c46e7724bfe9 ("iwlwifi: mvm: support new BA notification response")
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 42 ++++++++++-------------
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  5 +--
+ 2 files changed, 22 insertions(+), 25 deletions(-)
 
-In v2: a fix by Sari to properly initialize the tid_data lq_color
-       field to avoid a double usage of the rate scaling macro.
-
-drivers/net/wireless/intel/iwlwifi/fw/api/tx.h |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c    | 10 ++++++++++
- 2 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 14ad9fb895f9..f5d5ba7e37ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -710,7 +710,7 @@ enum iwl_mvm_ba_resp_flags {
-  * @reduced_txp: power reduced according to TPC. This is the actual value and
-  *	not a copy from the LQ command. Thus, if not the first rate was used
-  *	for Tx-ing then this value will be set to 0 by FW.
-- * @initial_rate: TLC rate info, initial rate index, TLC table color
-+ * @tlc_rate_info: TLC rate info, initial rate index, TLC table color
-  * @retry_cnt: retry count
-  * @query_byte_cnt: SCD query byte count
-  * @query_frame_cnt: SCD query frame count
-@@ -730,7 +730,7 @@ struct iwl_mvm_compressed_ba_notif {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index b65d705..babdc60 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -2037,7 +2037,7 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ {
+ 	struct sk_buff *cmd_skb;
+ 	struct qlink_cmd_connect *cmd;
+-	struct qlink_auth_encr aen;
++	struct qlink_auth_encr *aen;
+ 	u16 res_code = QLINK_CMD_RESULT_OK;
+ 	int ret;
+ 	int i;
+@@ -2049,8 +2049,6 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 	if (unlikely(!cmd_skb))
+ 		return -ENOMEM;
+ 
+-	qtnf_bus_lock(vif->mac->bus);
+-
+ 	cmd = (struct qlink_cmd_connect *)cmd_skb->data;
+ 
+ 	ether_addr_copy(cmd->bssid, vif->bssid);
+@@ -2077,41 +2075,39 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 
+ 	cmd->flags = cpu_to_le32(connect_flags);
+ 
+-	memset(&aen, 0, sizeof(aen));
+-	aen.auth_type = sme->auth_type;
+-	aen.privacy = !!sme->privacy;
+-	aen.mfp = sme->mfp;
+-	aen.wpa_versions = cpu_to_le32(sme->crypto.wpa_versions);
+-	aen.cipher_group = cpu_to_le32(sme->crypto.cipher_group);
+-	aen.n_ciphers_pairwise = cpu_to_le32(
+-		sme->crypto.n_ciphers_pairwise);
++	aen = &cmd->aen;
++	aen->auth_type = sme->auth_type;
++	aen->privacy = !!sme->privacy;
++	aen->mfp = sme->mfp;
++	aen->wpa_versions = cpu_to_le32(sme->crypto.wpa_versions);
++	aen->cipher_group = cpu_to_le32(sme->crypto.cipher_group);
++	aen->n_ciphers_pairwise = cpu_to_le32(sme->crypto.n_ciphers_pairwise);
+ 
+ 	for (i = 0; i < QLINK_MAX_NR_CIPHER_SUITES; i++)
+-		aen.ciphers_pairwise[i] = cpu_to_le32(
+-			sme->crypto.ciphers_pairwise[i]);
++		aen->ciphers_pairwise[i] =
++			cpu_to_le32(sme->crypto.ciphers_pairwise[i]);
+ 
+-	aen.n_akm_suites = cpu_to_le32(sme->crypto.n_akm_suites);
++	aen->n_akm_suites = cpu_to_le32(sme->crypto.n_akm_suites);
+ 
+ 	for (i = 0; i < QLINK_MAX_NR_AKM_SUITES; i++)
+-		aen.akm_suites[i] = cpu_to_le32(
+-			sme->crypto.akm_suites[i]);
++		aen->akm_suites[i] = cpu_to_le32(sme->crypto.akm_suites[i]);
+ 
+-	aen.control_port = sme->crypto.control_port;
+-	aen.control_port_no_encrypt =
++	aen->control_port = sme->crypto.control_port;
++	aen->control_port_no_encrypt =
+ 		sme->crypto.control_port_no_encrypt;
+-	aen.control_port_ethertype = cpu_to_le16(be16_to_cpu(
+-		sme->crypto.control_port_ethertype));
++	aen->control_port_ethertype =
++		cpu_to_le16(be16_to_cpu(sme->crypto.control_port_ethertype));
+ 
+ 	qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, sme->ssid,
+-		sme->ssid_len);
+-	qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_CRYPTO, (u8 *)&aen,
+-				 sizeof(aen));
++				 sme->ssid_len);
+ 
+ 	if (sme->ie_len != 0)
+ 		qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_IE_SET,
+ 					 sme->ie,
+ 					 sme->ie_len);
+ 
++	qtnf_bus_lock(vif->mac->bus);
++
+ 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
+ 
+ 	if (unlikely(ret))
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 641d252..7b313d3 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -417,8 +417,9 @@ enum qlink_sta_connect_flags {
+  * struct qlink_cmd_connect - data for QLINK_CMD_CONNECT command
+  *
+  * @flags: for future use.
+- * @freq: center frequence of a channel which should be used to connect.
++ * @channel: channel which should be used to connect.
+  * @bg_scan_period: period of background scan.
++ * @aen: authentication information.
+  * @bssid: BSSID of the BSS to connect to.
+  * @payload: variable portion of connection request.
+  */
+@@ -427,6 +428,7 @@ struct qlink_cmd_connect {
  	__le32 flags;
- 	u8 sta_id;
- 	u8 reduced_txp;
--	u8 initial_rate;
-+	u8 tlc_rate_info;
- 	u8 retry_cnt;
- 	__le32 query_byte_cnt;
- 	__le16 query_frame_cnt;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 172b5e63d3fb..35f455ede173 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1746,6 +1746,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
- 		struct iwl_mvm_compressed_ba_notif *ba_res =
- 			(void *)pkt->data;
-+		u8 lq_color = TX_RES_RATE_TABLE_COL_GET(ba_res->tlc_rate_info);
- 		int i;
+ 	__le16 channel;
+ 	__le16 bg_scan_period;
++	struct qlink_auth_encr aen;
+ 	u8 bssid[ETH_ALEN];
+ 	u8 payload[0];
+ } __packed;
+@@ -950,7 +952,6 @@ enum qlink_tlv_id {
+ 	QTN_TLV_ID_STA_GENERIC_INFO	= 0x0301,
+ 	QTN_TLV_ID_KEY			= 0x0302,
+ 	QTN_TLV_ID_SEQ			= 0x0303,
+-	QTN_TLV_ID_CRYPTO		= 0x0304,
+ 	QTN_TLV_ID_IE_SET		= 0x0305,
+ };
  
- 		sta_id = ba_res->sta_id;
-@@ -1759,11 +1760,18 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		if (!le16_to_cpu(ba_res->tfd_cnt))
- 			goto out;
- 
-+		rcu_read_lock();
-+
-+		mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, sta_id);
-+		if (!mvmsta)
-+			goto out_unlock;
-+
- 		/* Free per TID */
- 		for (i = 0; i < le16_to_cpu(ba_res->tfd_cnt); i++) {
- 			struct iwl_mvm_compressed_ba_tfd *ba_tfd =
- 				&ba_res->tfd[i];
- 
-+			mvmsta->tid_data[i].lq_color = lq_color;
- 			iwl_mvm_tx_reclaim(mvm, sta_id, ba_tfd->tid,
- 					   (int)(le16_to_cpu(ba_tfd->q_num)),
- 					   le16_to_cpu(ba_tfd->tfd_index),
-@@ -1771,6 +1779,8 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 					   le32_to_cpu(ba_res->tx_rate));
- 		}
- 
-+out_unlock:
-+		rcu_read_unlock();
- out:
- 		IWL_DEBUG_TX_REPLY(mvm,
- 				   "BA_NOTIFICATION Received from sta_id = %d, flags %x, sent:%d, acked:%d\n",
 -- 
-2.14.2
+2.9.5
