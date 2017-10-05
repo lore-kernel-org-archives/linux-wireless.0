@@ -1,35 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:10551 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751794AbdJ2T6U (ORCPT
+Received: from smtprelay0082.hostedemail.com ([216.40.44.82]:60041 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751094AbdJEQLh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 15:58:20 -0400
-From: Maya Haim <merez@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        qca_merez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        QCA_ailizaro <QCA_ailizaro@QCA.qualcomm.com>,
+        Thu, 5 Oct 2017 12:11:37 -0400
+Message-ID: <1507219892.4434.29.camel@perches.com> (sfid-20171005_181154_630125_E60A0020)
+Subject: Re: [PATCH] rsi: fix integer overflow warning
+From: Joe Perches <joe@perches.com>
+To: David Laight <David.Laight@ACULAB.COM>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>,
-        qca_merez <qca_merez@qca.qualcomm.com>
-Subject: RE: [01/12] wil6210: run-time PM when interface down
-Date: Sun, 29 Oct 2017 19:58:15 +0000
-Message-ID: <6dab086844a74a32990ef682a484c425@euamsexm01a.eu.qualcomm.com> (sfid-20171029_205842_253620_D2E3731D)
-References: <1508937247-11890-2-git-send-email-qca_merez@qca.qualcomm.com>
- <589009024f344a718e1616b30dd3edd0@euamsexm01a.eu.qualcomm.com>
-In-Reply-To: <589009024f344a718e1616b30dd3edd0@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 05 Oct 2017 09:11:32 -0700
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD008ACEE@AcuExch.aculab.com>
+References: <20171005120547.328687-1-arnd@arndb.de>
+         <1507205947.4434.23.camel@perches.com>
+         <063D6719AE5E284EB5DD2968C1650D6DD008ACEE@AcuExch.aculab.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-S2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+IHdyb3RlOg0KDQo+IE1heWEgRXJleiA8
-cWNhX21lcmV6QHFjYS5xdWFsY29tbS5jb20+IHdyb3RlOg0KDQo+PiBBbGxvdyBydW4tdGltZSBz
-dXNwZW5kIHdoZW4gaW50ZXJmYWNlIGlzIGRvd24sIGtlZXAgY2FyZCBhbGl2ZSB3aGVuIA0KPj4g
-aW50ZXJmYWNlIGlzIHVwLg0KPj4gSWYgZHJpdmVyIGlzIGluIHdtaSBvbmx5IG9yIGRlYnVnX2Z3
-IG1vZGUgcnVuLXRpbWUgUE0gd29uJ3Qgc3VzcGVuZC4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBM
-YXphciBBbGV4ZWkgPHFjYV9haWxpemFyb0BxY2EucXVhbGNvbW0uY29tPg0KPj4gCXBjaWVfYnVz
-LmMNCj4+IFNpZ25lZC1vZmYtYnk6IE1heWEgRXJleiA8cWNhX21lcmV6QHFjYS5xdWFsY29tbS5j
-b20+DQo+PiBTaWduZWQtb2ZmLWJ5OiBLYWxsZSBWYWxvIDxrdmFsb0BxY2EucXVhbGNvbW0uY29t
-Pg0KDQo+IEtidWlsZCBib3QgZm91bmQgcHJvYmxlbXM6DQoNClRoYW5rcywgS2FsbGUuIFdlIHdp
-bGwgZml4IHRoZSBlcnJvcnMuDQo=
+On Thu, 2017-10-05 at 15:12 +0000, David Laight wrote:
+> From: Joe Perches
+> > Sent: 05 October 2017 13:19
+> > On Thu, 2017-10-05 at 14:05 +0200, Arnd Bergmann wrote:
+> > > gcc produces a harmless warning about a recently introduced
+> > > signed integer overflow:
+> > > 
+> > > drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_prepare_mgmt_desc':
+> > > include/uapi/linux/swab.h:13:15: error: integer overflow in expression [-Werror=overflow]
+> > >   (((__u16)(x) & (__u16)0x00ffU) << 8) |   \
+> > >    ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+> > > include/uapi/linux/swab.h:104:2: note: in expansion of macro '___constant_swab16'
+> > >   ___constant_swab16(x) :   \
+> > >   ^~~~~~~~~~~~~~~~~~
+> > > include/uapi/linux/byteorder/big_endian.h:34:43: note: in expansion of macro '__swab16'
+> > >  #define __cpu_to_le16(x) ((__force __le16)__swab16((x)))
+> > 
+> > []
+> > 
+> > > The problem is that the 'mask' value is a signed integer that gets
+> > > turned into a negative number when truncated to 16 bits. Making it
+> > > an unsigned constant avoids this.
+> > 
+> > I would expect there are more of these.
+> > 
+> > Perhaps this define in include/uapi/linux/swab.h:
+> > 
+> > #define __swab16(x)				\
+> > 	(__builtin_constant_p((__u16)(x)) ?	\
+> > 	___constant_swab16(x) :			\
+> > 	__fswab16(x))
+> > 
+> > should be
+> > 
+> > #define __swab16(x)				\
+> > 	(__builtin_constant_p((__u16)(x)) ?	\
+> > 	___constant_swab16((__u16)(x)) :	\
+> > 	__fswab16((__u16)(x)))
+> 
+> You probably don't want the cast in the call to __fswab16() since
+> that is likely to generate an explicit and with 0xffff.
+> You will likely also get one if the argument is _u16 (not unsigned int).
+
+It would just an explicit vs implicit cast as __fswab16 is
+a static inline with a __u16 argument
