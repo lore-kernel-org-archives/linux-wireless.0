@@ -1,73 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway33.websitewelcome.com ([192.185.146.87]:12657 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750705AbdJKPVR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:40544 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751280AbdJENSG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 11:21:17 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id 02B515991BF
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 09:32:49 -0500 (CDT)
-Date: Wed, 11 Oct 2017 09:32:48 -0500
-Message-ID: <20171011093248.Horde.Jwmh0VKhmCeOxBgQzLLpYeZ@gator4166.hostgator.com> (sfid-20171011_172120_843402_CF11C776)
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
-References: <20171010193027.GA23108@embeddedor.com>
- <5f5f0f54-d901-90be-9025-0a1c4b909368@gmail.com>
- <87o9peqdo2.fsf@kamboji.qca.qualcomm.com>
- <eb89f2ad-f2d5-b97f-c224-daf3953d912c@gmail.com>
-In-Reply-To: <eb89f2ad-f2d5-b97f-c224-daf3953d912c@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-MIME-Version: 1.0
+        Thu, 5 Oct 2017 09:18:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 1/2] fq: support filtering a given tin
+Date: Thu,  5 Oct 2017 15:18:02 +0200
+Message-Id: <20171005131803.12328-1-johannes@sipsolutions.net> (sfid-20171005_151810_797395_ED4E92E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Quoting Jes Sorensen <jes.sorensen@gmail.com>:
+Add to the FQ API a way to filter a given tin, in order to
+remove frames that fulfil certain criteria according to a
+filter function.
 
-> On 10/11/2017 04:41 AM, Kalle Valo wrote:
->> Jes Sorensen <jes.sorensen@gmail.com> writes:
->>
->>> On 10/10/2017 03:30 PM, Gustavo A. R. Silva wrote:
->>>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->>>> where we are expecting to fall through.
->>>
->>> While this isn't harmful, to me this looks like pointless patch churn
->>> for zero gain and it's just ugly.
->>
->> In general I find it useful to mark fall through cases. And it's just a
->> comment with two words, so they cannot hurt your eyes that much.
->
-> I don't see them being harmful in the code, but I don't see them of  
-> much use either. If it happened as part of natural code development,  
-> fine. My objection is to people running around doing this  
-> systematically causing patch churn for little to zero gain.
->
-> Jes
+This will be used by mac80211 to remove frames belonging to
+an AP VLAN interface that's being removed.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/fq.h      |  7 +++++
+ include/net/fq_impl.h | 72 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 69 insertions(+), 10 deletions(-)
 
-I understand that you think this is of zero gain for you, but as  
-Florian Fainelli pointed out:
-
-"That is the canonical way to tell static analyzers and compilers that
-fall throughs are wanted and not accidental mistakes in the code. For
-people that deal with these kinds of errors, it's quite helpful, unless
-you suggest disabling that particular GCC warning specific for that
-file/directory?"
-
-this is very helpful for people working on fixing issues reported by  
-static analyzers. It saves a huge amount of time when dealing with  
-False Positives. Also, there are cases when an apparently intentional  
-fall-through turns out to be an actual missing break or continue.
-
-So there is an ongoing effort to detect such cases and avoid them to  
-show up in the future by at least warning people about a potential  
-issue in their code. And this is helpful for everybody.
-
-Thanks
---
-Gustavo A. R. Silva
+diff --git a/include/net/fq.h b/include/net/fq.h
+index 6d8521a30c5c..ac944a686840 100644
+--- a/include/net/fq.h
++++ b/include/net/fq.h
+@@ -90,6 +90,13 @@ typedef void fq_skb_free_t(struct fq *,
+ 			   struct fq_flow *,
+ 			   struct sk_buff *);
+ 
++/* Return %true to filter (drop) the frame. */
++typedef bool fq_skb_filter_t(struct fq *,
++			     struct fq_tin *,
++			     struct fq_flow *,
++			     struct sk_buff *,
++			     void *);
++
+ typedef struct fq_flow *fq_flow_get_default_t(struct fq *,
+ 					      struct fq_tin *,
+ 					      int idx,
+diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
+index 4e6131cd3f43..8b237e4afee6 100644
+--- a/include/net/fq_impl.h
++++ b/include/net/fq_impl.h
+@@ -12,24 +12,22 @@
+ 
+ /* functions that are embedded into includer */
+ 
+-static struct sk_buff *fq_flow_dequeue(struct fq *fq,
+-				       struct fq_flow *flow)
++static void fq_adjust_removal(struct fq *fq,
++			      struct fq_flow *flow,
++			      struct sk_buff *skb)
+ {
+ 	struct fq_tin *tin = flow->tin;
+-	struct fq_flow *i;
+-	struct sk_buff *skb;
+-
+-	lockdep_assert_held(&fq->lock);
+-
+-	skb = __skb_dequeue(&flow->queue);
+-	if (!skb)
+-		return NULL;
+ 
+ 	tin->backlog_bytes -= skb->len;
+ 	tin->backlog_packets--;
+ 	flow->backlog -= skb->len;
+ 	fq->backlog--;
+ 	fq->memory_usage -= skb->truesize;
++}
++
++static void fq_rejigger_backlog(struct fq *fq, struct fq_flow *flow)
++{
++	struct fq_flow *i;
+ 
+ 	if (flow->backlog == 0) {
+ 		list_del_init(&flow->backlogchain);
+@@ -43,6 +41,21 @@ static struct sk_buff *fq_flow_dequeue(struct fq *fq,
+ 		list_move_tail(&flow->backlogchain,
+ 			       &i->backlogchain);
+ 	}
++}
++
++static struct sk_buff *fq_flow_dequeue(struct fq *fq,
++				       struct fq_flow *flow)
++{
++	struct sk_buff *skb;
++
++	lockdep_assert_held(&fq->lock);
++
++	skb = __skb_dequeue(&flow->queue);
++	if (!skb)
++		return NULL;
++
++	fq_adjust_removal(fq, flow, skb);
++	fq_rejigger_backlog(fq, flow);
+ 
+ 	return skb;
+ }
+@@ -188,6 +201,45 @@ static void fq_tin_enqueue(struct fq *fq,
+ 	}
+ }
+ 
++static void fq_flow_filter(struct fq *fq,
++			   struct fq_flow *flow,
++			   fq_skb_filter_t filter_func,
++			   void *filter_data,
++			   fq_skb_free_t free_func)
++{
++	struct fq_tin *tin = flow->tin;
++	struct sk_buff *skb, *tmp;
++
++	lockdep_assert_held(&fq->lock);
++
++	skb_queue_walk_safe(&flow->queue, skb, tmp) {
++		if (!filter_func(fq, tin, flow, skb, filter_data))
++			continue;
++
++		__skb_unlink(skb, &flow->queue);
++		fq_adjust_removal(fq, flow, skb);
++		free_func(fq, tin, flow, skb);
++	}
++
++	fq_rejigger_backlog(fq, flow);
++}
++
++static void fq_tin_filter(struct fq *fq,
++			  struct fq_tin *tin,
++			  fq_skb_filter_t filter_func,
++			  void *filter_data,
++			  fq_skb_free_t free_func)
++{
++	struct fq_flow *flow;
++
++	lockdep_assert_held(&fq->lock);
++
++	list_for_each_entry(flow, &tin->new_flows, flowchain)
++		fq_flow_filter(fq, flow, filter_func, filter_data, free_func);
++	list_for_each_entry(flow, &tin->old_flows, flowchain)
++		fq_flow_filter(fq, flow, filter_func, filter_data, free_func);
++}
++
+ static void fq_flow_reset(struct fq *fq,
+ 			  struct fq_flow *flow,
+ 			  fq_skb_free_t free_func)
+-- 
+2.14.2
