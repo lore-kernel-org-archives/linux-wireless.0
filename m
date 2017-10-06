@@ -1,161 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbdJYNOe (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:59456 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751639AbdJFRSm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 09:14:34 -0400
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 11/12] wil6210: remove suspend time statistics
-Date: Wed, 25 Oct 2017 16:14:06 +0300
-Message-Id: <1508937247-11890-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151442_413377_9796F250)
-In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 6 Oct 2017 13:18:42 -0400
+Message-ID: <1507310319.19300.28.camel@sipsolutions.net> (sfid-20171006_191921_152379_2DFDE1A2)
+Subject: Re: [RFC] mac80211: Add airtime fairness accounting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Fri, 06 Oct 2017 19:18:39 +0200
+In-Reply-To: <87lgkoqrhs.fsf@toke.dk>
+References: <20171006115232.28688-1-toke@toke.dk>
+         <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+On Fri, 2017-10-06 at 16:29 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Fri, 2017-10-06 at 13:52 +0200, Toke Høiland-Jørgensen wrote:
+> > > This adds accounting of each station's airtime usage to mac80211.
+> > > On
+> > > the RX side, airtime is calculated from the packet length and
+> > > duration.
+> > 
+> > I think you should probably try to get something here from the
+> > driver?
+> > Doing the calculations is really awkward, because you have to take
+> > into account aggregation, etc.
+> 
+> Well, calculating the duration from the rate and size is what ath9k
+> is currently doing, and that has all the information available to do
+> so (I did verify that the airtime was almost identical on the TX and
+> RX side for the same traffic).
 
-Currently suspend time statistics are showed through debugfs.
-Remove time statistics in suspend state since the timing may
-not be accurate in that state.
+It's still iffy - with aggregation you might have a better idea of the
+total airtime, but not really see - in the higher layers - all the
+padding that comes between A-MPDUs etc. I think many drivers could do
+better by exposing the total airtime from the device/firmware, whereas
+exposing _all_ the little details that you need to calculate it post-
+facto will be really difficult, and make the calculation really hard.
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 ++---------------
- drivers/net/wireless/ath/wil6210/main.c    |  1 -
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++------------------
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 -----
- 4 files changed, 4 insertions(+), 39 deletions(-)
+> But yeah, I guess that is not necessarily the case for all drivers?
+> Maybe having a field that the driver can fill in is better (that also
+> has the nice property that a driver that doesn't supply any airtime
+> information won't get the scheduling; which is probably desirable).
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 2634650..03d17ea 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1676,8 +1676,6 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
--	wil->suspend_stats.min_suspend_time = ULONG_MAX;
--	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1689,27 +1687,18 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
--	unsigned long long stats_collection_time =
--		ktime_to_us(ktime_sub(ktime_get(),
--				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n"
--		     "total suspend time:%lld min suspend time:%lld\n"
--		     "max suspend time:%lld stats collection time: %lld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device,
--		     wil->suspend_stats.total_suspend_time,
--		     wil->suspend_stats.min_suspend_time,
--		     wil->suspend_stats.max_suspend_time,
--		     stats_collection_time);
-+		     wil->suspend_stats.rejected_by_device);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1881,8 +1870,6 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
--	wil->suspend_stats.collection_start = ktime_get();
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index ad1f9f8..9b3726d 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -580,7 +580,6 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
--	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 	wil->vring_idle_trsh = 16;
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index ce4f546..48ec186 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -319,16 +319,12 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
--	if (!rc)
--		wil->suspend_stats.suspend_start_time = ktime_get();
--
- 	return rc;
- }
- 
- int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- {
- 	int rc = 0;
--	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -346,21 +342,9 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
--	if (rc)
--		goto out;
--
--	suspend_time_usec =
--		ktime_to_us(ktime_sub(ktime_get(),
--				      wil->suspend_stats.suspend_start_time));
--	wil->suspend_stats.total_suspend_time += suspend_time_usec;
--	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
--		wil->suspend_stats.min_suspend_time = suspend_time_usec;
--	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
--		wil->suspend_stats.max_suspend_time = suspend_time_usec;
--
- out:
--	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
--		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
-+	wil_dbg_pm(wil, "resume: %s => %d\n", is_runtime ? "runtime" : "system",
-+		   rc);
- 	return rc;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b7509f3..0d8457e 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -89,11 +89,6 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
--	unsigned long long total_suspend_time;
--	unsigned long long min_suspend_time;
--	unsigned long long max_suspend_time;
--	ktime_t collection_start;
--	ktime_t suspend_start_time;
- };
- 
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
--- 
-1.9.1
+I think that'd be better, yes. Perhaps for some simple cases a helper
+function can be provided, but I'd want to actually know about those
+drivers before adding that.
+
+> You're right that it does nothing for one-way UDP, of course. But not
+> a lot of traffic is actually one-way (most is either TCP or something
+> like Quic that also has a feedback loop). So in most of our tests we
+> saw a pretty nice effect from TCP back-pressure.
+
+Yeah that makes some sense. I'm a bit concerned about pathological
+corner cases, you don't really know about the protocol used on top. Can
+a client starve itself by sending things? And perhaps, if it has a dumb
+higher layer protocol, it'll retransmit rather than back off, if it
+doesn't get the higher layer ACK?
+
+> > Then again, I'm not even sure yet why you care about the AC at all?
+> > Should fairness really be something that's within an AC?
+> 
+> No, ideally it shouldn't. This is mostly an artifact of how ath9k
+> schedules TXQs independently for each AC. This means that if (say)
+> three stations are back-logged on the BE queue, and one of those also
+> has the occasional packet on the VO queue, if the deficit is shared
+> between all levels, every time a VO packet arrives that station
+> effectively gets its deficit reset to zero, meaning it will get too
+> much airtime.
+> 
+> Having a separate deficit for each AC level is a crude workaround for
+> this, which is what we went with for the initial version in ath9k;
+> and this patch is just a straight-forward port of that. But I guess
+> this is a good opportunity to figure out how to solve this properly;
+> I'll think about how to do that (ideas welcome!)...
+
+So ... no, I don't understand. You have a TXQ per _TID_, so splitting
+up this per _AC_ still doesn't make sense since you have two TXQs for
+each AC?
+
+But then again I'm not sure I've sufficiently wrapped my head around
+the whole algorithm, so ...
+
+johannes
