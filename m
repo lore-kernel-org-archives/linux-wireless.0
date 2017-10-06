@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0050.outbound.protection.outlook.com ([104.47.33.50]:19456
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751583AbdJOUxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Oct 2017 16:53:50 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 3/5] qtnfmac: drop nonexistent function declaration
-Date: Sun, 15 Oct 2017 23:53:25 +0300
-Message-Id: <20171015205327.9966-4-sergey.matyukevich.os@quantenna.com> (sfid-20171015_225420_348087_01B44C72)
-In-Reply-To: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com>
-References: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com>
+Received: from lang.hm ([66.167.227.134]:55605 "EHLO bifrost.lang.hm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751485AbdJFWqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Oct 2017 18:46:46 -0400
+Date: Fri, 6 Oct 2017 15:40:14 -0700 (PDT)
+From: David Lang <david@lang.hm>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: =?ISO-8859-15?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [Make-wifi-fast] [RFC] mac80211: Add airtime fairness
+ accounting
+In-Reply-To: <1507310319.19300.28.camel@sipsolutions.net>
+Message-ID: <alpine.DEB.2.02.1710061536220.4994@nftneq.ynat.uz> (sfid-20171007_004650_111876_BB03BBED)
+References: <20171006115232.28688-1-toke@toke.dk> <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk> <1507310319.19300.28.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function qtnf_classify_skb_no_mbss has been used for debug
-during early stage of development. Drop its declaration.
+On Fri, 6 Oct 2017, Johannes Berg wrote:
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/core.h | 3 ---
- 1 file changed, 3 deletions(-)
+>> Well, calculating the duration from the rate and size is what ath9k
+>> is currently doing, and that has all the information available to do
+>> so (I did verify that the airtime was almost identical on the TX and
+>> RX side for the same traffic).
+>
+> It's still iffy - with aggregation you might have a better idea of the
+> total airtime, but not really see - in the higher layers - all the
+> padding that comes between A-MPDUs etc. I think many drivers could do
+> better by exposing the total airtime from the device/firmware, whereas
+> exposing _all_ the little details that you need to calculate it post-
+> facto will be really difficult, and make the calculation really hard.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 44a2cbb19310..49ae700f66f0 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -153,9 +153,6 @@ int qtnf_cmd_send_get_phy_params(struct qtnf_wmac *mac);
- 
- struct qtnf_wmac *qtnf_core_get_mac(const struct qtnf_bus *bus, u8 macid);
- struct net_device *qtnf_classify_skb(struct qtnf_bus *bus, struct sk_buff *skb);
--struct net_device *qtnf_classify_skb_no_mbss(struct qtnf_bus *bus,
--					     struct sk_buff *skb);
--
- void qtnf_virtual_intf_cleanup(struct net_device *ndev);
- 
- void qtnf_netdev_updown(struct net_device *ndev, bool up);
--- 
-2.11.0
+perfect is the enemy of good enough :-)
+
+I don't think the intent is to try and be a perfect accounting, if the total 
+calculated time ends up being > 100%, it doesn't really matter, what matters is 
+the relative behavior of the stations, and while the naive calculation fails to 
+properly reward a station that's being more efficient, it is still good enough 
+to punish stations using lower bandwidth modes (which is a far larger cause of 
+problems)
+
+while it's ideal to have the driver provide the airtime, falling back to a naive 
+(but relativly cheap) calculation if a time isn't provided.
+
+David Lang
