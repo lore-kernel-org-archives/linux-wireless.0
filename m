@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:7232 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750736AbdJTDfA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52950 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752210AbdJFJmw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2017 23:35:00 -0400
-From: Yingying Tang <yintang@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH V6 1/5] mac80211: Enable TDLS peer buffer STA feature
-Date: Fri, 20 Oct 2017 03:34:55 +0000
-Message-ID: <ad23308b0865465daeba02cd416e22cb@aptaiexm02b.ap.qualcomm.com> (sfid-20171020_053522_871898_5F28264D)
-References: <TDLS for ath10k patches V6>
-         <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com>
-         <1508133633-23214-2-git-send-email-yintang@qti.qualcomm.com>
-         (sfid-20171016_075844_306502_036ED199)
- <1508322936.2674.19.camel@sipsolutions.net>
-In-Reply-To: <1508322936.2674.19.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Fri, 6 Oct 2017 05:42:52 -0400
+Message-ID: <1507282969.19300.4.camel@sipsolutions.net> (sfid-20171006_114306_734858_B190F1B8)
+Subject: Re: [RFC v2 1/2] fq: support filtering a given tin
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 06 Oct 2017 11:42:49 +0200
+In-Reply-To: <87h8vdslpr.fsf@toke.dk>
+References: <20171005131803.12328-1-johannes@sipsolutions.net>
+         <87h8vdslpr.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCkkgaGF2ZSBidWlsdCBhbmQgdGVzdGVkIGl0LCBpdCBjYW4gd29yaw0K
-DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRv
-OmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDogV2VkbmVzZGF5LCBPY3RvYmVyIDE4
-LCAyMDE3IDY6MzYgUE0NClRvOiBZaW5neWluZyBUYW5nIDx5aW50YW5nQHF0aS5xdWFsY29tbS5j
-b20+OyBhdGgxMGtAbGlzdHMuaW5mcmFkZWFkLm9yZw0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIu
-a2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSCBWNiAxLzVdIG1hYzgwMjExOiBFbmFibGUg
-VERMUyBwZWVyIGJ1ZmZlciBTVEEgZmVhdHVyZQ0KDQpPbiBNb24sIDIwMTctMTAtMTYgYXQgMTQ6
-MDAgKzA4MDAsIHlpbnRhbmdAcXRpLnF1YWxjb21tLmNvbSB3cm90ZToNCj4gRnJvbTogWWluZ3lp
-bmcgVGFuZyA8eWludGFuZ0BxdGkucXVhbGNvbW0uY29tPg0KPiANCj4gRW5hYmxlIFRETFMgcGVl
-ciBidWZmZXIgU1RBIGZlYXR1cmUuDQo+IFNldCBleHRlbmRlZCBjYXBhYmlsaXR5IGJpdCB0byBl
-bmFibGUgYnVmZmVyIFNUQSB3aGVuIGRyaXZlciBzdXBwb3J0IA0KPiBpdC4NCg0KSXQgd291bGQg
-aGVscCBpZiB5b3UgY291bGQgKGJ1aWxkKSB0ZXN0IHlvdXIgY2hhbmdlcyA6LSkNCg0Kam9oYW5u
-ZXMNCg==
+On Thu, 2017-10-05 at 16:39 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Add to the FQ API a way to filter a given tin, in order to
+> > remove frames that fulfil certain criteria according to a
+> > filter function.
+> > 
+> > This will be used by mac80211 to remove frames belonging to
+> > an AP VLAN interface that's being removed.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> Yup, this version looks reasonable to me :)
+
+Do you know if anyone feels responsible for the fq code?
+
+Should I Cc netdev on these patches?
+
+johannes
