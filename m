@@ -1,61 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752996AbdJaBFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 21:05:12 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 8/9] qtnfmac: include HTCAP and VHTCAP into config AP command
-Date: Mon, 30 Oct 2017 18:04:54 -0700
-Message-Id: <20171031010455.27772-9-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020547_529715_A49C3DF8)
-In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:37541 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751515AbdJFPFD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Oct 2017 11:05:03 -0400
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: amitkarwar@gmail.com
+Cc: nishants@marvell.com, gbhat@marvell.com, huxm@marvell.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH v2] mwifiex: Use put_unaligned_le32
+Date: Fri,  6 Oct 2017 20:34:39 +0530
+Message-Id: <1507302279-3875-1-git-send-email-himanshujha199640@gmail.com> (sfid-20171006_170532_548145_5A3BECFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Use put_unaligned_le32 rather than using byte ordering function and
+memcpy which makes code clear.
+Also, add the header file where it is declared.
 
-Include HT/VHT caps directly into command so that they won't have
-to be searched for in IEs.
+Done using Coccinelle and semantic patch used is :
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+@ rule1 @
+identifier tmp; expression ptr,x; type T;
+@@
+
+- tmp = cpu_to_le32(x);
+
+  <+... when != tmp
+- memcpy(ptr, (T)&tmp, ...);
++ put_unaligned_le32(x,ptr);
+  ...+>
+
+@ depends on rule1 @
+type j; identifier tmp;
+@@
+
+- j tmp;
+  ...when != tmp
+
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+v2:
+* added correct header file.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 5186116..c2f0b75 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -266,6 +266,24 @@ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
- 				s->beacon.assocresp_ies,
- 				s->beacon.assocresp_ies_len);
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 0edc5d6..e28e119 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -17,6 +17,7 @@
+  * this warranty disclaimer.
+  */
  
-+	if (s->ht_cap) {
-+		struct qlink_tlv_hdr *tlv = (struct qlink_tlv_hdr *)
-+			skb_put(cmd_skb, sizeof(*tlv) + sizeof(*s->ht_cap));
-+
-+		tlv->type = cpu_to_le16(WLAN_EID_HT_CAPABILITY);
-+		tlv->len = cpu_to_le16(sizeof(*s->ht_cap));
-+		memcpy(tlv->val, s->ht_cap, sizeof(*s->ht_cap));
-+	}
-+
-+	if (s->vht_cap) {
-+		struct qlink_tlv_hdr *tlv = (struct qlink_tlv_hdr *)
-+			skb_put(cmd_skb, sizeof(*tlv) + sizeof(*s->vht_cap));
-+
-+		tlv->type = cpu_to_le16(WLAN_EID_VHT_CAPABILITY);
-+		tlv->len = cpu_to_le16(sizeof(*s->vht_cap));
-+		memcpy(tlv->val, s->vht_cap, sizeof(*s->vht_cap));
-+	}
-+
- 	qtnf_bus_lock(vif->mac->bus);
++#include <asm/unaligned.h>
+ #include "decl.h"
+ #include "ioctl.h"
+ #include "util.h"
+@@ -183,7 +184,6 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 	uint16_t cmd_code;
+ 	uint16_t cmd_size;
+ 	unsigned long flags;
+-	__le32 tmp;
  
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
+ 	if (!adapter || !cmd_node)
+ 		return -1;
+@@ -249,9 +249,9 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 	mwifiex_dbg_dump(adapter, CMD_D, "cmd buffer:", host_cmd, cmd_size);
+ 
+ 	if (adapter->iface_type == MWIFIEX_USB) {
+-		tmp = cpu_to_le32(MWIFIEX_USB_TYPE_CMD);
+ 		skb_push(cmd_node->cmd_skb, MWIFIEX_TYPE_LEN);
+-		memcpy(cmd_node->cmd_skb->data, &tmp, MWIFIEX_TYPE_LEN);
++		put_unaligned_le32(MWIFIEX_USB_TYPE_CMD,
++				   cmd_node->cmd_skb->data);
+ 		adapter->cmd_sent = true;
+ 		ret = adapter->if_ops.host_to_card(adapter,
+ 						   MWIFIEX_USB_EP_CMD_EVENT,
+@@ -317,7 +317,6 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 				(struct mwifiex_opt_sleep_confirm *)
+ 						adapter->sleep_cfm->data;
+ 	struct sk_buff *sleep_cfm_tmp;
+-	__le32 tmp;
+ 
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 
+@@ -342,8 +341,7 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 				      + MWIFIEX_TYPE_LEN);
+ 		skb_put(sleep_cfm_tmp, sizeof(struct mwifiex_opt_sleep_confirm)
+ 			+ MWIFIEX_TYPE_LEN);
+-		tmp = cpu_to_le32(MWIFIEX_USB_TYPE_CMD);
+-		memcpy(sleep_cfm_tmp->data, &tmp, MWIFIEX_TYPE_LEN);
++		put_unaligned_le32(MWIFIEX_USB_TYPE_CMD, sleep_cfm_tmp->data);
+ 		memcpy(sleep_cfm_tmp->data + MWIFIEX_TYPE_LEN,
+ 		       adapter->sleep_cfm->data,
+ 		       sizeof(struct mwifiex_opt_sleep_confirm));
 -- 
-2.9.5
+2.7.4
