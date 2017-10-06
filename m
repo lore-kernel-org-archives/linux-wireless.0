@@ -1,89 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:43807 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752420AbdJSI0H (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51860 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751774AbdJFMV1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2017 04:26:07 -0400
-Received: by mail-it0-f44.google.com with SMTP id k70so9982874itk.0
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 01:26:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACT4Y+YB7PTCFCjeqwJeGpSxxAh_U6F6UsDKaN4XAx6uL8+pZw@mail.gmail.com>
-References: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
- <20171012072529.GB2686@redhat.com> <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
- <20171016094024.GD2553@redhat.com> <CACT4Y+YB7PTCFCjeqwJeGpSxxAh_U6F6UsDKaN4XAx6uL8+pZw@mail.gmail.com>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Thu, 19 Oct 2017 10:25:46 +0200
-Message-ID: <CACT4Y+b4axLm++jwFnUgABvqE7DUN_sD-HG2dVC7_LfptKVgYg@mail.gmail.com> (sfid-20171019_102636_029374_058E58DD)
-Subject: Re: usb/net/rt2x00: warning in rt2800_eeprom_word_index
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Andrey Konovalov <andreyknvl@google.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
+        Fri, 6 Oct 2017 08:21:27 -0400
+Message-ID: <1507292484.908.131.camel@coelho.fi> (sfid-20171006_142200_434874_A185BC34)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Date: Fri, 06 Oct 2017 15:21:24 +0300
+In-Reply-To: <1507291417.908.130.camel@coelho.fi>
+References: <1507291417.908.130.camel@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi-next 2017-10-06
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 2:19 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
-> On Mon, Oct 16, 2017 at 11:40 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> Hi Dmitry
->>
->> On Sat, Oct 14, 2017 at 04:38:03PM +0200, Dmitry Vyukov wrote:
->>> On Thu, Oct 12, 2017 at 9:25 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>> > Hi
->>> >
->>> > On Mon, Oct 09, 2017 at 07:50:53PM +0200, Andrey Konovalov wrote:
->>> >> I've got the following report while fuzzing the kernel with syzkaller.
->>> >>
->>> >> On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
->>> >>
->>> >> I'm not sure whether this is a bug in the driver, or just a way to
->>> >> report misbehaving device. In the latter case this shouldn't be a
->>> >> WARN() call, since WARN() means bug in the kernel.
->>> >
->>> > This is about wrong EEPROM, which reported 3 tx streams on
->>> > non 3 antenna device. I think WARN() is justified and thanks
->>> > to the call trace I was actually able to to understand what
->>> > happened.
->>> >
->>> > In general I do not think WARN() only means a kernel bug, it
->>> > can be F/W or H/W bug too.
->>>
->>> Hi Stanislaw,
->>>
->>> Printing messages is fine. Printing stacks is fine. Just please make
->>> them distinguishable from kernel bugs and don't kill the whole
->>> possibility of automated Linux kernel testing. That's an important
->>> capability.
->>
->> We do not distinguish between bugs and other problems when WARN() is
->> used in (wireless) drivers, what I think is correct, taking comment from
->> include/asm-generic/bug.h :
->>
->> /*
->>  * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report
->>  * significant issues that need prompt attention if they should ever
->>  * appear at runtime.  Use the versions with printk format strings
->>  * to provide better diagnostics.
->>  */
->>
->> Historically we have BUG() to mark the bugs, but usage if it is not
->> recommended as it can kill the system, so for anything that can
->> be recovered in runtime - WARN() is recommended.
->>
->> Perhaps we can introduce another helper like PROBLEM() for marking
->> situations when something is wrong, but it is not a bug. However I'm
->> not even sure at what extent it can be used, since for many cases
->> if not the most, driver author can not tell apriori if the problem
->> is a bug in the driver or HW/FW misbehaviour (or maybe particular
->> issue can happen because of both).
->
-> I will write a separate email to LKML.
+On Fri, 2017-10-06 at 15:03 +0300, Luca Coelho wrote:
+> Hi Kalle,
+> 
+> Here's my first pull-request intended for v4.15.  It
+> contains the last two patch sets I sent out.
+> 
+> I have sent this out before and kbuildbot reported success.
+> 
+> Please let me know if there are any issues.
 
+Oops, please hold on.  There is one patch I have to fix.  I'll send v2
+of the patch and of the pull-req in a bit.
 
-Sent a mail titled "Distinguishing kernel bugs from invalid inputs" to
-LKML. Here is a copy:
-https://groups.google.com/forum/#!topic/syzkaller/dGh7qtbu14Q
+--
+Luca.
