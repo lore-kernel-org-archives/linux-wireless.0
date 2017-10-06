@@ -1,113 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:49155 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751221AbdJDX1z (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51882 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751841AbdJFMc6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 19:27:55 -0400
-Received: by mail-pg0-f42.google.com with SMTP id v13so7324094pgq.6
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:27:55 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>, netdev@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, Oleg Nesterov <oleg@redhat.com>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Tejun Heo <tj@kernel.org>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 04/13] timer: Remove init_timer_pinned() in favor of timer_setup()
-Date: Wed,  4 Oct 2017 16:26:58 -0700
-Message-Id: <1507159627-127660-5-git-send-email-keescook@chromium.org> (sfid-20171005_013453_730071_5AE7F396)
-In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+        Fri, 6 Oct 2017 08:32:58 -0400
+Message-ID: <1507293175.908.134.camel@coelho.fi> (sfid-20171006_143306_546975_4F9EBAEC)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Date: Fri, 06 Oct 2017 15:32:55 +0300
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-3ug0WUU60w1/gtro5jjZ"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2017-10-06-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This refactors the only users of init_timer_pinned() to use
-the new timer_setup() and from_timer(). Drops the definition of
-init_timer_pinned().
 
-Cc: Chris Metcalf <cmetcalf@mellanox.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/ethernet/tile/tilepro.c | 9 ++++-----
- include/linux/timer.h               | 2 --
- 2 files changed, 4 insertions(+), 7 deletions(-)
+--=-3ug0WUU60w1/gtro5jjZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/ethernet/tile/tilepro.c b/drivers/net/ethernet/tile/tilepro.c
-index 49ccee4b9aec..56d06282fbde 100644
---- a/drivers/net/ethernet/tile/tilepro.c
-+++ b/drivers/net/ethernet/tile/tilepro.c
-@@ -608,9 +608,9 @@ static void tile_net_schedule_egress_timer(struct tile_net_cpu *info)
-  * ISSUE: Maybe instead track number of expected completions, and free
-  * only that many, resetting to zero if "pending" is ever false.
-  */
--static void tile_net_handle_egress_timer(unsigned long arg)
-+static void tile_net_handle_egress_timer(struct timer_list *t)
- {
--	struct tile_net_cpu *info = (struct tile_net_cpu *)arg;
-+	struct tile_net_cpu *info = from_timer(info, t, egress_timer);
- 	struct net_device *dev = info->napi.dev;
- 
- 	/* The timer is no longer scheduled. */
-@@ -1004,9 +1004,8 @@ static void tile_net_register(void *dev_ptr)
- 		BUG();
- 
- 	/* Initialize the egress timer. */
--	init_timer_pinned(&info->egress_timer);
--	info->egress_timer.data = (long)info;
--	info->egress_timer.function = tile_net_handle_egress_timer;
-+	timer_setup(&info->egress_timer, tile_net_handle_egress_timer,
-+		    TIMER_PINNED);
- 
- 	u64_stats_init(&info->stats.syncp);
- 
-diff --git a/include/linux/timer.h b/include/linux/timer.h
-index b10c4bdc6fbd..9da903562ed4 100644
---- a/include/linux/timer.h
-+++ b/include/linux/timer.h
-@@ -128,8 +128,6 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
- 
- #define init_timer(timer)						\
- 	__init_timer((timer), 0)
--#define init_timer_pinned(timer)					\
--	__init_timer((timer), TIMER_PINNED)
- #define init_timer_deferrable(timer)					\
- 	__init_timer((timer), TIMER_DEFERRABLE)
- 
--- 
-2.7.4
+Hi Kalle,
+
+Here's the second version of my first pull-request intended for
+v4.15.  It contains the last two patch sets I sent out with v2 of the
+pci dump patch.
+
+In v2 we have fixed a potential kernel oops when our driver is used
+with qemu, for instance.  In that case, the root port is NULL and we
+were trying to access it without checing.
+
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit a7c9acc452b21b56c99dd7dfe0ab542f7baa6563=
+:
+
+  brcmfmac: Delete redundant length check (2017-10-02 17:07:00 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2017-10-06-2
+
+for you to fetch changes up to f2abcfa6c86e503b352846ace9d6ab9b02ade0ab:
+
+  iwlwifi: remove dflt_pwr_limit from the transport (2017-10-06 15:22:34 +0=
+300)
+
+----------------------------------------------------------------
+First batch of iwlwifi patches for 4.15 (v2)
+
+* Cleanups: - remove an unused value that we read from the NVM;
+            - remove link quality measurement code that was never used;
+* One FW command API update;
+* A fix and an addition for PCI devices for the A000 family;
+* Tiny refactor of ref/unref code used by runtime-PM;
+* Some debugging improvements;
+* Implementation of a more flexible way to define command queue sizes;
+* ACPI code refactoring;
+* Some coding-style fixes;
+* Avoid redundant command to the firmware;
+* Add a struct with the format of one FW command;
+* Change an error log to a warning when the FW API is not aligned with
+  the driver (important during development);
+* Change a WARN_ON to WARN_ONCE to make it more descriptive and less
+  noisy (i.e. no repeated warnings on a firmware triggered error);
+* Dump PCI registers when an error occurs, to make it easier to debug;
+
+----------------------------------------------------------------
+Chaya Rachel Ivgi (1):
+      iwlwifi: remove redundant reading from NVM file
+
+Christoph B=C3=B6hmwalder (1):
+      iwlwifi: fix minor code style issues
+
+David Spinadel (1):
+      iwlwifi: mvm: Add new quota command API
+
+Emmanuel Grumbach (3):
+      iwlwifi: mvm: remove support for Link Quality Measurements
+      iwlwifi: mvm: support firmware debug trigger on frame reorder timeout
+      iwlwifi: mvm: don't send identical PHY_CTXT_CMD
+
+Ilan Peer (1):
+      iwlwifi: Add few debug prints to the WRT dump flow
+
+Johannes Berg (3):
+      iwlwifi: fw: api: remove excess enum value documentation
+      iwlwifi: fix indentation in a000 family configuration
+      iwlwifi: mvm: warn on invalid statistics size
+
+Liad Kaufman (1):
+      iwlwifi: mvm: add dbgfs entry for fw info
+
+Luca Coelho (11):
+      iwlwifi: trans: move ref/unref code to the common part of the transpo=
+rt
+      iwlwifi: acpi: add common code to read from ACPI
+      iwlwifi: acpi: move ACPI method definitions to acpi.h
+      iwlwifi: acpi: move ACPI-related definitions to acpi.h
+      iwlwifi: acpi: generalize iwl_mvm_sar_find_wifi_pkg()
+      iwlwifi: acpi: use iwl_acpi_get_wifi_pkg when reading reading SPLC
+      iwlwifi: acpi: make iwl_get_bios_mcc() use the common acpi functions
+      iwlwifi: acpi: remove a couple of unnecessary ifdefs
+      iwlwifi: acpi: move function to get mcc into acpi code
+      iwlwifi: acpi: move code that reads SPLC to acpi
+      iwlwifi: remove dflt_pwr_limit from the transport
+
+Mordechay Goodstein (1):
+      iwlwifi: mvm: add marker cmd response struct.
+
+Oren Givon (2):
+      iwlwifi: fix wrong struct for a000 device
+      iwlwifi: add a new a000 device
+
+Rajat Jain (1):
+      iwlwifi: pcie: dump registers when HW becomes inaccessible
+
+Sara Sharon (1):
+      iwlwifi: mvm: change warning to warn_once()
+
+Shahar S Matityahu (1):
+      iwlwifi: pcie: dynamic Tx command queue size
+
+ drivers/net/wireless/intel/iwlwifi/Makefile          |   1 +
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c        | 103 +++++++++++++++=
++++++++++------------------------
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c         | 210 +++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h         | 138 +++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/api/binding.h  |  41 +++++++++++++++=
+++--
+ drivers/net/wireless/intel/iwlwifi/fw/api/commands.h |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/debug.h    |   9 +++++
+ drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h  |  67 ---------------=
+----------------
+ drivers/net/wireless/intel/iwlwifi/fw/api/power.h    |   3 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/sta.h      |   4 --
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c          |  15 +++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h         |   3 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h      |   3 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.h       |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c         |   7 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c   |  98 +--------------=
+------------------------------
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h   |  17 --------
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c       |  16 ++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h       |  16 +-------
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c          |  16 +++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c |  76 ---------------=
+--------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c     |  32 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c          | 207 +++++++++++++++=
+++++-----------------------------------------------------------------------=
+-----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  52 ++++++++-------=
+---------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |  62 +++++++++++++++=
++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c         |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |  22 ++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c    |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/quota.c       |  59 +++++++++++++++=
++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c          |   7 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |   8 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c         |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c       |  96 ++++++++++++---=
+-----------------------------
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c        | 100 ++-------------=
+-------------------------------
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h   |   4 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      |  89 +++++++++++++++=
+++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c    |   8 +++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c         |  23 ++++++++++-
+ 39 files changed, 846 insertions(+), 775 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/acpi.h
+--=-3ug0WUU60w1/gtro5jjZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlnXd/gACgkQoUecoho8
+xfphRg/9F7YKUldcaP9pYde7UrY5LWFirEjZF0YRUbdlt7KCrXk/VnojMrwevEI6
+LllUctZT1MCaYWc3/VmfKZYRhAdgtYN7VVRDXa1RT+pe97r8kX8pBRp8vBEdRIsH
+lXrxI+N5ri/AJ/zWgJ5D7TkfWxJbDpLnWlb/Z6aHU5SQ9mlMl5n6r/DGMwn171Sp
+4USSFAQnagjHaZ+v/zqRS6p4lpESJGRBIuPOn7GeII+H7zZGau9QdiP0+6VKsbNr
+95hM6Ew5JrNJb3xP2dxJb5Av1EY96yuFDCIkELjMj6GEHMhdj4Fu+9ZtcMMTEpMK
+Ro8MHgIIRvwXERQLlcaQ3nuGFMhQVpDVT/wsAOZYD7OzwNLrN4mgJqoU6JGZxJ8I
+XI6iSli2bBVaRWjqrSMjdnHpLqVsy2jnbMlosvU61xNVKBaF6C1SzemBX0WlO1RR
++DaHU0vnSox4Pl099rMVGCAkbFC6x2kGN1Lqpz/F4nzFgebDWpDs9f9g2DTPlM8J
+63jKav4s6iLNTOi91mm+XoYS9ieUuCDrAwID/LX361R20D9I9kmpn76fwuuPeUQ/
+SbYuw9lUjwVox9ldtJsgYIveHZhZM/AZZJK9Dt+vhq+a8CdcEkDcPMs8ZEY+SLKz
+wDEQxfJFD6ZCoN84Zr5o34QtvwN/WIHBbbVCQvLopYxwpk4Xf50=
+=Fqln
+-----END PGP SIGNATURE-----
+
+--=-3ug0WUU60w1/gtro5jjZ--
