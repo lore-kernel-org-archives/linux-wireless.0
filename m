@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0023.hostedemail.com ([216.40.44.23]:35173 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753358AbdJKKUm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 06:20:42 -0400
-Message-ID: <1507717237.3552.48.camel@perches.com> (sfid-20171011_122152_624981_60A0FA31)
-Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
-From: Joe Perches <joe@perches.com>
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Jes Sorensen <Jes.Sorensen@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Arnaldo Carvalho de Melo <acme@infradead.org>
-Date: Wed, 11 Oct 2017 03:20:37 -0700
-In-Reply-To: <20171010193027.GA23108@embeddedor.com>
-References: <20171010193027.GA23108@embeddedor.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail.toke.dk ([52.28.52.200]:42459 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751334AbdJFKaU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Oct 2017 06:30:20 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org,
+        =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 1/2] fq: support filtering a given tin
+In-Reply-To: <20171006095333.26335-1-johannes@sipsolutions.net>
+References: <20171006095333.26335-1-johannes@sipsolutions.net>
+Date: Fri, 06 Oct 2017 12:30:15 +0200
+Message-ID: <87zi94r2ko.fsf@toke.dk> (sfid-20171006_123024_018064_B54B2B27)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-10-10 at 14:30 -0500, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-perhaps use Arnaldo's idea:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Add to the FQ API a way to filter a given tin, in order to
+> remove frames that fulfil certain criteria according to a
+> filter function.
+>
+> This will be used by mac80211 to remove frames belonging to
+> an AP VLAN interface that's being removed.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-https://lkml.org/lkml/2017/2/9/845
-https://lkml.org/lkml/2017/2/10/485
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
