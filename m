@@ -1,91 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:46569 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751268AbdJDKCw (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51870 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752002AbdJFMZS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 06:02:52 -0400
-Received: by mail-wm0-f42.google.com with SMTP id m72so21771128wmc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 03:02:51 -0700 (PDT)
-Subject: Re: [PATCH v3 1/2] dt-bindings: add device tree binding for Allwinner
- XR819 SDIO Wi-Fi
-To: Icenowy Zheng <icenowy@aosc.io>, Kalle Valo <kvalo@codeaurora.org>
-References: <20171003165944.13056-1-icenowy@aosc.io>
- <20171003165944.13056-2-icenowy@aosc.io>
- <871smjxp46.fsf@kamboji.qca.qualcomm.com>
- <E46F3A20-294A-497E-AF71-C77A67AFDB8C@aosc.io>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Maxime Ripard <maxime.ripard@free-electrons.com>,
-        Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-sunxi@googlegroups.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <59D4B1C8.8020105@broadcom.com> (sfid-20171004_120310_860964_85F0EDC3)
-Date: Wed, 4 Oct 2017 12:02:48 +0200
-MIME-Version: 1.0
-In-Reply-To: <E46F3A20-294A-497E-AF71-C77A67AFDB8C@aosc.io>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 6 Oct 2017 08:25:18 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  6 Oct 2017 15:25:10 +0300
+Message-Id: <20171006122510.12127-1-luca@coelho.fi> (sfid-20171006_142553_148765_E552CB34)
+In-Reply-To: <20170929164423.23666-6-luca@coelho.fi>
+References: <20170929164423.23666-6-luca@coelho.fi>
+Subject: [PATCH v2 05/18] iwlwifi: pcie: dump registers when HW becomes inaccessible
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/4/2017 11:03 AM, Icenowy Zheng wrote:
->
->
-> 于 2017年10月4日 GMT+08:00 下午5:02:17, Kalle Valo <kvalo@codeaurora.org> 写到:
->> Icenowy Zheng <icenowy@aosc.io> writes:
->>
->>> Allwinner XR819 is a SDIO Wi-Fi chip, which has the functionality to
->> use
->>> an out-of-band interrupt pin instead of SDIO in-band interrupt.
->>>
->>> Add the device tree binding of this chip, in order to make it
->> possible
->>> to add this interrupt pin to device trees.
->>>
->>> Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
->>> Acked-by: Rob Herring <robh@kernel.org>
->>> ---
->>> Changes in v3:
->>> - Renames the node name.
->>> - Adds ACK from Rob.
->>> Changes in v2:
->>> - Removed status property in example.
->>> - Added required property reg.
->>>
->>>   .../bindings/net/wireless/allwinner,xr819.txt      | 38
->> ++++++++++++++++++++++
->>>   1 file changed, 38 insertions(+)
->>>   create mode 100644
->> Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
->>
->> Like I asked already last time, AFAICS there is no upstream xr819
->> wireless driver in drivers/net/wireless directory. Do we still accept
->> bindings like this for out-of-tree drivers?
->
-> See esp8089.
->
-> There's also no in-tree driver for it.
+From: Rajat Jain <rajatja@google.com>
 
-The question is whether we should. The above might be a precedent, but 
-it may not necessarily be the way to go. The commit message for esp8089 
-seems to hint that there is intent to have an in-tree driver:
+We conclude the HW became inaccessible when we timeout waiting for
+a bit to be set in a memory mapped register (CSR_GP_CNTRL). This
+conclusion may not be true because the bit may not get set due to:
+- a firmware issue
+- a driver issue
+- a PCI bus issue
+- a platform issue
+There are a lot of such reports with really no good debug information
+beyond this message to help us.
 
-"""
-     Note that at this point there only is an out of tree driver for this
-     hardware, there is no clear timeline / path for merging this. Still
-     I believe it would be good to specify the binding for this in tree
-     now, so that any future migration to an in tree driver will not cause
-     compatiblity issues.
+Add some debug information and attempt to dump the different register
+spaces at such a failure:
 
-     Cc: Icenowy Zheng <icenowy@aosc.xyz>
-     Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-     Signed-off-by: Rob Herring <robh@kernel.org>
-"""
+* Dump some configuration space of device - this will tell us if
+something very basic is broken in the PCIe bus (so that configuration
+accesses are failing). If this works, the PCIe bus seems OK. If this
+does not work, it is definitely an PCIe issue.
 
-Regardless the bindings are in principle independent of the kernel and 
-just describing hardware. I think there have been discussions to move 
-the bindings to their own repository, but apparently it was decided 
-otherwise.
+* Dump some memory mapped registers - if we're reading some sane'ish
+values, this will tell us that the PCIe bus is OK, but may be a firmware
+/ driver issue. If this does not work, it may be a PCI configuration
+issue or a driver/firmware issue.
 
-Regards,
-Arend
+* Dump parent and device's AER registers, will give us some straws to
+chew on.
+
+This is the sample output:
+[   13.082651] ------------[ cut here ]------------
+[   13.086791] iwlwifi 0000:01:00.0: iwlwifi transaction failed, dumping registers
+[   13.086793] iwlwifi 0000:01:00.0: iwlwifi device config registers:
+[   13.086893] iwlwifi 0000:01:00.0: 00000000: 095a8086 00100406 02800059 00000000 00000004 00000000 00000000 00000000
+[   13.086895] iwlwifi 0000:01:00.0: 00000020: 00000000 00000000 00000000 50108086 00000000 000000c8 00000000 00000100
+[   13.086901] iwlwifi 0000:01:00.0: iwlwifi device memory mapped registers:
+[   13.086989] iwlwifi 0000:01:00.0: 00000000: ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
+[   13.086991] iwlwifi 0000:01:00.0: 00000020: ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
+[   13.086999] iwlwifi 0000:01:00.0: iwlwifi device AER capability structure:
+[   13.087033] iwlwifi 0000:01:00.0: 00000000: 14010001 00100000 00000000 00462031 00002000 00002000 00000014 40000001
+[   13.087034] iwlwifi 0000:01:00.0: 00000020: 0000000f d140000c 00000000
+[   13.087036] iwlwifi 0000:01:00.0: iwlwifi parent port (0000:00:1c.0) config registers:
+[   13.087074] iwlwifi 0000:00:1c.0: 00000000: 9d108086 00100506 060400f1 00810010 00000000 00000000 00010100 200000f0
+[   13.087075] iwlwifi 0000:00:1c.0: 00000020: d140d140 0001fff1 00000000 00000000 00000000 00000040 00000000 0006010b
+[   13.087087] ------------[ cut here ]------------
+[   13.087095] WARNING: CPU: 0 PID: 1759 at drivers/net/wireless/iwl7000/iwlwifi/pcie/trans.c:2082 iwl_trans_pcie_reclaim+0x1ee4/0x2b9a [iwlwifi]()
+[   13.087096] Timeout waiting for hardware access (CSR_GP_CNTRL 0xffffffff)
+
+Signed-off-by: Rajat Jain <rajatja@google.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 89 ++++++++++++++++++++++
+ 2 files changed, 90 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 9caff1ec29e1..d749abeca3ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -443,6 +443,7 @@ struct iwl_trans_pcie {
+ 	bool bc_table_dword;
+ 	bool scd_set_active;
+ 	bool sw_csum_tx;
++	bool pcie_dbg_dumped_once;
+ 	u32 rx_page_order;
+ 
+ 	/*protect hw register */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 2e3e013ec95a..0008ea323be3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -88,6 +88,93 @@
+ #define IWL_FW_MEM_EXTENDED_START	0x40000
+ #define IWL_FW_MEM_EXTENDED_END		0x57FFF
+ 
++static void iwl_trans_pcie_err_dump(struct iwl_trans *trans)
++{
++#define PCI_DUMP_SIZE	64
++#define PREFIX_LEN	32
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct pci_dev *pdev = trans_pcie->pci_dev;
++	u32 i, pos, alloc_size, *ptr, *buf;
++	char *prefix;
++
++	if (trans_pcie->pcie_dbg_dumped_once)
++		return;
++
++	/* Should be a multiple of 4 */
++	BUILD_BUG_ON(PCI_DUMP_SIZE > 4096 || PCI_DUMP_SIZE & 0x3);
++	/* Alloc a max size buffer */
++	if (PCI_ERR_ROOT_ERR_SRC +  4 > PCI_DUMP_SIZE)
++		alloc_size = PCI_ERR_ROOT_ERR_SRC +  4 + PREFIX_LEN;
++	else
++		alloc_size = PCI_DUMP_SIZE + PREFIX_LEN;
++	buf = kmalloc(alloc_size, GFP_ATOMIC);
++	if (!buf)
++		return;
++	prefix = (char *)buf + alloc_size - PREFIX_LEN;
++
++	IWL_ERR(trans, "iwlwifi transaction failed, dumping registers\n");
++
++	/* Print wifi device registers */
++	sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
++	IWL_ERR(trans, "iwlwifi device config registers:\n");
++	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
++		if (pci_read_config_dword(pdev, i, ptr))
++			goto err_read;
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++
++	IWL_ERR(trans, "iwlwifi device memory mapped registers:\n");
++	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
++		*ptr = iwl_read32(trans, i);
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	if (pos) {
++		IWL_ERR(trans, "iwlwifi device AER capability structure:\n");
++		for (i = 0, ptr = buf; i < PCI_ERR_ROOT_COMMAND; i += 4, ptr++)
++			if (pci_read_config_dword(pdev, pos + i, ptr))
++				goto err_read;
++		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET,
++			       32, 4, buf, i, 0);
++	}
++
++	/* Print parent device registers next */
++	if (!pdev->bus->self)
++		goto out;
++
++	pdev = pdev->bus->self;
++	sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
++
++	IWL_ERR(trans, "iwlwifi parent port (%s) config registers:\n",
++		pci_name(pdev));
++	for (i = 0, ptr = buf; i < PCI_DUMP_SIZE; i += 4, ptr++)
++		if (pci_read_config_dword(pdev, i, ptr))
++			goto err_read;
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++
++	/* Print root port AER registers */
++	pos = 0;
++	pdev = pcie_find_root_port(pdev);
++	if (pdev)
++		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	if (pos) {
++		IWL_ERR(trans, "iwlwifi root port (%s) AER cap structure:\n",
++			pci_name(pdev));
++		sprintf(prefix, "iwlwifi %s: ", pci_name(pdev));
++		for (i = 0, ptr = buf; i <= PCI_ERR_ROOT_ERR_SRC; i += 4, ptr++)
++			if (pci_read_config_dword(pdev, pos + i, ptr))
++				goto err_read;
++		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32,
++			       4, buf, i, 0);
++	}
++
++err_read:
++	print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET, 32, 4, buf, i, 0);
++	IWL_ERR(trans, "Read failed at 0x%X\n", i);
++out:
++	trans_pcie->pcie_dbg_dumped_once = 1;
++	kfree(buf);
++}
++
+ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -649,6 +736,7 @@ static int iwl_pcie_load_firmware_chunk(struct iwl_trans *trans,
+ 				 trans_pcie->ucode_write_complete, 5 * HZ);
+ 	if (!ret) {
+ 		IWL_ERR(trans, "Failed to load firmware chunk!\n");
++		iwl_trans_pcie_err_dump(trans);
+ 		return -ETIMEDOUT;
+ 	}
+ 
+@@ -1868,6 +1956,7 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+ 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (unlikely(ret < 0)) {
++		iwl_trans_pcie_err_dump(trans);
+ 		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
+ 		WARN_ONCE(1,
+ 			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
+-- 
+2.14.2
