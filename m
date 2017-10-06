@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39810 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751208AbdJCWqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Oct 2017 18:46:37 -0400
-Date: Tue, 3 Oct 2017 19:46:32 -0300
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: davem@davemloft.net, herbert@gondor.apana.org.au,
-        nhorman@tuxdriver.com, vyasevich@gmail.com, luto@kernel.org,
-        kvalo@codeaurora.org, linux-crypto@vger.kernel.org,
-        netdev@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] Fix a sleep-in-atomic bug in shash_setkey_unaligned
-Message-ID: <20171003224632.GF19750@localhost.localdomain> (sfid-20171004_004651_226484_DCEE7D50)
-References: <1506997522-26684-1-git-send-email-baijiaju1990@163.com>
- <20171003223308.GD19750@localhost.localdomain>
+Received: from mail-io0-f179.google.com ([209.85.223.179]:55270 "EHLO
+        mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdJFWTA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Oct 2017 18:19:00 -0400
+Received: by mail-io0-f179.google.com with SMTP id h66so17247360ioh.11
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Oct 2017 15:18:59 -0700 (PDT)
+Received: from [10.73.41.175] ([65.154.145.130])
+        by smtp.gmail.com with ESMTPSA id m192sm1369266itm.26.2017.10.06.15.18.58
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 06 Oct 2017 15:18:58 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+From: Dennis Millard <dennis@tealdrones.com>
+Subject: Restricting BCM4354 to 802.11b only
+Message-ID: <820714b7-e1de-33eb-2437-d2539608e50c@tealdrones.com> (sfid-20171007_001903_721896_7A5674DB)
+Date: Fri, 6 Oct 2017 16:18:57 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171003223308.GD19750@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 03, 2017 at 07:33:08PM -0300, Marcelo Ricardo Leitner wrote:
-> On Tue, Oct 03, 2017 at 10:25:22AM +0800, Jia-Ju Bai wrote:
-> > The SCTP program may sleep under a spinlock, and the function call path is:
-> > sctp_generate_t3_rtx_event (acquire the spinlock)
-> >   sctp_do_sm
-> >     sctp_side_effects
-> >       sctp_cmd_interpreter
-> >         sctp_make_init_ack
-> >           sctp_pack_cookie
-> >             crypto_shash_setkey
-> >               shash_setkey_unaligned
-> >                 kmalloc(GFP_KERNEL)
-> 
-> Are you sure this can happen?
-> The host is not supposed to store any information when replying to an
-> INIT packet (which generated the INIT_ACK listed above). That said,
-> it's weird to see the timer function triggering so.
-> 
-> Checking now, that code is dead actually:
-> $ git grep -A 2 SCTP_CMD_GEN_INIT_ACK
-> sm_sideeffect.c:                case SCTP_CMD_GEN_INIT_ACK:
-> sm_sideeffect.c-                        /* Generate an INIT ACK chunk.
-> */
-> sm_sideeffect.c-                        new_obj =
-> sctp_make_init_ack(asoc, chunk, GFP_ATOMIC,
-> 
-> Nobody is triggering a call to sctp_cmd_interpreter with
-> SCTP_CMD_GEN_INIT_ACK command, which would generate the callstack
-> above.
+I'm developing on an nVidia TX1 SOM which has an integrated BCM4354 
+chipset which is a fullmac DSIO 11ac chip. The SOM is running Ubuntu 
+16.04 Linux (64-bit ARM)
 
-Nevertheless, the issue is real through other call paths.
+I have an application where I need long range with low bandwidth 
+requirements.  It seems that 802.11b has the best receive sensitivity, 
+and I need to reduce latency caused by modulation switching (i.e. 802.11 
+b, g, n etc).  I'm looking for a way to configure the BCM43 chipset to 
+lock in to 802.11b mode only, so I want to disable 802.11g and 802.11n 
+modes.
 
-Thanks,
-Marcelo
+I've seen references on google to the Broadcom WLAN client utility, or 
+"wl", but it's not freely available anywhere.
+
+I'm capable of making kernel driver modifications if necessary, but I 
+don't have the required information to do this.  Cypress has bought the 
+Broadcom line, and some support person from Cypress suggested the following:
+
+"For your query, we have different IOV and IOCTL calls for doing so. 
+There is a IOV_NMODE (set to 0 disable 802.11n mode) and ioctl WLC_GMODE 
+(set to 0 to disable 802.11g mode) . You need to make these calls during 
+the system initialization phase to use 802.11b only mode."
+
+I don't see any references to the WLC_GMODE ioctl in the brcfmac driver 
+source, so I haven't been able to make that ioctl call in my code.
+
+
+Does anyone have any advice on how to do this?  Thanks.
+
+    -Dennis
