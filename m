@@ -1,46 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:49522 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750807AbdJRRm6 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55462 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751659AbdJFNzh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 13:42:58 -0400
-Date: Wed, 18 Oct 2017 10:42:55 -0700
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: using verifier to ensure a BPF program uses certain metadata?
-Message-ID: <20171018174253.sozuxdyfusixc5sx@ast-mbp> (sfid-20171018_194319_989889_38BA67AF)
-References: <1508139524.10607.25.camel@sipsolutions.net>
- <20171017225806.b5xubolkyocfgnjc@ast-mbp>
- <1508309791.2674.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508309791.2674.1.camel@sipsolutions.net>
+        Fri, 6 Oct 2017 09:55:37 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] cfg80211: implement regdb signature checking
+Date: Fri,  6 Oct 2017 15:55:32 +0200
+Message-Id: <20171006135532.29550-5-johannes@sipsolutions.net> (sfid-20171006_155549_949690_D723A289)
+In-Reply-To: <20171006135532.29550-1-johannes@sipsolutions.net>
+References: <20171006135532.29550-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 08:56:31AM +0200, Johannes Berg wrote:
-> > > Now, I realize that people could trivially just work around this in
-> > > their program if they wanted, but I think most will take the
-> > > reminder
-> > > and just implement
-> > > 
-> > >     if (ctx->is_data_ethernet)
-> > >         return DROP_FRAME;
-> > > 
-> > > instead, since mostly data frames will not be very relevant to
-> > > them.
-> > > 
-> > > What do you think?
-> > 
-> > sounds fine and considering new verifier ops after Jakub refactoring
-> > a check that is_data_ethernet was accessed would fit nicely.
-> > Without void** hack.
-> 
-> Ok, thanks! I'll have to check what Jakub is doing there, do you have a
-> pointer to that refactoring?
+From: Johannes Berg <johannes.berg@intel.com>
 
-something similar to
-commit 4f9218aaf8a4 ("bpf: move knowledge about post-translation offsets out of verifier")
+Currently CRDA implements the signature checking, and the previous
+commits added the ability to load the whole regulatory database
+into the kernel.
+
+However, we really can't lose the signature checking, so implement
+it in the kernel by loading a detached signature (regulatory.db.p7s)
+and check it against built-in keys.
+
+TODO
+ - add Seth's key, obviously
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/Kconfig         |  30 +++++++++++
+ net/wireless/Makefile        |  22 ++++++++
+ net/wireless/certs/none.x509 |   0
+ net/wireless/reg.c           | 121 ++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/reg.h           |   8 +++
+ 5 files changed, 180 insertions(+), 1 deletion(-)
+ create mode 100644 net/wireless/certs/none.x509
+
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index f050030055c5..da91bb547db3 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -83,6 +83,36 @@ config CFG80211_CERTIFICATION_ONUS
+ 	  you are a wireless researcher and are working in a controlled
+ 	  and approved environment by your local regulatory agency.
+ 
++config CFG80211_REQUIRE_SIGNED_REGDB
++	bool "require regdb signature" if CFG80211_CERTIFICATION_ONUS
++	default y
++	select SYSTEM_DATA_VERIFICATION
++	help
++	  Require that in addition to the "regulatory.db" file a
++	  "regulatory.db.p7s" can be loaded with a valid PKCS#7
++	  signature for the regulatory.db file made by one of the
++	  keys in the certs/ directory.
++
++config CFG80211_USE_KERNEL_REGDB_KEYS
++	bool "allow regdb keys shipped with the kernel" if CFG80211_CERTIFICATION_ONUS
++	default y
++	depends on CFG80211_REQUIRE_SIGNED_REGDB
++	help
++	  Allow the regulatory database to be signed by one of the keys for
++	  which certificates are part of the kernel sources
++	  (in net/wireless/certs/).
++
++	  This is currently only Seth Forshee's key, who is the regulatory
++	  database maintainer.
++
++config CFG80211_EXTRA_REGDB_KEYDIR
++	string "additional regdb key directory" if CFG80211_CERTIFICATION_ONUS
++	depends on CFG80211_REQUIRE_SIGNED_REGDB
++	help
++	  If selected, point to a directory with DER-encoded X.509
++	  certificates like in the kernel sources (net/wireless/certs/)
++	  that shall be accepted for a signed regulatory database.
++
+ config CFG80211_REG_CELLULAR_HINTS
+ 	bool "cfg80211 regulatory support for cellular base station hints"
+ 	depends on CFG80211_CERTIFICATION_ONUS
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index 5f20dac5d8c6..219baea57e4e 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -16,3 +16,25 @@ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
+ cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
+ 
+ CFLAGS_trace.o := -I$(src)
++
++cfg80211-$(CONFIG_CFG80211_USE_KERNEL_REGDB_KEYS) += shipped-certs.o
++ifneq ($(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR),)
++cfg80211-y += extra-certs.o
++endif
++
++$(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
++	@echo "  GEN     $@"
++	@echo '#include "reg.h"' > $@
++	@echo 'const u8 shipped_regdb_certs[] = {' >> $@
++	@for f in $^ ; do hexdump -v -e '1/1 "0x%.2x," "\n"' < $$f >> $@ ; done
++	@echo '};' >> $@
++	@echo 'unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);' >> $@
++
++$(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
++		      $(wildcard $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%)/*.x509)
++	@echo "  GEN     $@"
++	@echo '#include "reg.h"' > $@
++	@echo 'const u8 extra_regdb_certs[] = {' >> $@
++	@for f in $^ ; do test -f $$f && hexdump -v -e '1/1 "0x%.2x," "\n"' < $$f >> $@ || true ; done
++	@echo '};' >> $@
++	@echo 'unsigned int extra_regdb_certs_len = sizeof(extra_regdb_certs);' >> $@
+diff --git a/net/wireless/certs/none.x509 b/net/wireless/certs/none.x509
+new file mode 100644
+index 000000000000..e69de29bb2d1
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6ed99b33646f..af7dc2b42953 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -53,6 +53,7 @@
+ #include <linux/ctype.h>
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
++#include <linux/verification.h>
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+ #include <net/cfg80211.h>
+@@ -652,6 +653,115 @@ static bool valid_country(const u8 *data, unsigned int size,
+ 	return true;
+ }
+ 
++#ifdef CONFIG_CFG80211_REQUIRE_SIGNED_REGDB
++static struct key *builtin_regdb_keys;
++
++static void __init load_keys_from_buffer(const u8 *p, unsigned int buflen)
++{
++	const u8 *end = p + buflen;
++	size_t plen;
++	key_ref_t key;
++
++	while (p < end) {
++		/* Each cert begins with an ASN.1 SEQUENCE tag and must be more
++		 * than 256 bytes in size.
++		 */
++		if (end - p < 4)
++			goto dodgy_cert;
++		if (p[0] != 0x30 &&
++		    p[1] != 0x82)
++			goto dodgy_cert;
++		plen = (p[2] << 8) | p[3];
++		plen += 4;
++		if (plen > end - p)
++			goto dodgy_cert;
++
++		key = key_create_or_update(make_key_ref(builtin_regdb_keys, 1),
++					   "asymmetric", NULL, p, plen,
++					   ((KEY_POS_ALL & ~KEY_POS_SETATTR) |
++					    KEY_USR_VIEW | KEY_USR_READ),
++					   KEY_ALLOC_NOT_IN_QUOTA |
++					   KEY_ALLOC_BUILT_IN |
++					   KEY_ALLOC_BYPASS_RESTRICTION);
++		if (IS_ERR(key)) {
++			pr_err("Problem loading in-kernel X.509 certificate (%ld)\n",
++			       PTR_ERR(key));
++		} else {
++			pr_notice("Loaded X.509 cert '%s'\n",
++				  key_ref_to_ptr(key)->description);
++			key_ref_put(key);
++		}
++		p += plen;
++	}
++
++	return;
++
++dodgy_cert:
++	pr_err("Problem parsing in-kernel X.509 certificate list\n");
++}
++
++static int __init load_builtin_regdb_keys(void)
++{
++	builtin_regdb_keys =
++		keyring_alloc(".builtin_regdb_keys",
++			      KUIDT_INIT(0), KGIDT_INIT(0), current_cred(),
++			      ((KEY_POS_ALL & ~KEY_POS_SETATTR) |
++			      KEY_USR_VIEW | KEY_USR_READ | KEY_USR_SEARCH),
++			      KEY_ALLOC_NOT_IN_QUOTA, NULL, NULL);
++	if (IS_ERR(builtin_regdb_keys))
++		return PTR_ERR(builtin_regdb_keys);
++
++	pr_notice("Loading compiled-in X.509 certificates for regulatory database\n");
++
++#ifdef CONFIG_CFG80211_USE_KERNEL_REGDB_KEYS
++	load_keys_from_buffer(shipped_regdb_certs, shipped_regdb_certs_len);
++#endif
++#ifdef CFG80211_EXTRA_REGDB_KEYDIR
++	if (CONFIG_CFG80211_EXTRA_REGDB_KEYDIR[0] != '\0')
++		load_keys_from_buffer(extra_regdb_certs, extra_regdb_certs_len);
++#endif
++
++	return 0;
++}
++
++static bool regdb_has_valid_signature(const u8 *data, unsigned int size)
++{
++	const struct firmware *sig;
++	bool result;
++
++	if (request_firmware(&sig, "regulatory.db.p7s", &reg_pdev->dev))
++		return false;
++
++	result = verify_pkcs7_signature(data, size, sig->data, sig->size,
++					builtin_regdb_keys,
++					VERIFYING_UNSPECIFIED_SIGNATURE,
++					NULL, NULL) == 0;
++
++	release_firmware(sig);
++
++	return result;
++}
++
++static void free_regdb_keyring(void)
++{
++	key_put(builtin_regdb_keys);
++}
++#else
++static int load_builtin_regdb_keys(void)
++{
++	return 0;
++}
++
++static bool regdb_has_valid_signature(const u8 *data, unsigned int size)
++{
++	return true;
++}
++
++static void free_regdb_keyring(void)
++{
++}
++#endif /* CONFIG_CFG80211_REQUIRE_SIGNED_REGDB */
++
+ static bool valid_regdb(const u8 *data, unsigned int size)
+ {
+ 	const struct fwdb_header *hdr = (void *)data;
+@@ -666,6 +776,9 @@ static bool valid_regdb(const u8 *data, unsigned int size)
+ 	if (hdr->version != cpu_to_be32(FWDB_VERSION))
+ 		return false;
+ 
++	if (!regdb_has_valid_signature(data, size))
++		return false;
++
+ 	country = &hdr->country[0];
+ 	while ((u8 *)(country + 1) <= data + size) {
+ 		if (!country->coll_ptr)
+@@ -751,7 +864,7 @@ static void regdb_fw_cb(const struct firmware *fw, void *context)
+ 		if (fwregdb_attempts-- == 0)
+ 			set_error = -ENODATA;
+ 	} else if (!valid_regdb(fw->data, fw->size)) {
+-		pr_info("loaded regulatory.db is malformed\n");
++		pr_info("loaded regulatory.db is malformed or signature is missing/invalid\n");
+ 		set_error = -EINVAL;
+ 	}
+ 
+@@ -3513,6 +3626,10 @@ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+ 
++	err = load_builtin_regdb_keys();
++	if (err)
++		return err;
++
+ 	reg_pdev = platform_device_register_simple("regulatory", 0, NULL, 0);
+ 	if (IS_ERR(reg_pdev))
+ 		return PTR_ERR(reg_pdev);
+@@ -3589,4 +3706,6 @@ void regulatory_exit(void)
+ 
+ 	if (!IS_ERR_OR_NULL(regdb))
+ 		kfree(regdb);
++
++	free_regdb_keyring();
+ }
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 9529c522611a..9ceeb5f3a7cb 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -1,5 +1,8 @@
+ #ifndef __NET_WIRELESS_REG_H
+ #define __NET_WIRELESS_REG_H
++
++#include <net/cfg80211.h>
++
+ /*
+  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+  *
+@@ -185,4 +188,9 @@ bool reg_dfs_domain_same(struct wiphy *wiphy1, struct wiphy *wiphy2);
+  */
+ int reg_reload_regdb(void);
+ 
++extern const u8 shipped_regdb_certs[];
++extern unsigned int shipped_regdb_certs_len;
++extern const u8 extra_regdb_certs[];
++extern unsigned int extra_regdb_certs_len;
++
+ #endif  /* __NET_WIRELESS_REG_H */
+-- 
+2.14.2
