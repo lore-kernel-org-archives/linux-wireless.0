@@ -1,53 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:50866 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752339AbdJ0Lcs (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:56699 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751425AbdJGVEV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 07:32:48 -0400
-Received: by mail-pf0-f193.google.com with SMTP id b6so4767004pfh.7
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2017 04:32:47 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v3 0/3] rsi: WOWLAN support
-Date: Fri, 27 Oct 2017 16:55:54 +0530
-Message-Id: <1509103557-6215-1-git-send-email-amitkarwar@gmail.com> (sfid-20171027_133311_429264_20E1E521)
+        Sat, 7 Oct 2017 17:04:21 -0400
+Subject: Re: [PATCH] bcma: keep *config menu together
+To: LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <2bdfed1b-5f74-07bf-d016-abe93f6034c7@infradead.org> (sfid-20171007_230447_314764_436303BD)
+Date: Sat, 7 Oct 2017 14:04:17 -0700
+MIME-Version: 1.0
+In-Reply-To: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+On 09/27/17 13:01, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Use "if BCMA"/"endif" around all Kconfig symbols so that they are
+> kept together in *config menus instead of showing up in unexpected
+> places. Also remove "depends on BCMA" since this is handled by the
+> "if BCMA" addition.
+> 
+> Tested with ARCH={x86_64,MIPS} using make {n,menu,g,x}config.
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Rafał Miłecki <zajec5@gmail.com>
 
-This patch series adds WOWLAN support for system's S3, S4 and
-S5 power states. wakeup through magic packet has been verified
-in these power states.
+Rafał -- ping?
 
-Changes since v2:
-  Rebased the patch series to the latest code. Recently below patch
-  got accepted which causes some conflicts.
-	"drivers/wireless: rsi: Convert timers to use timer_setup()"
+> ---
+>  drivers/bcma/Kconfig |   18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> --- lnx-414-rc2.orig/drivers/bcma/Kconfig
+> +++ lnx-414-rc2/drivers/bcma/Kconfig
+> @@ -10,14 +10,15 @@ menuconfig BCMA
+>  	  Bus driver for Broadcom specific Advanced Microcontroller Bus
+>  	  Architecture.
+>  
+> +if BCMA
+> +
+>  # Support for Block-I/O. SELECT this from the driver that needs it.
+>  config BCMA_BLOCKIO
+>  	bool
+> -	depends on BCMA
+>  
+>  config BCMA_HOST_PCI_POSSIBLE
+>  	bool
+> -	depends on BCMA && PCI = y
+> +	depends on PCI = y
+>  	default y
+>  
+>  config BCMA_HOST_PCI
+> @@ -28,7 +29,6 @@ config BCMA_HOST_PCI
+>  
+>  config BCMA_HOST_SOC
+>  	bool "Support for BCMA in a SoC"
+> -	depends on BCMA
+>  	help
+>  	  Host interface for a Broadcom AIX bus directly mapped into
+>  	  the memory. This only works with the Broadcom SoCs from the
+> @@ -38,7 +38,7 @@ config BCMA_HOST_SOC
+>  
+>  config BCMA_DRIVER_PCI
+>  	bool "BCMA Broadcom PCI core driver"
+> -	depends on BCMA && PCI
+> +	depends on PCI
+>  	default y
+>  	help
+>  	  BCMA bus may have many versions of PCIe core. This driver
+> @@ -54,13 +54,13 @@ config BCMA_DRIVER_PCI
+>  
+>  config BCMA_DRIVER_PCI_HOSTMODE
+>  	bool "Driver for PCI core working in hostmode"
+> -	depends on BCMA && MIPS && BCMA_DRIVER_PCI
+> +	depends on MIPS && BCMA_DRIVER_PCI
+>  	help
+>  	  PCI core hostmode operation (external PCI bus).
+>  
+>  config BCMA_DRIVER_MIPS
+>  	bool "BCMA Broadcom MIPS core driver"
+> -	depends on BCMA && MIPS
+> +	depends on MIPS
+>  	help
+>  	  Driver for the Broadcom MIPS core attached to Broadcom specific
+>  	  Advanced Microcontroller Bus.
+> @@ -91,7 +91,6 @@ config BCMA_NFLASH
+>  
+>  config BCMA_DRIVER_GMAC_CMN
+>  	bool "BCMA Broadcom GBIT MAC COMMON core driver"
+> -	depends on BCMA
+>  	help
+>  	  Driver for the Broadcom GBIT MAC COMMON core attached to Broadcom
+>  	  specific Advanced Microcontroller Bus.
+> @@ -100,7 +99,7 @@ config BCMA_DRIVER_GMAC_CMN
+>  
+>  config BCMA_DRIVER_GPIO
+>  	bool "BCMA GPIO driver"
+> -	depends on BCMA && GPIOLIB
+> +	depends on GPIOLIB
+>  	select GPIOLIB_IRQCHIP if BCMA_HOST_SOC
+>  	help
+>  	  Driver to provide access to the GPIO pins of the bcma bus.
+> @@ -109,8 +108,9 @@ config BCMA_DRIVER_GPIO
+>  
+>  config BCMA_DEBUG
+>  	bool "BCMA debugging"
+> -	depends on BCMA
+>  	help
+>  	  This turns on additional debugging messages.
+>  
+>  	  If unsure, say N
+> +
+> +endif # BCMA
+> 
+> 
+> 
 
-Changes since v1:
-  1/3 Get rid of CONFIG_RSI_WOW compiler flag (Kalle Valo)
-  2/3 Use ieee80211_restart_hw() instead of re-registering with mac80211 (Kalle Valo/Brian Norris)
-  3/3 Get rid of CONFIG_RSI_WOW compiler flag
-
-Karun Eagalapati (3):
-  rsi: sdio: add WOWLAN support for S3 suspend state
-  rsi: sdio: Add WOWLAN support for S4 hibernate state
-  rsi: sdio: Add WOWLAN support for S5 shutdown state
-
- drivers/net/wireless/rsi/rsi_91x_core.c     |   8 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 128 +++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_main.c     |   1 +
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |  67 +++++++++++--
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 141 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_common.h       |   1 +
- drivers/net/wireless/rsi/rsi_main.h         |  12 ++-
- drivers/net/wireless/rsi/rsi_mgmt.h         |  31 +++++-
- drivers/net/wireless/rsi/rsi_sdio.h         |   1 +
- 9 files changed, 378 insertions(+), 12 deletions(-)
 
 -- 
-2.7.4
+~Randy
