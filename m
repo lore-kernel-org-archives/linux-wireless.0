@@ -1,43 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:50022 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751061AbdJBQTm (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36330 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750771AbdJHFoL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 12:19:42 -0400
-Date: Mon, 2 Oct 2017 18:19:36 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Daniel Drake <drake@endlessm.com>
-cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, linux@endlessm.com
-Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
- allocation
-In-Reply-To: <alpine.DEB.2.20.1710021540030.2185@nanos>
-Message-ID: <alpine.DEB.2.20.1710021817500.9529@nanos> (sfid-20171002_181956_833410_2876A9F2)
-References: <alpine.DEB.2.20.1709271555430.2027@nanos> <20171002085732.4039-1-drake@endlessm.com> <alpine.DEB.2.20.1710021540030.2185@nanos>
+        Sun, 8 Oct 2017 01:44:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1506945898.25586.3.camel@sipsolutions.net>
+References: <20170926131945.3962-1-qasdfgtyuiop@gmail.com> <1506945898.25586.3.camel@sipsolutions.net>
+From: Xiang Gao <qasdfgtyuiop@gmail.com>
+Date: Sun, 8 Oct 2017 01:43:49 -0400
+Message-ID: <CAMtaSwRU45ve71=H4C7cDQEHrkHg2=eMvXhYbe4HZGxsPRD+AQ@mail.gmail.com> (sfid-20171008_074431_659072_C1A7474F)
+Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Oct 2017, Thomas Gleixner wrote:
-> On Mon, 2 Oct 2017, Daniel Drake wrote:
->   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
->      requires to make the affinity change from the interrupt context of the
->      current active vector in order not to lose interrupts or worst case
->      getting into a stale state.
-> 
->      That works for single vectors, but trying to move all vectors in one
->      go is more or less impossible, as there is no reliable way to
->      determine that none of the other vectors is on flight.
-> 
->      There might be some 'workarounds' for that, but I rather avoid that
->      unless we get an official documented one from Intel/AMD.
+Hi Johannes,
 
-Thinking more about it. That might be actually a non issue for MSI, but we
-have that modus operandi in the current code and we need to address that
-first before even thinking about multi MSI support.
+Thanks for your time on reviewing this. I will make changes following
+your review. See details below.
+By the way, I'm still struggling on how to run unit tests. It might
+take time for me to make it run on my machine.
 
-Thanks,
+2017-10-02 8:04 GMT-04:00 Johannes Berg <johannes@sipsolutions.net>:
+> Please use "v2" tag or so in the subject line, having the same patch
+> again is really not helpful.
+>
+> The next should be v3, obviously.
 
-	tglx
+Thanks for your patience to point this out. I will follow your instruction.
+
+>
+>> +++ b/net/mac80211/aead_api.c
+>> @@ -1,7 +1,4 @@
+>> -/*
+>> - * Copyright 2014-2015, Qualcomm Atheros, Inc.
+>> - *
+>> - * This program is free software; you can redistribute it and/or
+>> modify
+>> +/* This program is free software; you can redistribute it and/or
+>> modify
+>
+> I see no reason to make this change, why remove copyright?
+
+Hmm... good question. The reason is, aes_ccm.c and aes_gcm.c was
+almost exact copy of each other. But they have different copyright
+information.
+The copyright of aes_ccm.c was:
+
+Copyright 2006, Devicescape Software, Inc.
+Copyright 2003-2004, Instant802 Networks, Inc.
+
+and the copyright of aes_gcm.c was:
+
+Copyright 2014-2015, Qualcomm Atheros, Inc.
+
+I just don't know how to write the copyright for the new aead_api.c,
+so I does not put anything there.
+
+These copyright information are still at aes_ccm.h and aes_gcm.h
+
+What's your opinion on writing these copyright information? Do I write
+all of them? like:
+
+Copyright 2014-2015, Qualcomm Atheros, Inc.
+Copyright 2006, Devicescape Software, Inc.
+Copyright 2003-2004, Instant802 Networks, Inc.
+
+>
+>> +++ b/net/mac80211/wpa.c
+>> @@ -464,7 +464,8 @@ static int ccmp_encrypt_skb(struct
+>> ieee80211_tx_data *tx, struct sk_buff *skb,
+>>       pos += IEEE80211_CCMP_HDR_LEN;
+>>       ccmp_special_blocks(skb, pn, b_0, aad);
+>>       return ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad,
+>> pos, len,
+>> -                                      skb_put(skb, mic_len),
+>> mic_len);
+>> +                                      skb_put(skb,
+>> +                                              key->u.ccmp.tfm-
+>> >authsize));
+>>  }
+>
+> I see no reason for the change from mic_len to authsize here?
+
+This was because I was planning to put it to crypto directory, then I
+changed it to the same name as in other crypto api. Now that it will
+goes to the mac80211, I think it is time to revert this change.
+
+>
+>> @@ -540,10 +541,11 @@ ieee80211_crypto_ccmp_decrypt(struct
+>> ieee80211_rx_data *rx,
+>>                       ccmp_special_blocks(skb, pn, b_0, aad);
+>>
+>>                       if (ieee80211_aes_ccm_decrypt(
+>> -                                 key->u.ccmp.tfm, b_0, aad,
+>> -                                 skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
+>> -                                 data_len,
+>> -                                 skb->data + skb->len - mic_len, mic_len))
+>> +                             key->u.ccmp.tfm, b_0, aad,
+>> +                             skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
+>> +                             data_len,
+>> +                             skb->data + skb->len - key->u.ccmp.tfm->authsize
+>> +                     ))
+>>                               return RX_DROP_UNUSABLE;
+>
+> That's a really really strange way of writing this ...
+>
+> Please reformat.
+
+OK, I will reformat it.
+
+>
+> johannes
