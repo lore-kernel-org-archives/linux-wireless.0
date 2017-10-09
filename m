@@ -1,90 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.132]:43013 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932367AbdJZN3L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Oct 2017 09:29:11 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Len Brown <lenb@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Caesar Wang <wxt@rock-chips.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v8 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Thu, 26 Oct 2017 21:28:33 +0800
-Message-Id: <20171026132840.20946-1-jeffy.chen@rock-chips.com> (sfid-20171026_153110_366869_8280844B)
+Received: from mail-co1nam03on0075.outbound.protection.outlook.com ([104.47.40.75]:19424
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754551AbdJIQAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Oct 2017 12:00:47 -0400
+Date: Mon, 9 Oct 2017 19:00:35 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, avinashp@quantenna.com,
+        johannes@sipsolutions.net
+Subject: Re: [PATCH V2 0/8] qtnfmac: get rid of redundant state caching in
+ driver
+Message-ID: <20171009160033.o734uvdguk62yapx@bars> (sfid-20171009_180051_822904_766C6997)
+References: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> In many cases qtnfmac driver stores state info (like current channel,
+> interface state) in driver's internal state that is either unused or
+> duplicates information that is available elsewhere. Cleanup driver
+> to get rid of not needed cached data.
+> 
+> It was part of bigger changeset when it was V1.
+> 
+> Changelist V1->V2:
+> PATCH 3:
+>   - add missing cpu_to_le16() to CMD len field initialization.
+> 
+> Igor Mitsyanko (8):
+>   qtnfmac: do not cache AP settings in driver structures
+>   qtnfmac: pass all AP settings to wireless card for processing
+>   qtnfmac: pass channel definition to WiFi card on START_AP command
+>   qtnfmac: get rid of QTNF_STATE_AP_CONFIG
+>   qtnfmac: get rid of QTNF_STATE_AP_START flag
+>   qtnfmac: do not cache BSS state in per-VIF structure
+>   qtnfmac: make encryption info a part of CONNECT command.
+>   qtnfmac: do not cache current channel info in driver's state
+> 
+>  drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  | 110 ++------------
+>  drivers/net/wireless/quantenna/qtnfmac/commands.c  | 163 +++++++++++----------
+>  drivers/net/wireless/quantenna/qtnfmac/commands.h  |   3 +-
+>  drivers/net/wireless/quantenna/qtnfmac/core.h      |  24 +--
+>  drivers/net/wireless/quantenna/qtnfmac/event.c     |  14 --
+>  drivers/net/wireless/quantenna/qtnfmac/qlink.h     |  92 +++++++++---
+>  .../net/wireless/quantenna/qtnfmac/qlink_util.c    |  45 ++++++
+>  .../net/wireless/quantenna/qtnfmac/qlink_util.h    |   3 +
+>  8 files changed, 224 insertions(+), 230 deletions(-)
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
-
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Rewrite the commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Use "wakeup" instead of "wake"
-Rebase.
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (7):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  mwifiex: Disable wakeup irq handling for pcie
-  arm64: dts: rockchip: Handle PCIe WAKE# signal in pcie driver for Gru
-  of/irq: Adjust of pci irq parsing for multiple interrupts
-  PCI: Make pci_platform_pm_ops's callbacks optional
-  PCI / PM: Move acpi wakeup code to pci core
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-
- Documentation/devicetree/bindings/pci/pci.txt |   3 +
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
- drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
- drivers/of/of_pci_irq.c                       |  13 ++-
- drivers/pci/Makefile                          |   2 +-
- drivers/pci/pci-acpi.c                        | 121 +++++++++++------------
- drivers/pci/pci-driver.c                      |   9 ++
- drivers/pci/pci-of.c                          | 136 ++++++++++++++++++++++++++
- drivers/pci/pci.c                             | 112 +++++++++++++++++----
- drivers/pci/pci.h                             |  31 ++++--
- drivers/pci/probe.c                           |  12 ++-
- drivers/pci/remove.c                          |   2 +
- include/linux/pci.h                           |   2 +
- 13 files changed, 365 insertions(+), 97 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
--- 
-2.11.0
+For the whole patchset:
+Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
