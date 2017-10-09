@@ -1,119 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42854 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752364AbdJSTKB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2017 15:10:01 -0400
-Received: from mail-io0-f200.google.com ([209.85.223.200])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1e5GCe-0008Pd-4d
-        for linux-wireless@vger.kernel.org; Thu, 19 Oct 2017 19:10:00 +0000
-Received: by mail-io0-f200.google.com with SMTP id n33so8554153ioi.7
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 12:10:00 -0700 (PDT)
-Date: Thu, 19 Oct 2017 14:09:57 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: =?utf-8?B?0JDQvdC00YDQtdC5INCY0LLQsNC90L7Qsg==?= <wowz89@mail.ru>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: Update regulatory rules for Kazakhstan (KZ) on
- 5GHz
-Message-ID: <20171019190957.fvjqwgwbxzjv6edz@ubuntu-hedt> (sfid-20171019_211005_170355_251B1F3E)
-References: <1508325977.297437473@f42.i.mail.ru>
- <20171018184900.nycqbsqbwwfnyuzu@ubuntu-xps13>
- <1508380132.687331572@f226.i.mail.ru>
- <1508432054.240009473@f105.i.mail.ru>
+Received: from mail.toke.dk ([52.28.52.200]:34429 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751184AbdJIJmz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Oct 2017 05:42:55 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: Add airtime fairness accounting
+In-Reply-To: <1507533328.26041.12.camel@sipsolutions.net>
+References: <20171006115232.28688-1-toke@toke.dk> <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk> <1507310319.19300.28.camel@sipsolutions.net> <87infrqk28.fsf@toke.dk> <1507533328.26041.12.camel@sipsolutions.net>
+Date: Mon, 09 Oct 2017 11:42:50 +0200
+Message-ID: <878tgkd5d1.fsf@toke.dk> (sfid-20171009_114319_522810_AED75EF6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1508432054.240009473@f105.i.mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 07:54:14PM +0300, Андрей Иванов wrote:
-> Hello again perirenal forums and laws of Kazakhstan on the 5GHz and everywhere one answer permitted use indoors frequency 5150-5350 and 5470-5725 MHz details there is no law painted as is done in other countries. Please add to this range in Kazakhstan is possible in the future and will develop in more detail the law on wi-fi 5 GHz, but currently it is what it is.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-So, based on the doucment you linked to and one given earlier
-(http://adilet.zan.kz/rus/docs/P000001379_) I'll send a paatch to allow
-5150-5350 adn 5470-5725 MHz. However I think the power limit for all the
-rules needs to be limited to 100mW instead of 1W as you had in some of
-them, and we need to add the NO-OUTDOOR flag.
+> On Sat, 2017-10-07 at 13:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+>> Guess you are right that it will be difficult to get a completely
+>> accurate number. But as David Lang notes, as long as we are off by
+>> the same amount for all stations, that is fine - we're just
+>> interested in relative numbers.
+>
+> That's not quite true though, you'd overestimate most on stations that
+> are using aggregation, assuming you take into account the whole frame
+> exchange sequence time. But maybe giving less than their fair share to
+> fast stations isn't really that much of a problem.
 
-One of the documents also refers to ITU Resolution 229 with regard to
-the 5GHz ranges, so I do think DFS is necessary in some of the ranges.
+Well, the padding and spacing between frames is at most 11 bytes (4-byte
+delimiter, 4-byte FCS and 3-byte padding), which is ~0.7% of a
+full-sized frame. I'm not too worried about errors on that scale, TBH.
+Sure, it would be better to have it be accurate, but there are other
+imperfections, especially on the RX side (we can't count
+retransmissions, for instance, since the receiver obviously doesn't see
+those).
 
-I'll follow up with a patch shortly.
+>> > So ... no, I don't understand. You have a TXQ per _TID_, so
+>> > splitting up this per _AC_ still doesn't make sense since you have
+>> > two TXQs for each AC?
+>>=20
+>> Yeah, but ath9k schedules all TIDs on the same AC together. So if
+>> station A has two TIDs active and station B one, the scheduling order
+>> will be A1, A2, B1, basically. This is fine as long as they are all
+>> on the same AC and scheduled together (in which case A1 and A2 will
+>> just share the same deficit).
+>
+> Huh, I'm confused. Can you elaborate on this? How does it schedule two
+> TIDs for _different_ ACs then?
 
-> >Четверг, 19 октября 2017, 8:28 +06:00 от Андрей Иванов <wowz89@mail.ru>:
-> >
-> >Yes, I saw the frequencies wrong, but according to the documentation, you can add support for the frequencies 5150-5350 and 5470-5725 MHz, so that the phones on the Androyd started seeing Wi-fi 5GHz? or are our legislative acts not extinguishing you?
-> >
-> >I'm just not strong in all of your terms, but my phone does not see wi-fi 5GHz and with support we figured out that due to the fact that it does not exist in wireless-regdb it will not see it.
-> >
-> >
-> >>Четверг, 19 октября 2017, 0:49 +06:00 от Seth Forshee < seth.forshee@canonical.com >:
-> >>
-> >>On Wed, Oct 18, 2017 at 07:44:54PM +0300, Андрей Иванов wrote:
-> >>> 
-> >>> In accordance with the communications act ( in the attachment) official source the government website mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
-> >>> on page 16 in paragraph 23 outlines that we can use frequency 5150–5350МГц 5470-5725 MHz indoor. It's an official order approved by the government also exert its scan where you can see all the printing and painting reference on the Internet  http://adilet.zan.kz/rus/origins/V1500010730  
-> >>
-> >>Any reason you dropped the mailing lists from your reply?
-> >>
-> >>A few notes/questions:
-> >>
-> >>1. We'll need to add the NO-OUTDOOR flag to the 5150-5350 and 5470-5725
-> >>   MHz ranges.
-> >>
-> >>2. I don't see anything about using DFS in the ranges where you have
-> >>   that. It's not unreasonable that this would be required, but I'm
-> >>   wondering whether I'm missing that or if there's someplace else which
-> >>   specifies this is needed?
-> >>
-> >>3. I don't see anything about using frequencies above 5725 MHz.
-> >>
-> >>4. The regulatory db is for unlicensed spectrum only. I'm reading a
-> >>   google translation of the document so I'm having a hard time being
-> >>   sure of what it says, but I do see a lot of references to permits or
-> >>   licenses. Can the spectrum you're trying to add be used without
-> >>   obtaining a permit or license?
-> >>
-> >>Thanks,
-> >>Seth
-> >>
-> >>> 
-> >>> >Среда, 18 октября 2017, 19:50 +06:00 от Seth Forshee < seth.forshee@canonical.com >:
-> >>> >
-> >>> >On Wed, Oct 18, 2017 at 02:26:17PM +0300, Андрей Иванов wrote:
-> >>> >> Please add support for 5 GHz in Kazakhstan
-> >>> >>         (5170 - 5250 @ 80), (20), AUTO-BW
-> >>> >> 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-> >>> >> 	(5650 - 5730 @ 80), (30), DFS
-> >>> >> 	(5735 - 5835 @ 80), (30)
-> >>> >
-> >>> >We got a very similar submission not that long ago, and I had some
-> >>> >questions which were never answered.
-> >>> >
-> >>> > http://lists.infradead.org/pipermail/wireless-regdb/2017-August/001086.html
-> >>> >
-> >>> >That one provided a link to some documentation for Kazakhstan, but the
-> >>> >information there seemed incomplete to me. Can you answer the questions
-> >>> >I asked there, or provide a link to a more complete source of
-> >>> >information for the regulations in Kazakhstan?
-> >>> >
-> >>> >Thanks,
-> >>> >Seth
-> >>> 
-> >>> 
-> >>> С уважением,
-> >>> Андрей Ивaнoв
-> >>
-> >>
-> >>
-> >
-> >
-> >С уважением,
-> >Андрей Ивaнoв
-> 
-> 
-> С уважением,
-> Андрей Ивaнoв
+There's a separate scheduling loop for each hardware queue (one per AC),
+which only schedules all TXQs with that AC. The hardware will prioritise
+higher ACs by dequeueing from the high-priority hardware queue first.
+
+> It seems to me that to actually get the right QoS behaviour you have
+> to schedule *stations*, and then while you're looking at a station,
+> you need to select the highest-priority TXQ that has data? Otherwise,
+> don't you end up doing fairness on a STA/AC rather than just on a STA,
+> so that a station that uses two ACs gets twice as much airtime as one
+> using just a single AC?
+
+Yeah, that's what we have currently in ath9k. However, it's rare in
+practice that a station transmits the same amount of data on all ACs
+(for one, since the max aggregation size is smaller at the higher ACs
+that becomes difficult). But you are quite right that this is something
+that should be fixed :)
+
+>> Ideally, I would prefer the scheduling to be "two-pass": First,
+>> decide which physical station to send to, then decide which TID on
+>> that station to service.=20
+>
+> Yeah, that would make more sense.
+>
+>> But because everything is done at the TID/TXQ level, that is not
+>> quite trivial to achieve I think...
+>
+> Well you can group the TXQs, I guess. They all have a STA pointer, so
+> you could put a one- or two-bit "schedule color" field into each
+> station and if you find a TXQ with the same station color you just
+> skip it or something like that?
+
+Couldn't we add something like a get_next_txq(phy) function to mac80211
+that the drivers can call to get the queue to pull packets from? That
+way, responsibility for scheduling both stations and QoS levels falls to
+mac80211, which makes it possible to do clever scheduling stuff without
+having to re-implement it in every driver. Also, this function could
+handle all the special TXQs for PS and non-data frames that you were
+talking about in your other email?
+
+Unless there's some reason I'm missing that the driver really needs to
+schedule the TXQs, I think this would make a lot of sense?
+
+-Toke
