@@ -1,69 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53008 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdJCWNt (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:43888 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754374AbdJIRtz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Oct 2017 18:13:49 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] ath10k: Retry pci probe on failure.
-Date: Tue,  3 Oct 2017 15:13:46 -0700
-Message-Id: <1507068826-14677-1-git-send-email-greearb@candelatech.com> (sfid-20171004_001352_016602_37EB5394)
+        Mon, 9 Oct 2017 13:49:55 -0400
+Received: by mail-oi0-f47.google.com with SMTP id c77so39067785oig.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 10:49:55 -0700 (PDT)
+MIME-Version: 1.0
+From: Andrey Konovalov <andreyknvl@google.com>
+Date: Mon, 9 Oct 2017 19:49:54 +0200
+Message-ID: <CAAeHK+xaHtb_CnEhZ5ncPXDERYhOu-+kvaAXpjbcBPRTT6xd9A@mail.gmail.com> (sfid-20171009_195429_545988_FFC5803B)
+Subject: usb/net/ar5523: warning in ar5523_submit_rx_cmd/usb_submit_urb
+To: Pontus Fuchs <pontus.fuchs@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi!
 
-This works around a problem we see when sometimes the wifi NIC does
-not respond the first time.  This seems to happen especially often on
-some of the 9984 NICs in mid-range platforms.
+I've got the following report while fuzzing the kernel with syzkaller.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
 
-v2:  Change to mdelay instead of udelay to fix compile issue on ARM.
+It seems that the driver doesn't check the endpoint type provided in
+the USB descriptor.
 
- drivers/net/wireless/ath/ath10k/pci.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 77beb13..0861f7f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3487,8 +3487,8 @@ static const struct ath10k_bus_ops ath10k_pci_bus_ops = {
- 	.get_num_banks	= ath10k_pci_get_num_banks,
- };
- 
--static int ath10k_pci_probe(struct pci_dev *pdev,
--			    const struct pci_device_id *pci_dev)
-+static int __ath10k_pci_probe(struct pci_dev *pdev,
-+			      const struct pci_device_id *pci_dev)
- {
- 	int ret = 0;
- 	struct ath10k *ar;
-@@ -3672,6 +3672,22 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 	return ret;
- }
- 
-+static int ath10k_pci_probe(struct pci_dev *pdev,
-+			    const struct pci_device_id *pci_dev)
-+{
-+	int cnt = 0;
-+	int rv;
-+	do {
-+		rv = __ath10k_pci_probe(pdev, pci_dev);
-+		if (rv == 0)
-+			return rv;
-+		pr_err("ath10k: failed to probe PCI : %d, retry-count: %d\n", rv, cnt);
-+		mdelay(10); /* let the ath10k firmware gerbil take a small break */
-+	} while (cnt++ < 10);
-+	return rv;
-+}
-+
-+
- static void ath10k_pci_remove(struct pci_dev *pdev)
- {
- 	struct ath10k *ar = pci_get_drvdata(pdev);
--- 
-2.4.11
+usb 1-1: BOGUS urb xfer, pipe 3 != type 1
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 2265 at drivers/usb/core/urb.c:449
+usb_submit_urb+0xf8a/0x11d0
+Modules linked in:
+CPU: 1 PID: 2265 Comm: kworker/1:2 Not tainted
+4.14.0-rc4-43418-g43a3f84d2109 #379
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Workqueue: usb_hub_wq hub_event
+task: ffff88006abc8000 task.stack: ffff880063e08000
+RIP: 0010:usb_submit_urb+0xf8a/0x11d0 drivers/usb/core/urb.c:448
+RSP: 0000:ffff880063e0ded0 EFLAGS: 00010286
+RAX: 0000000000000029 RBX: ffff8800694cbf00 RCX: 0000000000000000
+RDX: 0000000000000029 RSI: ffffffff86a76d40 RDI: ffffed000c7c1bcc
+RBP: ffff880063e0dfd0 R08: 1ffff1000c7c1a72 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 1ffff1000c7c1be1
+R13: 0000000000000001 R14: 0000000000000003 R15: ffff88006bb47e10
+FS:  0000000000000000(0000) GS:ffff88006c500000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f43b3d37000 CR3: 00000000695d4000 CR4: 00000000000006e0
+Call Trace:
+ ar5523_submit_rx_cmd+0x20a/0x320 drivers/net/wireless/ath/ar5523/ar5523.c:208
+ ar5523_probe+0x1683/0x3af0 drivers/net/wireless/ath/ar5523/ar5523.c:1643
+ usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
+ really_probe drivers/base/dd.c:413
+ driver_probe_device+0x610/0xa00 drivers/base/dd.c:557
+ __device_attach_driver+0x230/0x290 drivers/base/dd.c:653
+ bus_for_each_drv+0x161/0x210 drivers/base/bus.c:463
+ __device_attach+0x26e/0x3d0 drivers/base/dd.c:710
+ device_initial_probe+0x1f/0x30 drivers/base/dd.c:757
+ bus_probe_device+0x1eb/0x290 drivers/base/bus.c:523
+ device_add+0xd0b/0x1660 drivers/base/core.c:1835
+ usb_set_configuration+0x104e/0x1870 drivers/usb/core/message.c:1932
+ generic_probe+0x73/0xe0 drivers/usb/core/generic.c:174
+ usb_probe_device+0xaf/0xe0 drivers/usb/core/driver.c:266
+ really_probe drivers/base/dd.c:413
+ driver_probe_device+0x610/0xa00 drivers/base/dd.c:557
+ __device_attach_driver+0x230/0x290 drivers/base/dd.c:653
+ bus_for_each_drv+0x161/0x210 drivers/base/bus.c:463
+ __device_attach+0x26e/0x3d0 drivers/base/dd.c:710
+ device_initial_probe+0x1f/0x30 drivers/base/dd.c:757
+ bus_probe_device+0x1eb/0x290 drivers/base/bus.c:523
+ device_add+0xd0b/0x1660 drivers/base/core.c:1835
+ usb_new_device+0x7b8/0x1020 drivers/usb/core/hub.c:2457
+ hub_port_connect drivers/usb/core/hub.c:4903
+ hub_port_connect_change drivers/usb/core/hub.c:5009
+ port_event drivers/usb/core/hub.c:5115
+ hub_event+0x194d/0x3740 drivers/usb/core/hub.c:5195
+ process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+ worker_thread+0x221/0x1850 kernel/workqueue.c:2253
+ kthread+0x3a1/0x470 kernel/kthread.c:231
+ ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
+Code: 48 8b 85 30 ff ff ff 48 8d b8 98 00 00 00 e8 6e df c7 fe 45 89
+e8 44 89 f1 4c 89 fa 48 89 c6 48 c7 c7 c0 ce 04 87 e8 50 6d 16 fd <0f>
+ff e9 9b f7 ff ff e8 9a f1 5f fd e9 80 f7 ff ff e8 60 c4 2d
+---[ end trace 4ec8ea7915652acc ]---
