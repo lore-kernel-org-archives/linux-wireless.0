@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:56431 "EHLO
-        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751091AbdJSCAE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34314 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751635AbdJIHJV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 22:00:04 -0400
-Received: by mail-oi0-f48.google.com with SMTP id v9so12195524oif.13
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 19:00:04 -0700 (PDT)
-Subject: Re: rtlwifi oops
-To: nirinA <nirina.raseliarison@gmail.com>,
-        James Cameron <quozl@laptop.org>,
-        linux-wireless@vger.kernel.org
-References: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
- <20171018223320.GB641@us.netrek.org>
- <c13aa975-6339-2f5a-20bb-0a82656a2271@gmail.com>
- <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
- <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <d65baa01-c842-0d14-5760-bbc1c754b1e6@lwfinger.net> (sfid-20171019_040008_208852_E18CD1B1)
-Date: Wed, 18 Oct 2017 21:00:02 -0500
-MIME-Version: 1.0
-In-Reply-To: <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 9 Oct 2017 03:09:21 -0400
+Message-ID: <1507532953.26041.5.camel@sipsolutions.net> (sfid-20171009_090939_993136_388CF49C)
+Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Xiang Gao <qasdfgtyuiop@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Mon, 09 Oct 2017 09:09:13 +0200
+In-Reply-To: <CAMtaSwRU45ve71=H4C7cDQEHrkHg2=eMvXhYbe4HZGxsPRD+AQ@mail.gmail.com> (sfid-20171008_074412_021883_BA751082)
+References: <20170926131945.3962-1-qasdfgtyuiop@gmail.com>
+         <1506945898.25586.3.camel@sipsolutions.net>
+         <CAMtaSwRU45ve71=H4C7cDQEHrkHg2=eMvXhYbe4HZGxsPRD+AQ@mail.gmail.com>
+         (sfid-20171008_074412_021883_BA751082)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2017 08:40 PM, nirinA wrote:
-> i checked my dmesg and have this similar log, i think when i unplugged the device.
+On Sun, 2017-10-08 at 01:43 -0400, Xiang Gao wrote:
 > 
-> [ 5640.100541] usb 2-1.4: USB disconnect, device number 5
-> [ 5640.104108] rtl_usb: reg 0x102, usbctrl_vendorreq TimeOut! status:0xffffffed 
-> value=0x0
-> [ 5640.104110] rtl_usb: reg 0x422, usbctrl_vendorreq TimeOut! status:0xffffffed 
-> value=0x0
-> [ 5640.104113] rtl_usb: reg 0x542, usbctrl_vendorreq TimeOut! status:0xffffffed 
-> value=0x0
-> [ 5640.104127] rtl_usb: reg 0x102, usbctrl_vendorreq TimeOut! status:0xffffffed 
-> value=0xd38000
+> By the way, I'm still struggling on how to run unit tests. It might
+> take time for me to make it run on my machine.
+
+I can run it easily, so don't worry about it too much. Running it is of
+course much appreciated, but I don't really want to go and require that
+right now, it takes a long time to run.
+
+If you do want to set it up, I suggest the vm scripts (hostap
+repository in tests/hwsim/vm/ - you can use the kernel .config there as
+a base to compile a kernel and then just kick it off from there, but it
+can take a while to run.
+
+> Hmm... good question. The reason is, aes_ccm.c and aes_gcm.c was
+> almost exact copy of each other. But they have different copyright
+> information.
+> The copyright of aes_ccm.c was:
 > 
-> i will apply the patch and will see if i still get this.
+> Copyright 2006, Devicescape Software, Inc.
+> Copyright 2003-2004, Instant802 Networks, Inc.
+> 
+> and the copyright of aes_gcm.c was:
+> 
+> Copyright 2014-2015, Qualcomm Atheros, Inc.
+> 
+> I just don't know how to write the copyright for the new aead_api.c,
+> so I does not put anything there.
 
-As I said in the response to your private message:
+Heh, good point. Well, I guess we can pretend it wasn't already copied
+before and just "keep" both.
 
-No, that is a different error. You need to check for the USB disconnect when 
-starting, but no rtl_usb errors.
-
-Larry
+johannes
