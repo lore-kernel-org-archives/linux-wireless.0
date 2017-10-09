@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.linuxprofi.at ([93.83.54.199]:33244 "EHLO
-        zimbra.linuxprofi.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751396AbdJDP5U (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 11:57:20 -0400
-From: =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
-Subject: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
-Date: Wed,  4 Oct 2017 17:56:58 +0200
-Message-Id: <20171004155700.18048-2-christoph@boehmwalder.at> (sfid-20171004_175826_657041_CAC08B8C)
-In-Reply-To: <20171004155700.18048-1-christoph@boehmwalder.at>
-References: <20171004155700.18048-1-christoph@boehmwalder.at>
+Received: from m12-13.163.com ([220.181.12.13]:39054 "EHLO m12-13.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753408AbdJIBaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 8 Oct 2017 21:30:14 -0400
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: gregkh@linuxfoundation.org, m@bues.ch, sudipm.mukherjee@gmail.com,
+        akpm@linux-foundation.org, johannes@sipsolutions.net,
+        dahinds@users.sourceforge.net
+Cc: linux-pcmcia@lists.infradead.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Subject: [BUG] ssb: Possible sleep-in-atomic bugs in ssb_pcmcia_read8
+Message-ID: <b3252056-573d-2c69-81d6-dde291246748@163.com> (sfid-20171009_033038_343245_8692BA01)
+Date: Mon, 9 Oct 2017 09:29:17 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change a usage of int in a boolean context to use the bool type instead, as it
-makes the intent of the function clearer and helps clarify its semantics.
+According to pcmcia.c, the driver may sleep under a spinlock.
+The function call paths are:
+ssb_pcmcia_read8 (acquire the spinlock)
+   select_core_and_segment
+     ssb_pcmcia_switch_segment
+       ssb_pcmcia_cfg_write
+         pcmcia_write_config_byte
+           pcmcia_access_config (drivers/pcmcia/pcmcia_resource.c)
+             mutex_lock --> may sleep
 
-Also eliminate the if/else and just return the boolean result directly,
-making the code more readable.
+ssb_pcmcia_read8 (acquire the spinlock)
+   select_core_and_segment
+     ssb_pcmcia_switch_segment
+       sssb_pcmcia_cfg_read
+         pcmcia_read_config_byte
+           pcmcia_access_config (drivers/pcmcia/pcmcia_resource.c)
+             mutex_lock --> may sleep
 
-Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
----
- drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+A possible fix is to use spinlock instead of mutex lock in 
+pcmcia_access_config in drivers/pcmcia/pcmcia_resource.c.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-index b7cd813ba70f..0eb815ae97e8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-@@ -267,14 +267,12 @@ int iwl_phy_db_set_section(struct iwl_phy_db *phy_db,
- }
- IWL_EXPORT_SYMBOL(iwl_phy_db_set_section);
- 
--static int is_valid_channel(u16 ch_id)
-+static bool is_valid_channel(u16 ch_id)
- {
--	if (ch_id <= 14 ||
--	    (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
--	    (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
--	    (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1))
--		return 1;
--	return 0;
-+	return (ch_id <= 14 ||
-+	       (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-+	       (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-+	       (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1));
- }
- 
- static u8 ch_id_to_ch_index(u16 ch_id)
--- 
-2.13.5
+These bugs are found by my static analysis tool and my code review.
+
+
+Thanks,
+Jia-Ju Bai
