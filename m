@@ -1,86 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:47710 "EHLO
-        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754801AbdJINXj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:38436 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754129AbdJILk0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 09:23:39 -0400
-Date: Mon, 9 Oct 2017 15:23:05 +0200
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-mips@linux-mips.org, linux-watchdog@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Tejun Heo <tj@kernel.org>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        linux1394-devel@lists.sourceforge.net, linux-pm@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 09/13] timer: Remove users of expire and data arguments
- to DEFINE_TIMER
-Message-ID: <20171009132305.GH20977@linux-mips.org> (sfid-20171009_152403_592641_4D88C10F)
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
- <1507159627-127660-10-git-send-email-keescook@chromium.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1507159627-127660-10-git-send-email-keescook@chromium.org>
+        Mon, 9 Oct 2017 07:40:26 -0400
+Message-ID: <1507549222.26041.38.camel@sipsolutions.net> (sfid-20171009_134032_153917_4C895360)
+Subject: Re: [RFC] mac80211: Add airtime fairness accounting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Mon, 09 Oct 2017 13:40:22 +0200
+In-Reply-To: <878tgkd5d1.fsf@toke.dk>
+References: <20171006115232.28688-1-toke@toke.dk>
+         <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk>
+         <1507310319.19300.28.camel@sipsolutions.net> <87infrqk28.fsf@toke.dk>
+         <1507533328.26041.12.camel@sipsolutions.net> <878tgkd5d1.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 04, 2017 at 04:27:03PM -0700, Kees Cook wrote:
+On Mon, 2017-10-09 at 11:42 +0200, Toke Høiland-Jørgensen wrote:
 
-> Subject: [PATCH 09/13] timer: Remove users of expire and data arguments to
->  DEFINE_TIMER
+> Well, the padding and spacing between frames is at most 11 bytes (4-
+> byte delimiter, 4-byte FCS and 3-byte padding), which is ~0.7% of a
+> full-sized frame. I'm not too worried about errors on that scale,
+> TBH.
+
+I'm not sure - this really should take the whole frame exchange
+sequence into consideration, since the "dead" IFS time and the ACK etc.
+is also airtime consumed for that station, even if there's no actual
+transmission going on.
+
+If you factor that in, the overhead reduction with aggregation is
+considerable! With an 80 MHz 2x2 MCS 9 (866Mbps PHY rate) A-MPDU
+containing 64 packets, you can reach >650Mbps (with protection),
+without A-MPDU you can reach only about 45Mbps I think.
+
+You'd think that a 1500 byte frame takes 1.5ms for the 1Mbps client,
+and ~14µs for the above mentioned VHT rate.
+
+In reality, however, the overhead for both is comparable in absolute
+numbers, it's >200µs.
+
+If you don't take any of this overhead into account at all, then you'll
+vastly over-allocate time for clients sending small (non-aggregated)
+frames, because for those - even with slow rates - the overhead will
+dominate.
+
+If you do take this overhead into account but don't account for
+aggregation, you'll vastly under-allocate time for HT/VHT clients that
+use aggregation.
+
+I don't know if there's an easy answer. Perhaps not accounting for the
+overhead but assuming that clients won't be stupid and will actually do
+aggregation when they ramp up their rates is reasonable in most
+scenarios, but I'm afraid that we'll find interop issues - we found for
+example that if you enable U-APSD lots of devices won't do aggregation
+any more ...
+
+> Sure, it would be better to have it be accurate, but there are other
+> imperfections, especially on the RX side (we can't count
+> retransmissions, for instance, since the receiver obviously doesn't
+> see those).
+
+Sure.
+
+> There's a separate scheduling loop for each hardware queue (one per
+> AC), which only schedules all TXQs with that AC. The hardware will
+> prioritise higher ACs by dequeueing from the high-priority hardware
+> queue first.
+
+Ok, I guess that addresses that issue.
+
+> Yeah, that's what we have currently in ath9k. However, it's rare in
+> practice that a station transmits the same amount of data on all ACs
+> (for one, since the max aggregation size is smaller at the higher ACs
+> that becomes difficult). But you are quite right that this is
+> something that should be fixed :)
+
+Not sure the amount of data matters that much, but ok.
+
+> > > Ideally, I would prefer the scheduling to be "two-pass": First,
+> > > decide which physical station to send to, then decide which TID
+> > > on that station to service. 
+> > 
+> > Yeah, that would make more sense.
+> > 
+> > > But because everything is done at the TID/TXQ level, that is not
+> > > quite trivial to achieve I think...
+> > 
+> > Well you can group the TXQs, I guess. They all have a STA pointer,
+> > so
+> > you could put a one- or two-bit "schedule color" field into each
+> > station and if you find a TXQ with the same station color you just
+> > skip it or something like that?
 > 
-> The expire and data arguments of DEFINE_TIMER are only used in two places
-> and are ignored by the code (malta-display.c only uses mod_timer(),
-> never add_timer(), so the preset expires value is ignored). Set both
-> sets of arguments to zero.
+> Couldn't we add something like a get_next_txq(phy) function to
+> mac80211 that the drivers can call to get the queue to pull packets
+> from? That way, responsibility for scheduling both stations and QoS
+> levels falls to mac80211, which makes it possible to do clever
+> scheduling stuff without having to re-implement it in every driver.
+> Also, this function could handle all the special TXQs for PS and non-
+> data frames that you were talking about in your other email?
 > 
-> Cc: Ralf Baechle <ralf@linux-mips.org>
-> Cc: Wim Van Sebroeck <wim@iguana.be>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: linux-mips@linux-mips.org
-> Cc: linux-watchdog@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  arch/mips/mti-malta/malta-display.c | 6 +++---
->  drivers/watchdog/alim7101_wdt.c     | 4 ++--
->  2 files changed, 5 insertions(+), 5 deletions(-)
+> Unless there's some reason I'm missing that the driver really needs
+> to schedule the TXQs, I think this would make a lot of sense?
 
-For malta-display:
+I have no idea, that's something you'll have to ask Felix I guess. I'd
+think it should work, but the scheduling might have other constraints
+like wanting to fill certain A-MPDU buffers, or getting a specific
+channel (though that's already decided once you pick the station).
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+It might also be hard to combine that - if you have space on your VI
+queue, how do you then pick the queue? We can't really go *all* the way
+and do scheduling *entirely* in software, getting rid of per-AC queues,
+since the per-AC queues also work to assign the EDCA parameters etc.
 
-  Ralf
+Also, in iwlwifi we actually have a HW queue per TID to facilitate
+aggregation, though we could just let mac80211 pick the next TXQ to
+serve and skip in the unlikely case that the HW queue for that is
+already full (which really shouldn't happen).
+
+johannes
