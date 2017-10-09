@@ -1,191 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751665AbdJYNOY (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44990 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753921AbdJIQq5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 09:14:24 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 06/12] wil6210: add block size checks during FW load
-Date: Wed, 25 Oct 2017 16:14:01 +0300
-Message-Id: <1508937247-11890-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151429_302994_7E725BCA)
-In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Mon, 9 Oct 2017 12:46:57 -0400
+Message-ID: <1507567607.2677.124.camel@decadent.org.uk> (sfid-20171009_184709_371020_E98D9D48)
+Subject: Re: [PATCH 0/3] linux-firmware: ath10k update 20170918
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Mon, 09 Oct 2017 17:46:47 +0100
+In-Reply-To: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1505746857-31938-1-git-send-email-kvalo@qca.qualcomm.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-asNaL9aoDF0/embyOfOG"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
 
-When loading FW from file add block size checks to ensure a
-corrupted FW file will not cause the driver to write outside
-the device memory.
+--=-asNaL9aoDF0/embyOfOG
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/fw_inc.c  | 58 +++++++++++++++++++-----------
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- drivers/net/wireless/ath/wil6210/wmi.c     | 11 +++++-
- 3 files changed, 49 insertions(+), 21 deletions(-)
+On Mon, 2017-09-18 at 18:00 +0300, Kalle Valo wrote:
+> Few firmware fixes to user reported issues for ath10k, but the other "fix=
+"
+> being a revert back to older firmware. Also a small board-2.bin update.
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 7a33792..77d1902 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -26,14 +26,17 @@
- 					     prefix_type, rowsize,	\
- 					     groupsize, buf, len, ascii)
- 
--#define FW_ADDR_CHECK(ioaddr, val, msg) do { \
--		ioaddr = wmi_buffer(wil, val); \
--		if (!ioaddr) { \
--			wil_err_fw(wil, "bad " msg ": 0x%08x\n", \
--				   le32_to_cpu(val)); \
--			return -EINVAL; \
--		} \
--	} while (0)
-+static bool wil_fw_addr_check(struct wil6210_priv *wil,
-+			      void __iomem **ioaddr, __le32 val,
-+			      u32 size, const char *msg)
-+{
-+	*ioaddr = wmi_buffer_block(wil, val, size);
-+	if (!(*ioaddr)) {
-+		wil_err_fw(wil, "bad %s: 0x%08x\n", msg, le32_to_cpu(val));
-+		return false;
-+	}
-+	return true;
-+}
- 
- /**
-  * wil_fw_verify - verify firmware file validity
-@@ -160,7 +163,8 @@ static int fw_handle_data(struct wil6210_priv *wil, const void *data,
- 		return -EINVAL;
- 	}
- 
--	FW_ADDR_CHECK(dst, d->addr, "address");
-+	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
-+		return -EINVAL;
- 	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(d->addr),
- 		   s);
- 	wil_memcpy_toio_32(dst, d->data, s);
-@@ -192,7 +196,8 @@ static int fw_handle_fill(struct wil6210_priv *wil, const void *data,
- 		return -EINVAL;
- 	}
- 
--	FW_ADDR_CHECK(dst, d->addr, "address");
-+	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
-+		return -EINVAL;
- 
- 	v = le32_to_cpu(d->value);
- 	wil_dbg_fw(wil, "fill [0x%08x] <== 0x%08x, %zu bytes\n",
-@@ -248,7 +253,8 @@ static int fw_handle_direct_write(struct wil6210_priv *wil, const void *data,
- 		u32 v = le32_to_cpu(block[i].value);
- 		u32 x, y;
- 
--		FW_ADDR_CHECK(dst, block[i].addr, "address");
-+		if (!wil_fw_addr_check(wil, &dst, block[i].addr, 0, "address"))
-+			return -EINVAL;
- 
- 		x = readl(dst);
- 		y = (x & m) | (v & ~m);
-@@ -314,10 +320,15 @@ static int fw_handle_gateway_data(struct wil6210_priv *wil, const void *data,
- 	wil_dbg_fw(wil, "gw write record [%3d] blocks, cmd 0x%08x\n",
- 		   n, gw_cmd);
- 
--	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
--	FW_ADDR_CHECK(gwa_val, d->gateway_value_addr, "gateway_value_addr");
--	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
--	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
-+	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
-+			       "gateway_addr_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_val, d->gateway_value_addr, 0,
-+			       "gateway_value_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
-+			       "gateway_cmd_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
-+			       "gateway_ctrl_address"))
-+		return -EINVAL;
- 
- 	wil_dbg_fw(wil, "gw addresses: addr 0x%08x val 0x%08x"
- 		   " cmd 0x%08x ctl 0x%08x\n",
-@@ -373,12 +384,19 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
- 	wil_dbg_fw(wil, "gw4 write record [%3d] blocks, cmd 0x%08x\n",
- 		   n, gw_cmd);
- 
--	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
-+	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
-+			       "gateway_addr_addr"))
-+		return -EINVAL;
- 	for (k = 0; k < ARRAY_SIZE(block->value); k++)
--		FW_ADDR_CHECK(gwa_val[k], d->gateway_value_addr[k],
--			      "gateway_value_addr");
--	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
--	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
-+		if (!wil_fw_addr_check(wil, &gwa_val[k],
-+				       d->gateway_value_addr[k],
-+				       0, "gateway_value_addr"))
-+			return -EINVAL;
-+	if (!wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
-+			       "gateway_cmd_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
-+			       "gateway_ctrl_address"))
-+		return -EINVAL;
- 
- 	wil_dbg_fw(wil, "gw4 addresses: addr 0x%08x cmd 0x%08x ctl 0x%08x\n",
- 		   le32_to_cpu(d->gateway_addr_addr),
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 8dfb4a7..6b09998 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -877,6 +877,7 @@ int wil_ps_update(struct wil6210_priv *wil,
- int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
- void wil_set_ethtoolops(struct net_device *ndev);
- 
-+void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr, u32 size);
- void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
- void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
- int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dbdf71d..16aa624 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -140,13 +140,15 @@ static u32 wmi_addr_remap(u32 x)
- /**
-  * Check address validity for WMI buffer; remap if needed
-  * @ptr - internal (linker) fw/ucode address
-+ * @size - if non zero, validate the block does not
-+ *  exceed the device memory (bar)
-  *
-  * Valid buffer should be DWORD aligned
-  *
-  * return address for accessing buffer from the host;
-  * if buffer is not valid, return NULL.
-  */
--void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
-+void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr_, u32 size)
- {
- 	u32 off;
- 	u32 ptr = le32_to_cpu(ptr_);
-@@ -161,10 +163,17 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
- 	off = HOSTADDR(ptr);
- 	if (off > wil->bar_size - 4)
- 		return NULL;
-+	if (size && ((off + size > wil->bar_size) || (off + size < off)))
-+		return NULL;
- 
- 	return wil->csr + off;
- }
- 
-+void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
-+{
-+	return wmi_buffer_block(wil, ptr_, 0);
-+}
-+
- /**
-  * Check address validity
-  */
--- 
-1.9.1
+I've applied this series, thanks.
+
+Ben.
+
+> Kalle Valo (3):
+>   ath10k: QCA6174 hw3.0: update firmware-6.bin to
+>     WLAN.RM.4.4.1-00051-QCARMSWP-1
+>   ath10k: QCA6174 hw3.0: update board-2.bin
+>   Revert "ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2"
+>=20
+>  WHENCE                                            |   4 +-
+>  ath10k/QCA6174/hw3.0/board-2.bin                  | Bin 477060 -> 501748=
+ bytes
+>  ath10k/QCA6174/hw3.0/firmware-6.bin               | Bin 711408 -> 727776=
+ bytes
+>  ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt |  97 +++++-----------=
+------
+>  ath10k/QCA988X/hw2.0/firmware-5.bin               | Bin 249384 -> 248188=
+ bytes
+>  5 files changed, 25 insertions(+), 76 deletions(-)
+>=20
+--=20
+Ben Hutchings
+Humour is the best antidote to reality.
+
+
+--=-asNaL9aoDF0/embyOfOG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAlnbp/cACgkQ57/I7JWG
+EQkmOxAAzmuueUAcOszYNZ0GSkvOsnKDJ9PF0f9P3Cahi9mwCe4kCyjbiCDaji33
+I0nDqzTvnZBqFHvWhFwKviIQP81cHIq7ESKVmZSYMqV098k9pcHvLNu50cjgkvB5
+gLjbr8pQQ+Iz68P6KSBbF3boDabdJQ6s84DeH4zYx7eb2y7MvDC1idEDTArGcEKU
+zFnIOumW9n/Hc0JtO1S6k5lHT8rgJ1z98oV3j3VAC0N7PA4/OwMImOv+urr3ifPz
+9M/V9j07IVKJhB93i9Ws39IFQbElg/r/L2IXoLTDblpRk2C9Ts1FwBijbzwnv9yZ
+0Q9E7M1FBoDuyhGcUYgJqE42NSsimjOnEvwz59mHoukX13Rsc9BJFyEFyDLQ9CTV
+6jEJpXarUwHkleOqamefGoZNjkhWiZob9dgcUs3HBt/0PlouY8GdZbU9wfy8Dwhr
+gf0qnEt3BZgYodG7IaupuU/xoq5iznzWP16PfFEClgZXpvw87Ht+ZjsHrUeq0Te1
+KKdMnIfXIAmxk194tiiLITnQmPaPOQ1pfYq6LZlc8jalfHHo+NNAuNb1ZBw3CbUq
+5yolsSGryfoMIfyS1ZmItti2SzeHYa27PywW6SkPXk9jcuhNEWjfPXvsQevAmf7b
+4RgZsCKFHYONLpgy8lLw0CxfUvsne7fxKfFer+6wBUpWyAZAsCs=
+=FmEp
+-----END PGP SIGNATURE-----
+
+--=-asNaL9aoDF0/embyOfOG--
