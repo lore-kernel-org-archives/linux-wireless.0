@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:44971 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751480AbdJMLhq (ORCPT
+Received: from eddie.linux-mips.org ([148.251.95.138]:47710 "EHLO
+        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754801AbdJINXj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 07:37:46 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 9 Oct 2017 09:23:39 -0400
+Date: Mon, 9 Oct 2017 15:23:05 +0200
+From: Ralf Baechle <ralf@linux-mips.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-mips@linux-mips.org, linux-watchdog@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Harish Patil <harish.patil@cavium.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <len.brown@intel.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Mark Gross <mark.gross@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
+        Petr Mladek <pmladek@suse.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@codeaurora.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Tejun Heo <tj@kernel.org>,
+        Ursula Braun <ubraun@linux.vnet.ibm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        linux1394-devel@lists.sourceforge.net, linux-pm@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 09/13] timer: Remove users of expire and data arguments
+ to DEFINE_TIMER
+Message-ID: <20171009132305.GH20977@linux-mips.org> (sfid-20171009_152403_592641_4D88C10F)
+References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+ <1507159627-127660-10-git-send-email-keescook@chromium.org>
 MIME-Version: 1.0
-Subject: Re: ath10k: fix core PCI suspend when WoWLAN is supported but disabled
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170919232416.108247-1-briannorris@chromium.org>
-References: <20170919232416.108247-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Grant Grundler" <grundler@chromium.org>,
-        <linux-kernel@vger.kernel.org>,
-        "Brian Norris" <briannorris@chromium.org>,
-        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Message-ID: <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com> (sfid-20171013_133815_281978_9221C3F6)
-Date: Fri, 13 Oct 2017 13:37:37 +0200
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1507159627-127660-10-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
+On Wed, Oct 04, 2017 at 04:27:03PM -0700, Kees Cook wrote:
 
-> For devices where the FW supports WoWLAN but user-space has not
-> configured it, we don't do any PCI-specific suspend/resume operations,
-> because mac80211 doesn't call drv_suspend() when !wowlan. This has
-> particularly bad effects for some platforms, because we don't stop the
-> power-save timer, and if this timer goes off after the PCI controller
-> has suspended the link, Bad Things will happen.
+> Subject: [PATCH 09/13] timer: Remove users of expire and data arguments to
+>  DEFINE_TIMER
 > 
-> Commit 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
-> got some of this right, in that it understood there was a problem on
-> non-WoWLAN firmware. But it forgot the $subject case.
+> The expire and data arguments of DEFINE_TIMER are only used in two places
+> and are ignored by the code (malta-display.c only uses mod_timer(),
+> never add_timer(), so the preset expires value is ignored). Set both
+> sets of arguments to zero.
 > 
-> Fix this by moving all the PCI driver suspend/resume logic exclusively
-> into the driver PM hooks. This shouldn't affect WoWLAN support much
-> (this just gets executed later on).
-> 
-> I would just as well kill the entirety of ath10k_hif_suspend(), as it's
-> not even implemented on the USB or SDIO drivers. I expect that we don't
-> need the callback, except to return "supported" (i.e., 0) or "not
-> supported" (i.e., -EOPNOTSUPP).
-> 
-> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
-> Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Ralf Baechle <ralf@linux-mips.org>
+> Cc: Wim Van Sebroeck <wim@iguana.be>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: linux-mips@linux-mips.org
+> Cc: linux-watchdog@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  arch/mips/mti-malta/malta-display.c | 6 +++---
+>  drivers/watchdog/alim7101_wdt.c     | 4 ++--
+>  2 files changed, 5 insertions(+), 5 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
+For malta-display:
 
-96378bd2c6cd ath10k: fix core PCI suspend when WoWLAN is supported but disabled
+Acked-by: Ralf Baechle <ralf@linux-mips.org>
 
--- 
-https://patchwork.kernel.org/patch/9960481/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+  Ralf
