@@ -1,78 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:54005 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751178AbdJEQ2i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 12:28:38 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc: nbd <nbd@nbd.name>
-Subject: Re: converting mac80211 to TXQs entirely
-In-Reply-To: <1507217947.2387.60.camel@sipsolutions.net>
-References: <1507205618.2387.19.camel@sipsolutions.net> <1507217947.2387.60.camel@sipsolutions.net>
-Date: Thu, 05 Oct 2017 18:28:33 +0200
-Message-ID: <87efqhsgni.fsf@toke.dk> (sfid-20171005_182842_039833_DF76AD5C)
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:47951 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932127AbdJIRuf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Oct 2017 13:50:35 -0400
+Received: by mail-oi0-f54.google.com with SMTP id h200so14080485oib.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 10:50:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Andrey Konovalov <andreyknvl@google.com>
+Date: Mon, 9 Oct 2017 19:50:34 +0200
+Message-ID: <CAAeHK+wjhrkr_EedW7+XyFcs1Y9NZVaLyYuGxDTpgrZ-jaLFJg@mail.gmail.com> (sfid-20171009_195251_256594_A20078E1)
+Subject: usb/net/rtlwifi: trying to register non-static key in rtl_c2hcmd_launcher
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hi!
 
-> Part 2 - where can we go from here
->
->
-> Of course - as mentioned in the subject - my goal is to just convert
-> over to TXQs entirely in mac80211. That would get rid of a LOT of
-> special case code, like queueing for aggregation setup, powersave
-> buffering (both unicast and multicast), etc.
+I've got the following report while fuzzing the kernel with syzkaller.
 
+On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
 
-At first glance this looks like a decent way forward. I'll think about
-it some more and comment again later, but for now I just wanted to add
-this:
-
-I'm been thinking about how to move the airtime fairness scheduler out
-of ath9k and into mac80211 (so more drivers can take advantage of it).
-This will require some changes to the TXQ API that drivers speak to, so
-wanted to add my thoughts here to make sure it's compatible with your
-thinking.
-
-I think the easiest way to have mac80211 handle airtime fairness is to
-add a way for ieee80211_tx_dequeue() to return some sort of DEFER signal
-which semantically means "there is no packet for this queue right now,
-but please keep scheduling it" (which would be the result of a TXQ
-belonging to a station that has used its airtime quota but still has
-packets pending). This is different from the current meaning of NULL,
-which will make the driver stop scheduling that TXQ until it gets a new
-wake signal.
-
-The alternative would be to change the API so the driver asks mac80211
-which TXQ it should pull from next, instead of doing its own scheduling
-as it does now. But I'm not sure that's doable with a sane API.
-
-Now, I believe this is related to this point of yours:
-
-> 5) handle non-data frames for vifs
->
-> Similarly, we need a vif->nondata_txq where we can put probe responses
-> and the (few) other frames that we send before we have a station entry.
->
-> According to my earlier analysis (previous email) after these steps we
-> have a TXQ for all frames. All of these steps will require certain
-> adjustments in the drivers currently using TXQs (ath9k & ath10k) since
-> they'll be relying on some amount of buffering and queue stop/wake in
-> mac80211 for these frames. We might just have to add some API to ask
-> "is queue stopped" to make the transition here easy.
-
-And I'm wondering if this "is queue stopped" API could be the same one
-used for the airtime DEFER case?
-
-
-Oh, and BTW: I see this is on the list of topics for the wireless summit
-in Seoul. How do I go about signing up for that? I'll be at netdev
-talking about some of this stuff anyway[1] :)
-
--Toke
-
-[1] https://www.netdevconf.org/2.2/session.html?jorgensen-wifistack-talk
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+CPU: 0 PID: 24 Comm: kworker/0:1 Not tainted
+4.14.0-rc4-43418-g43a3f84d2109-dirty #391
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ __dump_stack lib/dump_stack.c:16
+ dump_stack+0x292/0x395 lib/dump_stack.c:52
+ register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
+ __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
+ lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
+ __raw_spin_lock_irqsave ./include/linux/spinlock_api_smp.h:110
+ _raw_spin_lock_irqsave+0xcc/0x110 kernel/locking/spinlock.c:159
+ rtl_c2hcmd_launcher+0x3ca/0x5d0
+drivers/net/wireless/realtek/rtlwifi/base.c:2052
+ rtl_deinit_core+0x79/0x350 drivers/net/wireless/realtek/rtlwifi/base.c:590
+ rtl_usb_probe+0x1ca3/0x2470 drivers/net/wireless/realtek/rtlwifi/usb.c:1128
+ rtl8192cu_probe+0x29/0x30
+drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c:398
+ usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
+ really_probe drivers/base/dd.c:413
+ driver_probe_device+0x610/0xa00 drivers/base/dd.c:557
+ __device_attach_driver+0x230/0x290 drivers/base/dd.c:653
+ bus_for_each_drv+0x161/0x210 drivers/base/bus.c:463
+ __device_attach+0x26e/0x3d0 drivers/base/dd.c:710
+ device_initial_probe+0x1f/0x30 drivers/base/dd.c:757
+ bus_probe_device+0x1eb/0x290 drivers/base/bus.c:523
+ device_add+0xd0b/0x1660 drivers/base/core.c:1835
+ usb_set_configuration+0x104e/0x1870 drivers/usb/core/message.c:1932
+ generic_probe+0x73/0xe0 drivers/usb/core/generic.c:174
+ usb_probe_device+0xaf/0xe0 drivers/usb/core/driver.c:266
+ really_probe drivers/base/dd.c:413
+ driver_probe_device+0x610/0xa00 drivers/base/dd.c:557
+ __device_attach_driver+0x230/0x290 drivers/base/dd.c:653
+ bus_for_each_drv+0x161/0x210 drivers/base/bus.c:463
+ __device_attach+0x26e/0x3d0 drivers/base/dd.c:710
+ device_initial_probe+0x1f/0x30 drivers/base/dd.c:757
+ bus_probe_device+0x1eb/0x290 drivers/base/bus.c:523
+ device_add+0xd0b/0x1660 drivers/base/core.c:1835
+ usb_new_device+0x7b8/0x1020 drivers/usb/core/hub.c:2457
+ hub_port_connect drivers/usb/core/hub.c:4903
+ hub_port_connect_change drivers/usb/core/hub.c:5009
+ port_event drivers/usb/core/hub.c:5115
+ hub_event+0x194d/0x3740 drivers/usb/core/hub.c:5195
+ process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+ worker_thread+0x221/0x1850 kernel/workqueue.c:2253
+ kthread+0x3a1/0x470 kernel/kthread.c:231
+ ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
