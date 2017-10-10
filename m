@@ -1,144 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:45034 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751587AbdJDX2H (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:33760 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932142AbdJJPxr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 19:28:07 -0400
-Received: by mail-pf0-f177.google.com with SMTP id t62so5849965pfd.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:28:07 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 13/13] workqueue: Convert callback to use from_timer()
-Date: Wed,  4 Oct 2017 16:27:07 -0700
-Message-Id: <1507159627-127660-14-git-send-email-keescook@chromium.org> (sfid-20171005_012920_847241_3BCEB699)
-In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+        Tue, 10 Oct 2017 11:53:47 -0400
+Message-ID: <1507650823.26041.70.camel@sipsolutions.net> (sfid-20171010_175419_415790_D5268F23)
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Tue, 10 Oct 2017 17:53:43 +0200
+In-Reply-To: <20171010140208.1515-1-toke@toke.dk> (sfid-20171010_160341_258014_BDC1BDA8)
+References: <20171010140208.1515-1-toke@toke.dk>
+         (sfid-20171010_160341_258014_BDC1BDA8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer
-to all timer callbacks, switch workqueue to use from_timer() and pass the
-timer pointer explicitly.
+On Tue, 2017-10-10 at 16:02 +0200, Toke Høiland-Jørgensen wrote:
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- include/linux/workqueue.h | 15 ++++++++-------
- kernel/workqueue.c        |  7 +++----
- 2 files changed, 11 insertions(+), 11 deletions(-)
+> +++ b/net/mac80211/agg-tx.c
+> @@ -226,9 +226,11 @@ ieee80211_agg_start_txq(struct sta_info *sta,
+> int tid, bool enable)
+>  		clear_bit(IEEE80211_TXQ_AMPDU, &txqi->flags);
+>  
+>  	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+> +	ieee80211_schedule_txq(&sta->sdata->local->hw, txq);
+> +
+>  	local_bh_disable();
+>  	rcu_read_lock();
+> -	drv_wake_tx_queue(sta->sdata->local, txqi);
+> +	drv_wake_tx_queue(sta->sdata->local);
+>  	rcu_read_unlock();
+>  	local_bh_enable();
 
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index f4960260feaf..f3c47a05fd06 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -17,7 +17,7 @@ struct workqueue_struct;
+It seems like there could be some sort of TX batching here - maybe only
+call the driver if the queue was actually scheduled?
+
+Return true/false from ieee80211_schedule_txq() depending on whether it
+was added or not, and then call the driver only if it was added just
+now? That way, we can save a bunch of driver calls, batching the TX.
  
- struct work_struct;
- typedef void (*work_func_t)(struct work_struct *work);
--void delayed_work_timer_fn(unsigned long __data);
-+void delayed_work_timer_fn(struct timer_list *t);
- 
- /*
-  * The first word is the work queue pointer and the flags rolled into
-@@ -175,8 +175,8 @@ struct execute_work {
- 
- #define __DELAYED_WORK_INITIALIZER(n, f, tflags) {			\
- 	.work = __WORK_INITIALIZER((n).work, (f)),			\
--	.timer = __TIMER_INITIALIZER(delayed_work_timer_fn,		\
--				     (unsigned long)&(n),		\
-+	.timer = __TIMER_INITIALIZER((TIMER_FUNC_TYPE)delayed_work_timer_fn,\
-+				     (TIMER_DATA_TYPE)&(n.timer),	\
- 				     (tflags) | TIMER_IRQSAFE),		\
- 	}
- 
-@@ -241,8 +241,9 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
- #define __INIT_DELAYED_WORK(_work, _func, _tflags)			\
- 	do {								\
- 		INIT_WORK(&(_work)->work, (_func));			\
--		__setup_timer(&(_work)->timer, delayed_work_timer_fn,	\
--			      (unsigned long)(_work),			\
-+		__setup_timer(&(_work)->timer,				\
-+			      (TIMER_FUNC_TYPE)delayed_work_timer_fn,	\
-+			      (TIMER_DATA_TYPE)&(_work)->timer,		\
- 			      (_tflags) | TIMER_IRQSAFE);		\
- 	} while (0)
- 
-@@ -250,8 +251,8 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
- 	do {								\
- 		INIT_WORK_ONSTACK(&(_work)->work, (_func));		\
- 		__setup_timer_on_stack(&(_work)->timer,			\
--				       delayed_work_timer_fn,		\
--				       (unsigned long)(_work),		\
-+				       (TIMER_FUNC_TYPE)delayed_work_timer_fn,\
-+				       (TIMER_DATA_TYPE)&(_work)->timer,\
- 				       (_tflags) | TIMER_IRQSAFE);	\
- 	} while (0)
- 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index a5361fc6215d..c77fdf6bf24f 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -1492,9 +1492,9 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
- }
- EXPORT_SYMBOL(queue_work_on);
- 
--void delayed_work_timer_fn(unsigned long __data)
-+void delayed_work_timer_fn(struct timer_list *t)
- {
--	struct delayed_work *dwork = (struct delayed_work *)__data;
-+	struct delayed_work *dwork = from_timer(dwork, t, timer);
- 
- 	/* should have been called from irqsafe timer with irq already off */
- 	__queue_work(dwork->cpu, dwork->wq, &dwork->work);
-@@ -1508,8 +1508,7 @@ static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
- 	struct work_struct *work = &dwork->work;
- 
- 	WARN_ON_ONCE(!wq);
--	WARN_ON_ONCE(timer->function != delayed_work_timer_fn ||
--		     timer->data != (unsigned long)dwork);
-+	WARN_ON_ONCE(timer->function != (TIMER_FUNC_TYPE)delayed_work_timer_fn);
- 	WARN_ON_ONCE(timer_pending(timer));
- 	WARN_ON_ONCE(!list_empty(&work->entry));
- 
--- 
-2.7.4
+> @@ -1121,6 +1122,9 @@ struct ieee80211_local {
+>  	struct codel_vars *cvars;
+>  	struct codel_params cparams;
+>  
+> +	struct list_head active_txqs;
+> +	spinlock_t active_txq_lock;
+
+Is there much point in having a separate lock? We probably need the fq
+lock in most places related to this anyway?
+
+> +++ b/net/mac80211/sta_info.c
+> @@ -1250,8 +1250,9 @@ void ieee80211_sta_ps_deliver_wakeup(struct
+> sta_info *sta)
+>  			if (!txq_has_queue(sta->sta.txq[i]))
+>  				continue;
+>  
+> -			drv_wake_tx_queue(local, to_txq_info(sta-
+> >sta.txq[i]));
+> +			ieee80211_schedule_txq(&local->hw, sta-
+> >sta.txq[i]);
+>  		}
+> +		drv_wake_tx_queue(local);
+
+Again, calling the driver could be conditional on having done any
+interesting work.
+
+> @@ -1524,7 +1526,8 @@ static bool ieee80211_queue_skb(struct
+> ieee80211_local *local,
+>  	ieee80211_txq_enqueue(local, txqi, skb);
+>  	spin_unlock_bh(&fq->lock);
+>  
+> -	drv_wake_tx_queue(local, txqi);
+> +	ieee80211_schedule_txq(&local->hw, &txqi->txq);
+> +	drv_wake_tx_queue(local);
+
+ditto
+
+> +void ieee80211_schedule_txq(struct ieee80211_hw *hw,
+> +			     struct ieee80211_txq *txq)
+> +{
+> +	struct ieee80211_local *local = hw_to_local(hw);
+> +	struct txq_info *txqi = to_txq_info(txq);
+> +
+> +	spin_lock_bh(&local->active_txq_lock);
+> +
+> +	if (!list_empty(&txqi->schedule_order))
+> +		list_add_tail(&txqi->schedule_order, &local-
+> >active_txqs);
+
+What's with the !list_empty()? Seems inverted to me? You need to add it
+if it's empty?
+
+Also maybe you should only do that if the TXQ isn't *empty*, so the
+driver could call this unconditionally?
+
+> +struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw)
+> +{
+> +	struct ieee80211_local *local = hw_to_local(hw);
+> +	struct txq_info *txqi = NULL;
+> +
+> +	spin_lock_bh(&local->active_txq_lock);
+> +
+> +	if (list_empty(&local->active_txqs))
+> +		goto out;
+> +
+> +	txqi = list_first_entry(&local->active_txqs, struct
+> txq_info, schedule_order);
+> +	list_del_init(&txqi->schedule_order);
+> +
+> +out:
+> +	spin_unlock_bh(&local->active_txq_lock);
+> +
+> +	return &txqi->txq;
+
+You forgot
+	if (!txqi)
+		return NULL;
+
+johannes
