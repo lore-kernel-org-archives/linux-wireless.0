@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:54273 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751474AbdJ3JcV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:33864 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932075AbdJJQF6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 05:32:21 -0400
-Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
- <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com> (sfid-20171030_103224_529311_A3EAB636)
-Date: Mon, 30 Oct 2017 10:32:12 +0100
-MIME-Version: 1.0
-In-Reply-To: <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 10 Oct 2017 12:05:58 -0400
+Message-ID: <1507651555.26041.81.camel@sipsolutions.net> (sfid-20171010_180630_439020_657EE57D)
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Tue, 10 Oct 2017 18:05:55 +0200
+In-Reply-To: <20171010140208.1515-1-toke@toke.dk> (sfid-20171010_160341_258014_BDC1BDA8)
+References: <20171010140208.1515-1-toke@toke.dk>
+         (sfid-20171010_160341_258014_BDC1BDA8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-will check it tomorrow including gcmp-256, ccmp-256. was out for weekend :-)
 
-Am 30.10.2017 um 09:39 schrieb Kalle Valo:
-> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->
->> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
->> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
->> on host (mac80211) rather than firmware. Rebuild cipher header
->> in every received data frames (that are notified through those
->> HTT interfaces) from the rx_hdr_status tlv available in the
->> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
->> flag for the packets which requires mac80211 PN/TSC check support
->> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
->> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
->> rebuilding of cipher header to perform PN/TSC check for replay
->> attack.
->>
->> Please note that removing crypto tail for CCMP-256, GCMP and GCMP-256 ciphers
->> in raw mode needs to be fixed. Since Rx with these ciphers in raw
->> mode does not work in the current form even without this patch and
->> removing crypto tail for these chipers needs clean up, raw mode related
->> issues in CCMP-256, GCMP and GCMP-256 can be addressed in follow up
->> patches.
->>
->> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
->> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> Patch applied to ath-current branch of ath.git, thanks.
->
-> 7eccb738fce5 ath10k: rebuild crypto header in rx data frames
->
+> In particular, I'm not sure what the right thing to do in regards to
+> PS wakeup is...
 
--- 
-Mit freundlichen Grüssen / Regards
+Can you explain what you were _trying_ to do?
 
-Sebastian Gottschall / CTO
+I don't like calling this "driver_buffered" because that's already a
+term for frames that are buffered in the driver ... :-)
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+PS is complicated, we basically transmit, in the following order:
+ * filtered frames (tx_filtered)
+ * buffered frames (ps_tx_buf)
+ * regular frames
+
+This is when we _leave_ powersave. When we deliver frames while the
+station is sleeping (PS-Poll or U-APSD), they don't even go through the
+TXQ. They still come from this place, but currently go directly to the
+->tx() method, which to me is actually pretty weird but that's what it
+is now.
+
+As I think I said in my other thread, we should probably eventually
+just get rid of ps_tx_buf entirely, instead just keeping the frames on
+the TXQ. Then, filtered can just be pushed onto txqi->frags [*], and we
+get rid of having that separately as well.
+
+Then, we've completely solved the wakeup scenario, we just start
+scheduling that TXQ normally again.
+
+For the deliver-while-sleeping (PS-Poll/U-APSD) scenario, I think the
+driver should still pull frames, after calling something like
+drv_release_buffered_frames(). We want this to be scheduled pretty much
+immediately, so we shouldn't just put the TXQ into the normal rotation,
+but otherwise it should work similarly - except limited to a certain
+number of frames [**].
+In this case the driver probably needs to pull the frames using a
+different function so that we can
+ a) tag the packets properly (more-data, EOSP)
+ b) generate nulldata as EOSP container where needed
+Thus, it seems likely that we'll want a separate function, "pull for PS
+delivery" rather than the normal ieee80211_tx_dequeue().
+
+johannes
+
+[*] ok not exactly, if there are frags there already things get messy.
+    but we can probably solve that somehow without needing more special
+    cases
