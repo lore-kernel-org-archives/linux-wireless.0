@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:9303 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754788AbdJJILR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:33774 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932191AbdJJPyy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 04:11:17 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V5 5/5] ath10k: Fix TDLS peer TX data failure issue on encryped AP
-Date: Tue, 10 Oct 2017 16:13:05 +0800
-Message-ID: <1507623185-9383-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_101120_500941_56588340)
-In-Reply-To: <TDLS for ath10k patch>
-References: <TDLS for ath10k patch>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 10 Oct 2017 11:54:54 -0400
+Message-ID: <1507650891.26041.71.camel@sipsolutions.net> (sfid-20171010_175734_170267_73518FE4)
+Subject: Re: [RFC 2/3] ath9k: Move to mac80211 TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Tue, 10 Oct 2017 17:54:51 +0200
+In-Reply-To: <20171010140208.1515-2-toke@toke.dk> (sfid-20171010_160341_629286_01B5926E)
+References: <20171010140208.1515-1-toke@toke.dk>
+         <20171010140208.1515-2-toke@toke.dk> (sfid-20171010_160341_629286_01B5926E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On Tue, 2017-10-10 at 16:02 +0200, Toke Høiland-Jørgensen wrote:
+> This removes TXQ scheduling from ath9k and changes it to use the
+> mac80211 TXQ scheduling API introduced in the previous patch.
 
-For WPA encryption, QCA6174 firmware(version: WLAN.RM.4.4) will unblock
-data when M4 was sent successfully. For other encryption which didn't need
-4-way handshake firmware will unblock the data when peer authorized. Since
-TDLS is 3-way handshake host need send authorize cmd to firmware to unblock
-data.
+I can't really comment on this, but I'll note that the patches need to
+be all combined into a single one eventually, so that it compiles.
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f6702cb..d2530f7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5841,6 +5841,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ath10k_warn(ar, "Peer %pM disappeared!\n", peer_addr);
- 	spin_unlock_bh(&ar->data_lock);
- 
-+	if (sta && sta->tdls)
-+		ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+					  WMI_PEER_AUTHORIZE, 1);
-+
- exit:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
--- 
-1.7.9.5
+johannes
