@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38237 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751350AbdJLLd4 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57918 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751858AbdJJTnL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 07:33:56 -0400
-Date: Thu, 12 Oct 2017 13:34:05 +0200
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Kevin Cernekee <cernekee@chromium.org>
-Subject: Re: [PATCH] brcmfmac: add length check in
- brcmf_cfg80211_escan_handler()
-Message-ID: <20171012113405.GA27073@kroah.com> (sfid-20171012_133359_798285_383299AA)
-References: <1507802052-14654-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 10 Oct 2017 15:43:11 -0400
+Subject: Re: ath10k hang on rmmod after fw crash in 4.13.3+ hacks
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+References: <d18529ba-1d91-e9c6-4719-4586e6b5b287@candelatech.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <8ee59286-42a6-7396-d420-185fefd72b57@candelatech.com> (sfid-20171010_214332_773217_3087FC8D)
+Date: Tue, 10 Oct 2017 12:43:11 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1507802052-14654-1-git-send-email-arend.vanspriel@broadcom.com>
+In-Reply-To: <d18529ba-1d91-e9c6-4719-4586e6b5b287@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 11:54:12AM +0200, Arend van Spriel wrote:
-> commit 17df6453d4be17910456e99c5a85025aa1b7a246 upstream.
-> 
-> Upon handling the firmware notification for scans the length was
-> checked properly and may result in corrupting kernel heap memory
-> due to buffer overruns. This fix addresses CVE-2017-0786.
-> 
-> Cc: Kevin Cernekee <cernekee@chromium.org>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
-> Hi, Greg
-> 
-> This backport for stable-4.4 has been compile tested on x86_64 on
-> linux-4.4.y branch in the stable repo. Apparently I only checked
-> that the patch applied on 4.4. Lesson learned.
+On 10/10/2017 12:07 PM, Ben Greear wrote:
+> I loaded a crashing firmware (it crashes early since it ran OOM), and
+> then tried to rmmod it.  rmmod hangs, with this stack:
 
-No worries, thanks for the patch.
+Looks like this is a hang related to napi, and I had a patch from an
+older kernel that is probably not needed anymore...maybe it causes the
+issue.  I'll test with that removed...
 
-greg k-h
+Thanks,
+Ben
+
+>
+> [root@ben-ota-2 ~]# cat /proc/32491/stack
+> [<ffffffff8113c51d>] flush_work+0x1fd/0x2d0
+> [<ffffffff8113f031>] __cancel_work_timer+0x111/0x190
+> [<ffffffff8113f0bb>] cancel_work_sync+0xb/0x10
+> [<ffffffffa0b0a054>] ath10k_core_unregister+0x14/0xa0 [ath10k_core]
+> [<ffffffffa07c7dcd>] ath10k_pci_remove+0x2d/0x70 [ath10k_pci]
+> [<ffffffff81528834>] pci_device_remove+0x34/0xb0
+> [<ffffffff81656b18>] device_release_driver_internal+0x158/0x210
+> [<ffffffff81656c1b>] driver_detach+0x3b/0x80
+> [<ffffffff81655ad3>] bus_remove_driver+0x53/0xd0
+> [<ffffffff81657737>] driver_unregister+0x27/0x40
+> [<ffffffff81526ff4>] pci_unregister_driver+0x24/0x90
+> [<ffffffffa07ca922>] ath10k_pci_exit+0x10/0x6ee [ath10k_pci]
+> [<ffffffff811c64c1>] SyS_delete_module+0x1e1/0x2a0
+> [<ffffffff81003d34>] do_syscall_64+0x64/0x140
+> [<ffffffff819b77c9>] entry_SYSCALL64_slow_path+0x25/0x25
+> [<ffffffffffffffff>] 0xffffffffffffffff
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
