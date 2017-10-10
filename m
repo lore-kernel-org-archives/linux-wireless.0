@@ -1,84 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35354 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932356AbdJ3SsC (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37928 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756688AbdJJTzK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 14:48:02 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Subject: RE: [EXT] Re: pull-request mwifiex-firmware 2017-10-30
-Date: Mon, 30 Oct 2017 18:47:58 +0000
-Message-ID: <fb8d8eece601415c83167c500d80ff2f@SC-EXCH02.marvell.com> (sfid-20171030_194805_871589_E7219A8B)
-References: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
- <20171030170308.GA80479@google.com>
-In-Reply-To: <20171030170308.GA80479@google.com>
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 10 Oct 2017 15:55:10 -0400
+Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
+To: Jes Sorensen <jes.sorensen@gmail.com>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20171010193027.GA23108@embeddedor.com>
+ <5f5f0f54-d901-90be-9025-0a1c4b909368@gmail.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <94264677-cf71-86d5-5220-413cfbac8e90@gmail.com> (sfid-20171010_230350_442592_B72A5534)
+Date: Tue, 10 Oct 2017 12:55:02 -0700
 MIME-Version: 1.0
+In-Reply-To: <5f5f0f54-d901-90be-9025-0a1c4b909368@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+On 10/10/2017 12:35 PM, Jes Sorensen wrote:
+> On 10/10/2017 03:30 PM, Gustavo A. R. Silva wrote:
+>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>> where we are expecting to fall through.
+> 
+> While this isn't harmful, to me this looks like pointless patch churn
+> for zero gain and it's just ugly.
 
->
-> ----------------------------------------------------------------------
-> On Mon, Oct 30, 2017 at 02:13:31PM +0000, Ganapathi Bhat wrote:
-> > The following changes since commit
-> e0494e95192ac5329989f4d128cf95c417d618cc:
-> >
-> >   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-08-01
-> 23:55:30 +0530)
-> >
-> > are available in the git repository at:
-> >
-> >   git://git.marvell.com/mwifiex-firmware.git
-> >
-> > for you to fetch changes up to
-> c5bed1294f6cf6bf6cbef612204f96361a3c2539:
-> >
-> >   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-10-30
-> 19:23:05 +0530)
->
-> Hooray, your git server is working again! And FWIW:
->
-> Tested-by: Brian Norris <briannorris@chromium.org>
->
-> But quoting your patch...
->
-> > --- a/WHENCE
-> > +++ b/WHENCE
-> > @@ -757,7 +757,7 @@ File: mrvl/pcieuart8997_combo_v4.bin
-> >  Version: 16.68.1.p70
-> >
-> >  File: mrvl/pcieusb8997_combo_v4.bin
-> > -Version: 16.68.1.p133
-> > +Version: 16.68.1.p40
->
-> This says .p40, whereas the commit message (and the version tag within the
-> firmware) says p140. I think you're missing a "1".
- I did miss this.  Will it make sense to trigger another pull request with just the version change?
->
-> >
-> >  File: mrvl/pcie8997_wlan_v4.bin
-> >  Version: 16.68.1.p97
->
->
-> Brian
->
-> >
-> > ----------------------------------------------------------------
-> > Ganapathi Bhat (1):
-> >       linux-firmware: update Marvell PCIe-USB8997 firmware image
-> >
-> > WHENCE                        |   2 +-
-> > mrvl/pcieusb8997_combo_v4.bin | Bin 620800 -> 622532 bytes
-> > 2 files changed, 1 insertion(+), 1 deletion(-)
+That is the canonical way to tell static analyzers and compilers that
+fall throughs are wanted and not accidental mistakes in the code. For
+people that deal with these kinds of errors, it's quite helpful, unless
+you suggest disabling that particular GCC warning specific for that
+file/directory?
 
-Regards,
-Ganapathi
+> 
+> Jes
+> 
+> 
+>> Cc: Jes Sorensen <Jes.Sorensen@gmail.com>
+>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>> ---
+>>   drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> index 7806a4d..e66be05 100644
+>> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> @@ -1153,6 +1153,7 @@ void rtl8xxxu_gen1_config_channel(struct
+>> ieee80211_hw *hw)
+>>       switch (hw->conf.chandef.width) {
+>>       case NL80211_CHAN_WIDTH_20_NOHT:
+>>           ht = false;
+>> +        /* fall through */
+>>       case NL80211_CHAN_WIDTH_20:
+>>           opmode |= BW_OPMODE_20MHZ;
+>>           rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
+>> @@ -1280,6 +1281,7 @@ void rtl8xxxu_gen2_config_channel(struct
+>> ieee80211_hw *hw)
+>>       switch (hw->conf.chandef.width) {
+>>       case NL80211_CHAN_WIDTH_20_NOHT:
+>>           ht = false;
+>> +        /* fall through */
+>>       case NL80211_CHAN_WIDTH_20:
+>>           rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_20;
+>>           subchannel = 0;
+>> @@ -1748,9 +1750,11 @@ static int rtl8xxxu_identify_chip(struct
+>> rtl8xxxu_priv *priv)
+>>           case 3:
+>>               priv->ep_tx_low_queue = 1;
+>>               priv->ep_tx_count++;
+>> +            /* fall through */
+>>           case 2:
+>>               priv->ep_tx_normal_queue = 1;
+>>               priv->ep_tx_count++;
+>> +            /* fall through */
+>>           case 1:
+>>               priv->ep_tx_high_queue = 1;
+>>               priv->ep_tx_count++;
+>> @@ -5691,6 +5695,7 @@ static int rtl8xxxu_set_key(struct ieee80211_hw
+>> *hw, enum set_key_cmd cmd,
+>>           break;
+>>       case WLAN_CIPHER_SUITE_TKIP:
+>>           key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+>> +        /* fall through */
+>>       default:
+>>           return -EOPNOTSUPP;
+>>       }
+>>
+> 
+
+
+-- 
+Florian
