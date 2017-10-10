@@ -1,107 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751776AbdJaBFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 21:05:05 -0400
-From: igor.mitsyanko.os@quantenna.com
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:49149 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdJJGFM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Oct 2017 02:05:12 -0400
+Received: by mail-pf0-f177.google.com with SMTP id b79so3892421pfk.5
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 23:05:12 -0700 (PDT)
+Received: from himanshu-Vostro-3559 ([106.222.85.12])
+        by smtp.gmail.com with ESMTPSA id l28sm10331269pgu.38.2017.10.09.23.05.09
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 09 Oct 2017 23:05:10 -0700 (PDT)
+Date: Tue, 10 Oct 2017 11:35:04 +0530
+From: Himanshu Jha <himanshujha199640@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 2/9] qtnfmac: initialize HT/VHT caps "can override" masks
-Date: Mon, 30 Oct 2017 18:04:48 -0700
-Message-Id: <20171031010455.27772-3-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020519_366268_237D0170)
-In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+Subject: Contributing to Linux-wireless drivers.
+Message-ID: <20171010060504.GA3130@himanshu-Vostro-3559> (sfid-20171010_080517_115691_454C8713)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+----- Forwarded message from Himanshu Jha <himanshujha199640@gmail.com> -----
 
-Information on which HT/VHT capabilities can be overridden is reported
-per-MAC by wireless device.
+Date: Fri, 6 Oct 2017 02:05:39 +0530
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: kvalo@codeaurora.org
+Subject: Contributing to Linux-wireless drivers.
+User-Agent: Mutt/1.5.24 (2015-08-30)
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 ++
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 7 ++++---
- drivers/net/wireless/quantenna/qtnfmac/core.h     | 4 ++--
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 8 ++++----
- 4 files changed, 12 insertions(+), 9 deletions(-)
+Hi Kalle,
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 2f60331..b6a2540 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -925,6 +925,8 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 	wiphy->available_antennas_rx = mac->macinfo.num_rx_chain;
- 
- 	wiphy->max_ap_assoc_sta = mac->macinfo.max_ap_assoc_sta;
-+	wiphy->ht_capa_mod_mask = &mac->macinfo.ht_cap_mod_mask;
-+	wiphy->vht_capa_mod_mask = &mac->macinfo.vht_cap_mod_mask;
- 
- 	ether_addr_copy(wiphy->perm_addr, mac->macaddr);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index a7422c5..35ff7e8 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -1110,9 +1110,10 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
- 			qlink_chan_width_mask_to_nl(le16_to_cpu(
- 					resp_info->radar_detect_widths));
- 
--	memcpy(&mac_info->ht_cap, &resp_info->ht_cap, sizeof(mac_info->ht_cap));
--	memcpy(&mac_info->vht_cap, &resp_info->vht_cap,
--	       sizeof(mac_info->vht_cap));
-+	memcpy(&mac_info->ht_cap_mod_mask, &resp_info->ht_cap_mod_mask,
-+	       sizeof(mac_info->ht_cap_mod_mask));
-+	memcpy(&mac_info->vht_cap_mod_mask, &resp_info->vht_cap_mod_mask,
-+	       sizeof(mac_info->vht_cap_mod_mask));
- }
- 
- static void qtnf_cmd_resp_band_fill_htcap(const u8 *info,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index da2c24e..74b94ce 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -103,8 +103,8 @@ struct qtnf_mac_info {
- 	u8 sretry_limit;
- 	u8 coverage_class;
- 	u8 radar_detect_widths;
--	struct ieee80211_ht_cap ht_cap;
--	struct ieee80211_vht_cap vht_cap;
-+	struct ieee80211_ht_cap ht_cap_mod_mask;
-+	struct ieee80211_vht_cap vht_cap_mod_mask;
- 	struct ieee80211_iface_limit *limits;
- 	size_t n_limits;
- };
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index dfef7fa..b2c4e27 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -636,8 +636,8 @@ struct qlink_resp {
-  *	specified WMAC).
-  * @num_tx_chain: Number of transmit chains used by WMAC.
-  * @num_rx_chain: Number of receive chains used by WMAC.
-- * @vht_cap: VHT capabilities.
-- * @ht_cap: HT capabilities.
-+ * @vht_cap_mod_mask: mask specifying which VHT capabilities can be altered.
-+ * @ht_cap_mod_mask: mask specifying which HT capabilities can be altered.
-  * @bands_cap: wireless bands WMAC can operate in, bitmap of &enum qlink_band.
-  * @phymode_cap: PHY modes WMAC can operate in, bitmap of &enum qlink_phy_mode.
-  * @max_ap_assoc_sta: Maximum number of associations supported by WMAC.
-@@ -649,8 +649,8 @@ struct qlink_resp_get_mac_info {
- 	u8 dev_mac[ETH_ALEN];
- 	u8 num_tx_chain;
- 	u8 num_rx_chain;
--	struct ieee80211_vht_cap vht_cap;
--	struct ieee80211_ht_cap ht_cap;
-+	struct ieee80211_vht_cap vht_cap_mod_mask;
-+	struct ieee80211_ht_cap ht_cap_mod_mask;
- 	u8 bands_cap;
- 	u8 phymode_cap;
- 	__le16 max_ap_assoc_sta;
--- 
-2.9.5
+
+I am an undergraduate student in ECE(3rd year) and wish to contribute to linux-wireless
+drivers. I am familiar with the kernel development process and have many
+patches accepted in the past 2 months with variety of tools used such as
+coccinelle,Kasan,smatch,sparse and checkpatch.
+
+I have basic knowledge of Linux kernel internals and competent C skills,
+also planning to learn Device Drivers in future. 
+
+The wiki page https://wireless.wiki.kernel.org/ is not working
+correctly, for every page it shows 
+
+"This topic does not exist yet
+You've followed a link to a topic that doesn't exist yet. If permissions
+allow, you may create it by clicking on “Create this page”.
+Earlier I used to visit this without any issues, don't know what is the
+problem now ?
+
+Also, since I am beginner is there any small project that I could work on
+to enhance my knowledge. Please provide me any links to
+Documentation/tutorials which I can follow and help the community.
+Lastly, I will next year surely apply for GSoC under Linux-wireless and
+I don't seem to find any participation since 2012. Also, if there is
+any project that someone didn't try and is open then please let me know!
+
+I am really sorry for this direct email to you but nobody helped me on
+IRC channel.
+
+Thanks
+Himanshu Jha
+
+----- End forwarded message -----
