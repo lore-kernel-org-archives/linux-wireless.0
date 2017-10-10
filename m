@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37324 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750716AbdJLHZd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 03:25:33 -0400
-Date: Thu, 12 Oct 2017 09:25:30 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Andrey Konovalov <andreyknvl@google.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
-Subject: Re: usb/net/rt2x00: warning in rt2800_eeprom_word_index
-Message-ID: <20171012072529.GB2686@redhat.com> (sfid-20171012_092608_144072_B1B1D8EA)
-References: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29766 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755590AbdJJHxi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Oct 2017 03:53:38 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k-ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/5] Add TDLS feature for ath10k
+Date: Tue, 10 Oct 2017 15:55:20 +0800
+Message-ID: <1507622125-8841-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_095341_260928_D7FB55E5)
+In-Reply-To: <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patch V4>
+ <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-On Mon, Oct 09, 2017 at 07:50:53PM +0200, Andrey Konovalov wrote:
-> I've got the following report while fuzzing the kernel with syzkaller.
-> 
-> On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
-> 
-> I'm not sure whether this is a bug in the driver, or just a way to
-> report misbehaving device. In the latter case this shouldn't be a
-> WARN() call, since WARN() means bug in the kernel.
+This patchset is for Rome PCIE chip, it will not affect other hardware
 
-This is about wrong EEPROM, which reported 3 tx streams on
-non 3 antenna device. I think WARN() is justified and thanks
-to the call trace I was actually able to to understand what
-happened.
+Yingying Tang (5):
+  mac80211: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer inactivity detection
+  ath10k: Avoid to set WEP key for TDLS peer
+  ath10k: Fix TDLS peer TX data failure issue on encryped AP
 
-In general I do not think WARN() only means a kernel bug, it 
-can be F/W or H/W bug too.
+ drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
+ include/net/cfg80211.h                    |    3 ++
+ net/mac80211/tdls.c                       |    5 ++-
+ 6 files changed, 94 insertions(+), 2 deletions(-)
 
-Thanks
-Stanislaw
+-- 
+1.7.9.5
