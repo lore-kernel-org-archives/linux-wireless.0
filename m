@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48056 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757764AbdJMJol (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29787 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755655AbdJJHxp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 05:44:41 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 10 Oct 2017 03:53:45 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k-ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/5] ath10k: Enable TDLS peer buffer STA feature
+Date: Tue, 10 Oct 2017 15:55:22 +0800
+Message-ID: <1507622125-8841-4-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_095348_700393_8C632D1F)
+In-Reply-To: <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patch V4>
+ <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
 MIME-Version: 1.0
-Subject: Re: [01/10] rtlwifi: Fix MAX MPDU of VHT capability
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170929194800.15617-2-Larry.Finger@lwfinger.net>
-References: <20170929194800.15617-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20171013094441.2FC4360847@smtp.codeaurora.org> (sfid-20171013_114450_340949_072C1BD2)
-Date: Fri, 13 Oct 2017 09:44:41 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> We must choose only one of VHT_CAP among
-> IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895,
-> IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 and
-> IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+Enable TDLS peer buffer STA feature.
+QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
+it reports this capability through wmi service map in wmi service ready
+event. Set related parameter in TDLS WMI command to enable this feature.
 
-10 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c     |    3 +++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 +++
+ 2 files changed, 6 insertions(+)
 
-f06eb3f9c03e rtlwifi: Fix MAX MPDU of VHT capability
-ecf4000e0d92 rtlwifi: Remove redundant semicolon in wifi.h.
-0c07bd745760 rtlwifi: rtl8192ee: Make driver support 64bits DMA.
-cdc9c7a032aa rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
-c1816f1709e8 rtlwifi: Add rtl_get_hal_edca_param() to generate register's format of EDCA.
-74451b935c42 rtlwifi: Add TX/RX throughput statistics in period
-08ab7465f36c rtlwifi: Add RSSI and RF type to wifi.h for phydm
-aa59a1e7c6e8 rtlwifi: Remove BAND_NUM and related fields
-1d22b17744a3 rtlwifi: Add bw_update parameter for RA mask update.
-84efbad4f867 rtlwifi: Add module parameter ASPM
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5683f1a..399f9ba 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8204,6 +8204,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
+ 	}
+ 
++	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
++		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
++
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 7616c1c..f60b46e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2747,6 +2747,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
+ 	 */
+ 	u32 options = 0;
+ 
++	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
++		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
++
+ 	len = sizeof(*tlv) + sizeof(*cmd);
+ 	skb = ath10k_wmi_alloc_skb(ar, len);
+ 	if (!skb)
 -- 
-https://patchwork.kernel.org/patch/9978583/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
