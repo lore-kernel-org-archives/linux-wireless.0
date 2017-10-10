@@ -1,78 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48782 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751357AbdJBNxt (ORCPT
+Received: from mail-io0-f176.google.com ([209.85.223.176]:44420 "EHLO
+        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751433AbdJJOWH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 09:53:49 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 10 Oct 2017 10:22:07 -0400
+Received: by mail-io0-f176.google.com with SMTP id m16so15671588iod.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Oct 2017 07:22:07 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [v4,
- 1/9] brcmsmac: make some local variables 'static const' to reduce
- stack size
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170922212930.620249-2-arnd@arndb.de>
-References: <20170922212930.620249-2-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
-        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>
-Message-Id: <20171002135348.7AFA560AFB@smtp.codeaurora.org> (sfid-20171002_155708_279251_06CE656B)
-Date: Mon,  2 Oct 2017 13:53:48 +0000 (UTC)
+In-Reply-To: <20171010082603.8E283607C5@smtp.codeaurora.org>
+References: <20171005005020.GA23219@beast> <20171010082603.8E283607C5@smtp.codeaurora.org>
+From: Kees Cook <keescook@chromium.org>
+Date: Tue, 10 Oct 2017 07:22:05 -0700
+Message-ID: <CAGXu5j+S0Nm-gqeKfD2oPNanXoWUZ4NSraPab4MoJrdxFP6p3g@mail.gmail.com> (sfid-20171010_162307_754640_49760080)
+Subject: Re: net/wireless/ray_cs: Convert timers to use
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+On Tue, Oct 10, 2017 at 1:26 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Kees Cook <keescook@chromium.org> wrote:
+>
+>> In preparation for unconditionally passing the struct timer_list pointer to
+>> all timer callbacks, switch to using the new timer_setup() and from_timer()
+>> to pass the timer pointer explicitly.
+>>
+>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Cc: Thomas Gleixner <tglx@linutronix.de>
+>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>
+> I'll apply this once I have fast forwarded wireless-drivers-next to
+> -rc3. I'll also fix the title, what was it supposed to say?
 
-> With KASAN and a couple of other patches applied, this driver is one
-> of the few remaining ones that actually use more than 2048 bytes of
-> kernel stack:
-> 
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy_gainctrl':
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c:16065:1: warning: the frame size of 3264 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_workarounds_nphy':
-> broadcom/brcm80211/brcmsmac/phy/phy_n.c:17138:1: warning: the frame size of 2864 bytes is larger than 2048 bytes [-Wframe-larger-than=]
-> 
-> Here, I'm reducing the stack size by marking as many local variables as
-> 'static const' as I can without changing the actual code.
-> 
-> This is the first of three patches to improve the stack usage in this
-> driver. It would be good to have this backported to stabl kernels
-> to get all drivers in 'allmodconfig' below the 2048 byte limit so
-> we can turn on the frame warning again globally, but I realize that
-> the patch is larger than the normal limit for stable backports.
-> 
-> The other two patches do not need to be backported.
-> 
-> Cc: <stable@vger.kernel.org>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+It was truncated from "net/wireless/ray_cs: Convert timers to use
+timer_setup()"; I've fixed that glitch in my workflow now.
 
-Patch applied to wireless-drivers.git, thanks.
+> Patch set to Awaiting Upstream.
 
-c503dd38f850 brcmsmac: make some local variables 'static const' to reduce stack size
+Thanks!
+
+-Kees
 
 -- 
-https://patchwork.kernel.org/patch/9967145/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kees Cook
+Pixel Security
