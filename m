@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f170.google.com ([209.85.217.170]:52572 "EHLO
-        mail-ua0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932206AbdJYSn5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:60440 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755349AbdJJNtE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 14:43:57 -0400
-Received: by mail-ua0-f170.google.com with SMTP id i35so721364uah.9
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2017 11:43:56 -0700 (PDT)
-MIME-Version: 1.0
-From: David Ashley <dashxdr@gmail.com>
-Date: Wed, 25 Oct 2017 13:43:55 -0500
-Message-ID: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com> (sfid-20171025_204401_104346_1D83767E)
-Subject: RTL usb adapter question
-To: linux-wireless@vger.kernel.org
+        Tue, 10 Oct 2017 09:49:04 -0400
+Message-ID: <1507643341.26041.61.camel@sipsolutions.net> (sfid-20171010_155030_844664_D7833210)
+Subject: Re: [PATCH v2] mac80211: fix STA_SLOW_THRESHOLD htmldocs failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org
+Cc: toke@toke.dk
+Date: Tue, 10 Oct 2017 15:49:01 +0200
+In-Reply-To: <20171010134107.GA3328@redhat.com>
+References: <1506426485-7539-1-git-send-email-sgruszka@redhat.com>
+         <20171010134107.GA3328@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to understand how the linux kernel loads RTL8188CUS firmware
-rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
-when that file isn't available anywhere in my embedded system's filesystem.
+On Tue, 2017-10-10 at 15:41 +0200, Stanislaw Gruszka wrote:
+> On Tue, Sep 26, 2017 at 01:48:05PM +0200, Stanislaw Gruszka wrote:
+> > Patch fixes htmldocs build problem:
+> > 
+> > Error(.//net/mac80211/sta_info.h:416): cannot understand prototype:
+> > 'STA_SLOW_THRESHOLD 6000  '
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> > v1 -> v2: just fix documentation build, do not move the code.
+> 
+> Johannes, would you apply this? I think patch is safe to apply :-)
 
-Basically I'm trying to understand the theory. We have a product that
-is making use of the device
+I already did :)
 
-Bus 001 Device 007: ID 7392:7811 Edimax Technology Co., Ltd
-EW-7811Un802.11n Wireless Adapter [Realtek RTL8188CUS]
-
-It has not been especially reliable. I've never provided firmware
-files for the device in the root filesystem. I've started to pay
-attention to the kernel error messages. Now the kernel drivers seem to
-be loading the rtlwifi/rtl8192cufw_TMSC.bin file and I'm trying to
-understand if this is actually working, if it makes any difference in
-reliability...
-
-It's like I can't figure out how the usb dongle even worked without
-its firmware file...
-
-My working theory is that the usb dongle comes from the factory with a
-hardcoded firmware file (rtlwifi/rtl8192cufw.bin) but it is buggy or
-inferior. And the performance and reliability can be improved if the
-driver successfully manages to load the rtl8192cufw_TMSC.bin file. I
-don't know if the firmware load persists across a power cycle (my
-assumption is it doesn't).
-
-Thanks for any insight anyone can provide.
-
--Dave
+johannes
