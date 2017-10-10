@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:54130 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763193AbdJRK3b (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32743 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755538AbdJJIAx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 06:29:31 -0400
-Message-ID: <1508322566.2674.17.camel@sipsolutions.net> (sfid-20171018_122945_123971_5A96CA64)
-Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use
- timer_setup()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kees Cook <keescook@chromium.org>, linux-wireless@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 18 Oct 2017 12:29:26 +0200
-In-Reply-To: <20171017202545.GA115810@beast> (sfid-20171017_222550_315925_34B26DDB)
-References: <20171017202545.GA115810@beast>
-         (sfid-20171017_222550_315925_34B26DDB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 10 Oct 2017 04:00:53 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k-ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/5] ath10k: Avoid to set WEP key for TDLS peer
+Date: Tue, 10 Oct 2017 16:02:30 +0800
+Message-ID: <1507622551-9156-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_100058_732339_0AA53B0B)
+In-Reply-To: <1507622551-9156-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patch V4>
+ <1507622551-9156-1-git-send-email-yintang@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-[quoting your other email:]
+TDLS peer do not need WEP key. Setting WEP key will lead
+to TDLS setup failure. Add fix to avoid setting WEP key
+for TDLS peer.
 
-> This has been the least trivial timer conversion yet. Given the use of
-> RCU and other things I may not even know about, I'd love to get a close
-> look at this. I *think* this is correct, as it will re-lookup the tid
-> entries when firing the timer.
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm not really sure why you're doing the lookup again? That seems
-pointless, since you already have the right structure, and already rely
-on it being valid. You can't really get a new struct assigned to the
-same TID without the old one being destroyed.
-
-> -static void sta_rx_agg_session_timer_expired(unsigned long data)
-> +static void sta_rx_agg_session_timer_expired(struct timer_list *t)
->  {
-> -	/* not an elegant detour, but there is no choice as the timer passes
-> -	 * only one argument, and various sta_info are needed here, so init
-> -	 * flow in sta_info_create gives the TID as data, while the timer_to_id
-> -	 * array gives the sta through container_of */
-> -	u8 *ptid = (u8 *)data;
-> -	u8 *timer_to_id = ptid - *ptid;
-> -	struct sta_info *sta = container_of(timer_to_id, struct sta_info,
-> -					 timer_to_tid[0]);
-> +	struct tid_ampdu_rx *tid_rx_timer =
-> +		from_timer(tid_rx_timer, t, session_timer);
-> +	struct sta_info *sta = tid_rx_timer->sta;
-> +	u16 tid = tid_rx_timer->tid;
->  	struct tid_ampdu_rx *tid_rx;
->  	unsigned long timeout;
->  
->  	rcu_read_lock();
-> -	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[*ptid]);
-> +	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
->  	if (!tid_rx) {
->  		rcu_read_unlock();
-
-So through all of this, I'm pretty sure we can just use tid_rx_timer
-instead of tid_rx.
-
-(Same for TX)
-
-Anyway, the change here looks correct to me, so I'll apply it and then
-perhaps clean up more. I've only changed "u16 tid" to "u8 tid" since
-the valid range is 0-15 (in theory, in practice 0-7).
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 399f9ba..f6702cb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2966,7 +2966,7 @@ static int ath10k_station_assoc(struct ath10k *ar,
+ 		}
+ 
+ 		/* Plumb cached keys only for static WEP */
+-		if (arvif->def_wep_key_idx != -1) {
++		if ((arvif->def_wep_key_idx != -1) && (!sta->tdls)) {
+ 			ret = ath10k_install_peer_wep_keys(arvif, sta->addr);
+ 			if (ret) {
+ 				ath10k_warn(ar, "failed to install peer wep keys for vdev %i: %d\n",
+-- 
+1.7.9.5
