@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43117 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757585AbdJKNzB (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60228 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933196AbdJJUyV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 09:55:01 -0400
-Date: Wed, 11 Oct 2017 16:54:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Souptick Joarder <jrdr.linux@gmail.com>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: Two rtlwifi drivers?
-Message-ID: <20171011135439.3d5zuljyd4qokftw@mwanda> (sfid-20171011_155724_861980_F0E76BEC)
-References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
- <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
- <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
- <87k202qcjr.fsf@kamboji.qca.qualcomm.com>
- <20171011131310.GF32250@kroah.com>
+        Tue, 10 Oct 2017 16:54:21 -0400
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>, kirtika@google.com,
+        Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Setting single rate in ath10k broken by "reject/clear user rate mask
+ if not usable"
+Message-ID: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com> (sfid-20171010_225427_620459_2849A16B)
+Date: Tue, 10 Oct 2017 13:54:20 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171011131310.GF32250@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 03:13:10PM +0200, Greg Kroah-Hartman wrote:
-> And it seems like the company isn't willing to do the real work, so
-> dumping this in staging is the best we can do at the moment.
+At one point, you could set a single rate using 'iw' and
+ath10k would convert that to a special firmware API that
+fixed all data traffic to a particular rate set.  (Management
+frames and broadcast will not be affected by setting the rates
+when using ath10k).
 
-I'm more optimistic.  There are a lot of @realtek.com addresses in the
-CC list and that's a new thing.
+But, with the commit below, a command like this will fail:
 
-regards,
-dan carpenter
+#iw dev vap206 set bitrates legacy-5 ht-mcs-5 0 vht-mcs-5
+command failed: Invalid argument (-22)
+
+But, it actually *does* successfully set the rate in the driver first, which
+is confusing at best.
+
+So, I think we should relax this check, at least for ath10k.
+
+commit e8e4f5280ddd0a7b43a795f90a0758e3c99df6a6
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Wed Mar 8 11:12:10 2017 +0100
+
+     mac80211: reject/clear user rate mask if not usable
+
+     If the user rate mask results in no (basic) rates being usable,
+     clear it. Also, if we're already operating when it's set, reject
+     it instead.
+
+     Technically, selecting basic rates as the criterion is a bit too
+     restrictive, but calculating the usable rates over all stations
+     (e.g. in AP mode) is harder, and all stations must support the
+     basic rates. Similarly, in client mode, the basic rates will be
+     used anyway for control frames.
+
+     This fixes the "no supported rates (...) in rate_mask ..." warning
+     that occurs on TX when you've selected a rate mask that's not
+     compatible with the connection (e.g. an AP that enables only the
+     rates 36, 48, 54 and you've selected only 6, 9, 12.)
+
+     Reported-by: Kirtika Ruchandani <kirtika@google.com>
+     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
