@@ -1,77 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42206 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751935AbdJ2JvT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 05:51:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 11:51:07 +0200
-Message-Id: <20171029095111.17078-2-luca@coelho.fi> (sfid-20171029_105208_563374_7A715C3E)
-In-Reply-To: <20171029095111.17078-1-luca@coelho.fi>
-References: <20171029095111.17078-1-luca@coelho.fi>
-Subject: [PATCH 1/5] mac80211: always update the PM state of a peer on MGMT / DATA frames
+Received: from mail.toke.dk ([52.28.52.200]:43439 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932300AbdJJRvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Oct 2017 13:51:38 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+In-Reply-To: <1507650823.26041.70.camel@sipsolutions.net>
+References: <20171010140208.1515-1-toke@toke.dk> <1507650823.26041.70.camel@sipsolutions.net>
+Date: Tue, 10 Oct 2017 19:51:30 +0200
+Message-ID: <87k2027uxp.fsf@toke.dk> (sfid-20171010_195146_648515_38804C00)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-The 2016 version of the spec is more generic about when the
-AP should update the power management state of the peer:
-the AP shall update the state based on any management or
-data frames. This means that even non-bufferable management
-frames should be looked at to update to maintain the power
-management state of the peer.
+> On Tue, 2017-10-10 at 16:02 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+>> +++ b/net/mac80211/agg-tx.c
+>> @@ -226,9 +226,11 @@ ieee80211_agg_start_txq(struct sta_info *sta,
+>> int tid, bool enable)
+>>  		clear_bit(IEEE80211_TXQ_AMPDU, &txqi->flags);
+>>=20=20
+>>  	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+>> +	ieee80211_schedule_txq(&sta->sdata->local->hw, txq);
+>> +
+>>  	local_bh_disable();
+>>  	rcu_read_lock();
+>> -	drv_wake_tx_queue(sta->sdata->local, txqi);
+>> +	drv_wake_tx_queue(sta->sdata->local);
+>>  	rcu_read_unlock();
+>>  	local_bh_enable();
+>
+> It seems like there could be some sort of TX batching here - maybe
+> only call the driver if the queue was actually scheduled?
 
-This can avoid problematic cases for example if a station
-disappears while being asleep and then re-appears. The AP
-would remember it as in power save, but the Authentication
-frame couldn't be used to set the peer as awake again.
-Note that this issues wasn't really critical since at some
-point (after the association) we would have removed the
-station and created another one with all the states cleared.
+Yeah, I guess that should be doable.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/rx.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+>> @@ -1121,6 +1122,9 @@ struct ieee80211_local {
+>>  	struct codel_vars *cvars;
+>>  	struct codel_params cparams;
+>>=20=20
+>> +	struct list_head active_txqs;
+>> +	spinlock_t active_txq_lock;
+>
+> Is there much point in having a separate lock? We probably need the fq
+> lock in most places related to this anyway?
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 70e9d2ca8bbe..b3cff69bfd66 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1607,23 +1607,16 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 
- 	/*
- 	 * Change STA power saving mode only at the end of a frame
--	 * exchange sequence.
-+	 * exchange sequence, and only for a data or management
-+	 * frame as specified in IEEE 802.11-2016 11.2.3.2
- 	 */
- 	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
- 	    !ieee80211_has_morefrags(hdr->frame_control) &&
--	    !ieee80211_is_back_req(hdr->frame_control) &&
-+	    (ieee80211_is_mgmt(hdr->frame_control) ||
-+	     ieee80211_is_data(hdr->frame_control)) &&
- 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
- 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
--	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
--	    /*
--	     * PM bit is only checked in frames where it isn't reserved,
--	     * in AP mode it's reserved in non-bufferable management frames
--	     * (cf. IEEE 802.11-2012 8.2.4.1.7 Power Management field)
--	     * BAR frames should be ignored as specified in
--	     * IEEE 802.11-2012 10.2.1.2.
--	     */
--	    (!ieee80211_is_mgmt(hdr->frame_control) ||
--	     ieee80211_is_bufferable_mmpdu(hdr->frame_control))) {
-+	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
- 		if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
- 			if (!ieee80211_has_pm(hdr->frame_control))
- 				sta_ps_end(sta);
--- 
-2.14.2
+Well, once the scheduler gets a bit smarter it may be necessary to much
+with the order of TXQs on there without touching any of the queues
+(e.g., when calculating airtime usage on TX and RX completion). Not sure
+if that is enough to warrant a separate lock, though; I hadn't thought
+about just grabbing fq->lock...
+
+>> +void ieee80211_schedule_txq(struct ieee80211_hw *hw,
+>> +			     struct ieee80211_txq *txq)
+>> +{
+>> +	struct ieee80211_local *local =3D hw_to_local(hw);
+>> +	struct txq_info *txqi =3D to_txq_info(txq);
+>> +
+>> +	spin_lock_bh(&local->active_txq_lock);
+>> +
+>> +	if (!list_empty(&txqi->schedule_order))
+>> +		list_add_tail(&txqi->schedule_order, &local-
+>> >active_txqs);
+>
+> What's with the !list_empty()? Seems inverted to me? You need to add
+> it if it's empty?
+
+Yeah, nice catch. This started out as an "unschedule" function before I
+decided this way was better. Guess I forgot to switch the logic :)
+
+> Also maybe you should only do that if the TXQ isn't *empty*, so the
+> driver could call this unconditionally?
+
+There can be cases where the driver wants the queue to be scheduled even
+though it looks empty from mac80211's point of view. For ath9k, the
+driver keeps its retry queue in the drv_priv part of the txq structure,
+so it will check if that is empty before deciding to call the schedule
+function.
+
+This is also related to the PS behaviour, so guess this could be changed
+once that is all TXQ-based...
+
+-Toke
