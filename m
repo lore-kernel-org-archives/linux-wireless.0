@@ -1,99 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:37771 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750797AbdJDS2e (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:15471 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755637AbdJJHxl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 14:28:34 -0400
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: amitkarwar@gmail.com
-Cc: nishants@marvell.com, gbhat@marvell.com, huxm@marvell.com,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Himanshu Jha <himanshujha199640@gmail.com>
-Subject: [PATCH] mwifiex: Use put_unaligned_le32
-Date: Wed,  4 Oct 2017 23:58:06 +0530
-Message-Id: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com> (sfid-20171004_202852_836163_1FFC1B34)
+        Tue, 10 Oct 2017 03:53:41 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k-ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/5] mac80211: Enable TDLS peer buffer STA feature
+Date: Tue, 10 Oct 2017 15:55:21 +0800
+Message-ID: <1507622125-8841-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_095345_602749_365B3164)
+In-Reply-To: <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
+References: <TDLS for ath10k patch V4>
+ <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use put_unaligned_le32 rather than using byte ordering function and
-memcpy which makes code clear.
-Also, add the header file where it is declared.
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-Done using Coccinelle and semantic patch used is :
+Enable TDLS peer buffer STA feature.
+Set extended capability bit to enable buffer STA when driver
+support it.
 
-@ rule1 @
-identifier tmp; expression ptr,x; type T;
-@@
-
-- tmp = cpu_to_le32(x);
-
-  <+... when != tmp
-- memcpy(ptr, (T)&tmp, ...);
-+ put_unaligned_le32(x,ptr);
-  ...+>
-
-@ depends on rule1 @
-type j; identifier tmp;
-@@
-
-- j tmp;
-  ...when != tmp
-
-Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ include/net/cfg80211.h |    3 +++
+ net/mac80211/tdls.c    |    5 ++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 0edc5d6..e28e119 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -17,6 +17,7 @@
-  * this warranty disclaimer.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f12fa52..edefc25 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3249,6 +3249,8 @@ struct cfg80211_ops {
+  *	beaconing mode (AP, IBSS, Mesh, ...).
+  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
+  *	before connection.
++ * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_ST: Device support buffer STA when TDLS is
++ *	established.
   */
+ enum wiphy_flags {
+ 	/* use hole at 0 */
+@@ -3275,6 +3277,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+ 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
++	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
+ };
  
-+#include <linux/unaligned/access_ok.h>
- #include "decl.h"
- #include "ioctl.h"
- #include "util.h"
-@@ -183,7 +184,6 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	uint16_t cmd_code;
- 	uint16_t cmd_size;
- 	unsigned long flags;
--	__le32 tmp;
+ /**
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 91093d4..f99e379 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -49,6 +49,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 			  !ifmgd->tdls_wider_bw_prohibited;
+ 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
+ 	bool vht = sband && sband->vht_cap.vht_supported;
++	bool buffer_sta =
++		local->hw.wiphy->flags & WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
+ 	u8 *pos = skb_put(skb, 10);
  
- 	if (!adapter || !cmd_node)
- 		return -1;
-@@ -249,9 +249,9 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	mwifiex_dbg_dump(adapter, CMD_D, "cmd buffer:", host_cmd, cmd_size);
- 
- 	if (adapter->iface_type == MWIFIEX_USB) {
--		tmp = cpu_to_le32(MWIFIEX_USB_TYPE_CMD);
- 		skb_push(cmd_node->cmd_skb, MWIFIEX_TYPE_LEN);
--		memcpy(cmd_node->cmd_skb->data, &tmp, MWIFIEX_TYPE_LEN);
-+		put_unaligned_le32(MWIFIEX_USB_TYPE_CMD,
-+				   cmd_node->cmd_skb->data);
- 		adapter->cmd_sent = true;
- 		ret = adapter->if_ops.host_to_card(adapter,
- 						   MWIFIEX_USB_EP_CMD_EVENT,
-@@ -317,7 +317,6 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 				(struct mwifiex_opt_sleep_confirm *)
- 						adapter->sleep_cfm->data;
- 	struct sk_buff *sleep_cfm_tmp;
--	__le32 tmp;
- 
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
- 
-@@ -342,8 +341,7 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 				      + MWIFIEX_TYPE_LEN);
- 		skb_put(sleep_cfm_tmp, sizeof(struct mwifiex_opt_sleep_confirm)
- 			+ MWIFIEX_TYPE_LEN);
--		tmp = cpu_to_le32(MWIFIEX_USB_TYPE_CMD);
--		memcpy(sleep_cfm_tmp->data, &tmp, MWIFIEX_TYPE_LEN);
-+		put_unaligned_le32(MWIFIEX_USB_TYPE_CMD, sleep_cfm_tmp->data);
- 		memcpy(sleep_cfm_tmp->data + MWIFIEX_TYPE_LEN,
- 		       adapter->sleep_cfm->data,
- 		       sizeof(struct mwifiex_opt_sleep_confirm));
+ 	*pos++ = WLAN_EID_EXT_CAPABILITY;
+@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
+ 	*pos++ = 0x0;
+ 	*pos++ = 0x0;
+ 	*pos++ = 0x0;
+-	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
++	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
++		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
+ 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
+ 	*pos++ = 0;
+ 	*pos++ = 0;
 -- 
-2.7.4
+1.7.9.5
