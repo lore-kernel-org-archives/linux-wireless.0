@@ -1,169 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swan.media.mit.edu ([18.85.44.157]:54087 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932326AbdJZWAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Oct 2017 18:00:20 -0400
-Date: Fri, 27 Oct 2017 09:00:13 +1100
-From: James Cameron <quozl@laptop.org>
-To: David Ashley <dashxdr@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: RTL usb adapter question
-Message-ID: <20171026220013.GC9888@us.netrek.org> (sfid-20171027_000024_312450_DCCC2EC0)
-References: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com>
- <5f907d16-b889-f7c0-0873-880e5c812ab9@lwfinger.net>
- <CABkE59A2Cr5mx3W_rkHj+qDtu6t-MQ2V_sJPfuuqF4vbJ7YfmQ@mail.gmail.com>
+Received: from gateway24.websitewelcome.com ([192.185.51.202]:46977 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754212AbdJJTvH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Oct 2017 15:51:07 -0400
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id A09055C60
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Oct 2017 14:30:30 -0500 (CDT)
+Date: Tue, 10 Oct 2017 14:30:27 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] rtl8xxxu: mark expected switch fall-throughs
+Message-ID: <20171010193027.GA23108@embeddedor.com> (sfid-20171010_215115_280650_63E9C86E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABkE59A2Cr5mx3W_rkHj+qDtu6t-MQ2V_sJPfuuqF4vbJ7YfmQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Base on your evidence, I'd say the device is different to others and
-has firmware included.
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-On Thu, Oct 26, 2017 at 04:45:54PM -0500, David Ashley wrote:
-> OK I'm completely baffled.
-> 
-> I have explicitly removed all rtlwifi/ firmware files from the root
-> filesystem and yet the usb dongle still works, even after a power
-> cycle. How can it possibly be getting its firmware file????????
-> 
-> Here are the relevant kernel messages. There is no file
-> rtl8192cufw.bin anywhere for the kernel to find...
-> root@30046:~# ls -l /lib/firmware/rtlwifi/
-> total 0
-> 
-> I have ensured there is no *OTHER* route to the internet such that the
-> driver (or udev) can magically get the firmware file from the
-> internet...
-> 
-> Here's other info that may be useful...
-> 
-> root@30046:~# zcat /proc/config.gz | grep FIRM
-> CONFIG_PREVENT_FIRMWARE_BUILD=y
-> CONFIG_FIRMWARE_IN_KERNEL=y
-> CONFIG_EXTRA_FIRMWARE="am335x-pm-firmware.elf
-> am335x-bone-scale-data.bin am335x-evm-scale-data.bin
-> am43x-evm-scale-data.bin"
-> CONFIG_EXTRA_FIRMWARE_DIR="firmware"
-> # CONFIG_LIBERTAS_THINFIRM is not set
-> # CONFIG_FIRMWARE_MEMMAP is not set
-> # CONFIG_TEST_FIRMWARE is not set
-> root@30046:~# cat /proc/version
-> Linux version 4.1.19-bone20 (dash@DaveDesktop) (gcc version 5.4.0
-> 20160609 (Ubuntu/Linaro 5.4.0-6ubuntu1~16.04.4) ) #2 Tue Oct 3
-> 17:25:35 CDT 2017
-> root@30046:~# lsusb
-> Bus 001 Device 002: ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un
-> 802.11n Wireless Adapter [Realtek RTL8188CUS]
-> 
-> ... ifconfig
-> wlan0     Link encap:Ethernet  HWaddr 74:da:38:61:f1:2c
->           inet addr:192.168.10.31  Bcast:192.168.10.255  Mask:255.255.255.0
->           inet6 addr: fe80::76da:38ff:fe61:f12c/64 Scope:Link
->           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->           RX packets:509 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:146 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:60812 (59.3 KiB)  TX bytes:16365 (15.9 KiB)
-> 
-> 
-> 
-> 
-> [    9.663796] rtl8192cu: Chip version 0x10
-> [    9.745394] cfg80211: Calling CRDA to update world regulatory domain
-> [    9.844311] random: nonblocking pool is initialized
-> [    9.877851] rtl8192cu: MAC address: 74:da:38:61:f1:2c
-> [    9.877883] rtl8192cu: Board Type 0
-> [    9.877989] rtl_usb: rx_max_size 15360, rx_urb_num 8, in_ep 1
-> [    9.878098] rtl8192cu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
-> [    9.878249] usb 1-1: Direct firmware load for
-> rtlwifi/rtl8192cufw_TMSC.bin failed with error -2
-> [    9.889781] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-> [    9.890862] usbcore: registered new interface driver rtl8192cu
-> [    9.897667] usb 1-1: Direct firmware load for
-> rtlwifi/rtl8192cufw.bin failed with error -2
-> [    9.906030] rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
-> [    9.906037] rtlwifi: Firmware rtlwifi/rtl8192cufw_TMSC.bin not available
-> [   11.316476] rtl8192cu: MAC auto ON okay!
-> [   11.333847] rtl8192cu: Tx queue select: 0x05
-> [   12.364722] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [   12.905367] cfg80211: Calling CRDA to update world regulatory domain
-> [   13.413043] rtl8192cu: MAC auto ON okay!
-> [   13.430371] rtl8192cu: Tx queue select: 0x05
-> [   15.795679] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [   16.065356] cfg80211: Calling CRDA to update world regulatory domain
-> [   19.225333] cfg80211: Calling CRDA to update world regulatory domain
-> [   21.582749] wlan0: authenticate with 70:4d:7b:1d:91:40
-> [   21.600676] wlan0: send auth to 70:4d:7b:1d:91:40 (try 1/3)
-> [   21.605390] wlan0: authenticated
-> [   21.615431] wlan0: associate with 70:4d:7b:1d:91:40 (try 1/3)
-> [   21.667523] wlan0: RX AssocResp from 70:4d:7b:1d:91:40 (capab=0x411
-> status=0 aid=5)
-> [   21.669000] wlan0: associated
-> [   21.669671] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [   22.385320] cfg80211: Calling CRDA to update world regulatory domain
-> [   25.545336] cfg80211: Calling CRDA to update world regulatory domain
-> [   28.705312] cfg80211: Calling CRDA to update world regulatory domain
-> [   31.865335] cfg80211: Calling CRDA to update world regulatory domain
-> [   35.025348] cfg80211: Exceeded CRDA call max attempts. Not calling CRDA
-> 
-> 
-> Thanks!!!!!!
-> -Dave
-> 
-> On 10/25/17, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > On 10/25/2017 01:43 PM, David Ashley wrote:
-> >> I'm trying to understand how the linux kernel loads RTL8188CUS firmware
-> >> rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
-> >> when that file isn't available anywhere in my embedded system's
-> >> filesystem.
-> >>
-> >> Basically I'm trying to understand the theory. We have a product that
-> >> is making use of the device
-> >>
-> >> Bus 001 Device 007: ID 7392:7811 Edimax Technology Co., Ltd
-> >> EW-7811Un802.11n Wireless Adapter [Realtek RTL8188CUS]
-> >>
-> >> It has not been especially reliable. I've never provided firmware
-> >> files for the device in the root filesystem. I've started to pay
-> >> attention to the kernel error messages. Now the kernel drivers seem to
-> >> be loading the rtlwifi/rtl8192cufw_TMSC.bin file and I'm trying to
-> >> understand if this is actually working, if it makes any difference in
-> >> reliability...
-> >>
-> >> It's like I can't figure out how the usb dongle even worked without
-> >> its firmware file...
-> >>
-> >> My working theory is that the usb dongle comes from the factory with a
-> >> hardcoded firmware file (rtlwifi/rtl8192cufw.bin) but it is buggy or
-> >> inferior. And the performance and reliability can be improved if the
-> >> driver successfully manages to load the rtl8192cufw_TMSC.bin file. I
-> >> don't know if the firmware load persists across a power cycle (my
-> >> assumption is it doesn't).
-> >
-> > There is NO firmware coded by the factory in the device. It only has enough
-> >
-> > intelligence to load the real firmware. The exact file that it loads is
-> > determined by the model. If you provide the appropriate section of the
-> > output of
-> > dmesg where the above firmware messages occur, and a file listing of
-> > /lib/firmware/rtlwifi/, I can tell you what firmware is being loaded.
-> >
-> > No, firmware will not persist across a power failure.
-> >
-> > The driver has never been particularly reliable, and the USB group at
-> > Realtek
-> > seems not to care. You might try their other driver, but you will be on your
-> >
-> > own, as I will not support that particular piece of ****.
-> >
-> > Please reply to all on any followups.
-> >
-> > Larry
-> >
-> >
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 7806a4d..e66be05 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -1153,6 +1153,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
+ 	switch (hw->conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		ht = false;
++		/* fall through */
+ 	case NL80211_CHAN_WIDTH_20:
+ 		opmode |= BW_OPMODE_20MHZ;
+ 		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
+@@ -1280,6 +1281,7 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
+ 	switch (hw->conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		ht = false;
++		/* fall through */
+ 	case NL80211_CHAN_WIDTH_20:
+ 		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_20;
+ 		subchannel = 0;
+@@ -1748,9 +1750,11 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
+ 		case 3:
+ 			priv->ep_tx_low_queue = 1;
+ 			priv->ep_tx_count++;
++			/* fall through */
+ 		case 2:
+ 			priv->ep_tx_normal_queue = 1;
+ 			priv->ep_tx_count++;
++			/* fall through */
+ 		case 1:
+ 			priv->ep_tx_high_queue = 1;
+ 			priv->ep_tx_count++;
+@@ -5691,6 +5695,7 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++		/* fall through */
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
 -- 
-James Cameron
-http://quozl.netrek.org/
+2.7.4
