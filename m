@@ -1,60 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:56518 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbdJEAlO (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:55936 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751274AbdJJAKg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 20:41:14 -0400
-Date: Wed, 04 Oct 2017 17:41:11 -0700 (PDT)
-Message-Id: <20171004.174111.1056977714603579000.davem@davemloft.net> (sfid-20171005_024125_999979_E4943067)
-To: keescook@chromium.org
-Cc: tglx@linutronix.de, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        sre@kernel.org, harish.patil@cavium.com, manish.chopra@cavium.com,
-        kvalo@qca.qualcomm.com, linuxppc-dev@lists.ozlabs.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        akpm@linux-foundation.org, arnd@arndb.de, cmetcalf@mellanox.com,
-        geert@linux-m68k.org, gregkh@linuxfoundation.org,
-        linux@roeck-us.net, heiko.carstens@de.ibm.com,
-        jejb@linux.vnet.ibm.com, john.stultz@linaro.org,
-        jwi@linux.vnet.ibm.com, jiangshanlai@gmail.com,
-        len.brown@intel.com, mark.gross@intel.com,
-        martin.petersen@oracle.com, schwidefsky@de.ibm.com, mdr@sgi.com,
-        oleg@redhat.com, paulus@samba.org, pavel@ucw.cz, pmladek@suse.com,
-        rjw@rjwysocki.net, ralf@linux-mips.org, stefanr@s5r6.in-berlin.de,
-        sboyd@codeaurora.org, sudipm.mukherjee@gmail.com, tj@kernel.org,
-        ubraun@linux.vnet.ibm.com, viresh.kumar@linaro.org, wim@iguana.be,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        Mon, 9 Oct 2017 20:10:36 -0400
+Received: by mail-pf0-f170.google.com with SMTP id 17so7042733pfn.12
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 17:10:36 -0700 (PDT)
+Date: Mon, 9 Oct 2017 17:10:32 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jens Axboe <axboe@fb.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 05/13] timer: Remove init_timer_deferrable() in favor
- of timer_setup()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1507159627-127660-6-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-        <1507159627-127660-6-git-send-email-keescook@chromium.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: [PATCH] timer: Remove meaningless .data/.function assignments
+Message-ID: <20171010001032.GA119829@beast> (sfid-20171010_021349_004674_A44C9DB4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kees Cook <keescook@chromium.org>
-Date: Wed,  4 Oct 2017 16:26:59 -0700
+Several timer users needlessly reset their .function/.data fields during
+their timer callback, but nothing else changes them. Some users do not
+use their .data field at all. Each instance is removed here.
 
-> This refactors the only users of init_timer_deferrable() to use
-> the new timer_setup() and from_timer(). Removes definition of
-> init_timer_deferrable().
-> 
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Sebastian Reichel <sre@kernel.org>
-> Cc: Harish Patil <harish.patil@cavium.com>
-> Cc: Manish Chopra <manish.chopra@cavium.com>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>
+Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # for staging
+Acked-by: Krzysztof Halasa <khc@pm.waw.pl> # for wan/hdlc*
+Acked-by: Jens Axboe <axboe@kernel.dk> # for amiflop
+---
+This should go via the timer/core tree, please. It's been acked by each
+of the maintainers. Thanks!
+---
+ drivers/block/amiflop.c                           | 3 +--
+ drivers/net/wan/hdlc_cisco.c                      | 2 --
+ drivers/net/wan/hdlc_fr.c                         | 2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
+ 4 files changed, 2 insertions(+), 9 deletions(-)
 
-For networking:
+diff --git a/drivers/block/amiflop.c b/drivers/block/amiflop.c
+index 49908c74bfcb..4e3fb9f104af 100644
+--- a/drivers/block/amiflop.c
++++ b/drivers/block/amiflop.c
+@@ -323,7 +323,7 @@ static void fd_deselect (int drive)
+ 
+ }
+ 
+-static void motor_on_callback(unsigned long nr)
++static void motor_on_callback(unsigned long ignored)
+ {
+ 	if (!(ciaa.pra & DSKRDY) || --on_attempts == 0) {
+ 		complete_all(&motor_on_completion);
+@@ -344,7 +344,6 @@ static int fd_motor_on(int nr)
+ 		fd_select(nr);
+ 
+ 		reinit_completion(&motor_on_completion);
+-		motor_on_timer.data = nr;
+ 		mod_timer(&motor_on_timer, jiffies + HZ/2);
+ 
+ 		on_attempts = 10;
+diff --git a/drivers/net/wan/hdlc_cisco.c b/drivers/net/wan/hdlc_cisco.c
+index a408abc25512..f4b0ab34f048 100644
+--- a/drivers/net/wan/hdlc_cisco.c
++++ b/drivers/net/wan/hdlc_cisco.c
+@@ -276,8 +276,6 @@ static void cisco_timer(unsigned long arg)
+ 	spin_unlock(&st->lock);
+ 
+ 	st->timer.expires = jiffies + st->settings.interval * HZ;
+-	st->timer.function = cisco_timer;
+-	st->timer.data = arg;
+ 	add_timer(&st->timer);
+ }
+ 
+diff --git a/drivers/net/wan/hdlc_fr.c b/drivers/net/wan/hdlc_fr.c
+index 78596e42a3f3..07f265fa2826 100644
+--- a/drivers/net/wan/hdlc_fr.c
++++ b/drivers/net/wan/hdlc_fr.c
+@@ -644,8 +644,6 @@ static void fr_timer(unsigned long arg)
+ 			state(hdlc)->settings.t391 * HZ;
+ 	}
+ 
+-	state(hdlc)->timer.function = fr_timer;
+-	state(hdlc)->timer.data = arg;
+ 	add_timer(&state(hdlc)->timer);
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ac5aaafa461c..60f088babf27 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -266,7 +266,7 @@ static void update_scan_time(void)
+ 		last_scanned_shadow[i].time_scan = jiffies;
+ }
+ 
+-static void remove_network_from_shadow(unsigned long arg)
++static void remove_network_from_shadow(unsigned long unused)
+ {
+ 	unsigned long now = jiffies;
+ 	int i, j;
+@@ -287,7 +287,6 @@ static void remove_network_from_shadow(unsigned long arg)
+ 	}
+ 
+ 	if (last_scanned_cnt != 0) {
+-		hAgingTimer.data = arg;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 	}
+ }
+@@ -304,7 +303,6 @@ static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
+ 	int i;
+ 
+ 	if (last_scanned_cnt == 0) {
+-		hAgingTimer.data = (unsigned long)user_void;
+ 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 		state = -1;
+ 	} else {
+-- 
+2.7.4
 
-Acked-by: David S. Miller <davem@davemloft.net>
+
+-- 
+Kees Cook
+Pixel Security
