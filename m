@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:51851 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933303AbdJQArf (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:9303 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754788AbdJJILR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 20:47:35 -0400
-Received: by mail-pf0-f170.google.com with SMTP id n14so66573pfh.8
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 17:47:34 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Kees Cook <keescook@chromium.org>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 17/58] net/cw1200: Convert timers to use timer_setup()
-Date: Mon, 16 Oct 2017 17:29:01 -0700
-Message-Id: <1508200182-104605-18-git-send-email-keescook@chromium.org> (sfid-20171017_024936_419873_260430B7)
-In-Reply-To: <1508200182-104605-1-git-send-email-keescook@chromium.org>
-References: <1508200182-104605-1-git-send-email-keescook@chromium.org>
+        Tue, 10 Oct 2017 04:11:17 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V5 5/5] ath10k: Fix TDLS peer TX data failure issue on encryped AP
+Date: Tue, 10 Oct 2017 16:13:05 +0800
+Message-ID: <1507623185-9383-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_101120_500941_56588340)
+In-Reply-To: <TDLS for ath10k patch>
+References: <TDLS for ath10k patch>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
+For WPA encryption, QCA6174 firmware(version: WLAN.RM.4.4) will unblock
+data when M4 was sent successfully. For other encryption which didn't need
+4-way handshake firmware will unblock the data when peer authorized. Since
+TDLS is 3-way handshake host need send authorize cmd to firmware to unblock
+data.
+
+Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
 ---
- drivers/net/wireless/st/cw1200/pm.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/st/cw1200/pm.c b/drivers/net/wireless/st/cw1200/pm.c
-index d2202ae92bdd..ded23df1ac1d 100644
---- a/drivers/net/wireless/st/cw1200/pm.c
-+++ b/drivers/net/wireless/st/cw1200/pm.c
-@@ -91,7 +91,7 @@ struct cw1200_suspend_state {
- 	u8 prev_ps_mode;
- };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f6702cb..d2530f7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5841,6 +5841,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		ath10k_warn(ar, "Peer %pM disappeared!\n", peer_addr);
+ 	spin_unlock_bh(&ar->data_lock);
  
--static void cw1200_pm_stay_awake_tmo(unsigned long arg)
-+static void cw1200_pm_stay_awake_tmo(struct timer_list *unused)
- {
- 	/* XXX what's the point of this ? */
- }
-@@ -101,8 +101,7 @@ int cw1200_pm_init(struct cw1200_pm_state *pm,
- {
- 	spin_lock_init(&pm->lock);
- 
--	setup_timer(&pm->stay_awake, cw1200_pm_stay_awake_tmo,
--		    (unsigned long)pm);
-+	timer_setup(&pm->stay_awake, cw1200_pm_stay_awake_tmo, 0);
- 
- 	return 0;
- }
++	if (sta && sta->tdls)
++		ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++					  WMI_PEER_AUTHORIZE, 1);
++
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
 -- 
-2.7.4
+1.7.9.5
