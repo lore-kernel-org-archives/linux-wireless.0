@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751068AbdJ0Hsd (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39955 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756138AbdJJOFv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:48:33 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 10 Oct 2017 10:05:51 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: replace redundant computations with 0
+Date: Tue, 10 Oct 2017 15:05:48 +0100
+Message-Id: <20171010140548.18016-1-colin.king@canonical.com> (sfid-20171010_160711_199986_1B69C808)
 MIME-Version: 1.0
-Subject: Re: mwifiex: Convert timers to use timer_setup()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171024092919.GA47203@beast>
-References: <20171024092919.GA47203@beast>
-To: Kees Cook <keescook@chromium.org>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20171027074832.9CD3360314@smtp.codeaurora.org> (sfid-20171027_094941_654985_5F67D1C3)
-Date: Fri, 27 Oct 2017 07:48:32 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
-> 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Cc: Ganapathi Bhat <gbhat@marvell.com>
-> Cc: Xinming Hu <huxm@marvell.com>
-> Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> Cc: Ingo Molnar <mingo@kernel.org>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Andrew Zaborowski <andrew.zaborowski@intel.com>
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Shifting and masking strHostIfSetMulti->enabled is redundant since
+enabled is a bool and so all the shifted and masked values will be
+zero. Replace them with zero to simplify the code.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Detected by CoverityScan, CID#1339458 ("Bad shift operation") and
+CID#1339506 ("Operands don't affect result").
 
-08c2eb8ec800 mwifiex: Convert timers to use timer_setup()
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7b620658ec38..94477dd08c85 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2417,9 +2417,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 
+ 	pu8CurrByte = wid.val;
+ 	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
++	*pu8CurrByte++ = 0;
++	*pu8CurrByte++ = 0;
++	*pu8CurrByte++ = 0;
+ 
+ 	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+ 	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
 -- 
-https://patchwork.kernel.org/patch/10023837/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.1
