@@ -1,110 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41756 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755059AbdJRADR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 20:03:17 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Fix offchannel tx failure when no ath10k_mac_tx_frm_has_freq
-Date: Tue, 17 Oct 2017 17:03:12 -0700
-Message-Id: <1508284992-3574-1-git-send-email-greearb@candelatech.com> (sfid-20171018_020324_933578_A9957310)
+Received: from mail.toke.dk ([52.28.52.200]:38581 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755794AbdJJSEt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Oct 2017 14:04:49 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+In-Reply-To: <1507651555.26041.81.camel@sipsolutions.net>
+References: <20171010140208.1515-1-toke@toke.dk> <1507651555.26041.81.camel@sipsolutions.net>
+Date: Tue, 10 Oct 2017 20:04:43 +0200
+Message-ID: <87fuaq7ubo.fsf@toke.dk> (sfid-20171010_201523_494445_411C4954)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-This bug appears to have been added between 4.0 (which works for us),
-and 4.4, which does not work.
+>> In particular, I'm not sure what the right thing to do in regards to
+>> PS wakeup is...
+>
+> Can you explain what you were _trying_ to do?
+>
+> I don't like calling this "driver_buffered" because that's already a
+> term for frames that are buffered in the driver ... :-)
 
-I think this is because the tx-offchannel logic gets in a loop when
-ath10k_mac_tx_frm_has_freq(ar) is false, so pkt is never actually
-sent to the firmware for transmit.
+Well I was trying to do The Right Thing(tm), obviously ;)
 
-This patch fixes the problem on 4.9 for me, and now HS20 clients
-can work again with my firmware.
+The driver_buffered field comes from the previous behaviour of ath9k: It
+would basically set the station_buffered flag if there was something in
+the retry queue at the time it goes to sleep. And on wakeup, it will
+reschedule the txq if it has anything in the retry queue. And, well, it
+just seemed odd that there was this duplicated logic in the driver and
+mac80211, if the driver could just signal to mac80211 to reschedule for
+it...
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+But I guess I was really just getting ahead of myself there; so the
+right thing to do for now is to keep the old behaviour, and then fix it
+properly afterwards?
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c45ca04..f0a7864 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4101,7 +4101,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
- 			 struct ieee80211_sta *sta,
- 			 enum ath10k_hw_txrx_mode txmode,
- 			 enum ath10k_mac_tx_path txpath,
--			 struct sk_buff *skb)
-+			 struct sk_buff *skb, bool noque_offchan)
- {
- 	struct ieee80211_hw *hw = ar->hw;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -4134,10 +4134,10 @@ static int ath10k_mac_tx(struct ath10k *ar,
- 		}
- 	}
- 
--	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
-+	if ((!noque_offchan) && info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
- 		if (!ath10k_mac_tx_frm_has_freq(ar)) {
--			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %pK\n",
--				   skb);
-+			ath10k_dbg(ar, ATH10K_DBG_MAC, "no-tx-frm-has-freq: queued offchannel skb %pK, len: %d\n",
-+				   skb, skb->len);
- 
- 			skb_queue_tail(&ar->offchan_tx_queue, skb);
- 			ieee80211_queue_work(hw, &ar->offchan_tx_work);
-@@ -4198,8 +4198,8 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		mutex_lock(&ar->conf_mutex);
- 
--		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac offchannel skb %pK\n",
--			   skb);
-+		ath10k_dbg(ar, ATH10K_DBG_MAC, "offchan-tx-work: mac offchannel skb %pK len: %d\n",
-+			   skb, skb->len);
- 
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		peer_addr = ieee80211_get_DA(hdr);
-@@ -4245,7 +4245,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 		txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
- 
--		ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
-+		ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb, true);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to transmit offchannel frame: %d\n",
- 				    ret);
-@@ -4255,8 +4255,8 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		time_left =
- 		wait_for_completion_timeout(&ar->offchan_tx_completed, 3 * HZ);
- 		if (time_left == 0)
--			ath10k_warn(ar, "timed out waiting for offchannel skb %pK\n",
--				    skb);
-+			ath10k_warn(ar, "timed out waiting for offchannel skb %pK, len: %d\n",
-+				    skb, skb->len);
- 
- 		if (!peer && tmp_peer_created) {
- 			ret = ath10k_peer_delete(ar, vdev_id, peer_addr);
-@@ -4513,7 +4513,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 		spin_unlock_bh(&ar->htt.tx_lock);
- 	}
- 
--	ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
-+	ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb, false);
- 	if (unlikely(ret)) {
- 		ath10k_warn(ar, "failed to push frame: %d\n", ret);
- 
-@@ -4802,7 +4802,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
- 		spin_unlock_bh(&ar->htt.tx_lock);
- 	}
- 
--	ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
-+	ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb, false);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to transmit frame: %d\n", ret);
- 		if (is_htt) {
--- 
-2.4.11
+> PS is complicated, we basically transmit, in the following order:
+>  * filtered frames (tx_filtered)
+>  * buffered frames (ps_tx_buf)
+>  * regular frames
+>
+> This is when we _leave_ powersave. When we deliver frames while the
+> station is sleeping (PS-Poll or U-APSD), they don't even go through the
+> TXQ. They still come from this place, but currently go directly to the
+> ->tx() method, which to me is actually pretty weird but that's what it
+> is now.
+>
+> As I think I said in my other thread, we should probably eventually
+> just get rid of ps_tx_buf entirely, instead just keeping the frames on
+> the TXQ. Then, filtered can just be pushed onto txqi->frags [*], and we
+> get rid of having that separately as well.
+>
+> Then, we've completely solved the wakeup scenario, we just start
+> scheduling that TXQ normally again.
+
+Yes, this makes sense. Each sleep period is pretty short, right? I.e.,
+we don't need to deal with interactions between CoDel and the queue
+being stopped for a long period of time?
+
+> For the deliver-while-sleeping (PS-Poll/U-APSD) scenario, I think the
+> driver should still pull frames, after calling something like
+> drv_release_buffered_frames(). We want this to be scheduled pretty much
+> immediately, so we shouldn't just put the TXQ into the normal rotation,
+> but otherwise it should work similarly - except limited to a certain
+> number of frames [**].
+> In this case the driver probably needs to pull the frames using a
+> different function so that we can
+>  a) tag the packets properly (more-data, EOSP)
+>  b) generate nulldata as EOSP container where needed
+> Thus, it seems likely that we'll want a separate function, "pull for PS
+> delivery" rather than the normal ieee80211_tx_dequeue().
+
+I was envisioning that next_txq() could also make those kinds of
+decisions (i.e., preempt the normal scheduling algorithm when a
+"special" TXQ needs to be scheduled immediately). But not sure if that
+is enough for this case?
+
+-Toke
