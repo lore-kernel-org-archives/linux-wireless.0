@@ -1,81 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42090 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755903AbdJJITA (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:12276 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754894AbdJJIJ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 04:19:00 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 10 Oct 2017 04:09:29 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V5 0/5] Add TDLS feature for ath10k
+Date: Tue, 10 Oct 2017 16:11:15 +0800
+Message-ID: <1507623080-9311-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_100933_322017_16F7AF97)
+In-Reply-To: <TDLS for ath10k patch>
+References: <TDLS for ath10k patch>
 MIME-Version: 1.0
-Subject: Re: [v2] p54: don't unregister leds when they are not initialized
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com>
-References: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com>
-To: Andrey Konovalov <andreyknvl@google.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        Andrey Konovalov <andreyknvl@google.com>
-Message-Id: <20171010081859.B5954607CC@smtp.codeaurora.org> (sfid-20171010_102046_112145_635CCA70)
-Date: Tue, 10 Oct 2017 08:18:59 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Konovalov <andreyknvl@google.com> wrote:
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-> ieee80211_register_hw() in p54_register_common() may fail and leds won't
-> get initialized. Currently p54_unregister_common() doesn't check that and
-> always calls p54_unregister_leds(). The fix is to check priv->registered
-> flag before calling p54_unregister_leds().
-> 
-> Found by syzkaller.
-> 
-> INFO: trying to register non-static key.
-> the code is fine but needs lockdep annotation.
-> turning off the locking correctness validator.
-> CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
-> 4.14.0-rc1-42251-gebb2c2437d80-dirty #205
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-> Workqueue: usb_hub_wq hub_event
-> Call Trace:
->  __dump_stack lib/dump_stack.c:16
->  dump_stack+0x292/0x395 lib/dump_stack.c:52
->  register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
->  __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
->  lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
->  flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
->  __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
->  cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
->  p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
->  p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
->  p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
->  usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
->  __device_release_driver drivers/base/dd.c:861
->  device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
->  device_release_driver+0x1e/0x30 drivers/base/dd.c:918
->  bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
->  device_del+0x5c4/0xab0 drivers/base/core.c:1985
->  usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
->  usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
->  hub_port_connect drivers/usb/core/hub.c:4754
->  hub_port_connect_change drivers/usb/core/hub.c:5009
->  port_event drivers/usb/core/hub.c:5115
->  hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
->  process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
->  process_scheduled_works kernel/workqueue.c:2179
->  worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
->  kthread+0x3a1/0x470 kernel/kthread.c:231
->  ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
-> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+This patchset is for Rome PCIE chip, it will not affect other hardware
 
-Patch applied to wireless-drivers-next.git, thanks.
+Yingying Tang (5):
+  mac80211: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer inactivity detection
+  ath10k: Avoid to set WEP key for TDLS peer
+  ath10k: Fix TDLS peer TX data failure issue on encryped AP
 
-fc09785de0a3 p54: don't unregister leds when they are not initialized
+ drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
+ include/net/cfg80211.h                    |    3 ++
+ net/mac80211/tdls.c                       |    5 ++-
+ 6 files changed, 94 insertions(+), 2 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/9972281/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
