@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:49360 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752024AbdJLAdy (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:56843 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdJJTJc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 20:33:54 -0400
-Received: by mail-pf0-f173.google.com with SMTP id l188so2596628pfc.6
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 17:33:54 -0700 (PDT)
-Date: Wed, 11 Oct 2017 17:33:51 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>
-Subject: Re: [PATCH 2/3] rsi: sdio: Add WOWLAN support for S4 hibernate state
-Message-ID: <20171012003350.GA88621@google.com> (sfid-20171012_023400_954645_FDCA257C)
-References: <1506345709-4699-1-git-send-email-amitkarwar@gmail.com>
- <87wp4l6au9.fsf@kamboji.qca.qualcomm.com>
- <CAEhWJF=NusRJmdhQ7W9OPVjGG=XYAWU-+gnu_mYck2BsAOK+pg@mail.gmail.com>
- <87fuaqqbpa.fsf@kamboji.qca.qualcomm.com>
+        Tue, 10 Oct 2017 15:09:32 -0400
+Received: by mail-wm0-f47.google.com with SMTP id l68so8134059wmd.5
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Oct 2017 12:09:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87fuaqqbpa.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <e99d4daa-fdc2-ce26-8ffb-bd3cf131e87c@candelatech.com>
+References: <e99d4daa-fdc2-ce26-8ffb-bd3cf131e87c@candelatech.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Tue, 10 Oct 2017 12:09:30 -0700
+Message-ID: <CAJ-Vmok9rNij_hErSfArrf9A6U8wCaZZWhOEPphCODKnj5Xjog@mail.gmail.com> (sfid-20171010_210935_863492_60694A38)
+Subject: Re: What should setting rate on 'AP' interface mean?
+To: Ben Greear <greearb@candelatech.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
+Hi,
 
-On Wed, Oct 11, 2017 at 12:24:17PM +0300, Kalle Valo wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
-> > On Tue, Sep 26, 2017 at 3:27 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> >> And even if that would be the right approach it needs to be properly
-> >> described in the commit log, a vague sentence in the end of a commit log
-> >> is not enough.
-> >
-> > Understood. I will add detailed description and send updated version
-> > if the patch is fine.
-> 
-> Not sure if this is fine or not. I think what you do here is ugly but I
-> guess it's better than nothing?
+IIRC, I think it's the drivers job to determine per-peer fixed rate.
 
-I don't see why you can't try to reuse the existing mac80211 reset;
-seems like you'd need to factor out some pieces of rsi_reset_card() and
-call that from the ieee80211_ops::start() method. Then, you just call
-ieee80211_restart_hw() from the appropriate place, instead of
-implementing your own tear-down/reset.
 
-Brian
+
+-adrian
+
+
+On 10 October 2017 at 11:34, Ben Greear <greearb@candelatech.com> wrote:
+> I was trying to use 'iw' to set rates on an AP interface, hoping it would
+> set tx-rates on all of the stations (peers) to the same thing.
+>
+> It appears that the ath10k driver will set ratesets on all stations if
+> we specify more than one rate, but if we specify a single rate, it does
+> not iterate through all stations, and just sets the 'vdev' fixed rate.
+>
+> So, should the driver somehow attempt to set single rate on all the stations
+> when
+> using a single rate?
+>
+> Or, do we need an API to force rates for individual stations (peers) and
+> leave
+> the driver in the current configuration?
+>
+> Or is it the firmware's responsibility to set the rate for all peers when
+> we set the vdev fixed rate on an AP vdev?
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
