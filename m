@@ -1,50 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33186 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:42090 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752199AbdJ0HtR (ORCPT
+        with ESMTP id S1755903AbdJJITA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:49:17 -0400
+        Tue, 10 Oct 2017 04:19:00 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: libertas: Convert timers to use timer_setup()
+Subject: Re: [v2] p54: don't unregister leds when they are not initialized
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171024092928.GA47234@beast>
-References: <20171024092928.GA47234@beast>
-To: Kees Cook <keescook@chromium.org>
-Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20171027074916.B582E601DA@smtp.codeaurora.org> (sfid-20171027_094942_028556_1ED710AA)
-Date: Fri, 27 Oct 2017 07:49:16 +0000 (UTC)
+In-Reply-To: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com>
+References: <17c60ebcc8ce7f20de41a55087d24dfdfca09c67.1506438620.git.andreyknvl@google.com>
+To: Andrey Konovalov <andreyknvl@google.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>,
+        Kostya Serebryany <kcc@google.com>,
+        Andrey Konovalov <andreyknvl@google.com>
+Message-Id: <20171010081859.B5954607CC@smtp.codeaurora.org> (sfid-20171010_102046_112145_635CCA70)
+Date: Tue, 10 Oct 2017 08:18:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
+Andrey Konovalov <andreyknvl@google.com> wrote:
 
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
+> ieee80211_register_hw() in p54_register_common() may fail and leds won't
+> get initialized. Currently p54_unregister_common() doesn't check that and
+> always calls p54_unregister_leds(). The fix is to check priv->registered
+> flag before calling p54_unregister_leds().
 > 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> Cc: Ingo Molnar <mingo@kernel.org>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Andrew Zaborowski <andrew.zaborowski@intel.com>
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Found by syzkaller.
+> 
+> INFO: trying to register non-static key.
+> the code is fine but needs lockdep annotation.
+> turning off the locking correctness validator.
+> CPU: 1 PID: 1404 Comm: kworker/1:1 Not tainted
+> 4.14.0-rc1-42251-gebb2c2437d80-dirty #205
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+> Workqueue: usb_hub_wq hub_event
+> Call Trace:
+>  __dump_stack lib/dump_stack.c:16
+>  dump_stack+0x292/0x395 lib/dump_stack.c:52
+>  register_lock_class+0x6c4/0x1a00 kernel/locking/lockdep.c:769
+>  __lock_acquire+0x27e/0x4550 kernel/locking/lockdep.c:3385
+>  lock_acquire+0x259/0x620 kernel/locking/lockdep.c:4002
+>  flush_work+0xf0/0x8c0 kernel/workqueue.c:2886
+>  __cancel_work_timer+0x51d/0x870 kernel/workqueue.c:2961
+>  cancel_delayed_work_sync+0x1f/0x30 kernel/workqueue.c:3081
+>  p54_unregister_leds+0x6c/0xc0 drivers/net/wireless/intersil/p54/led.c:160
+>  p54_unregister_common+0x3d/0xb0 drivers/net/wireless/intersil/p54/main.c:856
+>  p54u_disconnect+0x86/0x120 drivers/net/wireless/intersil/p54/p54usb.c:1073
+>  usb_unbind_interface+0x21c/0xa90 drivers/usb/core/driver.c:423
+>  __device_release_driver drivers/base/dd.c:861
+>  device_release_driver_internal+0x4f4/0x5c0 drivers/base/dd.c:893
+>  device_release_driver+0x1e/0x30 drivers/base/dd.c:918
+>  bus_remove_device+0x2f4/0x4b0 drivers/base/bus.c:565
+>  device_del+0x5c4/0xab0 drivers/base/core.c:1985
+>  usb_disable_device+0x1e9/0x680 drivers/usb/core/message.c:1170
+>  usb_disconnect+0x260/0x7a0 drivers/usb/core/hub.c:2124
+>  hub_port_connect drivers/usb/core/hub.c:4754
+>  hub_port_connect_change drivers/usb/core/hub.c:5009
+>  port_event drivers/usb/core/hub.c:5115
+>  hub_event+0x1318/0x3740 drivers/usb/core/hub.c:5195
+>  process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
+>  process_scheduled_works kernel/workqueue.c:2179
+>  worker_thread+0xb2b/0x1850 kernel/workqueue.c:2255
+>  kthread+0x3a1/0x470 kernel/kthread.c:231
+>  ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Andrey Konovalov <andreyknvl@google.com>
+> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-78ce6a9083c4 libertas: Convert timers to use timer_setup()
+fc09785de0a3 p54: don't unregister leds when they are not initialized
 
 -- 
-https://patchwork.kernel.org/patch/10023823/
+https://patchwork.kernel.org/patch/9972281/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
