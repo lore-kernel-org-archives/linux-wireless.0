@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55140 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752058AbdJ0Hnq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:43:46 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:45178 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756209AbdJJNlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Oct 2017 09:41:10 -0400
+Date: Tue, 10 Oct 2017 15:41:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: toke@toke.dk
+Subject: Re: [PATCH v2] mac80211: fix STA_SLOW_THRESHOLD htmldocs failure
+Message-ID: <20171010134107.GA3328@redhat.com> (sfid-20171010_154200_489138_52F1C8CD)
+References: <1506426485-7539-1-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-Subject: Re: qtnfmac: Convert timers to use timer_setup()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171024092837.GA47040@beast>
-References: <20171024092837.GA47040@beast>
-To: Kees Cook <keescook@chromium.org>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20171027074345.AD4A16044E@smtp.codeaurora.org> (sfid-20171027_094415_432002_185C5CD3)
-Date: Fri, 27 Oct 2017 07:43:45 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506426485-7539-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
-
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
+On Tue, Sep 26, 2017 at 01:48:05PM +0200, Stanislaw Gruszka wrote:
+> Patch fixes htmldocs build problem:
 > 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Igor Mitsyanko <imitsyanko@quantenna.com>
-> Cc: Avinash Patil <avinashp@quantenna.com>
-> Cc: Sergey Matyukevich <smatyukevich@quantenna.com>
-> Cc: Kamlesh Rath <krath@quantenna.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Error(.//net/mac80211/sta_info.h:416): cannot understand prototype: 'STA_SLOW_THRESHOLD 6000  '
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+> v1 -> v2: just fix documentation build, do not move the code.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Johannes, would you apply this? I think patch is safe to apply :-)
 
-7e916cafb4d9 qtnfmac: Convert timers to use timer_setup()
-
--- 
-https://patchwork.kernel.org/patch/10023851/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>  net/mac80211/sta_info.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+> index 3acbdfa..a35c964 100644
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -398,7 +398,7 @@ struct ieee80211_sta_rx_stats {
+>  	u64 msdu[IEEE80211_NUM_TIDS + 1];
+>  };
+>  
+> -/**
+> +/*
+>   * The bandwidth threshold below which the per-station CoDel parameters will be
+>   * scaled to be more lenient (to prevent starvation of slow stations). This
+>   * value will be scaled by the number of active stations when it is being
+> -- 
+> 1.7.1
+> 
