@@ -1,87 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f52.google.com ([74.125.83.52]:45151 "EHLO
-        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932950AbdJPXgY (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:60378 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754049AbdJJBGB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 19:36:24 -0400
-Received: by mail-pg0-f52.google.com with SMTP id b192so8064616pga.2
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 16:36:24 -0700 (PDT)
-Date: Mon, 16 Oct 2017 16:36:22 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Mon, 9 Oct 2017 21:06:01 -0400
+Date: Mon, 09 Oct 2017 18:05:55 -0700 (PDT)
+Message-Id: <20171009.180555.71645109792027520.davem@davemloft.net> (sfid-20171010_030620_640639_403E6A3B)
+To: keescook@chromium.org
+Cc: tglx@linutronix.de, khc@pm.waw.pl, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com, gregkh@linuxfoundation.org,
+        axboe@fb.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: qtnfmac: Convert timers to use timer_setup()
-Message-ID: <20171016233622.GA101550@beast> (sfid-20171017_013644_535208_ED4D8867)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [PATCH] timer: Remove meaningless .data/.function assignments
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20171010001032.GA119829@beast>
+References: <20171010001032.GA119829@beast>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+From: Kees Cook <keescook@chromium.org>
+Date: Mon, 9 Oct 2017 17:10:32 -0700
 
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>
-Cc: Avinash Patil <avinashp@quantenna.com>
-Cc: Sergey Matyukevich <smatyukevich@quantenna.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Kamlesh Rath <krath@quantenna.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 7 +++----
- drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
- 2 files changed, 4 insertions(+), 5 deletions(-)
+> Several timer users needlessly reset their .function/.data fields during
+> their timer callback, but nothing else changes them. Some users do not
+> use their .data field at all. Each instance is removed here.
+> 
+> Cc: Krzysztof Halasa <khc@pm.waw.pl>
+> Cc: Aditya Shankar <aditya.shankar@microchip.com>
+> Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Jens Axboe <axboe@fb.com>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: devel@driverdev.osuosl.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # for staging
+> Acked-by: Krzysztof Halasa <khc@pm.waw.pl> # for wan/hdlc*
+> Acked-by: Jens Axboe <axboe@kernel.dk> # for amiflop
+> ---
+> This should go via the timer/core tree, please. It's been acked by each
+> of the maintainers. Thanks!
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 32bf72c0399f..ac1b9bd5ed90 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -581,9 +581,9 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
- 
--static void qtnf_scan_timeout(unsigned long data)
-+static void qtnf_scan_timeout(struct timer_list *t)
- {
--	struct qtnf_wmac *mac = (struct qtnf_wmac *)data;
-+	struct qtnf_wmac *mac = from_timer(mac, t, scan_timeout);
- 
- 	pr_warn("mac%d scan timed out\n", mac->macid);
- 	qtnf_scan_done(mac, true);
-@@ -602,8 +602,7 @@ qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 		return -EFAULT;
- 	}
- 
--	mac->scan_timeout.data = (unsigned long)mac;
--	mac->scan_timeout.function = qtnf_scan_timeout;
-+	mac->scan_timeout.function = (TIMER_FUNC_TYPE)qtnf_scan_timeout;
- 	mod_timer(&mac->scan_timeout,
- 		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index 5e60180482d1..aa7f146278a7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -289,7 +289,7 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
- 		mac->iflist[i].vifid = i;
- 		qtnf_sta_list_init(&mac->iflist[i].sta_list);
- 		mutex_init(&mac->mac_lock);
--		init_timer(&mac->scan_timeout);
-+		setup_timer(&mac->scan_timeout, NULL, 0);
- 	}
- 
- 	qtnf_mac_init_primary_intf(mac);
--- 
-2.7.4
+For networking bits:
 
-
--- 
-Kees Cook
-Pixel Security
+Acked-by: David S. Miller <davem@davemloft.net>
