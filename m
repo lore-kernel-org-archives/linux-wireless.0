@@ -1,101 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:43631 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751729AbdJaOwT (ORCPT
+Received: from mail-it0-f47.google.com ([209.85.214.47]:56887 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752225AbdJKOMw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 10:52:19 -0400
-Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
- <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
- <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
-Message-ID: <52655c07-aba1-525e-8c81-e420eafc329f@dd-wrt.com> (sfid-20171031_155244_565935_1A11ECF0)
-Date: Tue, 31 Oct 2017 15:52:15 +0100
+        Wed, 11 Oct 2017 10:12:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1507708082.1998.9.camel@sipsolutions.net>
+References: <20171011023149.18021-1-qasdfgtyuiop@gmail.com> <1507708082.1998.9.camel@sipsolutions.net>
+From: Xiang Gao <qasdfgtyuiop@gmail.com>
+Date: Wed, 11 Oct 2017 10:12:30 -0400
+Message-ID: <CAMtaSwRNc0JvyG04SpW2DxNyzdCtwE0o0i2biMF6Wm+53NHmDg@mail.gmail.com> (sfid-20171011_161408_416787_BDD723D5)
+Subject: Re: [PATCH v3] mac80211: aead api to reduce redundancy
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the following patchlines in the v3 patch look wrong
-
-+               /* ICV */
-+               if (status->flag & RX_FLAG_ICV_STRIPPED &&
-+                   enctype != HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
-+                       skb_trim(msdu, msdu->len -
-+                                ath10k_htt_rx_crypto_tail_len(ar, 
-enctype));
+Great ! Thanks !
+Xiang Gao
 
 
-the enctype != wpa2 isnt enough since it also belongs to ccmp-256, gcmp 
-modes etc.
-
-my proposal
-
-        if (status->flag & RX_FLAG_ICV_STRIPPED) {
-            switch(enctype)
-            {
-            case HTT_RX_MPDU_ENCRYPT_WEP40:
-            case HTT_RX_MPDU_ENCRYPT_WEP104:
--         case HTT_RX_MPDU_ENCRYPT_TKIP_WITHOUT_MIC:
-            case HTT_RX_MPDU_ENCRYPT_TKIP_WPA:
-                skb_trim(msdu, msdu->len -
-                         ath10k_htt_rx_crypto_tail_len(ar, enctype));
-            break;
-            default:
-            break;
-           }
--     }
-
-
-Am 30.10.2017 um 10:32 schrieb Sebastian Gottschall:
-> will check it tomorrow including gcmp-256, ccmp-256. was out for 
-> weekend :-)
+2017-10-11 3:48 GMT-04:00 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2017-10-10 at 22:31 -0400, Xiang Gao wrote:
+>> Currently, the aes_ccm.c and aes_gcm.c are almost line by line copy
+>> of
+>> each other. This patch reduce code redundancy by moving the code in
+>> these
+>> two files to crypto/aead_api.c to make it a higher level aead api.
+>> The
+>> file aes_ccm.c and aes_gcm.c are removed and all the functions there
+>> are
+>> now implemented in their headers using the newly added aead api.
 >
-> Am 30.10.2017 um 09:39 schrieb Kalle Valo:
->> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>
->>> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
->>> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
->>> on host (mac80211) rather than firmware. Rebuild cipher header
->>> in every received data frames (that are notified through those
->>> HTT interfaces) from the rx_hdr_status tlv available in the
->>> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
->>> flag for the packets which requires mac80211 PN/TSC check support
->>> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
->>> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
->>> rebuilding of cipher header to perform PN/TSC check for replay
->>> attack.
->>>
->>> Please note that removing crypto tail for CCMP-256, GCMP and 
->>> GCMP-256 ciphers
->>> in raw mode needs to be fixed. Since Rx with these ciphers in raw
->>> mode does not work in the current form even without this patch and
->>> removing crypto tail for these chipers needs clean up, raw mode related
->>> issues in CCMP-256, GCMP and GCMP-256 can be addressed in follow up
->>> patches.
->>>
->>> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> Patch applied to ath-current branch of ath.git, thanks.
->>
->> 7eccb738fce5 ath10k: rebuild crypto header in rx data frames
->>
+> Applied. FWIW, the sta_dynamic_down_up test that the robot complained
+> about, and the PSK tests that heavily use CCMP all pass.
 >
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+> johannes
