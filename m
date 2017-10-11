@@ -1,30 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36436 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751635AbdJIJuW (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:60562 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751423AbdJKRPe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 05:50:22 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1e1UhZ-0005jA-HI
-        for linux-wireless@vger.kernel.org; Mon, 09 Oct 2017 11:50:21 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/4] built-in regulatory database
-Date: Mon,  9 Oct 2017 11:50:14 +0200
-Message-Id: <20171009095018.5289-1-johannes@sipsolutions.net> (sfid-20171009_115031_306127_99E9D381)
+        Wed, 11 Oct 2017 13:15:34 -0400
+Date: Wed, 11 Oct 2017 10:15:31 -0700 (PDT)
+Message-Id: <20171011.101531.1673001523626350498.davem@davemloft.net> (sfid-20171011_191615_367485_21A78B87)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2017-10-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20171011123613.28890-1-johannes@sipsolutions.net>
+References: <20171011123613.28890-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a new version of these patches, hopefully the final. I changed
-the database format to make it smaller
- * dropping antenna gain limitation (never used in db.txt)
- * make CAC timeout in seconds, and optional
- * change length fields to u8
- * change n_rules field to u8
- * re-pack those flags that are used in db.txt
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 11 Oct 2017 14:36:12 +0200
 
-The whole database is now only about 3.4KB.
+> Here's a -next pull request. The only bigger thing here is the
+> addition of the regulatory database as firmware, which will
+> allow us to - over time - get rid of CRDA, as well as having
+> the option of adding more fields to the database where needed,
+> this would've been extremely complex with CRDA because it had
+> not been built with extensibility in mind.
+> 
+> Please pull and let me know if there's any problem.
 
-johannes
+Pulled, thanks!
