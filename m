@@ -1,88 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:54860 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751884AbdJXJ2k (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:48620 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751459AbdJKOQA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 05:28:40 -0400
-Received: by mail-pg0-f68.google.com with SMTP id l24so14040434pgu.11
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 02:28:39 -0700 (PDT)
-Date: Tue, 24 Oct 2017 02:28:37 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/wireless: qtnfmac: Convert timers to use
- timer_setup()
-Message-ID: <20171024092837.GA47040@beast> (sfid-20171024_113508_010375_32C2E64E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 11 Oct 2017 10:16:00 -0400
+Message-ID: <1507731344.1998.36.camel@sipsolutions.net> (sfid-20171011_161625_750465_27FAEB08)
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Wed, 11 Oct 2017 16:15:44 +0200
+In-Reply-To: <87tvz5pymm.fsf@toke.dk>
+References: <20171010140208.1515-1-toke@toke.dk>
+         <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk>
+         <1507711498.1998.18.camel@sipsolutions.net> <87tvz5pymm.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+On Wed, 2017-10-11 at 16:06 +0200, Toke Høiland-Jørgensen wrote:
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>
-Cc: Avinash Patil <avinashp@quantenna.com>
-Cc: Sergey Matyukevich <smatyukevich@quantenna.com>
-Cc: Kamlesh Rath <krath@quantenna.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 7 +++----
- drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
- 2 files changed, 4 insertions(+), 5 deletions(-)
+> > Hmm, not sure. We really want this to be scheduled pretty much
+> > immediately because the other side will be waiting for the frames,
+> > and
+> > if we don't get an answer out quickly it'll have to assume we're
+> > broken. I don't know what the limit here is for our firmware, but
+> > we
+> > should really get this out as soon as possible in this case.
+> 
+> OK. But presumably it can't preempt packets already pushed to the
+> hardware, right? 
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 32bf72c0399f..ac1b9bd5ed90 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -581,9 +581,9 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
- 
--static void qtnf_scan_timeout(unsigned long data)
-+static void qtnf_scan_timeout(struct timer_list *t)
- {
--	struct qtnf_wmac *mac = (struct qtnf_wmac *)data;
-+	struct qtnf_wmac *mac = from_timer(mac, t, scan_timeout);
- 
- 	pr_warn("mac%d scan timed out\n", mac->macid);
- 	qtnf_scan_done(mac, true);
-@@ -602,8 +602,7 @@ qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 		return -EFAULT;
- 	}
- 
--	mac->scan_timeout.data = (unsigned long)mac;
--	mac->scan_timeout.function = qtnf_scan_timeout;
-+	mac->scan_timeout.function = (TIMER_FUNC_TYPE)qtnf_scan_timeout;
- 	mod_timer(&mac->scan_timeout,
- 		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index 5e60180482d1..aa7f146278a7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -289,7 +289,7 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
- 		mac->iflist[i].vifid = i;
- 		qtnf_sta_list_init(&mac->iflist[i].sta_list);
- 		mutex_init(&mac->mac_lock);
--		init_timer(&mac->scan_timeout);
-+		setup_timer(&mac->scan_timeout, NULL, 0);
- 	}
- 
- 	qtnf_mac_init_primary_intf(mac);
--- 
-2.7.4
+True. If there are still packets scheduled then it needs even more
+driver tricks to drop those back to tx_pending first ...
 
+> So telling the driver to immediately schedule a packet,
+> and making sure that the txq it gets from next_txq() is the right one
+> should do the trick? But I guess it's a bit of a roundabout way,
+> which may not be worth it to avoid an extra callback...
 
--- 
-Kees Cook
-Pixel Security
+Yeah, might work, but remember that we need to mangle the packet, and
+for that we need to know how many packets will go out. E.g. with U-
+APSD, if we tell the driver 8 packets are OK, and it only wants 6, then
+that's acceptable, but we have to tag the last of those with EOSP ...
+
+So one way or another I think we need a separate callback here, and
+perhaps just have the driver do the EOSP tagging, or have a separate
+function to pull the frames so mac80211 can do the tagging, dunno.
+
+Note that this is only for _some_ drivers, others will implement much
+of this in firmware.
+
+johannes
