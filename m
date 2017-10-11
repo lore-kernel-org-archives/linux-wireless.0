@@ -1,47 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.linuxprofi.at ([93.83.54.199]:33262 "EHLO
-        zimbra.linuxprofi.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751412AbdJDP5V (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:44728 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757047AbdJKIHS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 11:57:21 -0400
-From: =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= <christoph@boehmwalder.at>
-Subject: [PATCH 2/3] wireless: iwlwifi: function definition cosmetic fix
-Date: Wed,  4 Oct 2017 17:56:59 +0200
-Message-Id: <20171004155700.18048-3-christoph@boehmwalder.at> (sfid-20171004_175845_127768_A1FEF27F)
-In-Reply-To: <20171004155700.18048-1-christoph@boehmwalder.at>
-References: <20171004155700.18048-1-christoph@boehmwalder.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Wed, 11 Oct 2017 04:07:18 -0400
+Message-ID: <1507709235.1998.17.camel@sipsolutions.net> (sfid-20171011_100844_724095_8447CA1A)
+Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
+ mask if not usable"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>, kirtika@google.com,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 11 Oct 2017 10:07:15 +0200
+In-Reply-To: <1507708948.1998.15.camel@sipsolutions.net>
+References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
+         (sfid-20171010_225427_620459_2849A16B) <1507708948.1998.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Separate the function from the previous definition with a newline and
-put the `static` keyword on the same line, as it just looks nicer.
+On Wed, 2017-10-11 at 10:02 +0200, Johannes Berg wrote:
 
-Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
----
- drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> Overall, this isn't very well defined for AP mode...
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-index 0eb815ae97e8..249ee1c7b02f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-@@ -325,8 +325,8 @@ static u16 channel_id_to_txp(struct iwl_phy_db *phy_db, u16 ch_id)
- 	}
- 	return 0xff;
- }
--static
--int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
-+
-+static int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
- 				u32 type, u8 **data, u16 *size, u16 ch_id)
- {
- 	struct iwl_phy_db_entry *entry;
--- 
-2.13.5
+No, that's not really correct. It *is* well defined (set the rate for
+all clients to the same fixed rate), but that definition isn't very
+good because if that rate isn't a basic rate, clients can connect that
+don't support this rate...
+
+johannes
