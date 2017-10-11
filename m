@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22530 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753258AbdJMMSe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 08:18:34 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:35363 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750883AbdJKO3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 10:29:10 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+In-Reply-To: <1507731344.1998.36.camel@sipsolutions.net>
+References: <20171010140208.1515-1-toke@toke.dk> <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk> <1507711498.1998.18.camel@sipsolutions.net> <87tvz5pymm.fsf@toke.dk> <1507731344.1998.36.camel@sipsolutions.net>
+Date: Wed, 11 Oct 2017 16:29:07 +0200
+Message-ID: <87fuapbvws.fsf@toke.dk> (sfid-20171011_162931_467271_3AF4D94E)
 MIME-Version: 1.0
-Subject: Re: [2/2] ath10k: handle tdls peer events
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1507618202-25473-3-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1507618202-25473-3-git-send-email-mpubbise@qti.qualcomm.com>
-To: <mpubbise@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Manikanta Pubbisetty" <mpubbise@qti.qualcomm.com>
-Message-ID: <e1bed0a347cf4ce0a1c538b99852398a@euamsexm01e.eu.qualcomm.com> (sfid-20171013_141837_948902_B49D74B9)
-Date: Fri, 13 Oct 2017 14:18:26 +0200
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mpubbise@qti.qualcomm.com wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> Handle tdls peer events from the target. TDLS events for the peer
-> could be discover, teardown, etc. As of now, adding the logic to
-> handle tdls teardown events alone.
-> 
-> Teardown due to peer traffic indication(PTR) timeout is one such
-> teardown event from the target.
-> 
-> Tested this change on QCA9888 with 10.4-3.5.1-00018 fw version.
-> 
-> Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> On Wed, 2017-10-11 at 16:06 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+>> > Hmm, not sure. We really want this to be scheduled pretty much
+>> > immediately because the other side will be waiting for the frames,
+>> > and
+>> > if we don't get an answer out quickly it'll have to assume we're
+>> > broken. I don't know what the limit here is for our firmware, but
+>> > we
+>> > should really get this out as soon as possible in this case.
+>>=20
+>> OK. But presumably it can't preempt packets already pushed to the
+>> hardware, right?=20
+>
+> True. If there are still packets scheduled then it needs even more
+> driver tricks to drop those back to tx_pending first ...
 
-This patch introduces new warnings:
+Only for packets to the same station, right?
 
-$ ath10k-check
-drivers/net/wireless/ath/ath10k/wmi.c:4470:39: warning: incorrect type in argument 2 (different base types)
-drivers/net/wireless/ath/ath10k/wmi.c:4470:39:    expected int [signed] vdev_id
-drivers/net/wireless/ath/ath10k/wmi.c:4470:39:    got restricted __le32 [usertype] vdev_id
-drivers/net/wireless/ath/ath10k/wmi.c:4481:27: warning: restricted __le32 degrades to integer
-drivers/net/wireless/ath/ath10k/wmi.c:4481:27: warning: restricted __le32 degrades to integer
-drivers/net/wireless/ath/ath10k/wmi.c:4481:27: warning: restricted __le32 degrades to integer
-drivers/net/wireless/ath/ath10k/wmi.c:4492:48: warning: incorrect type in argument 2 (different base types)
-drivers/net/wireless/ath/ath10k/wmi.c:4492:48:    expected unsigned int [unsigned] [usertype] vdev_id
-drivers/net/wireless/ath/ath10k/wmi.c:4492:48:    got restricted __le32 [usertype] vdev_id
-drivers/net/wireless/ath/ath10k/wmi.c:4479:19: warning: restricted __le32 degrades to integer
-drivers/net/wireless/ath/ath10k/wmi.c:4460:6: warning: symbol 'ath10k_wmi_handle_tdls_peer_event' was not declared. Should it be static?
+>> So telling the driver to immediately schedule a packet,
+>> and making sure that the txq it gets from next_txq() is the right one
+>> should do the trick? But I guess it's a bit of a roundabout way,
+>> which may not be worth it to avoid an extra callback...
+>
+> Yeah, might work, but remember that we need to mangle the packet, and
+> for that we need to know how many packets will go out. E.g. with U-
+> APSD, if we tell the driver 8 packets are OK, and it only wants 6, then
+> that's acceptable, but we have to tag the last of those with EOSP ...
+>
+> So one way or another I think we need a separate callback here, and
+> perhaps just have the driver do the EOSP tagging, or have a separate
+> function to pull the frames so mac80211 can do the tagging, dunno.
 
--- 
-https://patchwork.kernel.org/patch/9995131/
+Yeah, sounds like it'll need a separate callback, or at least a flag.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+What part of the standard do I have to read to learn how this is
+supposed to work, BTW? Or even better, is there a resource that
+describes how PS works that is more accessible than the standard itself?
+
+> Note that this is only for _some_ drivers, others will implement much
+> of this in firmware.
+
+Right, of course. Fun times! :)
+
+-Toke
