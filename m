@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0078.outbound.protection.outlook.com ([104.47.33.78]:11264
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751394AbdJOUxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Oct 2017 16:53:46 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: [PATCH 0/8] qtnfmac: misc small features and fixes
-Date: Sun, 15 Oct 2017 23:53:22 +0300
-Message-Id: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com> (sfid-20171015_225418_943194_2ADDCE0E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:52628 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757177AbdJKIFV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 04:05:21 -0400
+Message-ID: <1507709118.908.219.camel@coelho.fi> (sfid-20171011_101043_212015_364C1BEB)
+From: Luca Coelho <luca@coelho.fi>
+To: Joel =?ISO-8859-1?Q?Bjurstr=F6m?= <maxxflow@gmail.com>,
+        linux-wireless@vger.kernel.org, assaf.krauss@intel.com,
+        johannes.berg@intel.com, emmanuel.grumbach@intel.com
+Cc: linuxwifi@intel.com
+Date: Wed, 11 Oct 2017 11:05:18 +0300
+In-Reply-To: <1507092741.908.56.camel@intel.com>
+References: <981d5fb9-4c3f-be8e-265a-6d21a2591e40@maxxflow.com>
+         <d3356a70-b90e-d0cc-6328-17f055b2ed1c@maxxflow.com>
+         <1507092741.908.56.camel@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi: ToF usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle, Igor, and all
-
-This patch series includes a number of small features and fixes
-for qtnfmac driver.
-
-Igor Mitsyanko (1):
- qtnfmac: advertise support of inactivity timeout
-
-Sergey Matyukevich (4):
- qtnfmac: modify full Tx queue error reporting
- qtnfmac: enable registration of more mgmt frames
- qtnfmac: drop nonexistent function declaration
- qtnfmac: modify full Tx queue recovery
+On Wed, 2017-10-04 at 07:52 +0300, Luciano Coelho wrote:
+> Hi Joel,
+> 
+> Unfortunately we don't have full support for ToF on the mainline
+> kernel
+> yet.  But you can try to use one of our Core releases (which is a
+> backports-based tree) that you can find here:
+> 
+> You could try the release/Core30 branch, for example.
 
 
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c            |   17 +++++++++++++++--
- drivers/net/wireless/quantenna/qtnfmac/commands.c            |    5 +++--
- drivers/net/wireless/quantenna/qtnfmac/core.c                |   27 +++++++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/core.h                |    4 +---
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c          |   15 +++++++++------
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h |    1 +
- drivers/net/wireless/quantenna/qtnfmac/qlink.h               |   11 ++++++++++-
- 7 files changed, 66 insertions(+), 14 deletions(-)
+Johannes has also created a patch on top of the latest iw tool, adding
+the commands for ToF.  Please see my comment in this bugzilla entry if
+you want to try that:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=197187#c1
+
+Also, if you have any problems, please add it to bugzilla so we can
+track this all in a single place.
+
+--
+Cheers,
+Luca.
