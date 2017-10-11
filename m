@@ -1,105 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53168 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758185AbdJMNZR (ORCPT
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:55145 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752123AbdJKNey (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:25:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Oct 2017 16:24:56 +0300
-Message-Id: <20171013132502.10473-4-luca@coelho.fi> (sfid-20171013_152606_021386_C2B8098F)
-In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
-References: <20171013132502.10473-1-luca@coelho.fi>
-Subject: [PATCH 3/9] iwlwifi: mvm: pass baid_data to iwl_mvm_release_frames()
+        Wed, 11 Oct 2017 09:34:54 -0400
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20171010193027.GA23108@embeddedor.com>
+ <5f5f0f54-d901-90be-9025-0a1c4b909368@gmail.com>
+ <87o9peqdo2.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <eb89f2ad-f2d5-b97f-c224-daf3953d912c@gmail.com> (sfid-20171011_153610_188983_FC21841F)
+Date: Wed, 11 Oct 2017 09:34:51 -0400
+MIME-Version: 1.0
+In-Reply-To: <87o9peqdo2.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 10/11/2017 04:41 AM, Kalle Valo wrote:
+> Jes Sorensen <jes.sorensen@gmail.com> writes:
+> 
+>> On 10/10/2017 03:30 PM, Gustavo A. R. Silva wrote:
+>>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>>> where we are expecting to fall through.
+>>
+>> While this isn't harmful, to me this looks like pointless patch churn
+>> for zero gain and it's just ugly.
+> 
+> In general I find it useful to mark fall through cases. And it's just a
+> comment with two words, so they cannot hurt your eyes that much.
 
-All callers of iwl_mvm_release_frames() already have the baid_data
-pointer, so we don't need to (re)calculate it inside the function.
-Just pass it instead.
+I don't see them being harmful in the code, but I don't see them of much 
+use either. If it happened as part of natural code development, fine. My 
+objection is to people running around doing this systematically causing 
+patch churn for little to zero gain.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index fea7b965ea49..8e4f3b0a12cd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -407,11 +407,10 @@ static bool iwl_mvm_is_sn_less(u16 sn1, u16 sn2, u16 buffer_size)
- static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- 				   struct ieee80211_sta *sta,
- 				   struct napi_struct *napi,
-+				   struct iwl_mvm_baid_data *baid_data,
- 				   struct iwl_mvm_reorder_buffer *reorder_buf,
- 				   u16 nssn)
- {
--	struct iwl_mvm_baid_data *baid_data =
--		iwl_mvm_baid_data_from_reorder_buf(reorder_buf);
- 	struct iwl_mvm_reorder_buf_entry *entries =
- 		&baid_data->entries[reorder_buf->queue *
- 				    baid_data->entries_per_queue];
-@@ -515,7 +514,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
- 			     sta_id, sn);
- 		iwl_mvm_event_frame_timeout_callback(buf->mvm, mvmsta->vif,
- 						     sta, baid_data->tid);
--		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
-+		iwl_mvm_release_frames(buf->mvm, sta, NULL, baid_data, buf, sn);
- 		rcu_read_unlock();
- 	} else {
- 		/*
-@@ -555,7 +554,7 @@ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
- 
- 	/* release all frames that are in the reorder buffer to the stack */
- 	spin_lock_bh(&reorder_buf->lock);
--	iwl_mvm_release_frames(mvm, sta, NULL, reorder_buf,
-+	iwl_mvm_release_frames(mvm, sta, NULL, ba_data, reorder_buf,
- 			       ieee80211_sn_add(reorder_buf->head_sn,
- 						reorder_buf->buf_size));
- 	spin_unlock_bh(&reorder_buf->lock);
-@@ -683,7 +682,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	}
- 
- 	if (ieee80211_is_back_req(hdr->frame_control)) {
--		iwl_mvm_release_frames(mvm, sta, napi, buffer, nssn);
-+		iwl_mvm_release_frames(mvm, sta, napi, baid_data, buffer, nssn);
- 		goto drop;
- 	}
- 
-@@ -698,7 +697,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 				buffer->buf_size)) {
- 		u16 min_sn = ieee80211_sn_less(sn, nssn) ? sn : nssn;
- 
--		iwl_mvm_release_frames(mvm, sta, napi, buffer, min_sn);
-+		iwl_mvm_release_frames(mvm, sta, napi, baid_data, buffer,
-+				       min_sn);
- 	}
- 
- 	/* drop any oudated packets */
-@@ -755,7 +755,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	 * release notification with up to date NSSN.
- 	 */
- 	if (!amsdu || last_subframe)
--		iwl_mvm_release_frames(mvm, sta, napi, buffer, nssn);
-+		iwl_mvm_release_frames(mvm, sta, napi, baid_data, buffer, nssn);
- 
- 	spin_unlock_bh(&buffer->lock);
- 	return true;
-@@ -1075,7 +1075,7 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	reorder_buf = &ba_data->reorder_buf[queue];
- 
- 	spin_lock_bh(&reorder_buf->lock);
--	iwl_mvm_release_frames(mvm, sta, napi, reorder_buf,
-+	iwl_mvm_release_frames(mvm, sta, napi, ba_data, reorder_buf,
- 			       le16_to_cpu(release->nssn));
- 	spin_unlock_bh(&reorder_buf->lock);
- 
--- 
-2.14.2
+Jes
