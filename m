@@ -1,126 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:38436 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:45094 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754129AbdJILk0 (ORCPT
+        with ESMTP id S1756899AbdJKIpF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 07:40:26 -0400
-Message-ID: <1507549222.26041.38.camel@sipsolutions.net> (sfid-20171009_134032_153917_4C895360)
-Subject: Re: [RFC] mac80211: Add airtime fairness accounting
+        Wed, 11 Oct 2017 04:45:05 -0400
+Message-ID: <1507711498.1998.18.camel@sipsolutions.net> (sfid-20171011_104519_784439_FFD77093)
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
         make-wifi-fast@lists.bufferbloat.net,
         linux-wireless@vger.kernel.org
-Date: Mon, 09 Oct 2017 13:40:22 +0200
-In-Reply-To: <878tgkd5d1.fsf@toke.dk>
-References: <20171006115232.28688-1-toke@toke.dk>
-         <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk>
-         <1507310319.19300.28.camel@sipsolutions.net> <87infrqk28.fsf@toke.dk>
-         <1507533328.26041.12.camel@sipsolutions.net> <878tgkd5d1.fsf@toke.dk>
+Date: Wed, 11 Oct 2017 10:44:58 +0200
+In-Reply-To: <87fuaq7ubo.fsf@toke.dk>
+References: <20171010140208.1515-1-toke@toke.dk>
+         <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-10-09 at 11:42 +0200, Toke Høiland-Jørgensen wrote:
 
-> Well, the padding and spacing between frames is at most 11 bytes (4-
-> byte delimiter, 4-byte FCS and 3-byte padding), which is ~0.7% of a
-> full-sized frame. I'm not too worried about errors on that scale,
-> TBH.
+> Well I was trying to do The Right Thing(tm), obviously ;)
 
-I'm not sure - this really should take the whole frame exchange
-sequence into consideration, since the "dead" IFS time and the ACK etc.
-is also airtime consumed for that station, even if there's no actual
-transmission going on.
+:-)
 
-If you factor that in, the overhead reduction with aggregation is
-considerable! With an 80 MHz 2x2 MCS 9 (866Mbps PHY rate) A-MPDU
-containing 64 packets, you can reach >650Mbps (with protection),
-without A-MPDU you can reach only about 45Mbps I think.
+> The driver_buffered field comes from the previous behaviour of ath9k:
+> It would basically set the station_buffered flag if there was
+> something in the retry queue at the time it goes to sleep. And on
+> wakeup, it will reschedule the txq if it has anything in the retry
+> queue. And, well, it just seemed odd that there was this duplicated
+> logic in the driver and mac80211, if the driver could just signal to
+> mac80211 to reschedule for it...
 
-You'd think that a 1500 byte frame takes 1.5ms for the 1Mbps client,
-and ~14µs for the above mentioned VHT rate.
+Ok. I'm not sure what ath9k does, but mac80211 makes a distinction
+between "do I have something buffered" and "does the driver have
+something buffered".
 
-In reality, however, the overhead for both is comparable in absolute
-numbers, it's >200µs.
+When the station wakes up it's pretty easy, we tell the driver and it
+just has to send its own frames first.
 
-If you don't take any of this overhead into account at all, then you'll
-vastly over-allocate time for clients sending small (non-aggregated)
-frames, because for those - even with slow rates - the overhead will
-dominate.
+But when we get a PS-Poll/U-APSD it's more complicated, and we have to
+tell the driver "please release N frames you have buffered" or we may
+have to tell it "please allow me to send N frames that I have buffered"
+which is why we need the distinction of whether or not the driver has
+something buffered.
 
-If you do take this overhead into account but don't account for
-aggregation, you'll vastly under-allocate time for HT/VHT clients that
-use aggregation.
+Ultimately, with TXQs, I hope this distinction can go away because the
+driver wouldn't buffer all by itself.
 
-I don't know if there's an easy answer. Perhaps not accounting for the
-overhead but assuming that clients won't be stupid and will actually do
-aggregation when they ramp up their rates is reasonable in most
-scenarios, but I'm afraid that we'll find interop issues - we found for
-example that if you enable U-APSD lots of devices won't do aggregation
-any more ...
+> But I guess I was really just getting ahead of myself there; so the
+> right thing to do for now is to keep the old behaviour, and then fix
+> it properly afterwards?
 
-> Sure, it would be better to have it be accurate, but there are other
-> imperfections, especially on the RX side (we can't count
-> retransmissions, for instance, since the receiver obviously doesn't
-> see those).
+I guess that'd be easier.
 
-Sure.
+> Yes, this makes sense. Each sleep period is pretty short, right? 
 
-> There's a separate scheduling loop for each hardware queue (one per
-> AC), which only schedules all TXQs with that AC. The hardware will
-> prioritise higher ACs by dequeueing from the high-priority hardware
-> queue first.
+Not necessarily.
 
-Ok, I guess that addresses that issue.
+> I.e., we don't need to deal with interactions between CoDel and the
+> queue being stopped for a long period of time?
 
-> Yeah, that's what we have currently in ath9k. However, it's rare in
-> practice that a station transmits the same amount of data on all ACs
-> (for one, since the max aggregation size is smaller at the higher ACs
-> that becomes difficult). But you are quite right that this is
-> something that should be fixed :)
+I don't know enough about the possible interactions to answer that.
+Sleep periods may be long, though typically if there's traffic for
+stations then they want to retrieve that and will wake up relatively
+soon, but "relatively soon" may still be on the order of hundreds of
+milliseconds (or even seconds) because sometimes clients will only
+listen to DTIM beacons (DTIM period * beacon interval), and e.g. with
+WNM sleep mode it becomes even longer.
 
-Not sure the amount of data matters that much, but ok.
-
-> > > Ideally, I would prefer the scheduling to be "two-pass": First,
-> > > decide which physical station to send to, then decide which TID
-> > > on that station to service. 
-> > 
-> > Yeah, that would make more sense.
-> > 
-> > > But because everything is done at the TID/TXQ level, that is not
-> > > quite trivial to achieve I think...
-> > 
-> > Well you can group the TXQs, I guess. They all have a STA pointer,
-> > so
-> > you could put a one- or two-bit "schedule color" field into each
-> > station and if you find a TXQ with the same station color you just
-> > skip it or something like that?
+> > For the deliver-while-sleeping (PS-Poll/U-APSD) scenario, I think
+> > the
+> > driver should still pull frames, after calling something like
+> > drv_release_buffered_frames(). We want this to be scheduled pretty
+> > much
+> > immediately, so we shouldn't just put the TXQ into the normal
+> > rotation,
+> > but otherwise it should work similarly - except limited to a
+> > certain
+> > number of frames [**].
+> > In this case the driver probably needs to pull the frames using a
+> > different function so that we can
+> >  a) tag the packets properly (more-data, EOSP)
+> >  b) generate nulldata as EOSP container where needed
+> > Thus, it seems likely that we'll want a separate function, "pull
+> > for PS
+> > delivery" rather than the normal ieee80211_tx_dequeue().
 > 
-> Couldn't we add something like a get_next_txq(phy) function to
-> mac80211 that the drivers can call to get the queue to pull packets
-> from? That way, responsibility for scheduling both stations and QoS
-> levels falls to mac80211, which makes it possible to do clever
-> scheduling stuff without having to re-implement it in every driver.
-> Also, this function could handle all the special TXQs for PS and non-
-> data frames that you were talking about in your other email?
-> 
-> Unless there's some reason I'm missing that the driver really needs
-> to schedule the TXQs, I think this would make a lot of sense?
+> I was envisioning that next_txq() could also make those kinds of
+> decisions (i.e., preempt the normal scheduling algorithm when a
+> "special" TXQ needs to be scheduled immediately). But not sure if
+> that is enough for this case?
 
-I have no idea, that's something you'll have to ask Felix I guess. I'd
-think it should work, but the scheduling might have other constraints
-like wanting to fill certain A-MPDU buffers, or getting a specific
-channel (though that's already decided once you pick the station).
-
-It might also be hard to combine that - if you have space on your VI
-queue, how do you then pick the queue? We can't really go *all* the way
-and do scheduling *entirely* in software, getting rid of per-AC queues,
-since the per-AC queues also work to assign the EDCA parameters etc.
-
-Also, in iwlwifi we actually have a HW queue per TID to facilitate
-aggregation, though we could just let mac80211 pick the next TXQ to
-serve and skip in the unlikely case that the HW queue for that is
-already full (which really shouldn't happen).
+Hmm, not sure. We really want this to be scheduled pretty much
+immediately because the other side will be waiting for the frames, and
+if we don't get an answer out quickly it'll have to assume we're
+broken. I don't know what the limit here is for our firmware, but we
+should really get this out as soon as possible in this case.
 
 johannes
