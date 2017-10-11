@@ -1,128 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56699 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751425AbdJGVEV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:44652 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755430AbdJKICb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Oct 2017 17:04:21 -0400
-Subject: Re: [PATCH] bcma: keep *config menu together
-To: LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <2bdfed1b-5f74-07bf-d016-abe93f6034c7@infradead.org> (sfid-20171007_230447_314764_436303BD)
-Date: Sat, 7 Oct 2017 14:04:17 -0700
-MIME-Version: 1.0
-In-Reply-To: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org>
-Content-Type: text/plain; charset=utf-8
+        Wed, 11 Oct 2017 04:02:31 -0400
+Message-ID: <1507708948.1998.15.camel@sipsolutions.net> (sfid-20171011_100440_048918_C443C234)
+Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
+ mask if not usable"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>, kirtika@google.com,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 11 Oct 2017 10:02:28 +0200
+In-Reply-To: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com> (sfid-20171010_225427_620459_2849A16B)
+References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
+         (sfid-20171010_225427_620459_2849A16B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/17 13:01, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Use "if BCMA"/"endif" around all Kconfig symbols so that they are
-> kept together in *config menus instead of showing up in unexpected
-> places. Also remove "depends on BCMA" since this is handled by the
-> "if BCMA" addition.
-> 
-> Tested with ARCH={x86_64,MIPS} using make {n,menu,g,x}config.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Rafał Miłecki <zajec5@gmail.com>
+Hi,
 
-Rafał -- ping?
+> #iw dev vap206 set bitrates legacy-5 ht-mcs-5 0 vht-mcs-5
+> command failed: Invalid argument (-22)
+> 
+> But, it actually *does* successfully set the rate in the driver
+> first, which is confusing at best.
 
-> ---
->  drivers/bcma/Kconfig |   18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
-> 
-> --- lnx-414-rc2.orig/drivers/bcma/Kconfig
-> +++ lnx-414-rc2/drivers/bcma/Kconfig
-> @@ -10,14 +10,15 @@ menuconfig BCMA
->  	  Bus driver for Broadcom specific Advanced Microcontroller Bus
->  	  Architecture.
->  
-> +if BCMA
-> +
->  # Support for Block-I/O. SELECT this from the driver that needs it.
->  config BCMA_BLOCKIO
->  	bool
-> -	depends on BCMA
->  
->  config BCMA_HOST_PCI_POSSIBLE
->  	bool
-> -	depends on BCMA && PCI = y
-> +	depends on PCI = y
->  	default y
->  
->  config BCMA_HOST_PCI
-> @@ -28,7 +29,6 @@ config BCMA_HOST_PCI
->  
->  config BCMA_HOST_SOC
->  	bool "Support for BCMA in a SoC"
-> -	depends on BCMA
->  	help
->  	  Host interface for a Broadcom AIX bus directly mapped into
->  	  the memory. This only works with the Broadcom SoCs from the
-> @@ -38,7 +38,7 @@ config BCMA_HOST_SOC
->  
->  config BCMA_DRIVER_PCI
->  	bool "BCMA Broadcom PCI core driver"
-> -	depends on BCMA && PCI
-> +	depends on PCI
->  	default y
->  	help
->  	  BCMA bus may have many versions of PCIe core. This driver
-> @@ -54,13 +54,13 @@ config BCMA_DRIVER_PCI
->  
->  config BCMA_DRIVER_PCI_HOSTMODE
->  	bool "Driver for PCI core working in hostmode"
-> -	depends on BCMA && MIPS && BCMA_DRIVER_PCI
-> +	depends on MIPS && BCMA_DRIVER_PCI
->  	help
->  	  PCI core hostmode operation (external PCI bus).
->  
->  config BCMA_DRIVER_MIPS
->  	bool "BCMA Broadcom MIPS core driver"
-> -	depends on BCMA && MIPS
-> +	depends on MIPS
->  	help
->  	  Driver for the Broadcom MIPS core attached to Broadcom specific
->  	  Advanced Microcontroller Bus.
-> @@ -91,7 +91,6 @@ config BCMA_NFLASH
->  
->  config BCMA_DRIVER_GMAC_CMN
->  	bool "BCMA Broadcom GBIT MAC COMMON core driver"
-> -	depends on BCMA
->  	help
->  	  Driver for the Broadcom GBIT MAC COMMON core attached to Broadcom
->  	  specific Advanced Microcontroller Bus.
-> @@ -100,7 +99,7 @@ config BCMA_DRIVER_GMAC_CMN
->  
->  config BCMA_DRIVER_GPIO
->  	bool "BCMA GPIO driver"
-> -	depends on BCMA && GPIOLIB
-> +	depends on GPIOLIB
->  	select GPIOLIB_IRQCHIP if BCMA_HOST_SOC
->  	help
->  	  Driver to provide access to the GPIO pins of the bcma bus.
-> @@ -109,8 +108,9 @@ config BCMA_DRIVER_GPIO
->  
->  config BCMA_DEBUG
->  	bool "BCMA debugging"
-> -	depends on BCMA
->  	help
->  	  This turns on additional debugging messages.
->  
->  	  If unsure, say N
-> +
-> +endif # BCMA
-> 
-> 
-> 
+Huh?
 
+> So, I think we should relax this check, at least for ath10k.
 
--- 
-~Randy
+Well, yes and no. I don't think we should make ath10k special here, and
+this fixes a real problem - namely that you can set up the system so
+that you have no usable rates at all, and then you just get a WARN_ON
+and start using the lowest possible rate...
+
+> commit e8e4f5280ddd0a7b43a795f90a0758e3c99df6a6
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Wed Mar 8 11:12:10 2017 +0100
+> 
+>      mac80211: reject/clear user rate mask if not usable
+> 
+>      If the user rate mask results in no (basic) rates being usable,
+>      clear it. Also, if we're already operating when it's set, reject
+>      it instead.
+> 
+>      Technically, selecting basic rates as the criterion is a bit too
+>      restrictive, but calculating the usable rates over all stations
+>      (e.g. in AP mode) is harder, and all stations must support the
+>      basic rates. Similarly, in client mode, the basic rates will be
+>      used anyway for control frames.
+
+I guess you could implement this part? I.e. iterating the clients and
+checking that they all support the rate that is set. However, then you
+also need to implement that this gets reset when a new client that
+doesn't support this rate connects.
+
+Overall, this isn't very well defined for AP mode...
+
+Perhaps it'd be better - as you pointed out in the other thread - to
+have API to force a rate per station? We already have that for iwlwifi
+in debugfs, so perhaps that'd be something to consider for this too,
+I'm not sure there would be a real need to have it in nl80211?
+
+johannes
