@@ -1,136 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44808 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754473AbdJISuK (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:50353 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751609AbdJKSRa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 14:50:10 -0400
-Message-ID: <1507575007.26041.59.camel@sipsolutions.net> (sfid-20171009_205020_725591_1B43A4FE)
-Subject: Re: [RFC] mac80211: Add airtime fairness accounting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Mon, 09 Oct 2017 20:50:07 +0200
-In-Reply-To: <87zi90binm.fsf@toke.dk>
-References: <20171006115232.28688-1-toke@toke.dk>
-         <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk>
-         <1507310319.19300.28.camel@sipsolutions.net> <87infrqk28.fsf@toke.dk>
-         <1507533328.26041.12.camel@sipsolutions.net> <878tgkd5d1.fsf@toke.dk>
-         <1507549222.26041.38.camel@sipsolutions.net> <87zi90binm.fsf@toke.dk>
+        Wed, 11 Oct 2017 14:17:30 -0400
+Received: by mail-wm0-f54.google.com with SMTP id u138so7086835wmu.5
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 11:17:29 -0700 (PDT)
+MIME-Version: 1.0
+From: M D <dsmm4444@gmail.com>
+Date: Wed, 11 Oct 2017 11:17:28 -0700
+Message-ID: <CACUY3ep1s4OVZ-Fw3G4+aNjOxmLi1Rf+Zpnm__7c80KVPvr3fQ@mail.gmail.com> (sfid-20171011_201743_915996_2A2E48F2)
+Subject: Atheros TL-721N adapter refuses to enumerate on the USB Bus (ath9k_htc)
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
+My system details are as follows
 
-> Right, but most of these are constant values that are straight
-> forward to add as long as you know how the frame was received, no?
-> Maybe not as a general function in mac80211, but the driver should be
-> able to perform a reasonable computation in the absence of
-> information from the hardware.
+Hardware:
+CPU                      :              ARM based platform, imx21
+USB                       :             USB Host Controller 1.1 Full Speed Mode
 
-Yes, I think so.
+Software:
+Firmware              :              /lib/firmware/htc_9271.fw
+(version 1.3 / version 1.4)
+Device Driver       :              Backports (v3.12.8-1)
+OS                        :              Linux Kernel 3.0.101, ARM
+Freescale IMX21ADS
 
-> What does iwl put into the status.tx_time field of ieee80211_tx_info,
-> BTW? That was the only driver I could find that used the field, and
-> it looks like it just writes something it gets from the hardware into
-> it.
-> So does that value include overhead? And what about retransmissions?
+Problem Statement:
 
-It comes from the firmware - as far as I can tell, yes, it'll include
-retransmissions and the whole frame exchange sequence (RTS-CTS-data-ack 
-or RTS-CTS-ampdu-blockack).
+-        The WiFi adapter is connected directly to the USB Port and is
+configured in Full Speed mode
+-        After it is plugged in, it is enumerated on the Bus (that is,
+executing the instruction lsusb shows the vendor and product
+information)
+-        After repeated reboots, after one random reboot the issue
+occurs. (usually 1 out of 5 times) the wlan0 node does not come up
+-        When the issue occurs the following details below describe
+the issue at best
 
-> > I don't know if there's an easy answer. Perhaps not accounting for
-> > the
-> > overhead but assuming that clients won't be stupid and will
-> > actually
-> > do aggregation when they ramp up their rates is reasonable in most
-> > scenarios, but I'm afraid that we'll find interop issues - we found
-> > for example that if you enable U-APSD lots of devices won't do
-> > aggregation any more ...
-> 
-> What do you mean by "interop" here, exactly? Just that stations doing
-> weird things will see reduced performance?
 
-Well, the case that we did find is that sometimes U-APSD kills
-aggregation, so then you'd have a lot of single frames and
-significantly under-estimate air-time usage in this case. Thus, this
-station would get far more than its fair share of air time, because of
-a bug that makes it not use aggregation... That doesn't sound very good
-to me.
+1)  The adapter is visible on the USB bus (adapter gets enumerated)
+2)  The required modules are loaded
+3)  However the wireless networking node, wlan0 does not come up
+4)  One of the threads created during the init goes into a D state
 
-Perhaps at least taking aggregation into account would be doable - we
-_should_ know this, at least partially.
+root       1024  0.0  0.0      0     0 ?        D    11:06   0:00
+[firmware/htc_92]
 
-> I'm pretty sure it will work for ath9k. That just picks a TXQ and
-> keeps pulling packets until it has filled an aggregate. 
+In the file drivers/net/wireless/ath/ath9k/hif_usb.c
+[
 
-OK
+hif_usb.c
+...
 
-> That would still be possible if mac80211 picks the TXQ instead of the
-> driver itself. 
+ret = request_firmware_nowait(THIS_MODULE, true, hif_dev->fw_name,
+      &hif_dev->udev->dev, GFP_KERNEL,
+      hif_dev, ath9k_hif_usb_firmware_cb);
 
-Right.
 
-> So I was asking more generally, but if you don't see anything obvious
-> that would prevent me from doing this, I guess I'll go and try it out
-> :)
+compat_firmware_class.c
+...
+task = kthread_run(request_firmware_work_func, fw_work,
+    "firmware/%s", name);
+]
 
-:-)
 
-> > It might also be hard to combine that - if you have space on your
-> > VI
-> > queue, how do you then pick the queue? We can't really go *all* the
-> > way and do scheduling *entirely* in software, getting rid of per-AC
-> > queues, since the per-AC queues also work to assign the EDCA
-> > parameters etc.
-> 
-> We'll need to keep putting packets into different hardware queues,
-> sure.
+5) This is recoverable only after manually unplugging out the Adapter.
 
-> But deciding which one can be done at the last instant (i.e., for
-> ath9k,
-> ask mac80211 for a TXQ, look at which AC that TXQ belongs to, and
-> start
-> putting packets into that hardware queue).
+ROOT CAUSE OF THE ISSUE:
+6) The underlying cause is due to the wifi adapter being configured in
+FULL SPEED mode. Due to this the endpoints 3 and 4 get configured as
+BULK and not INT.
 
-Right.
 
-> One of the things I would also like to try, is to sometimes promote
-> or demote packets between AC levels. E.g., if a station has one VO
-> packet and a bunch of BE packets queued, it may sometimes be more
-> efficient to just put the VO packet at the beginning of a BE
-> aggregate. I still need to figure out for which values of 'sometimes'
-> this is a good idea, but I'd like to at least be able to support this
-> sort of shenanigans, which I believe what I proposed above will.
+After some investigation, I made the following changes which helps to
+recover the adapter when the issue occurs,
 
-I don't think that's a good idea. It's possible (and this can be done
-at least in synthetic scenarios) that VO traffic _completely_ drowns
-out all lower-priority traffic, so demoting frames that way would get
-them the wrong EDCA parameters.
+--- ../original-backports/backports-3.12.8-1/drivers/net/wireless/ath/ath9k/hif_usb.c
+  2017-10-11 10:50:05.043241000 -0700
++++ drivers/net/wireless/ath/ath9k/hif_usb.c    2017-10-11
+10:50:03.154255000 -0700
+@@ -24,6 +24,8 @@
+ MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
+ MODULE_FIRMWARE(FIRMWARE_AR9271);
 
-Yes, it might be better for throughput, but it would almost certainly
-be worse for latency for those frames, which is kinda the whole point
-of the ACs.
++static void ath9k_hif_usb_reboot(struct usb_device *udev);
++
 
-> > Also, in iwlwifi we actually have a HW queue per TID to facilitate
-> > aggregation, though we could just let mac80211 pick the next TXQ to
-> > serve and skip in the unlikely case that the HW queue for that is
-> > already full (which really shouldn't happen).
-> 
-> Yeah, there may be a need for the driver to be able to express some
-> constraints on the queues it can accept currently; may a bitmap of
-> eligible TID numbers, or just a way of saying "can't use this TXQ,
-> please give me another". But it may also be that it's enough for the
-> driver to just give up and try again later if it can't use the TXQ it
-> is assigned...
+@@ -1189,7 +1193,12 @@
+ {
+        struct usb_device *udev = interface_to_usbdev(interface);
+        struct hif_device_usb *hif_dev;
+-       int ret = 0;
++
++        struct usb_host_interface *alt ;
++        struct usb_endpoint_descriptor *endp;
++
++       int ret;
++       int idx, EP = 0;
 
-I guess it could just move on to the next TID. There doesn't seem to be
-much point in saying "I can't service this high-priority TID, give me
-something lower priority instead" because it really should be servicing
-the higher priority first anyway, so just skipping if it can't be
-serviced seems fine.
+        if (id->driver_info == STORAGE_DEVICE)
+                return send_eject_command(interface);
+@@ -1212,6 +1221,44 @@
 
-johannes
+        init_completion(&hif_dev->fw_done);
+
++       alt = &hif_dev->interface->altsetting[0];
++
++
++       for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
++                endp = &alt->endpoint[idx].desc;
++                EP = idx + 1;
++                printk (KERN_ALERT "EndPoint %d is conf as %d\n", EP,
+(endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK));
++               /* First FIX EP3. EP3 should never show up as BULK.
++                  If it does we have a serious problem.
++               */
++
++               if (endp->bEndpointAddress==0x83){
++                  if ((endp->bmAttributes &
+USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_BULK) {
++                       endp->bmAttributes |= USB_ENDPOINT_XFER_INT;
++                       endp->bInterval = 1;
++                       ath9k_hif_usb_reboot(hif_dev->udev);
++                       mdelay(1000);
++                       ret = usb_reset_device(hif_dev->udev);
++                       mdelay(1000);
++                        if (ret)
++                           return ret;
++                   }
++               }
++
++                if (endp->bEndpointAddress==0x04){
++                   if ((endp->bmAttributes &
+USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_BULK) {
++                        endp->bmAttributes |= USB_ENDPOINT_XFER_INT;
++                        endp->bInterval = 1;
++                       ath9k_hif_usb_reboot(hif_dev->udev);
++                       mdelay(1000);
++                       ret = usb_reset_device(hif_dev->udev);
++                       mdelay(1000);
++                       if (ret)
++                               return ret;
++                  }
++               }
++       }
++
+        /* Find out which firmware to load */
+
+        if (IS_AR7010_DEVICE(id->driver_info))
+
+
+
+I see the following output in dmesg
+
+EndPoint 1 is conf as 2
+EndPoint 2 is conf as 2
+EndPoint 3 is conf as 2
+usb 1-2: reset full speed USB device number 2 using imx21-hcd
+usb 1-2: device firmware changed
+usb 1-2: USB disconnect, device number 2
+usbcore: registered new interface driver ath9k_htc
+usb 1-2: new full speed USB device number 3 using imx21-hcd
+EndPoint 1 is conf as 2
+EndPoint 2 is conf as 2
+EndPoint 3 is conf as 3
+EndPoint 4 is conf as 2
+usb 1-2: reset full speed USB device number 3 using imx21-hcd
+EndPoint 5 is conf as 2
+EndPoint 6 is conf as 2
+usb 1-2: ath9k_htc: Firmware htc_9271.fw requested
+usb 1-2: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
+ath9k_htc 1-2:1.0: ath9k_htc: HTC initialized with 33 credits
+ath9k_htc 1-2:1.0: ath9k_htc: FW Version: 1.3
+Completed ath9k_init_firmware_version
+ath: EEPROM regdomain: 0x809c
+ath: EEPROM indicates we should expect a country code
+ath: doing EEPROM country->regdmn map search
+ath: country maps to regdmn code: 0x52
+ath: Country alpha2 being used: CN
+ath: Regpair used: 0x52
+ath9k_hw_set_reset_reg: 1
+ieee80211 phy0: Atheros AR9271 Rev:1
+Registered led device: ath9k_htc-phy0
+
+
+
+These code changes help to reconfigure the WiFi adapter many times.
+However at some point of reboot (say 30th reboot), I see
+
+usb 1-2: device descriptor read/64, error -110
+hub 1-0:1.0: unable to enumerate USB device on port 2
+
+When this happens, the only way to recover is to manually unplug the
+adapter from the USB port.
+
+Could anyone offer any suggestions as to how to overcome this problem?
+The issue occurs with both v1.3 and v1.4 htc_9271.fw.
+
+Regards,
+Max
