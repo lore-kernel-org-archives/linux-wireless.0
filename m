@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blatinox.fr ([51.254.120.209]:41830 "EHLO vps202351.ovh.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751421AbdJCBij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 21:38:39 -0400
-Date: Mon, 2 Oct 2017 21:23:06 -0400
-From: =?UTF-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sathya Perla <sathya.perla@broadcom.com>,
-        Ajit Khaparde <ajit.khaparde@broadcom.com>,
-        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
-        Somnath Kotur <somnath.kotur@broadcom.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
-Message-ID: <20171002212306.29ca6488@blatinox-laptop.localdomain> (sfid-20171003_033941_036688_5E49E87C)
-In-Reply-To: <87h8vh64sq.fsf@codeaurora.org>
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
-        <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
-        <87h8vh64sq.fsf@codeaurora.org>
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:54444 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757497AbdJKTly (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 15:41:54 -0400
+Received: by mail-pf0-f180.google.com with SMTP id m28so1786911pfi.11
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 12:41:54 -0700 (PDT)
+Date: Wed, 11 Oct 2017 12:41:50 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Karthik Ananthapadmanabha <karthida@marvell.com>
+Subject: Re: [PATCH] mwifiex: Random MAC address during scanning
+Message-ID: <20171011194148.GA84547@google.com> (sfid-20171011_214231_282764_38B8825E)
+References: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 02 Oct 2017 16:46:29 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
+On Fri, Sep 29, 2017 at 04:23:10PM +0530, Ganapathi Bhat wrote:
+> From: Karthik Ananthapadmanabha <karthida@marvell.com>
+> 
+> Driver will advertise RANDOM_MAC support only if the device
+> supports this feature.
+> 
+> Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-> We have a tree for wireless so usually it's better to submit wireless
-> changes on their own but here I assume Dave will apply this to his tree.
-> If not, please resubmit the wireless part in a separate patch.
-Ok, I note that.
+I'd just like to point out that this is a very bad commit subject:
 
-I'll wait Dave's answer and I'll split this patch if needed.
+"[PATCH] mwifiex: Random MAC address during scanning"
 
-Thank you,
-Jérémy
+It's borderline wrong, really. "Random MAC address during scanning" is
+already supported. This patch is just adding a feature-flag check for
+it, since some firmwares in the wild don't support it. A more accurate
+description would be something like:
+
+"[PATCH] mwifiex: Add feature flag support for MAC randomization"
+
+The patch is already applied, so I'd only worry about it for future
+submissions (no need to resend).
+
+Brian
