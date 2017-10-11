@@ -1,51 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0070.outbound.protection.outlook.com ([104.47.38.70]:2209
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752554AbdJ3KOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 06:14:11 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 1/5] qtnfmac: modify full Tx queue error reporting
-Date: Mon, 30 Oct 2017 13:13:46 +0300
-Message-Id: <20171030101350.21251-2-sergey.matyukevich.os@quantenna.com> (sfid-20171030_111419_808196_653F2FBA)
-In-Reply-To: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
-References: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.63.242]:44942 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756899AbdJKI3x (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 04:29:53 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Cc: Peng Xu <pxu@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v4.4] nl80211: Define policy for packet pattern attributes
+Date: Wed, 11 Oct 2017 10:29:49 +0200
+Message-Id: <20171011082949.10652-1-johannes@sipsolutions.net> (sfid-20171011_103011_161792_E5056BEB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Under heavy load it is normal that h/w Tx queue is almost full all the time
-and reclaim should be done before transmitting next packet. Warning still
-should be reported as well as s/w Tx queues should be stopped in the
-case when reclaim failed.
+From: Peng Xu <pxu@qti.qualcomm.com>
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Upstream commit ad670233c9e1d5feb365d870e30083ef1b889177.
+
+Define a policy for packet pattern attributes in order to fix a
+potential read over the end of the buffer during nla_get_u32()
+of the NL80211_PKTPAT_OFFSET attribute.
+
+Note that the data there can always be read due to SKB allocation
+(with alignment and struct skb_shared_info at the end), but the
+data might be uninitialized. This could be used to leak some data
+from uninitialized vmalloc() memory, but most drivers don't allow
+an offset (so you'd just get -EINVAL if the data is non-zero) or
+just allow it with a fixed value - 100 or 128 bytes, so anything
+above that would get -EINVAL. With brcmfmac the limit is 1500 so
+(at least) one byte could be obtained.
+
+Cc: stable@kernel.org
+Signed-off-by: Peng Xu <pxu@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+[rewrite description based on SKB allocation knowledge]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/nl80211.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index 69131965a298..146e42a132e7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -643,11 +643,11 @@ static int qtnf_tx_queue_ready(struct qtnf_pcie_bus_priv *priv)
- {
- 	if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
- 			priv->tx_bd_num)) {
--		pr_err_ratelimited("reclaim full Tx queue\n");
- 		qtnf_pcie_data_tx_reclaim(priv);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8ece212aa3d2..7950506395a8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -485,6 +485,14 @@ nl80211_plan_policy[NL80211_SCHED_SCAN_PLAN_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_PLAN_ITERATIONS] = { .type = NLA_U32 },
+ };
  
- 		if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
- 				priv->tx_bd_num)) {
-+			pr_warn_ratelimited("reclaim full Tx queue\n");
- 			priv->tx_full_count++;
- 			return 0;
- 		}
++/* policy for packet pattern attributes */
++static const struct nla_policy
++nl80211_packet_pattern_policy[MAX_NL80211_PKTPAT + 1] = {
++	[NL80211_PKTPAT_MASK] = { .type = NLA_BINARY, },
++	[NL80211_PKTPAT_PATTERN] = { .type = NLA_BINARY, },
++	[NL80211_PKTPAT_OFFSET] = { .type = NLA_U32 },
++};
++
+ static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
+ 				     struct netlink_callback *cb,
+ 				     struct cfg80211_registered_device **rdev,
+@@ -9410,7 +9418,7 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 			u8 *mask_pat;
+ 
+ 			nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
+-				  nla_len(pat), NULL);
++				  nla_len(pat), nl80211_packet_pattern_policy);
+ 			err = -EINVAL;
+ 			if (!pat_tb[NL80211_PKTPAT_MASK] ||
+ 			    !pat_tb[NL80211_PKTPAT_PATTERN])
+@@ -9660,7 +9668,7 @@ static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
+ 		u8 *mask_pat;
+ 
+ 		nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
+-			  nla_len(pat), NULL);
++			  nla_len(pat), nl80211_packet_pattern_policy);
+ 		if (!pat_tb[NL80211_PKTPAT_MASK] ||
+ 		    !pat_tb[NL80211_PKTPAT_PATTERN])
+ 			return -EINVAL;
 -- 
-2.11.0
+2.14.2
