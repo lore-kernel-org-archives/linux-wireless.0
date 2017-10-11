@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:51986 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751239AbdJEMGD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52614 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751415AbdJKHrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 08:06:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] rsi: fix integer overflow warning
-Date: Thu,  5 Oct 2017 14:05:24 +0200
-Message-Id: <20171005120547.328687-1-arnd@arndb.de> (sfid-20171005_140621_878991_805ACBC7)
+        Wed, 11 Oct 2017 03:47:53 -0400
+Message-ID: <1507708070.908.216.camel@coelho.fi> (sfid-20171011_094811_483286_147897A0)
+From: Luca Coelho <luca@coelho.fi>
+To: Seraphime Kirkovski <kirkseraph@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 11 Oct 2017 10:47:50 +0300
+In-Reply-To: <20171010074414.x3uqv27prkqov45v@macchiaveli>
+References: <20171010074414.x3uqv27prkqov45v@macchiaveli>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: 4.14.0-rc3 iwlwifi: Hardware became unavailable during restart
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc produces a harmless warning about a recently introduced
-signed integer overflow:
+On Tue, 2017-10-10 at 09:44 +0200, Seraphime Kirkovski wrote:
+> Hello,
 
-drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_prepare_mgmt_desc':
-include/uapi/linux/swab.h:13:15: error: integer overflow in expression [-Werror=overflow]
-  (((__u16)(x) & (__u16)0x00ffU) << 8) |   \
-   ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
-include/uapi/linux/swab.h:104:2: note: in expansion of macro '___constant_swab16'
-  ___constant_swab16(x) :   \
-  ^~~~~~~~~~~~~~~~~~
-include/uapi/linux/byteorder/big_endian.h:34:43: note: in expansion of macro '__swab16'
- #define __cpu_to_le16(x) ((__force __le16)__swab16((x)))
-                                           ^~~~~~~~
-include/linux/byteorder/generic.h:89:21: note: in expansion of macro '__cpu_to_le16'
- #define cpu_to_le16 __cpu_to_le16
-                     ^~~~~~~~~~~~~
-drivers/net/wireless/rsi/rsi_91x_hal.c:136:3: note: in expansion of macro 'cpu_to_le16'
-   cpu_to_le16((tx_params->vap_id << RSI_DESC_VAP_ID_OFST) &
-   ^~~~~~~~~~~
+Hi Seraphime,
 
-The problem is that the 'mask' value is a signed integer that gets
-turned into a negative number when truncated to 16 bits. Making it
-an unsigned constant avoids this.
 
-Fixes: eac4eed3224b ("rsi: tx and rx path enhancements for p2p mode")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/rsi/rsi_mgmt.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> I've got this splat after a couple of suspend-resume cycles on my
+> HP-laptop. I haven't had the time to bisect or test other rcs for now.
+> Pasting some logs before the actual WARN_ON, as they may be relevant.
+> Just after the splat the connection is successfully reestablished.
+> 
+> [14293.758404] iwlwifi 0000:24:00.0: Error sending REPLY_SCAN_ABORT_CMD: 
+> time out after 2000ms.
+> [14293.758429] iwlwifi 0000:24:00.0: Current CMD queue read_ptr 67 write_ptr 68
+> [14293.758518] iwlwifi 0000:24:00.0: Loaded firmware version: 18.168.6.1
 
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index b9d0802c1b0f..e21723013f8d 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -189,7 +189,7 @@
- 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE | \
- 	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
- 
--#define RSI_DESC_VAP_ID_MASK		0xC000
-+#define RSI_DESC_VAP_ID_MASK		0xC000u
- #define RSI_DESC_VAP_ID_OFST		14
- #define RSI_DATA_DESC_MAC_BBP_INFO	BIT(0)
- #define RSI_DATA_DESC_NO_ACK_IND	BIT(9)
--- 
-2.9.0
+This seems to be a DVM device (iwldvm).  What is the exact device
+model? And you have never noticed this problem before?
+
+Unfortunately this is a very old device and we don't support it
+actively anymore.  Hopefully this will turn out to be a trivial fix in
+the driver side, so we can get it solved for you.
+
+The best way to track this is to report it in
+https://bugzilla.kernel.org.
+
+--
+Cheers,
+Luca.
