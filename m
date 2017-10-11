@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:35363 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750883AbdJKO3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 10:29:10 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
-In-Reply-To: <1507731344.1998.36.camel@sipsolutions.net>
-References: <20171010140208.1515-1-toke@toke.dk> <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk> <1507711498.1998.18.camel@sipsolutions.net> <87tvz5pymm.fsf@toke.dk> <1507731344.1998.36.camel@sipsolutions.net>
-Date: Wed, 11 Oct 2017 16:29:07 +0200
-Message-ID: <87fuapbvws.fsf@toke.dk> (sfid-20171011_162931_467271_3AF4D94E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from smtprelay0097.hostedemail.com ([216.40.44.97]:35015 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752314AbdJKRrT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 13:47:19 -0400
+Message-ID: <1507744033.3552.55.camel@perches.com> (sfid-20171011_194912_187837_C3FD6318)
+Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
+From: Joe Perches <joe@perches.com>
+To: David Laight <David.Laight@ACULAB.COM>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Arnaldo Carvalho de Melo <acme@infradead.org>
+Date: Wed, 11 Oct 2017 10:47:13 -0700
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009123C@AcuExch.aculab.com>
+References: <20171010193027.GA23108@embeddedor.com>
+         <1507717237.3552.48.camel@perches.com>
+         <063D6719AE5E284EB5DD2968C1650D6DD009123C@AcuExch.aculab.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, 2017-10-11 at 12:54 +0000, David Laight wrote:
+> From: Joe Perches
+> > Sent: 11 October 2017 11:21
+> > On Tue, 2017-10-10 at 14:30 -0500, Gustavo A. R. Silva wrote:
+> > > In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> > > where we are expecting to fall through.
+> > 
+> > perhaps use Arnaldo's idea:
+> > 
+> > https://lkml.org/lkml/2017/2/9/845
+> > https://lkml.org/lkml/2017/2/10/485
+> 
+> gah, that is even uglier and requires a chase through
+> headers to find out what it means.
 
-> On Wed, 2017-10-11 at 16:06 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
->> > Hmm, not sure. We really want this to be scheduled pretty much
->> > immediately because the other side will be waiting for the frames,
->> > and
->> > if we don't get an answer out quickly it'll have to assume we're
->> > broken. I don't know what the limit here is for our firmware, but
->> > we
->> > should really get this out as soon as possible in this case.
->>=20
->> OK. But presumably it can't preempt packets already pushed to the
->> hardware, right?=20
->
-> True. If there are still packets scheduled then it needs even more
-> driver tricks to drop those back to tx_pending first ...
+Sure, if you think __fallthrough; isn't self-documenting.
 
-Only for packets to the same station, right?
+	case foo;
+		bar;
+		__fallthrough;
+	case baz;
+		etc...
 
->> So telling the driver to immediately schedule a packet,
->> and making sure that the txq it gets from next_txq() is the right one
->> should do the trick? But I guess it's a bit of a roundabout way,
->> which may not be worth it to avoid an extra callback...
->
-> Yeah, might work, but remember that we need to mangle the packet, and
-> for that we need to know how many packets will go out. E.g. with U-
-> APSD, if we tell the driver 8 packets are OK, and it only wants 6, then
-> that's acceptable, but we have to tag the last of those with EOSP ...
->
-> So one way or another I think we need a separate callback here, and
-> perhaps just have the driver do the EOSP tagging, or have a separate
-> function to pull the frames so mac80211 can do the tagging, dunno.
 
-Yeah, sounds like it'll need a separate callback, or at least a flag.
 
-What part of the standard do I have to read to learn how this is
-supposed to work, BTW? Or even better, is there a resource that
-describes how PS works that is more accessible than the standard itself?
-
-> Note that this is only for _some_ drivers, others will implement much
-> of this in firmware.
-
-Right, of course. Fun times! :)
-
--Toke
+		
