@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0063.outbound.protection.outlook.com ([104.47.38.63]:27360
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932549AbdJ3KON (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 06:14:13 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 2/5] qtnfmac: enable registration of more mgmt frames
-Date: Mon, 30 Oct 2017 13:13:47 +0300
-Message-Id: <20171030101350.21251-3-sergey.matyukevich.os@quantenna.com> (sfid-20171030_111417_783674_7F8EC3A7)
-In-Reply-To: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
-References: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.63.242]:45108 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756608AbdJKIqg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 04:46:36 -0400
+Message-ID: <1507711593.1998.20.camel@sipsolutions.net> (sfid-20171011_104646_396385_39FCCCBA)
+Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Wed, 11 Oct 2017 10:46:33 +0200
+In-Reply-To: <87k2027uxp.fsf@toke.dk>
+References: <20171010140208.1515-1-toke@toke.dk>
+         <1507650823.26041.70.camel@sipsolutions.net> <87k2027uxp.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support registration for more mgmt frame types
-for debug and monitoring purposes.
+On Tue, 2017-10-10 at 19:51 +0200, Toke Høiland-Jørgensen wrote:
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+> > > +	struct list_head active_txqs;
+> > > +	spinlock_t active_txq_lock;
+> > 
+> > Is there much point in having a separate lock? We probably need the
+> > fq lock in most places related to this anyway?
+> 
+> Well, once the scheduler gets a bit smarter it may be necessary to
+> much with the order of TXQs on there without touching any of the
+> queues (e.g., when calculating airtime usage on TX and RX
+> completion). Not sure if that is enough to warrant a separate lock,
+> though; I hadn't thought about just grabbing fq->lock...
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 63a540d1216e..64db4082c9d2 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -73,7 +73,10 @@ qtnf_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 	[NL80211_IFTYPE_AP] = {
- 		.tx = BIT(IEEE80211_STYPE_ACTION >> 4),
- 		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
--		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_AUTH >> 4),
- 	},
- };
- 
-@@ -353,6 +356,13 @@ qtnf_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		return;
- 
- 	switch (frame_type & IEEE80211_FCTL_STYPE) {
-+	case IEEE80211_STYPE_REASSOC_REQ:
-+	case IEEE80211_STYPE_ASSOC_REQ:
-+		qlink_frame_type = QLINK_MGMT_FRAME_ASSOC_REQ;
-+		break;
-+	case IEEE80211_STYPE_AUTH:
-+		qlink_frame_type = QLINK_MGMT_FRAME_AUTH;
-+		break;
- 	case IEEE80211_STYPE_PROBE_REQ:
- 		qlink_frame_type = QLINK_MGMT_FRAME_PROBE_REQ;
- 		break;
--- 
-2.11.0
+Ok, dunno. It seemed sort of related but perhaps it's not really.
+
+
+> > Also maybe you should only do that if the TXQ isn't *empty*, so the
+> > driver could call this unconditionally?
+> 
+> There can be cases where the driver wants the queue to be scheduled
+> even though it looks empty from mac80211's point of view. For ath9k,
+> the driver keeps its retry queue in the drv_priv part of the txq
+> structure, so it will check if that is empty before deciding to call
+> the schedule function.
+> 
+> This is also related to the PS behaviour, so guess this could be
+> changed once that is all TXQ-based...
+
+Interesting. I guess scheduling an empty queue doesn't really matter
+for mac80211 anyway though - just some extra work if we try to get
+frames from it.
+
+johannes
