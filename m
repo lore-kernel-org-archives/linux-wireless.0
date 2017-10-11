@@ -1,87 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:23214 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751061AbdJTG3Y (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:37362 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752485AbdJKVPT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Oct 2017 02:29:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Grant Grundler <grundler@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ath10k: fix build errors with !CONFIG_PM
-Date: Fri, 20 Oct 2017 06:29:21 +0000
-Message-ID: <87efpyfi2n.fsf@kamboji.qca.qualcomm.com> (sfid-20171020_082940_526723_B6005457)
-References: <20170919232416.108247-1-briannorris@chromium.org>
-        <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
-        <87vajbgqcz.fsf@kamboji.qca.qualcomm.com>       <20171019171224.GA46096@google.com>
-        <20171019184517.GA76422@google.com>
-In-Reply-To: <20171019184517.GA76422@google.com> (Brian Norris's message of
-        "Thu, 19 Oct 2017 11:45:19 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 11 Oct 2017 17:15:19 -0400
+From: Christos Gkekas <chris.gekas@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] rtlwifi: Remove unused cur_rfstate variables
+Date: Wed, 11 Oct 2017 22:15:15 +0100
+Message-Id: <1507756515-15738-1-git-send-email-chris.gekas@gmail.com> (sfid-20171011_231618_174274_6681C48A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+Clean up unused cur_rfstate variables in rtl8188ee, rtl8723ae, rtl8723be
+and rtl8821ae.
 
-> Build errors have been reported with CONFIG_PM=3Dn:
->
-> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
-> declaration of function 'ath10k_pci_suspend'
-> [-Werror=3Dimplicit-function-declaration]
->
-> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
-> declaration of function 'ath10k_pci_resume'
-> [-Werror=3Dimplicit-function-declaration]
->
-> These are caused by the combination of the following two commits:
->
-> 6af1de2e4ec4 ("ath10k: mark PM functions as __maybe_unused")
-> 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is supported but
-> disabled")
->
-> Both build fine on their own.
->
-> But now that ath10k_pci_pm_{suspend,resume}() is compiled
-> unconditionally, we should also compile ath10k_pci_{suspend,resume}()
-> unconditionally.
->
-> And drop the #ifdef around ath10k_pci_hif_{suspend,resume}() too; they
-> are trivial (empty), so we're not saving much space by compiling them
-> out. And the alternatives would be to sprinkle more __maybe_unused, or
-> spread the #ifdef's further.
->
-> Build tested with the following combinations:
-> CONFIG_PM=3Dy && CONFIG_PM_SLEEP=3Dy
-> CONFIG_PM=3Dy && CONFIG_PM_SLEEP=3Dn
-> CONFIG_PM=3Dn
->
-> Fixes: 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is
-> supported but disabled")
-> Fixes: 096ad2a15fd8 ("Merge branch 'ath-next'")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c | 5 -----
->  1 file changed, 5 deletions(-)
->
-> On Thu, Oct 19, 2017 at 10:12:25AM -0700, Brian Norris wrote:
->> The solution would seem to be either to kill the #ifdefs around
->> ath10k_pci_{suspend,resume}() and friends (and use __maybe_unused
->> instead, to further extend Arnd's patch), or else revert Arnd's stuff
->> and go with CONFIG_PM_SLEEP everywhere, which would resolve the original
->> warning (promoted to error) that Arnd was resolving.
->>=20
->> I can send out one of these if you'd like.
->
-> Here you go :)
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c | 4 +---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c | 4 +---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 4 +---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 4 +---
+ 4 files changed, 4 insertions(+), 12 deletions(-)
 
-Thanks! As this an unusual merge problem between two branches I applied
-this manually to ath.git master-pending branch for now. Let's see if
-kbuild bot is happy now.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 0ba26d2..4d843e6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -2235,7 +2235,7 @@ bool rtl88ee_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
++	enum rf_pwrstate e_rfpowerstate_toset;
+ 	u32 u4tmp;
+ 	bool b_actuallyset = false;
+ 
+@@ -2254,8 +2254,6 @@ bool rtl88ee_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 		spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 	}
+ 
+-	cur_rfstate = ppsc->rfpwr_state;
+-
+ 	u4tmp = rtl_read_dword(rtlpriv, REG_GPIO_OUTPUT);
+ 	e_rfpowerstate_toset = (u4tmp & BIT(31)) ? ERFON : ERFOFF;
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 5ac7b81..4e1e1f8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -2103,7 +2103,7 @@ bool rtl8723e_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+-	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
++	enum rf_pwrstate e_rfpowerstate_toset;
+ 	u8 u1tmp;
+ 	bool b_actuallyset = false;
+ 
+@@ -2122,8 +2122,6 @@ bool rtl8723e_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 		spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 	}
+ 
+-	cur_rfstate = ppsc->rfpwr_state;
+-
+ 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL_2,
+ 		       rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL_2)&~(BIT(1)));
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 4d47b97..2ad1013 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2486,7 +2486,7 @@ bool rtl8723be_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+-	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
++	enum rf_pwrstate e_rfpowerstate_toset;
+ 	u8 u1tmp;
+ 	bool b_actuallyset = false;
+ 
+@@ -2505,8 +2505,6 @@ bool rtl8723be_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 		spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 	}
+ 
+-	cur_rfstate = ppsc->rfpwr_state;
+-
+ 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL_2,
+ 		       rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL_2) & ~(BIT(1)));
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 1d431d4..e756f94 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -3845,7 +3845,7 @@ bool rtl8821ae_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+-	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
++	enum rf_pwrstate e_rfpowerstate_toset;
+ 	u8 u1tmp = 0;
+ 	bool b_actuallyset = false;
+ 
+@@ -3864,8 +3864,6 @@ bool rtl8821ae_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
+ 		spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 	}
+ 
+-	cur_rfstate = ppsc->rfpwr_state;
+-
+ 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL_2,
+ 			rtl_read_byte(rtlpriv,
+ 					REG_GPIO_IO_SEL_2) & ~(BIT(1)));
+-- 
+2.7.4
