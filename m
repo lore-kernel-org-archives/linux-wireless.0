@@ -1,104 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:33852 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbdJBJGp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:47562 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751991AbdJKMgR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 05:06:45 -0400
-Received: by mail-lf0-f66.google.com with SMTP id h80so1969805lfe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Oct 2017 02:06:44 -0700 (PDT)
-Subject: Re: [PATCH 02/11] ath10k_sdio: wb396 reference card fix
-To: Alagu Sankar <alagusankar@silex-india.com>,
-        Steve deRosier <derosier@gmail.com>
-Cc: silexcommon@gmail.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
- <1506793068-27445-3-git-send-email-alagusankar@silex-india.com>
- <CALLGbR+-G6pKcSPZo=xxJ66iQ0aMJo9xWWq8raSTt5rSASrM=w@mail.gmail.com>
- <bc6a860a4d655c65583a9da26cb4c63e@silex-india.com>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <427bfce1-5adb-9cad-b674-e42f8005bb02@gmail.com> (sfid-20171002_110459_463768_722ACABC)
-Date: Mon, 2 Oct 2017 11:06:42 +0200
+        Wed, 11 Oct 2017 08:36:17 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2017-10-11
+Date: Wed, 11 Oct 2017 14:36:12 +0200
+Message-Id: <20171011123613.28890-1-johannes@sipsolutions.net> (sfid-20171011_143634_480505_BF45D6FF)
 MIME-Version: 1.0
-In-Reply-To: <bc6a860a4d655c65583a9da26cb4c63e@silex-india.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alagu,
+Hi Dave,
 
-On 2017-10-02 09:02, Alagu Sankar wrote:
-> Hi Steve,
-> 
-> On 2017-10-02 04:17, Steve deRosier wrote:
->> Hi Alagu,
->>
->>
->> On Sat, Sep 30, 2017 at 10:37 AM, <silexcommon@gmail.com> wrote:
->>>
->>> From: Alagu Sankar <alagusankar@silex-india.com>
->>>
->>> The QCA9377-3 WB396 sdio reference card does not get initialized
->>> due to the conflict in uart gpio pins. This fix is not required
->>> for other QCA9377 sdio cards.
->>>
->>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
->>> ---
->>>  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++++-
->>>  1 file changed, 8 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
->>> index b4f66cd..86247c8 100644
->>> --- a/drivers/net/wireless/ath/ath10k/core.c
->>> +++ b/drivers/net/wireless/ath/ath10k/core.c
->>> @@ -1708,8 +1708,15 @@ static int ath10k_init_uart(struct ath10k *ar)
->>>                 return ret;
->>>         }
->>>
->>> -       if (!uart_print)
->>> +       if (!uart_print) {
->>> +               /* Hack: override dbg TX pin to avoid side effects of default
->>> +                * GPIO_6 in QCA9377 WB396 reference card
->>> +                */
->>> +               if (ar->hif.bus == ATH10K_BUS_SDIO)
->>> +                       ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
->>> +                                          ar->hw_params.uart_pin);
->>
->> If it is indeed a "hack", then I don't think the maintainer should
->> accept this upstream. If you want it upstream you need a clean enough
->> implementation that doesn't need to be labeled a "hack".
-> 
-> It is a hack as per the qcacld reference driver.
-> 
->> Your commit message states that this is only needed for a very
->> specific card and not for other QCA9377 sdio cards. Yet, you're doing
->> this for all ATH10K_BUS_SDIO devices. Not good. I think that it's a
->> quirk and it's limited to a particular implementation of the device.
->> My suggestion: if it can be automatically determined, then do so
->> explicitly. If not, then it needs to be a DT setting or a module
->> parameter or something like that so the platform maker can decide to
->> do it. Having it affect all users of a SDIO QCA9377 when it doesn't
->> apply doesn't seem like a good idea to me.
->>
->>
->> - Steve
-> 
-> Got it. The qcacld reference driver had it for all the QCA9377 sdio cards.
-> But we found it to be a problem only for the WB396 reference card. Will
-> have this checked again and release a v2 patch accordingly.
-> 
-While you are at it, you might as well change the commit comments to:
+Here's a -next pull request. The only bigger thing here is the
+addition of the regulatory database as firmware, which will
+allow us to - over time - get rid of CRDA, as well as having
+the option of adding more fields to the database where needed,
+this would've been extremely complex with CRDA because it had
+not been built with extensibility in mind.
 
-"ath10k: sdio: <description>"
+Please pull and let me know if there's any problem.
 
-or perhaps just:
+Thanks,
+johannes
 
-"ath10k: <description>"
 
-> Best Regards,
-> Alagu Sankar
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+
+The following changes since commit cc71b7b071192ac1c288e272fdc3f3877eb96663:
+
+  net/ipv6: remove unused err variable on icmpv6_push_pending_frames (2017-10-05 21:56:26 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2017-10-11
+
+for you to fetch changes up to 90a53e4432b12288316efaa5f308adafb8d304b0:
+
+  cfg80211: implement regdb signature checking (2017-10-11 14:24:24 +0200)
+
+----------------------------------------------------------------
+Work continues in various areas:
+ * port authorized event for 4-way-HS offload (Avi)
+ * enable MFP optional for such devices (Emmanuel)
+ * Kees's timer setup patch for mac80211 mesh
+   (the part that isn't trivially scripted)
+ * improve VLAN vs. TXQ handling (myself)
+ * load regulatory database as firmware file (myself)
+ * with various other small improvements and cleanups
+
+I merged net-next once in the meantime to allow Kees's
+timer setup patch to go in.
+
+----------------------------------------------------------------
+Avraham Stern (2):
+      ieee80211: Add WFA TPC report element OUI type
+      cfg80211/nl80211: add a port authorized event
+
+Emmanuel Grumbach (1):
+      nl80211: add an option to allow MFP without requiring it
+
+Gregory Greenman (1):
+      mac80211: recalculate some sta parameters after insertion
+
+Ilan peer (1):
+      mac80211: Simplify locking in ieee80211_sta_tear_down_BA_sessions()
+
+Johannes Berg (12):
+      mac80211: avoid allocating TXQs that won't be used
+      mac80211: simplify and clarify IE splitting
+      mac80211: use offsetofend()
+      cfg80211: remove unused function ieee80211_data_from_8023()
+      Merge remote-tracking branch 'net-next/master' into mac80211-next
+      MAINTAINERS: update Johannes Berg's entries
+      fq: support filtering a given tin
+      mac80211: only remove AP VLAN frames from TXQ
+      cfg80211: support loading regulatory database as firmware file
+      cfg80211: support reloading regulatory database
+      cfg80211: reg: remove support for built-in regdb
+      cfg80211: implement regdb signature checking
+
+Kees Cook (1):
+      net/mac80211/mesh_plink: Convert timers to use timer_setup()
+
+Liad Kaufman (1):
+      mac80211: extend ieee80211_ie_split to support EXTENSION
+
+Lubomir Rintel (1):
+      mac80211_hwsim: use dyndbg for debug messages
+
+Luca Coelho (1):
+      mac80211: add documentation to ieee80211_rx_ba_offl()
+
+Manikanta Pubbisetty (1):
+      mac80211: fix bandwidth computation for TDLS peers
+
+Richard Schütz (1):
+      wireless: set correct mandatory rate flags
+
+Roee Zamir (2):
+      nl80211: add OCE scan and capability flags
+      mac80211: oce: enable receiving of bcast probe resp
+
+Stanislaw Gruszka (1):
+      mac80211: fix STA_SLOW_THRESHOLD htmldocs failure
+
+Tova Mussai (1):
+      nl80211: return error for invalid center_freq in 40 MHz
+
+Xiang Gao (1):
+      mac80211: aead api to reduce redundancy
+
+ Documentation/driver-api/80211/cfg80211.rst |   3 -
+ Documentation/networking/regulatory.txt     |  30 +-
+ MAINTAINERS                                 |  13 +-
+ drivers/net/wireless/mac80211_hwsim.c       | 192 ++++++------
+ include/linux/ieee80211.h                   |   1 +
+ include/net/cfg80211.h                      |  40 +--
+ include/net/fq.h                            |   7 +
+ include/net/fq_impl.h                       |  72 ++++-
+ include/net/mac80211.h                      |   8 +-
+ include/uapi/linux/nl80211.h                |  82 +++--
+ net/mac80211/Makefile                       |   3 +-
+ net/mac80211/{aes_ccm.c => aead_api.c}      |  40 +--
+ net/mac80211/aead_api.h                     |  27 ++
+ net/mac80211/aes_ccm.h                      |  42 ++-
+ net/mac80211/aes_gcm.c                      | 109 -------
+ net/mac80211/aes_gcm.h                      |  38 ++-
+ net/mac80211/agg-rx.c                       |   4 +-
+ net/mac80211/ht.c                           |  12 +-
+ net/mac80211/ieee80211_i.h                  |   2 +
+ net/mac80211/iface.c                        |  29 +-
+ net/mac80211/mesh.c                         |   3 +-
+ net/mac80211/mesh.h                         |   1 +
+ net/mac80211/mesh_hwmp.c                    |   8 +-
+ net/mac80211/mesh_plink.c                   |  13 +-
+ net/mac80211/mlme.c                         |  19 +-
+ net/mac80211/scan.c                         |  37 ++-
+ net/mac80211/sta_info.c                     |  61 ++--
+ net/mac80211/sta_info.h                     |   4 +-
+ net/mac80211/tx.c                           |  34 +++
+ net/mac80211/util.c                         |  25 +-
+ net/mac80211/vht.c                          |  10 +
+ net/mac80211/wpa.c                          |   4 +-
+ net/wireless/.gitignore                     |   3 +-
+ net/wireless/Kconfig                        |  58 ++--
+ net/wireless/Makefile                       |  24 +-
+ net/wireless/certs/sforshee.x509            | Bin 0 -> 680 bytes
+ net/wireless/core.c                         |   2 +-
+ net/wireless/core.h                         |   5 +
+ net/wireless/db.txt                         |  17 --
+ net/wireless/genregdb.awk                   | 158 ----------
+ net/wireless/nl80211.c                      | 199 ++++++++----
+ net/wireless/nl80211.h                      |   2 +
+ net/wireless/reg.c                          | 452 +++++++++++++++++++++++++---
+ net/wireless/reg.h                          |  14 +
+ net/wireless/regdb.h                        |  23 --
+ net/wireless/sme.c                          |  45 ++-
+ net/wireless/util.c                         | 202 ++++---------
+ 47 files changed, 1278 insertions(+), 899 deletions(-)
+ rename net/mac80211/{aes_ccm.c => aead_api.c} (67%)
+ create mode 100644 net/mac80211/aead_api.h
+ delete mode 100644 net/mac80211/aes_gcm.c
+ create mode 100644 net/wireless/certs/sforshee.x509
+ delete mode 100644 net/wireless/db.txt
+ delete mode 100644 net/wireless/genregdb.awk
+ delete mode 100644 net/wireless/regdb.h
