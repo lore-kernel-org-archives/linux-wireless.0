@@ -1,89 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48896 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932316AbdJYJHk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 05:07:40 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't compare TKIP TX MIC key in reinstall prevention
-Date: Wed, 25 Oct 2017 11:07:36 +0200
-Message-Id: <20171025090736.11739-1-johannes@sipsolutions.net> (sfid-20171025_110744_035538_3D71331B)
+Received: from mail.toke.dk ([52.28.52.200]:40611 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752111AbdJKNuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Oct 2017 09:50:22 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: Add airtime fairness accounting
+In-Reply-To: <1507712135.1998.27.camel@sipsolutions.net>
+References: <20171006115232.28688-1-toke@toke.dk> <1507298832.19300.20.camel@sipsolutions.net> <87lgkoqrhs.fsf@toke.dk> <1507310319.19300.28.camel@sipsolutions.net> <87infrqk28.fsf@toke.dk> <1507533328.26041.12.camel@sipsolutions.net> <878tgkd5d1.fsf@toke.dk> <1507549222.26041.38.camel@sipsolutions.net> <87zi90binm.fsf@toke.dk> <1507575007.26041.59.camel@sipsolutions.net> <87376sqda9.fsf@toke.dk> <1507712135.1998.27.camel@sipsolutions.net>
+Date: Wed, 11 Oct 2017 15:50:17 +0200
+Message-ID: <87zi8xpzdy.fsf@toke.dk> (sfid-20171011_155038_004571_2415E073)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-For the reinstall prevention, the code I had added compares the
-whole key. It turns out though that iwlwifi firmware doesn't
-provide the TKIP TX MIC key as it's not needed in client mode,
-and thus the comparison will always return false.
+>> Yeah, ath9k certainly gets that as part of the RX information from
+>> the chip.
+>
+> Yeah, though there are more complex cases, e.g. with hardware A-MSDU
+> deaggregation like in ath10k.
 
-For client mode, thus always zero out the TX MIC key part before
-doing the comparison in order to avoid accepting the reinstall
-of the key with identical encryption and RX MIC key, but not the
-same TX MIC key (since the supplicant provides the real one.)
+Here be dragons; noted :)
 
-Fixes: fdf7cb4185b6 ("mac80211: accept key reinstall without changing anything")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/key.c | 36 ++++++++++++++++++++++++++++++++++--
- 1 file changed, 34 insertions(+), 2 deletions(-)
+>> Well, some of the tests I did while porting ath9k to the iTXQs
+>> indicated that for voice-like traffic we can get very close to the
+>> same actual end-to-end latency for BE-marked traffic that we do with
+>> VO-marked traffic. This is in part because the FQ sparse flow
+>> prioritisation makes sure that such flows get queueing priority.
+>
+> That really depends on medium saturation - if that's low, then yeah,
+> the difference is in the EDCA parameters and the minimum backoff,
+> which isn't a huge difference if you measure end-to-end.
+>
+> Given saturation/congestion though, and I think we have to take this
+> into account since not everyone will be using this code, there are
+> measurable advantages to using VO - like in the test I mentioned where
+> you can block out BE "forever".
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 035d16fe926e..938049395f90 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -610,6 +610,39 @@ void ieee80211_key_free_unused(struct ieee80211_key *key)
- 	ieee80211_key_free_common(key);
- }
- 
-+static bool ieee80211_key_identical(struct ieee80211_sub_if_data *sdata,
-+				    struct ieee80211_key *old,
-+				    struct ieee80211_key *new)
-+{
-+	u8 tkip_old[WLAN_KEY_LEN_TKIP], tkip_new[WLAN_KEY_LEN_TKIP];
-+	u8 *tk_old, *tk_new;
-+
-+	if (!old || new->conf.keylen != old->conf.keylen)
-+		return false;
-+
-+	tk_old = old->conf.key;
-+	tk_new = new->conf.key;
-+
-+	/*
-+	 * In station mode, don't compare the TX MIC key, as it's never used
-+	 * and offloaded rekeying may not care to send it to the host. This
-+	 * is the case in iwlwifi, for example.
-+	 */
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    new->conf.cipher == WLAN_CIPHER_SUITE_TKIP &&
-+	    new->conf.keylen == WLAN_KEY_LEN_TKIP &&
-+	    !(new->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+		memcpy(tkip_old, tk_old, WLAN_KEY_LEN_TKIP);
-+		memcpy(tkip_new, tk_new, WLAN_KEY_LEN_TKIP);
-+		memset(tkip_old + NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY, 0, 8);
-+		memset(tkip_new + NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY, 0, 8);
-+		tk_old = tkip_old;
-+		tk_new = tkip_new;
-+	}
-+
-+	return !crypto_memneq(tk_old, tk_new, new->conf.keylen);
-+}
-+
- int ieee80211_key_link(struct ieee80211_key *key,
- 		       struct ieee80211_sub_if_data *sdata,
- 		       struct sta_info *sta)
-@@ -635,8 +668,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	 * Silently accept key re-installation without really installing the
- 	 * new version of the key to avoid nonce reuse or replay issues.
- 	 */
--	if (old_key && key->conf.keylen == old_key->conf.keylen &&
--	    !crypto_memneq(key->conf.key, old_key->conf.key, key->conf.keylen)) {
-+	if (ieee80211_key_identical(sdata, old_key, key)) {
- 		ieee80211_key_free_unused(key);
- 		ret = 0;
- 		goto out;
--- 
-2.14.2
+Yup, when the medium is saturated the tradeoff might be different. My
+hope is that it is possible to dynamically detect when it might be
+beneficial and change behaviour based on this. I know this is maybe a
+bit hand-wavy for now, but otherwise it wouldn't be research... ;)
+>
+>> Now obviously, there are going to be tradeoffs, and scenarios where
+>> latency will suffer. But I would at least like to be able to explore
+>> this, and I think with the API we are currently discussing that will
+>> be possible. 
+>
+> I'm not sure how you envision this working with the API, since you
+> still have to pull from multiple TXQs, but I have no objection to the
+> API as is - I'm just not convinced that actually demoting traffic is a
+> good idea :)
+
+Sure, I realise I have some convincing to do on this point...
+
+>> Another thing I want to explore is doing soft admission
+>> control; i.e., if someone sends bulk traffic marked as VO, it will be
+>> automatically demoted to BE traffic rather than locking everyone else
+>> out. We've tested that with some success in the Cake scheduler, and
+>> it may be applicable to WiFi as well.
+>
+> It seems pretty strange to do that at this level - we control what TID
+> (and AC) is selected for the traffic? So why not just change at that
+> level for this type of thing?
+>
+> You can probably even already do that with TC by re-marking the traffic
+> depending on type or throughput or whatever else TC can classify on.
+
+Mostly because I am expecting that the current queue state is an
+important input variable. It's quite straight forward to (e.g.) remark
+VO packets if they exceed a fixed rate. But what I want to do is demote
+packets if they exceed what the network can currently handle. It may be
+that visibility into the queueing is enough, though. I have yet to
+actually experiment with this...
+
+-Toke
