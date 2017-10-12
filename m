@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:59251 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750966AbdJDQfh (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52622 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751034AbdJLF1t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 12:35:37 -0400
-Subject: Re: QCA988x and kernel 4.13
-To: Ben Greear <greearb@candelatech.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: svp <s.pooheer@gmail.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <c6294832-ff1e-595c-da8b-dac59b12a976@gmail.com>
- <7549b77b-3619-f8a5-48d6-eb7e330ba80e@dd-wrt.com>
- <48aebea8-9231-b41e-cbaa-d592d8540c53@candelatech.com>
- <87d163xpoe.fsf@kamboji.qca.qualcomm.com>
- <78f5383d-0187-628e-cf56-de6234fdb9b0@candelatech.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <62fdf553-8c2e-538e-3743-511e9bfa7721@dd-wrt.com> (sfid-20171004_183541_541142_7792A340)
-Date: Wed, 4 Oct 2017 18:35:29 +0200
+        Thu, 12 Oct 2017 01:27:49 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: Random MAC address during scanning
+Date: Thu, 12 Oct 2017 05:27:44 +0000
+Message-ID: <90f90bcb559345e7bad7ba8d371a615e@SC-EXCH02.marvell.com> (sfid-20171012_072753_854687_8A21341D)
+References: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
+ <20171011194148.GA84547@google.com>
+In-Reply-To: <20171011194148.GA84547@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <78f5383d-0187-628e-cf56-de6234fdb9b0@candelatech.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 04.10.2017 um 17:13 schrieb Ben Greear:
->
->
-> On 10/04/2017 01:50 AM, Kalle Valo wrote:
->> Ben Greear <greearb@candelatech.com> writes:
->>
->>> On 10/01/2017 07:06 AM, Sebastian Gottschall wrote:
->>>> you have to update to the latest mac80211 code. there is a well
->>>> known bug in mac80211 which causes a deadlock with ath10k
->>>
->>> Do you have a pointer to the patch that fixes this?  I'd like to 
->>> check if it has
->>> made it into 4.13 stable yet...
->>
->> I think it's this one:
->>
->> mac80211: fix deadlock in driver-managed RX BA session start
->>
->> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bde59c475e0883e4c4294bcd9b9c7e08ae18c828 
->>
->>
->> Adding linux-wireless so that someone can correct me in case I'm wrong.
->
-> That did seem to fix my problems...
->
-> Thanks,
-> ben
->
-consider that this bug does at least exist since may. so older kernels 
-might be affected too
+Hi Brian,
 
+> ----------------------------------------------------------------------
+> On Fri, Sep 29, 2017 at 04:23:10PM +0530, Ganapathi Bhat wrote:
+> > From: Karthik Ananthapadmanabha <karthida@marvell.com>
+> >
+> > Driver will advertise RANDOM_MAC support only if the device supports
+> > this feature.
+> >
+> > Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+>
+> I'd just like to point out that this is a very bad commit subject:
+>
+> "[PATCH] mwifiex: Random MAC address during scanning"
+>
+> It's borderline wrong, really. "Random MAC address during scanning" is
+> already supported. This patch is just adding a feature-flag check for it, since
+> some firmwares in the wild don't support it. A more accurate description
+> would be something like:
+>
+> "[PATCH] mwifiex: Add feature flag support for MAC randomization"
+>
+> The patch is already applied, so I'd only worry about it for future submissions
+> (no need to resend).
 
--- 
-Mit freundlichen Grüssen / Regards
+I'm Really Sorry.  I will take care of this in future.
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+>
+> Brian
