@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44572 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751801AbdJPF6b (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52916 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751067AbdJLSu5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 01:58:31 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V6 0/5] Add TDLS feature for ath10k
-Date: Mon, 16 Oct 2017 14:00:28 +0800
-Message-ID: <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171016_075842_907216_519B7346)
-In-Reply-To: <TDLS for ath10k patches V6>
-References: <TDLS for ath10k patches V6>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 12 Oct 2017 14:50:57 -0400
+Message-ID: <1507834251.5497.7.camel@coelho.fi> (sfid-20171012_205143_535715_054FE6DA)
+From: Luca Coelho <luca@coelho.fi>
+To: Mark Brown <broonie@kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Thu, 12 Oct 2017 21:50:51 +0300
+In-Reply-To: <20171012183505.oo77lgdbmqjevsuo@sirena.co.uk>
+References: <20171012172512.tlsdjhppfz2hu4vr@sirena.co.uk>
+         <1507832196.5497.1.camel@intel.com>
+         <20171012182114.fdeiv67ebx7c63te@sirena.co.uk>
+         <1507832866.5497.2.camel@intel.com>
+         <20171012183505.oo77lgdbmqjevsuo@sirena.co.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ the wireless-drivers tree
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On Thu, 2017-10-12 at 19:35 +0100, Mark Brown wrote:
+> On Thu, Oct 12, 2017 at 09:27:46PM +0300, Luciano Coelho wrote:
+> > On Thu, 2017-10-12 at 19:21 +0100, Mark Brown wrote:
+> > > I may have confused the trees when I was pasting things in, the
+> > > commits
+> > > are filled in by hand.
+> > 
+> > Ah, okay.  But still, if the same patches conflicted twice, why
+> > wasn't
+> > there only one occurrence with both conflicts at once?
+> 
+> With trees like this that don't coordinate with their fixes branch
+> there
+> are frequently multiple conflicts introduced so I generally report
+> things file by file without even looking at the new ones.
 
-This patchset is for Rome PCIE chip, it will not affect other hardware
+Sorry for the trouble.  But how do you suggest that we "coordinate our
+fixes branch"? Merge fixes into the main tree?
 
-Yingying Tang (5):
-  mac80211: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer inactivity detection
-  ath10k: Avoid to set WEP key for TDLS peer
-  ath10k: Fix TDLS peer TX data failure issue on encryped AP
-
- drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |    9 +++++
- drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
- include/net/mac80211.h                    |    4 +++
- net/mac80211/tdls.c                       |    5 ++-
- 6 files changed, 81 insertions(+), 2 deletions(-)
-
--- 
-1.7.9.5
+--
+Luca.
