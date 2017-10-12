@@ -1,86 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44421 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbdJ2H1a (ORCPT
+Received: from heliosphere.sirena.org.uk ([172.104.155.198]:46604 "EHLO
+        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751040AbdJLROl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 03:27:30 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Thorsten Leemhuis <linux@leemhuis.info>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath10k: Wifi slow on the XPS13 (9360) (QCA6174)
-Date: Sun, 29 Oct 2017 07:27:18 +0000
-Message-ID: <87tvyi4dnv.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20171029_082734_325055_67266E81)
-References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
-        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
-        <74a979dc-f06d-be9d-7c3f-359cd481d16c@leemhuis.info>
-In-Reply-To: <74a979dc-f06d-be9d-7c3f-359cd481d16c@leemhuis.info> (Thorsten
-        Leemhuis's message of "Sun, 8 Oct 2017 11:39:04 +0200")
-Content-Type: text/plain; charset="utf-8"
+        Thu, 12 Oct 2017 13:14:41 -0400
+Date: Thu, 12 Oct 2017 18:14:24 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: linux-next: manual merge of the wireless-drivers-next tree with the
+ wireless-drivers tree
+Message-ID: <20171012171424.435b2cwnixnkl72r@sirena.co.uk> (sfid-20171012_191547_513914_EAFDD658)
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="m75tuv6t7oylusqm"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-KyBsaW51eC13aXJlbGVzcyBhbmQgY2xlYW5pbmcgdGhlIHN1YmplY3QNCg0KSGkgVGhvcnN0ZW4s
-DQoNCnNvcnJ5IGZvciB0aGUgbGF0ZSByZXBseSwgSSdtIGhhdmluZyBwcm9ibGVtcyBrZWVwaW5n
-IHVwIHdpdGggYWxsIHRoZQ0KZW1haWwuIEkganVzdCBkbyBhIHF1aWNrIHJlcGx5IG5vdyB0byBw
-b2ludCBvdXQgdGhhdCB5b3UgYXJlIHRhbGtpbmcNCmFib3V0IHR3byBkaWZmZXJlbnQgcHJvYmxl
-bXMuIFRvIGtlZXAgdGhlIGRpc2N1c3Npb24gc2ltcGxlIEkgcmVjb21tZW5kDQprZWVwaW5nIHRo
-ZSB0d28gaXNzdWVzIGNvbXBsZXRlIHNlcGFyYXRlLg0KDQpUaG9yc3RlbiBMZWVtaHVpcyA8bGlu
-dXhAbGVlbWh1aXMuaW5mbz4gd3JpdGVzOg0KDQo+IExvISBTcGxpdHRpbmcgdGhpcyB0aHJlYWQg
-dG8gZm9jdXMgb24gYSBpc3N1ZSB0aGF0IGhhcyBub3RoaW5nIHRvIGRvDQo+IHdpdGggdGhlIHJl
-Z3Jlc3Npb24gaW4gNC4xNCBJIHJlcG9ydGVkOg0KPg0KPiBPbiAwMy4xMC4yMDE3IDAxOjQwLCBS
-eWFuIEhzdSB3cm90ZToNCj4+IE9uIDEwLzAxLzIwMTcgMDE6NTkgQU0sIFRob3JzdGVuIExlZW1o
-dWlzIHdyb3RlOg0KPj4+PiBhdGgxMGtfcGNpIDAwMDA6M2E6MDAuMDogRGlyZWN0IGZpcm13YXJl
-IGxvYWQgZm9yDQo+Pj4+IGF0aDEway9wcmUtY2FsLXBjaS0wMDAwOjNhOjAwLjAuYmluIGZhaWxl
-ZCB3aXRoIGVycm9yIC0yDQo+Pj4+IGF0aDEwa19wY2kgMDAwMDozYTowMC4wOiBEaXJlY3QgZmly
-bXdhcmUgbG9hZCBmb3INCj4+Pj4gYXRoMTBrL2NhbC1wY2ktMDAwMDozYTowMC4wLmJpbiBmYWls
-ZWQgd2l0aCBlcnJvciAtMg0KPj4+IERvIHRoZXkgaGF2ZSBhbnl0aGluZyB0byBkbyB3aXRoIHRo
-aXM/IEhhcmR3YXJlIGlzDQo+PiBUaGlzIGVycm9yIG1lc3NhZ2UgaXMgY29uZnVzaW5nIHNpbmNl
-IFFDQTYxNzQgaXMgbm90IHN1cHBvcnRpbmcNCj4+IHByZS1jYWxpYnJhdGlvbiBmZWF0dXJlLCB0
-aGlzIHJlbWluZHMgbWUgdGhhdCB3ZSBuZWVkIHRvIGNsZWFuIHRoaXMgdXAuDQo+DQo+IEkgZ3Vl
-c3MgdGhhdCB3b3VsZCBiZSBnb29kIHRvIGF2b2lkIGNvbmZ1c2lvbi4gQnV0IHdoaWxlIGF0IGl0
-OiBJZiB5b3UNCj4gaGF2ZSBhIG1pbnV0ZSwgY291bGQgeW91IHBsZWFzZSBleHBsYWluIHRvIG1l
-IGhvdyB0byBwcm9wZXJseSBzZXQgdXAgdGhlDQo+IHdpZmkgZmlybXdhcmUgZmlsZXMgZm9yIG15
-IERlbGwgWFBTMTMgKDkzNjApPyBUaGUgcmVhc29ucyB3aHkgSSdtDQo+IGFza2luZzogU2VuZGlu
-ZyBkYXRhIHZpYSB3aWZpIGlzIHJlYWxseSBzbG93IG9uIG15IGxhcHRvcCAoc2NwIGNvcGllcw0K
-PiBvbmx5IGdldCAyIHRvIDUgTUJ5dGUvcyBvbiBuZXR3b3JrcyB0aGF0IGFyZSBrbm93biB0byBi
-ZSBhIGxvdCBmYXN0ZXIpLg0KPiBJIHdvbmRlciBpZiB0aGUgZmlybXdhcmUgZmlsZXMgb3IgdGhl
-IGNhbGlicmF0aW9uIGRhdGEgaXMgcGFydCBvZiB0aGUNCj4gcmVhc29uIHdpZmkgVHggaXMgc2xv
-dy4gVGhlIG1hY2hpbmUgaXMgbm9ybWFsbHkgc2hpcHBlZCB3aXRoIGEgc2xpZ2h0bHkNCj4gZW5o
-YW5jZWQgVWJ1bnR1IDE2LjA0LiBUaGF0IGFtb25nIG90aGVycyBjb250YWlucyBhIHBhY2thZ2Ug
-d2l0aCB0aGUNCj4gbWFjaGluZSBzcGVjaWZpYyBmaWxlcyBib2FyZC5iaW4gYW5kIGJvYXJkLTIu
-YmluIHRoYXQgcmVwbGFjZSB0aGUgZmlsZXMNCj4gbm9ybWFsbHkgaW5zdGFsbGVkIGluIC9saWIv
-ZmlybXdhcmUvYXRoMTBrL1FDQTYxNzQvaHczLjAvIEFyZSB0aG9zZQ0KPiBtYWNoaW5lIHNwZWNp
-ZmljIGZpbGVzIGNydWNpYWwgdG8gaGF2ZSBvciBhcmUgdGhlIG9uZSBmcm9tIHRoZQ0KPiBsaW51
-eC1maXJtd2FyZSByZXBvIGdvb2QgZW5vZ3VoPyBJJ20gdXNpbmcgRmVkb3JhIGFuZCBjb3VsZCBj
-b3B5IHRoZQ0KPiBvbmVzIGZyb20gVWJ1bnR1IG92ZXIsIGJ1dCBvYnZpb3VzbHkgdGhleSB3aWxs
-IGdldCBvdmVyd3JpdHRlbiBldmVyeQ0KPiB0aW1lIEZlZG9yYSBzaGlwcyBhIG5ldyBsaW51eC1m
-aXJtd2FyZSBwYWNrYWdlIOKAkyBJT1c6IGV2ZXJ5IGZldyB3ZWVrcyA6LS8NCg0KWWVzLCB0aGUg
-Ym9hcmQgZmlsZSBjYW4gYWZmZWN0IHRocm91Z2h0cHV0LCBfYm90aF8gVENQIGFuZCBVRFAuIEkg
-ZG9uJ3QNCmtub3cgd2hhdCBib2FyZCBmaWxlcyBVYnVudHUgaXMgc2hpcHBpbmcgYnV0IHdlIHNo
-b3VsZCB0cnkgdG8gZ2V0IHRob3NlDQppbnRvIHVwc3RyZWFtLg0KDQo+IFNpZGUgbm90ZTogWW91
-IGZpbmQgYSBsb3Qgb2YgcmVwb3J0cyBhYm91dCBzbG93IHdpZmkgaXMgeW91IHNlYXJjaCB0aGUN
-Cj4gbmV0IHdpdGggdGVybXMgbGlrZSAiOTM2MCB3aWZpIHNsb3cgbGludXgiLiBVYnVudHUgZml4
-ZWQgdGhhdCBhIGZldw0KPiBtb250aHMgYWdvIHdpdGggdGhpcyBwYXRjaDoNCj4gaHR0cDovL2tl
-cm5lbC51YnVudHUuY29tL2dpdC91YnVudHUvdWJ1bnR1LXhlbmlhbC5naXQvY29tbWl0Lz9pZD05
-NjkwZjE5ZjA3ZmVlMmFjYjJiMDRlYTVlYWE1ZGIxODRlZTE3NWQ1DQo+DQo+IFNvbWUgYnVncyBh
-Ym91dCB0aGlzOg0KPiBodHRwczovL2J1Z3MubGF1bmNocGFkLm5ldC91YnVudHUvK3NvdXJjZS9s
-aW51eC8rYnVnLzE2OTI4MzYNCj4gaHR0cHM6Ly9idWdzLmxhdW5jaHBhZC5uZXQvdWJ1bnR1Lytz
-b3VyY2UvbGludXgvK2J1Zy8xNjcwMDQxDQoNCkJ1dCB0aGlzIGFnYWluIGFib3V0IGludGVycmFj
-dGlvbiBiZXR3ZWVuIGF0aDEwayBhbmQgVENQIHN0YWNrLiBBbmQgaXQNCl9vbmx5XyBhZmZlY3Rz
-IFRDUCwgVURQIHNob3VsZCBiZSB1bmFmZmVjdGVkLiBTbyB3aGVuZXZlciB0ZXN0aW5nDQp0aHJv
-dWdocHV0IHBsZWFzZSBhbHdheXMgbWVhc3VyZSBib3RoIFRDUCBhbmQgVURQIGJlY2F1c2UgdGhl
-biBpdCdzDQplYXNpZXIgdG8gcGlucG9pbnQgdGhlIHJlYXNvbi4NCg0KPiBCdXQgZnJvbSB3aGF0
-IEkgZ2F0aGVyZWQgYnkgc2VhcmNoaW5nIHRoZSBuZXQgYW5kIGFza2luZyBvbiAjYXRoMTBrIEkN
-Cj4gZ290IHRoZSBpbXByZXNzaW9uIHRoYXQgcGF0Y2ggaXMgYSBtYXNzaXZlIHVnbHkgaGFjayBh
-bmQgbm8gd2F5DQo+IGFjY2VwdGFibGUgdXBzdHJlYW0uICBJcyB0aGF0IGNvcnJlY3Q/DQoNClll
-cywgaXQncyBhIGhvcnJpYmxlIGhhY2sgYW5kIEkgY2Fubm90IGFwcGx5IHRoYXQuIEFuZCBsaWtl
-IHlvdSBzYWlkDQojMTY5MjgzNiwgYWxzbyBFcmljIER1bWF6ZXQgKG9uZSBvZiBUQ1AgbWFpbnRh
-aW5lcnMpIGFncmVlcyB3aXRoIHRoYXQuDQoNCj4gSWYgeWVzOiBpcyB0aGVyZSBtYXliZSBhIHBy
-b3BlciBmaXggb3V0IHRoZXJlIHNvbWV3aGVyZT8NCg0KVW5mb3J0dW5hdGVseSB0aGVyZSBzdGls
-bCBpcyBubyBnb29kIHNvbHV0aW9uLiBJbiBhIHdlZWsgdGhlcmUncyBOZXRkZXYNCjIuMiBhbmQg
-d2UgaGF2ZSBMaW51eCBXaXJlbGVzcyBzdW1taXQgdGhlcmUuIFdlIHNob3VsZCBicmluZyB1cCB0
-aGlzDQp0b3BpYyB0aGVyZS4NCg0KLS0gDQpLYWxsZSBWYWxv
+
+--m75tuv6t7oylusqm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi all,
+
+Today's linux-next merge of the wireless-drivers-next tree got a
+conflict in:
+
+  drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+
+between commit:
+
+  44fd09dad5d2b78e ("iwlwifi: nvm: set the correct offsets to 3168 series")
+
+=66rom the wireless-drivers tree and commit:
+
+  a2ff48af65ad661a ("iwlwifi: remove redundant reading from NVM file")
+
+=66rom the wireless-drivers-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+diff --cc drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index c3a5d8ccc95e,d9a2ea9dd93f..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@@ -75,9 -75,10 +75,10 @@@
+  #include "iwl-prph.h"
+  #include "iwl-io.h"
+  #include "iwl-csr.h"
++ #include "fw/acpi.h"
+ =20
+  /* NVM offsets (in words) definitions */
+ -enum wkp_nvm_offsets {
+ +enum nvm_offsets {
+  	/* NVM HW-Section offset (in words) definitions */
+  	SUBSYSTEM_ID =3D 0x0A,
+  	HW_ADDR =3D 0x15,
+@@@ -89,13 -90,6 +90,9 @@@
+  	SKU =3D 2,
+  	N_HW_ADDRS =3D 3,
+  	NVM_CHANNELS =3D 0x1E0 - NVM_SW_SECTION,
+ +
+- 	/* NVM calibration section offset (in words) definitions */
+- 	NVM_CALIB_SECTION =3D 0x2B8,
+- 	XTAL_CALIB =3D 0x316 - NVM_CALIB_SECTION,
+-=20
+ +	/* NVM REGULATORY -Section offset (in words) definitions */
+ +	NVM_CHANNELS_SDP =3D 0,
+  };
+ =20
+  enum ext_nvm_offsets {
+@@@ -758,15 -745,8 +755,12 @@@ iwl_parse_nvm_data(struct iwl_trans *tr
+  			kfree(data);
+  			return NULL;
+  		}
+ +
+ +		ch_section =3D cfg->nvm_type =3D=3D IWL_NVM_SDP ?
+ +			     &regulatory[NVM_CHANNELS_SDP] :
+ +			     &nvm_sw[NVM_CHANNELS];
+ +
+- 		/* in family 8000 Xtal calibration values moved to OTP */
+- 		data->xtal_calib[0] =3D *(nvm_calib + XTAL_CALIB);
+- 		data->xtal_calib[1] =3D *(nvm_calib + XTAL_CALIB + 1);
+  		lar_enabled =3D true;
+ -		ch_section =3D &nvm_sw[NVM_CHANNELS];
+  	} else {
+  		u16 lar_offset =3D data->nvm_version < 0xE39 ?
+  				 NVM_LAR_OFFSET_OLD :
+
+--m75tuv6t7oylusqm
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlnfou8ACgkQJNaLcl1U
+h9AD1gf/fMtJnh6026YmxZ+l00iLKo/ScFYrdDhfOHhVIMISR3wxEyJCya6adqdq
+e+ddDsBCGkA7KJqgdzOLKm2u9iigj6K+8kc/KL1dbjbvG1h9BSLEVJIa7TCU7Ai7
+3CHSq9IvRNlhqxcqLb8Cgjx3Lo1pWuVDfvoogsr6axLtckFPN5A7Q5ptbORgIyna
+5f5pa1AleypTKvzLIBb2fhDMJg9frs8nv+BP7a5UyHNWVL9cFfXXOkHazqsyc9tS
+0Vju/gd+yMPIyctgzx3DZRif+CNtoze6io14/nmDEXHOICh5z4r9FvBY4SeM6YbH
+MyovWIyjPwunICOsNamVbK/fIl7ENQ==
+=/nmY
+-----END PGP SIGNATURE-----
+
+--m75tuv6t7oylusqm--
