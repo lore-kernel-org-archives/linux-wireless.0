@@ -1,102 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.133]:46451 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750790AbdJ0H0c (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38237 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751350AbdJLLd4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:26:32 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Len Brown <lenb@kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
-        Klaus Goger <klaus.goger@theobroma-systems.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v10 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Fri, 27 Oct 2017 15:26:05 +0800
-Message-Id: <20171027072612.26565-1-jeffy.chen@rock-chips.com> (sfid-20171027_092642_612144_7D72A8D7)
+        Thu, 12 Oct 2017 07:33:56 -0400
+Date: Thu, 12 Oct 2017 13:34:05 +0200
+From: Greg KH <greg@kroah.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Kevin Cernekee <cernekee@chromium.org>
+Subject: Re: [PATCH] brcmfmac: add length check in
+ brcmf_cfg80211_escan_handler()
+Message-ID: <20171012113405.GA27073@kroah.com> (sfid-20171012_133359_798285_383299AA)
+References: <1507802052-14654-1-git-send-email-arend.vanspriel@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1507802052-14654-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 12, 2017 at 11:54:12AM +0200, Arend van Spriel wrote:
+> commit 17df6453d4be17910456e99c5a85025aa1b7a246 upstream.
+> 
+> Upon handling the firmware notification for scans the length was
+> checked properly and may result in corrupting kernel heap memory
+> due to buffer overruns. This fix addresses CVE-2017-0786.
+> 
+> Cc: Kevin Cernekee <cernekee@chromium.org>
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+> Hi, Greg
+> 
+> This backport for stable-4.4 has been compile tested on x86_64 on
+> linux-4.4.y branch in the stable repo. Apparently I only checked
+> that the patch applied on 4.4. Lesson learned.
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+No worries, thanks for the patch.
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-
-
-Changes in v10:
-Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Rewrite the commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Use "wakeup" instead of "wake"
-Rebase.
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (7):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie driver for Gru
-  PCI: Make pci_platform_pm_ops's callbacks optional
-  PCI / PM: Move acpi wakeup code to pci core
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-
- Documentation/devicetree/bindings/pci/pci.txt |   8 ++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
- drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
- drivers/of/of_pci_irq.c                       |  13 ++-
- drivers/pci/Makefile                          |   2 +-
- drivers/pci/pci-acpi.c                        | 121 ++++++++++++------------
- drivers/pci/pci-driver.c                      |   9 ++
- drivers/pci/pci-of.c                          | 127 ++++++++++++++++++++++++++
- drivers/pci/pci.c                             | 112 +++++++++++++++++++----
- drivers/pci/pci.h                             |  31 +++++--
- drivers/pci/probe.c                           |  12 ++-
- drivers/pci/remove.c                          |   2 +
- include/linux/pci.h                           |   2 +
- 13 files changed, 361 insertions(+), 97 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
--- 
-2.11.0
+greg k-h
