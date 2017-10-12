@@ -1,134 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:5602 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750927AbdJTGYx (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:49898 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbdJLJ7c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Oct 2017 02:24:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Grant Grundler <grundler@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: Re: ath10k: fix core PCI suspend when WoWLAN is supported but
- disabled
-Date: Fri, 20 Oct 2017 06:24:31 +0000
-Message-ID: <87infafiao.fsf@kamboji.qca.qualcomm.com> (sfid-20171020_082511_986179_3FF3A103)
-References: <20170919232416.108247-1-briannorris@chromium.org>
-        <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
-        <87vajbgqcz.fsf@kamboji.qca.qualcomm.com>       <20171019171224.GA46096@google.com>
-In-Reply-To: <20171019171224.GA46096@google.com> (Brian Norris's message of
-        "Thu, 19 Oct 2017 10:12:25 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
+        Thu, 12 Oct 2017 05:59:32 -0400
+Date: Thu, 12 Oct 2017 10:59:25 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: linux-wireless@vger.kernel.org, "Reizer, Eyal" <eyalr@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>
+Subject: wl1837: ERROR SW watchdog interrupt received! starting recovery
+Message-ID: <20171012095925.GC20805@n2100.armlinux.org.uk> (sfid-20171012_120033_966222_933E15A2)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+It looks like ti wilink is unmaintained, so I've added some people who
+have touched the driver recently.
 
-> + Arnd
->
-> On Thu, Oct 19, 2017 at 02:32:45PM +0000, Kalle Valo wrote:
->> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->>=20
->> > Brian Norris <briannorris@chromium.org> wrote:
->> >
->> >> For devices where the FW supports WoWLAN but user-space has not
->> >> configured it, we don't do any PCI-specific suspend/resume operations=
-,
->> >> because mac80211 doesn't call drv_suspend() when !wowlan. This has
->> >> particularly bad effects for some platforms, because we don't stop th=
-e
->> >> power-save timer, and if this timer goes off after the PCI controller
->> >> has suspended the link, Bad Things will happen.
->> >>=20
->> >> Commit 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops"=
-)
->> >> got some of this right, in that it understood there was a problem on
->> >> non-WoWLAN firmware. But it forgot the $subject case.
->> >>=20
->> >> Fix this by moving all the PCI driver suspend/resume logic exclusivel=
-y
->> >> into the driver PM hooks. This shouldn't affect WoWLAN support much
->> >> (this just gets executed later on).
->> >>=20
->> >> I would just as well kill the entirety of ath10k_hif_suspend(), as it=
-'s
->> >> not even implemented on the USB or SDIO drivers. I expect that we don=
-'t
->> >> need the callback, except to return "supported" (i.e., 0) or "not
->> >> supported" (i.e., -EOPNOTSUPP).
->> >>=20
->> >> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops"=
-)
->> >> Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
->> >> Signed-off-by: Brian Norris <briannorris@chromium.org>
->> >> Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>
->> >> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
->> >> Cc: Michal Kazior <michal.kazior@tieto.com>
->> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> >
->> > Patch applied to ath-next branch of ath.git, thanks.
->> >
->> > 96378bd2c6cd ath10k: fix core PCI suspend when WoWLAN is supported but=
- disabled
->>=20
->> Kbuild found a build problem, I suspect it's caused by this patch:
->
-> Actually, it's the interaction of this patch and Arnd's patch:
->
-> 6af1de2e4ec4 ath10k: mark PM functions as __maybe_unused
->
-> I see that's now in these branches:
->
->   ath/ath-current
->   ath/ath-qca
->   ath/master
->   ath/master-pending
->   wireless-drivers-next/master
->   wireless-drivers-next/pending
->
-> Whereas mine got applied to:
->
->   ath/ath-next
->
-> So technically, the problem is in your merge here :)
->
-> 096ad2a15fd8 Merge branch 'ath-next'
+Running wl1837 on a Hummingboard2 (iMX6 Dual core) I've seen one instance
+of the warning below.  Luckily, the recovery worked and connectivity was
+maintained.
 
-Ah, that's why kbuild bot didn't report about this problem while your
-patch was in my pending branch. And I was also really puzzled why it
-claimed that my merge was at fault :) Thanks for the good explanation.
+...
+wlcore: Association completed.
 
-Just to clarify: ath-current is for patches going to 4.14 and ath-next
-to 4.15, that's why they were applied to a different branch.
+After 19532s from boot, I saw:
 
->> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
->> declaration of function 'ath10k_pci_suspend'
->> [-Werror=3Dimplicit-function-declaration]
->>=20
->> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
->> declaration of function 'ath10k_pci_resume'
->> [-Werror=3Dimplicit-function-declaration]
->>=20
->> http://lists.infradead.org/pipermail/ath10k/2017-October/010269.html
->>=20
->> The .config.gz there doesn't have CONFIG_PM set, maybe that's the
->> problem?
->
-> Yes, indirectly that's also the problem.
->
-> The solution would seem to be either to kill the #ifdefs around
-> ath10k_pci_{suspend,resume}() and friends (and use __maybe_unused
-> instead, to further extend Arnd's patch), or else revert Arnd's stuff
-> and go with CONFIG_PM_SLEEP everywhere, which would resolve the original
-> warning (promoted to error) that Arnd was resolving.
->
-> I can send out one of these if you'd like.
+wlcore: ERROR SW watchdog interrupt received! starting recovery.
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 244 at drivers/net/wireless/ti/wlcore/main.c:796 wl12xx_queue_recovery_work+0x68/0x70 [wlcore]
+Modules linked in: nfsd wl18xx wlcore mac80211 cfg80211 caam_jr imx_media_ic(C) imx_media_vdic(C) snd_soc_imx_sgtl5000 snd_soc_fsl_asoc_card imx_media_csi(C) imx_media_capture(C) snd_soc_imx_audmux wlcore_sdio snd_soc_sgtl5000 mux_mmio video_mux mux_core ci_hdrc_imx ci_hdrc caam udc_core usbmisc_imx imx_sdma imx2_wdt coda v4l2_mem2mem videobuf2_v4l2 rc_cec imx_vdoa videobuf2_dma_contig videobuf2_core videobuf2_vmalloc videobuf2_memops imx_thermal snd_soc_fsl_ssi imx_pcm_dma imx_media(C) dw_hdmi_ahb_audio dw_hdmi_cec imx_media_common(C) v4l2_fwnode etnaviv
+CPU: 0 PID: 244 Comm: irq/243-wl18xx Tainted: G         C      4.14.0-rc1+ #2209
+Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+Backtrace:
+[<c0015288>] (dump_backtrace) from [<c00154ec>] (show_stack+0x18/0x1c)
+ r6:60000013 r5:ffffffff r4:00000000 r3:00000000
+[<c00154d4>] (show_stack) from [<c072d13c>] (dump_stack+0xa4/0xdc)
+[<c072d098>] (dump_stack) from [<c003835c>] (__warn+0xdc/0x108)
+ r6:bf376a48 r5:00000000 r4:00000000 r3:c0a41530
+[<c0038280>] (__warn) from [<c00383b0>] (warn_slowpath_null+0x28/0x30)
+ r10:ee309950 r8:ee30973c r7:00000000 r6:ee309788 r5:ee309704 r4:ee3096e0
+[<c0038388>] (warn_slowpath_null) from [<bf3620c4>] (wl12xx_queue_recovery_work+0x68/0x70 [wlcore])
+[<bf36205c>] (wl12xx_queue_recovery_work [wlcore]) from [<bf362228>] (wlcore_irq+0x15c/0x174 [wlcore])
+ r4:ee3096e0 r3:00000001
+[<bf3620cc>] (wlcore_irq [wlcore]) from [<c00a4710>] (irq_thread_fn+0x24/0x3c)
+ r10:c00a46ec r8:ee349b00 r7:ef2ffc00 r6:ef2ffc00 r5:00000000 r4:ee349b00
+[<c00a46ec>] (irq_thread_fn) from [<c00a48ac>] (irq_thread+0x128/0x1ec)
+ r6:00000001 r5:00000000 r4:ee349b24 r3:00000004
+[<c00a4784>] (irq_thread) from [<c005cd58>] (kthread+0x150/0x198)[19532.504033]  r10:c00a4784 r9:ef111d10 r8:ee349b00 r7:ee2b9680 r6:ee349c00 r5:00000000
+ r4:ee2b9600
+[<c005cc08>] (kthread) from [<c0010458>] (ret_from_fork+0x14/0x3c)
+ r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:00000000 r5:c005cc08
+ r4:ee349c00 r3:ed9a8000
+---[ end trace b35f1ada6f716c27 ]---
+wlcore: Hardware recovery in progress. FW ver: Rev 8.9.0.0.75
+wlcore: pc: 0x116424, hint_sts: 0x00000000 count: 1
+wlcore: down
+ieee80211 phy0: Hardware restart was requested
+wlcore: PHY firmware version: Rev 8.2.0.0.240
+wlcore: firmware booted (Rev 8.9.0.0.75)
+wlcore: Association completed.
 
-I see that you already sent the patch, thanks!
+The interrupt, according to /proc/interrupts, shows:
 
---=20
-Kalle Valo=
+           CPU0       CPU1
+243:      32387          0  gpio-mxc   4 Level     wl18xx
+
+although that's from about a day or so after boot.
+
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
+According to speedtest.net: 8.21Mbps down 510kbps up
