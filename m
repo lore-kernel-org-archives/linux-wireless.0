@@ -1,79 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:51712 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932782AbdJQW6L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 18:58:11 -0400
-Date: Tue, 17 Oct 2017 15:58:08 -0700
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: using verifier to ensure a BPF program uses certain metadata?
-Message-ID: <20171017225806.b5xubolkyocfgnjc@ast-mbp> (sfid-20171018_005819_743436_04CF6DD1)
-References: <1508139524.10607.25.camel@sipsolutions.net>
+Received: from swan.media.mit.edu ([18.85.44.157]:53992 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753200AbdJLVZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Oct 2017 17:25:01 -0400
+Date: Fri, 13 Oct 2017 08:24:54 +1100
+From: James Cameron <quozl@laptop.org>
+To: Mario Theodoridis <mario@schmut.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi crash with hostapd
+Message-ID: <20171012212454.GB4362@us.netrek.org> (sfid-20171012_232504_725517_DD3CF558)
+References: <6e51916a-6178-5620-8f45-54705c1b4d98@schmut.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508139524.10607.25.camel@sipsolutions.net>
+In-Reply-To: <6e51916a-6178-5620-8f45-54705c1b4d98@schmut.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 09:38:44AM +0200, Johannes Berg wrote:
-> Hi,
+On Thu, Oct 12, 2017 at 10:26:33PM +0200, Mario Theodoridis wrote:
+> Hello everyone,
 > 
-> As we discussed in April already (it's really been that long...), I'd
-> wanted to allow using BPF to filter wireless monitor frames, to enable
-> new use cases and higher performance in monitoring. I have some code,
-> at
+> i'm running Kubuntu 16.04 as a Virtualbox VM host, and a wireless AP
+> with an Intel Wireless 7260.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/log/?h=bpf
+> My WLAN connections frequently keep dying, so that i need to
+> disconnect and reconnect in order to use them again.
+> My syslog is full of these:
+> 
+> Oct 12 21:48:55 zippy kernel: [3546600.957321] ------------[ cut here
+> ]------------
+> Oct 12 21:48:55 zippy kernel: [3546600.957352] WARNING: CPU: 2 PID: 1571 at
+> /build/linux-YyUNAI/linux-4.4.0/drivers/net/wireless/iwlwifi/mvm/utils.c:740
+> iwl_mvm_disable_txq+0x2a6/0x2c0 [iwlmvm]()
+> [...]
+> I'm not sure if this is the right forum to post this.
+> If it isn't, a pointer to the right place would be appreciated.
 
-bpf bits looks pretty straightforward.
-attach looks fine too. I'm assuming there is some rtnl or other lock,
-so multiple assigns cannot race?
-It's missing query interface though.
-Please add support to return prog_id.
+This is a right place.  Another right place is Ubuntu bug reporting.
 
-> which implements parts of this. It's still missing the TX status path
-> and perhaps associated metadata, but that part is easy.
-> 
-> The bigger "problem" is that we're going to be adding support for
-> devices that have 802.11->Ethernet conversion already in hardware, and
-> in that case the notion that the filter program will get an 802.11
-> header to look at is no longer right.
-> 
-> Now, most likely for the actual in-service monitoring we'll actually
-> have to reconstitute the 802.11 header on the fly (in pure monitoring
-> where nothing else is active, we can just disable the conversion), but
-> the filtering shouldn't really be reliant on that, since that's not the
-> cheapest thing to do.
-> 
-> The obvious idea around this is to add a metadata field (just a bit
-> really), something like "is_data_ethernet", saying that it was both a
-> data frame and is already converted to have an Ethernet header.
-> However, since these devices don't really exist yet for the vast
-> majority of people, I'm a bit afraid that we'll find later a lot of
-> code simply ignoring this field and looking at the "802.11" header,
-> which is then broken if it encounters an Ethernet header instead.
-> 
-> Are there lies my question: If we added a new callback to
-> bpf_verifier_ops (e.g. "post_verifier_check"), to be called after the
-> normal verification, and also added a context argument to
-> "is_valid_access" (*), we could easily track that this new metadata
-> field is accessed, and reject programs that don't access it at all.
-> 
-> Now, I realize that people could trivially just work around this in
-> their program if they wanted, but I think most will take the reminder
-> and just implement
-> 
->     if (ctx->is_data_ethernet)
->         return DROP_FRAME;
-> 
-> instead, since mostly data frames will not be very relevant to them.
-> 
-> What do you think?
+> Please include me in the reply as i'm not on the list.
+> Let me know, what additional details i need to provide, as i'm
+> interested in getting this to work.
 
-sounds fine and considering new verifier ops after Jakub refactoring
-a check that is_data_ethernet was accessed would fit nicely.
-Without void** hack.
+There's a good chance this problem has been fixed already.  You
+are using a v4.4 kernel with many patches applied by Ubuntu.  Here, we
+are more concerned with the latest kernels, and v4.4 is quite old.
+
+Please test some of the later kernels, see
+https://wiki.ubuntu.com/Kernel/MainlineBuilds
+
+In particular, test v4.13 or v4.14-rc4.
+
+If the problem still happens, capture the same information and send it
+again as a reply.
+
+If the problem doesn't happen, then you can either continue to use the
+new kernel, or find when the problem was fixed; a long but rewarding
+process.
+
+Should the problem have been fixed for v4.10, you might also switch to
+using the Ubuntu package linux-generic-hwe-16.04.
+https://wiki.ubuntu.com/Kernel/RollingLTSEnablementStack#hwe-16.04
+
+Hope that helps.
+
+> Thanks.
+> 
+> Regards
+> 
+> Mario
+
+[...]
+
+-- 
+James Cameron
+http://quozl.netrek.org/
