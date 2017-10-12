@@ -1,121 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:49828 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751712AbdJLAiJ (ORCPT
+Received: from heliosphere.sirena.org.uk ([172.104.155.198]:45418 "EHLO
+        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751618AbdJLSVT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 20:38:09 -0400
-Received: by mail-pf0-f175.google.com with SMTP id l188so2607109pfc.6
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 17:38:08 -0700 (PDT)
-Date: Wed, 11 Oct 2017 17:38:06 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Grant Grundler <grundler@chromium.org>,
-        linux-kernel@vger.kernel.org, Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH] ath10k: fix core PCI suspend when WoWLAN is supported
- but disabled
-Message-ID: <20171012003805.GA89253@google.com> (sfid-20171012_023832_601646_E11495D0)
-References: <20170919232416.108247-1-briannorris@chromium.org>
+        Thu, 12 Oct 2017 14:21:19 -0400
+Date: Thu, 12 Oct 2017 19:21:14 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ the wireless-drivers tree
+Message-ID: <20171012182114.fdeiv67ebx7c63te@sirena.co.uk> (sfid-20171012_202247_223605_2286DCB8)
+References: <20171012172512.tlsdjhppfz2hu4vr@sirena.co.uk>
+ <1507832196.5497.1.camel@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170919232416.108247-1-briannorris@chromium.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="oi3qykxsazyvkqrj"
+In-Reply-To: <1507832196.5497.1.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping? Any comments? I know there's more than one way to slice this
-problem, but it's most definitely a problem...
 
-Brian
+--oi3qykxsazyvkqrj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 19, 2017 at 04:24:16PM -0700, Brian Norris wrote:
-> For devices where the FW supports WoWLAN but user-space has not
-> configured it, we don't do any PCI-specific suspend/resume operations,
-> because mac80211 doesn't call drv_suspend() when !wowlan. This has
-> particularly bad effects for some platforms, because we don't stop the
-> power-save timer, and if this timer goes off after the PCI controller
-> has suspended the link, Bad Things will happen.
-> 
-> Commit 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
-> got some of this right, in that it understood there was a problem on
-> non-WoWLAN firmware. But it forgot the $subject case.
-> 
-> Fix this by moving all the PCI driver suspend/resume logic exclusively
-> into the driver PM hooks. This shouldn't affect WoWLAN support much
-> (this just gets executed later on).
-> 
-> I would just as well kill the entirety of ath10k_hif_suspend(), as it's
-> not even implemented on the USB or SDIO drivers. I expect that we don't
-> need the callback, except to return "supported" (i.e., 0) or "not
-> supported" (i.e., -EOPNOTSUPP).
-> 
-> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
-> Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c | 24 ++++++++++++++----------
->  1 file changed, 14 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> index bc1633945a56..4655c944e3fd 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -2580,6 +2580,12 @@ void ath10k_pci_hif_power_down(struct ath10k *ar)
->  #ifdef CONFIG_PM
->  
->  static int ath10k_pci_hif_suspend(struct ath10k *ar)
-> +{
-> +	/* Nothing to do; the important stuff is in the driver suspend. */
-> +	return 0;
-> +}
-> +
-> +static int ath10k_pci_suspend(struct ath10k *ar)
->  {
->  	/* The grace timer can still be counting down and ar->ps_awake be true.
->  	 * It is known that the device may be asleep after resuming regardless
-> @@ -2592,6 +2598,12 @@ static int ath10k_pci_hif_suspend(struct ath10k *ar)
->  }
->  
->  static int ath10k_pci_hif_resume(struct ath10k *ar)
-> +{
-> +	/* Nothing to do; the important stuff is in the driver resume. */
-> +	return 0;
-> +}
-> +
-> +static int ath10k_pci_resume(struct ath10k *ar)
->  {
->  	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
->  	struct pci_dev *pdev = ar_pci->pdev;
-> @@ -3403,11 +3415,7 @@ static int ath10k_pci_pm_suspend(struct device *dev)
->  	struct ath10k *ar = dev_get_drvdata(dev);
->  	int ret;
->  
-> -	if (test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
-> -		     ar->running_fw->fw_file.fw_features))
-> -		return 0;
-> -
-> -	ret = ath10k_hif_suspend(ar);
-> +	ret = ath10k_pci_suspend(ar);
->  	if (ret)
->  		ath10k_warn(ar, "failed to suspend hif: %d\n", ret);
->  
-> @@ -3419,11 +3427,7 @@ static int ath10k_pci_pm_resume(struct device *dev)
->  	struct ath10k *ar = dev_get_drvdata(dev);
->  	int ret;
->  
-> -	if (test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT,
-> -		     ar->running_fw->fw_file.fw_features))
-> -		return 0;
-> -
-> -	ret = ath10k_hif_resume(ar);
-> +	ret = ath10k_pci_resume(ar);
->  	if (ret)
->  		ath10k_warn(ar, "failed to resume hif: %d\n", ret);
->  
-> -- 
-> 2.14.1.690.gbb1197296e-goog
-> 
+On Thu, Oct 12, 2017 at 09:16:36PM +0300, Luciano Coelho wrote:
+
+> This is weird... The previous conflict was the exact opposite of this.=20
+> 44fd09 came in from wireless-drivers and dd05f9 came from wireless-
+> drivers-next.  I don't understand why it is saying the opposite here...
+
+I may have confused the trees when I was pasting things in, the commits
+are filled in by hand.
+
+--oi3qykxsazyvkqrj
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlnfspkACgkQJNaLcl1U
+h9CFAQf/XM40iBAJ+DOFBaLzDyPuZ6pbmO0kfSeFaqstXTAbi3N0MDAaxn5vQLhw
+p1xhuha3X67W9UtFx0FRIfOL+JJAHz5tqi+4ocK97Ehn7k0D3zHGjTfmw9RVgKm9
+RgC+rM/vrqfy1ElQYyuacNZzYhQi/FFcsaGc7ZTjbGfssxBbVsp0DhJit5GaZnhA
+WxFblDVUwSjYFxnfus22J+UZd4NiPoF49d2WfIjC22z+O6qh3M8mfPXB1SVz3imq
+OL34skuO0BZfZk03q7nR7tuI1kxlKo/K2GpBxFMT+jM+tbPg4p2b0EJDwEIaLN5X
+gtnlVJPlA0eSB2QFslvuT5FbWLwq4w==
+=gRuf
+-----END PGP SIGNATURE-----
+
+--oi3qykxsazyvkqrj--
