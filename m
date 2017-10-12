@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:40486 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdJENNN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52934 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751542AbdJLTCe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 09:13:13 -0400
-Message-ID: <1507209191.2387.22.camel@sipsolutions.net> (sfid-20171005_151316_235392_CD33F7A1)
-Subject: Re: [RFC 1/2] fq: support filtering a given tin
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Date: Thu, 05 Oct 2017 15:13:11 +0200
-In-Reply-To: <87k209sryx.fsf@toke.dk>
-References: <20171005113808.3889-1-johannes@sipsolutions.net>
-         <87k209sryx.fsf@toke.dk>
+        Thu, 12 Oct 2017 15:02:34 -0400
+Message-ID: <1507834948.5497.9.camel@coelho.fi> (sfid-20171012_210304_843075_72AF8BE6)
+From: Luca Coelho <luca@coelho.fi>
+To: Mark Brown <broonie@kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Thu, 12 Oct 2017 22:02:28 +0300
+In-Reply-To: <20171012185944.bip4cdk7bd4d6mpc@sirena.co.uk>
+References: <20171012172512.tlsdjhppfz2hu4vr@sirena.co.uk>
+         <1507832196.5497.1.camel@intel.com>
+         <20171012182114.fdeiv67ebx7c63te@sirena.co.uk>
+         <1507832866.5497.2.camel@intel.com>
+         <20171012183505.oo77lgdbmqjevsuo@sirena.co.uk>
+         <1507834251.5497.7.camel@coelho.fi>
+         <20171012185944.bip4cdk7bd4d6mpc@sirena.co.uk>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ the wireless-drivers tree
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-10-05 at 14:24 +0200, Toke Høiland-Jørgensen wrote:
-
-> > +	for (;;) {
-> > +		head = &tin->new_flows;
-> > +		if (list_empty(head)) {
-> > +			head = &tin->old_flows;
-> > +			if (list_empty(head))
-> > +				break;
-> > +		}
-> > +
-> > +		flow = list_first_entry(head, struct fq_flow, flowchain);
-> > +		fq_flow_filter(fq, flow, filter_func, filter_data, free_func);
-> > +	}
+On Thu, 2017-10-12 at 19:59 +0100, Mark Brown wrote:
+> On Thu, Oct 12, 2017 at 09:50:51PM +0300, Luca Coelho wrote:
+> > On Thu, 2017-10-12 at 19:35 +0100, Mark Brown wrote:
+> > > With trees like this that don't coordinate with their fixes
+> > > branch
+> > > there
+> > > are frequently multiple conflicts introduced so I generally
+> > > report
+> > > things file by file without even looking at the new ones.
+> > Sorry for the trouble.  But how do you suggest that we "coordinate
+> > our
+> > fixes branch"? Merge fixes into the main tree?
 > 
-> Isn't this going to loop forever?
+> That'd be easiest for me!  It's not of necessity a problem if the
+> conflicts are easy enough to resolve if you just let things get
+> merged
+> in -next, it's just more an observation that that's a thing that
+> happens
+> and that this is how I cope with it.  Stephen may do things a bit
+> differently.
 
-Good question, I'll admit that I copied this without understanding it
-from fq_tin_reset(), and didn't think about it much.
+Cool, I'll discuss this with Kalle and make sure I note these potential
+conflicts early enough so everyone is aware when they're coming.
 
-I think you're right though - I guess this needs to iterate the
-new_flows and old_flows.
+Thanks for taking over while Stephen is away! I really appreciate it,
+since linux-next is a very important part of our process. :)
 
-johannes
+--
+Luca.
