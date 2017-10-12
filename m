@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38042 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751762AbdJMJje (ORCPT
+Received: from heliosphere.sirena.org.uk ([172.104.155.198]:46508 "EHLO
+        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752452AbdJLTMZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 05:39:34 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 12 Oct 2017 15:12:25 -0400
+Date: Thu, 12 Oct 2017 20:12:15 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ the wireless-drivers tree
+Message-ID: <20171012191215.hstb7oapb7gcemsf@sirena.co.uk> (sfid-20171012_211259_766937_618D4A44)
+References: <20171012172512.tlsdjhppfz2hu4vr@sirena.co.uk>
+ <1507832979.5497.4.camel@coelho.fi>
 MIME-Version: 1.0
-Subject: Re: mwifiex: double the size of chan_stats array in adapter
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1507118766-17713-1-git-send-email-gbhat@marvell.com>
-References: <1507118766-17713-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Rohit Fule <rohitf@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20171013093934.11BBD6095E@smtp.codeaurora.org> (sfid-20171013_113937_804459_360C12CD)
-Date: Fri, 13 Oct 2017 09:39:33 +0000 (UTC)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="mmucsx4ii4livhqa"
+In-Reply-To: <1507832979.5497.4.camel@coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-> From: Rohit Fule <rohitf@marvell.com>
-> 
-> When a user requests scan, driver sends multiple scan requests
-> to firmware, which might be active or passive. Firmware will
-> send channel statistics for each channel in the request. This will
-> be stored in chan_stats array.
-> 
-> Few channels might report hidden SSIDs in passive scan results.
-> So, once the original scan request is finished, driver issues an
-> active scan request for all channels which reported hidden SSIDs.
-> This will cause duplicates in the chan_stats array. At worst,
-> every channel will have a hidden SSID, in which case the driver
-> can issue active scan requests for each channel. So the complete
-> scan statistics size will be twice of existing limit.
-> 
-> At present maximum number of channels returned in scan statistics
-> is 31(BG) + 14(A) = 45. Clearly there will be an overflow of the
-> chan_stats array in the above mentioned scenario. To fix this
-> double the size of chan_stats array.
-> 
-> Signed-off-by: Rohit Fule <rohitf@marvell.com>
-> Signed-off-by: Mangesh Malusare <mmangesh@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+--mmucsx4ii4livhqa
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Patch applied to wireless-drivers-next.git, thanks.
+On Thu, Oct 12, 2017 at 09:29:39PM +0300, Luca Coelho wrote:
+> On Thu, 2017-10-12 at 18:25 +0100, Mark Brown wrote:
 
-2d5cc60949e0 mwifiex: double the size of chan_stats array in adapter
+> > @@@ -382,7 -371,9 +384,8 @@@ struct iwl_cfg=20
+> >   	    use_tfh:1,
+> >   	    gen2:1,
+> >   	    cdb:1,
+> >  -	    ext_nvm:1,
 
--- 
-https://patchwork.kernel.org/patch/9984471/
+> nvm_type seems to be missing from here?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Oh bother.  Either my error or git's...  but it does seem to be
+building so I'm a bit confused about what's going on there.
+
+--mmucsx4ii4livhqa
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlnfvo4ACgkQJNaLcl1U
+h9BJ8wf/ZXUID+Vz81/XckoSgZCc15JQqd2rTmIy8IPcb/BNam6fmle6Z0zT9sZf
+4580E2jIePjzHT+k2D874e9FMkEZ/mFOzzvcf1E2BxUeEglOgdux5UR6w71lQu5h
+lATnbBInyzB53z7FuF7dtr570Xzx74sOxu7zzLXBGegcE1bbH6r1faqMHHVpPqP2
+nOowtvNlJaVZVFHueQmU4Uj5n46mYPCituCHBUc/l95bok5L/1e+uVGG6x4q4Ir8
+2RJ91MaVF5N1qH1ODbJFWvSHddA5rstnC+2IxpLx96FJbOkXl3+RbXXOmMFWycLT
+5APpSuk+/atc/Qmzb5shG8sXRWyfcA==
+=3k+x
+-----END PGP SIGNATURE-----
+
+--mmucsx4ii4livhqa--
