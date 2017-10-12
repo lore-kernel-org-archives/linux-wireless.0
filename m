@@ -1,284 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:55691 "EHLO mail.toke.dk"
+Received: from mout.gmx.net ([212.227.17.22]:60719 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751152AbdJ0OPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 10:15:21 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH v2 3/3] ath9k: Switch to mac80211 airtime API
-Date: Fri, 27 Oct 2017 16:14:51 +0200
-Message-Id: <20171027141451.22768-3-toke@toke.dk> (sfid-20171027_161617_910642_B8AD27D9)
-In-Reply-To: <20171027141451.22768-1-toke@toke.dk>
-References: <20171027141451.22768-1-toke@toke.dk>
-In-Reply-To: <20171016160902.8970-1-toke@toke.dk>
-References: <20171016160902.8970-1-toke@toke.dk>
+        id S1751370AbdJLGwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Oct 2017 02:52:16 -0400
+Subject: Re: Atheros TL-721N adapter refuses to enumerate on the USB Bus
+ (ath9k_htc)
+To: M D <dsmm4444@gmail.com>, linux-wireless@vger.kernel.org
+References: <CACUY3ep1s4OVZ-Fw3G4+aNjOxmLi1Rf+Zpnm__7c80KVPvr3fQ@mail.gmail.com>
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <9b69844d-6f83-c29b-5c4d-aef5220ff847@rempel-privat.de> (sfid-20171012_085222_338374_A4E51632)
+Date: Thu, 12 Oct 2017 08:52:08 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CACUY3ep1s4OVZ-Fw3G4+aNjOxmLi1Rf+Zpnm__7c80KVPvr3fQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="VIpE6FH14UQcqqFGgMT5ppoKAt8A3MOH7"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the in-driver airtime fairness scheduling from ath9k and
-switches the driver to use the API introduced in mac80211 in the
-previous commit.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--VIpE6FH14UQcqqFGgMT5ppoKAt8A3MOH7
+Content-Type: multipart/mixed; boundary="arMih8O147SUAxEmDpFOHBW2EH9W7v1Iu";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: M D <dsmm4444@gmail.com>, linux-wireless@vger.kernel.org
+Message-ID: <9b69844d-6f83-c29b-5c4d-aef5220ff847@rempel-privat.de>
+Subject: Re: Atheros TL-721N adapter refuses to enumerate on the USB Bus
+ (ath9k_htc)
+References: <CACUY3ep1s4OVZ-Fw3G4+aNjOxmLi1Rf+Zpnm__7c80KVPvr3fQ@mail.gmail.com>
+In-Reply-To: <CACUY3ep1s4OVZ-Fw3G4+aNjOxmLi1Rf+Zpnm__7c80KVPvr3fQ@mail.gmail.com>
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
-Changes since v1:
-- Split out ath9k changes into separate patch
+--arMih8O147SUAxEmDpFOHBW2EH9W7v1Iu
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/ath/ath9k/ath9k.h     |  7 +---
- drivers/net/wireless/ath/ath9k/debug.h     |  8 -----
- drivers/net/wireless/ath/ath9k/debug_sta.c | 54 ------------------------------
- drivers/net/wireless/ath/ath9k/init.c      |  4 +--
- drivers/net/wireless/ath/ath9k/recv.c      | 11 ++----
- drivers/net/wireless/ath/ath9k/xmit.c      | 21 ++++--------
- 6 files changed, 12 insertions(+), 93 deletions(-)
+Am 11.10.2017 um 20:17 schrieb M D:
+> Hi,
+> My system details are as follows
+>=20
+> Hardware:
+> CPU                      :              ARM based platform, imx21
+> USB                       :             USB Host Controller 1.1 Full Sp=
+eed Mode
+>=20
+> Software:
+> Firmware              :              /lib/firmware/htc_9271.fw
+> (version 1.3 / version 1.4)
+> Device Driver       :              Backports (v3.12.8-1)
+> OS                        :              Linux Kernel 3.0.101, ARM
+> Freescale IMX21ADS
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f6c53df78856..f6e8f9b1b984 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -112,8 +112,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- #define ATH_TXFIFO_DEPTH           8
- #define ATH_TX_ERROR               0x01
- 
--#define ATH_AIRTIME_QUANTUM        300 /* usec */
--
- /* Stop tx traffic 1ms before the GO goes away */
- #define ATH_P2P_PS_STOP_TIME       1000
- 
-@@ -215,6 +213,7 @@ struct ath_buf_state {
- 	bool stale;
- 	u16 seqno;
- 	unsigned long bfs_paprd_timestamp;
-+	u32 airtime;
- };
- 
- struct ath_buf {
-@@ -262,12 +261,9 @@ struct ath_node {
- 
- 	bool sleeping;
- 	bool no_ps_filter;
--	s64 airtime_deficit[IEEE80211_NUM_ACS];
--	u32 airtime_rx_start;
- 
- #ifdef CONFIG_ATH9K_STATION_STATISTICS
- 	struct ath_rx_rate_stats rx_rate_stats;
--	struct ath_airtime_stats airtime_stats;
- #endif
- 	u8 key_idx[4];
- 
-@@ -986,7 +982,6 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- 
- #define AIRTIME_USE_TX		BIT(0)
- #define AIRTIME_USE_RX		BIT(1)
--#define AIRTIME_USE_NEW_QUEUES	BIT(2)
- #define AIRTIME_ACTIVE(flags) (!!(flags & (AIRTIME_USE_TX|AIRTIME_USE_RX)))
- 
- struct ath_softc {
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 249f8141cd00..559d9628f280 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -319,20 +319,12 @@ ath9k_debug_sync_cause(struct ath_softc *sc, u32 sync_cause)
- void ath_debug_rate_stats(struct ath_softc *sc,
- 			  struct ath_rx_status *rs,
- 			  struct sk_buff *skb);
--void ath_debug_airtime(struct ath_softc *sc,
--		       struct ath_node *an,
--		       u32 rx, u32 tx);
- #else
- static inline void ath_debug_rate_stats(struct ath_softc *sc,
- 					struct ath_rx_status *rs,
- 					struct sk_buff *skb)
- {
- }
--static inline void ath_debug_airtime(struct ath_softc *sc,
--			      struct ath_node *an,
--			      u32 rx, u32 tx)
--{
--}
- #endif /* CONFIG_ATH9K_STATION_STATISTICS */
- 
- #endif /* DEBUG_H */
-diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
-index efc692ee67d4..89ba95287a8b 100644
---- a/drivers/net/wireless/ath/ath9k/debug_sta.c
-+++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
-@@ -242,59 +242,6 @@ static const struct file_operations fops_node_recv = {
- 	.llseek = default_llseek,
- };
- 
--void ath_debug_airtime(struct ath_softc *sc,
--		struct ath_node *an,
--		u32 rx,
--		u32 tx)
--{
--	struct ath_airtime_stats *astats = &an->airtime_stats;
--
--	astats->rx_airtime += rx;
--	astats->tx_airtime += tx;
--}
--
--static ssize_t read_airtime(struct file *file, char __user *user_buf,
--			size_t count, loff_t *ppos)
--{
--	struct ath_node *an = file->private_data;
--	struct ath_airtime_stats *astats;
--	static const char *qname[4] = {
--		"VO", "VI", "BE", "BK"
--	};
--	u32 len = 0, size = 256;
--	char *buf;
--	size_t retval;
--	int i;
--
--	buf = kzalloc(size, GFP_KERNEL);
--	if (buf == NULL)
--		return -ENOMEM;
--
--	astats = &an->airtime_stats;
--
--	len += scnprintf(buf + len, size - len, "RX: %u us\n", astats->rx_airtime);
--	len += scnprintf(buf + len, size - len, "TX: %u us\n", astats->tx_airtime);
--	len += scnprintf(buf + len, size - len, "Deficit: ");
--	for (i = 0; i < 4; i++)
--		len += scnprintf(buf+len, size - len, "%s: %lld us ", qname[i], an->airtime_deficit[i]);
--	if (len < size)
--		buf[len++] = '\n';
--
--	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
--	kfree(buf);
--
--	return retval;
--}
--
--
--static const struct file_operations fops_airtime = {
--	.read = read_airtime,
--	.open = simple_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
--
- void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
- 			   struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta,
-@@ -304,5 +251,4 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
- 
- 	debugfs_create_file("node_aggr", S_IRUGO, dir, an, &fops_node_aggr);
- 	debugfs_create_file("node_recv", S_IRUGO, dir, an, &fops_node_recv);
--	debugfs_create_file("airtime", S_IRUGO, dir, an, &fops_airtime);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index bb7936090b91..b4c6fc49b19e 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -620,8 +620,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 
- 	/* Will be cleared in ath9k_start() */
- 	set_bit(ATH_OP_INVALID, &common->op_flags);
--	sc->airtime_flags = (AIRTIME_USE_TX | AIRTIME_USE_RX |
--			     AIRTIME_USE_NEW_QUEUES);
-+	sc->airtime_flags = (AIRTIME_USE_TX | AIRTIME_USE_RX);
- 
- 	sc->sc_ah = ah;
- 	sc->dfs_detector = dfs_pattern_detector_init(common, NL80211_DFS_UNSET);
-@@ -873,6 +872,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
- 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
-+	ieee80211_hw_set(hw, AIRTIME_ACCOUNTING);
- 
- 	if (ath9k_ps_enable)
- 		ieee80211_hw_set(hw, SUPPORTS_PS);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 2197aee2bb72..69a4ba5d4013 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1054,14 +1054,9 @@ static void ath_rx_count_airtime(struct ath_softc *sc,
- 						len, rxs->rate_idx, is_sp);
- 	}
- 
-- 	if (!!(sc->airtime_flags & AIRTIME_USE_RX)) {
--		spin_lock_bh(&acq->lock);
--		an->airtime_deficit[acno] -= airtime;
--		if (an->airtime_deficit[acno] <= 0)
--			__ath_tx_queue_tid(sc, ATH_AN_2_TID(an, tidno));
--		spin_unlock_bh(&acq->lock);
--	}
--	ath_debug_airtime(sc, an, airtime, 0);
-+	if (!!(sc->airtime_flags & AIRTIME_USE_RX))
-+		rxs->airtime = airtime;
-+
- exit:
- 	rcu_read_unlock();
- }
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index bd438062a6db..5ffd44a4b3de 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -640,11 +640,9 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
-     return bf_isampdu(bf) && !(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
- }
- 
--static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_node *an,
--				 struct ath_atx_tid *tid, struct ath_buf *bf,
-+static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_buf *bf,
- 				 struct ath_tx_status *ts)
- {
--	struct ath_txq *txq = tid->txq;
- 	u32 airtime = 0;
- 	int i;
- 
-@@ -654,15 +652,9 @@ static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_node *an,
- 		airtime += rate_dur * bf->rates[i].count;
- 	}
- 
--	if (sc->airtime_flags & AIRTIME_USE_TX) {
--		int q = txq->mac80211_qnum;
--		struct ath_acq *acq = &sc->cur_chan->acq[q];
-+	if (sc->airtime_flags & AIRTIME_USE_TX)
-+		bf->bf_state.airtime = airtime;
- 
--		spin_lock_bh(&acq->lock);
--		an->airtime_deficit[q] -= airtime;
--		spin_unlock_bh(&acq->lock);
--	}
--	ath_debug_airtime(sc, an, 0, airtime);
- }
- 
- static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
-@@ -692,7 +684,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 	if (sta) {
- 		struct ath_node *an = (struct ath_node *)sta->drv_priv;
- 		tid = ath_get_skb_tid(sc, an, bf->bf_mpdu);
--		ath_tx_count_airtime(sc, an, tid, bf, ts);
-+		ath_tx_count_airtime(sc, bf, ts);
- 		if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
- 			tid->clear_ps_filter = true;
- 	}
-@@ -2428,6 +2420,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 	if (ts->ts_status & ATH9K_TXERR_FILT)
- 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 
-+	tx_info->status.tx_time = min_t(u32, 0xffff, bf->bf_state.airtime);
-+
- 	dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
- 	bf->bf_buf_addr = 0;
- 	if (sc->tx99_state)
-@@ -2754,9 +2748,6 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 	struct ath_atx_tid *tid;
- 	int tidno, acno;
- 
--	for (acno = 0; acno < IEEE80211_NUM_ACS; acno++)
--		an->airtime_deficit[acno] = ATH_AIRTIME_QUANTUM;
--
- 	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
- 		tid = ath_node_to_tid(an, tidno);
- 		tid->an        = an;
--- 
-2.14.2
+Heh... I doubt this configuration can be more exotic :D
+
+> Problem Statement:
+>=20
+> -        The WiFi adapter is connected directly to the USB Port and is
+> configured in Full Speed mode
+> -        After it is plugged in, it is enumerated on the Bus (that is,
+> executing the instruction lsusb shows the vendor and product
+> information)
+> -        After repeated reboots, after one random reboot the issue
+> occurs. (usually 1 out of 5 times) the wlan0 node does not come up
+> -        When the issue occurs the following details below describe
+> the issue at best
+>=20
+>=20
+> 1)  The adapter is visible on the USB bus (adapter gets enumerated)
+> 2)  The required modules are loaded
+> 3)  However the wireless networking node, wlan0 does not come up
+> 4)  One of the threads created during the init goes into a D state
+>=20
+> root       1024  0.0  0.0      0     0 ?        D    11:06   0:00
+> [firmware/htc_92]
+>=20
+> In the file drivers/net/wireless/ath/ath9k/hif_usb.c
+> [
+>=20
+> hif_usb.c
+> ...
+>=20
+> ret =3D request_firmware_nowait(THIS_MODULE, true, hif_dev->fw_name,
+>       &hif_dev->udev->dev, GFP_KERNEL,
+>       hif_dev, ath9k_hif_usb_firmware_cb);
+>=20
+>=20
+> compat_firmware_class.c
+> ...
+> task =3D kthread_run(request_firmware_work_func, fw_work,
+>     "firmware/%s", name);
+> ]
+>=20
+>=20
+> 5) This is recoverable only after manually unplugging out the Adapter.
+>=20
+> ROOT CAUSE OF THE ISSUE:
+> 6) The underlying cause is due to the wifi adapter being configured in
+> FULL SPEED mode. Due to this the endpoints 3 and 4 get configured as
+> BULK and not INT.
+>=20
+>=20
+> After some investigation, I made the following changes which helps to
+> recover the adapter when the issue occurs,
+>=20
+> --- ../original-backports/backports-3.12.8-1/drivers/net/wireless/ath/a=
+th9k/hif_usb.c
+>   2017-10-11 10:50:05.043241000 -0700
+> +++ drivers/net/wireless/ath/ath9k/hif_usb.c    2017-10-11
+> 10:50:03.154255000 -0700
+> @@ -24,6 +24,8 @@
+>  MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
+>  MODULE_FIRMWARE(FIRMWARE_AR9271);
+>=20
+> +static void ath9k_hif_usb_reboot(struct usb_device *udev);
+> +
+>=20
+> @@ -1189,7 +1193,12 @@
+>  {
+>         struct usb_device *udev =3D interface_to_usbdev(interface);
+>         struct hif_device_usb *hif_dev;
+> -       int ret =3D 0;
+> +
+> +        struct usb_host_interface *alt ;
+> +        struct usb_endpoint_descriptor *endp;
+> +
+> +       int ret;
+> +       int idx, EP =3D 0;
+>=20
+>         if (id->driver_info =3D=3D STORAGE_DEVICE)
+>                 return send_eject_command(interface);
+> @@ -1212,6 +1221,44 @@
+>=20
+>         init_completion(&hif_dev->fw_done);
+>=20
+> +       alt =3D &hif_dev->interface->altsetting[0];
+> +
+> +
+> +       for (idx =3D 0; idx < alt->desc.bNumEndpoints; idx++) {
+> +                endp =3D &alt->endpoint[idx].desc;
+> +                EP =3D idx + 1;
+> +                printk (KERN_ALERT "EndPoint %d is conf as %d\n", EP,
+> (endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK));
+> +               /* First FIX EP3. EP3 should never show up as BULK.
+> +                  If it does we have a serious problem.
+> +               */
+> +
+> +               if (endp->bEndpointAddress=3D=3D0x83){
+> +                  if ((endp->bmAttributes &
+> USB_ENDPOINT_XFERTYPE_MASK) =3D=3D USB_ENDPOINT_XFER_BULK) {
+> +                       endp->bmAttributes |=3D USB_ENDPOINT_XFER_INT;
+> +                       endp->bInterval =3D 1;
+> +                       ath9k_hif_usb_reboot(hif_dev->udev);
+> +                       mdelay(1000);
+> +                       ret =3D usb_reset_device(hif_dev->udev);
+> +                       mdelay(1000);
+> +                        if (ret)
+> +                           return ret;
+> +                   }
+> +               }
+> +
+> +                if (endp->bEndpointAddress=3D=3D0x04){
+> +                   if ((endp->bmAttributes &
+> USB_ENDPOINT_XFERTYPE_MASK) =3D=3D USB_ENDPOINT_XFER_BULK) {
+> +                        endp->bmAttributes |=3D USB_ENDPOINT_XFER_INT;=
+
+> +                        endp->bInterval =3D 1;
+> +                       ath9k_hif_usb_reboot(hif_dev->udev);
+> +                       mdelay(1000);
+> +                       ret =3D usb_reset_device(hif_dev->udev);
+> +                       mdelay(1000);
+> +                       if (ret)
+> +                               return ret;
+> +                  }
+> +               }
+> +       }
+> +
+>         /* Find out which firmware to load */
+>=20
+>         if (IS_AR7010_DEVICE(id->driver_info))
+>=20
+>=20
+>=20
+> I see the following output in dmesg
+>=20
+> EndPoint 1 is conf as 2
+> EndPoint 2 is conf as 2
+> EndPoint 3 is conf as 2
+> usb 1-2: reset full speed USB device number 2 using imx21-hcd
+> usb 1-2: device firmware changed
+> usb 1-2: USB disconnect, device number 2
+> usbcore: registered new interface driver ath9k_htc
+> usb 1-2: new full speed USB device number 3 using imx21-hcd
+> EndPoint 1 is conf as 2
+> EndPoint 2 is conf as 2
+> EndPoint 3 is conf as 3
+> EndPoint 4 is conf as 2
+> usb 1-2: reset full speed USB device number 3 using imx21-hcd
+> EndPoint 5 is conf as 2
+> EndPoint 6 is conf as 2
+> usb 1-2: ath9k_htc: Firmware htc_9271.fw requested
+> usb 1-2: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
+> ath9k_htc 1-2:1.0: ath9k_htc: HTC initialized with 33 credits
+> ath9k_htc 1-2:1.0: ath9k_htc: FW Version: 1.3
+> Completed ath9k_init_firmware_version
+> ath: EEPROM regdomain: 0x809c
+> ath: EEPROM indicates we should expect a country code
+> ath: doing EEPROM country->regdmn map search
+> ath: country maps to regdmn code: 0x52
+> ath: Country alpha2 being used: CN
+> ath: Regpair used: 0x52
+> ath9k_hw_set_reset_reg: 1
+> ieee80211 phy0: Atheros AR9271 Rev:1
+> Registered led device: ath9k_htc-phy0
+>=20
+> These code changes help to reconfigure the WiFi adapter many times.
+> However at some point of reboot (say 30th reboot), I see
+>=20
+> usb 1-2: device descriptor read/64, error -110
+> hub 1-0:1.0: unable to enumerate USB device on port 2
+>=20
+> When this happens, the only way to recover is to manually unplug the
+> adapter from the USB port.
+>=20
+> Could anyone offer any suggestions as to how to overcome this problem?
+> The issue occurs with both v1.3 and v1.4 htc_9271.fw.
+
+I fear, you should debuge it:
+- attach uart on TL-721N to get some debug information from firmware
+- use usb analizer to see what is going on with usb traffic.
+
+--=20
+Regards,
+Oleksij
+
+
+--arMih8O147SUAxEmDpFOHBW2EH9W7v1Iu--
+
+--VIpE6FH14UQcqqFGgMT5ppoKAt8A3MOH7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF4EAREIAAYFAlnfERgACgkQHwImuRkmbWki+gD+PrZawns4SEnNmy0ORNsn209O
+dart4j0U52NOm4tuZ0gA/im54ohJKYJZrv1uC55jS8x6qVKtrTfHLac1tycz052D
+=cnC4
+-----END PGP SIGNATURE-----
+
+--VIpE6FH14UQcqqFGgMT5ppoKAt8A3MOH7--
