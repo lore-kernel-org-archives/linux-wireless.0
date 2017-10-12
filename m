@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56258 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753007AbdJKKUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 06:20:37 -0400
-Date: Wed, 11 Oct 2017 12:20:33 +0200
-From: Petr Mladek <pmladek@suse.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 12/13] kthread: Convert callback to use from_timer()
-Message-ID: <20171011102033.GB2882@pathway.suse.cz> (sfid-20171011_122152_365067_74636168)
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
- <1507159627-127660-13-git-send-email-keescook@chromium.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35958 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751434AbdJLKen (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Oct 2017 06:34:43 -0400
+Date: Thu, 12 Oct 2017 12:34:50 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Souptick Joarder <jrdr.linux@gmail.com>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: Two rtlwifi drivers?
+Message-ID: <20171012103450.GA24647@kroah.com> (sfid-20171012_123508_276300_F8D9FA56)
+References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+ <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
+ <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
+ <87k202qcjr.fsf@kamboji.qca.qualcomm.com>
+ <20171011131310.GF32250@kroah.com>
+ <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1507159627-127660-13-git-send-email-keescook@chromium.org>
+In-Reply-To: <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 2017-10-04 16:27:06, Kees Cook wrote:
-> In preparation for unconditionally passing the struct timer_list pointer
-> to all timer callbacks, switch kthread to use from_timer() and pass the
-> timer pointer explicitly.
+On Thu, Oct 12, 2017 at 11:38:06AM +0300, Kalle Valo wrote:
+> > So what to do?  Any ideas?  What makes your life easier?  You can just
+> > ignore the staging tree, as it should not affect your portion of the
+> > kernel at all, right?
 > 
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Petr Mladek <pmladek@suse.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Oleg Nesterov <oleg@redhat.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Yes, I automatically ignore anything staging related. But the problem is
+> that we now have two drivers with the same name and people don't always
+> remember to prefix the patch with "staging: ". So on a bad day I might
+> accidentally apply a patch which was meant for your tree. Of course I
+> immediately revert it as soon as I, or someone else, catches that but
+> annoying still.
 
-Reviewed-by: Petr Mladek <pmladek@suse.com>
+It doesn't bother me if you apply staging patches, I can handle the
+merge issues :)
 
-Best Regards,
-Petr
+> I think we have two options here:
+> 
+> 1) We set a deadline (like 12 months or something) for the
+>    drivers/staging/rtlwifi and after that you refuse to take any patches
+>    for it. Hopefully this makes it clear for everyone that this fork is
+>    just temporary. I think Larry is trying to do this, which is great.
+
+Fine with me, if Larry is ok with it.
+
+> 2) We move the whole rtlwifi driver to staging. A very bad option but
+>    still better than forking the drivers.
+
+Ick, I don't want that to have to happen, that would not be good for the
+users of other devices that the "real" rtlwifi driver supports.
+
+thanks,
+
+greg k-h
