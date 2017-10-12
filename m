@@ -1,117 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:62060 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752080AbdJPNM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 09:12:28 -0400
-Subject: Re: Two rtlwifi drivers?
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
- <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
- <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
- <87k202qcjr.fsf@kamboji.qca.qualcomm.com> <20171011131310.GF32250@kroah.com>
- <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com> <20171012103450.GA24647@kroah.com>
- <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
- <ed361ae7-864e-1179-c7da-3ff10f4c73e2@rempel-privat.de>
- <87fuajmeak.fsf@kamboji.qca.qualcomm.com>
-Cc: Pkshih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        =?UTF-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Souptick Joarder <jrdr.linux@gmail.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <380282b8-39e2-1ec0-7b05-157187883653@rempel-privat.de> (sfid-20171016_151231_981420_1472C498)
-Date: Mon, 16 Oct 2017 15:11:45 +0200
-MIME-Version: 1.0
-In-Reply-To: <87fuajmeak.fsf@kamboji.qca.qualcomm.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="C8h7igGKkDF8IwqWuwGA0g8SPLv5IcfpC"
+Received: from s3.sipsolutions.net ([144.76.63.242]:34096 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751455AbdJLIED (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Oct 2017 04:04:03 -0400
+Message-ID: <1507795437.1998.70.camel@sipsolutions.net> (sfid-20171012_100444_289483_DA528F0D)
+Subject: Re: [lkp-robot] [mac80211]  cd1a0cdbf9: hwsim.ap_cipher_bip.fail
+From: Johannes Berg <johannes@sipsolutions.net>
+To: kernel test robot <xiaolong.ye@intel.com>,
+        Xiang Gao <qasdfgtyuiop@gmail.com>
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org, lkp@01.org
+Date: Thu, 12 Oct 2017 10:03:57 +0200
+In-Reply-To: <20171012061919.GE26196@yexl-desktop>
+References: <20171012061919.GE26196@yexl-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---C8h7igGKkDF8IwqWuwGA0g8SPLv5IcfpC
-Content-Type: multipart/mixed; boundary="Gm3dj6M8OUWOIrxaud9N5kXHdiDa4dnt2";
- protected-headers="v1"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Pkshih <pkshih@realtek.com>, Larry Finger <Larry.Finger@lwfinger.net>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dan Carpenter <dan.carpenter@oracle.com>, =?UTF-8?B?6I6K5b2l5a6j?=
- <yhchuang@realtek.com>, Johannes Berg <johannes.berg@intel.com>,
- Souptick Joarder <jrdr.linux@gmail.com>,
- "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Message-ID: <380282b8-39e2-1ec0-7b05-157187883653@rempel-privat.de>
-Subject: Re: Two rtlwifi drivers?
-References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
- <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
- <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
- <87k202qcjr.fsf@kamboji.qca.qualcomm.com> <20171011131310.GF32250@kroah.com>
- <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com> <20171012103450.GA24647@kroah.com>
- <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
- <ed361ae7-864e-1179-c7da-3ff10f4c73e2@rempel-privat.de>
- <87fuajmeak.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fuajmeak.fsf@kamboji.qca.qualcomm.com>
+Hi,
 
---Gm3dj6M8OUWOIrxaud9N5kXHdiDa4dnt2
-Content-Type: text/plain; charset=utf-8
-Content-Language: ru
-Content-Transfer-Encoding: quoted-printable
+Thanks for the report.
 
-Am 16.10.2017 um 15:07 schrieb Kalle Valo:
-> Oleksij Rempel <linux@rempel-privat.de> writes:
->=20
->>> 4) As Kalle mentioned, rtlwifi contains many magic numbers, and I=20
->>>    plan to fix them after rtl8723de and rtl8821ce. Because the driver=
-s
->>>    are developing, the changes will make us hard to integrate. Howeve=
-r,
->>>    I don't have plan to process the magic numbers in the module phydm=
-,
->>>    because the most of BB/RF registers contain many functions. And
->>>    it doesn't have a register name but a bit field name instead.
->>>    Our BB team guys say the use of enumeration or defined name will
->>>    be unreadable, and the name is meaningless for most people.
->>
->> Experience with ath9k driver showed, that development was kind of
->> balanced between two groups, QCA and Community (Other companies,
->> researches, education and so on.). Saying: "you will not understand it=
+On Thu, 2017-10-12 at 14:19 +0800, kernel test robot wrote:
+> FYI, we noticed the following commit (built with gcc-6):
+> 
+> commit: cd1a0cdbf9ada9bb975d8730a375bc13824ef065 ("mac80211: aead api to reduce redundancy")
 
->> any way" is nor really helpful :)
->> Please don't repeat bad experience of Broadcom.
->=20
-> I agree with Oleksij here, but I want to still point out that there are=
+I guess the commit isn't actually an upstream commit, but one the robot
+made when applying the patch?
 
-> cases when using magic numbers are ok, for example look at
-> ar5008_initvals.h from ath9k. So it depends on case by case.
+> url: https://github.com/0day-ci/linux/commits/Xiang-Gao/mac80211-aead-api-to-reduce-redundancy/20170929-140556
 
-Beside. It is probably offtopic. I assume this initvals related to BB.
-Is it possible to force a 802.11n controller to work in 802.11b mode? I
-can image, it should be possible by reconfiguring BB. Correct?
---=20
-Regards,
-Oleksij
+This URL doesn't work (any more?)
 
+> 2017-10-05 23:08:27 	./run-tests.py ap_cipher_bip 
+> DEV: wlan0: 02:00:00:00:00:00
+> DEV: wlan1: 02:00:00:00:01:00
+> DEV: wlan2: 02:00:00:00:02:00
+> APDEV: wlan3
+> APDEV: wlan4
+> START ap_cipher_bip 1/1
+> Test: WPA2-PSK with BIP
+> Starting AP wlan3
+> Connect STA wlan0 to AP
+> dev1->dev2 unicast data delivery failed
+> Traceback (most recent call last):
+>   File "./run-tests.py", line 453, in main
+>     t(dev, apdev)
+>   File "/lkp/benchmarks/hwsim/tests/hwsim/test_ap_ciphers.py", line
+> 279, in test_ap_cipher_bip
+>     check_group_mgmt_cipher(dev[0], apdev[0], "AES-128-CMAC")
+>   File "/lkp/benchmarks/hwsim/tests/hwsim/test_ap_ciphers.py", line
+> 51, in check_group_mgmt_cipher
+>     hwsim_utils.test_connectivity(dev, hapd)
+>   File "/lkp/benchmarks/hwsim/tests/hwsim/hwsim_utils.py", line 165,
+> in test_connectivity
+>     raise Exception(last_err)
+> Exception: dev1->dev2 unicast data delivery failed
+> FAIL ap_cipher_bip 5.24306 2017-10-05 23:08:32.620542
 
---Gm3dj6M8OUWOIrxaud9N5kXHdiDa4dnt2--
+[... similar results ...]
 
---C8h7igGKkDF8IwqWuwGA0g8SPLv5IcfpC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+As on the previous version of this report (which had different test
+cases failing IIRC), I can't reproduce this on my tree, even with your
+kernel config. Since I can't actually look at the tree state that you
+had (mac80211-next + patch, but which mac80211-next?), I can't
+reproduce entirely.
 
------BEGIN PGP SIGNATURE-----
-
-iF4EAREIAAYFAlnksBUACgkQHwImuRkmbWmmpQD5AZxf+GGndepWK7REytcfM98N
-qh+R9fvtH6bhjDNFO8QA/2Xg/jNrfSTyFXgNZlCf2fS7jlnuMCPLv6VGsbQPkz0g
-=8KRk
------END PGP SIGNATURE-----
-
---C8h7igGKkDF8IwqWuwGA0g8SPLv5IcfpC--
+johannes
