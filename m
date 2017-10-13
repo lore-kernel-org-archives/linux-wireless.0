@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:50140 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751364AbdJDX2A (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53392 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758380AbdJMMtT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 19:28:00 -0400
-Received: by mail-pf0-f174.google.com with SMTP id l188so7035863pfc.6
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:28:00 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Tejun Heo <tj@kernel.org>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Fri, 13 Oct 2017 08:49:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Christos Gkekas <chris.gekas@gmail.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 08/13] timer: Remove unused static initializer macros
-Date: Wed,  4 Oct 2017 16:27:02 -0700
-Message-Id: <1507159627-127660-9-git-send-email-keescook@chromium.org> (sfid-20171005_013248_838611_6D5822DE)
-In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+Subject: Re: [PATCH] ath9k: debug: Simplify error checking
+References: <1507498152-4058-1-git-send-email-chris.gekas@gmail.com>
+Date: Fri, 13 Oct 2017 15:49:15 +0300
+In-Reply-To: <1507498152-4058-1-git-send-email-chris.gekas@gmail.com>
+        (Christos Gkekas's message of "Sun, 8 Oct 2017 22:29:12 +0100")
+Message-ID: <87infjw6us.fsf@purkki.adurom.net> (sfid-20171013_144942_324597_B5AA5E46)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the now unused TIMER_*INITIALIZER macros:
+Christos Gkekas <chris.gekas@gmail.com> writes:
 
-TIMER_INITIALIZER
-TIMER_PINNED_INITIALIZER
-TIMER_DEFERRED_INITIALIZER
-TIMER_PINNED_DEFERRED_INITIALIZER
+> Variable val is unsigned so checking whether it is less than zero is
+> redundant.
+>
+> Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/debug.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index 01fa301..3b93c23 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -1164,10 +1164,7 @@ static ssize_t write_file_tpc(struct file *file, const char __user *user_buf,
+>  		return -EFAULT;
+>  
+>  	buf[len] = '\0';
+> -	if (kstrtoul(buf, 0, &val))
+> -		return -EINVAL;
+> -
+> -	if (val < 0 || val > 1)
+> +	if (kstrtoul(buf, 0, &val) || val > 1)
+>  		return -EINVAL;
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- include/linux/timer.h | 12 ------------
- 1 file changed, 12 deletions(-)
+Same as with the ath10k patch, please keep the two if statements
+separate.
 
-diff --git a/include/linux/timer.h b/include/linux/timer.h
-index 4f7476e4a727..a33220311361 100644
---- a/include/linux/timer.h
-+++ b/include/linux/timer.h
-@@ -73,18 +73,6 @@ struct timer_list {
- 			__FILE__ ":" __stringify(__LINE__))	\
- 	}
- 
--#define TIMER_INITIALIZER(_function, _expires, _data)		\
--	__TIMER_INITIALIZER((_function), (_expires), (_data), 0)
--
--#define TIMER_PINNED_INITIALIZER(_function, _expires, _data)	\
--	__TIMER_INITIALIZER((_function), (_expires), (_data), TIMER_PINNED)
--
--#define TIMER_DEFERRED_INITIALIZER(_function, _expires, _data)	\
--	__TIMER_INITIALIZER((_function), (_expires), (_data), TIMER_DEFERRABLE)
--
--#define TIMER_PINNED_DEFERRED_INITIALIZER(_function, _expires, _data)	\
--	__TIMER_INITIALIZER((_function), (_expires), (_data), TIMER_DEFERRABLE | TIMER_PINNED)
--
- #define DEFINE_TIMER(_name, _function, _expires, _data)		\
- 	struct timer_list _name =				\
- 		__TIMER_INITIALIZER(_function, _expires, _data, 0)
 -- 
-2.7.4
+Kalle Valo
