@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eggs.gnu.org ([208.118.235.92]:41183 "EHLO eggs.gnu.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751226AbdJXBtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 21:49:42 -0400
-Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
-        (envelope-from <nikolas@gnu.org>)
-        id 1e6oLd-0006NW-DS
-        for linux-wireless@vger.kernel.org; Mon, 23 Oct 2017 21:49:42 -0400
-From: Nik Nyby <nikolas@gnu.org>
-To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        trivial@kernel.org
-Cc: Nik Nyby <nikolas@gnu.org>
-Subject: [PATCH] rtlwifi: rtl8821ae: Fix typo in variable name
-Date: Mon, 23 Oct 2017 21:49:09 -0400
-Message-Id: <20171024014909.7347-1-nikolas@gnu.org> (sfid-20171024_034946_103079_81A7FDBE)
+Received: from s3.sipsolutions.net ([144.76.63.242]:53600 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758379AbdJMPxh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Oct 2017 11:53:37 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2017-10-13
+Date: Fri, 13 Oct 2017 17:53:31 +0200
+Message-Id: <20171013155332.4310-1-johannes@sipsolutions.net> (sfid-20171013_175400_381628_8D4C5ACD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In _rtl8821ae_dbi_write(), wrtie_addr should be write_addr.
+Hi Dave,
 
-Signed-off-by: Nik Nyby <nikolas@gnu.org>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Sorry for the quick succession - there were a few issues with
+the last pull request that only got noticed now, so I'm fixing
+those here.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 1d431d4bf6d2..6a9d8ee0ae9f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -1130,13 +1130,13 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
- static void _rtl8821ae_dbi_write(struct rtl_priv *rtlpriv, u16 addr, u8 data)
- {
- 	u8 tmp = 0, count = 0;
--	u16 wrtie_addr, remainder = addr % 4;
-+	u16 write_addr, remainder = addr % 4;
- 
--	wrtie_addr = REG_DBI_WDATA + remainder;
--	rtl_write_byte(rtlpriv, wrtie_addr, data);
-+	write_addr = REG_DBI_WDATA + remainder;
-+	rtl_write_byte(rtlpriv, write_addr, data);
- 
--	wrtie_addr = (addr & 0xfffc) | (BIT(0) << (remainder + 12));
--	rtl_write_word(rtlpriv, REG_DBI_ADDR, wrtie_addr);
-+	write_addr = (addr & 0xfffc) | (BIT(0) << (remainder + 12));
-+	rtl_write_word(rtlpriv, REG_DBI_ADDR, write_addr);
- 
- 	rtl_write_byte(rtlpriv, REG_DBI_FLAG, 0x1);
- 
--- 
-2.14.2
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit 90a53e4432b12288316efaa5f308adafb8d304b0:
+
+  cfg80211: implement regdb signature checking (2017-10-11 14:24:24 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2017-10-13
+
+for you to fetch changes up to b1b1ae2c1c150f8db5d3523c74e81eaf8cae5cbb:
+
+  mac80211: don't track HT capability changes (2017-10-13 14:29:02 +0200)
+
+----------------------------------------------------------------
+Three fixes for the recently added new code:
+ * make "make -s" silent for the certs file (Arnd)
+ * fix missing CONFIG_ in extra certs symbol (Arnd)
+ * use crypto_aead_authsize() to use the proper API
+and two other changes:
+ * remove a set-but-unused variable
+ * don't track HT *capability* changes, capabilities
+   are supposed to be constant (HT operation changes)
+
+----------------------------------------------------------------
+Arnd Bergmann (2):
+      cfg80211: don't print log output for building shipped-certs
+      cfg80211: fix CFG80211_EXTRA_REGDB_KEYDIR typo
+
+Johannes Berg (3):
+      mac80211: use crypto_aead_authsize()
+      cfg80211: remove set but never used variable cf_offset
+      mac80211: don't track HT capability changes
+
+ net/mac80211/aead_api.c |  4 ++--
+ net/mac80211/mlme.c     | 14 +++-----------
+ net/wireless/Makefile   |  4 ++--
+ net/wireless/chan.c     |  4 +---
+ net/wireless/reg.c      |  2 +-
+ 5 files changed, 9 insertions(+), 19 deletions(-)
