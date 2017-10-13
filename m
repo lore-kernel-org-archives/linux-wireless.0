@@ -1,206 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:50353 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdJKSRa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46474 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757829AbdJMJmn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 14:17:30 -0400
-Received: by mail-wm0-f54.google.com with SMTP id u138so7086835wmu.5
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 11:17:29 -0700 (PDT)
+        Fri, 13 Oct 2017 05:42:43 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: M D <dsmm4444@gmail.com>
-Date: Wed, 11 Oct 2017 11:17:28 -0700
-Message-ID: <CACUY3ep1s4OVZ-Fw3G4+aNjOxmLi1Rf+Zpnm__7c80KVPvr3fQ@mail.gmail.com> (sfid-20171011_201743_915996_2A2E48F2)
-Subject: Atheros TL-721N adapter refuses to enumerate on the USB Bus (ath9k_htc)
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [v2] mwifiex: Use put_unaligned_le32
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1507302279-3875-1-git-send-email-himanshujha199640@gmail.com>
+References: <1507302279-3875-1-git-send-email-himanshujha199640@gmail.com>
+To: Himanshu Jha <himanshujha199640@gmail.com>
+Cc: amitkarwar@gmail.com, nishants@marvell.com, gbhat@marvell.com,
+        huxm@marvell.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Himanshu Jha <himanshujha199640@gmail.com>
+Message-Id: <20171013094243.4C87C6070A@smtp.codeaurora.org> (sfid-20171013_114301_772507_84E2628A)
+Date: Fri, 13 Oct 2017 09:42:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-My system details are as follows
+Himanshu Jha <himanshujha199640@gmail.com> wrote:
 
-Hardware:
-CPU                      :              ARM based platform, imx21
-USB                       :             USB Host Controller 1.1 Full Speed Mode
+> Use put_unaligned_le32 rather than using byte ordering function and
+> memcpy which makes code clear.
+> Also, add the header file where it is declared.
+> 
+> Done using Coccinelle and semantic patch used is :
+> 
+> @ rule1 @
+> identifier tmp; expression ptr,x; type T;
+> @@
+> 
+> - tmp = cpu_to_le32(x);
+> 
+>   <+... when != tmp
+> - memcpy(ptr, (T)&tmp, ...);
+> + put_unaligned_le32(x,ptr);
+>   ...+>
+> 
+> @ depends on rule1 @
+> type j; identifier tmp;
+> @@
+> 
+> - j tmp;
+>   ...when != tmp
+> 
+> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
 
-Software:
-Firmware              :              /lib/firmware/htc_9271.fw
-(version 1.3 / version 1.4)
-Device Driver       :              Backports (v3.12.8-1)
-OS                        :              Linux Kernel 3.0.101, ARM
-Freescale IMX21ADS
+Patch applied to wireless-drivers-next.git, thanks.
 
-Problem Statement:
+317049204cd3 mwifiex: Use put_unaligned_le32
 
--        The WiFi adapter is connected directly to the USB Port and is
-configured in Full Speed mode
--        After it is plugged in, it is enumerated on the Bus (that is,
-executing the instruction lsusb shows the vendor and product
-information)
--        After repeated reboots, after one random reboot the issue
-occurs. (usually 1 out of 5 times) the wlan0 node does not come up
--        When the issue occurs the following details below describe
-the issue at best
+-- 
+https://patchwork.kernel.org/patch/9989655/
 
-
-1)  The adapter is visible on the USB bus (adapter gets enumerated)
-2)  The required modules are loaded
-3)  However the wireless networking node, wlan0 does not come up
-4)  One of the threads created during the init goes into a D state
-
-root       1024  0.0  0.0      0     0 ?        D    11:06   0:00
-[firmware/htc_92]
-
-In the file drivers/net/wireless/ath/ath9k/hif_usb.c
-[
-
-hif_usb.c
-...
-
-ret = request_firmware_nowait(THIS_MODULE, true, hif_dev->fw_name,
-      &hif_dev->udev->dev, GFP_KERNEL,
-      hif_dev, ath9k_hif_usb_firmware_cb);
-
-
-compat_firmware_class.c
-...
-task = kthread_run(request_firmware_work_func, fw_work,
-    "firmware/%s", name);
-]
-
-
-5) This is recoverable only after manually unplugging out the Adapter.
-
-ROOT CAUSE OF THE ISSUE:
-6) The underlying cause is due to the wifi adapter being configured in
-FULL SPEED mode. Due to this the endpoints 3 and 4 get configured as
-BULK and not INT.
-
-
-After some investigation, I made the following changes which helps to
-recover the adapter when the issue occurs,
-
---- ../original-backports/backports-3.12.8-1/drivers/net/wireless/ath/ath9k/hif_usb.c
-  2017-10-11 10:50:05.043241000 -0700
-+++ drivers/net/wireless/ath/ath9k/hif_usb.c    2017-10-11
-10:50:03.154255000 -0700
-@@ -24,6 +24,8 @@
- MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
- MODULE_FIRMWARE(FIRMWARE_AR9271);
-
-+static void ath9k_hif_usb_reboot(struct usb_device *udev);
-+
-
-@@ -1189,7 +1193,12 @@
- {
-        struct usb_device *udev = interface_to_usbdev(interface);
-        struct hif_device_usb *hif_dev;
--       int ret = 0;
-+
-+        struct usb_host_interface *alt ;
-+        struct usb_endpoint_descriptor *endp;
-+
-+       int ret;
-+       int idx, EP = 0;
-
-        if (id->driver_info == STORAGE_DEVICE)
-                return send_eject_command(interface);
-@@ -1212,6 +1221,44 @@
-
-        init_completion(&hif_dev->fw_done);
-
-+       alt = &hif_dev->interface->altsetting[0];
-+
-+
-+       for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
-+                endp = &alt->endpoint[idx].desc;
-+                EP = idx + 1;
-+                printk (KERN_ALERT "EndPoint %d is conf as %d\n", EP,
-(endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK));
-+               /* First FIX EP3. EP3 should never show up as BULK.
-+                  If it does we have a serious problem.
-+               */
-+
-+               if (endp->bEndpointAddress==0x83){
-+                  if ((endp->bmAttributes &
-USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_BULK) {
-+                       endp->bmAttributes |= USB_ENDPOINT_XFER_INT;
-+                       endp->bInterval = 1;
-+                       ath9k_hif_usb_reboot(hif_dev->udev);
-+                       mdelay(1000);
-+                       ret = usb_reset_device(hif_dev->udev);
-+                       mdelay(1000);
-+                        if (ret)
-+                           return ret;
-+                   }
-+               }
-+
-+                if (endp->bEndpointAddress==0x04){
-+                   if ((endp->bmAttributes &
-USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_BULK) {
-+                        endp->bmAttributes |= USB_ENDPOINT_XFER_INT;
-+                        endp->bInterval = 1;
-+                       ath9k_hif_usb_reboot(hif_dev->udev);
-+                       mdelay(1000);
-+                       ret = usb_reset_device(hif_dev->udev);
-+                       mdelay(1000);
-+                       if (ret)
-+                               return ret;
-+                  }
-+               }
-+       }
-+
-        /* Find out which firmware to load */
-
-        if (IS_AR7010_DEVICE(id->driver_info))
-
-
-
-I see the following output in dmesg
-
-EndPoint 1 is conf as 2
-EndPoint 2 is conf as 2
-EndPoint 3 is conf as 2
-usb 1-2: reset full speed USB device number 2 using imx21-hcd
-usb 1-2: device firmware changed
-usb 1-2: USB disconnect, device number 2
-usbcore: registered new interface driver ath9k_htc
-usb 1-2: new full speed USB device number 3 using imx21-hcd
-EndPoint 1 is conf as 2
-EndPoint 2 is conf as 2
-EndPoint 3 is conf as 3
-EndPoint 4 is conf as 2
-usb 1-2: reset full speed USB device number 3 using imx21-hcd
-EndPoint 5 is conf as 2
-EndPoint 6 is conf as 2
-usb 1-2: ath9k_htc: Firmware htc_9271.fw requested
-usb 1-2: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
-ath9k_htc 1-2:1.0: ath9k_htc: HTC initialized with 33 credits
-ath9k_htc 1-2:1.0: ath9k_htc: FW Version: 1.3
-Completed ath9k_init_firmware_version
-ath: EEPROM regdomain: 0x809c
-ath: EEPROM indicates we should expect a country code
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x52
-ath: Country alpha2 being used: CN
-ath: Regpair used: 0x52
-ath9k_hw_set_reset_reg: 1
-ieee80211 phy0: Atheros AR9271 Rev:1
-Registered led device: ath9k_htc-phy0
-
-
-
-These code changes help to reconfigure the WiFi adapter many times.
-However at some point of reboot (say 30th reboot), I see
-
-usb 1-2: device descriptor read/64, error -110
-hub 1-0:1.0: unable to enumerate USB device on port 2
-
-When this happens, the only way to recover is to manually unplug the
-adapter from the USB port.
-
-Could anyone offer any suggestions as to how to overcome this problem?
-The issue occurs with both v1.3 and v1.4 htc_9271.fw.
-
-Regards,
-Max
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
