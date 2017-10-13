@@ -1,55 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:50089 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753597AbdJQKJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 06:09:51 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <1508234443.10607.72.camel@sipsolutions.net>
-References: <20171016160902.8970-1-toke@toke.dk> <20171016160902.8970-2-toke@toke.dk> <1508224046.10607.67.camel@sipsolutions.net> <871sm2p6rt.fsf@toke.dk> <1508234443.10607.72.camel@sipsolutions.net>
-Date: Tue, 17 Oct 2017 12:09:48 +0200
-Message-ID: <871sm29jbn.fsf@toke.dk> (sfid-20171017_120955_083076_6670E4CB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:53126 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753342AbdJMM0I (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Oct 2017 08:26:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 13 Oct 2017 15:26:01 +0300
+Message-Id: <20171013122601.18964-1-luca@coelho.fi> (sfid-20171013_142612_400326_0430AE22)
+Subject: [PATCH] mac80211: don't track HT capability changes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Tue, 2017-10-17 at 09:34 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
->> Yeah, I did that initially. The reason I ended up squashing them is
->> that
->> this patch moved the per-station 'airtime' debugfs-entry that was
->> previously created by ath9k into mac80211. I assumed it would create
->> problems if both the driver and mac80211 tried to create the same
->> file;
->> not sure how to handle that if it's split into two patches?
->
-> That might indeed be problematic, so perhaps just use a different
-> name?
+The code here (more or less accidentally) tracks the HT capability of
+the AP when connected, and we found at least one AP that erroneously
+toggles its 20/40 capability bit when changing between 20/40 MHz. The
+connection to the AP is then broken because we set the 40 MHz disable
+flag based on this, as soon as it switches to 20 MHz, but because the
+flag then changed, we disconnect.
 
-Well I would like to keep compatibility with my tooling that reads the
-values :)
+I'd be inclined to just ignore this issue, since we then reconnect
+while the AP is in 20 MHz mode and never use 40 MHz with it again,
+but this code is a bit strange anyway - we don't use the capabilities
+for anything else.
 
-> Then again, if adding the entry fails in ath9k, nothing will happen
-> since it doesn't even check the return value - so I think it doesn't
-> actually matter.
+Change the code to simply not track the HT capabilities at all, which
+assumes that the AP at least sets 20/40 capability when operating in
+40 MHz (or higher). If not, rate scaling might end up using only the
+narrower bandwidth.
 
-Right, I'll try that, and otherwise create a separate patch to ath9k
-that removes the debugfs entry before applying the mac80211 patch.
+The new behaviour also mirrors what VHT does, where we only check the
+VHT operation.
 
->> > I'd prefer this were called "airtime" or such,
->>=20
->> Right. I picked rx_time for symmetry with the tx side; should I
->> rename that as well, then, or is asymmetry fine?
->
-> Let's not change the tx side in this patch, but we can clean it up
-> later I guess.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-ACK.
-
--Toke
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ee5ca1bc5a20..e4ededa1909d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -145,7 +145,6 @@ static u32
+ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 			     struct ieee80211_supported_band *sband,
+ 			     struct ieee80211_channel *channel,
+-			     const struct ieee80211_ht_cap *ht_cap,
+ 			     const struct ieee80211_ht_operation *ht_oper,
+ 			     const struct ieee80211_vht_operation *vht_oper,
+ 			     struct cfg80211_chan_def *chandef, bool tracking)
+@@ -163,20 +162,13 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 	chandef->center_freq1 = channel->center_freq;
+ 	chandef->center_freq2 = 0;
+ 
+-	if (!ht_cap || !ht_oper || !sta_ht_cap.ht_supported) {
++	if (!ht_oper || !sta_ht_cap.ht_supported) {
+ 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+ 		goto out;
+ 	}
+ 
+ 	chandef->width = NL80211_CHAN_WIDTH_20;
+ 
+-	if (!(ht_cap->cap_info &
+-	      cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40))) {
+-		ret = IEEE80211_STA_DISABLE_40MHZ;
+-		vht_chandef = *chandef;
+-		goto out;
+-	}
+-
+ 	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
+ 						  channel->band);
+ 	/* check that channel matches the right operating channel */
+@@ -344,7 +336,7 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* calculate new channel (type) based on HT/VHT operation IEs */
+ 	flags = ieee80211_determine_chantype(sdata, sband, chan,
+-					     ht_cap, ht_oper, vht_oper,
++					     ht_oper, vht_oper,
+ 					     &chandef, true);
+ 
+ 	/*
+@@ -4312,7 +4304,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
+ 						     cbss->channel,
+-						     ht_cap, ht_oper, vht_oper,
++						     ht_oper, vht_oper,
+ 						     &chandef, false);
+ 
+ 	sdata->needed_rx_chains = min(ieee80211_ht_vht_rx_chains(sdata, cbss),
+-- 
+2.14.2
