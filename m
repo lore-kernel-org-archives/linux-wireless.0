@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57144 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751065AbdJBNE0 (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:50845 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753327AbdJMBRF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 09:04:26 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 12 Oct 2017 21:17:05 -0400
+Received: by mail-oi0-f54.google.com with SMTP id q4so11795209oic.7
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Oct 2017 18:17:05 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8821ae: Fix connection lost problem
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
-References: <20170920211505.26171-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20171002130425.77E9760767@smtp.codeaurora.org> (sfid-20171002_150234_491348_99D70DFA)
-Date: Mon,  2 Oct 2017 13:04:25 +0000 (UTC)
+In-Reply-To: <CAFv23Q=dFRfxXQnY3pu_zV-yK9yaw-t3-Kn2q9YFFuyB9jJMog@mail.gmail.com>
+References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
+ <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
+ <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
+ <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
+ <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com>
+ <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com>
+ <CAFv23QkLJ0m112Y8iAGv+6DyFT52Hqnxq5Fy=ryWTWxu8oTXdw@mail.gmail.com> <CAFv23Q=dFRfxXQnY3pu_zV-yK9yaw-t3-Kn2q9YFFuyB9jJMog@mail.gmail.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Fri, 13 Oct 2017 09:17:04 +0800
+Message-ID: <CAD8Lp46ZHN656P_aROGs5WyxNckga7rBUrcDJpEApwtRvA0yhg@mail.gmail.com> (sfid-20171013_031938_655779_F6088C0C)
+Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
+To: AceLan Kao <acelan.kao@canonical.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Fri, Oct 13, 2017 at 9:12 AM, AceLan Kao <acelan.kao@canonical.com> wrote:
+> Hi Daniel,
+>
+> After applied the 2 commits you mentioned in the email, ath9k works.
+>
+> https://marc.info/?l=linux-wireless&m=150631274108016&w=2
+> https://github.com/endlessm/linux/commit/739c7a924db8f4434a9617657
 
-> In commit 40b368af4b75 ("rtlwifi: Fix alignment issues"), the read
-> of REG_DBI_READ was changed from 16 to 8 bits. For unknown reasonsi
-> this change results in reduced stability for the wireless connection.
-> This regression was located using bisection.
-> 
-> Fixes: 40b368af4b75 ("rtlwifi: Fix alignment issues")
-> Reported-and-tested-by: James Cameron <quozl@laptop.org>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> # 4.11+
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+Thanks for testing. However the approach was basically rejected in this thread:
+  [PATCH] PCI MSI: allow alignment restrictions on vector allocation
+  https://marc.info/?t=150631283200001&r=1&w=2
 
-Patch applied to wireless-drivers.git, thanks.
+So we still need an upstream solution.
 
-b8b8b16352cd rtlwifi: rtl8821ae: Fix connection lost problem
+I am curious what Qualcomm have to say about their hardware corrupting
+the MSI Message Data value. Is there any news on them submitting the
+MSI support patch?
 
--- 
-https://patchwork.kernel.org/patch/9962615/
+Separately we have the option of seeing if Intel can help us unblock
+the legacy interrupt (assuming it was simply blocked by the BIOS), or
+adding an interrupt-polling fallback path to ath9k.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Daniel
