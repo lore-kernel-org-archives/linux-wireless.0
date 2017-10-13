@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blatinox.fr ([51.254.120.209]:41817 "EHLO vps202351.ovh.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751250AbdJCBid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 21:38:33 -0400
-Date: Mon, 2 Oct 2017 21:22:14 -0400
-From: =?UTF-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Sathya Perla <sathya.perla@broadcom.com>,
-        Ajit Khaparde <ajit.khaparde@broadcom.com>,
-        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
-        Somnath Kotur <somnath.kotur@broadcom.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        netdev <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        intel-wired-lan@lists.osuosl.org, USB <linux-usb@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
-Message-ID: <20171002212214.30d7013a@blatinox-laptop.localdomain> (sfid-20171003_033846_353042_AD7A294F)
-In-Reply-To: <CAHp75VfC2e+h8GCiB-1Rbe=_z3siBBo0WfqEf3qz8yWh8Cm3RQ@mail.gmail.com>
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
-        <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
-        <CAHp75VfC2e+h8GCiB-1Rbe=_z3siBBo0WfqEf3qz8yWh8Cm3RQ@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35558 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753378AbdJMJiV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Oct 2017 05:38:21 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [1/2] mwifiex: kill useless list_empty checks
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1507043984-9832-1-git-send-email-gbhat@marvell.com>
+References: <1507043984-9832-1-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20171013093820.8458D61473@smtp.codeaurora.org> (sfid-20171013_113824_350503_DFBD1D47)
+Date: Fri, 13 Oct 2017 09:38:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Oct 2017 16:07:36 +0300
-Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-> > +       {&gainctrl_lut_core0_rev0, ARRAY_SIZE(gainctrl_lut_core0_rev0), 26, 192,
-> > +        32},  
+> From: Douglas Anderson <dianders@chromium.org>
 > 
-> For all such cases I would rather put on one line disregard checkpatch
-> warning for better readability.
-I agree that it would be better. I didn't know that it was possible to
-not follow this rule for anything else than a string.
+> There's absolutely no reason to check to see if a list is empty
+> before iterating through it.  It's just like writing code like
+> this:
+> 
+> if (count != 0) {
+>   for (i = 0; i < count; i++) {
+>      ...
+>   }
+> }
+> 
+> The loop will already be avoided if "count == 0" so there was no
+> reason to check.
+> 
+> Signed-off-by: Douglas Anderson <dianders@chromium.org>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-I am waiting for more comments and I will send a v2.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-Thank you,
-Jérémy
+40351051d022 mwifiex: kill useless list_empty checks
+f0f7c2275fb9 mwifiex: minor cleanups w/ sta_list_spinlock in cfg80211.c
+
+-- 
+https://patchwork.kernel.org/patch/9983061/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
