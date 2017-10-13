@@ -1,199 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:52980
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751259AbdJEBiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 21:38:21 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 3/8] qtnfmac: pass channel definition to WiFi card on START_AP command
-Date: Wed,  4 Oct 2017 18:38:08 -0700
-Message-Id: <20171005013813.13332-4-igor.mitsyanko.os@quantenna.com> (sfid-20171005_033830_598051_8E2A1C50)
-In-Reply-To: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
-References: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:53202 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758195AbdJMNZU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Oct 2017 09:25:20 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Oct 2017 16:25:00 +0300
+Message-Id: <20171013132502.10473-8-luca@coelho.fi> (sfid-20171013_152607_707956_918CD07C)
+In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
+References: <20171013132502.10473-1-luca@coelho.fi>
+Subject: [PATCH 7/9] iwlwifi: mvm: add missing lq_color
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Introduce "channel definition" TLV containing full channel
-description (center frequence for both segments + BW) and pass it to
-wireless card in a payload to START_AP command.
+In the compressed BA notif, the driver didn't parse out
+the LQ color, so statistics for the rates tried were
+always thrown out. Add it so it gets correctly used.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+While at it, fix the name of the relevant field in the
+struct.
+
+Fixes: c46e7724bfe9 ("iwlwifi: mvm: support new BA notification response")
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  |  9 ------
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 28 ++++++++++---------
- drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 13 +++++++++
- .../net/wireless/quantenna/qtnfmac/qlink_util.c    | 32 ++++++++++++++++++++++
- .../net/wireless/quantenna/qtnfmac/qlink_util.h    |  2 ++
- 5 files changed, 62 insertions(+), 22 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c    | 3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index fe157f5..056018e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -266,17 +266,8 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			 struct cfg80211_ap_settings *settings)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
--	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 14ad9fb895f9..f5d5ba7e37ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -710,7 +710,7 @@ enum iwl_mvm_ba_resp_flags {
+  * @reduced_txp: power reduced according to TPC. This is the actual value and
+  *	not a copy from the LQ command. Thus, if not the first rate was used
+  *	for Tx-ing then this value will be set to 0 by FW.
+- * @initial_rate: TLC rate info, initial rate index, TLC table color
++ * @tlc_rate_info: TLC rate info, initial rate index, TLC table color
+  * @retry_cnt: retry count
+  * @query_byte_cnt: SCD query byte count
+  * @query_frame_cnt: SCD query frame count
+@@ -730,7 +730,7 @@ struct iwl_mvm_compressed_ba_notif {
+ 	__le32 flags;
+ 	u8 sta_id;
+ 	u8 reduced_txp;
+-	u8 initial_rate;
++	u8 tlc_rate_info;
+ 	u8 retry_cnt;
+ 	__le32 query_byte_cnt;
+ 	__le16 query_frame_cnt;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 172b5e63d3fb..df3c21c5f722 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1746,6 +1746,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	if (iwl_mvm_has_new_tx_api(mvm)) {
+ 		struct iwl_mvm_compressed_ba_notif *ba_res =
+ 			(void *)pkt->data;
++		u8 lq_color = TX_RES_RATE_TABLE_COL_GET(ba_res->tlc_rate_info);
+ 		int i;
  
--	if (!cfg80211_chandef_identical(&mac->chandef, &settings->chandef)) {
--		memcpy(&mac->chandef, &settings->chandef, sizeof(mac->chandef));
--		if (vif->vifid != 0)
--			pr_warn("%s: unexpected chan %u (%u MHz)\n", dev->name,
--				settings->chandef.chan->hw_value,
--				settings->chandef.chan->center_freq);
--	}
--
- 	ret = qtnf_cmd_send_config_ap(vif, settings);
- 	if (ret) {
- 		pr_err("VIF%u.%u: failed to push config to FW\n",
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 493c3f8..f5bc43b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -185,8 +185,6 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
- 			    const struct cfg80211_ap_settings *s)
- {
- 	struct sk_buff *cmd_skb;
--	struct cfg80211_chan_def *chandef = &vif->mac->chandef;
--	struct qlink_tlv_channel *qchan;
- 	struct qlink_cmd_config_ap *cmd;
- 	struct qlink_auth_encr *aen;
- 	u16 res_code = QLINK_CMD_RESULT_OK;
-@@ -211,17 +209,6 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
- 	cmd->ht_required = s->ht_required;
- 	cmd->vht_required = s->vht_required;
+ 		sta_id = ba_res->sta_id;
+@@ -1754,7 +1755,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		ba_info.status.tx_time =
+ 			(u16)le32_to_cpu(ba_res->wireless_time);
+ 		ba_info.status.status_driver_data[0] =
+-			(void *)(uintptr_t)ba_res->reduced_txp;
++			RS_DRV_DATA_PACK(lq_color, ba_res->reduced_txp);
  
--	if (s->ssid && s->ssid_len > 0 && s->ssid_len <= IEEE80211_MAX_SSID_LEN)
--		qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, s->ssid,
--					 s->ssid_len);
--
--	qchan = skb_put_zero(cmd_skb, sizeof(*qchan));
--	qchan->hdr.type = cpu_to_le16(QTN_TLV_ID_CHANNEL);
--	qchan->hdr.len = cpu_to_le16(sizeof(*qchan) -
--			sizeof(struct qlink_tlv_hdr));
--	qchan->hw_value = cpu_to_le16(
--		ieee80211_frequency_to_channel(chandef->chan->center_freq));
--
- 	aen = &cmd->aen;
- 	aen->auth_type = s->auth_type;
- 	aen->privacy = !!s->privacy;
-@@ -240,6 +227,21 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
- 	aen->control_port_ethertype =
- 		cpu_to_le16(be16_to_cpu(s->crypto.control_port_ethertype));
- 
-+	if (s->ssid && s->ssid_len > 0 && s->ssid_len <= IEEE80211_MAX_SSID_LEN)
-+		qtnf_cmd_skb_put_tlv_arr(cmd_skb, WLAN_EID_SSID, s->ssid,
-+					 s->ssid_len);
-+
-+	if (cfg80211_chandef_valid(&s->chandef)) {
-+		struct qlink_tlv_chandef *chtlv =
-+			(struct qlink_tlv_chandef *)skb_put(cmd_skb,
-+							    sizeof(*chtlv));
-+
-+		chtlv->hdr.type = cpu_to_le16(QTN_TLV_ID_CHANDEF);
-+		chtlv->hdr.len = cpu_to_le16(sizeof(*chtlv) -
-+					     sizeof(chtlv->hdr));
-+		qlink_chandef_cfg2q(&s->chandef, &chtlv->chan);
-+	}
-+
- 	qtnf_bus_lock(vif->mac->bus);
- 
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 6814254..641d252 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -941,6 +941,7 @@ enum qlink_tlv_id {
- 	QTN_TLV_ID_LRETRY_LIMIT		= 0x0204,
- 	QTN_TLV_ID_REG_RULE		= 0x0207,
- 	QTN_TLV_ID_CHANNEL		= 0x020F,
-+	QTN_TLV_ID_CHANDEF		= 0x0210,
- 	QTN_TLV_ID_COVERAGE_CLASS	= 0x0213,
- 	QTN_TLV_ID_IFACE_LIMIT		= 0x0214,
- 	QTN_TLV_ID_NUM_IFACE_COMB	= 0x0215,
-@@ -1128,6 +1129,18 @@ struct qlink_tlv_channel {
- 	u8 rsvd[2];
- } __packed;
- 
-+/**
-+ * struct qlink_tlv_chandef - data for QTN_TLV_ID_CHANDEF TLV
-+ *
-+ * Channel definition.
-+ *
-+ * @chan: channel definition data.
-+ */
-+struct qlink_tlv_chandef {
-+	struct qlink_tlv_hdr hdr;
-+	struct qlink_chandef chan;
-+} __packed;
-+
- struct qlink_chan_stats {
- 	__le32 chan_num;
- 	__le32 cca_tx;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-index 63a74b2..61d999a 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-@@ -128,6 +128,38 @@ void qlink_chandef_q2cfg(struct wiphy *wiphy,
- 	}
- }
- 
-+static u8 qlink_chanwidth_nl_to_qlink(enum nl80211_chan_width nlwidth)
-+{
-+	switch (nlwidth) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		return QLINK_CHAN_WIDTH_20_NOHT;
-+	case NL80211_CHAN_WIDTH_20:
-+		return QLINK_CHAN_WIDTH_20;
-+	case NL80211_CHAN_WIDTH_40:
-+		return QLINK_CHAN_WIDTH_40;
-+	case NL80211_CHAN_WIDTH_80:
-+		return QLINK_CHAN_WIDTH_80;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		return QLINK_CHAN_WIDTH_80P80;
-+	case NL80211_CHAN_WIDTH_160:
-+		return QLINK_CHAN_WIDTH_160;
-+	case NL80211_CHAN_WIDTH_5:
-+		return QLINK_CHAN_WIDTH_5;
-+	case NL80211_CHAN_WIDTH_10:
-+		return QLINK_CHAN_WIDTH_10;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+void qlink_chandef_cfg2q(const struct cfg80211_chan_def *chdef,
-+			 struct qlink_chandef *qch)
-+{
-+	qch->center_freq1 = cpu_to_le16(chdef->center_freq1);
-+	qch->center_freq2 = cpu_to_le16(chdef->center_freq2);
-+	qch->width = qlink_chanwidth_nl_to_qlink(chdef->width);
-+}
-+
- enum qlink_hidden_ssid qlink_hidden_ssid_nl2q(enum nl80211_hidden_ssid nl_val)
- {
- 	switch (nl_val) {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-index 416f11d..260383d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-@@ -66,6 +66,8 @@ u8 qlink_chan_width_mask_to_nl(u16 qlink_mask);
- void qlink_chandef_q2cfg(struct wiphy *wiphy,
- 			 const struct qlink_chandef *qch,
- 			 struct cfg80211_chan_def *chdef);
-+void qlink_chandef_cfg2q(const struct cfg80211_chan_def *chdef,
-+			 struct qlink_chandef *qch);
- enum qlink_hidden_ssid qlink_hidden_ssid_nl2q(enum nl80211_hidden_ssid nl_val);
- 
- #endif /* _QTN_FMAC_QLINK_UTIL_H_ */
+ 		if (!le16_to_cpu(ba_res->tfd_cnt))
+ 			goto out;
 -- 
-2.9.5
+2.14.2
