@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:60112 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753231AbdJMM2z (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:53148 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758036AbdJMNZP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 08:28:55 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Christos Gkekas <chris.gekas@gmail.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: spectral: Simplify error checking
-Date: Fri, 13 Oct 2017 12:28:50 +0000
-Message-ID: <87fuannse6.fsf@kamboji.qca.qualcomm.com> (sfid-20171013_142910_486532_094540FF)
-References: <1507491026-28690-1-git-send-email-chris.gekas@gmail.com>
-In-Reply-To: <1507491026-28690-1-git-send-email-chris.gekas@gmail.com>
-        (Christos Gkekas's message of "Sun, 8 Oct 2017 20:30:26 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 13 Oct 2017 09:25:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Oct 2017 16:24:53 +0300
+Message-Id: <20171013132502.10473-1-luca@coelho.fi> (sfid-20171013_152605_019145_55443064)
+Subject: [PATCH 0/9] ] iwlwifi: updates intended for v4.15 2017-10-13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christos Gkekas <chris.gekas@gmail.com> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> Variable val is unsigned so checking whether it is less than zero is
-> redundant.
->
-> Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/spectral.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wir=
-eless/ath/ath10k/spectral.c
-> index dd9cc09..1867937 100644
-> --- a/drivers/net/wireless/ath/ath10k/spectral.c
-> +++ b/drivers/net/wireless/ath/ath10k/spectral.c
-> @@ -403,10 +403,7 @@ static ssize_t write_file_spectral_count(struct file=
- *file,
->  		return -EFAULT;
-> =20
->  	buf[len] =3D '\0';
-> -	if (kstrtoul(buf, 0, &val))
-> -		return -EINVAL;
-> -
-> -	if (val < 0 || val > 255)
-> +	if (kstrtoul(buf, 0, &val) || val > 255)
->  		return -EINVAL;
+Hi,
 
-Removing the check for negative is correct but I don't think you are
-simplifying anything, on the contrary it's harder to read. Please keep
-the two if statements separate.
+Here's the third set of patches intended for 4.15.  A few small fixes,
+but mostly just code cleanups.
 
---=20
-Kalle Valo=
+These are the changes:
+
+* Allocate reorder buffer dynamically to save memory;
+* Fix a FW dump problem in the A000 family;
+* Fix for a statistics gathering issue;
+* Sort the list of 9000 devices to make it easier to find entries;
+* A couple of cleanups in the FW dump code;
+* Remove some unnecessary variables and fields and calculations;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Beni Lev (1):
+  iwlwifi: mvm: allow reading UMAC error data from SMEM in A000 devices
+
+Johannes Berg (3):
+  iwlwifi: mvm: allocate reorder buffer according to need
+  iwlwifi: mvm: pass baid_data to iwl_mvm_release_frames()
+  iwlwifi: pcie: remove set but not used variable tcph
+
+Liad Kaufman (1):
+  iwlwifi: mvm: add missing lq_color
+
+Luca Coelho (3):
+  iwlwifi: mvm: move umac_error_event_table validity check to where it's
+    set
+  iwlwifi: define minimum valid address for umac_error_event_table in
+    cfg
+  iwlwifi: pcie: sort IDs for the 9000 series for easier comparisons
+
+Sara Sharon (1):
+  iwlwifi: mvm: remove duplicated fields in mvm reorder buffer
+
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c     |  3 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c     |  3 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c     |  3 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    |  4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 20 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 43 +++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 49 ++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 44 +++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 17 ++---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 84 +++++++++++------------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  5 +-
+ 13 files changed, 176 insertions(+), 103 deletions(-)
+
+-- 
+2.14.2
