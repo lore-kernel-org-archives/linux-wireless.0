@@ -1,24 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb1.openmailbox.org ([5.79.108.160]:49981 "EHLO
-        mta-1.openmailbox.og" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751173AbdJZL7H (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33420 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751033AbdJMJ6r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Oct 2017 07:59:07 -0400
-Received: from [127.0.0.1] (unknown [10.0.0.4])
-        by mta-1.openmailbox.og (Postfix) with ESMTP id 52E6B4E016C
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Oct 2017 13:50:16 +0200 (CEST)
+        Fri, 13 Oct 2017 05:58:47 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Activity LED does not work on TL-WN823N 2.0 WLAN dongle
-From: sonofagun@openmailbox.org
-Date: Thu, 26 Oct 2017 11:50:16 -0000
-To: linux-wireless@vger.kernel.org
-Message-Id: <20171026115016.5879E4E0173@mta-1.openmailbox.og> (sfid-20171026_135911_066372_0B4AD00A)
+Subject: Re: rtlwifi: Remove unused cur_rfstate variables
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1507756515-15738-1-git-send-email-chris.gekas@gmail.com>
+References: <1507756515-15738-1-git-send-email-chris.gekas@gmail.com>
+To: Christos Gkekas <chris.gekas@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Christos Gkekas <chris.gekas@gmail.com>
+Message-Id: <20171013095846.319826071B@smtp.codeaurora.org> (sfid-20171013_115931_422624_104CFE89)
+Date: Fri, 13 Oct 2017 09:58:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhlIFRMLVdOODIzTiBVU0IgMi4wIFdMQU4gZG9uZ2xlIGJhc2VkIG9uIFJUTDgxOTJFVSBoYXMg
-aXRzIGdyZWVuIExFRCB0dXJuZWQgb2ZmIGFsd2F5cy4gVHJpZWQgdmFyaW91cyBkaXN0cmlidXRp
-b25zKGRlYmlhbiwgdWJ1bnR1KSBidXQgbm9uZSB3b3JrZWQgOigKCk9uIHdpbmRvd3MgNyBTUDEg
-aXRzIExFRCB3b3JrcyBmaW5lIGFuZCBpdCBpcyBtdWNoIGZhc3Rlci4KCklzIGl0IHBvc3NpYmxl
-IHRvIG1ha2UgaXQgd29yayB1bmRlciBsaW51eD8=
+Christos Gkekas <chris.gekas@gmail.com> wrote:
+
+> Clean up unused cur_rfstate variables in rtl8188ee, rtl8723ae, rtl8723be
+> and rtl8821ae.
+> 
+> Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+76d7b12cbbe2 rtlwifi: Remove unused cur_rfstate variables
+
+-- 
+https://patchwork.kernel.org/patch/10000659/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
