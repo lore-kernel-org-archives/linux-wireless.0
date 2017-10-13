@@ -1,48 +1,326 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:55808 "EHLO
-        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751804AbdJ3Sur (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:53154 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753258AbdJMNZQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 14:50:47 -0400
-Received: by mail-io0-f180.google.com with SMTP id p186so29467534ioe.12
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2017 11:50:46 -0700 (PDT)
-Date: Mon, 30 Oct 2017 11:50:43 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Subject: Re: [EXT] Re: pull-request mwifiex-firmware 2017-10-30
-Message-ID: <20171030185043.GA100626@google.com> (sfid-20171030_195050_513125_EFE05DAB)
-References: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
- <20171030170308.GA80479@google.com>
- <fb8d8eece601415c83167c500d80ff2f@SC-EXCH02.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fb8d8eece601415c83167c500d80ff2f@SC-EXCH02.marvell.com>
+        Fri, 13 Oct 2017 09:25:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Oct 2017 16:24:54 +0300
+Message-Id: <20171013132502.10473-2-luca@coelho.fi> (sfid-20171013_152607_482994_FBD68DA5)
+In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
+References: <20171013132502.10473-1-luca@coelho.fi>
+Subject: [PATCH 1/9] iwlwifi: mvm: allocate reorder buffer according to need
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 30, 2017 at 06:47:58PM +0000, Ganapathi Bhat wrote:
-> > ----------------------------------------------------------------------
-> > On Mon, Oct 30, 2017 at 02:13:31PM +0000, Ganapathi Bhat wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > > --- a/WHENCE
-> > > +++ b/WHENCE
-> > > @@ -757,7 +757,7 @@ File: mrvl/pcieuart8997_combo_v4.bin
-> > >  Version: 16.68.1.p70
-> > >
-> > >  File: mrvl/pcieusb8997_combo_v4.bin
-> > > -Version: 16.68.1.p133
-> > > +Version: 16.68.1.p40
-> >
-> > This says .p40, whereas the commit message (and the version tag within the
-> > firmware) says p140. I think you're missing a "1".
->  I did miss this.  Will it make sense to trigger another pull request with just the version change?
+Now that we may have up to 256 entries per reorder buffer, and possibly up
+to 16 queues, we can use a LOT of memory for this (64k for each station).
+Allocate it according to what we need, which is of course much less for HT
+stations (only 16k at a max of 16 queues).
 
-Sure, why not? Email is cheap, and so is git. Either rewrite the commit
-or add another on top to fix it...
+However, this comes at the expense of complicating the code a bit to
+calculate the right entry structure to use for each frame.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 39 +++++++++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 30 ++++++++++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 38 +++++++++++++++++++++++---
+ 3 files changed, 90 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 7fa7849367ef..f008d5f4c585 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -590,8 +590,6 @@ enum iwl_mvm_tdls_cs_state {
+  * @last_amsdu: track last ASMDU SN for duplication detection
+  * @last_sub_index: track ASMDU sub frame index for duplication detection
+  * @tid: the tid
+- * @entries: list of skbs stored
+- * @reorder_time: time the packet was stored in the reorder buffer
+  * @reorder_timer: timer for frames are in the reorder buffer. For AMSDU
+  *	it is the time of last received sub-frame
+  * @removed: prevent timer re-arming
+@@ -608,8 +606,6 @@ struct iwl_mvm_reorder_buffer {
+ 	u16 last_amsdu;
+ 	u8 last_sub_index;
+ 	u8 tid;
+-	struct sk_buff_head entries[IEEE80211_MAX_AMPDU_BUF];
+-	unsigned long reorder_time[IEEE80211_MAX_AMPDU_BUF];
+ 	struct timer_list reorder_timer;
+ 	bool removed;
+ 	bool valid;
+@@ -617,16 +613,39 @@ struct iwl_mvm_reorder_buffer {
+ 	struct iwl_mvm *mvm;
+ } ____cacheline_aligned_in_smp;
+ 
++/**
++ * struct _iwl_mvm_reorder_buf_entry - reorder buffer entry per-queue/per-seqno
++ * @frames: list of skbs stored
++ * @reorder_time: time the packet was stored in the reorder buffer
++ */
++struct _iwl_mvm_reorder_buf_entry {
++	struct sk_buff_head frames;
++	unsigned long reorder_time;
++};
++
++/* make this indirection to get the aligned thing */
++struct iwl_mvm_reorder_buf_entry {
++	struct _iwl_mvm_reorder_buf_entry e;
++}
++#ifndef __CHECKER__
++/* sparse doesn't like this construct: "bad integer constant expression" */
++__aligned(roundup_pow_of_two(sizeof(struct _iwl_mvm_reorder_buf_entry)))
++#endif
++;
++
+ /**
+  * struct iwl_mvm_baid_data - BA session data
+  * @sta_id: station id
+  * @tid: tid of the session
+  * @baid baid of the session
+  * @timeout: the timeout set in the addba request
++ * @entries_per_queue: # of buffers per queue, this actually gets
++ *	aligned up to avoid cache line sharing between queues
+  * @last_rx: last rx jiffies, updated only if timeout passed from last update
+  * @session_timer: timer to check if BA session expired, runs at 2 * timeout
+  * @mvm: mvm pointer, needed for timer context
+  * @reorder_buf: reorder buffer, allocated per queue
++ * @reorder_buf_data: data
+  */
+ struct iwl_mvm_baid_data {
+ 	struct rcu_head rcu_head;
+@@ -634,12 +653,22 @@ struct iwl_mvm_baid_data {
+ 	u8 tid;
+ 	u8 baid;
+ 	u16 timeout;
++	u16 entries_per_queue;
+ 	unsigned long last_rx;
+ 	struct timer_list session_timer;
+ 	struct iwl_mvm *mvm;
+-	struct iwl_mvm_reorder_buffer reorder_buf[];
++	struct iwl_mvm_reorder_buffer reorder_buf[IWL_MAX_RX_HW_QUEUES];
++	struct iwl_mvm_reorder_buf_entry entries[];
+ };
+ 
++static inline struct iwl_mvm_baid_data *
++iwl_mvm_baid_data_from_reorder_buf(struct iwl_mvm_reorder_buffer *buf)
++{
++	return (void *)((u8 *)buf -
++			offsetof(struct iwl_mvm_baid_data, reorder_buf) -
++			sizeof(*buf) * buf->queue);
++}
++
+ /*
+  * enum iwl_mvm_queue_status - queue status
+  * @IWL_MVM_QUEUE_FREE: the queue is not allocated nor reserved
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 836c6cf4b369..14c2d366f256 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -410,6 +410,11 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 				   struct iwl_mvm_reorder_buffer *reorder_buf,
+ 				   u16 nssn)
+ {
++	struct iwl_mvm_baid_data *baid_data =
++		iwl_mvm_baid_data_from_reorder_buf(reorder_buf);
++	struct iwl_mvm_reorder_buf_entry *entries =
++		&baid_data->entries[reorder_buf->queue *
++				    baid_data->entries_per_queue];
+ 	u16 ssn = reorder_buf->head_sn;
+ 
+ 	lockdep_assert_held(&reorder_buf->lock);
+@@ -420,7 +425,7 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 
+ 	while (iwl_mvm_is_sn_less(ssn, nssn, reorder_buf->buf_size)) {
+ 		int index = ssn % reorder_buf->buf_size;
+-		struct sk_buff_head *skb_list = &reorder_buf->entries[index];
++		struct sk_buff_head *skb_list = &entries[index].e.frames;
+ 		struct sk_buff *skb;
+ 
+ 		ssn = ieee80211_sn_inc(ssn);
+@@ -443,11 +448,11 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 	if (reorder_buf->num_stored && !reorder_buf->removed) {
+ 		u16 index = reorder_buf->head_sn % reorder_buf->buf_size;
+ 
+-		while (skb_queue_empty(&reorder_buf->entries[index]))
++		while (skb_queue_empty(&entries[index].e.frames))
+ 			index = (index + 1) % reorder_buf->buf_size;
+ 		/* modify timer to match next frame's expiration time */
+ 		mod_timer(&reorder_buf->reorder_timer,
+-			  reorder_buf->reorder_time[index] + 1 +
++			  entries[index].e.reorder_time + 1 +
+ 			  RX_REORDER_BUF_TIMEOUT_MQ);
+ 	} else {
+ 		del_timer(&reorder_buf->reorder_timer);
+@@ -457,6 +462,10 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ {
+ 	struct iwl_mvm_reorder_buffer *buf = (void *)data;
++	struct iwl_mvm_baid_data *baid_data =
++		iwl_mvm_baid_data_from_reorder_buf(buf);
++	struct iwl_mvm_reorder_buf_entry *entries =
++		&baid_data->entries[buf->queue * baid_data->entries_per_queue];
+ 	int i;
+ 	u16 sn = 0, index = 0;
+ 	bool expired = false;
+@@ -472,7 +481,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 	for (i = 0; i < buf->buf_size ; i++) {
+ 		index = (buf->head_sn + i) % buf->buf_size;
+ 
+-		if (skb_queue_empty(&buf->entries[index])) {
++		if (skb_queue_empty(&entries[index].e.frames)) {
+ 			/*
+ 			 * If there is a hole and the next frame didn't expire
+ 			 * we want to break and not advance SN
+@@ -480,7 +489,8 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 			cont = false;
+ 			continue;
+ 		}
+-		if (!cont && !time_after(jiffies, buf->reorder_time[index] +
++		if (!cont &&
++		    !time_after(jiffies, entries[index].e.reorder_time +
+ 					 RX_REORDER_BUF_TIMEOUT_MQ))
+ 			break;
+ 
+@@ -513,7 +523,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 		 * accordingly to this frame.
+ 		 */
+ 		mod_timer(&buf->reorder_timer,
+-			  buf->reorder_time[index] +
++			  entries[index].e.reorder_time +
+ 			  1 + RX_REORDER_BUF_TIMEOUT_MQ);
+ 	}
+ 	spin_unlock(&buf->lock);
+@@ -608,6 +618,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 	u8 tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+ 	u8 sub_frame_idx = desc->amsdu_info &
+ 			   IWL_RX_MPDU_AMSDU_SUBFRAME_IDX_MASK;
++	struct iwl_mvm_reorder_buf_entry *entries;
+ 	int index;
+ 	u16 nssn, sn;
+ 	u8 baid;
+@@ -658,6 +669,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 		IWL_RX_MPDU_REORDER_SN_SHIFT;
+ 
+ 	buffer = &baid_data->reorder_buf[queue];
++	entries = &baid_data->entries[queue * baid_data->entries_per_queue];
+ 
+ 	spin_lock_bh(&buffer->lock);
+ 
+@@ -713,7 +725,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 	 * If it is the same SN then if the subframe index is incrementing it
+ 	 * is the same AMSDU - otherwise it is a retransmission.
+ 	 */
+-	tail = skb_peek_tail(&buffer->entries[index]);
++	tail = skb_peek_tail(&entries[index].e.frames);
+ 	if (tail && !amsdu)
+ 		goto drop;
+ 	else if (tail && (sn != buffer->last_amsdu ||
+@@ -721,9 +733,9 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 		goto drop;
+ 
+ 	/* put in reorder buffer */
+-	__skb_queue_tail(&buffer->entries[index], skb);
++	__skb_queue_tail(&entries[index].e.frames, skb);
+ 	buffer->num_stored++;
+-	buffer->reorder_time[index] = jiffies;
++	entries[index].e.reorder_time = jiffies;
+ 
+ 	if (amsdu) {
+ 		buffer->last_amsdu = sn;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 3711f226220c..a26cf8e89036 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2104,6 +2104,8 @@ static void iwl_mvm_free_reorder(struct iwl_mvm *mvm,
+ 		int j;
+ 		struct iwl_mvm_reorder_buffer *reorder_buf =
+ 			&data->reorder_buf[i];
++		struct iwl_mvm_reorder_buf_entry *entries =
++			&data->entries[i * data->entries_per_queue];
+ 
+ 		spin_lock_bh(&reorder_buf->lock);
+ 		if (likely(!reorder_buf->num_stored)) {
+@@ -2119,7 +2121,7 @@ static void iwl_mvm_free_reorder(struct iwl_mvm *mvm,
+ 		WARN_ON(1);
+ 
+ 		for (j = 0; j < reorder_buf->buf_size; j++)
+-			__skb_queue_purge(&reorder_buf->entries[j]);
++			__skb_queue_purge(&entries[j].e.frames);
+ 		/*
+ 		 * Prevent timer re-arm. This prevents a very far fetched case
+ 		 * where we timed out on the notification. There may be prior
+@@ -2144,6 +2146,8 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
+ 	for (i = 0; i < mvm->trans->num_rx_queues; i++) {
+ 		struct iwl_mvm_reorder_buffer *reorder_buf =
+ 			&data->reorder_buf[i];
++		struct iwl_mvm_reorder_buf_entry *entries =
++			&data->entries[i * data->entries_per_queue];
+ 		int j;
+ 
+ 		reorder_buf->num_stored = 0;
+@@ -2161,7 +2165,7 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
+ 		reorder_buf->tid = data->tid;
+ 		reorder_buf->valid = false;
+ 		for (j = 0; j < reorder_buf->buf_size; j++)
+-			__skb_queue_head_init(&reorder_buf->entries[j]);
++			__skb_queue_head_init(&entries[j].e.frames);
+ 	}
+ }
+ 
+@@ -2182,16 +2186,44 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	}
+ 
+ 	if (iwl_mvm_has_new_rx_api(mvm) && start) {
++		u16 reorder_buf_size = buf_size * sizeof(baid_data->entries[0]);
++
++		/* sparse doesn't like the __align() so don't check */
++#ifndef __CHECKER__
++		/*
++		 * The division below will be OK if either the cache line size
++		 * can be divided by the entry size (ALIGN will round up) or if
++		 * if the entry size can be divided by the cache line size, in
++		 * which case the ALIGN() will do nothing.
++		 */
++		BUILD_BUG_ON(SMP_CACHE_BYTES % sizeof(baid_data->entries[0]) &&
++			     sizeof(baid_data->entries[0]) % SMP_CACHE_BYTES);
++#endif
++
++		/*
++		 * Upward align the reorder buffer size to fill an entire cache
++		 * line for each queue, to avoid sharing cache lines between
++		 * different queues.
++		 */
++		reorder_buf_size = ALIGN(reorder_buf_size, SMP_CACHE_BYTES);
++
+ 		/*
+ 		 * Allocate here so if allocation fails we can bail out early
+ 		 * before starting the BA session in the firmware
+ 		 */
+ 		baid_data = kzalloc(sizeof(*baid_data) +
+ 				    mvm->trans->num_rx_queues *
+-				    sizeof(baid_data->reorder_buf[0]),
++				    reorder_buf_size,
+ 				    GFP_KERNEL);
+ 		if (!baid_data)
+ 			return -ENOMEM;
++
++		/*
++		 * This division is why we need the above BUILD_BUG_ON(),
++		 * if that doesn't hold then this will not be right.
++		 */
++		baid_data->entries_per_queue =
++			reorder_buf_size / sizeof(baid_data->entries[0]);
+ 	}
+ 
+ 	cmd.mac_id_n_color = cpu_to_le32(mvm_sta->mac_id_n_color);
+-- 
+2.14.2
