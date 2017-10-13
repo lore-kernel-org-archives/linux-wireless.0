@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:45965 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbdJ2Hoa (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:60554 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758139AbdJMMFK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 03:44:30 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-CC: Thorsten Leemhuis <linux@leemhuis.info>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: ath10k-regression due to "ath10k: fix napi_poll budget overflow"
- c9353bf483d3
-Date: Sun, 29 Oct 2017 07:44:20 +0000
-Message-ID: <87po964cvg.fsf@kamboji.qca.qualcomm.com> (sfid-20171029_084439_939103_4BB6607F)
-References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
-        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
-        <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info>
-        <877evh53p8.fsf_-_@kamboji.qca.qualcomm.com>
-        <72e73df5-c261-cb1a-7fba-b1a3a9019fea@qti.qualcomm.com>
-In-Reply-To: <72e73df5-c261-cb1a-7fba-b1a3a9019fea@qti.qualcomm.com> (Ryan
-        Hsu's message of "Fri, 27 Oct 2017 19:01:32 +0000")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 13 Oct 2017 08:05:10 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] cfg80211: fix CFG80211_EXTRA_REGDB_KEYDIR typo
+Date: Fri, 13 Oct 2017 14:04:31 +0200
+Message-Id: <20171013120446.4079666-2-arnd@arndb.de> (sfid-20171013_140540_504684_904ABE0D)
+In-Reply-To: <20171013120446.4079666-1-arnd@arndb.de>
+References: <20171013120446.4079666-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ryan Hsu <ryanhsu@qti.qualcomm.com> writes:
+The missing CONFIG_ prefix means this macro is never defined,
+leading to a possible Kbuild warning:
 
-> On 10/27/2017 02:40 AM, Kalle Valo wrote:
->
->> + linux-wireless
->>
->> Sorry, I have not been able to follow this discussion very closely but
->> was the conclusion? Should we should revert c9353bf483d3 for 4.14 or
->> what? I should still have time to do that, but not much.
->
-> Kalle, I don't think I have enough time to look into the issue, since
-> original change is to avoid the warning, but now is having regression.
-> Let's try to revert c9353bf483d3 for 4.14, and I'll look into this later.
+net/wireless/reg.c:666:20: error: 'load_keys_from_buffer' defined but not used [-Werror=unused-function]
+ static void __init load_keys_from_buffer(const u8 *p, unsigned int buflen)
 
-Great, thanks Ryan.
+When we use the correct symbol, the warning also goes away.
 
-I now submitted the revert and I'll try to get it to 4.14:
+Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://patchwork.kernel.org/patch/10031233/
-
---=20
-Kalle Valo=
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 58319c82ecb3..3871998059de 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -723,7 +723,7 @@ static int __init load_builtin_regdb_keys(void)
+ #ifdef CONFIG_CFG80211_USE_KERNEL_REGDB_KEYS
+ 	load_keys_from_buffer(shipped_regdb_certs, shipped_regdb_certs_len);
+ #endif
+-#ifdef CFG80211_EXTRA_REGDB_KEYDIR
++#ifdef CONFIG_CFG80211_EXTRA_REGDB_KEYDIR
+ 	if (CONFIG_CFG80211_EXTRA_REGDB_KEYDIR[0] != '\0')
+ 		load_keys_from_buffer(extra_regdb_certs, extra_regdb_certs_len);
+ #endif
+-- 
+2.9.0
