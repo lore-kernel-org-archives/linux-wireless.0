@@ -1,67 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33826 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751599AbdJ0HvK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:53192 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758179AbdJMNZT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:51:10 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v4,2/9] brcmsmac: split up wlc_phy_workarounds_nphy
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170922212930.620249-3-arnd@arndb.de>
-References: <20170922212930.620249-3-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
-        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>
-Message-Id: <20171027075109.6D3CE605A8@smtp.codeaurora.org> (sfid-20171027_095140_518612_60F01178)
-Date: Fri, 27 Oct 2017 07:51:09 +0000 (UTC)
+        Fri, 13 Oct 2017 09:25:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Oct 2017 16:24:59 +0300
+Message-Id: <20171013132502.10473-7-luca@coelho.fi> (sfid-20171013_152606_493539_E8C66335)
+In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
+References: <20171013132502.10473-1-luca@coelho.fi>
+Subject: [PATCH 6/9] iwlwifi: define minimum valid address for umac_error_event_table in cfg
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> The stack consumption in this driver is still relatively high, with one
-> remaining warning if the warning level is lowered to 1536 bytes:
-> 
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: error: the frame size of 1880 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
-> 
-> The affected function is actually a collection of three separate implementations,
-> and each of them is fairly large by itself. Splitting them up is done easily
-> and improves readability at the same time.
-> 
-> I'm leaving the original indentation to make the review easier.
-> 
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+We now have two different minimum valid values for
+umac_error_event_table.  To avoid hardcoding the minimum value in the
+driver, add a value to cfg where it can be read from.
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c   |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c   |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c   |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 17 +++++++++++------
+ 5 files changed, 18 insertions(+), 9 deletions(-)
 
-0425f079590c brcmsmac: split up wlc_phy_workarounds_nphy
-ad1987d67392 brcmsmac: reindent split functions
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+index 2e6c52664cee..32d6aa25b9a9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+@@ -165,7 +165,8 @@ static const struct iwl_tt_params iwl8000_tt_params = {
+ 	.thermal_params = &iwl8000_tt_params,				\
+ 	.apmg_not_supported = true,					\
+ 	.ext_nvm = true,						\
+-	.dbgc_supported = true
++	.dbgc_supported = true,						\
++	.min_umac_error_event_table = 0x800000
+ 
+ #define IWL_DEVICE_8000							\
+ 	IWL_DEVICE_8000_COMMON,						\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index 2babe0a1f18b..94d717bffbbe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -149,7 +149,8 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.mac_addr_from_csr = true,					\
+ 	.rf_id = true,							\
+ 	.ext_nvm = true,						\
+-	.dbgc_supported = true
++	.dbgc_supported = true,						\
++	.min_umac_error_event_table = 0x800000
+ 
+ const struct iwl_cfg iwl9160_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9160",
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+index 076f8d6d1124..f27eeba3c87c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+@@ -135,7 +135,8 @@ static const struct iwl_ht_params iwl_a000_ht_params = {
+ 	.gen2 = true,							\
+ 	.ext_nvm = true,						\
+ 	.dbgc_supported = true,						\
+-	.tx_cmd_queue_size = 32
++	.tx_cmd_queue_size = 32,					\
++	.min_umac_error_event_table = 0x400000
+ 
+ const struct iwl_cfg iwla000_2ac_cfg_hr = {
+ 	.name = "Intel(R) Dual Band Wireless AC a000",
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index b9f3b350fe34..175bab54df7f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -384,6 +384,7 @@ struct iwl_cfg {
+ 	u8 max_vht_ampdu_exponent;
+ 	u8 ucode_api_max;
+ 	u8 ucode_api_min;
++	u32 min_umac_error_event_table;
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 70d0505a176e..0296df625cd5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -176,6 +176,7 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 	struct iwl_lmac_alive *lmac1;
+ 	struct iwl_lmac_alive *lmac2 = NULL;
+ 	u16 status;
++	u32 umac_error_event_table;
+ 
+ 	if (iwl_rx_packet_payload_len(pkt) == sizeof(*palive)) {
+ 		palive = (void *)pkt->data;
+@@ -198,18 +199,22 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 	mvm->sf_space.addr = le32_to_cpu(lmac1->st_fwrd_addr);
+ 	mvm->sf_space.size = le32_to_cpu(lmac1->st_fwrd_size);
+ 
+-	mvm->umac_error_event_table = le32_to_cpu(umac->error_info_addr);
++	umac_error_event_table = le32_to_cpu(umac->error_info_addr);
+ 
+-	if (mvm->umac_error_event_table <
+-	    (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000 ?
+-	     0x400000 : 0x800000))
++	if (!umac_error_event_table) {
++		mvm->support_umac_log = false;
++	} else if (umac_error_event_table >=
++		   mvm->trans->cfg->min_umac_error_event_table) {
++		mvm->support_umac_log = true;
++		mvm->umac_error_event_table = umac_error_event_table;
++	} else {
+ 		IWL_ERR(mvm,
+ 			"Not valid error log pointer 0x%08X for %s uCode\n",
+ 			mvm->umac_error_event_table,
+ 			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT) ?
+ 			"Init" : "RT");
+-	else
+-		mvm->support_umac_log = true;
++		mvm->support_umac_log = false;
++	}
+ 
+ 	alive_data->scd_base_addr = le32_to_cpu(lmac1->scd_base_ptr);
+ 	alive_data->valid = status == IWL_ALIVE_STATUS_OK;
 -- 
-https://patchwork.kernel.org/patch/9967141/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.2
