@@ -1,122 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34827 "EHLO
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54039 "EHLO
         sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750950AbdJJGvN (ORCPT
+        with ESMTP id S1753231AbdJMMmC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 02:51:13 -0400
-From: <mpubbise@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: handle tdls peer events
-Date: Tue, 10 Oct 2017 12:20:02 +0530
-Message-ID: <1507618202-25473-3-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20171010_085116_606740_A067E1BF)
-In-Reply-To: <1507618202-25473-1-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1507618202-25473-1-git-send-email-mpubbise@qti.qualcomm.com>
+        Fri, 13 Oct 2017 08:42:02 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "greearb@candelatech.com" <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: Retry pci probe on failure.
+Date: Fri, 13 Oct 2017 12:41:57 +0000
+Message-ID: <87a80vnrsb.fsf@kamboji.qca.qualcomm.com> (sfid-20171013_144205_442521_E9CBD918)
+References: <1507068826-14677-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1507068826-14677-1-git-send-email-greearb@candelatech.com>
+        (greearb@candelatech.com's message of "Tue, 3 Oct 2017 15:13:46 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+greearb@candelatech.com writes:
 
-Handle tdls peer events from the target. TDLS events for the peer
-could be discover, teardown, etc. As of now, adding the logic to
-handle tdls teardown events alone.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This works around a problem we see when sometimes the wifi NIC does
+> not respond the first time.  This seems to happen especially often on
+> some of the 9984 NICs in mid-range platforms.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-Teardown due to peer traffic indication(PTR) timeout is one such
-teardown event from the target.
+[...]
 
-Tested this change on QCA9888 with 10.4-3.5.1-00018 fw version.
+> -static int ath10k_pci_probe(struct pci_dev *pdev,
+> -			    const struct pci_device_id *pci_dev)
+> +static int __ath10k_pci_probe(struct pci_dev *pdev,
+> +			      const struct pci_device_id *pci_dev)
+>  {
+>  	int ret =3D 0;
+>  	struct ath10k *ar;
+> @@ -3672,6 +3672,22 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+>  	return ret;
+>  }
+> =20
+> +static int ath10k_pci_probe(struct pci_dev *pdev,
+> +			    const struct pci_device_id *pci_dev)
+> +{
+> +	int cnt =3D 0;
+> +	int rv;
+> +	do {
+> +		rv =3D __ath10k_pci_probe(pdev, pci_dev);
+> +		if (rv =3D=3D 0)
+> +			return rv;
+> +		pr_err("ath10k: failed to probe PCI : %d, retry-count: %d\n", rv, cnt)=
+;
+> +		mdelay(10); /* let the ath10k firmware gerbil take a small break */
+> +	} while (cnt++ < 10);
+> +	return rv;
+> +}
 
-Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |   59 +++++++++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
+This is a sledgehammer approach and it causes reload for all error
+cases, like when hardware is broken or memory allocation is failing.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 38a9708..344f19c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -29,6 +29,7 @@
- #include "p2p.h"
- #include "hw.h"
- #include "hif.h"
-+#include "txrx.h"
- 
- #define ATH10K_WMI_BARRIER_ECHO_ID 0xBA991E9
- #define ATH10K_WMI_BARRIER_TIMEOUT_HZ (3 * HZ)
-@@ -4456,6 +4457,61 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
- 		   __le32_to_cpu(ev->rate_max));
- }
- 
-+void ath10k_wmi_handle_tdls_peer_event(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct wmi_tdls_peer_event *ev;
-+	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
-+	u8 reason;
-+
-+	ev = (struct wmi_tdls_peer_event *)skb->data;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	peer = ath10k_peer_find(ar, ev->vdev_id, ev->peer_macaddr.addr);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (!peer) {
-+		ath10k_warn(ar, "failed to find peer entry for %pM\n",
-+			    ev->peer_macaddr.addr);
-+		return;
-+	}
-+
-+	switch (ev->peer_status) {
-+	case WMI_TDLS_SHOULD_TEARDOWN:
-+		switch (ev->peer_reason) {
-+		case WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT:
-+		case WMI_TDLS_TEARDOWN_REASON_NO_RESPONSE:
-+		case WMI_TDLS_TEARDOWN_REASON_RSSI:
-+			reason = WLAN_REASON_TDLS_TEARDOWN_UNREACHABLE;
-+			break;
-+		default:
-+			reason = WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED;
-+			break;
-+		}
-+
-+		arvif = ath10k_get_arvif(ar, ev->vdev_id);
-+		if (!arvif) {
-+			ath10k_warn(ar, "received tdls peer event for invalid vdev id %u\n",
-+				    ev->vdev_id);
-+			return;
-+		}
-+
-+		ieee80211_tdls_oper_request(arvif->vif, ev->peer_macaddr.addr,
-+					    NL80211_TDLS_TEARDOWN, reason,
-+					    GFP_ATOMIC);
-+
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "received tdls teardown event for peer %pM reason %u\n",
-+			   ev->peer_macaddr.addr, ev->peer_reason);
-+		break;
-+	default:
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "received unknown tdls peer event %u\n",
-+			   ev->peer_status);
-+		break;
-+	}
-+}
-+
- void ath10k_wmi_event_pdev_ftm_intg(struct ath10k *ar, struct sk_buff *skb)
- {
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PDEV_FTM_INTG_EVENTID\n");
-@@ -5477,6 +5533,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_PDEV_TPC_CONFIG_EVENTID:
- 		ath10k_wmi_event_pdev_tpc_config(ar, skb);
- 		break;
-+	case WMI_10_4_TDLS_PEER_EVENTID:
-+		ath10k_wmi_handle_tdls_peer_event(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
--- 
-1.7.9.5
+When the problem happens does it always fail at the the same place? Is
+it hw reset or something else? It's better to retry the invidiual action
+than to do this hack. Or is it just some more delay needed somewhere?
+
+--=20
+Kalle Valo=
