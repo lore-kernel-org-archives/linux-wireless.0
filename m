@@ -1,73 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:48617 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932252AbdJ3RDM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:53184 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758191AbdJMNZT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 13:03:12 -0400
-Received: by mail-io0-f178.google.com with SMTP id j17so28736246iod.5
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2017 10:03:12 -0700 (PDT)
-Date: Mon, 30 Oct 2017 10:03:08 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Subject: Re: pull-request mwifiex-firmware 2017-10-30
-Message-ID: <20171030170308.GA80479@google.com> (sfid-20171030_180325_412126_5DC9CE9C)
-References: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
+        Fri, 13 Oct 2017 09:25:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Oct 2017 16:24:58 +0300
+Message-Id: <20171013132502.10473-6-luca@coelho.fi> (sfid-20171013_152606_269992_EBAF0C70)
+In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
+References: <20171013132502.10473-1-luca@coelho.fi>
+Subject: [PATCH 5/9] iwlwifi: mvm: move umac_error_event_table validity check to where it's set
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 30, 2017 at 02:13:31PM +0000, Ganapathi Bhat wrote:
-> The following changes since commit e0494e95192ac5329989f4d128cf95c417d618cc:
-> 
->   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-08-01 23:55:30 +0530)
-> 
-> are available in the git repository at:
-> 
->   git://git.marvell.com/mwifiex-firmware.git
-> 
-> for you to fetch changes up to c5bed1294f6cf6bf6cbef612204f96361a3c2539:
-> 
->   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-10-30 19:23:05 +0530)
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Hooray, your git server is working again! And FWIW:
+There's no point in checking the validity of the
+umac_error_event_table pointer every time we generate a dump.  It's
+cleaner to do so when we read the value, namely when we receive the
+alive data.
 
-Tested-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c    | 13 +++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 18 ++++--------------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-But quoting your patch...
-
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -757,7 +757,7 @@ File: mrvl/pcieuart8997_combo_v4.bin
->  Version: 16.68.1.p70
->  
->  File: mrvl/pcieusb8997_combo_v4.bin
-> -Version: 16.68.1.p133
-> +Version: 16.68.1.p40
-
-This says .p40, whereas the commit message (and the version tag within the
-firmware) says p140. I think you're missing a "1".
-
->  
->  File: mrvl/pcie8997_wlan_v4.bin
->  Version: 16.68.1.p97
-
-
-Brian
-
-> 
-> ----------------------------------------------------------------
-> Ganapathi Bhat (1):
->       linux-firmware: update Marvell PCIe-USB8997 firmware image
-> 
-> WHENCE                        |   2 +-
-> mrvl/pcieusb8997_combo_v4.bin | Bin 620800 -> 622532 bytes
-> 2 files changed, 1 insertion(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index f476882291ae..70d0505a176e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -200,10 +200,19 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 
+ 	mvm->umac_error_event_table = le32_to_cpu(umac->error_info_addr);
+ 
++	if (mvm->umac_error_event_table <
++	    (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000 ?
++	     0x400000 : 0x800000))
++		IWL_ERR(mvm,
++			"Not valid error log pointer 0x%08X for %s uCode\n",
++			mvm->umac_error_event_table,
++			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT) ?
++			"Init" : "RT");
++	else
++		mvm->support_umac_log = true;
++
+ 	alive_data->scd_base_addr = le32_to_cpu(lmac1->scd_base_ptr);
+ 	alive_data->valid = status == IWL_ALIVE_STATUS_OK;
+-	if (mvm->umac_error_event_table)
+-		mvm->support_umac_log = true;
+ 
+ 	IWL_DEBUG_FW(mvm,
+ 		     "Alive ucode status 0x%04x revision 0x%01X 0x%01X\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 4ade688db63b..d46115e2d69e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -455,21 +455,12 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_trans *trans = mvm->trans;
+ 	struct iwl_umac_error_event_table table;
+-	u32 base;
+ 
+-	base = mvm->umac_error_event_table;
+-
+-	if (base < (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000 ?
+-		    0x400000 : 0x800000)) {
+-		IWL_ERR(mvm,
+-			"Not valid error log pointer 0x%08X for %s uCode\n",
+-			base,
+-			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT)
+-			? "Init" : "RT");
++	if (!mvm->support_umac_log)
+ 		return;
+-	}
+ 
+-	iwl_trans_read_mem_bytes(trans, base, &table, sizeof(table));
++	iwl_trans_read_mem_bytes(trans, mvm->umac_error_event_table, &table,
++				 sizeof(table));
+ 
+ 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
+ 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
+@@ -609,8 +600,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 	if (mvm->error_event_table[1])
+ 		iwl_mvm_dump_lmac_error_log(mvm, mvm->error_event_table[1]);
+ 
+-	if (mvm->support_umac_log)
+-		iwl_mvm_dump_umac_error_log(mvm);
++	iwl_mvm_dump_umac_error_log(mvm);
+ }
+ 
+ int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id, u8 minq, u8 maxq)
+-- 
+2.14.2
