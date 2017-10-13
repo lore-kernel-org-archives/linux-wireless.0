@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:59415 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751821AbdJXItF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48056 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757764AbdJMJol (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 04:49:05 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v7 0/5] Add TDLS feature for ath10k
-Date: Tue, 24 Oct 2017 16:51:09 +0800
-Message-ID: <1508835074-3384-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171024_104957_271890_745E86E2)
-In-Reply-To: <TDLS for ath10k patch v7>
-References: <TDLS for ath10k patch v7>
+        Fri, 13 Oct 2017 05:44:41 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [01/10] rtlwifi: Fix MAX MPDU of VHT capability
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170929194800.15617-2-Larry.Finger@lwfinger.net>
+References: <20170929194800.15617-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Message-Id: <20171013094441.2FC4360847@smtp.codeaurora.org> (sfid-20171013_114450_340949_072C1BD2)
+Date: Fri, 13 Oct 2017 09:44:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-This patchset is for Rome PCIE chip, it will not affect other hardware
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> We must choose only one of VHT_CAP among
+> IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895,
+> IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 and
+> IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-Yingying Tang (5):
-  mac80211: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer inactivity detection
-  ath10k: Avoid to set WEP key for TDLS peer
-  ath10k: Fix TDLS peer TX data failure issue on encryped AP
+10 patches applied to wireless-drivers-next.git, thanks.
 
- drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |    9 +++++
- drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
- include/net/mac80211.h                    |    4 +++
- net/mac80211/debugfs.c                    |    1 +
- net/mac80211/tdls.c                       |    5 ++-
- 7 files changed, 82 insertions(+), 2 deletions(-)
+f06eb3f9c03e rtlwifi: Fix MAX MPDU of VHT capability
+ecf4000e0d92 rtlwifi: Remove redundant semicolon in wifi.h.
+0c07bd745760 rtlwifi: rtl8192ee: Make driver support 64bits DMA.
+cdc9c7a032aa rtlwifi: Implement rtl_get_tx_hw_rate to yield correct hw_rate
+c1816f1709e8 rtlwifi: Add rtl_get_hal_edca_param() to generate register's format of EDCA.
+74451b935c42 rtlwifi: Add TX/RX throughput statistics in period
+08ab7465f36c rtlwifi: Add RSSI and RF type to wifi.h for phydm
+aa59a1e7c6e8 rtlwifi: Remove BAND_NUM and related fields
+1d22b17744a3 rtlwifi: Add bw_update parameter for RA mask update.
+84efbad4f867 rtlwifi: Add module parameter ASPM
 
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/9978583/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
