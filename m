@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60724 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751529AbdJMJhm (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:22530 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753258AbdJMMSe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 05:37:42 -0400
+        Fri, 13 Oct 2017 08:18:34 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: bcma: keep *config menu together
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org>
-References: <c4250321-0c2e-4f9c-7fea-aa1001d9c3a8@infradead.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-Id: <20171013093741.5629461256@smtp.codeaurora.org> (sfid-20171013_113756_517083_1C274727)
-Date: Fri, 13 Oct 2017 09:37:39 +0000 (UTC)
+Subject: Re: [2/2] ath10k: handle tdls peer events
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1507618202-25473-3-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1507618202-25473-3-git-send-email-mpubbise@qti.qualcomm.com>
+To: <mpubbise@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Manikanta Pubbisetty" <mpubbise@qti.qualcomm.com>
+Message-ID: <e1bed0a347cf4ce0a1c538b99852398a@euamsexm01e.eu.qualcomm.com> (sfid-20171013_141837_948902_B49D74B9)
+Date: Fri, 13 Oct 2017 14:18:26 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap <rdunlap@infradead.org> wrote:
+mpubbise@qti.qualcomm.com wrote:
 
-> From: Randy Dunlap <rdunlap@infradead.org>
+> Handle tdls peer events from the target. TDLS events for the peer
+> could be discover, teardown, etc. As of now, adding the logic to
+> handle tdls teardown events alone.
 > 
-> Use "if BCMA"/"endif" around all Kconfig symbols so that they are
-> kept together in *config menus instead of showing up in unexpected
-> places. Also remove "depends on BCMA" since this is handled by the
-> "if BCMA" addition.
+> Teardown due to peer traffic indication(PTR) timeout is one such
+> teardown event from the target.
 > 
-> Tested with ARCH={x86_64,MIPS} using make {n,menu,g,x}config.
+> Tested this change on QCA9888 with 10.4-3.5.1-00018 fw version.
 > 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Rafał Miłecki <zajec5@gmail.com>
+> Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+This patch introduces new warnings:
 
-0f0a0af82626 bcma: keep *config menu together
+$ ath10k-check
+drivers/net/wireless/ath/ath10k/wmi.c:4470:39: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/ath/ath10k/wmi.c:4470:39:    expected int [signed] vdev_id
+drivers/net/wireless/ath/ath10k/wmi.c:4470:39:    got restricted __le32 [usertype] vdev_id
+drivers/net/wireless/ath/ath10k/wmi.c:4481:27: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:4481:27: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:4481:27: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:4492:48: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/ath/ath10k/wmi.c:4492:48:    expected unsigned int [unsigned] [usertype] vdev_id
+drivers/net/wireless/ath/ath10k/wmi.c:4492:48:    got restricted __le32 [usertype] vdev_id
+drivers/net/wireless/ath/ath10k/wmi.c:4479:19: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:4460:6: warning: symbol 'ath10k_wmi_handle_tdls_peer_event' was not declared. Should it be static?
 
 -- 
-https://patchwork.kernel.org/patch/9974679/
+https://patchwork.kernel.org/patch/9995131/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
