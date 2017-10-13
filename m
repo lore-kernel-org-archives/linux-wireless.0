@@ -1,39 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64632 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750791AbdJXEvE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60680 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751551AbdJMHZU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 00:51:04 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Jasmine Strong <jas@eero.com>
-CC: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: rebuild crypto header in RX data frames
-Date: Tue, 24 Oct 2017 04:50:56 +0000
-Message-ID: <8760b5cfnz.fsf@kamboji.qca.qualcomm.com> (sfid-20171024_065109_943972_74793CBB)
-References: <150851690590.5158.11970481736247725763.stgit@potku.adurom.net>
-        <c9bdd915-0667-eee0-3b52-1fdf15abf249@dd-wrt.com>
-        <CAGyitvP0wquoo_8_ma3rcj+riJ5Wgfo7+pmbUOx9pQRwFcQHYA@mail.gmail.com>
-        <87376dds5e.fsf@kamboji.qca.qualcomm.com>
-        <9407ed1f-2bd9-3fd0-981d-1a20452e8ba9@dd-wrt.com>
-        <CAGyitvNj+74HafQ9Aps1HTmknTxa0ZUgV7hao1A8mJ4rV7cibw@mail.gmail.com>
-In-Reply-To: <CAGyitvNj+74HafQ9Aps1HTmknTxa0ZUgV7hao1A8mJ4rV7cibw@mail.gmail.com>       (Jasmine
- Strong's message of "Mon, 23 Oct 2017 11:28:18 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 13 Oct 2017 03:25:20 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-10-13
+Date: Fri, 13 Oct 2017 10:25:14 +0300
+Message-ID: <878tgfpl0l.fsf@kamboji.qca.qualcomm.com> (sfid-20171013_092544_307823_71B3E3C7)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jasmine Strong <jas@eero.com> writes:
+Hi Dave,
 
-> That's what I saw.  A bcom client was able to associate and not pass
-> any traffic.  This is on all three of 9882, 9888 and 4019.
+here's a pull request to net tree, more info in the signed tag below.
+Please let me know if there are any problems.
 
-Thanks for the report, we'll investigate it. And I see that your email
-was now succesfully delivered to the list:
+Kalle
 
-http://lists.infradead.org/pipermail/ath10k/2017-October/010325.html
+The following changes since commit 3e747fa18202896b5be66b88478352d5880fb8eb:
 
---=20
-Kalle Valo=
+  Merge ath-current from ath.git (2017-09-25 10:06:12 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2017-10-13
+
+for you to fetch changes up to a6127b4440d1f74f26b64006b2f50c9dc6d66efc:
+
+  Merge tag 'iwlwifi-for-kalle-2017-10-06' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2017-10-09 17:31:39 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.14
+
+Nothing really special standing out, all of these are important fixes
+which should go to 4.14.
+
+iwlwifi
+
+* fix support for 3168 device series
+
+* fix a potential crash when using FW debugging recording;
+
+* improve channel flags parsing to avoid warnings on too long traces
+
+* return -ENODATA when the temperature is not available, since the
+ -EIO we were returning was causing fatal errors in userspace
+
+* avoid printing too many messages in dmesg when using monitor mode,
+  since this can become very noisy and completely flood the logs
+
+brcmsmac
+
+* reduce stack usage to avoid frame size warnings with KASAN
+
+brcmfmac
+
+* add a check to avoid copying uninitialised memory
+
+rtlwifi:
+
+* fix a regression with rtl8821ae starting from v4.11 where
+  connections was frequently lost
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      brcmsmac: make some local variables 'static const' to reduce stack size
+
+Chaya Rachel Ivgi (1):
+      iwlwifi: nvm: set the correct offsets to 3168 series
+
+Golan Ben Ami (1):
+      iwlwifi: stop dbgc recording before stopping DMA
+
+Johannes Berg (1):
+      iwlwifi: nvm-parse: unify channel flags printing
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2017-10-06' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Kevin Cernekee (1):
+      brcmfmac: Add check for short event packets
+
+Larry Finger (1):
+      rtlwifi: rtl8821ae: Fix connection lost problem
+
+Luca Coelho (1):
+      iwlwifi: mvm: return -ENODATA when reading the temperature with the FW down
+
+Shaul Triebitz (1):
+      iwlwifi: mvm: do not print security error in monitor mode
+
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    |   3 +-
+ .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        | 197 ++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/cfg/7000.c      |   1 +
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c      |   2 +-
+ .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    |   2 +
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c        |   7 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |  15 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  16 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 137 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   7 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |  21 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |   2 +-
+ 18 files changed, 232 insertions(+), 197 deletions(-)
