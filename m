@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42394 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750848AbdJ2M25 (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:38487 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751185AbdJNJqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 08:28:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 14:28:13 +0200
-Message-Id: <20171029122816.8802-15-luca@coelho.fi> (sfid-20171029_132859_949477_5173D2B3)
-In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
-References: <20171029122816.8802-1-luca@coelho.fi>
-Subject: [PATCH 14/17] iwlwifi: drop RX frames during hardware restart
+        Sat, 14 Oct 2017 05:46:16 -0400
+From: Christos Gkekas <chris.gekas@gmail.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] ath9k: debug: Remove redundant check
+Date: Sat, 14 Oct 2017 10:46:11 +0100
+Message-Id: <1507974371-7419-1-git-send-email-chris.gekas@gmail.com> (sfid-20171014_114633_424096_2927D742)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Variable val is unsigned, so checking whether it is less than zero is
+redundant.
 
-In case of a hardware restart the BA session data in HW is lost
-so the reorder buffer simply passes the frames to mac80211 as is
-as there is no NSSN set. Instead, we will drop these frames
-before they reach the reorder buffer. mac80211 drops such frames anyway,
-but we shouldn't rely on that. In addition it saves some
-processing time
-
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath9k/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 343bdc4266cd..76dc58381e1c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -834,6 +834,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct sk_buff *skb;
- 	u8 crypt_len = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 01fa301..4f5f141 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1167,7 +1167,7 @@ static ssize_t write_file_tpc(struct file *file, const char __user *user_buf,
+ 	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
  
-+	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
-+		return;
-+
- 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
- 	 * ieee80211_hdr pulled.
- 	 */
+-	if (val < 0 || val > 1)
++	if (val > 1)
+ 		return -EINVAL;
+ 
+ 	tpc_enabled = !!val;
 -- 
-2.14.2
+2.7.4
