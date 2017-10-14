@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750876AbdJYNOM (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:45061 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbdJNJlU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 09:14:12 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 00/12] wil6210 patches
-Date: Wed, 25 Oct 2017 16:13:55 +0300
-Message-Id: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151416_546362_775CC7D1)
+        Sat, 14 Oct 2017 05:41:20 -0400
+From: Christos Gkekas <chris.gekas@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] ath10k: spectral: Remove redundant check
+Date: Sat, 14 Oct 2017 10:41:15 +0100
+Message-Id: <1507974075-6987-1-git-send-email-chris.gekas@gmail.com> (sfid-20171014_114142_812332_10AEA3A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patches include:
-- Bug fixes
-- run-time PM when interface down
+Variable val is unsigned, so checking whether it is less than zero is
+redundant.
 
-Dedy Lansky (1):
-  wil6210: print human readable names of WMI commands and events
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/spectral.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hamad Kadmany (1):
-  wil6210: abort properly in cfg suspend
-
-Lazar Alexei (5):
-  wil6210: run-time PM when interface down
-  wil6210: get suspend reject reason and resume triggers from FW
-  wil6210: fix PCIe bus mastering in case of interface down
-  wil6210: remove suspend time statistics
-  wil6210: update statistics for suspend
-
-Lior David (5):
-  wil6210: refresh FW capabilities during interface up
-  wil6210: fix length check in __wmi_send
-  wil6210: add block size checks during FW load
-  wil6210: missing length check in wmi_set_ie
-  wil6210: missing length check in wil_cfg80211_mgmt_tx
-
- drivers/net/wireless/ath/wil6210/cfg80211.c  |  17 +-
- drivers/net/wireless/ath/wil6210/debugfs.c   | 134 +++++++++---
- drivers/net/wireless/ath/wil6210/ethtool.c   |  15 ++
- drivers/net/wireless/ath/wil6210/fw_inc.c    |  79 ++++---
- drivers/net/wireless/ath/wil6210/interrupt.c |  22 +-
- drivers/net/wireless/ath/wil6210/main.c      |  26 ++-
- drivers/net/wireless/ath/wil6210/netdev.c    |  18 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c  |  87 +++++---
- drivers/net/wireless/ath/wil6210/pm.c        | 100 ++++++---
- drivers/net/wireless/ath/wil6210/wil6210.h   |  38 +++-
- drivers/net/wireless/ath/wil6210/wmi.c       | 304 ++++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.h       |  17 +-
- 12 files changed, 706 insertions(+), 151 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
+index dd9cc09..2048b1e 100644
+--- a/drivers/net/wireless/ath/ath10k/spectral.c
++++ b/drivers/net/wireless/ath/ath10k/spectral.c
+@@ -406,7 +406,7 @@ static ssize_t write_file_spectral_count(struct file *file,
+ 	if (kstrtoul(buf, 0, &val))
+ 		return -EINVAL;
+ 
+-	if (val < 0 || val > 255)
++	if (val > 255)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&ar->conf_mutex);
 -- 
-1.9.1
+2.7.4
