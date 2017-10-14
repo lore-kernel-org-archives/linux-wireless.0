@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from frisell.zx2c4.com ([192.95.5.64]:41439 "EHLO frisell.zx2c4.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753108AbdJQScO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 14:32:14 -0400
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Subject: [PATCH] mac80211: use constant time comparison with keys
-Date: Tue, 17 Oct 2017 20:32:07 +0200
-Message-Id: <20171017183207.23124-1-Jason@zx2c4.com> (sfid-20171017_203220_488309_0C41D4D2)
-In-Reply-To: <CAHmME9qd_m-FDj1E+eiBYWKvnMBvr0tWVcJ4ph2tr=Y1d_tb1g@mail.gmail.com>
-References: <CAHmME9qd_m-FDj1E+eiBYWKvnMBvr0tWVcJ4ph2tr=Y1d_tb1g@mail.gmail.com>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:37762 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750970AbdJNINA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 14 Oct 2017 04:13:00 -0400
+Date: Sat, 14 Oct 2017 09:12:57 +0100
+From: Christos Gkekas <chris.gekas@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: spectral: Simplify error checking
+Message-ID: <20171014081257.GA3961@inspiron> (sfid-20171014_101529_702017_8A8F5A91)
+References: <1507491026-28690-1-git-send-email-chris.gekas@gmail.com>
+ <87fuannse6.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87fuannse6.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise we risk leaking information via timing side channel.
+On 13/10/17 12:28:50 +0000, Kalle Valo wrote:
+> Christos Gkekas <chris.gekas@gmail.com> writes:
+> 
+> > Variable val is unsigned so checking whether it is less than zero is
+> > redundant.
+> >
+> > Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+> > ---
+> >  drivers/net/wireless/ath/ath10k/spectral.c | 5 +----
+> >  1 file changed, 1 insertion(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
+> > index dd9cc09..1867937 100644
+> > --- a/drivers/net/wireless/ath/ath10k/spectral.c
+> > +++ b/drivers/net/wireless/ath/ath10k/spectral.c
+> > @@ -403,10 +403,7 @@ static ssize_t write_file_spectral_count(struct file *file,
+> >  		return -EFAULT;
+> >  
+> >  	buf[len] = '\0';
+> > -	if (kstrtoul(buf, 0, &val))
+> > -		return -EINVAL;
+> > -
+> > -	if (val < 0 || val > 255)
+> > +	if (kstrtoul(buf, 0, &val) || val > 255)
+> >  		return -EINVAL;
+> 
+> Removing the check for negative is correct but I don't think you are
+> simplifying anything, on the contrary it's harder to read. Please keep
+> the two if statements separate.
+> 
+> -- 
+> Kalle Valo
 
-Fixes: fdf7cb4185b6 ("mac80211: accept key reinstall without changing anything")
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
----
- net/mac80211/key.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+You are right, will make the change and send a new patch.
+Thanks for your time.
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index ae995c8480db..035d16fe926e 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -19,6 +19,7 @@
- #include <linux/slab.h>
- #include <linux/export.h>
- #include <net/mac80211.h>
-+#include <crypto/algapi.h>
- #include <asm/unaligned.h>
- #include "ieee80211_i.h"
- #include "driver-ops.h"
-@@ -635,7 +636,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	 * new version of the key to avoid nonce reuse or replay issues.
- 	 */
- 	if (old_key && key->conf.keylen == old_key->conf.keylen &&
--	    !memcmp(key->conf.key, old_key->conf.key, key->conf.keylen)) {
-+	    !crypto_memneq(key->conf.key, old_key->conf.key, key->conf.keylen)) {
- 		ieee80211_key_free_unused(key);
- 		ret = 0;
- 		goto out;
--- 
-2.14.2
+Christos Gkekas
