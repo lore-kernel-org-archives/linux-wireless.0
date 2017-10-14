@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:61353 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932423AbdJXItW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 04:49:22 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v7 2/5] ath10k: Enable TDLS peer buffer STA feature
-Date: Tue, 24 Oct 2017 16:51:11 +0800
-Message-ID: <1508835074-3384-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20171024_105121_669984_3DF7B5CF)
-In-Reply-To: <1508835074-3384-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patch v7>
- <1508835074-3384-1-git-send-email-yintang@qti.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:52094 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750772AbdJNHUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 14 Oct 2017 03:20:48 -0400
+Subject: Re: [PATCH v6 1/3] dt-bindings: net: add mt76 wireless device binding
+To: Rob Herring <robh@kernel.org>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        devicetree@vger.kernel.org
+References: <20171006110249.31013-1-nbd@nbd.name>
+ <20171006110249.31013-2-nbd@nbd.name>
+ <20171013190749.lzzw4zjzt7fkp3hs@rob-hp-laptop>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <3828919b-d634-9f03-22ad-1515219c31d4@nbd.name> (sfid-20171014_092111_708392_00071F99)
+Date: Sat, 14 Oct 2017 09:20:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171013190749.lzzw4zjzt7fkp3hs@rob-hp-laptop>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On 2017-10-13 21:07, Rob Herring wrote:
+> On Fri, Oct 06, 2017 at 01:02:47PM +0200, Felix Fietkau wrote:
+>> Add documentation describing how device tree can be used to configure
+>> wireless chips supported by the mt76 driver.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>> ---
+>>  .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
+>>  1 file changed, 24 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+>> 
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+>> new file mode 100644
+>> index 000000000000..19522ab97d62
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+>> @@ -0,0 +1,24 @@
+>> +* MediaTek mt76xx devices
+>> +
+>> +This node provides properties for configuring the MediaTek mt76xx wireless
+>> +device. The node is expected to be specified as a child node of the PCI
+>> +controller to which the wireless chip is connected.
+>> +
+>> +Optional properties:
+>> +
+>> +- mac-address: See ethernet.txt in the parent directory
+>> +- local-mac-address: See ethernet.txt in the parent directory
+>> +- ieee80211-freq-limit: See ieee80211.txt
+>> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
+> 
+> MTD is a Linuxism. And is an EEPROM the only supported device? I'd 
+> suggest naming if after what the data contains.
+PCI cards with this kind of wireless chip usually come with some form of
+EEPROM or use the on-chip OTP ROM.
+This property is for the case where the chip is built into an embedded
+device and the data that would otherwise be on an EEPROM is stored on a
+MTD partition instead.
+The EEPROM data itself contains multiple things: calibration data,
+hardware capabilities, MAC address, etc.
+I couldn't think of a better name for it, do you have any suggestions?
 
-Enable TDLS peer buffer STA feature.
-QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
-it reports this capability through wmi service map in wmi service ready
-event. Set related parameter in TDLS WMI command to enable this feature.
-
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c     |    3 +++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 +++
- 2 files changed, 6 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5683f1a..1672043 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8204,6 +8204,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
- 	}
- 
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		ieee80211_hw_set(ar->hw, SUPPORTS_TDLS_BUFFER_STA);
-+
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7616c1c..f60b46e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2747,6 +2747,9 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- 	 */
- 	u32 options = 0;
- 
-+	if (test_bit(WMI_SERVICE_TDLS_UAPSD_BUFFER_STA, ar->wmi.svc_map))
-+		options |=  WMI_TLV_TDLS_BUFFER_STA_EN;
-+
- 	len = sizeof(*tlv) + sizeof(*cmd);
- 	skb = ath10k_wmi_alloc_skb(ar, len);
- 	if (!skb)
--- 
-1.7.9.5
+- Felix
