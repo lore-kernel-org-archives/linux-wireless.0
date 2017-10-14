@@ -1,127 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42328 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751437AbdJ2M2g (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:38542 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753818AbdJNPny (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 08:28:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Kirtika Ruchandani <kirtika@chromium.org>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 14:28:07 +0200
-Message-Id: <20171029122816.8802-9-luca@coelho.fi> (sfid-20171029_132850_418929_1F7F9C1C)
-In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
-References: <20171029122816.8802-1-luca@coelho.fi>
-Subject: [PATCH 08/17] iwlwifi: Add more call-sites for pcie reg dumper
+        Sat, 14 Oct 2017 11:43:54 -0400
+From: Christian Lamparter <chunkeey@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Rob Herring <robh@kernel.org>, linux-wireless@vger.kernel.org,
+        kvalo@codeaurora.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] dt-bindings: net: add mt76 wireless device binding
+Date: Sat, 14 Oct 2017 17:43:51 +0200
+Message-ID: <1589476.LyXlx7DqTg@debian64> (sfid-20171014_174409_283923_0AA4E39A)
+In-Reply-To: <3828919b-d634-9f03-22ad-1515219c31d4@nbd.name>
+References: <20171006110249.31013-1-nbd@nbd.name> <20171013190749.lzzw4zjzt7fkp3hs@rob-hp-laptop> <3828919b-d634-9f03-22ad-1515219c31d4@nbd.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kirtika Ruchandani <kirtika@chromium.org>
+On Saturday, October 14, 2017 9:20:46 AM CEST Felix Fietkau wrote:
+> On 2017-10-13 21:07, Rob Herring wrote:
+> > On Fri, Oct 06, 2017 at 01:02:47PM +0200, Felix Fietkau wrote:
+> >> Add documentation describing how device tree can be used to configure
+> >> wireless chips supported by the mt76 driver.
+> >> 
+> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> >> ---
+> >>  .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
+> >>  1 file changed, 24 insertions(+)
+> >>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> >> 
+> >> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> >> new file mode 100644
+> >> index 000000000000..19522ab97d62
+> >> --- /dev/null
+> >> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> >> @@ -0,0 +1,24 @@
+> >> +* MediaTek mt76xx devices
+> >> +
+> >> +This node provides properties for configuring the MediaTek mt76xx wireless
+> >> +device. The node is expected to be specified as a child node of the PCI
+> >> +controller to which the wireless chip is connected.
+> >> +
+> >> +Optional properties:
+> >> +
+> >> +- mac-address: See ethernet.txt in the parent directory
+> >> +- local-mac-address: See ethernet.txt in the parent directory
+> >> +- ieee80211-freq-limit: See ieee80211.txt
+> >> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
+> > 
+> > MTD is a Linuxism. And is an EEPROM the only supported device? I'd 
+> > suggest naming if after what the data contains.
+> PCI cards with this kind of wireless chip usually come with some form of
+> EEPROM or use the on-chip OTP ROM.
+> This property is for the case where the chip is built into an embedded
+> device and the data that would otherwise be on an EEPROM is stored on a
+> MTD partition instead.
+> The EEPROM data itself contains multiple things: calibration data,
+> hardware capabilities, MAC address, etc.
+> I couldn't think of a better name for it, do you have any suggestions?
+This sort of reminds me of the failed ath9k nvmem patches:
+https://patchwork.kernel.org/patch/9622127/
 
-Commit a6d24fad00d9 ("iwlwifi: pcie: dump registers when HW becomes
-inaccessible") added a function to dump pcie config registers and
-memory mapped registers on a failure. It is currently only accessible
-within trans.c. Add it to struct iwl_trans_ops, so that failure cases
-in other files can call it.  While there, add a call to this function
-from iwl_pcie_load_firmware_chunk in pcie/tx.c, since this is a common
-failure case seen on some platforms.
+Which uses the nvmem system.
 
-Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
-[modified the commit message slightly]
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 11 +++++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  7 ++++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c    |  1 +
- 3 files changed, 16 insertions(+), 3 deletions(-)
+https://github.com/torvalds/linux/blob/master/Documentation/nvmem/nvmem.txt
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 3138f637ab2a..ca0b5536a8a6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -520,6 +520,9 @@ struct iwl_trans_txq_scd_cfg {
-  * @dump_data: return a vmalloc'ed buffer with debug data, maybe containing last
-  *	TX'ed commands and similar. The buffer will be vfree'd by the caller.
-  *	Note that the transport must fill in the proper file headers.
-+ * @dump_regs: dump using IWL_ERR configuration space and memory mapped
-+ *	registers of the device to diagnose failure, e.g., when HW becomes
-+ *	inaccessible.
-  */
- struct iwl_trans_ops {
- 
-@@ -587,6 +590,8 @@ struct iwl_trans_ops {
- 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans,
- 						 const struct iwl_fw_dbg_trigger_tlv
- 						 *trigger);
-+
-+	void (*dump_regs)(struct iwl_trans *trans);
- };
- 
- /**
-@@ -865,6 +870,12 @@ iwl_trans_dump_data(struct iwl_trans *trans,
- 	return trans->ops->dump_data(trans, trigger);
- }
- 
-+static inline void iwl_trans_dump_regs(struct iwl_trans *trans)
-+{
-+	if (trans->ops->dump_regs)
-+		trans->ops->dump_regs(trans);
-+}
-+
- static inline struct iwl_device_cmd *
- iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 0008ea323be3..8d992d5ba064 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -88,7 +88,7 @@
- #define IWL_FW_MEM_EXTENDED_START	0x40000
- #define IWL_FW_MEM_EXTENDED_END		0x57FFF
- 
--static void iwl_trans_pcie_err_dump(struct iwl_trans *trans)
-+static void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- {
- #define PCI_DUMP_SIZE	64
- #define PREFIX_LEN	32
-@@ -736,7 +736,7 @@ static int iwl_pcie_load_firmware_chunk(struct iwl_trans *trans,
- 				 trans_pcie->ucode_write_complete, 5 * HZ);
- 	if (!ret) {
- 		IWL_ERR(trans, "Failed to load firmware chunk!\n");
--		iwl_trans_pcie_err_dump(trans);
-+		iwl_trans_pcie_dump_regs(trans);
- 		return -ETIMEDOUT;
- 	}
- 
-@@ -1956,7 +1956,7 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
- 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
- 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
- 	if (unlikely(ret < 0)) {
--		iwl_trans_pcie_err_dump(trans);
-+		iwl_trans_pcie_dump_regs(trans);
- 		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
- 		WARN_ONCE(1,
- 			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
-@@ -3021,6 +3021,7 @@ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
- 	.ref = iwl_trans_pcie_ref,					\
- 	.unref = iwl_trans_pcie_unref,					\
- 	.dump_data = iwl_trans_pcie_dump_data,				\
-+	.dump_regs = iwl_trans_pcie_dump_regs,				\
- 	.d3_suspend = iwl_trans_pcie_d3_suspend,			\
- 	.d3_resume = iwl_trans_pcie_d3_resume
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index e93c471ef9bf..b5c459cd70ce 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1909,6 +1909,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	}
- 
- 	if (test_bit(STATUS_FW_ERROR, &trans->status)) {
-+		iwl_trans_dump_regs(trans);
- 		IWL_ERR(trans, "FW error in SYNC CMD %s\n",
- 			iwl_get_cmd_string(trans, cmd->id));
- 		dump_stack();
--- 
-2.14.2
+Rob, would this be acceptable?
+
+Regards,
+Christian
