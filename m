@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0026.hostedemail.com ([216.40.44.26]:51069 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751867AbdJHP7h (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Oct 2017 11:59:37 -0400
-Message-ID: <1507478374.11434.1.camel@perches.com> (sfid-20171008_175941_173964_B758B079)
-Subject: Re: [PATCH 1/5] iwlwifi: mvm: do not print security error in
- monitor mode
-From: Joe Perches <joe@perches.com>
-To: Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 08 Oct 2017 08:59:34 -0700
-In-Reply-To: <20170929120305.20551-2-luca@coelho.fi>
-References: <20170929120305.20551-1-luca@coelho.fi>
-         <20170929120305.20551-2-luca@coelho.fi>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-bn3nam01on0078.outbound.protection.outlook.com ([104.47.33.78]:11264
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751468AbdJOUxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 15 Oct 2017 16:53:47 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 1/5] qtnfmac: modify full Tx queue error reporting
+Date: Sun, 15 Oct 2017 23:53:23 +0300
+Message-Id: <20171015205327.9966-2-sergey.matyukevich.os@quantenna.com> (sfid-20171015_225419_328356_8AD83E19)
+In-Reply-To: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com>
+References: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-09-29 at 15:03 +0300, Luca Coelho wrote:
-> From: Shaul Triebitz <shaul.triebitz@intel.com>
-> 
-> In monitor mode we are not expected to decrypt encrypted
-> packets (not having the keys).
-> Hence we are expected to get an unknown rx security status.
-> Keeping the print in monitor mode causes a print for each
-> captured packet flooding the dmesg.
-[]
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-[]
-> @@ -1015,6 +1015,9 @@ struct iwl_mvm {
->  	bool drop_bcn_ap_mode;
->  
->  	struct delayed_work cs_tx_unblock_dwork;
-> +
-> +	/* does a monitor vif exist (only one can exist hence bool) */
-> +	bool monitor_on;
+Under heavy load it is normal that h/w Tx queue is almost full all the time
+and reclaim should be done before transmitting next packet. Warning still
+should be reported as well as s/w Tx queues should be stopped in the
+case when reclaim failed.
 
-It would be slightly more space efficient to move this above
-	struct delayed_work cs_tx_unblock_dwork
-adjacent to
-	bool drop_bcn_ap_mode
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 502e72b7cdcc..a8f2c46f3a25 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -643,11 +643,11 @@ static int qtnf_tx_queue_ready(struct qtnf_pcie_bus_priv *priv)
+ {
+ 	if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
+ 			priv->tx_bd_num)) {
+-		pr_err_ratelimited("reclaim full Tx queue\n");
+ 		qtnf_pcie_data_tx_reclaim(priv);
+ 
+ 		if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
+ 				priv->tx_bd_num)) {
++			pr_warn_ratelimited("reclaim full Tx queue\n");
+ 			priv->tx_full_count++;
+ 			return 0;
+ 		}
+-- 
+2.11.0
