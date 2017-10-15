@@ -1,88 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57746 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750897AbdJXUPN (ORCPT
+Received: from snoopy.schmut.com ([185.37.248.246]:59912 "EHLO
+        snoopy.schmut.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbdJOQVo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 16:15:13 -0400
-Subject: Re: A good way to get CSI info to user-space?
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com>
- <1508790635.2639.24.camel@sipsolutions.net>
- <76d6a1ad-2dc4-0542-808f-4be459c3508a@candelatech.com>
- <1508824462.2639.25.camel@sipsolutions.net>
- <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
- <1508852310.2639.29.camel@sipsolutions.net>
- <b52bbc61-f0b5-5e9a-cce3-011fd43e6c8d@candelatech.com>
- <1508853316.2639.31.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <3555c7e9-836c-dcf7-a189-f442544f09ca@candelatech.com> (sfid-20171024_221624_186617_D83421F3)
-Date: Tue, 24 Oct 2017 13:15:10 -0700
+        Sun, 15 Oct 2017 12:21:44 -0400
+From: Mario Theodoridis <mario@schmut.com>
+Subject: Re: iwlwifi crash with hostapd
+To: linux-wireless@vger.kernel.org
+References: <6e51916a-6178-5620-8f45-54705c1b4d98@schmut.com>
+ <20171012212454.GB4362@us.netrek.org>
+Message-ID: <b985bbb0-ec49-0506-871e-b65837b05be2@schmut.com> (sfid-20171015_182243_989014_74A212EE)
+Date: Sun, 15 Oct 2017 18:21:36 +0200
 MIME-Version: 1.0
-In-Reply-To: <1508853316.2639.31.camel@sipsolutions.net>
+In-Reply-To: <20171012212454.GB4362@us.netrek.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/2017 06:55 AM, Johannes Berg wrote:
-> On Tue, 2017-10-24 at 06:50 -0700, Ben Greear wrote:
->
->>> We keep having this discussion. You need to fix this, it should be
->>> really simple to fix this - just remove all checks for CONF_MONITOR
->>> from ath10k and make it use WANT_MONITOR_VIF instead if it doesn't
->>> already.
->>
->> I don't recall having this discussion,
->
-> I'm pretty sure I had this discussion about ath10k not liking virtual
-> monitor, but maybe it was with somebody else.
->
->> but even if you can do a
->> non-promiscuous monitor mode, you would have to end up having a bpf
->> socket filter and packet socket, right?
->
-> True.
->
->> Wouldn't that have a noticeable effect on performance on modest sized
->> AP hardware?
->
-> Yes. I was planning to add the wifi BPF to fix that:
-> https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/log/?h=bpf
->
-> You shouldn't think that building netlink messages is free though.
-> There's a lot more locking etc. going on there.
+Thanks for the pointers, James.
 
-CSI info is quite rare (probe-responses only at this point),
-so even if each report is somewhat costly, that
-will still be a lot less over-all work than running any kind of filter on
-every frame.
+On 12.10.2017 23:24, James Cameron wrote:
+> There's a good chance this problem has been fixed already.  You
+> are using a v4.4 kernel with many patches applied by Ubuntu.  Here, we
+> are more concerned with the latest kernels, and v4.4 is quite old.
+> 
+> Please test some of the later kernels, see
+> https://wiki.ubuntu.com/Kernel/MainlineBuilds
+> 
+> In particular, test v4.13 or v4.14-rc4.
 
-I'm not sure how often tx-beamforming data is made available, but probably
-it is somewhat rare compared to normal data packets, at least in ath10k.
+I'm having a hard time with that, because the virtualbox-dkms build 
+fails with the 4.13 kernel, and virtualbox unfortunately is essential.
 
->>>> mac80211_nl_send_opaque_event(mac80211-handle, int data-type, u8* data, int data_len);
->>>
->>> I will not accept this upstream.
->>
->> Thanks for letting me know up front, at least.
->>
->> Anyone know if there is a useful way to stream events from debugfs
->> and/or sysfs w/out having to busy-poll on it?
->
-> There's relayfs, which is kinda built for that. You could even use
-> netlink vendor events, but I don't really think netlink is appropriate
-> here.
+> 
+> If the problem still happens, capture the same information and send it
+> again as a reply.
+> 
+> If the problem doesn't happen, then you can either continue to use the
+> new kernel, or find when the problem was fixed; a long but rewarding
+> process.
+> 
+> Should the problem have been fixed for v4.10, you might also switch to
+> using the Ubuntu package linux-generic-hwe-16.04.
+> https://wiki.ubuntu.com/Kernel/RollingLTSEnablementStack#hwe-16.04
 
-I'll look into the netlink vendor events.
+The 4.10 kernel readily produced this one
 
-Thanks,
-Ben
+------------[ cut here ]------------
+WARNING: CPU: 4 PID: 1617 at 
+/build/linux-hwe-IJy1zi/linux-hwe-4.10.0/drivers/net/wireless/intel/iwlwifi/mvm/tx.c:510 
+iwl_mvm_tx_skb_non_sta+0x39a/0x440 [iwlmvm]
+Modules linked in: bnep ccm pci_stub vboxpci(OE) vboxnetadp(OE) 
+vboxnetflt(OE) vboxdrv(OE) nf_log_ipv4 nf_log_common xt_LOG xt_tcpudp 
+nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack 
+iptable_filter ip_tables x_tables snd_hda_codec_hdmi arc4 iwlmvm 
+mac80211 snd_hda_codec_realtek snd_hda_codec_generic intel_rapl 
+x86_pkg_temp_thermal intel_powerclamp iwlwifi coretemp snd_hda_intel 
+snd_hda_codec kvm_intel snd_hda_core snd_hwdep kvm input_leds irqbypass 
+crct10dif_pclmul snd_pcm bridge crc32_pclmul joydev stp llc 
+ghash_clmulni_intel snd_seq_midi pcbc snd_seq_midi_event snd_rawmidi 
+aesni_intel snd_seq aes_x86_64 crypto_simd snd_seq_device glue_helper 
+cfg80211 cryptd snd_timer intel_cstate snd intel_rapl_perf soundcore 
+shpchp mei_me hci_uart mei btbcm btqca btintel bluetooth intel_lpss_acpi
+  acpi_als mac_hid intel_lpss kfifo_buf tpm_infineon industrialio 
+acpi_pad parport_pc ppdev lp parport autofs4 i915 e1000e i2c_algo_bit 
+drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops e100 
+hid_generic ptp i2c_hid ahci mii drm pps_core pinctrl_sunrisepoint 
+libahci usbhid e1000 hid wmi video pinctrl_intel fjes
+CPU: 4 PID: 1617 Comm: hostapd Tainted: G           OE 
+4.10.0-37-generic #41~16.04.1-Ubuntu
+Hardware name: Gigabyte Technology Co., Ltd. Z170M-D3H/Z170M-D3H-CF, 
+BIOS F20 11/17/2016
+Call Trace:
+  dump_stack+0x63/0x90
+  __warn+0xcb/0xf0
+  warn_slowpath_null+0x1d/0x20
+  iwl_mvm_tx_skb_non_sta+0x39a/0x440 [iwlmvm]
+  iwl_mvm_mac_tx+0x11e/0x1d0 [iwlmvm]
+  ieee80211_tx_frags+0x14b/0x220 [mac80211]
+  __ieee80211_tx+0x81/0x180 [mac80211]
+  ieee80211_tx+0x10f/0x150 [mac80211]
+  ieee80211_xmit+0x9b/0xf0 [mac80211]
+  __ieee80211_tx_skb_tid_band+0x5c/0x70 [mac80211]
+  ieee80211_mgmt_tx+0x42c/0x4a0 [mac80211]
+  cfg80211_mlme_mgmt_tx+0xdc/0x310 [cfg80211]
+  nl80211_tx_mgmt+0x212/0x360 [cfg80211]
+  genl_family_rcv_msg+0x1db/0x3b0
+  ? skb_queue_tail+0x43/0x50
+  genl_rcv_msg+0x59/0xa0
+  ? genl_notify+0x80/0x80 
+ 
 
->
-> johannes
->
+  netlink_rcv_skb+0xa4/0xc0 
+ 
+
+  genl_rcv+0x28/0x40 
+ 
+
+  netlink_unicast+0x18c/0x240 
+ 
+
+  netlink_sendmsg+0x2fb/0x3a0 
+ 
+
+  ? aa_sock_msg_perm+0x61/0x150 
+ 
+
+  sock_sendmsg+0x38/0x50 
+ 
+
+  ___sys_sendmsg+0x2c2/0x2d0 
+ 
+
+  ? sock_sendmsg+0x38/0x50 
+ 
+
+  ? SYSC_sendto+0x101/0x190 
+ 
+
+  ? __check_object_size+0x108/0x1e3 
+ 
+
+  ? _copy_to_user+0x55/0x60 
+ 
+
+  __sys_sendmsg+0x54/0x90 
+ 
+
+  SyS_sendmsg+0x12/0x20 
+ 
+
+  entry_SYSCALL_64_fastpath+0x1e/0xad 
+ 
+
+RIP: 0033:0x7fcc38cfe450 
+ 
+
+RSP: 002b:00007fffdefc9b18 EFLAGS: 00000246 ORIG_RAX: 000000000000002e 
+ 
+
+RAX: ffffffffffffffda RBX: 0000563e91285590 RCX: 00007fcc38cfe450 
+ 
+
+RDX: 0000000000000000 RSI: 00007fffdefc9ba0 RDI: 0000000000000005 
+ 
+
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000563e91283a70 
+ 
+
+R10: 0000000000001000 R11: 0000000000000246 R12: 0000000000000000 
+ 
+
+R13: 0000000000000009 R14: 0000000000000000 R15: 0000000000000000 
+ 
+
+---[ end trace 4d9a544d3976536e ]--- 
+ 
+
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Mit freundlichen Grüßen/Best regards
+
+Mario Theodoridis
