@@ -1,97 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from heliosphere.sirena.org.uk ([172.104.155.198]:36220 "EHLO
-        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752346AbdJLRZU (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:38238 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751895AbdJONql (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 13:25:20 -0400
-Date: Thu, 12 Oct 2017 18:25:12 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: linux-next: manual merge of the wireless-drivers-next tree with the
- wireless-drivers tree
-Message-ID: <20171012172512.tlsdjhppfz2hu4vr@sirena.co.uk> (sfid-20171012_192627_202184_B716AB75)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="r72ubnno7js4rha6"
+        Sun, 15 Oct 2017 09:46:41 -0400
+Received: by mail-wm0-f65.google.com with SMTP id q124so5772841wmb.5
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Oct 2017 06:46:41 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: [PATCH] wireless-regdb: add Short Range Devices (SRD) (ETSI EN 300 440) for Spain
+Date: Sun, 15 Oct 2017 15:46:37 +0200
+Message-Id: <20171015134637.2760-1-xose.vazquez@gmail.com> (sfid-20171015_154827_706859_0050AC81)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+UN - 130 Dispositivos de corto alcance en 5 GHz :
+https://www.boe.es/buscar/act.php?id=BOE-A-2013-4845&tn=1&p=20150410
 
---r72ubnno7js4rha6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Hi all,
+---
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Today's linux-next merge of the wireless-drivers-next tree got a
-conflict in:
-
-  drivers/net/wireless/intel/iwlwifi/iwl-config.h
-
-between commit:
-
-   dd05f9aab4426f ("iwlwifi: pcie: dynamic Tx command queue size")
-
-=66rom the wireless-drivers tree and commit:
-
-   44fd09dad5d2b7 ("iwlwifi: nvm: set the correct offsets to 3168 series")
-
-=66rom the wireless-drivers-next tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
-diff --cc drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 71cb1ecde0f7,b9f3b350fe34..000000000000
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@@ -332,7 -320,9 +332,9 @@@ struct iwl_pwr_tx_backoff=20
-   * @integrated: discrete or integrated
-   * @gen2: a000 and on transport operation
-   * @cdb: CDB support
- - * @ext_nvm: extended NVM format
- + * @nvm_type: see &enum iwl_nvm_type
-+  * @tx_cmd_queue_size: size of the cmd queue. If zero, use the same value=
- as
-+  *	the regular queues
-   *
-   * We enable the driver to be backward compatible wrt. hardware features.
-   * API differences in uCode shouldn't be handled here but through TLVs
-@@@ -382,7 -371,9 +384,8 @@@ struct iwl_cfg=20
-  	    use_tfh:1,
-  	    gen2:1,
-  	    cdb:1,
- -	    ext_nvm:1,
-  	    dbgc_supported:1;
-+ 	u16 tx_cmd_queue_size;
-  	u8 valid_tx_ant;
-  	u8 valid_rx_ant;
-  	u8 non_shared_ant;
-
---r72ubnno7js4rha6
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlnfpXcACgkQJNaLcl1U
-h9AVsAf9FiGOCXuWpZs+zaxLvjlp7xRF2PvtmTrUevbD9KqGbdckPXbCXyWfA1Up
-apZgjzxcP3Fz8325ktILoQ1E4yaTC3rhHVzoM2GqtZ+WJGfyoiOWADREWTYTbUzw
-h5/t9O+1c9awFSj6BC9CYl6ODNf9eVRtZ7g7USdJTH5EgCpHgjYhHCBw4ZAgEkxT
-FWWDdD5HWgH3RXzABAy0Lcj5jG2W3bemqib6sZrctmnjQROLxQoZ6LOfLDcfltBP
-uXpP6TUOqC6xToyQWUlZLcHF7Cn3mKvb8WyrbERK181tH1YJLRCGBeQTj5Zo3r73
-tSNnK91UjJqW8WpWIuOyyuJX7Xy34w==
-=truS
------END PGP SIGNATURE-----
-
---r72ubnno7js4rha6--
+diff --git a/db.txt b/db.txt
+index e48f9a6..1509491 100644
+--- a/db.txt
++++ b/db.txt
+@@ -431,6 +431,8 @@ country ES: DFS-ETSI
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+ 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (500 mW), DFS
++	# Short Range Devices (SRD) (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (25 mW)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+-- 
+2.14.2
