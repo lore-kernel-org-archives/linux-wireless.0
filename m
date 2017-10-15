@@ -1,67 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35882 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750978AbdJaJqJ (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:38282 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbdJOBhP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 05:46:09 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Karthik Ananthapadmanabha <karthida@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 1/3] mwifiex: cleanup rx_pkt_lock usage in 11n_rxreorder.c
-Date: Tue, 31 Oct 2017 15:12:45 +0530
-Message-ID: <1509442967-14149-2-git-send-email-gbhat@marvell.com> (sfid-20171031_104613_624972_14DC6088)
-In-Reply-To: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
-References: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 14 Oct 2017 21:37:15 -0400
+Date: Sat, 14 Oct 2017 18:37:14 -0700 (PDT)
+Message-Id: <20171014.183714.696434686883791627.davem@davemloft.net> (sfid-20171015_033720_762109_72E1B87C)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2017-10-13
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20171013155332.4310-1-johannes@sipsolutions.net>
+References: <20171013155332.4310-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karthik Ananthapadmanabha <karthida@marvell.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 13 Oct 2017 17:53:31 +0200
 
-Fix the incorrect usage of rx_pkt_lock spinlock. Realsing the
-spinlock while the element is still in process is unsafe. The
-lock must be released only after the element processing is
-complete.
+> Sorry for the quick succession - there were a few issues with
+> the last pull request that only got noticed now, so I'm fixing
+> those here.
+> 
+> Please pull and let me know if there's any problem.
 
-Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index 1edcdda..0149c4a 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -124,9 +124,10 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 			tbl->rx_reorder_ptr[i] = NULL;
- 		}
--		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
- 		if (rx_tmp_ptr)
- 			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
-+
-+		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
- 	}
- 
- 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-@@ -167,8 +168,8 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 		}
- 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 		tbl->rx_reorder_ptr[i] = NULL;
--		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
- 		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
-+		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
- 	}
- 
- 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
--- 
-1.9.1
+No worries, pulled, thanks Johannes.
