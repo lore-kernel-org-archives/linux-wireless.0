@@ -1,59 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19136 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751116AbdJWMTW (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:49056 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932519AbdJPXhr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 08:19:22 -0400
-Date: Mon, 23 Oct 2017 15:19:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: replace redundant computations with 0
-Message-ID: <20171023121907.phgo4ch5ygms2uja@mwanda> (sfid-20171023_141941_223794_9574E5C4)
-References: <20171010140548.18016-1-colin.king@canonical.com>
+        Mon, 16 Oct 2017 19:37:47 -0400
+Received: by mail-pf0-f169.google.com with SMTP id b79so16944231pfk.5
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 16:37:47 -0700 (PDT)
+Date: Mon, 16 Oct 2017 16:37:44 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: iwlegacy: Convert timers to use timer_setup()
+Message-ID: <20171016233744.GA101655@beast> (sfid-20171017_013805_023318_E1B33724)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171010140548.18016-1-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-On Tue, Oct 10, 2017 at 03:05:48PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Shifting and masking strHostIfSetMulti->enabled is redundant since
-> enabled is a bool and so all the shifted and masked values will be
-> zero. Replace them with zero to simplify the code.
-> 
-> Detected by CoverityScan, CID#1339458 ("Bad shift operation") and
-> CID#1339506 ("Operands don't affect result").
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 7b620658ec38..94477dd08c85 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -2417,9 +2417,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
->  
->  	pu8CurrByte = wid.val;
->  	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
-> -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
-> -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
-> -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
-> +	*pu8CurrByte++ = 0;
-> +	*pu8CurrByte++ = 0;
-> +	*pu8CurrByte++ = 0;
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c |  2 +-
+ drivers/net/wireless/intel/iwlegacy/3945-rs.c  | 10 +++-------
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c |  9 ++++-----
+ drivers/net/wireless/intel/iwlegacy/common.c   |  4 ++--
+ drivers/net/wireless/intel/iwlegacy/common.h   |  2 +-
+ 5 files changed, 11 insertions(+), 16 deletions(-)
 
-This is harder to understand now.  I would be better to solve this by
-declaring a struct with the right format and using cpu_to_be32().
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 329f3a63dadd..4b53ebf00c7f 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -3429,7 +3429,7 @@ il3945_setup_deferred_work(struct il_priv *il)
+ 
+ 	il3945_hw_setup_deferred_work(il);
+ 
+-	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
++	timer_setup(&il->watchdog, il_bg_watchdog, 0);
+ 
+ 	tasklet_init(&il->irq_tasklet,
+ 		     (void (*)(unsigned long))il3945_irq_tasklet,
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-rs.c b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
+index b2f35dfbc01b..e8983c6a2b7b 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-rs.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
+@@ -181,9 +181,9 @@ il3945_rate_scale_flush_wins(struct il3945_rs_sta *rs_sta)
+ #define IL_AVERAGE_PACKETS             1500
+ 
+ static void
+-il3945_bg_rate_scale_flush(unsigned long data)
++il3945_bg_rate_scale_flush(struct timer_list *t)
+ {
+-	struct il3945_rs_sta *rs_sta = (void *)data;
++	struct il3945_rs_sta *rs_sta = from_timer(rs_sta, t, rate_scale_flush);
+ 	struct il_priv *il __maybe_unused = rs_sta->il;
+ 	int unflushed = 0;
+ 	unsigned long flags;
+@@ -360,9 +360,6 @@ il3945_rs_rate_init(struct il_priv *il, struct ieee80211_sta *sta, u8 sta_id)
+ 	rs_sta->flush_time = RATE_FLUSH;
+ 	rs_sta->last_tx_packets = 0;
+ 
+-	rs_sta->rate_scale_flush.data = (unsigned long)rs_sta;
+-	rs_sta->rate_scale_flush.function = il3945_bg_rate_scale_flush;
+-
+ 	for (i = 0; i < RATE_COUNT_3945; i++)
+ 		il3945_clear_win(&rs_sta->win[i]);
+ 
+@@ -415,8 +412,7 @@ il3945_rs_alloc_sta(void *il_priv, struct ieee80211_sta *sta, gfp_t gfp)
+ 	rs_sta = &psta->rs_sta;
+ 
+ 	spin_lock_init(&rs_sta->lock);
+-	init_timer(&rs_sta->rate_scale_flush);
+-
++	timer_setup(&rs_sta->rate_scale_flush, il3945_bg_rate_scale_flush, 0);
+ 	D_RATE("leave\n");
+ 
+ 	return rs_sta;
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+index 65eba2c24292..de63f2518f23 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+@@ -4074,9 +4074,9 @@ il4965_hdl_alive(struct il_priv *il, struct il_rx_buf *rxb)
+  * used for calibrating the TXPOWER.
+  */
+ static void
+-il4965_bg_stats_periodic(unsigned long data)
++il4965_bg_stats_periodic(struct timer_list *t)
+ {
+-	struct il_priv *il = (struct il_priv *)data;
++	struct il_priv *il = from_timer(il, t, stats_periodic);
+ 
+ 	if (test_bit(S_EXIT_PENDING, &il->status))
+ 		return;
+@@ -6258,10 +6258,9 @@ il4965_setup_deferred_work(struct il_priv *il)
+ 
+ 	INIT_WORK(&il->txpower_work, il4965_bg_txpower_work);
+ 
+-	setup_timer(&il->stats_periodic, il4965_bg_stats_periodic,
+-		    (unsigned long)il);
++	timer_setup(&il->stats_periodic, il4965_bg_stats_periodic, 0);
+ 
+-	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
++	timer_setup(&il->watchdog, il_bg_watchdog, 0);
+ 
+ 	tasklet_init(&il->irq_tasklet,
+ 		     (void (*)(unsigned long))il4965_irq_tasklet,
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index 8d5acda92a9b..558bb16bfd46 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -4844,9 +4844,9 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
+  * we reset the firmware. If everything is fine just rearm the timer.
+  */
+ void
+-il_bg_watchdog(unsigned long data)
++il_bg_watchdog(struct timer_list *t)
+ {
+-	struct il_priv *il = (struct il_priv *)data;
++	struct il_priv *il = from_timer(il, t, watchdog);
+ 	int cnt;
+ 	unsigned long timeout;
+ 
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
+index 18c60c92e3a3..dc6a74a05983 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.h
++++ b/drivers/net/wireless/intel/iwlegacy/common.h
+@@ -1832,7 +1832,7 @@ int il_enqueue_hcmd(struct il_priv *il, struct il_host_cmd *cmd);
+  * PCI						     *
+  *****************************************************/
+ 
+-void il_bg_watchdog(unsigned long data);
++void il_bg_watchdog(struct timer_list *t);
+ u32 il_usecs_to_beacons(struct il_priv *il, u32 usec, u32 beacon_interval);
+ __le32 il_add_beacon_time(struct il_priv *il, u32 base, u32 addon,
+ 			  u32 beacon_interval);
+-- 
+2.7.4
 
-regards,
-dan carpenter
+
+-- 
+Kees Cook
+Pixel Security
