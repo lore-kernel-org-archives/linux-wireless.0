@@ -1,205 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49670 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751468AbdJMK2W (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33452 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752095AbdJPNHx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 06:28:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] backports: remove CRYPTO_CCM backport
-Date: Fri, 13 Oct 2017 12:28:18 +0200
-Message-Id: <20171013102818.26226-1-johannes@sipsolutions.net> (sfid-20171013_122827_605829_EB6C540D)
+        Mon, 16 Oct 2017 09:07:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Pkshih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Souptick Joarder <jrdr.linux@gmail.com>,
+        "devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kernel-janitors\@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: Two rtlwifi drivers?
+References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+        <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
+        <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
+        <87k202qcjr.fsf@kamboji.qca.qualcomm.com>
+        <20171011131310.GF32250@kroah.com>
+        <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com>
+        <20171012103450.GA24647@kroah.com>
+        <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
+        <ed361ae7-864e-1179-c7da-3ff10f4c73e2@rempel-privat.de>
+Date: Mon, 16 Oct 2017 16:07:47 +0300
+In-Reply-To: <ed361ae7-864e-1179-c7da-3ff10f4c73e2@rempel-privat.de> (Oleksij
+        Rempel's message of "Mon, 16 Oct 2017 08:46:10 +0200")
+Message-ID: <87fuajmeak.fsf@kamboji.qca.qualcomm.com> (sfid-20171016_150756_898029_2E776171)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Oleksij Rempel <linux@rempel-privat.de> writes:
 
-This never actually worked properly as far as I can tell,
-and now it looks like it won't even compile due to the
-real crypto_memneq() backport.
+>> 4) As Kalle mentioned, rtlwifi contains many magic numbers, and I 
+>>    plan to fix them after rtl8723de and rtl8821ce. Because the drivers
+>>    are developing, the changes will make us hard to integrate. However,
+>>    I don't have plan to process the magic numbers in the module phydm,
+>>    because the most of BB/RF registers contain many functions. And
+>>    it doesn't have a register name but a bit field name instead.
+>>    Our BB team guys say the use of enumeration or defined name will
+>>    be unreadable, and the name is meaningless for most people.
+>
+> Experience with ath9k driver showed, that development was kind of
+> balanced between two groups, QCA and Community (Other companies,
+> researches, education and so on.). Saying: "you will not understand it
+> any way" is nor really helpful :)
+> Please don't repeat bad experience of Broadcom.
 
-Just remove it - distro kernels have it enabled and all
-others should just enable it.
+I agree with Oleksij here, but I want to still point out that there are
+cases when using magic numbers are ok, for example look at
+ar5008_initvals.h from ath9k. So it depends on case by case.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- backport/compat/Kconfig     | 11 -------
- backport/compat/Makefile    |  1 -
- backport/compat/backports.h | 10 ------
- backport/compat/main.c      |  9 +-----
- patches/crypto-ccm.patch    | 78 ---------------------------------------------
- 5 files changed, 1 insertion(+), 108 deletions(-)
- delete mode 100644 patches/crypto-ccm.patch
-
-diff --git a/backport/compat/Kconfig b/backport/compat/Kconfig
-index 542cf0cca781..492efbfc7d9f 100644
---- a/backport/compat/Kconfig
-+++ b/backport/compat/Kconfig
-@@ -102,17 +102,6 @@ config BPAUTO_USERSEL_BUILD_ALL
- 	  It's only really useful for compat testing, so
- 	  you probably shouldn't enable it.
- 
--config BPAUTO_CRYPTO_CCM
--	depends on CRYPTO_AEAD
--	depends on CRYPTO_CTR
--	bool
--
--config BPAUTO_BUILD_CRYPTO_CCM
--	bool
--	default n if CRYPTO_CCM
--	default y if BPAUTO_CRYPTO_CCM
--	#c-file crypto/ccm.c
--
- config BPAUTO_CRYPTO_SKCIPHER
- 	tristate
- 	depends on KERNEL_4_3
-diff --git a/backport/compat/Makefile b/backport/compat/Makefile
-index ead22a0099fc..69cfd514da71 100644
---- a/backport/compat/Makefile
-+++ b/backport/compat/Makefile
-@@ -37,7 +37,6 @@ compat-$(CPTCFG_KERNEL_4_7) += backport-4.7.o
- compat-$(CPTCFG_KERNEL_4_8) += backport-4.8.o
- compat-$(CPTCFG_KERNEL_4_10) += backport-4.10.o
- 
--compat-$(CPTCFG_BPAUTO_BUILD_CRYPTO_CCM) += crypto-ccm.o
- compat-$(CPTCFG_BPAUTO_CRYPTO_SKCIPHER) += crypto-skcipher.o
- 
- compat-$(CPTCFG_BPAUTO_BUILD_SYSTEM_DATA_VERIFICATION) += verification/verify.o
-diff --git a/backport/compat/backports.h b/backport/compat/backports.h
-index ccc8972b41f6..538488887fca 100644
---- a/backport/compat/backports.h
-+++ b/backport/compat/backports.h
-@@ -3,16 +3,6 @@
- 
- #include <linux/version.h>
- 
--#ifdef CPTCFG_BPAUTO_BUILD_CRYPTO_CCM
--int crypto_ccm_module_init(void);
--void crypto_ccm_module_exit(void);
--#else
--static inline int crypto_ccm_module_init(void)
--{ return 0; }
--static inline void crypto_ccm_module_exit(void)
--{}
--#endif
--
- #ifdef CPTCFG_BPAUTO_BUILD_WANT_DEV_COREDUMP
- int devcoredump_init(void);
- void devcoredump_exit(void);
-diff --git a/backport/compat/main.c b/backport/compat/main.c
-index 5d45e3dad3e3..0bf04201a0bd 100644
---- a/backport/compat/main.c
-+++ b/backport/compat/main.c
-@@ -53,16 +53,10 @@ EXPORT_SYMBOL_GPL(backport_dependency_symbol);
- 
- static int __init backport_init(void)
- {
--	int ret = crypto_ccm_module_init();
-+	int ret = devcoredump_init();
- 	if (ret)
- 		return ret;
- 
--	ret = devcoredump_init();
--	if (ret) {
--		crypto_ccm_module_exit();
--		return ret;
--	}
--
- 	printk(KERN_INFO "Loading modules backported from " CPTCFG_KERNEL_NAME
- #ifndef BACKPORTS_GIT_TRACKED
- 		" version " CPTCFG_KERNEL_VERSION
-@@ -86,7 +80,6 @@ subsys_initcall(backport_init);
- 
- static void __exit backport_exit(void)
- {
--	crypto_ccm_module_exit();
- 	devcoredump_exit();
- }
- module_exit(backport_exit);
-diff --git a/patches/crypto-ccm.patch b/patches/crypto-ccm.patch
-deleted file mode 100644
-index 2136689eca91..000000000000
---- a/patches/crypto-ccm.patch
-+++ /dev/null
-@@ -1,78 +0,0 @@
----- a/compat/crypto-ccm.c
--+++ b/compat/crypto-ccm.c
--@@ -14,13 +14,44 @@
-- #include <crypto/internal/hash.h>
-- #include <crypto/internal/skcipher.h>
-- #include <crypto/scatterwalk.h>
--+#include <crypto/algapi.h>
-- #include <linux/err.h>
-- #include <linux/init.h>
-- #include <linux/kernel.h>
-- #include <linux/module.h>
-- #include <linux/slab.h>
--+#include <linux/version.h>
-- 
---#include "internal.h"
--+#if LINUX_VERSION_IS_LESS(3,13,0)
--+/* consider properly backporting this? */
--+static int crypto_memneq(const void *a, const void *b, size_t size)
--+{
--+	unsigned long neq = 0;
--+
--+#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
--+	while (size >= sizeof(unsigned long)) {
--+		neq |= *(unsigned long *)a ^ *(unsigned long *)b;
--+		/* OPTIMIZER_HIDE_VAR(neq); */
--+		barrier();
--+		a += sizeof(unsigned long);
--+		b += sizeof(unsigned long);
--+		size -= sizeof(unsigned long);
--+	}
--+#endif /* CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS */
--+	while (size > 0) {
--+		neq |= *(unsigned char *)a ^ *(unsigned char *)b;
--+		/* OPTIMIZER_HIDE_VAR(neq); */
--+		barrier();
--+		a += 1;
--+		b += 1;
--+		size -= 1;
--+	}
--+	return neq != 0UL ? 1 : 0;
--+}
--+#endif
--+
--+/* from internal.h */
--+struct crypto_alg *crypto_alg_mod_lookup(const char *name, u32 type, u32 mask);
-- 
-- struct ccm_instance_ctx {
-- 	struct crypto_skcipher_spawn ctr;
--@@ -1001,7 +1032,7 @@ static struct crypto_template crypto_cbc
-- 	.module = THIS_MODULE,
-- };
-- 
---static int __init crypto_ccm_module_init(void)
--+int __init crypto_ccm_module_init(void)
-- {
-- 	int err;
-- 
--@@ -1033,19 +1064,10 @@ out_undo_cbcmac:
-- 	goto out;
-- }
-- 
---static void __exit crypto_ccm_module_exit(void)
--+void __exit crypto_ccm_module_exit(void)
-- {
-- 	crypto_unregister_template(&crypto_rfc4309_tmpl);
-- 	crypto_unregister_template(&crypto_ccm_tmpl);
-- 	crypto_unregister_template(&crypto_ccm_base_tmpl);
-- 	crypto_unregister_template(&crypto_cbcmac_tmpl);
-- }
---
---module_init(crypto_ccm_module_init);
---module_exit(crypto_ccm_module_exit);
---
---MODULE_LICENSE("GPL");
---MODULE_DESCRIPTION("Counter with CBC MAC");
---MODULE_ALIAS_CRYPTO("ccm_base");
---MODULE_ALIAS_CRYPTO("rfc4309");
---MODULE_ALIAS_CRYPTO("ccm");
 -- 
-2.14.2
+Kalle Valo
