@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45082 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755634AbdJJIVj (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:53670 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752546AbdJPMyq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 04:21:39 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 16 Oct 2017 08:54:46 -0400
+Received: by mail-lf0-f68.google.com with SMTP id l23so16869637lfk.10
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 05:54:45 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] bcma: use bcma_debug and pr_cont in MIPS driver
+Date: Mon, 16 Oct 2017 14:54:32 +0200
+Message-Id: <20171016125432.11655-1-zajec5@gmail.com> (sfid-20171016_145451_454211_7F477762)
 MIME-Version: 1.0
-Subject: Re: mwifiex: Random MAC address during scanning
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
-References: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Karthik Ananthapadmanabha <karthida@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20171010082139.024EC6079C@smtp.codeaurora.org> (sfid-20171010_102144_330302_C2C03617)
-Date: Tue, 10 Oct 2017 08:21:38 +0000 (UTC)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> From: Karthik Ananthapadmanabha <karthida@marvell.com>
-> 
-> Driver will advertise RANDOM_MAC support only if the device
-> supports this feature.
-> 
-> Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Using bcma_debug gives a device-specific prefix for messages and pr_cont
+is a common helper for continuing a line.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/bcma/driver_mips.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-073a435d55a6 mwifiex: Random MAC address during scanning
-
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 89af807cf29c..5904ef1aa624 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -184,10 +184,11 @@ static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
+ {
+ 	int i;
+ 	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
+-	printk(KERN_DEBUG KBUILD_MODNAME ": core 0x%04x, irq :", dev->id.id);
++
++	bcma_debug(dev->bus, "core 0x%04x, irq :", dev->id.id);
+ 	for (i = 0; i <= 6; i++)
+-		printk(" %s%s", irq_name[i], i == irq ? "*" : " ");
+-	printk("\n");
++		pr_cont(" %s%s", irq_name[i], i == irq ? "*" : " ");
++	pr_cont("\n");
+ }
+ 
+ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
 -- 
-https://patchwork.kernel.org/patch/9977525/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
