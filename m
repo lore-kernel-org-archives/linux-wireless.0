@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33494 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbdJBMZC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55690 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751982AbdJPM61 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 08:25:02 -0400
-Message-ID: <1506945898.25586.3.camel@sipsolutions.net> (sfid-20171002_142310_261577_2B3829C8)
-Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Xiang Gao <qasdfgtyuiop@gmail.com>, davem@davemloft.net,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Date: Mon, 02 Oct 2017 14:04:58 +0200
-In-Reply-To: <20170926131945.3962-1-qasdfgtyuiop@gmail.com> (sfid-20170926_152018_942414_806DE318)
-References: <20170926131945.3962-1-qasdfgtyuiop@gmail.com>
-         (sfid-20170926_152018_942414_806DE318)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 16 Oct 2017 08:58:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: icenowy@aosc.io
+Cc: devicetree@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com,
+        Rob Herring <robh+dt@kernel.org>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 1/2] dt-bindings: add device tree binding for Allwinner XR819 SDIO Wi-Fi
+References: <20171003165944.13056-1-icenowy@aosc.io>
+        <20171003165944.13056-2-icenowy@aosc.io>
+        <871smjxp46.fsf@kamboji.qca.qualcomm.com>
+        <E46F3A20-294A-497E-AF71-C77A67AFDB8C@aosc.io>
+        <59D4B1C8.8020105@broadcom.com> <20171004101145.kgjufpcktodppuy3@flea>
+        <C4895259-FCDE-4B21-BB15-8F150FC53BE3@aosc.io>
+        <878tgq5beu.fsf@codeaurora.org>
+        <dba5f095f9f25f0726ee3a2852e01b88@aosc.io>
+Date: Mon, 16 Oct 2017 15:58:20 +0300
+In-Reply-To: <dba5f095f9f25f0726ee3a2852e01b88@aosc.io> (icenowy@aosc.io's
+        message of "Sat, 14 Oct 2017 20:00:52 +0800")
+Message-ID: <87o9p7meqb.fsf@kamboji.qca.qualcomm.com> (sfid-20171016_145850_455508_EEC99DFD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please use "v2" tag or so in the subject line, having the same patch
-again is really not helpful.
+icenowy@aosc.io writes:
 
-The next should be v3, obviously.
+>>>>> > > Like I asked already last time, AFAICS there is no upstream xr819
+>>>>> > > wireless driver in drivers/net/wireless directory. Do we still
+>>>> accept
+>>>>> > > bindings like this for out-of-tree drivers?
+>>>>> >
+>>>>> > See esp8089.
+>>>>> >
+>>>>> > There's also no in-tree driver for it.
+>>>>>
+>>>>> The question is whether we should. The above might be a precedent,
+>>>> but it
+>>>>> may not necessarily be the way to go. The commit message for esp8089
+>>>> seems
+>>>>> to hint that there is intent to have an in-tree driver:
+>>>>>
+>>>>> """
+>>>>>     Note that at this point there only is an out of tree driver for
+>>>> this
+>>>>>     hardware, there is no clear timeline / path for merging this.
+>>>> Still
+>>>>>     I believe it would be good to specify the binding for this in
+>>>> tree
+>>>>>     now, so that any future migration to an in tree driver will not
+>>>> cause
+>>>>>     compatiblity issues.
+>>>>>
+>>>>>     Cc: Icenowy Zheng <icenowy@aosc.xyz>
+>>>>>     Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>>>     Signed-off-by: Rob Herring <robh@kernel.org>
+>>>>> """
+>>>>>
+>>>>> Regardless the bindings are in principle independent of the kernel
+>>>> and just
+>>>>> describing hardware. I think there have been discussions to move the
+>>>>> bindings to their own repository, but apparently it was decided
+>>>> otherwise.
+>>>>
+>>>> Yeah, I guess especially how it could be merged with the cw1200
+>>>> driver
+>>>> would be very relevant to that commit log.
+>>>
+>>> The cw1200 driver seems to still have some legacy platform
+>>> data. Maybe they should also be convert to DT.
+>>> (Or maybe compatible = "allwinner,xr819" is enough, as
+>>> xr819 is a specified variant of cw1200 family)
+>>
+>> Ah, so the upstream cw1200 driver supports xr819? Has anyone tested
+>> that? Or does cw1200 more changes than just adding the DT support?
+>
+> The support of XR819 in CW1200 driver is far more difficult than I
+> imagined -- the codedrop used in the mainlined CW1200 driver seems to
+> be so old that it's before XR819 (which seems to be based on CW1160),
+> and there's a large number of problems to adapt it to a modern CW1200
+> variant.
+>
+> P.S. could you apply this device tree binding patch now?
 
-> +++ b/net/mac80211/aead_api.c
-> @@ -1,7 +1,4 @@
-> -/*
-> - * Copyright 2014-2015, Qualcomm Atheros, Inc.
-> - *
-> - * This program is free software; you can redistribute it and/or
-> modify
-> +/* This program is free software; you can redistribute it and/or
-> modify
+As I haven't seen any consensus that applying bindings document for
+out-of-tree drivers is ok so at least I'm not taking this. Though not
+sure what DT maintainers are planning to do.
 
-I see no reason to make this change, why remove copyright?
-
-> +++ b/net/mac80211/wpa.c
-> @@ -464,7 +464,8 @@ static int ccmp_encrypt_skb(struct
-> ieee80211_tx_data *tx, struct sk_buff *skb,
->  	pos += IEEE80211_CCMP_HDR_LEN;
->  	ccmp_special_blocks(skb, pn, b_0, aad);
->  	return ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad,
-> pos, len,
-> -					 skb_put(skb, mic_len),
-> mic_len);
-> +					 skb_put(skb,
-> +						 key->u.ccmp.tfm-
-> >authsize));
->  }
-
-I see no reason for the change from mic_len to authsize here?
-
-> @@ -540,10 +541,11 @@ ieee80211_crypto_ccmp_decrypt(struct
-> ieee80211_rx_data *rx,
->  			ccmp_special_blocks(skb, pn, b_0, aad);
->  
->  			if (ieee80211_aes_ccm_decrypt(
-> -				    key->u.ccmp.tfm, b_0, aad,
-> -				    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
-> -				    data_len,
-> -				    skb->data + skb->len - mic_len, mic_len))
-> +				key->u.ccmp.tfm, b_0, aad,
-> +				skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
-> +				data_len,
-> +				skb->data + skb->len - key->u.ccmp.tfm->authsize
-> +			))
->  				return RX_DROP_UNUSABLE;
-
-That's a really really strange way of writing this ...
-
-Please reformat.
-
-johannes
+-- 
+Kalle Valo
