@@ -1,35 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:47750 "EHLO
-        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbdJ1DXz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 23:23:55 -0400
-Received: by mail-vk0-f47.google.com with SMTP id j2so5261430vki.4
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2017 20:23:55 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:41018 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751550AbdJPJk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Oct 2017 05:40:26 -0400
+Date: Mon, 16 Oct 2017 11:40:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: Andrey Konovalov <andreyknvl@google.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Subject: Re: usb/net/rt2x00: warning in rt2800_eeprom_word_index
+Message-ID: <20171016094024.GD2553@redhat.com> (sfid-20171016_114042_635234_06A57BD3)
+References: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
+ <20171012072529.GB2686@redhat.com>
+ <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171027044149.GG9888@us.netrek.org>
-References: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com>
- <5f907d16-b889-f7c0-0873-880e5c812ab9@lwfinger.net> <CABkE59A2Cr5mx3W_rkHj+qDtu6t-MQ2V_sJPfuuqF4vbJ7YfmQ@mail.gmail.com>
- <20171026220013.GC9888@us.netrek.org> <CABkE59BgQ-nk-yQ2XY-T2QTfshQghv3zYiyydnj7t0ek7qSCWQ@mail.gmail.com>
- <20171027044149.GG9888@us.netrek.org>
-From: David Ashley <dashxdr@gmail.com>
-Date: Fri, 27 Oct 2017 22:23:54 -0500
-Message-ID: <CABkE59AL=Cj_AoLo8qk01ia3vaHye29Wje=pPoA_r4mCPq_9mQ@mail.gmail.com> (sfid-20171028_052359_932476_A40420DA)
-Subject: Re: RTL usb adapter question
-To: James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/26/17, James Cameron <quozl@laptop.org> wrote:
-> Interesting, thanks.  It should be a QFN 46 pin chip; you may have
-> counted 15 instead of 14 pins on the long edge.  Send me a photograph
-> of the inside, off-list?
+Hi Dmitry
 
-I uploaded a couple of pictures here:
-http://www.linuxmotors.com/RTL8188CUS/
+On Sat, Oct 14, 2017 at 04:38:03PM +0200, Dmitry Vyukov wrote:
+> On Thu, Oct 12, 2017 at 9:25 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > Hi
+> >
+> > On Mon, Oct 09, 2017 at 07:50:53PM +0200, Andrey Konovalov wrote:
+> >> I've got the following report while fuzzing the kernel with syzkaller.
+> >>
+> >> On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
+> >>
+> >> I'm not sure whether this is a bug in the driver, or just a way to
+> >> report misbehaving device. In the latter case this shouldn't be a
+> >> WARN() call, since WARN() means bug in the kernel.
+> >
+> > This is about wrong EEPROM, which reported 3 tx streams on
+> > non 3 antenna device. I think WARN() is justified and thanks
+> > to the call trace I was actually able to to understand what
+> > happened.
+> >
+> > In general I do not think WARN() only means a kernel bug, it
+> > can be F/W or H/W bug too.
+> 
+> Hi Stanislaw,
+> 
+> Printing messages is fine. Printing stacks is fine. Just please make
+> them distinguishable from kernel bugs and don't kill the whole
+> possibility of automated Linux kernel testing. That's an important
+> capability.
 
-You're right, I miscounted, it has 46 pins.
+We do not distinguish between bugs and other problems when WARN() is
+used in (wireless) drivers, what I think is correct, taking comment from
+include/asm-generic/bug.h :
 
--Dave
+/*
+ * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report
+ * significant issues that need prompt attention if they should ever
+ * appear at runtime.  Use the versions with printk format strings
+ * to provide better diagnostics.
+ */
+
+Historically we have BUG() to mark the bugs, but usage if it is not
+recommended as it can kill the system, so for anything that can
+be recovered in runtime - WARN() is recommended.
+
+Perhaps we can introduce another helper like PROBLEM() for marking
+situations when something is wrong, but it is not a bug. However I'm
+not even sure at what extent it can be used, since for many cases
+if not the most, driver author can not tell apriori if the problem
+is a bug in the driver or HW/FW misbehaviour (or maybe particular
+issue can happen because of both).
+
+Thanks
+Stanislaw
