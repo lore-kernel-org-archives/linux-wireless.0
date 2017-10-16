@@ -1,156 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39867 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751226AbdJXCDy (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41918 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751872AbdJPJRy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 22:03:54 -0400
-From: <pkshih@realtek.com>
-To: <Larry.Finger@lwfinger.net>, <kvalo@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <yhchuang@realtek.com>,
-        <pkshih@realtek.com>
-Subject: [PATCH] rtlwifi: Remove seq_number from rtl_tid_data
-Date: Tue, 24 Oct 2017 10:03:31 +0800
-Message-ID: <20171024020331.7353-1-pkshih@realtek.com> (sfid-20171024_040423_788641_DE417850)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 16 Oct 2017 05:17:54 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: accept key reinstall without changing anything
+Date: Mon, 16 Oct 2017 11:17:51 +0200
+Message-Id: <20171016091751.17989-1-johannes@sipsolutions.net> (sfid-20171016_111758_022974_22D72505)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Since mac80211 maintains the sequence number for each STA/TID,
-driver doesn't need to maintain a copy.
+When a key is reinstalled we can reset the replay counters
+etc. which can lead to nonce reuse and/or replay detection
+being impossible, breaking security properties, as described
+in the "KRACK attacks".
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+In particular, CVE-2017-13080 applies to GTK rekeying that
+happened in firmware while the host is in D3, with the second
+part of the attack being done after the host wakes up. In
+this case, the wpa_supplicant mitigation isn't sufficient
+since wpa_supplicant doesn't know the GTK material.
+
+In case this happens, simply silently accept the new key
+coming from userspace but don't take any action on it since
+it's the same key; this keeps the PN counter intact.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c |  6 ++----
- drivers/net/wireless/realtek/rtlwifi/pci.c  | 17 -----------------
- drivers/net/wireless/realtek/rtlwifi/usb.c  | 17 -----------------
- drivers/net/wireless/realtek/rtlwifi/wifi.h |  1 -
- 4 files changed, 2 insertions(+), 39 deletions(-)
+ net/mac80211/key.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 0b34886321f1..9f35b25bddf2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1618,9 +1618,8 @@ int rtl_tx_agg_start(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index a98fc2b5e0dc..ae995c8480db 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -4,7 +4,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright 2015	Intel Deutschland GmbH
++ * Copyright 2015-2017	Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -620,9 +620,6 @@ int ieee80211_key_link(struct ieee80211_key *key,
  
- 	RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG,
- 		 "on ra = %pM tid = %d seq:%d\n", sta->addr, tid,
--		 tid_data->seq_number);
-+		 *ssn);
+ 	pairwise = key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE;
+ 	idx = key->conf.keyidx;
+-	key->local = sdata->local;
+-	key->sdata = sdata;
+-	key->sta = sta;
  
--	*ssn = tid_data->seq_number;
- 	tid_data->agg.agg_state = RTL_AGG_START;
+ 	mutex_lock(&sdata->local->key_mtx);
  
- 	ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-@@ -1679,8 +1678,7 @@ int rtl_rx_agg_start(struct ieee80211_hw *hw,
- 	tid_data = &sta_entry->tids[tid];
+@@ -633,6 +630,21 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	else
+ 		old_key = key_mtx_dereference(sdata->local, sdata->keys[idx]);
  
- 	RT_TRACE(rtlpriv, COMP_RECV, DBG_DMESG,
--		 "on ra = %pM tid = %d seq:%d\n", sta->addr, tid,
--		 tid_data->seq_number);
-+		 "on ra = %pM tid = %d\n", sta->addr, tid);
++	/*
++	 * Silently accept key re-installation without really installing the
++	 * new version of the key to avoid nonce reuse or replay issues.
++	 */
++	if (old_key && key->conf.keylen == old_key->conf.keylen &&
++	    !memcmp(key->conf.key, old_key->conf.key, key->conf.keylen)) {
++		ieee80211_key_free_unused(key);
++		ret = 0;
++		goto out;
++	}
++
++	key->local = sdata->local;
++	key->sdata = sdata;
++	key->sta = sta;
++
+ 	increment_tailroom_need_count(sdata);
  
- 	tid_data->agg.rx_agg_state = RTL_RX_AGG_START;
- 	return 0;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index b9a6d23364be..eb12818b46b3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -1623,7 +1623,6 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
- 		      struct rtl_tcb_desc *ptcb_desc)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_sta_info *sta_entry = NULL;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct rtl8192_tx_ring *ring;
- 	struct rtl_tx_desc *pdesc;
-@@ -1635,9 +1634,6 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
- 	__le16 fc = rtl_get_fc(skb);
- 	u8 *pda_addr = hdr->addr1;
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	/*ssn */
--	u8 tid = 0;
--	u16 seq_number = 0;
- 	u8 own;
- 	u8 temp_one = 1;
- 
-@@ -1699,19 +1695,6 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
- 			return skb->len;
+ 	ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
+@@ -648,6 +660,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 		ret = 0;
  	}
  
--	if (ieee80211_is_data_qos(fc)) {
--		tid = rtl_get_tid(skb);
--		if (sta) {
--			sta_entry = (struct rtl_sta_info *)sta->drv_priv;
--			seq_number = (le16_to_cpu(hdr->seq_ctrl) &
--				      IEEE80211_SCTL_SEQ) >> 4;
--			seq_number += 1;
--
--			if (!ieee80211_has_morefrags(hdr->frame_control))
--				sta_entry->tids[tid].seq_number = seq_number;
--		}
--	}
--
- 	if (ieee80211_is_data(fc))
- 		rtlpriv->cfg->ops->led_control(hw, LED_CTL_TX);
++ out:
+ 	mutex_unlock(&sdata->local->key_mtx);
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 5590d07d0918..39b033b3b53a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -952,17 +952,12 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
- 				   u16 hw_queue)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct rtl_tx_desc *pdesc = NULL;
- 	struct rtl_tcb_desc tcb_desc;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
- 	__le16 fc = hdr->frame_control;
- 	u8 *pda_addr = hdr->addr1;
--	/* ssn */
--	u8 *qc = NULL;
--	u8 tid = 0;
--	u16 seq_number = 0;
- 
- 	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
- 	if (ieee80211_is_auth(fc)) {
-@@ -983,20 +978,8 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
- 		rtlpriv->stats.txbytesbroadcast += skb->len;
- 	else
- 		rtlpriv->stats.txbytesunicast += skb->len;
--	if (ieee80211_is_data_qos(fc)) {
--		qc = ieee80211_get_qos_ctl(hdr);
--		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
--		seq_number = (le16_to_cpu(hdr->seq_ctrl) &
--			     IEEE80211_SCTL_SEQ) >> 4;
--		seq_number += 1;
--		seq_number <<= 4;
--	}
- 	rtlpriv->cfg->ops->fill_tx_desc(hw, hdr, (u8 *)pdesc, NULL, info, sta, skb,
- 					hw_queue, &tcb_desc);
--	if (!ieee80211_has_morefrags(hdr->frame_control)) {
--		if (qc)
--			mac->tids[tid].seq_number = seq_number;
--	}
- 	if (ieee80211_is_data(fc))
- 		rtlpriv->cfg->ops->led_control(hw, LED_CTL_TX);
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 7dfc73b554f1..22afc14c3da6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1324,7 +1324,6 @@ struct rssi_sta {
- };
- 
- struct rtl_tid_data {
--	u16 seq_number;
- 	struct rtl_ht_agg agg;
- };
- 
+ 	return ret;
 -- 
-2.14.1
+2.14.2
