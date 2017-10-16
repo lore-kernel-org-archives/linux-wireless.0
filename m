@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:50831 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757463AbdJMME5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41976 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750914AbdJPJZB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 08:04:57 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] cfg80211: don't print log output for building shipped-certs
-Date: Fri, 13 Oct 2017 14:04:30 +0200
-Message-Id: <20171013120446.4079666-1-arnd@arndb.de> (sfid-20171013_140609_083098_0CFBF667)
+        Mon, 16 Oct 2017 05:25:01 -0400
+Message-ID: <1508145899.10607.30.camel@sipsolutions.net> (sfid-20171016_112504_583900_A5870E0D)
+Subject: Re: [PATCH] iw: add command to register and capture mgmt frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 16 Oct 2017 11:24:59 +0200
+In-Reply-To: <20171016084810.plzog2dtzakra4ae@bars>
+References: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com>
+         <CALLGbR+DonvXRDysZGx3fJ0wGQsmnWNW3db7mv9KObwTcicnOg@mail.gmail.com>
+         <20171015095133.prxuuukv6osx52td@bars>
+         <1508138777.10607.14.camel@sipsolutions.net>
+         <20171016084810.plzog2dtzakra4ae@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Building an allmodconfig kernel with 'make -s' now prints a single line:
+On Mon, 2017-10-16 at 11:48 +0300, Sergey Matyukevich wrote:
+> 
+> Well, monitor mode support in qtnfmac is in our todo list for sure. 
 
-  GEN     net/wireless/shipped-certs.c
+Sure. I'm saying you don't really need full monitor support at all,
+just a pure software construct for this.
 
-Using '$(kecho)' here will skip the output with 'make -s' but
-otherwise keeps printing it, which is consistent with how we
-handle all the other output.
+> Meanwhile the purpose of the patch was not to implement a full-
+> fledged mgmt packet capture. We have monitor mode and mature capture
+> tools for that.
 
-Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- net/wireless/Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Right, and I didn't originally see the patch as such, just that the
+discussion (and in particular Julian's suggestion) veered off in that
+direction.
 
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index 219baea57e4e..e585f3f71f77 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -23,7 +23,7 @@ cfg80211-y += extra-certs.o
- endif
- 
- $(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
--	@echo "  GEN     $@"
-+	@$(kecho) "  GEN     $@"
- 	@echo '#include "reg.h"' > $@
- 	@echo 'const u8 shipped_regdb_certs[] = {' >> $@
- 	@for f in $^ ; do hexdump -v -e '1/1 "0x%.2x," "\n"' < $$f >> $@ ; done
-@@ -32,7 +32,7 @@ $(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
- 
- $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
- 		      $(wildcard $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%)/*.x509)
--	@echo "  GEN     $@"
-+	@$(kecho) "  GEN     $@"
- 	@echo '#include "reg.h"' > $@
- 	@echo 'const u8 extra_regdb_certs[] = {' >> $@
- 	@for f in $^ ; do test -f $$f && hexdump -v -e '1/1 "0x%.2x," "\n"' < $$f >> $@ || true ; done
--- 
-2.9.0
+> Nevertheless in certain cases it is handy to dump selected types of
+> mgmt frames while system is up and running without adding the whole
+> monitor overhead. The idea was that NL80211_CMD_REGISTER_FRAME and iw
+> are the right tools for that task. Anyway, iw is something like a
+> 'swiss-army-knife' tool for various tasks related to
+> mac80211/cfg80211 reporting and troubleshooting.
+
+I'd see this particular feature in iw more as a way to debug the
+registrations, but whatever you ultimately want to use it for I neither
+can nor want to control :-)
+
+> Let me know if you have any objections to implementation details :)
+
+Yeah, I'll need to review it, just need a bit more time for that.
+
+> Then I will resubmit it addressing all the comments. Besides I am
+> going to change command name from 'capture' to 'dump' to avoid
+> confusion. Finally, I will update commit message adding information
+> about unicast nature of those registrations.
+
+Sounds good :)
+
+Do you want to resend before I review it?
+
+johannes
