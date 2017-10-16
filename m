@@ -1,72 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blatinox.fr ([51.254.120.209]:33833 "EHLO vps202351.ovh.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751672AbdJATlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Oct 2017 15:41:15 -0400
-From: =?UTF-8?q?J=C3=A9r=C3=A9my=20Lefaure?=
-        <jeremy.lefaure@lse.epita.fr>
-Cc: alsa-devel@alsa-project.org, amd-gfx@lists.freedesktop.org,
-        brcm80211-dev-list@cypress.com,
-        brcm80211-dev-list.pdl@broadcom.com, devel@acpica.org,
-        devel@driverdev.osuosl.org, dm-devel@redhat.com,
-        dri-devel@lists.freedesktop.org, ecryptfs@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org,
-        intel-gvt-dev@lists.freedesktop.org,
-        intel-wired-lan@lists.osuosl.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        linux-acpi@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        nouveau@lists.freedesktop.org,
-        openipmi-developer@lists.sourceforge.net
-Subject: [PATCH 00/18] use ARRAY_SIZE macro
-Date: Sun,  1 Oct 2017 15:30:38 -0400
-Message-Id: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr> (sfid-20171001_214008_654940_0CF8C4AC)
+Received: from mail-dm3nam03on0056.outbound.protection.outlook.com ([104.47.41.56]:56000
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750914AbdJPIsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Oct 2017 04:48:25 -0400
+Date: Mon, 16 Oct 2017 11:48:11 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] iw: add command to register and capture mgmt frames
+Message-ID: <20171016084810.plzog2dtzakra4ae@bars> (sfid-20171016_104829_759154_3699AAE7)
+References: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com>
+ <CALLGbR+DonvXRDysZGx3fJ0wGQsmnWNW3db7mv9KObwTcicnOg@mail.gmail.com>
+ <20171015095133.prxuuukv6osx52td@bars>
+ <1508138777.10607.14.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1508138777.10607.14.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
-Using ARRAY_SIZE improves the code readability. I used coccinelle (I
-made a change to the array_size.cocci file [1]) to find several places
-where ARRAY_SIZE could be used instead of other macros or sizeof
-division.
+Hello Johannes and all,
 
-I tried to divide the changes into a patch per subsystem (excepted for
-staging). If one of the patch should be split into several patches, let
-me know.
+> So first, I'll say that I have no objection in principle to the patch,
+> as a debugging aid.
+> 
+> However, the story is more complicated.
+> 
+> > IIUC tshark and other specific capture tools need wireless netdevice
+> > to be in monitor mode.
+> 
+> This is correct, but shouldn't be a problem.
+> 
+> > This particular iw command is based on
+> > NL80211_CMD_REGISTER_FRAME
+> > and related cfg80211 ops. In fact, this command can be used to
+> > subscribe
+> > to mgmt frames when wireless device is up and running in AP or STA
+> > mode.
+> > That can be convenient for monitor and debug purposes. There is a
+> > limitation though: currently cfg80211 core allows only one subscriber
+> > for each particular frame/pattern.
+> 
+> If you're looking for a tool to actually do something like sniffer,
+> this API isn't the right thing to do.
+> 
+> That's why I also don't think it should be added to tshark.
+> 
+> Remember that with the use of this API also come certain obligations.
+> For example, if you subscribe to (certain) action frames and then don't
+> actually process them as described by the spec, then the subscriber
+> MUST generate responses with the 0x80 bit ORed into the action code,
+> returning the frame as not understood. Clearly, this isn't something
+> that iw does and can implement.
+> 
+> Additionally, as you noted, and it's for this exact reason because
+> otherwise responsibilities wouldn't be clearly defined, there can only
+> be a single subscriber to a certain set of frames, as specified by the
+> subtype and match prefix, so using it as a type of sniffer or debug
+> tool may affect other functional operation.
+> 
+> 
+> In mac80211, it's _always_ possible to add a monitor interface, and
+> given no special flags (which may or may not be supported by a given
+> driver anyway) this monitor interface is a pure software construct and
+> will in no way affect device operation - apart from sending all
+> received frames to the monitor interface at the beginning of mac80211's
+> operation.
+> 
+> I see no reason, other than needing a little bit of coding, that this
+> couldn't similarly be supported in qtnfmac.
 
-In order to reduce the size of the To: and Cc: lines, each patch of the
-series is sent only to the maintainers and lists concerned by the patch.
-This cover letter is sent to every list concerned by this series.
+Well, monitor mode support in qtnfmac is in our todo list for sure. Meanwhile
+the purpose of the patch was not to implement a full-fledged mgmt packet
+capture. We have monitor mode and mature capture tools for that.
 
-This series is based on linux-next next-20170929. Each patch has been
-tested by building the relevant files with W=1.
+Nevertheless in certain cases it is handy to dump selected types of mgmt frames
+while system is up and running without adding the whole monitor overhead. The
+idea was that NL80211_CMD_REGISTER_FRAME and iw are the right tools for that
+task. Anyway, iw is something like a 'swiss-army-knife' tool for various tasks
+related to mac80211/cfg80211 reporting and troubleshooting.
 
-This series contains the following patches:
-[PATCH 01/18] sound: use ARRAY_SIZE
-[PATCH 02/18] tracing/filter: use ARRAY_SIZE
-[PATCH 03/18] media: use ARRAY_SIZE
-[PATCH 04/18] IB/mlx5: Use ARRAY_SIZE
-[PATCH 05/18] net: use ARRAY_SIZE
-[PATCH 06/18] drm: use ARRAY_SIZE
-[PATCH 07/18] scsi: bfa: use ARRAY_SIZE
-[PATCH 08/18] ecryptfs: use ARRAY_SIZE
-[PATCH 09/18] nfsd: use ARRAY_SIZE
-[PATCH 10/18] orangefs: use ARRAY_SIZE
-[PATCH 11/18] dm space map metadata: use ARRAY_SIZE
-[PATCH 12/18] x86: use ARRAY_SIZE
-[PATCH 13/18] tpm: use ARRAY_SIZE
-[PATCH 14/18] ipmi: use ARRAY_SIZE
-[PATCH 15/18] acpi: use ARRAY_SIZE
-[PATCH 16/18] media: staging: atomisp: use ARRAY_SIZE
-[PATCH 17/18] staging: rtl8723bs: use ARRAY_SIZE
-[PATCH 18/18] staging: rtlwifi: use ARRAY_SIZE
+Speaking of the patch, you mentioned that you have no objection in principle.
+Let me know if you have any objections to implementation details :)
+Then I will resubmit it addressing all the comments. Besides I am going
+to change command name from 'capture' to 'dump' to avoid confusion.
+Finally, I will update commit message adding information about unicast
+nature of those registrations.
 
-
-[1]: https://lkml.org/lkml/2017/9/13/689
+Regards,
+Sergey
