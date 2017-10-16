@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49222 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751893AbdJBP5W (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44572 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751801AbdJPF6b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 11:57:22 -0400
-Message-ID: <1506959840.10681.0.camel@sipsolutions.net> (sfid-20171002_175725_636303_F99316BB)
-Subject: Re: [PATCH] nl80211: look for HT/VHT capabilities in beacon's tail
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 02 Oct 2017 17:57:20 +0200
-In-Reply-To: <20171002153428.dhh47qlza7agrru4@bars>
-References: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com>
-         <20171002153428.dhh47qlza7agrru4@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 16 Oct 2017 01:58:31 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V6 0/5] Add TDLS feature for ath10k
+Date: Mon, 16 Oct 2017 14:00:28 +0800
+Message-ID: <1508133633-23214-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171016_075842_907216_519B7346)
+In-Reply-To: <TDLS for ath10k patches V6>
+References: <TDLS for ath10k patches V6>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-10-02 at 18:34 +0300, Sergey Matyukevich wrote:
-> On Wed, Aug 30, 2017 at 01:52:25PM -0700, igor.mitsyanko.os@quantenna
-> .com wrote:
-> 
-> > There are no HT/VHT capabilities in
-> > cfg80211_ap_settings::beacon_ies,
-> > these should be looked for in beacon's tail instead.
-> > 
-> > Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> > ---
-> > 
-> > This is true for hostapd (at least the one in mainline): it does
-> > not
-> > include HT/VHT caps and WLAN_EID_SUPP_RATES into beacon_ies.
-> > But worth noting that there is no clear documentation that I could
-> > find
-> > on what IEs could and could not be included into beacon_ies.
-> > 
-> >  net/wireless/nl80211.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Hello Johannes,
-> 
-> Any comments on this change ?
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-It's already in linux.git ...
+This patchset is for Rome PCIE chip, it will not affect other hardware
 
-johannes
+Yingying Tang (5):
+  mac80211: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer inactivity detection
+  ath10k: Avoid to set WEP key for TDLS peer
+  ath10k: Fix TDLS peer TX data failure issue on encryped AP
+
+ drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |    9 +++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
+ include/net/mac80211.h                    |    4 +++
+ net/mac80211/tdls.c                       |    5 ++-
+ 6 files changed, 81 insertions(+), 2 deletions(-)
+
+-- 
+1.7.9.5
