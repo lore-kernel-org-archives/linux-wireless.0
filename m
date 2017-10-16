@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52622 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751034AbdJLF1t (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41000 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750821AbdJPHir (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 01:27:49 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Subject: RE: [EXT] Re: [PATCH] mwifiex: Random MAC address during scanning
-Date: Thu, 12 Oct 2017 05:27:44 +0000
-Message-ID: <90f90bcb559345e7bad7ba8d371a615e@SC-EXCH02.marvell.com> (sfid-20171012_072753_854687_8A21341D)
-References: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
- <20171011194148.GA84547@google.com>
-In-Reply-To: <20171011194148.GA84547@google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Mon, 16 Oct 2017 03:38:47 -0400
+Message-ID: <1508139524.10607.25.camel@sipsolutions.net> (sfid-20171016_093851_682853_0344B992)
+Subject: using verifier to ensure a BPF program uses certain metadata?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: Daniel Borkmann <daniel@iogearbox.net>,
+        alexei.starovoitov@gmail.com,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 16 Oct 2017 09:38:44 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+Hi,
 
-> ----------------------------------------------------------------------
-> On Fri, Sep 29, 2017 at 04:23:10PM +0530, Ganapathi Bhat wrote:
-> > From: Karthik Ananthapadmanabha <karthida@marvell.com>
-> >
-> > Driver will advertise RANDOM_MAC support only if the device supports
-> > this feature.
-> >
-> > Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
-> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
->
-> I'd just like to point out that this is a very bad commit subject:
->
-> "[PATCH] mwifiex: Random MAC address during scanning"
->
-> It's borderline wrong, really. "Random MAC address during scanning" is
-> already supported. This patch is just adding a feature-flag check for it, since
-> some firmwares in the wild don't support it. A more accurate description
-> would be something like:
->
-> "[PATCH] mwifiex: Add feature flag support for MAC randomization"
->
-> The patch is already applied, so I'd only worry about it for future submissions
-> (no need to resend).
+As we discussed in April already (it's really been that long...), I'd
+wanted to allow using BPF to filter wireless monitor frames, to enable
+new use cases and higher performance in monitoring. I have some code,
+at
 
-I'm Really Sorry.  I will take care of this in future.
+https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/log/?h=bpf
 
->
-> Brian
+which implements parts of this. It's still missing the TX status path
+and perhaps associated metadata, but that part is easy.
+
+The bigger "problem" is that we're going to be adding support for
+devices that have 802.11->Ethernet conversion already in hardware, and
+in that case the notion that the filter program will get an 802.11
+header to look at is no longer right.
+
+Now, most likely for the actual in-service monitoring we'll actually
+have to reconstitute the 802.11 header on the fly (in pure monitoring
+where nothing else is active, we can just disable the conversion), but
+the filtering shouldn't really be reliant on that, since that's not the
+cheapest thing to do.
+
+The obvious idea around this is to add a metadata field (just a bit
+really), something like "is_data_ethernet", saying that it was both a
+data frame and is already converted to have an Ethernet header.
+However, since these devices don't really exist yet for the vast
+majority of people, I'm a bit afraid that we'll find later a lot of
+code simply ignoring this field and looking at the "802.11" header,
+which is then broken if it encounters an Ethernet header instead.
+
+Are there lies my question: If we added a new callback to
+bpf_verifier_ops (e.g. "post_verifier_check"), to be called after the
+normal verification, and also added a context argument to
+"is_valid_access" (*), we could easily track that this new metadata
+field is accessed, and reject programs that don't access it at all.
+
+Now, I realize that people could trivially just work around this in
+their program if they wanted, but I think most will take the reminder
+and just implement
+
+    if (ctx->is_data_ethernet)
+        return DROP_FRAME;
+
+instead, since mostly data frames will not be very relevant to them.
+
+What do you think?
+
+johannes
+
+(*) the context argument could just be a void **, and is_valid_access
+can allocate memory if needed - in this case I'd probably just do
+something like "return *is_valid_access ?: NULL;" and return something
+like "(void *)1" for when the field in question was accessed, and then
+just check that in "post_verifier_check".
