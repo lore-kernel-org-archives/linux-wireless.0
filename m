@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53970 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937082AbdJRKRs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 06:17:48 -0400
-Message-ID: <1508321865.2674.13.camel@sipsolutions.net> (sfid-20171018_121802_907068_E361E6B9)
-Subject: Re: [PATCH] fq_impl: Properly enforce memory limit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 18 Oct 2017 12:17:45 +0200
-In-Reply-To: <20171016150557.19368-1-toke@toke.dk> (sfid-20171016_170633_624958_1B076FBF)
-References: <20171016150557.19368-1-toke@toke.dk>
-         (sfid-20171016_170633_624958_1B076FBF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-cys01nam02on0076.outbound.protection.outlook.com ([104.47.37.76]:51898
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751358AbdJPJoM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Oct 2017 05:44:12 -0400
+Date: Mon, 16 Oct 2017 12:43:59 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] iw: add command to register and capture mgmt frames
+Message-ID: <20171016094358.ye7x6yc2m2u6qdrw@bars> (sfid-20171016_114420_118535_C21F8700)
+References: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com>
+ <CALLGbR+DonvXRDysZGx3fJ0wGQsmnWNW3db7mv9KObwTcicnOg@mail.gmail.com>
+ <20171015095133.prxuuukv6osx52td@bars>
+ <1508138777.10607.14.camel@sipsolutions.net>
+ <20171016084810.plzog2dtzakra4ae@bars>
+ <1508145899.10607.30.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1508145899.10607.30.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-10-16 at 17:05 +0200, Toke Høiland-Jørgensen wrote:
-> The fq structure would fail to properly enforce the memory limit in
-> the case
-> where the packet being enqueued was bigger than the packet being
-> removed to
-> bring the memory usage down. So keep dropping packets until the
-> memory usage is
-> back below the limit. Also, fix the statistics for memory limit
-> violations.
+> > Let me know if you have any objections to implementation details :)
 > 
-Applied.
+> Yeah, I'll need to review it, just need a bit more time for that.
+> 
+> > Then I will resubmit it addressing all the comments. Besides I am
+> > going to change command name from 'capture' to 'dump' to avoid
+> > confusion. Finally, I will update commit message adding information
+> > about unicast nature of those registrations.
+> 
+> Sounds good :)
+> 
+> Do you want to resend before I review it?
 
-johannes
+No, I will wait for code reviews, then I will resend the updated
+patch including changes for all the upcoming comments.
+
+Regards,
+Sergey
