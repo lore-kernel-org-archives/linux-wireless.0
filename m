@@ -1,20 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:54140 "EHLO
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:55988 "EHLO
         mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752199AbdJEAtz (ORCPT
+        with ESMTP id S932583AbdJPXhf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 20:49:55 -0400
-Received: by mail-pg0-f54.google.com with SMTP id y192so68736pgd.10
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 17:49:54 -0700 (PDT)
-Date: Wed, 4 Oct 2017 17:49:52 -0700
+        Mon, 16 Oct 2017 19:37:35 -0400
+Received: by mail-pg0-f54.google.com with SMTP id b11so8062657pgn.12
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 16:37:35 -0700 (PDT)
+Date: Mon, 16 Oct 2017 16:37:33 -0700
 From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH] net/mac80211/mesh_plink: Convert timers to use
-Message-ID: <20171005004952.GA23133@beast> (sfid-20171005_030801_816394_EFDDF465)
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH] wireless: ath: Convert timers to use timer_setup()
+Message-ID: <20171016233733.GA101566@beast> (sfid-20171017_013751_378516_2FC79AF9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,93 +20,526 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly. This requires adding a pointer back
-to the sta_info since container_of() can't resolve the sta_info.
+to pass the timer pointer explicitly.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
-This requires commit 686fef928bba ("timer: Prepare to change timer
-callback argument type") in v4.14-rc3, but should be otherwise
-stand-alone.
----
- net/mac80211/mesh_plink.c | 9 +++++----
- net/mac80211/sta_info.c   | 2 +-
- net/mac80211/sta_info.h   | 2 ++
- 3 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ar5523/ar5523.c      |  7 +++----
+ drivers/net/wireless/ath/ath10k/htt_rx.c      |  6 +++---
+ drivers/net/wireless/ath/ath10k/pci.c         | 17 ++++++++---------
+ drivers/net/wireless/ath/ath10k/pci.h         |  2 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c    |  6 ++----
+ drivers/net/wireless/ath/ath6kl/core.h        |  2 +-
+ drivers/net/wireless/ath/ath6kl/main.c        |  5 ++---
+ drivers/net/wireless/ath/ath6kl/txrx.c        |  6 +++---
+ drivers/net/wireless/ath/ath6kl/wmi.c         |  4 ++--
+ drivers/net/wireless/ath/ath6kl/wmi.h         |  2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h        |  4 ++--
+ drivers/net/wireless/ath/ath9k/channel.c      | 14 ++++++--------
+ drivers/net/wireless/ath/ath9k/gpio.c         | 14 ++++++--------
+ drivers/net/wireless/ath/ath9k/htc.h          |  2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  3 +--
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |  4 ++--
+ drivers/net/wireless/ath/ath9k/init.c         |  4 ++--
+ drivers/net/wireless/ath/ath9k/link.c         |  6 +++---
+ drivers/net/wireless/ath/ath9k/main.c         |  4 ++--
+ drivers/net/wireless/ath/wil6210/main.c       | 15 +++++++--------
+ drivers/net/wireless/ath/wil6210/p2p.c        |  4 ++--
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  2 +-
+ 22 files changed, 61 insertions(+), 72 deletions(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f69c6c38ca43..fcc02beaee6d 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -604,8 +604,9 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_mbss_info_change_notify(sdata, changed);
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 68f0463ed8df..b94759daeacc 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -889,9 +889,9 @@ static void ar5523_tx_work(struct work_struct *work)
+ 	mutex_unlock(&ar->mutex);
  }
  
--static void mesh_plink_timer(unsigned long data)
-+static void mesh_plink_timer(struct timer_list *t)
+-static void ar5523_tx_wd_timer(unsigned long arg)
++static void ar5523_tx_wd_timer(struct timer_list *t)
  {
-+	struct mesh_sta *mesh = from_timer(mesh, t, plink_timer);
- 	struct sta_info *sta;
- 	u16 reason = 0;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -617,7 +618,7 @@ static void mesh_plink_timer(unsigned long data)
- 	 * del_timer_sync() this timer after having made sure
- 	 * it cannot be readded (by deleting the plink.)
- 	 */
--	sta = (struct sta_info *) data;
-+	sta = mesh->plink_sta;
+-	struct ar5523 *ar = (struct ar5523 *) arg;
++	struct ar5523 *ar = from_timer(ar, t, tx_wd_timer);
  
- 	if (sta->sdata->local->quiescing)
- 		return;
-@@ -698,8 +699,8 @@ static void mesh_plink_timer(unsigned long data)
- static inline void mesh_plink_timer_set(struct sta_info *sta, u32 timeout)
- {
- 	sta->mesh->plink_timer.expires = jiffies + msecs_to_jiffies(timeout);
--	sta->mesh->plink_timer.data = (unsigned long) sta;
--	sta->mesh->plink_timer.function = mesh_plink_timer;
-+	sta->mesh->plink_sta = sta;
-+	sta->mesh->plink_timer.function = (TIMER_FUNC_TYPE)mesh_plink_timer;
- 	sta->mesh->plink_timeout = timeout;
- 	add_timer(&sta->mesh->plink_timer);
+ 	ar5523_dbg(ar, "TX watchdog timer triggered\n");
+ 	ieee80211_queue_work(ar->hw, &ar->tx_wd_work);
+@@ -1599,8 +1599,7 @@ static int ar5523_probe(struct usb_interface *intf,
+ 	mutex_init(&ar->mutex);
+ 
+ 	INIT_DELAYED_WORK(&ar->stat_work, ar5523_stat_work);
+-	init_timer(&ar->tx_wd_timer);
+-	setup_timer(&ar->tx_wd_timer, ar5523_tx_wd_timer, (unsigned long) ar);
++	timer_setup(&ar->tx_wd_timer, ar5523_tx_wd_timer, 0);
+ 	INIT_WORK(&ar->tx_wd_work, ar5523_tx_wd_work);
+ 	INIT_WORK(&ar->tx_work, ar5523_tx_work);
+ 	INIT_LIST_HEAD(&ar->tx_queue_pending);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a3f5dc78353f..f068376ec565 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -200,9 +200,9 @@ static void ath10k_htt_rx_msdu_buff_replenish(struct ath10k_htt *htt)
+ 	spin_unlock_bh(&htt->rx_ring.lock);
  }
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 69615016d5bf..5e5de9455e4e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -332,7 +332,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 		spin_lock_init(&sta->mesh->plink_lock);
- 		if (ieee80211_vif_is_mesh(&sdata->vif) &&
- 		    !sdata->u.mesh.user_mpm)
--			init_timer(&sta->mesh->plink_timer);
-+			timer_setup(&sta->mesh->plink_timer, NULL, 0);
- 		sta->mesh->nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
+ 
+-static void ath10k_htt_rx_ring_refill_retry(unsigned long arg)
++static void ath10k_htt_rx_ring_refill_retry(struct timer_list *t)
+ {
+-	struct ath10k_htt *htt = (struct ath10k_htt *)arg;
++	struct ath10k_htt *htt = from_timer(htt, t, rx_ring.refill_retry_timer);
+ 
+ 	ath10k_htt_rx_msdu_buff_replenish(htt);
+ }
+@@ -507,7 +507,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	*htt->rx_ring.alloc_idx.vaddr = 0;
+ 
+ 	/* Initialize the Rx refill retry timer */
+-	setup_timer(timer, ath10k_htt_rx_ring_refill_retry, (unsigned long)htt);
++	timer_setup(timer, ath10k_htt_rx_ring_refill_retry, 0);
+ 
+ 	spin_lock_init(&htt->rx_ring.lock);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 195dafb98131..2b975bb3f67e 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -585,10 +585,10 @@ static void ath10k_pci_sleep(struct ath10k *ar)
+ 	spin_unlock_irqrestore(&ar_pci->ps_lock, flags);
+ }
+ 
+-static void ath10k_pci_ps_timer(unsigned long ptr)
++static void ath10k_pci_ps_timer(struct timer_list *t)
+ {
+-	struct ath10k *ar = (void *)ptr;
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	struct ath10k_pci *ar_pci = from_timer(ar_pci, t, ps_timer);
++	struct ath10k *ar = ar_pci->ar;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+@@ -838,9 +838,10 @@ void ath10k_pci_rx_post(struct ath10k *ar)
+ 		ath10k_pci_rx_post_pipe(&ar_pci->pipe_info[i]);
+ }
+ 
+-void ath10k_pci_rx_replenish_retry(unsigned long ptr)
++void ath10k_pci_rx_replenish_retry(struct timer_list *t)
+ {
+-	struct ath10k *ar = (void *)ptr;
++	struct ath10k_pci *ar_pci = from_timer(ar_pci, t, rx_post_retry);
++	struct ath10k *ar = ar_pci->ar;
+ 
+ 	ath10k_pci_rx_post(ar);
+ }
+@@ -3157,8 +3158,7 @@ int ath10k_pci_setup_resource(struct ath10k *ar)
+ 	spin_lock_init(&ce->ce_lock);
+ 	spin_lock_init(&ar_pci->ps_lock);
+ 
+-	setup_timer(&ar_pci->rx_post_retry, ath10k_pci_rx_replenish_retry,
+-		    (unsigned long)ar);
++	timer_setup(&ar_pci->rx_post_retry, ath10k_pci_rx_replenish_retry, 0);
+ 
+ 	if (QCA_REV_6174(ar) || QCA_REV_9377(ar))
+ 		ath10k_pci_override_ce_config(ar);
+@@ -3284,8 +3284,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	ar->id.subsystem_vendor = pdev->subsystem_vendor;
+ 	ar->id.subsystem_device = pdev->subsystem_device;
+ 
+-	setup_timer(&ar_pci->ps_timer, ath10k_pci_ps_timer,
+-		    (unsigned long)ar);
++	timer_setup(&ar_pci->ps_timer, ath10k_pci_ps_timer, 0);
+ 
+ 	ret = ath10k_pci_setup_resource(ar);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 424ff323b2dc..08704fbc11e3 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -278,7 +278,7 @@ void ath10k_pci_hif_power_down(struct ath10k *ar);
+ int ath10k_pci_alloc_pipes(struct ath10k *ar);
+ void ath10k_pci_free_pipes(struct ath10k *ar);
+ void ath10k_pci_free_pipes(struct ath10k *ar);
+-void ath10k_pci_rx_replenish_retry(unsigned long ptr);
++void ath10k_pci_rx_replenish_retry(struct timer_list *t);
+ void ath10k_pci_ce_deinit(struct ath10k *ar);
+ void ath10k_pci_init_napi(struct ath10k *ar);
+ int ath10k_pci_init_pipes(struct ath10k *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 414b5b596efc..b53eb2b85f02 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3589,10 +3589,8 @@ static int ath6kl_cfg80211_vif_init(struct ath6kl_vif *vif)
+ 		return -ENOMEM;
  	}
- #endif
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 3acbdfa9f649..21d9760ce5c3 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -344,6 +344,7 @@ DECLARE_EWMA(mesh_fail_avg, 20, 8)
-  * @plink_state: peer link state
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-+ * @plink_sta: peer link watch timer's sta_info
-  * @t_offset: timing offset relative to this host
-  * @t_offset_setpoint: reference timing offset of this sta to be used when
-  * 	calculating clockdrift
-@@ -356,6 +357,7 @@ DECLARE_EWMA(mesh_fail_avg, 20, 8)
-  */
- struct mesh_sta {
- 	struct timer_list plink_timer;
-+	struct sta_info *plink_sta;
  
- 	s64 t_offset;
- 	s64 t_offset_setpoint;
+-	setup_timer(&vif->disconnect_timer, disconnect_timer_handler,
+-		    (unsigned long) vif->ndev);
+-	setup_timer(&vif->sched_scan_timer, ath6kl_wmi_sscan_timer,
+-		    (unsigned long) vif);
++	timer_setup(&vif->disconnect_timer, disconnect_timer_handler, 0);
++	timer_setup(&vif->sched_scan_timer, ath6kl_wmi_sscan_timer, 0);
+ 
+ 	set_bit(WMM_ENABLED, &vif->flags);
+ 	spin_lock_init(&vif->if_lock);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 87e99c12d4ba..e23d450babd2 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -893,7 +893,7 @@ static inline u32 ath6kl_get_hi_item_addr(struct ath6kl *ar,
+ 
+ int ath6kl_configure_target(struct ath6kl *ar);
+ void ath6kl_detect_error(unsigned long ptr);
+-void disconnect_timer_handler(unsigned long ptr);
++void disconnect_timer_handler(struct timer_list *t);
+ void init_netdev(struct net_device *dev);
+ void ath6kl_cookie_init(struct ath6kl *ar);
+ void ath6kl_cookie_cleanup(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index b90c77ef792e..db95f85751e3 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -494,10 +494,9 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
+ 	netif_wake_queue(vif->ndev);
+ }
+ 
+-void disconnect_timer_handler(unsigned long ptr)
++void disconnect_timer_handler(struct timer_list *t)
+ {
+-	struct net_device *dev = (struct net_device *)ptr;
+-	struct ath6kl_vif *vif = netdev_priv(dev);
++	struct ath6kl_vif *vif = from_timer(vif, t, disconnect_timer);
+ 
+ 	ath6kl_init_profile_info(vif);
+ 	ath6kl_disconnect(vif);
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 4e5cc2b7045a..1379906bf849 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1620,10 +1620,10 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	ath6kl_deliver_frames_to_nw_stack(vif->ndev, skb);
+ }
+ 
+-static void aggr_timeout(unsigned long arg)
++static void aggr_timeout(struct timer_list *t)
+ {
+ 	u8 i, j;
+-	struct aggr_info_conn *aggr_conn = (struct aggr_info_conn *) arg;
++	struct aggr_info_conn *aggr_conn = from_timer(aggr_conn, t, timer);
+ 	struct rxtid *rxtid;
+ 	struct rxtid_stats *stats;
+ 
+@@ -1753,7 +1753,7 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
+ 
+ 	aggr_conn->aggr_sz = AGGR_SZ_DEFAULT;
+ 	aggr_conn->dev = vif->ndev;
+-	setup_timer(&aggr_conn->timer, aggr_timeout, (unsigned long)aggr_conn);
++	timer_setup(&aggr_conn->timer, aggr_timeout, 0);
+ 	aggr_conn->aggr_info = aggr_info;
+ 
+ 	aggr_conn->timer_scheduled = false;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index bfc20b45b806..777acc564ac9 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1078,9 +1078,9 @@ static int ath6kl_wmi_tkip_micerr_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 	return 0;
+ }
+ 
+-void ath6kl_wmi_sscan_timer(unsigned long ptr)
++void ath6kl_wmi_sscan_timer(struct timer_list *t)
+ {
+-	struct ath6kl_vif *vif = (struct ath6kl_vif *) ptr;
++	struct ath6kl_vif *vif = from_timer(vif, t, sched_scan_timer);
+ 
+ 	cfg80211_sched_scan_results(vif->ar->wiphy, 0);
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 3af464a73b58..a60bb49fe920 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2719,7 +2719,7 @@ int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 if_idx, u8 mgmt_frm_type,
+ 
+ int ath6kl_wmi_set_inact_period(struct wmi *wmi, u8 if_idx, int inact_timeout);
+ 
+-void ath6kl_wmi_sscan_timer(unsigned long ptr);
++void ath6kl_wmi_sscan_timer(struct timer_list *t);
+ 
+ int ath6kl_wmi_get_challenge_resp_cmd(struct wmi *wmi, u32 cookie, u32 source);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index cf076719c27e..ef0de4f1312c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -750,14 +750,14 @@ void ath_reset_work(struct work_struct *work);
+ bool ath_hw_check(struct ath_softc *sc);
+ void ath_hw_pll_work(struct work_struct *work);
+ void ath_paprd_calibrate(struct work_struct *work);
+-void ath_ani_calibrate(unsigned long data);
++void ath_ani_calibrate(struct timer_list *t);
+ void ath_start_ani(struct ath_softc *sc);
+ void ath_stop_ani(struct ath_softc *sc);
+ void ath_check_ani(struct ath_softc *sc);
+ int ath_update_survey_stats(struct ath_softc *sc);
+ void ath_update_survey_nf(struct ath_softc *sc, int channel);
+ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
+-void ath_ps_full_sleep(unsigned long data);
++void ath_ps_full_sleep(struct timer_list *t);
+ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
+ 		   bool sw_pending, bool timeout_override);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index f0439f2d566b..6cdba5a71095 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1042,9 +1042,9 @@ static void ath_scan_channel_start(struct ath_softc *sc)
+ 	mod_timer(&sc->offchannel.timer, jiffies + sc->offchannel.duration);
+ }
+ 
+-static void ath_chanctx_timer(unsigned long data)
++static void ath_chanctx_timer(struct timer_list *t)
+ {
+-	struct ath_softc *sc = (struct ath_softc *) data;
++	struct ath_softc *sc = from_timer(sc, t, sched.timer);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+ 	ath_dbg(common, CHAN_CTX,
+@@ -1053,9 +1053,9 @@ static void ath_chanctx_timer(unsigned long data)
+ 	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_TSF_TIMER);
+ }
+ 
+-static void ath_offchannel_timer(unsigned long data)
++static void ath_offchannel_timer(struct timer_list *t)
+ {
+-	struct ath_softc *sc = (struct ath_softc *)data;
++	struct ath_softc *sc = from_timer(sc, t, offchannel.timer);
+ 	struct ath_chanctx *ctx;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+@@ -1361,10 +1361,8 @@ void ath9k_init_channel_context(struct ath_softc *sc)
+ {
+ 	INIT_WORK(&sc->chanctx_work, ath_chanctx_work);
+ 
+-	setup_timer(&sc->offchannel.timer, ath_offchannel_timer,
+-		    (unsigned long)sc);
+-	setup_timer(&sc->sched.timer, ath_chanctx_timer,
+-		    (unsigned long)sc);
++	timer_setup(&sc->offchannel.timer, ath_offchannel_timer, 0);
++	timer_setup(&sc->sched.timer, ath_chanctx_timer, 0);
+ 
+ 	init_completion(&sc->go_beacon);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index ddb28861e7fe..b457e52dd365 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -191,9 +191,9 @@ static void ath_mci_ftp_adjust(struct ath_softc *sc)
+  * 45ms, bt traffic will be given priority during 55% of this
+  * period while wlan gets remaining 45%
+  */
+-static void ath_btcoex_period_timer(unsigned long data)
++static void ath_btcoex_period_timer(struct timer_list *t)
+ {
+-	struct ath_softc *sc = (struct ath_softc *) data;
++	struct ath_softc *sc = from_timer(sc, t, btcoex.period_timer);
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	enum ath_stomp_type stomp_type;
+@@ -252,9 +252,9 @@ static void ath_btcoex_period_timer(unsigned long data)
+  * Generic tsf based hw timer which configures weight
+  * registers to time slice between wlan and bt traffic
+  */
+-static void ath_btcoex_no_stomp_timer(unsigned long arg)
++static void ath_btcoex_no_stomp_timer(struct timer_list *t)
+ {
+-	struct ath_softc *sc = (struct ath_softc *)arg;
++	struct ath_softc *sc = from_timer(sc, t, btcoex.no_stomp_timer);
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 
+@@ -284,10 +284,8 @@ static void ath_init_btcoex_timer(struct ath_softc *sc)
+ 				   btcoex->btcoex_period / 100;
+ 	btcoex->bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 
+-	setup_timer(&btcoex->period_timer, ath_btcoex_period_timer,
+-			(unsigned long) sc);
+-	setup_timer(&btcoex->no_stomp_timer, ath_btcoex_no_stomp_timer,
+-			(unsigned long) sc);
++	timer_setup(&btcoex->period_timer, ath_btcoex_period_timer, 0);
++	timer_setup(&btcoex->no_stomp_timer, ath_btcoex_no_stomp_timer, 0);
+ 
+ 	spin_lock_init(&btcoex->btcoex_lock);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 16dff4b89a86..9f64e32381f9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -584,7 +584,7 @@ void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot);
+ void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
+ void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event);
+ void ath9k_tx_failed_tasklet(unsigned long data);
+-void ath9k_htc_tx_cleanup_timer(unsigned long data);
++void ath9k_htc_tx_cleanup_timer(struct timer_list *t);
+ bool ath9k_htc_csa_is_finished(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_rx_init(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index da2164b0cccc..a5cb796f114d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -654,8 +654,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	INIT_DELAYED_WORK(&priv->ani_work, ath9k_htc_ani_work);
+ 	INIT_WORK(&priv->ps_work, ath9k_ps_work);
+ 	INIT_WORK(&priv->fatal_work, ath9k_fatal_work);
+-	setup_timer(&priv->tx.cleanup_timer, ath9k_htc_tx_cleanup_timer,
+-		    (unsigned long)priv);
++	timer_setup(&priv->tx.cleanup_timer, ath9k_htc_tx_cleanup_timer, 0);
+ 
+ 	/*
+ 	 * Cache line size is used to size and align various
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index b38a586ea59a..242304eb8798 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -752,9 +752,9 @@ static void ath9k_htc_tx_cleanup_queue(struct ath9k_htc_priv *priv,
+ 	}
+ }
+ 
+-void ath9k_htc_tx_cleanup_timer(unsigned long data)
++void ath9k_htc_tx_cleanup_timer(struct timer_list *t)
+ {
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) data;
++	struct ath9k_htc_priv *priv = from_timer(priv, t, tx.cleanup_timer);
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_htc_tx_event *event, *tmp;
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index bb7936090b91..7beba4e1a8a4 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -369,7 +369,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	int i = 0;
+ 
+-	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
++	timer_setup(&common->ani.timer, ath_ani_calibrate, 0);
+ 
+ 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+@@ -678,7 +678,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	tasklet_init(&sc->bcon_tasklet, ath9k_beacon_tasklet,
+ 		     (unsigned long)sc);
+ 
+-	setup_timer(&sc->sleep_timer, ath_ps_full_sleep, (unsigned long)sc);
++	timer_setup(&sc->sleep_timer, ath_ps_full_sleep, 0);
+ 	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+ 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+ 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 27c50562dc47..7d2462781bb8 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -301,11 +301,11 @@ void ath_paprd_calibrate(struct work_struct *work)
+  *  When the task is complete, it reschedules itself depending on the
+  *  appropriate interval that was calculated.
+  */
+-void ath_ani_calibrate(unsigned long data)
++void ath_ani_calibrate(struct timer_list *t)
+ {
+-	struct ath_softc *sc = (struct ath_softc *)data;
++	struct ath_common *common = from_timer(common, t, ani.timer);
++	struct ath_softc *sc = (struct ath_softc *)common->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+ 	bool longcal = false;
+ 	bool shortcal = false;
+ 	bool aniflag = false;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8b4ac7f0a09b..22ac9cf2d3f2 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -93,9 +93,9 @@ static bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode)
+ 	return ret;
+ }
+ 
+-void ath_ps_full_sleep(unsigned long data)
++void ath_ps_full_sleep(struct timer_list *t)
+ {
+-	struct ath_softc *sc = (struct ath_softc *) data;
++	struct ath_softc *sc = from_timer(sc, t, sleep_timer);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	bool reset;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index bac829aa950d..885924abf61c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -336,9 +336,9 @@ static void wil_disconnect_worker(struct work_struct *work)
+ 	clear_bit(wil_status_fwconnecting, wil->status);
+ }
+ 
+-static void wil_connect_timer_fn(ulong x)
++static void wil_connect_timer_fn(struct timer_list *t)
+ {
+-	struct wil6210_priv *wil = (void *)x;
++	struct wil6210_priv *wil = from_timer(wil, t, connect_timer);
+ 	bool q;
+ 
+ 	wil_err(wil, "Connect timeout detected, disconnect station\n");
+@@ -351,9 +351,9 @@ static void wil_connect_timer_fn(ulong x)
+ 	wil_dbg_wmi(wil, "queue_work of disconnect_worker -> %d\n", q);
+ }
+ 
+-static void wil_scan_timer_fn(ulong x)
++static void wil_scan_timer_fn(struct timer_list *t)
+ {
+-	struct wil6210_priv *wil = (void *)x;
++	struct wil6210_priv *wil = from_timer(wil, t, scan_timer);
+ 
+ 	clear_bit(wil_status_fwready, wil->status);
+ 	wil_err(wil, "Scan timeout detected, start fw error recovery\n");
+@@ -540,10 +540,9 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	init_completion(&wil->halp.comp);
+ 
+ 	wil->bcast_vring = -1;
+-	setup_timer(&wil->connect_timer, wil_connect_timer_fn, (ulong)wil);
+-	setup_timer(&wil->scan_timer, wil_scan_timer_fn, (ulong)wil);
+-	setup_timer(&wil->p2p.discovery_timer, wil_p2p_discovery_timer_fn,
+-		    (ulong)wil);
++	timer_setup(&wil->connect_timer, wil_connect_timer_fn, 0);
++	timer_setup(&wil->scan_timer, wil_scan_timer_fn, 0);
++	timer_setup(&wil->p2p.discovery_timer, wil_p2p_discovery_timer_fn, 0);
+ 
+ 	INIT_WORK(&wil->disconnect_worker, wil_disconnect_worker);
+ 	INIT_WORK(&wil->wmi_event_worker, wmi_event_worker);
+diff --git a/drivers/net/wireless/ath/wil6210/p2p.c b/drivers/net/wireless/ath/wil6210/p2p.c
+index 792484756654..7dbee2c3e482 100644
+--- a/drivers/net/wireless/ath/wil6210/p2p.c
++++ b/drivers/net/wireless/ath/wil6210/p2p.c
+@@ -65,9 +65,9 @@ bool wil_p2p_is_social_scan(struct cfg80211_scan_request *request)
+ 	       (request->channels[0]->hw_value == P2P_DMG_SOCIAL_CHANNEL);
+ }
+ 
+-void wil_p2p_discovery_timer_fn(ulong x)
++void wil_p2p_discovery_timer_fn(struct timer_list *t)
+ {
+-	struct wil6210_priv *wil = (void *)x;
++	struct wil6210_priv *wil = from_timer(wil, t, p2p.discovery_timer);
+ 
+ 	wil_dbg_misc(wil, "p2p_discovery_timer_fn\n");
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 315ec8b59662..1e340d04bd70 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -918,7 +918,7 @@ void wil6210_mask_halp(struct wil6210_priv *wil);
+ 
+ /* P2P */
+ bool wil_p2p_is_social_scan(struct cfg80211_scan_request *request);
+-void wil_p2p_discovery_timer_fn(ulong x);
++void wil_p2p_discovery_timer_fn(struct timer_list *t);
+ int wil_p2p_search(struct wil6210_priv *wil,
+ 		   struct cfg80211_scan_request *request);
+ int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
 -- 
 2.7.4
 
