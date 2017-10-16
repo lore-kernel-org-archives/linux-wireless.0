@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48808 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:42116 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751469AbdJ3Kbe (ORCPT
+        with ESMTP id S1751964AbdJPNWx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 06:31:34 -0400
+        Mon, 16 Oct 2017 09:22:53 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: Re: [1/5] qtnfmac: modify full Tx queue error reporting
-References: <20171015205327.9966-2-sergey.matyukevich.os@quantenna.com>
-        <20171027084814.B3FCB60314@smtp.codeaurora.org>
-        <20171029153211.4ynfo6wrh7q76efd@bars>
-        <87a8093vy7.fsf@kamboji.qca.qualcomm.com>
-        <20171030094459.kj6nnrrc52wj2bsp@bars>
-Date: Mon, 30 Oct 2017 12:31:29 +0200
-In-Reply-To: <20171030094459.kj6nnrrc52wj2bsp@bars> (Sergey Matyukevich's
-        message of "Mon, 30 Oct 2017 12:45:00 +0300")
-Message-ID: <87k1zd2agu.fsf@kamboji.qca.qualcomm.com> (sfid-20171030_113137_834899_20417118)
+To: Pkshih <pkshih@realtek.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        "Souptick Joarder" <jrdr.linux@gmail.com>,
+        "devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kernel-janitors\@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: Two rtlwifi drivers?
+References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+        <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
+        <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
+        <87k202qcjr.fsf@kamboji.qca.qualcomm.com>
+        <20171011131310.GF32250@kroah.com>
+        <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com>
+        <20171012103450.GA24647@kroah.com>
+        <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
+Date: Mon, 16 Oct 2017 16:22:48 +0300
+In-Reply-To: <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
+        (pkshih@realtek.com's message of "Mon, 16 Oct 2017 02:41:38 +0000")
+Message-ID: <87bml7mdlj.fsf@kamboji.qca.qualcomm.com> (sfid-20171016_152257_092000_4319BACC)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Hi PK,
 
->> > My assumption is that by default all the patches should cleanly apply
->> > to wireless-drivers-next. I could apply the patch in question to
->> > wireless-drivers-next without any issues.
->> 
->> Odd. How did you apply it? My script uses 'git am -s -3' individually
->> for each patch in the series, but to my knowledge that shouldn't cause
->> any problems.
->
-> It turns out I mechanically rebased my branch on top of w-d-n before writing
-> the previous email. Now I could reproduce the same failure when using this
-> command for the original patches downloaded from patchwork.
+you got good answers already so only short reply from me:
 
-Ok, that makes sense. Most likely when git-rebase does a 3-way merge
-automatically and that's why you were able to successfully apply them.
-But as git-am was not able to use 3-way merge due to incorrect sha1
-information it failed.
+Pkshih <pkshih@realtek.com> writes:
 
-> The problem was in conflict with qtnfmac fixes pulled to w-d-n from
-> w-d.
+> 3) Coming drivers -- rtl8723de and rtl8821ce
+>    We're developing the two drivers, and rtl8723de and rtl8821ce will
+>    be ready on 2017Q4 and 2018Q1 respectively. The drivers are based on
+>    rtl8822be that in staging now, so the line of code will be fewer.
+>    The new files will be a new IC folder and IC supported files of 
+>    three modules that btcoexist, phydm and halmac. Could I submit
+>    them to wirless tree when they're ready?
 
-Ok, thanks for investigating the root cause.
+My recommendation is to avoid accumulating patches at all cost and start
+submitting them as soon as you can. This way you get patches committed
+much more smoother. So do not wait until _all_ patches are ready,
+instead start submitting patches as soon as you have _some_ patches
+ready. In other words, keep the delta between mainline and your
+not-yet-submitted patches as small as possible.
+
+And the patches don't need to be bug free as you can always fix bugs
+later. Just mention in the commit logs that this is preparation for some
+new feature and not fully tested yet. We do that all the time, for
+example Intel's iwlwifi has support for hardware which have not reached
+customers yet.
+
+> On the way, I'll attend netdev workshop in Korea, so we can meet there
+> if you attend too.
+
+I'm also attending Netdev 2.2, looking forward to meeting you there.
 
 -- 
 Kalle Valo
