@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37558 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:46164 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752754AbdJ0UPO (ORCPT
+        with ESMTP id S1751376AbdJPO5w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 16:15:14 -0400
-Message-ID: <1509135311.2283.12.camel@sipsolutions.net> (sfid-20171027_221706_883633_B76A63F5)
-Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
- mask if not usable"
+        Mon, 16 Oct 2017 10:57:52 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        Oleksij Rempel <linux@rempel-privat.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>, kirtika@google.com
-Date: Fri, 27 Oct 2017 22:15:11 +0200
-In-Reply-To: <db23762d-3e65-7707-ca78-ad7e7bc7dfa6@candelatech.com>
-References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
-         <1507708948.1998.15.camel@sipsolutions.net>
-         <2c293255-aa79-75a0-1c28-994f864cddf4@candelatech.com>
-         <1508312033.2674.9.camel@sipsolutions.net>
-         <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
-         <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de>
-         <1508358869.2674.55.camel@sipsolutions.net>
-         <9791c86a-a15f-4c99-ab84-ce00b242d70f@candelatech.com>
-         <1508360527.2674.61.camel@sipsolutions.net>
-         <0bfb289d-a9fa-03d9-f9c7-cc0d01b0bd43@candelatech.com>
-         <1508944670.2421.49.camel@sipsolutions.net>
-         <db23762d-3e65-7707-ca78-ad7e7bc7dfa6@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: "Eric W . Biederman" <ebiederman@twitter.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] netlink: use NETLINK_CB(in_skb).sk instead of looking it up
+Date: Mon, 16 Oct 2017 16:57:49 +0200
+Message-Id: <20171016145749.31793-1-johannes@sipsolutions.net> (sfid-20171016_165759_627527_3313888C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-25 at 09:13 -0700, Ben Greear wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > Well it resulted in a WARN_ON because if the AP didn't have those
-> > rates, we'd not find any usable rates while trying to transmit a frame,
-> > and then ended up warning and falling down to the lowest possible rate.
-> > 
-> > I don't think I agree that configuring this should reject the
-> > association, and I've already implemented the behaviour of dropping the
-> > user's rate set in this case in the patch we're discussing.
-> 
-> So, as long as we are associating to a VHT AP, then we could still set the
-> tx-rateset to (only) VHT MCS 8 and allow association, even if there are no additional
-> rates set.  There is at least one common rate, so theoretically, the
-> station and AP can communicate.
-> 
-> If we tried to associate this same station to an HT AP, then your work-around
-> code could kick in and throw away the user's rateset configuration, preferably
-> with a fairly noticeable warning message since you are overriding the user's
-> preferred tx rateset?
+When netlink_ack() reports an allocation error to the sending
+socket, there's no need to look up the sending socket since
+it's available in the SKB's CB. Use that instead of going to
+the trouble of looking it up.
 
-There's only a debug message now, and I actually compare to the basic
-rates. Like I said, we could fix that to compare to real rates, but
-that gets a little trickier since we don't select from all possible
-rates when we try to send management frames, only from legacy rates, so
-we'd have to modify that code too.
+Note that the pointer is only available since Eric Biederman's
+commit 3fbc290540a1 ("netlink: Make the sending netlink socket availabe in NETLINK_CB")
+which is far newer than the original lookup code (Oct 2003)
+(though the field was called 'ssk' in that commit and only got
+renamed to 'sk' later, I'd actually argue 'ssk' was better - or
+perhaps it should've been 'source_sk' - since there are so many
+different 'sk's involved.)
 
-> > This kind of problem is why I absolutely dislike out-of-band state that
-> > affects the connection, rather than giving it in the connection
-> > command(s) (connect, auth, associate, whatever). We're stuck with it
-> > now, and needed to redefine that this selection may be dropped if not
-> > usable.
-> 
-> You could start allowing the user to configure the full advertised and
-> transmit rateset for each of these actions (and probe too), and user-space can add the fields
-> to their netlink commands.  At least going forward, this might help
-> make the behaviour more as expected.  If you would like to implement at
-> least the basics in cfg/mac80211, I would be happy to work on the supplicant
-> end of things.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/netlink/af_netlink.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-I'm not sure we can really remove this, there are users out there (e.g.
-Chrome's shill, IIRC), so we'd be stuck with two ways of doing things
-... that's not so much better really :)
-
-johannes
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index f34750691c5c..336d9c6dcad9 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2336,16 +2336,8 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
+ 
+ 	skb = nlmsg_new(payload + tlvlen, GFP_KERNEL);
+ 	if (!skb) {
+-		struct sock *sk;
+-
+-		sk = netlink_lookup(sock_net(in_skb->sk),
+-				    in_skb->sk->sk_protocol,
+-				    NETLINK_CB(in_skb).portid);
+-		if (sk) {
+-			sk->sk_err = ENOBUFS;
+-			sk->sk_error_report(sk);
+-			sock_put(sk);
+-		}
++		NETLINK_CB(in_skb).sk->sk_err = ENOBUFS;
++		NETLINK_CB(in_skb).sk->sk_error_report(NETLINK_CB(in_skb).sk);
+ 		return;
+ 	}
+ 
+-- 
+2.14.2
