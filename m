@@ -1,34 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51860 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751774AbdJFMV1 (ORCPT
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:45151 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932950AbdJPXgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 08:21:27 -0400
-Message-ID: <1507292484.908.131.camel@coelho.fi> (sfid-20171006_142200_434874_A185BC34)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
-Date: Fri, 06 Oct 2017 15:21:24 +0300
-In-Reply-To: <1507291417.908.130.camel@coelho.fi>
-References: <1507291417.908.130.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: pull-request: iwlwifi-next 2017-10-06
+        Mon, 16 Oct 2017 19:36:24 -0400
+Received: by mail-pg0-f52.google.com with SMTP id b192so8064616pga.2
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 16:36:24 -0700 (PDT)
+Date: Mon, 16 Oct 2017 16:36:22 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: qtnfmac: Convert timers to use timer_setup()
+Message-ID: <20171016233622.GA101550@beast> (sfid-20171017_013644_535208_ED4D8867)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-10-06 at 15:03 +0300, Luca Coelho wrote:
-> Hi Kalle,
-> 
-> Here's my first pull-request intended for v4.15.  It
-> contains the last two patch sets I sent out.
-> 
-> I have sent this out before and kbuildbot reported success.
-> 
-> Please let me know if there are any issues.
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-Oops, please hold on.  There is one patch I have to fix.  I'll send v2
-of the patch and of the pull-req in a bit.
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>
+Cc: Avinash Patil <avinashp@quantenna.com>
+Cc: Sergey Matyukevich <smatyukevich@quantenna.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Kamlesh Rath <krath@quantenna.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 7 +++----
+ drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
---
-Luca.
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 32bf72c0399f..ac1b9bd5ed90 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -581,9 +581,9 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
+-static void qtnf_scan_timeout(unsigned long data)
++static void qtnf_scan_timeout(struct timer_list *t)
+ {
+-	struct qtnf_wmac *mac = (struct qtnf_wmac *)data;
++	struct qtnf_wmac *mac = from_timer(mac, t, scan_timeout);
+ 
+ 	pr_warn("mac%d scan timed out\n", mac->macid);
+ 	qtnf_scan_done(mac, true);
+@@ -602,8 +602,7 @@ qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 		return -EFAULT;
+ 	}
+ 
+-	mac->scan_timeout.data = (unsigned long)mac;
+-	mac->scan_timeout.function = qtnf_scan_timeout;
++	mac->scan_timeout.function = (TIMER_FUNC_TYPE)qtnf_scan_timeout;
+ 	mod_timer(&mac->scan_timeout,
+ 		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 5e60180482d1..aa7f146278a7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -289,7 +289,7 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
+ 		mac->iflist[i].vifid = i;
+ 		qtnf_sta_list_init(&mac->iflist[i].sta_list);
+ 		mutex_init(&mac->mac_lock);
+-		init_timer(&mac->scan_timeout);
++		setup_timer(&mac->scan_timeout, NULL, 0);
+ 	}
+ 
+ 	qtnf_mac_init_primary_intf(mac);
+-- 
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
