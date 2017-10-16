@@ -1,99 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42264 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750848AbdJ2M22 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 08:28:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 14:27:59 +0200
-Message-Id: <20171029122816.8802-1-luca@coelho.fi> (sfid-20171029_132848_510531_685397EB)
-Subject: [PATCH 00/17] iwlwifi: updates intended for v4.15 2017-10-29
+Received: from mail-bn3nam01on0044.outbound.protection.outlook.com ([104.47.33.44]:47122
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752678AbdJPTRa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Oct 2017 15:17:30 -0400
+Subject: Re: [PATCH] iw: add command to register and capture mgmt frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Julian Calaby <julian.calaby@gmail.com>
+References: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com>
+ <CALLGbR+DonvXRDysZGx3fJ0wGQsmnWNW3db7mv9KObwTcicnOg@mail.gmail.com>
+ <20171015095133.prxuuukv6osx52td@bars>
+ <1508138777.10607.14.camel@sipsolutions.net>
+ <20171016084810.plzog2dtzakra4ae@bars>
+ <1508145899.10607.30.camel@sipsolutions.net>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <844c4931-f513-773b-21db-f8e5455088b9@quantenna.com> (sfid-20171016_211736_152151_54AA6A46)
+Date: Mon, 16 Oct 2017 12:17:22 -0700
+MIME-Version: 1.0
+In-Reply-To: <1508145899.10607.30.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 10/16/2017 02:24 AM, Johannes Berg wrote:
+> 
+> 
+> Right, and I didn't originally see the patch as such, just that the
+> discussion (and in particular Julian's suggestion) veered off in that
+> direction.
+> 
+>> Nevertheless in certain cases it is handy to dump selected types of
+>> mgmt frames while system is up and running without adding the whole
+>> monitor overhead. The idea was that NL80211_CMD_REGISTER_FRAME and iw
+>> are the right tools for that task. Anyway, iw is something like a
+>> 'swiss-army-knife' tool for various tasks related to
+>> mac80211/cfg80211 reporting and troubleshooting.
+> 
+> I'd see this particular feature in iw more as a way to debug the
+> registrations, but whatever you ultimately want to use it for I neither
+> can nor want to control :-)
+> 
 
-Hi,
-
-Here's the fourth set of patches intended for 4.15.  Some fixes, some
-cleanups, new PCI IDs... The usual.
-
-These are the changes:
-
-* Some new PCI IDs;
-* A bunch of cleanups;
-* The timers update by Kees;
-* Add more register dump call-sites;
-* A fix for a locking issue in the TX flush code;
-* Actual implementation of the TX flush code for A000;
-* An optimization to drop RX frames during restart to avoid BA issues;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (3):
-  iwlwifi: mvm: rs: remove the ANT C from the toogle antenna logic
-  iwlwifi: remove dead code for internal devices only
-  iwlwifi: remove host assisted paging
-
-Ihab Zhaika (3):
-  iwlwifi: add new cards for 8260 series
-  iwlwifi: add new cards for 8265 series
-  iwlwifi: add new cards for a000 series
-
-Kees Cook (1):
-  iwlwifi: mvm: Convert timers to use timer_setup()
-
-Kirtika Ruchandani (1):
-  iwlwifi: Add more call-sites for pcie reg dumper
-
-Liad Kaufman (1):
-  iwlwifi: mvm: reset seq num after restart
-
-Luca Coelho (1):
-  iwlwifi: mvm: hold mutex when flushing in iwl_mvm_flush_no_vif()
-
-Sara Sharon (6):
-  iwlwifi: mvm: use RS macro instead of duplicating the code
-  iwlwifi: mvm: cleanup references to aggregation count limit
-  iwlwifi: mvm: improve latency when there is a reorder timeout
-  iwlwifi: fix multi queue notification for a000 devices
-  iwlwifi: mvm: refactor iwl_mvm_flush_no_vif
-  iwlwifi: mvm: add missing implementation of flush for a000 devices
-
-Shahar S Matityahu (1):
-  iwlwifi: drop RX frames during hardware restart
-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |  51 ----------
- drivers/net/wireless/intel/iwlwifi/fw/api/paging.h |  24 -----
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/img.h        |   8 --
- drivers/net/wireless/intel/iwlwifi/fw/paging.c     | 103 +++------------------
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   3 -
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |   2 -
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   6 --
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  42 +++------
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  15 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  62 +++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   1 -
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  23 ++++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  50 +++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   3 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  10 ++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   7 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |   1 +
- 20 files changed, 127 insertions(+), 300 deletions(-)
-
--- 
-2.14.2
+Maybe we could add an additional nl attribute to 
+NL80211_CMD_REGISTER_FRAME command to allow applications to advertise 
+what is their intention, something like NL80211_ATTR_MGMT_LISTENER_TYPE. 
+Only allow to register more then one listener if it explicitly specifies 
+that it will not try to answer (TYPE_LISTEN_ONLY or smth like that).
+This will preserve behavior for existing userspace.
