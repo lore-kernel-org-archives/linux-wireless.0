@@ -1,53 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:47915 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932517AbdJQORs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 10:17:48 -0400
-Received: by mail-oi0-f43.google.com with SMTP id h200so3165810oib.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2017 07:17:48 -0700 (PDT)
-Subject: Re: Help with bug "Black screen freeze on suspend to ram (rtl8188ee)"
-To: Lauro Costa <lauro@polilinux.com.br>
-References: <03101f6d-5160-a3cf-3507-4d79a59cccea@polilinux.com.br>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <1a350c13-777a-b283-aefd-3c899883edf1@lwfinger.net> (sfid-20171017_161752_501425_AE89171F)
-Date: Tue, 17 Oct 2017 09:17:46 -0500
+Received: from frisell.zx2c4.com ([192.95.5.64]:40535 "EHLO frisell.zx2c4.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758221AbdJQSVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Oct 2017 14:21:35 -0400
 MIME-Version: 1.0
-In-Reply-To: <03101f6d-5160-a3cf-3507-4d79a59cccea@polilinux.com.br>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1508219181.10607.45.camel@sipsolutions.net>
+References: <20171016134618.30810-1-johannes@sipsolutions.net>
+ <CAHmME9rHMMAgJs3uQYpt15V8eh-PjDqioqURA3KPKEhc2a9OEg@mail.gmail.com> <1508219181.10607.45.camel@sipsolutions.net>
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Date: Tue, 17 Oct 2017 20:21:32 +0200
+Message-ID: <CAHmME9qd_m-FDj1E+eiBYWKvnMBvr0tWVcJ4ph2tr=Y1d_tb1g@mail.gmail.com> (sfid-20171017_202142_629634_63DCCCDB)
+Subject: Re: pull-request: mac80211 2017-10-16
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>,
+        Netdev <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/17/2017 09:03 AM, Lauro Costa wrote:
-> Dear maintainer,
-> 
-> I have opened a bug report on bugzilla [1] regarding this issue I find when I 
-> attempt to suspend to ram, unfortunately no one has replied to me yet.
-> 
-> I assumed this issue is related to the driver rtl8188ee since the black screen 
-> doesn't happen when I rmmod the wifi driver, but I'm not sure what I have is 
-> enough to assume this.
-> 
-> Do you know if this driver rtl8188ee is supposed to support suspend to ram?
-> 
-> This system log message:
-> 
-> |(NULL device *): firmware: direct-loading firmware rtlwifi/rtl8188efw.bin|
-> 
-> is something I haven't seen before, I don't understand why it says (NULL device 
-> *). Could it mean there is something else wrong and the rtl driver crashes as a 
-> result of that?
-> 
-> I'm not sure how to further investigate this issue, so any advice you could give 
-> here or in the bug report would be much appreciated.
+On Tue, Oct 17, 2017 at 7:46 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> If it's not equal, you execute so much code
+> beneath, going to the driver etc., that I'd think this particular time
+> is in the noise.
 
-Sorry that I missed that bug report. Unfortunately, without the traceback from 
-the occurrence of the bug, it will be very difficult to find the problem.
-
-If you add a script to unload the module when the machine hibernates or 
-suspends, and reloads it on startup, you should be able to avoid the lockups.
-
-I will try to duplicate the problem here.
-
-Larry
+Usually presumptions like this get you in trouble when some crafty
+academic has a smart idea about that noise. I'll send a patch.
