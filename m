@@ -1,222 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36442 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:58348 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752504AbdJIJuY (ORCPT
+        with ESMTP id S932780AbdJQGjo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 05:50:24 -0400
+        Tue, 17 Oct 2017 02:39:44 -0400
+Message-ID: <1508222380.10607.55.camel@sipsolutions.net> (sfid-20171017_083947_988697_57C3BBF5)
+Subject: Re: [PATCH 1/2] mac80211: Add TXQ scheduling API
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/4] cfg80211: support reloading regulatory database
-Date: Mon,  9 Oct 2017 11:50:16 +0200
-Message-Id: <20171009095018.5289-3-johannes@sipsolutions.net> (sfid-20171009_115031_692408_C79F348F)
-In-Reply-To: <20171009095018.5289-1-johannes@sipsolutions.net>
-References: <20171009095018.5289-1-johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Tue, 17 Oct 2017 08:39:40 +0200
+In-Reply-To: <20171016160902.8970-1-toke@toke.dk> (sfid-20171016_180931_557642_CDEF1515)
+References: <20171016160902.8970-1-toke@toke.dk>
+         (sfid-20171016_180931_557642_CDEF1515)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-If the regulatory database is loaded, and then updated, it may
-be necessary to reload it. Add an nl80211 command to do this.
+>  	/* protects shared structure data */
+>  	spinlock_t data_lock;
+> -	/* protects: ar->txqs, artxq->list */
+> -	spinlock_t txqs_lock;
+>  
+> -	struct list_head txqs;
 
-Note that this just reloads the database, it doesn't re-apply
-the rules from it immediately.
+I don't see you removing the artxq->list member, but surely it can't be
+used any more now, without a list?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h |  4 +++
- net/wireless/nl80211.c       | 11 ++++++
- net/wireless/reg.c           | 80 +++++++++++++++++++++++++++++++++-----------
- net/wireless/reg.h           |  6 ++++
- 4 files changed, 81 insertions(+), 20 deletions(-)
+[snip] that's about all I can comment on ath*k :)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 95832ce03a44..f882fe1f9709 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -990,6 +990,8 @@
-  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-  *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-+ * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1194,6 +1196,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_PORT_AUTHORIZED,
- 
-+	NL80211_CMD_RELOAD_REGDB,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5129342151e6..67a03f2885a4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5678,6 +5678,11 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	}
- }
- 
-+static int nl80211_reload_regdb(struct sk_buff *skb, struct genl_info *info)
-+{
-+	return reg_reload_regdb();
-+}
-+
- static int nl80211_get_mesh_config(struct sk_buff *skb,
- 				   struct genl_info *info)
- {
-@@ -12708,6 +12713,12 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_RELOAD_REGDB,
-+		.doit = nl80211_reload_regdb,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- 	{
- 		.cmd = NL80211_CMD_GET_MESH_CONFIG,
- 		.doit = nl80211_get_mesh_config,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 3187a941b7bf..6b444898919b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -782,6 +782,8 @@ static int query_regdb(const char *alpha2)
- 	const struct fwdb_header *hdr = regdb;
- 	const struct fwdb_country *country;
- 
-+	ASSERT_RTNL();
-+
- 	if (IS_ERR(regdb))
- 		return PTR_ERR(regdb);
- 
-@@ -797,42 +799,48 @@ static int query_regdb(const char *alpha2)
- 
- static void regdb_fw_cb(const struct firmware *fw, void *context)
- {
-+	int set_error = 0;
-+	bool restore = true;
- 	void *db;
- 
- 	if (!fw) {
- 		pr_info("failed to load regulatory.db\n");
- 		if (fwregdb_attempts-- == 0)
--			regdb = ERR_PTR(-ENODATA);
--		goto restore;
--	}
--
--	if (!valid_regdb(fw->data, fw->size)) {
-+			set_error = -ENODATA;
-+	} else if (!valid_regdb(fw->data, fw->size)) {
- 		pr_info("loaded regulatory.db is malformed\n");
--		release_firmware(fw);
--		regdb = ERR_PTR(-EINVAL);
--		goto restore;
-+		set_error = -EINVAL;
- 	}
- 
--	db = kmemdup(fw->data, fw->size, GFP_KERNEL);
--	release_firmware(fw);
-+	rtnl_lock();
-+	if (WARN_ON(regdb && !IS_ERR(regdb))) {
-+		/* just restore and free new db */
-+	} else if (set_error) {
-+		regdb = ERR_PTR(set_error);
-+	} else if (fw) {
-+		db = kmemdup(fw->data, fw->size, GFP_KERNEL);
-+		if (db) {
-+			regdb = db;
-+			restore = context && query_regdb(context);
-+		} else {
-+			restore = true;
-+		}
-+	}
- 
--	if (!db)
--		goto restore;
--	regdb = db;
-+	if (restore)
-+		restore_regulatory_settings(true);
- 
--	if (query_regdb(context))
--		goto restore;
--	goto free;
-- restore:
--	rtnl_lock();
--	restore_regulatory_settings(true);
- 	rtnl_unlock();
-- free:
-+
- 	kfree(context);
-+
-+	release_firmware(fw);
- }
- 
- static int query_regdb_file(const char *alpha2)
- {
-+	ASSERT_RTNL();
-+
- 	if (regdb)
- 		return query_regdb(alpha2);
- 
-@@ -845,6 +853,38 @@ static int query_regdb_file(const char *alpha2)
- 				       (void *)alpha2, regdb_fw_cb);
- }
- 
-+int reg_reload_regdb(void)
-+{
-+	const struct firmware *fw;
-+	void *db;
-+	int err;
-+
-+	err = request_firmware(&fw, "regulatory.db", &reg_pdev->dev);
-+	if (err)
-+		return err;
-+
-+	if (!valid_regdb(fw->data, fw->size)) {
-+		err = -ENODATA;
-+		goto out;
-+	}
-+
-+	db = kmemdup(fw->data, fw->size, GFP_KERNEL);
-+	if (!db) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	if (!IS_ERR_OR_NULL(regdb))
-+		kfree(regdb);
-+	regdb = db;
-+	rtnl_unlock();
-+
-+ out:
-+	release_firmware(fw);
-+	return err;
-+}
-+
- static bool reg_query_database(struct regulatory_request *request)
- {
- 	/* query internal regulatory database (if it exists) */
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index ca7fedf2e7a1..9529c522611a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -179,4 +179,10 @@ void regulatory_propagate_dfs_state(struct wiphy *wiphy,
-  * @wiphy2 - wiphy it's dfs_region to be checked against that of wiphy1
-  */
- bool reg_dfs_domain_same(struct wiphy *wiphy1, struct wiphy *wiphy2);
-+
-+/**
-+ * reg_reload_regdb - reload the regulatory.db firmware file
-+ */
-+int reg_reload_regdb(void);
-+
- #endif  /* __NET_WIRELESS_REG_H */
--- 
-2.14.2
+> +/**
+> + * ieee80211_schedule_txq - add txq to scheduling loop
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @txq: pointer obtained from station or virtual interface
+
+or more likely next_txq()? :)
+
+> + * Returns true if the txq was actually added to the scheduling,
+> + * false otherwise.
+
+Perhaps use %true/%false.
+
+>  	if (sta->sta.txq[0]) {
+> +		bool wake = false;
+
+please add a blank line after this new line
+
+>  		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
+>  			if (!txq_has_queue(sta->sta.txq[i]))
+>  				continue;
+>  
+> -			drv_wake_tx_queue(local, to_txq_info(sta->sta.txq[i]));
+> +			wake = wake || ieee80211_schedule_txq(&local->hw, sta->sta.txq[i]);
+>  		}
+> +		if (wake)
+> +			drv_wake_tx_queue(local);
+>  	}
+
+Are you sure you want to skip the call to ieee80211_schedule_txq() if
+wake is true? I think you don't, but boolean short-circuit evaluation
+would lead to that, afaict?
+
+So it better be written as
+
+  if (ieee80211_schedule_txq(...))
+    wake = true;
+
+No need to even check wake anyway, since it can only ever go from false
+to true.
+
+(Also, that line is getting a bit long)
+
+>  	skb_queue_head_init(&pending);
+> diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+> index 3d9ac17af407..531c0e7f2358 100644
+> --- a/net/mac80211/trace.h
+> +++ b/net/mac80211/trace.h
+> @@ -2550,33 +2550,20 @@ TRACE_EVENT(drv_tdls_recv_channel_switch,
+>  );
+>  
+>  TRACE_EVENT(drv_wake_tx_queue,
+> -	TP_PROTO(struct ieee80211_local *local,
+> -		 struct ieee80211_sub_if_data *sdata,
+> -		 struct txq_info *txq),
+> +	TP_PROTO(struct ieee80211_local *local),
+
+You should just replace all of this with
+
+DEFINE_EVENT(local_only_evt, drv_wake_tx_queue,
+        TP_PROTO(struct ieee80211_local *local),
+        TP_ARGS(local)
+);
+
+now.
+
+> +bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+> +			     struct ieee80211_txq *txq)
+> +{
+> +	struct ieee80211_local *local = hw_to_local(hw);
+> +	struct txq_info *txqi = to_txq_info(txq);
+> +	int ret = 0;
+
+bool/false/true please.
+
+> +struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw)
+> +{
+> +	struct ieee80211_local *local = hw_to_local(hw);
+> +	struct txq_info *txqi = NULL;
+> +
+> +	spin_lock_bh(&local->active_txq_lock);
+> +
+> +	if (list_empty(&local->active_txqs))
+> +		goto out;
+> +
+> +	txqi = list_first_entry(&local->active_txqs, struct txq_info, schedule_order);
+
+that line seems pretty long, but I haven't counted :)
+
+johannes
