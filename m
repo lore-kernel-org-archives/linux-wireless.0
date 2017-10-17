@@ -1,152 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53156 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751369AbdJFJxh (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:47749 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753485AbdJQIqB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 05:53:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Micha=C5=82=20Kazior?= <kazikcz@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: only remove AP VLAN frames from TXQ
-Date: Fri,  6 Oct 2017 11:53:33 +0200
-Message-Id: <20171006095333.26335-2-johannes@sipsolutions.net> (sfid-20171006_115345_601150_39C20185)
-In-Reply-To: <20171006095333.26335-1-johannes@sipsolutions.net>
-References: <20171006095333.26335-1-johannes@sipsolutions.net>
+        Tue, 17 Oct 2017 04:46:01 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2] ath10k: Retry pci probe on failure.
+Date: Tue, 17 Oct 2017 08:45:55 +0000
+Message-ID: <87376imabh.fsf@kamboji.qca.qualcomm.com> (sfid-20171017_104607_956647_1E0D4DF6)
+References: <1507068826-14677-1-git-send-email-greearb@candelatech.com>
+        <87a80vnrsb.fsf@kamboji.qca.qualcomm.com>
+        <CAJ-Vmon0SszxH22Zb+O5RVQSommFFuc5XmG+at9=xbGagOb7PQ@mail.gmail.com>
+        <59E124EB.6090602@candelatech.com>
+In-Reply-To: <59E124EB.6090602@candelatech.com> (Ben Greear's message of "Fri,
+        13 Oct 2017 13:41:15 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Ben Greear <greearb@candelatech.com> writes:
 
-When removing an AP VLAN interface, mac80211 currently purges
-the entire TXQ for the AP interface. Fix this by using the FQ
-API introduced in the previous patch to filter frames.
+> On 10/13/2017 08:50 AM, Adrian Chadd wrote:
+>> On 13 October 2017 at 05:41, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> greearb@candelatech.com writes:
+>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> This works around a problem we see when sometimes the wifi NIC does
+>>>> not respond the first time.  This seems to happen especially often on
+>>>> some of the 9984 NICs in mid-range platforms.
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>
+>>> [...]
+>>>
+>>>> -static int ath10k_pci_probe(struct pci_dev *pdev,
+>>>> -                         const struct pci_device_id *pci_dev)
+>>>> +static int __ath10k_pci_probe(struct pci_dev *pdev,
+>>>> +                           const struct pci_device_id *pci_dev)
+>>>>   {
+>>>>        int ret =3D 0;
+>>>>        struct ath10k *ar;
+>>>> @@ -3672,6 +3672,22 @@ static int ath10k_pci_probe(struct pci_dev *pde=
+v,
+>>>>        return ret;
+>>>>   }
+>>>>
+>>>> +static int ath10k_pci_probe(struct pci_dev *pdev,
+>>>> +                         const struct pci_device_id *pci_dev)
+>>>> +{
+>>>> +     int cnt =3D 0;
+>>>> +     int rv;
+>>>> +     do {
+>>>> +             rv =3D __ath10k_pci_probe(pdev, pci_dev);
+>>>> +             if (rv =3D=3D 0)
+>>>> +                     return rv;
+>>>> +             pr_err("ath10k: failed to probe PCI : %d, retry-count: %=
+d\n", rv, cnt);
+>>>> +             mdelay(10); /* let the ath10k firmware gerbil take a sma=
+ll break */
+>>>> +     } while (cnt++ < 10);
+>>>> +     return rv;
+>>>> +}
+>>>
+>>> This is a sledgehammer approach and it causes reload for all error
+>>> cases, like when hardware is broken or memory allocation is failing.
+>>>
+>>> When the problem happens does it always fail at the the same place? Is
+>>> it hw reset or something else? It's better to retry the invidiual actio=
+n
+>>> than to do this hack. Or is it just some more delay needed somewhere?
+>>
+>> I am seeing WMI timeouts during initial firmware load and wait on
+>> QCA9984 + BCM7444S SoC.
+>> My guess is the WMI wakeup time is not "right" enough and needs to be
+>> extended a little bit.
+>>
+>> But then, I have played a lot of whackamole with WMI timeouts during
+>> my loooong porting effort..
+>
+> The failure I saw was a failure to wake pci, and from comments, it seems =
+that
+> the current wait is longer than what should be required, and it warns on =
+slow
+> wakes, and I never saw that warning.  So I assume that waiting longer wou=
+ld not help.
+>
+> I saw it fail twice in a row to wake pci and then succeed on the third
+> try, for instance,
+> when testing my patch.
+>
+> As for a big hammer, I guess we could check for certain return codes if y=
+ou think
+> that is better than just retrying all failures?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       | 25 +++----------------------
- net/mac80211/tx.c          | 34 ++++++++++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+), 22 deletions(-)
+ath10k_pci_probe() has a lots of stuff which should not affect your
+problem, like allocating memory, setting up timers and interrupts etc.
+It's quite ugly to redo that in every cycle. A more fine grained
+solution, like looping specific action (reset, wake whatever) is much
+more preferred.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9675814f64db..68f874e73561 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2009,6 +2009,8 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 			struct txq_info *txq, int tid);
- void ieee80211_txq_purge(struct ieee80211_local *local,
- 			 struct txq_info *txqi);
-+void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata);
- void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 			 u16 transaction, u16 auth_alg, u16 status,
- 			 const u8 *extra, size_t extra_len, const u8 *bssid,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 2619daa29961..13b16f90e1cf 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -793,9 +793,7 @@ static int ieee80211_open(struct net_device *dev)
- static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			      bool going_down)
- {
--	struct ieee80211_sub_if_data *txq_sdata = sdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct fq *fq = &local->fq;
- 	unsigned long flags;
- 	struct sk_buff *skb, *tmp;
- 	u32 hw_reconf_flags = 0;
-@@ -939,9 +937,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
--		txq_sdata = container_of(sdata->bss,
--					 struct ieee80211_sub_if_data, u.ap);
--
- 		mutex_lock(&local->mtx);
- 		list_del(&sdata->u.vlan.list);
- 		mutex_unlock(&local->mtx);
-@@ -998,8 +993,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		skb_queue_purge(&sdata->skb_queue);
- 	}
- 
--	sdata->bss = NULL;
--
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
- 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
-@@ -1012,22 +1005,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
--	if (txq_sdata->vif.txq) {
--		struct txq_info *txqi = to_txq_info(txq_sdata->vif.txq);
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		ieee80211_txq_remove_vlan(local, sdata);
- 
--		/*
--		 * FIXME FIXME
--		 *
--		 * We really shouldn't purge the *entire* txqi since that
--		 * contains frames for the other AP_VLANs (and possibly
--		 * the AP itself) as well, but there's no API in FQ now
--		 * to be able to filter.
--		 */
--
--		spin_lock_bh(&fq->lock);
--		ieee80211_txq_purge(local, txqi);
--		spin_unlock_bh(&fq->lock);
--	}
-+	sdata->bss = NULL;
- 
- 	if (local->open_count == 0)
- 		ieee80211_clear_tx_pending(local);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 94826680cf2b..7b8154474b9e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1396,6 +1396,40 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
- 		       fq_flow_get_default_func);
- }
- 
-+static bool fq_vlan_filter_func(struct fq *fq, struct fq_tin *tin,
-+				struct fq_flow *flow, struct sk_buff *skb,
-+				void *data)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	return info->control.vif == data;
-+}
-+
-+void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata)
-+{
-+	struct fq *fq = &local->fq;
-+	struct txq_info *txqi;
-+	struct fq_tin *tin;
-+	struct ieee80211_sub_if_data *ap;
-+
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP_VLAN))
-+		return;
-+
-+	ap = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap);
-+
-+	if (!ap->vif.txq)
-+		return;
-+
-+	txqi = to_txq_info(ap->vif.txq);
-+	tin = &txqi->tin;
-+
-+	spin_lock_bh(&fq->lock);
-+	fq_tin_filter(fq, tin, fq_vlan_filter_func, &sdata->vif,
-+		      fq_skb_free_func);
-+	spin_unlock_bh(&fq->lock);
-+}
-+
- void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 			struct sta_info *sta,
- 			struct txq_info *txqi, int tid)
--- 
-2.14.2
+Do you have debug logs of failing cases?
+
+--=20
+Kalle Valo=
