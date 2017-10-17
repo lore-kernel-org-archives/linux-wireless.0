@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:56600 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbdJEAlh (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37876 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753489AbdJQPKv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 20:41:37 -0400
-Date: Wed, 04 Oct 2017 17:41:34 -0700 (PDT)
-Message-Id: <20171004.174134.1260012045520624727.davem@davemloft.net> (sfid-20171005_024148_046528_5E7EE195)
-To: keescook@chromium.org
-Cc: tglx@linutronix.de, cmetcalf@mellanox.com, netdev@vger.kernel.org,
-        akpm@linux-foundation.org, arnd@arndb.de, benh@kernel.crashing.org,
-        geert@linux-m68k.org, gregkh@linuxfoundation.org,
-        linux@roeck-us.net, harish.patil@cavium.com,
-        heiko.carstens@de.ibm.com, jejb@linux.vnet.ibm.com,
-        john.stultz@linaro.org, jwi@linux.vnet.ibm.com,
-        kvalo@qca.qualcomm.com, jiangshanlai@gmail.com,
-        len.brown@intel.com, manish.chopra@cavium.com,
-        mark.gross@intel.com, martin.petersen@oracle.com,
-        schwidefsky@de.ibm.com, mpe@ellerman.id.au, mdr@sgi.com,
-        oleg@redhat.com, paulus@samba.org, pavel@ucw.cz, pmladek@suse.com,
-        rjw@rjwysocki.net, ralf@linux-mips.org, sre@kernel.org,
-        stefanr@s5r6.in-berlin.de, sboyd@codeaurora.org,
-        sudipm.mukherjee@gmail.com, tj@kernel.org,
-        ubraun@linux.vnet.ibm.com, viresh.kumar@linaro.org, wim@iguana.be,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/13] timer: Remove init_timer_pinned() in favor of
- timer_setup()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1507159627-127660-5-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-        <1507159627-127660-5-git-send-email-keescook@chromium.org>
+        Tue, 17 Oct 2017 11:10:51 -0400
+Message-ID: <1508253043.10607.89.camel@sipsolutions.net> (sfid-20171017_171054_522281_7DD3AD68)
+Subject: Re: Commit 0711d638 breaks mwifiex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jesse Sung <jesse.sung@canonical.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
+        linux-wireless@vger.kernel.org
+Date: Tue, 17 Oct 2017 17:10:43 +0200
+In-Reply-To: <CAH10aOizMKboDOW27gvz=YEcRT1_tMj+W6iwJ47n=T=-Q7U14A@mail.gmail.com>
+References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
+         <1508233890.10607.70.camel@sipsolutions.net>
+         <CAH10aOj8xTPDyEufGS47hytnT8RSL+qSbiRVmePrMpaaUu7gPQ@mail.gmail.com>
+         <1508237298.10607.76.camel@sipsolutions.net>
+         <CAH10aOjmMdN2pGP8FDwZQ6BRcu2O5PiGjk+kKb6bAa7nS=ap8g@mail.gmail.com>
+         <1508246019.10607.77.camel@sipsolutions.net>
+         <CAH10aOgfNZbhUYfRa7VRPwvzDNTYtmeDYnDEMtq+6HPqbq94hg@mail.gmail.com>
+         <CAH10aOizMKboDOW27gvz=YEcRT1_tMj+W6iwJ47n=T=-Q7U14A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kees Cook <keescook@chromium.org>
-Date: Wed,  4 Oct 2017 16:26:58 -0700
+Hi,
 
-> This refactors the only users of init_timer_pinned() to use
-> the new timer_setup() and from_timer(). Drops the definition of
-> init_timer_pinned().
+> > > https://p.sipsolutions.net/8f9d5917a5cbe4b3.txt
+> > > 
+> > > Can you also give that a spin?
+
+Thanks for testing!
+
+> > Issued four reassociate, the network interface is still alive. Also
+> > with this patch it stays with BSSID1 and I don't see any
+> > "Association request to the driver failed" in the process.
 > 
-> Cc: Chris Metcalf <cmetcalf@mellanox.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Correction: I can still see "Association request to the driver
+> failed" and switching between BSSIDs with more reassociates but I
+> think that shouldn't be an issue?
 
-For networking:
+Not sure what you mean by "with more reassociates"?
 
-Acked-by: David S. Miller <davem@davemloft.net>
+In any case, we suspect that there's another underlying issue in
+mwifiex, which happens to tickle this problem.
+
+Could you record a full trace with -e cfg80211 for me (and send it
+privately, please compress trace.dat e.g. with xz, it compresses really
+well)
+
+Thanks,
+johannes
