@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:59792 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752029AbdJRLVa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57700 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751935AbdJQFqc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 07:21:30 -0400
-Date: Wed, 18 Oct 2017 12:21:24 +0100 (WEST)
-Message-Id: <20171018.122124.1275281623792997169.davem@davemloft.net> (sfid-20171018_132141_304475_E3FA5CEF)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        ebiederman@twitter.com, johannes.berg@intel.com
-Subject: Re: [PATCH] netlink: use NETLINK_CB(in_skb).sk instead of looking
- it up
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20171016145749.31793-1-johannes@sipsolutions.net>
-References: <20171016145749.31793-1-johannes@sipsolutions.net>
+        Tue, 17 Oct 2017 01:46:32 -0400
+Message-ID: <1508219181.10607.45.camel@sipsolutions.net> (sfid-20171017_074646_405792_D233303B)
+Subject: Re: pull-request: mac80211 2017-10-16
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date: Tue, 17 Oct 2017 07:46:21 +0200
+In-Reply-To: <CAHmME9rHMMAgJs3uQYpt15V8eh-PjDqioqURA3KPKEhc2a9OEg@mail.gmail.com>
+References: <20171016134618.30810-1-johannes@sipsolutions.net>
+         <CAHmME9rHMMAgJs3uQYpt15V8eh-PjDqioqURA3KPKEhc2a9OEg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 16 Oct 2017 16:57:49 +0200
+On Tue, 2017-10-17 at 01:30 +0200, Jason A. Donenfeld wrote:
+> Mobile phone right now, so not able to write patch, but you probably
+> should be using crypto_memneq for comparing those two keys, not
+> memcmp.
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When netlink_ack() reports an allocation error to the sending
-> socket, there's no need to look up the sending socket since
-> it's available in the SKB's CB. Use that instead of going to
-> the trouble of looking it up.
-> 
-> Note that the pointer is only available since Eric Biederman's
-> commit 3fbc290540a1 ("netlink: Make the sending netlink socket availabe in NETLINK_CB")
-> which is far newer than the original lookup code (Oct 2003)
-> (though the field was called 'ssk' in that commit and only got
-> renamed to 'sk' later, I'd actually argue 'ssk' was better - or
-> perhaps it should've been 'source_sk' - since there are so many
-> different 'sk's involved.)
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+I know that's a gut instinct, but I really don't see the point.
 
-Applied to net-next.
+If you actually get this to evaluate to "equal", you're already being
+attacked, and the attacker already knows they're trying to get the same
+key to be installed again. If it's not equal, you execute so much code
+beneath, going to the driver etc., that I'd think this particular time
+is in the noise.
+
+Also, this isn't something that the attacker can directly observe
+anyway, and if they can, then surely the fact that we *skip* a large
+amount of code when returning 0 is also observable.
+
+Besides, the only thing that can observe the timing is hostapd or
+wpa_supplicant, which obviously know the key (and in the fixed versions
+will already have done the comparison themselves).
+
+And lastly, if you wanted to use this as an oracle to get the key back
+from the kernel, then you already have admin permissions (in your
+network namespace), and can just sniff netlink traffic anyway.
+
+johannes
