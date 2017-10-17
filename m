@@ -1,111 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:40884 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750880AbdJPH0U (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:51712 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932782AbdJQW6L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 03:26:20 -0400
-Message-ID: <1508138777.10607.14.camel@sipsolutions.net> (sfid-20171016_092623_688359_86A50C2D)
-Subject: Re: [PATCH] iw: add command to register and capture mgmt frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Steve deRosier <derosier@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 16 Oct 2017 09:26:17 +0200
-In-Reply-To: <20171015095133.prxuuukv6osx52td@bars>
-References: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com>
-         <CALLGbR+DonvXRDysZGx3fJ0wGQsmnWNW3db7mv9KObwTcicnOg@mail.gmail.com>
-         <20171015095133.prxuuukv6osx52td@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 17 Oct 2017 18:58:11 -0400
+Date: Tue, 17 Oct 2017 15:58:08 -0700
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev <netdev@vger.kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using verifier to ensure a BPF program uses certain metadata?
+Message-ID: <20171017225806.b5xubolkyocfgnjc@ast-mbp> (sfid-20171018_005819_743436_04CF6DD1)
+References: <1508139524.10607.25.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1508139524.10607.25.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Oct 16, 2017 at 09:38:44AM +0200, Johannes Berg wrote:
+> Hi,
+> 
+> As we discussed in April already (it's really been that long...), I'd
+> wanted to allow using BPF to filter wireless monitor frames, to enable
+> new use cases and higher performance in monitoring. I have some code,
+> at
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/log/?h=bpf
 
-Looks like this played out while I wasn't paying attention :-)
+bpf bits looks pretty straightforward.
+attach looks fine too. I'm assuming there is some rtnl or other lock,
+so multiple assigns cannot race?
+It's missing query interface though.
+Please add support to return prog_id.
 
-So first, I'll say that I have no objection in principle to the patch,
-as a debugging aid.
+> which implements parts of this. It's still missing the TX status path
+> and perhaps associated metadata, but that part is easy.
+> 
+> The bigger "problem" is that we're going to be adding support for
+> devices that have 802.11->Ethernet conversion already in hardware, and
+> in that case the notion that the filter program will get an 802.11
+> header to look at is no longer right.
+> 
+> Now, most likely for the actual in-service monitoring we'll actually
+> have to reconstitute the 802.11 header on the fly (in pure monitoring
+> where nothing else is active, we can just disable the conversion), but
+> the filtering shouldn't really be reliant on that, since that's not the
+> cheapest thing to do.
+> 
+> The obvious idea around this is to add a metadata field (just a bit
+> really), something like "is_data_ethernet", saying that it was both a
+> data frame and is already converted to have an Ethernet header.
+> However, since these devices don't really exist yet for the vast
+> majority of people, I'm a bit afraid that we'll find later a lot of
+> code simply ignoring this field and looking at the "802.11" header,
+> which is then broken if it encounters an Ethernet header instead.
+> 
+> Are there lies my question: If we added a new callback to
+> bpf_verifier_ops (e.g. "post_verifier_check"), to be called after the
+> normal verification, and also added a context argument to
+> "is_valid_access" (*), we could easily track that this new metadata
+> field is accessed, and reject programs that don't access it at all.
+> 
+> Now, I realize that people could trivially just work around this in
+> their program if they wanted, but I think most will take the reminder
+> and just implement
+> 
+>     if (ctx->is_data_ethernet)
+>         return DROP_FRAME;
+> 
+> instead, since mostly data frames will not be very relevant to them.
+> 
+> What do you think?
 
-However, the story is more complicated.
-
-> IIUC tshark and other specific capture tools need wireless netdevice
-> to be in monitor mode.
-
-This is correct, but shouldn't be a problem.
-
-> This particular iw command is based on
-> NL80211_CMD_REGISTER_FRAME
-> and related cfg80211 ops. In fact, this command can be used to
-> subscribe
-> to mgmt frames when wireless device is up and running in AP or STA
-> mode.
-> That can be convenient for monitor and debug purposes. There is a
-> limitation though: currently cfg80211 core allows only one subscriber
-> for each particular frame/pattern.
-
-If you're looking for a tool to actually do something like sniffer,
-this API isn't the right thing to do.
-
-That's why I also don't think it should be added to tshark.
-
-Remember that with the use of this API also come certain obligations.
-For example, if you subscribe to (certain) action frames and then don't
-actually process them as described by the spec, then the subscriber
-MUST generate responses with the 0x80 bit ORed into the action code,
-returning the frame as not understood. Clearly, this isn't something
-that iw does and can implement.
-
-Additionally, as you noted, and it's for this exact reason because
-otherwise responsibilities wouldn't be clearly defined, there can only
-be a single subscriber to a certain set of frames, as specified by the
-subtype and match prefix, so using it as a type of sniffer or debug
-tool may affect other functional operation.
-
-
-In mac80211, it's _always_ possible to add a monitor interface, and
-given no special flags (which may or may not be supported by a given
-driver anyway) this monitor interface is a pure software construct and
-will in no way affect device operation - apart from sending all
-received frames to the monitor interface at the beginning of mac80211's
-operation.
-
-I see no reason, other than needing a little bit of coding, that this
-couldn't similarly be supported in qtnfmac.
-
-Now, there *is* one problem with this - namely that this can
-significantly affect performance. The reason is that all frames need to
-be sent to the monitor interface, even if they're immediately discarded
-using a BPF socket filter. Sending them there means allocating a new
-SKB (not necessarily copying the data, but still), as well as
-generating radiotap header information for the frames. In many cases
-data frames are immediately discarded so all this work is for naught.
-
-What I had worked on a while ago to solve this problem is an eBPF
-filter attached just before the "branch point" to the monitor
-interface, this filter gets access to the frame (without radiotap data)
-and some limited RX status data.
-
-You can find the code for this here (may need rebasing, but I have
-merged all the RX path logic changes already):
-
-https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
-/log/?h=bpf
-
-
-Now, there are two problems with this still (afaict):
-
-   1. It doesn't cover the TX status path, which it should, since that
-      also goes to the monitor interfaces. This is easily solved, I think
-      I just forgot about it :) (This may need an additional field in the
-      metadata, but that's not a problem)
-   2. It doesn't deal with already decapsulated RX, i.e. devices where the
-      802.11->ethernet decapsulation is done in the device already. This
-      was the reason I didn't merge this, and the problem I see with this
-      is that even if we do add additional metadata, it's hard to ensure
-      that eBPF programs won't ignore it.
-
-johannes
+sounds fine and considering new verifier ops after Jakub refactoring
+a check that is_data_ethernet was accessed would fit nicely.
+Without void** hack.
