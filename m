@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:27820 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932326AbdJZTUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Oct 2017 15:20:45 -0400
-Message-ID: <1509045643.4492.82.camel@intel.com> (sfid-20171026_212049_690618_D319898D)
-Subject: Re: [linuxwifi] Support Help on WiFi driver
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Edwin Amurao <babloyon@yahoo.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "linuxwifi@intel.com" <linuxwifi@intel.com>
-Date: Thu, 26 Oct 2017 22:20:43 +0300
-In-Reply-To: <1509045513.4492.80.camel@intel.com>
-References: <1458868388.5220365.1509025473944.ref@mail.yahoo.com>
-         <1458868388.5220365.1509025473944@mail.yahoo.com>
-         <1509045513.4492.80.camel@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.63.242]:44332 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965952AbdJQTfB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Oct 2017 15:35:01 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wil6210: remove wil6210_uapi.h from MAINTAINERS
+Date: Tue, 17 Oct 2017 21:34:58 +0200
+Message-Id: <20171017193458.7473-1-johannes@sipsolutions.net> (sfid-20171017_213504_568083_00198A47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BTW, all mailing lists @vger.kernel.org drop emails sent in HTML
-format, so your original email didn't reach it.
+From: Johannes Berg <johannes.berg@intel.com>
 
---
-Cheers,
-Luca.
+This file doesn't exist.
 
-On Thu, 2017-10-26 at 22:18 +0300, Luciano Coelho wrote:
-> Hi Edwin,
-> 
-> Please give us a bit more information. What is the kernel version
-> that your distro uses? And what is the WiFi card that yo have in this
-> machine?
-> 
-> Also, a dmesg output can help us start the investigation.
-> 
-> --
-> Cheers,
-> Luca.
-> 
-> On Thu, 2017-10-26 at 13:44 +0000, Edwin Amurao wrote:
-> > Hi!
-> > 
-> > I have an INTEL NUC5CFYPH and have installed Linux Mint 17.3.  The
-> > wifi cannot be detected by the system.  What driver should I
-> > download and how to make it work?
-> > 
-> > Thank you,
-> > Edwin Amurao
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ MAINTAINERS | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3944f1626911..7051e2ae9971 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14565,7 +14565,6 @@ L:	wil6210@qca.qualcomm.com
+ S:	Supported
+ W:	http://wireless.kernel.org/en/users/Drivers/wil6210
+ F:	drivers/net/wireless/ath/wil6210/
+-F:	include/uapi/linux/wil6210_uapi.h
+ 
+ WIMAX STACK
+ M:	Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+-- 
+2.14.2
