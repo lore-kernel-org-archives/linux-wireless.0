@@ -1,41 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:28211 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750714AbdJ0Nqo (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40298 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753003AbdJQKSU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 09:46:44 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 17 Oct 2017 06:18:20 -0400
+Received: from mail-ua0-f176.google.com ([209.85.217.176])
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <jesse.sung@canonical.com>)
+        id 1e4Ox0-0002dq-ML
+        for linux-wireless@vger.kernel.org; Tue, 17 Oct 2017 10:18:18 +0000
+Received: by mail-ua0-f176.google.com with SMTP id l40so783097uah.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2017 03:18:18 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [1/2] ath10k: move ath10k_mac_tdls_vif*() functions
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1507183709-585-1-git-send-email-akolli@qti.qualcomm.com>
-References: <1507183709-585-1-git-send-email-akolli@qti.qualcomm.com>
-To: <akolli@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <akolli@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>
-Message-ID: <d28440c53e574b58851d99003f99f9b9@euamsexm01a.eu.qualcomm.com> (sfid-20171027_154648_054302_4F24630C)
-Date: Fri, 27 Oct 2017 15:46:37 +0200
+In-Reply-To: <1508233890.10607.70.camel@sipsolutions.net>
+References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
+ <1508233890.10607.70.camel@sipsolutions.net>
+From: Jesse Sung <jesse.sung@canonical.com>
+Date: Tue, 17 Oct 2017 18:18:17 +0800
+Message-ID: <CAH10aOj8xTPDyEufGS47hytnT8RSL+qSbiRVmePrMpaaUu7gPQ@mail.gmail.com> (sfid-20171017_121829_964441_A527310A)
+Subject: Re: Commit 0711d638 breaks mwifiex
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@qti.qualcomm.com wrote:
+Hi Johannes,
 
-> To be able to use ath10k_mac_tdls_vif_stations_count() in
-> ath10k_hw_scan() in the following patch, move the functions
-> earlier in the file.
-> 
-> This commit is pure code move, no functional changes.
-> 
-> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On Tue, Oct 17, 2017 at 5:51 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>> While working on an issue that marvell module stops connecting to AP,
+>> bisect reveals that the issue starts to happen from commit 0711d638,
+>> which uses wdev->ssid_len instead of wdev->current_bss to determine
+>> if driver's .disconnect() should be called.
+>>
+>> It happens because mwifiex_cfg80211_connect() returns -EALREADY
+>> when it finds wdev->current_bss is valid:
+>>
+>> if (priv->wdev.current_bss) {
+>>     [PRINT LOG]
+>>     return -EALREADY;
+>> }
+>>
+>> This would make cfg80211_connect() set wdev->ssid_len to 0, and thus
+>> mwifiex_cfg80211_disconnect() won't be called by
+>> cfg80211_disconnect().
+>
+> Hmm, none of this makes much sense to me right now.
+>
+> Does mwifiex treat this -EALREADY as *keeping* an old connection, or
+> tearing it down entirely?
 
-2 patches applied to ath-next branch of ath.git, thanks.
+>From the call trace:
 
-dd0f9cd6bc6a ath10k: move ath10k_mac_tdls_vif*() functions
-a60809313b96 ath10k: block offchannel operations if TDLS session is active
+139.451318: nl80211_get_valid_chan <-nl80211_connect
+139.451321: cfg80211_connect <-nl80211_connect
+139.451322: cfg80211_oper_and_ht_capa <-cfg80211_connect
+139.451323: mwifiex_cfg80211_connect <-cfg80211_connect
+139.451337: nl80211_post_doit <-genl_family_rcv_msg
+139.451423: nl80211_pre_doit <-genl_family_rcv_msg
+139.451425: nl80211_disconnect <-genl_family_rcv_msg
+139.451426: cfg80211_disconnect <-nl80211_disconnect
+139.451430: mwifiex_cfg80211_disconnect <-cfg80211_disconnect
 
--- 
-https://patchwork.kernel.org/patch/9986447/
+mwifiex_cfg80211_disconnect() would be called after
+mwifiex_cfg80211_connect(), though I'm not sure if it's triggered by the
+error returned.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> Because right now clearly cfg80211 assumes, on the one hand, that no
+> connection is kept (resetting ssid_len), but on the other hand it got
+> here with current_bss set - so perhaps we should reject that before in
+> cfg80211, rather than in mwifiex?
+
+Yes the inconsistency may be a problem.
+
+> I think your fix is invalid because we then reset ssid_len and still
+> keep an old connection (current_bss) which will lead to strange nl80211
+> behaviour when getting interface data etc.
+
+Since this is how it works before commit 0711d638 (use current_bss instead
+of ssid_len), so I'm guessing this would still work. But I agree that this
+may not be a proper fix...
+
+Thanks,
+Jesse
