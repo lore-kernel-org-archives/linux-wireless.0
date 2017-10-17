@@ -1,222 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:54849 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751444AbdJEAuX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 20:50:23 -0400
-Received: by mail-pg0-f50.google.com with SMTP id c137so7408140pga.11
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 17:50:22 -0700 (PDT)
-Date: Wed, 4 Oct 2017 17:50:20 -0700
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH] net/wireless/ray_cs: Convert timers to use
-Message-ID: <20171005005020.GA23219@beast> (sfid-20171005_030633_617069_4DDF102E)
+Received: from mail-ve1eur01on0073.outbound.protection.outlook.com ([104.47.1.73]:3227
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935580AbdJQMIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Oct 2017 08:08:00 -0400
+From: Vanessa Maegima <vanessa.maegima@nxp.com>
+To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "van.ayumi@gmail.com" <van.ayumi@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "embed3d@gmail.com" <embed3d@gmail.com>,
+        "joerg.krause@embedded.rocks" <joerg.krause@embedded.rocks>
+Subject: Re: AP6335 with mainline kernel
+Date: Tue, 17 Oct 2017 12:07:56 +0000
+Message-ID: <1508242029.3656.1.camel@nxp.com> (sfid-20171017_140805_138645_AE5DA498)
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+         <e9fe560a-fba3-aaa8-8c0a-b3c6f5ce1a74@broadcom.com>
+         <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com>
+In-Reply-To: <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
-
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-This requires commit 686fef928bba ("timer: Prepare to change timer
-callback argument type") in v4.14-rc3, but should be otherwise
-stand-alone.
----
- drivers/net/wireless/ray_cs.c | 53 ++++++++++++++++++++-----------------------
- 1 file changed, 24 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 170cd504e8ff..d8afcdfca1ed 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -92,7 +92,7 @@ static const struct iw_handler_def ray_handler_def;
- /***** Prototypes for raylink functions **************************************/
- static void authenticate(ray_dev_t *local);
- static int build_auth_frame(ray_dev_t *local, UCHAR *dest, int auth_type);
--static void authenticate_timeout(u_long);
-+static void authenticate_timeout(struct timer_list *t);
- static int get_free_ccs(ray_dev_t *local);
- static int get_free_tx_ccs(ray_dev_t *local);
- static void init_startup_params(ray_dev_t *local);
-@@ -102,7 +102,7 @@ static int ray_init(struct net_device *dev);
- static int interrupt_ecf(ray_dev_t *local, int ccs);
- static void ray_reset(struct net_device *dev);
- static void ray_update_parm(struct net_device *dev, UCHAR objid, UCHAR *value, int len);
--static void verify_dl_startup(u_long);
-+static void verify_dl_startup(struct timer_list *t);
- 
- /* Prototypes for interrpt time functions **********************************/
- static irqreturn_t ray_interrupt(int reg, void *dev_id);
-@@ -120,9 +120,8 @@ static void associate(ray_dev_t *local);
- 
- /* Card command functions */
- static int dl_startup_params(struct net_device *dev);
--static void join_net(u_long local);
--static void start_net(u_long local);
--/* void start_net(ray_dev_t *local); */
-+static void join_net(struct timer_list *t);
-+static void start_net(struct timer_list *t);
- 
- /*===========================================================================*/
- /* Parameters that can be set with 'insmod' */
-@@ -323,7 +322,7 @@ static int ray_probe(struct pcmcia_device *p_dev)
- 	dev_dbg(&p_dev->dev, "ray_cs ray_attach calling ether_setup.)\n");
- 	netif_stop_queue(dev);
- 
--	init_timer(&local->timer);
-+	timer_setup(&local->timer, NULL, 0);
- 
- 	this_device = p_dev;
- 	return ray_config(p_dev);
-@@ -570,8 +569,7 @@ static int dl_startup_params(struct net_device *dev)
- 	local->card_status = CARD_DL_PARAM;
- 	/* Start kernel timer to wait for dl startup to complete. */
- 	local->timer.expires = jiffies + HZ / 2;
--	local->timer.data = (long)local;
--	local->timer.function = verify_dl_startup;
-+	local->timer.function = (TIMER_FUNC_TYPE)verify_dl_startup;
- 	add_timer(&local->timer);
- 	dev_dbg(&link->dev,
- 	      "ray_cs dl_startup_params started timer for verify_dl_startup\n");
-@@ -641,9 +639,9 @@ static void init_startup_params(ray_dev_t *local)
- } /* init_startup_params */
- 
- /*===========================================================================*/
--static void verify_dl_startup(u_long data)
-+static void verify_dl_startup(struct timer_list *t)
- {
--	ray_dev_t *local = (ray_dev_t *) data;
-+	ray_dev_t *local = from_timer(local, t, timer);
- 	struct ccs __iomem *pccs = ccs_base(local) + local->dl_param_ccs;
- 	UCHAR status;
- 	struct pcmcia_device *link = local->finder;
-@@ -676,16 +674,16 @@ static void verify_dl_startup(u_long data)
- 		return;
- 	}
- 	if (local->sparm.b4.a_network_type == ADHOC)
--		start_net((u_long) local);
-+		start_net(&local->timer);
- 	else
--		join_net((u_long) local);
-+		join_net(&local->timer);
- } /* end verify_dl_startup */
- 
- /*===========================================================================*/
- /* Command card to start a network */
--static void start_net(u_long data)
-+static void start_net(struct timer_list *t)
- {
--	ray_dev_t *local = (ray_dev_t *) data;
-+	ray_dev_t *local = from_timer(local, t, timer);
- 	struct ccs __iomem *pccs;
- 	int ccsindex;
- 	struct pcmcia_device *link = local->finder;
-@@ -710,9 +708,9 @@ static void start_net(u_long data)
- 
- /*===========================================================================*/
- /* Command card to join a network */
--static void join_net(u_long data)
-+static void join_net(struct timer_list *t)
- {
--	ray_dev_t *local = (ray_dev_t *) data;
-+	ray_dev_t *local = from_timer(local, t, timer);
- 
- 	struct ccs __iomem *pccs;
- 	int ccsindex;
-@@ -1639,13 +1637,13 @@ static int get_free_ccs(ray_dev_t *local)
- } /* get_free_ccs */
- 
- /*===========================================================================*/
--static void authenticate_timeout(u_long data)
-+static void authenticate_timeout(struct timer_list *t)
- {
--	ray_dev_t *local = (ray_dev_t *) data;
-+	ray_dev_t *local = from_timer(local, t, timer);
- 	del_timer(&local->timer);
- 	printk(KERN_INFO "ray_cs Authentication with access point failed"
- 	       " - timeout\n");
--	join_net((u_long) local);
-+	join_net(&local->timer);
- }
- 
- /*===========================================================================*/
-@@ -1945,17 +1943,16 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
- 
- 				del_timer(&local->timer);
- 				local->timer.expires = jiffies + HZ * 5;
--				local->timer.data = (long)local;
- 				if (status == CCS_START_NETWORK) {
- 					dev_dbg(&link->dev,
- 					      "ray_cs interrupt network \"%s\" start failed\n",
- 					      memtmp);
--					local->timer.function = start_net;
-+					local->timer.function = (TIMER_FUNC_TYPE)start_net;
- 				} else {
- 					dev_dbg(&link->dev,
- 					      "ray_cs interrupt network \"%s\" join failed\n",
- 					      memtmp);
--					local->timer.function = join_net;
-+					local->timer.function = (TIMER_FUNC_TYPE)join_net;
- 				}
- 				add_timer(&local->timer);
- 			}
-@@ -1967,7 +1964,7 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
- 			} else {
- 				dev_dbg(&link->dev, "ray_cs association failed,\n");
- 				local->card_status = CARD_ASSOC_FAILED;
--				join_net((u_long) local);
-+				join_net(&local->timer);
- 			}
- 			break;
- 		case CCS_TX_REQUEST:
-@@ -2420,12 +2417,11 @@ static void authenticate(ray_dev_t *local)
- 
- 	del_timer(&local->timer);
- 	if (build_auth_frame(local, local->bss_id, OPEN_AUTH_REQUEST)) {
--		local->timer.function = join_net;
-+		local->timer.function = (TIMER_FUNC_TYPE)join_net;
- 	} else {
--		local->timer.function = authenticate_timeout;
-+		local->timer.function = (TIMER_FUNC_TYPE)authenticate_timeout;
- 	}
- 	local->timer.expires = jiffies + HZ * 2;
--	local->timer.data = (long)local;
- 	add_timer(&local->timer);
- 	local->authentication_state = AWAITING_RESPONSE;
- } /* end authenticate */
-@@ -2468,7 +2464,7 @@ static void rx_authenticate(ray_dev_t *local, struct rcs __iomem *prcs,
- 				} else {
- 					pr_debug("Authentication refused\n");
- 					local->card_status = CARD_AUTH_REFUSED;
--					join_net((u_long) local);
-+					join_net(&local->timer);
- 					local->authentication_state =
- 					    UNAUTHENTICATED;
- 				}
-@@ -2506,8 +2502,7 @@ static void associate(ray_dev_t *local)
- 
- 		del_timer(&local->timer);
- 		local->timer.expires = jiffies + HZ * 2;
--		local->timer.data = (long)local;
--		local->timer.function = join_net;
-+		local->timer.function = (TIMER_FUNC_TYPE)join_net;
- 		add_timer(&local->timer);
- 		local->card_status = CARD_ASSOC_FAILED;
- 		return;
--- 
-2.7.4
-
-
--- 
-Kees Cook
-Pixel Security
+SGkgQXJlbmQsDQoNCk9uIFF1aSwgMjAxNy0wOS0yMSBhdCAxMjozMCAtMDMwMCwgVmFuZXNzYSBB
+eXVtaSBNYWVnaW1hIHdyb3RlOg0KPiBIaSBBcmVuZCwNCj4gDQo+IE9uIFRodSwgU2VwIDIxLCAy
+MDE3IGF0IDQ6MjYgQU0sIEFyZW5kIHZhbiBTcHJpZWwNCj4gPGFyZW5kLnZhbnNwcmllbEBicm9h
+ZGNvbS5jb20+IHdyb3RlOg0KPiA+IA0KPiA+IE9uIDIwLTA5LTE3IDIxOjMzLCBWYW5lc3NhIEF5
+dW1pIE1hZWdpbWEgd3JvdGU6DQo+ID4gPiANCj4gPiA+IA0KPiA+ID4gSGksDQo+ID4gPiANCj4g
+PiA+IEkgYW0gdHJ5aW5nIHRvIGVuYWJsZSBXaWZpIG9uIGlteDdkLXBpY28gdXNpbmcgbWFpbmxp
+bmUga2VybmVsLg0KPiA+ID4gaW14N2QtcGljbw0KPiA+ID4gaGFzIGFuIEFQNjMzNSBjaGlwLg0K
+PiA+ID4gDQo+ID4gPiBJIGFtIGZhY2luZyBzb21lIGlzc3VlcyByZWxhdGVkIHRvIHRoZSBudnJh
+bSBmaWxlLiBJIGFtIHVzaW5nIHRoZQ0KPiA+ID4gZmlybXdhcmUNCj4gPiA+IHByb3ZpZGVkIGJ5
+IEJ1aWxkcm9vdCAoYnJjbWZtYWM0MzM5LXNkaW8uYmluKS4gSSBnZXQgdGhlDQo+ID4gPiBmb2xs
+b3dpbmcgZXJyb3I6DQo+ID4gPiANCj4gPiA+IFvCoMKgwqDCoDguNjMwMzgwXSBicmNtZm1hYzog
+YnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiA+ID4gKDEwMDAwMDApOg0KPiA+
+ID4gY2xrY3RsIDB4NTANCj4gPiA+IA0KPiA+ID4gSSBoYXZlIHRyaWVkIHRvIHVzZSB0aGUgZmly
+bXdhcmUgYW5kIG52cmFtIHByb3ZpZGVkIGJ5IFRlY2hOZXhpb24NCj4gPiA+IGJ1dCBJDQo+ID4g
+PiBnZXQNCj4gPiA+IHRoZSBzYW1lIGVycm9yLg0KPiA+ID4gDQo+ID4gPiBJcyB0aGVyZSBhbnlv
+bmUgdGhhdCBjb3VsZCBlbmFibGUgV2lmaSBvbiBBUDYzMzUgdXNpbmcga2VybmVsDQo+ID4gPiBt
+YWlubGluZT8NCj4gPiA+IFdoYXQgbnZyYW0gZmlsZSB3YXMgdXNlZD8NCj4gPiA+IA0KPiA+ID4g
+SSBhbSBhYmxlIHRvIHVzZSBXaWZpIG9uIHRoZSBib2FyZCBpZiBJIHVzZSB0aGUgZmlybXdhcmUs
+IG52cmFtDQo+ID4gPiBmaWxlIGFuZA0KPiA+ID4ga2VybmVsDQo+ID4gPiBwcm92aWRlZCBieSBU
+ZWNoTmV4aW9uLiBUaGV5IHVzZSBhIDQuMSBrZXJuZWwgZnJvbSBOWFAgd2l0aCB0aGUNCj4gPiA+
+IGJjbWRoZA0KPiA+ID4gZHJpdmVyLg0KPiA+ID4gDQo+ID4gPiBTbyBJIGtub3cgdGhhdCB0aGUg
+aGFyZHdhcmUgaXMgZnVuY3Rpb25hbC4NCj4gPiA+IA0KPiA+ID4gQW55IHN1Z2dlc3Rpb25zIGFz
+IGhvdyB0byBnZXQgaXQgd29ya2luZyB3aXRoIGEgNC4xMyBhbmQgYnJjbWZtYWMNCj4gPiA+IGRy
+aXZlcg0KPiA+ID4gaXMNCj4gPiA+IGFwcHJlY2lhdGVkLg0KPiA+IA0KPiA+IFNvIHRoZSBudnJh
+bSBmaWxlIGlzIHNwZWNpZmljIHRvIHRoZSB3aWZpIGNoaXBzZXQgb24geW91ciBwbGF0Zm9ybQ0K
+PiA+IHNvIGJlc3QNCj4gPiB0byBzdGljayB3aXRoIHRoZSBwcm92aWRlZCBvbmUuIFRoZSAiSFQg
+QXZhaWwgdGltZW91dCIgbW9zdCBvZnRlbg0KPiA+IGlzIGFuDQo+ID4gaW5kaWNhdGlvbiB0aGF0
+IHRoZSBmaXJtd2FyZSBjcmFzaGVkLiBTbyBnZXR0aW5nIG1vcmUgZGVidWcgb3V0cHV0DQo+ID4g
+d291bGQNCj4gPiBoZWxwIHVzIHVuZGVyc3RhbmQgaG93IGl0IGVuZGVkIHVwIGxpa2UgdGhhdC4g
+Q2FuIHlvdSBidWlsZCB0aGUNCj4gPiBicmNtZm1hYw0KPiA+IHdpdGggQ09ORklHX0JSQ01EQkcg
+YW5kIGxvYWQgdGhlIGRyaXZlciB1c2luZzoNCj4gPiANCj4gPiAkIGluc21vZCBicmNtZm1hYy5r
+byBkZWJ1Zz0weDE0MTYNCj4gVGhhbmtzIGZvciB0aGUgcmVwbHkhDQo+IA0KPiBIZXJlIGlzIHRo
+ZSBsb2cgKHVzaW5nIDQuMTQtcmMxKToNCj4gDQo+ICMgZG1lc2cgfCBncmVwIGJyY21mbWFjDQo+
+IFvCoMKgwqAxOS4yOTcyMDZdIGJyY21mbWFjOiBicmNtZm1hY19tb2R1bGVfaW5pdCBObyBwbGF0
+Zm9ybSBkYXRhDQo+IGF2YWlsYWJsZS4NCj4gW8KgwqDCoDE5LjMwNzA3NV0gYnJjbWZtYWM6IGJy
+Y21mX3NkaW9fcHJvYmUgRW50ZXINCj4gW8KgwqDCoDE5LjMwODM4NF0gYnJjbWZtYWM6IEYxIHNp
+Z25hdHVyZSByZWFkIEAweDE4MDAwMDAwPTB4MTYyMjQzMzUNCj4gW8KgwqDCoDE5LjMwOTAyNl0g
+YnJjbWZtYWM6IGJyY21mX2NoaXBfcmVjb2duaXRpb24gZm91bmQgQVhJIGNoaXA6DQo+IEJDTTQz
+MzksIHJldj0yDQo+IFvCoMKgwqAxOS4zMTcxMTVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVz
+X2NoZWNrwqDCoFsxIF0gY29yZSAweDgwMDo0Ng0KPiBiYXNlIDB4MTgwMDAwMDAgd3JhcCAweDE4
+MTAwMDAwDQo+IFvCoMKgwqAxOS4zMTcxNDFdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2No
+ZWNrwqDCoFsyIF0gY29yZSAweDgxMjo0Ng0KPiBiYXNlIDB4MTgwMDEwMDAgd3JhcCAweDE4MTAx
+MDAwDQo+IFvCoMKgwqAxOS4zMTcxNjVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNr
+wqDCoFszIF0gY29yZSAweDgzZTo0DQo+IGJhc2UgMHgxODAwMjAwMCB3cmFwIDB4MTgxMDIwMDAN
+Cj4gW8KgwqDCoDE5LjMxNzE4OF0gYnJjbWZtYWM6IGJyY21mX2NoaXBfY29yZXNfY2hlY2vCoMKg
+WzQgXSBjb3JlIDB4ODNjOjQNCj4gYmFzZSAweDE4MDAzMDAwIHdyYXAgMHgxODEwMzAwMA0KPiBb
+wqDCoMKgMTkuMzE3MjEwXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNSBd
+IGNvcmUgMHg4MWE6MjANCj4gYmFzZSAweDE4MDA0MDAwIHdyYXAgMHgxODEwNDAwMA0KPiBbwqDC
+oMKgMTkuMzE3MjMzXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNiBdIGNv
+cmUgMHg4Mjk6MjENCj4gYmFzZSAweDE4MDA1MDAwIHdyYXAgMHgxODEwNTAwMA0KPiBbwqDCoMKg
+MTkuMzE3MjU2XSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNyBdIGNvcmUg
+MHgxMzU6MA0KPiBiYXNlIDB4MDAwMDAwMDAgd3JhcCAweDE4MTA5MDAwDQo+IFvCoMKgwqAxOS4z
+MTcyNzldIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNrwqDCoFs4IF0gY29yZSAweDI0
+MDowDQo+IGJhc2UgMHgwMDAwMDAwMCB3cmFwIDB4MDAwMDAwMDANCj4gW8KgwqDCoDE5LjMxNzI5
+OF0gYnJjbWZtYWM6IGJyY21mX2NoaXBfc2V0X3Bhc3NpdmUgRW50ZXINCj4gW8KgwqDCoDE5LjMy
+MjIzMl0gYnJjbWZtYWM6IGJyY21mX2NoaXBfZ2V0X3JhbWluZm8gUkFNOiBiYXNlPTB4MTgwMDAw
+DQo+IHNpemU9Nzg2NDMyICgweGMwMDAwKSBzcj0wICgweDApDQo+IFvCoMKgwqAxOS4zMjI0NTdd
+IGJyY21mbWFjOiBicmNtZl9jaGlwX3NldHVwIGNjcmV2PTQ2LCBwbXVyZXY9MjMsDQo+IHBtdWNh
+cHM9MHgzOWNjNWYxNw0KPiBbwqDCoMKgMTkuMzIyNDgxXSBicmNtZm1hYzogYnJjbWZfZ2V0X21v
+ZHVsZV9wYXJhbSBFbnRlciwgYnVzPTAsDQo+IGNoaXA9MTcyMDksIHJldj0yDQo+IFvCoMKgwqAx
+OS4zMjI1MDRdIGJyY21mbWFjOiBicmNtZl9zZGlvZF9zZ3RhYmxlX2FsbG9jIG5lbnRzPTM1DQo+
+IFvCoMKgwqAxOS4zMjI1MzFdIGJyY21mbWFjOiBicmNtZl9zZGlvX2tzb19pbml0IEVudGVyDQo+
+IFvCoMKgwqAxOS4zMjI2MThdIGJyY21mbWFjOiBicmNtZl9zZGlvX2RyaXZlc3RyZW5ndGhpbml0
+IE5vIFNESU8gZHJpdmVyDQo+IHN0cmVuZ3RoIGluaXQgbmVlZGVkIGZvciBjaGlwIDQzDQo+IDM5
+IHJldiAyIHBtdXJldiAyMw0KPiBbwqDCoMKgMTkuMzIzMjM1XSBicmNtZm1hYzogYnJjbWZfYXR0
+YWNoIEVudGVyDQo+IFvCoMKgwqAxOS4zMjM3MjVdIGJyY21mbWFjOiBicmNtZl9wcm90b19hdHRh
+Y2ggRW50ZXINCj4gW8KgwqDCoDE5LjMyMzc2OV0gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfcmVnaXN0
+ZXIgZXZlbnQgaGFuZGxlciByZWdpc3RlcmVkDQo+IGZvciBQU01fV0FUQ0hET0cNCj4gW8KgwqDC
+oDE5LjMyNDMwNl0gYnJjbWZtYWM6IGJyY21mX3NkaW9fcHJvYmUgY29tcGxldGVkISENCj4gW8Kg
+wqDCoDE5LjMyNDMzN10gYnJjbWZtYWM6IGJyY21mX2Z3X21hcF9jaGlwX3RvX25hbWU6IHVzaW5n
+DQo+IGJyY20vYnJjbWZtYWM0MzM5LXNkaW8uYmluIGZvciBjaGlwIDB4MDA0MzMNCj4gOSgxNzIw
+OSkgcmV2IDB4MDAwMDAyDQo+IFvCoMKgwqAxOS4zMzUzNTNdIGJyY21mbWFjOiBicmNtZl9md19n
+ZXRfZmlybXdhcmVzX3BjaWUgZW50ZXI6DQo+IGRldj1tbWMwOjAwMDE6MQ0KPiBbwqDCoMKgMTku
+MzUxNzg3XSBicmNtZm1hYzogYnJjbWZfZndfcmVxdWVzdF9jb2RlX2RvbmUgZW50ZXI6DQo+IGRl
+dj1tbWMwOjAwMDE6MQ0KPiBbwqDCoMKgMTkuMzUzMjAyXSBicmNtZm1hYzogYnJjbWZfZndfcmVx
+dWVzdF9udnJhbV9kb25lIGVudGVyOg0KPiBkZXY9bW1jMDowMDAxOjENCj4gW8KgwqDCoDE5LjM1
+MzQyNF0gYnJjbWZtYWM6IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJhY2sgRW50ZXI6DQo+IGRl
+dj1tbWMwOjAwMDE6MSwgZXJyPTANCj4gW8KgwqDCoDE5LjM1MzgxNF0gYnJjbWZtYWM6IGJyY21m
+X3NkaW9fZG93bmxvYWRfY29kZV9maWxlIEVudGVyDQo+IFvCoMKgwqAxOS4zODg1ODZdIGJyY21m
+bWFjOiBicmNtZl9zZGlvX3ZlcmlmeW1lbW9yeSBDb21wYXJlIFJBTSBkbCAmIHVsDQo+IGF0IDB4
+MDAxODAwMDA7IHNpemU9NDkzNTk5DQo+IFvCoMKgwqAxOS41NDY2NzVdIGJyY21mbWFjOiBicmNt
+Zl9zZGlvX2Rvd25sb2FkX252cmFtIEVudGVyDQo+IFvCoMKgwqAxOS41NDc0MzJdIGJyY21mbWFj
+OiBicmNtZl9zZGlvX3ZlcmlmeW1lbW9yeSBDb21wYXJlIFJBTSBkbCAmIHVsDQo+IGF0IDB4MDAy
+M2Y3MzA7IHNpemU9MjI1Ng0KPiBbwqDCoMKgMTkuNTQ4NjY1XSBicmNtZm1hYzogYnJjbWZfY2hp
+cF9zZXRfYWN0aXZlIEVudGVyDQo+IFvCoMKgwqAyMC41NjI5NzRdIGJyY21mbWFjOiBicmNtZl9z
+ZGlvX2h0Y2xrOiBIVCBBdmFpbCB0aW1lb3V0DQo+ICgxMDAwMDAwKToNCj4gY2xrY3RsIDB4NTAN
+Cj4gW8KgwqDCoDIwLjU3MDQ5MF0gYnJjbWZtYWM6IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJh
+Y2sgZmFpbGVkOg0KPiBkZXY9bW1jMDowMDAxOjEsIGVycj0wDQo+IFvCoMKgwqAyMC41NzA3Mzld
+IGJyY21mbWFjOiBicmNtZl9zZGlvX3JlbW92ZSBFbnRlcg0KPiBbwqDCoMKgMjAuNTcwNzc1XSBi
+cmNtZm1hYzogYnJjbWZfZGV0YWNoIEVudGVyDQo+IFvCoMKgwqAyMC42MTA0MTRdIGJyY21mbWFj
+OiBicmNtZl9idXNfY2hhbmdlX3N0YXRlIDAgLT4gMA0KPiBbwqDCoMKgMjAuNjEwNDQxXSBicmNt
+Zm1hYzogYnJjbWZfc2Rpb19idXNfc3RvcCBFbnRlcg0KPiBbwqDCoMKgMjEuNjIyNDc3XSBicmNt
+Zm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiAoMTAwMDAwMCk6DQo+
+IGNsa2N0bCAweDUwDQo+IFvCoMKgwqAyMS42MzA5MTJdIGJyY21mbWFjOiBicmNtZl9wcm90b19k
+ZXRhY2ggRW50ZXINCj4gW8KgwqDCoDIxLjYzMDk2N10gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfdW5y
+ZWdpc3RlciBldmVudCBoYW5kbGVyIGNsZWFyZWQNCj4gZm9yIFBTTV9XQVRDSERPRw0KPiBbwqDC
+oMKgMjIuNjQyNDU3XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91
+dA0KPiAoMTAwMDAwMCk6DQo+IGNsa2N0bCAweDUwDQo+IFvCoMKgwqAyMi42ODAxMzFdIGJyY21m
+bWFjOiBicmNtZl9jaGlwX3NldF9wYXNzaXZlIEVudGVyDQo+IFvCoMKgwqAyMi42ODI1ODBdIGJy
+Y21mbWFjOiBicmNtZl9zZGlvX3JlbW92ZSBEaXNjb25uZWN0ZWQNCj4gDQo+ID4gDQo+ID4gDQo+
+ID4gUmVnYXJkcywNCj4gPiBBcmVuZA0KPiA+ID4gDQo+ID4gPiANCj4gPiA+IFRoYW5rcyENCj4g
+PiA+IA0KPiA+ID4gUmVnYXJkcywNCj4gPiA+IFZhbmVzc2ENCj4gPiA+IA0KDQpEbyB5b3UgaGF2
+ZSBhbnkgY29tbWVudHM/DQoNClRoYW5rcyENClZhbmVzc2E=
