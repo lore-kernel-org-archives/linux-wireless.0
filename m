@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:46336 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755039AbdJKCbx (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:33636 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754334AbdJQB0Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 22:31:53 -0400
+        Mon, 16 Oct 2017 21:26:24 -0400
+From: Pkshih <pkshih@realtek.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Souptick Joarder <jrdr.linux@gmail.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Two rtlwifi drivers?
+Date: Tue, 17 Oct 2017 01:24:42 +0000
+Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D1058214F2@RTITMBSV07.realtek.com.tw> (sfid-20171017_032627_853963_01DF58B4)
+References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
+ <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
+ <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
+ <87k202qcjr.fsf@kamboji.qca.qualcomm.com> <20171011131310.GF32250@kroah.com>
+ <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com> <20171012103450.GA24647@kroah.com>
+ <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
+ <20171016075010.GB3044@kroah.com>
+In-Reply-To: <20171016075010.GB3044@kroah.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1507532953.26041.5.camel@sipsolutions.net>
-References: <20170926131945.3962-1-qasdfgtyuiop@gmail.com> <1506945898.25586.3.camel@sipsolutions.net>
- <CAMtaSwRU45ve71=H4C7cDQEHrkHg2=eMvXhYbe4HZGxsPRD+AQ@mail.gmail.com> <1507532953.26041.5.camel@sipsolutions.net>
-From: Xiang Gao <qasdfgtyuiop@gmail.com>
-Date: Tue, 10 Oct 2017 22:31:32 -0400
-Message-ID: <CAMtaSwTgu5vV3Pr_TaEOK4-4x0WO2Mk71Wg+Nr2ukg6VwNZ+2Q@mail.gmail.com> (sfid-20171011_043256_513442_4964AA97)
-Subject: Re: [PATCH] mac80211: aead api to reduce redundancy
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-10-09 3:09 GMT-04:00 Johannes Berg <johannes@sipsolutions.net>:
-> On Sun, 2017-10-08 at 01:43 -0400, Xiang Gao wrote:
->>
->> By the way, I'm still struggling on how to run unit tests. It might
->> take time for me to make it run on my machine.
->
-> I can run it easily, so don't worry about it too much. Running it is of
-> course much appreciated, but I don't really want to go and require that
-> right now, it takes a long time to run.
->
-> If you do want to set it up, I suggest the vm scripts (hostap
-> repository in tests/hwsim/vm/ - you can use the kernel .config there as
-> a base to compile a kernel and then just kick it off from there, but it
-> can take a while to run.
-
-Thanks for your help on this. This information is actually very helpful to me.
-
-Since the unit test is not required, I will put working on this patch
-higher priority than unit tests. I will send out patches without
-running unit tests for now before I can make it run on my computer.
-But I'm still interested in trying to run it on my computer after I
-finish this patch.
-
-I will send PATCH v3 soon.
-
-Thanks
-
->
->> Hmm... good question. The reason is, aes_ccm.c and aes_gcm.c was
->> almost exact copy of each other. But they have different copyright
->> information.
->> The copyright of aes_ccm.c was:
->>
->> Copyright 2006, Devicescape Software, Inc.
->> Copyright 2003-2004, Instant802 Networks, Inc.
->>
->> and the copyright of aes_gcm.c was:
->>
->> Copyright 2014-2015, Qualcomm Atheros, Inc.
->>
->> I just don't know how to write the copyright for the new aead_api.c,
->> so I does not put anything there.
->
-> Heh, good point. Well, I guess we can pretend it wasn't already copied
-> before and just "keep" both.
->
-> johannes
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR3JlZyBLcm9haC1IYXJ0
+bWFuIFttYWlsdG86Z3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmddDQo+IFNlbnQ6IE1vbmRheSwg
+T2N0b2JlciAxNiwgMjAxNyAzOjUwIFBNDQo+IFRvOiBQa3NoaWgNCj4gQ2M6IExhcnJ5IEZpbmdl
+cjsgS2FsbGUgVmFsbzsgRGFuIENhcnBlbnRlcjsg6I6K5b2l5a6jOyBKb2hhbm5lcyBCZXJnOyBT
+b3VwdGljayBKb2FyZGVyOw0KPiBkZXZlbEBkcml2ZXJkZXYub3N1b3NsLm9yZzsgbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBrZXJuZWwtamFuaXRvcnNAdmdlci5rZXJuZWwub3JnDQo+
+IFN1YmplY3Q6IFJlOiBUd28gcnRsd2lmaSBkcml2ZXJzPw0KPiANCj4gDQo+ID4gNCkgQXMgS2Fs
+bGUgbWVudGlvbmVkLCBydGx3aWZpIGNvbnRhaW5zIG1hbnkgbWFnaWMgbnVtYmVycywgYW5kIEkN
+Cj4gPiAgICBwbGFuIHRvIGZpeCB0aGVtIGFmdGVyIHJ0bDg3MjNkZSBhbmQgcnRsODgyMWNlLiBC
+ZWNhdXNlIHRoZSBkcml2ZXJzDQo+ID4gICAgYXJlIGRldmVsb3BpbmcsIHRoZSBjaGFuZ2VzIHdp
+bGwgbWFrZSB1cyBoYXJkIHRvIGludGVncmF0ZS4gSG93ZXZlciwNCj4gPiAgICBJIGRvbid0IGhh
+dmUgcGxhbiB0byBwcm9jZXNzIHRoZSBtYWdpYyBudW1iZXJzIGluIHRoZSBtb2R1bGUgcGh5ZG0s
+DQo+ID4gICAgYmVjYXVzZSB0aGUgbW9zdCBvZiBCQi9SRiByZWdpc3RlcnMgY29udGFpbiBtYW55
+IGZ1bmN0aW9ucy4gQW5kDQo+ID4gICAgaXQgZG9lc24ndCBoYXZlIGEgcmVnaXN0ZXIgbmFtZSBi
+dXQgYSBiaXQgZmllbGQgbmFtZSBpbnN0ZWFkLg0KPiA+ICAgIE91ciBCQiB0ZWFtIGd1eXMgc2F5
+IHRoZSB1c2Ugb2YgZW51bWVyYXRpb24gb3IgZGVmaW5lZCBuYW1lIHdpbGwNCj4gPiAgICBiZSB1
+bnJlYWRhYmxlLCBhbmQgdGhlIG5hbWUgaXMgbWVhbmluZ2xlc3MgZm9yIG1vc3QgcGVvcGxlLg0K
+PiANCj4gRG9uJ3QgYmUgc28gc3VyZSB0aGF0IG5hbWVzIGFyZSAibWVhbmluZ2xlc3MiLCB0aGVy
+ZSBhcmUgcGVvcGxlIGhlcmUNCj4gdGhhdCBoYXZlIGJlZW4gZG9pbmcgbmV0d29yayBkcml2ZXJz
+IGFuZCBkZXZlbG9wbWVudCBmb3IgbG9uZ2VyIHRoYW4NCj4gYW55b25lIGVsc2UgaW4gdGhlIHdv
+cmxkLiAgSXQncyBiZXN0IHRvIGF0IGxlYXN0IG5hbWUgdmFsdWVzLCBldmVuIGlmDQo+IHRoZXkg
+ZG8gbm90IHNlZW0gdG8gbWFrZSBzZW5zZSwgYXMgdGhhdCB3YXkgdGhlIHZhbHVlIGNhbiBiZSB0
+cmFja2VkDQo+IGNvcnJlY3RseSwgYW5kIHBvc3NpYmx5IGJlIHVuZGVyc3Rvb2QgbGF0ZXIgYnkg
+c29tZW9uZSBlbHNlLCBvciBldmVuDQo+IHlvdSENCj4gDQoNClRoYW5rcyBmb3IgeW91ciBoZWxw
+IHRvIHJlc29sdmUgb3VyIHF1ZXN0aW9ucy4NCkknbGwgcGFzcyB0aGlzIHBvaW50IHRvIHRoZSBn
+dXlzLg0KDQpQSw0KDQo=
