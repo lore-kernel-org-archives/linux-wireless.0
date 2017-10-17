@@ -1,150 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37786 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751625AbdJELiM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 07:38:12 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/2] mac80211: only remove AP VLAN frames from TXQ
-Date: Thu,  5 Oct 2017 13:38:08 +0200
-Message-Id: <20171005113808.3889-2-johannes@sipsolutions.net> (sfid-20171005_133816_069825_66FDBFDB)
-In-Reply-To: <20171005113808.3889-1-johannes@sipsolutions.net>
-References: <20171005113808.3889-1-johannes@sipsolutions.net>
+Received: from frisell.zx2c4.com ([192.95.5.64]:41439 "EHLO frisell.zx2c4.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753108AbdJQScO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Oct 2017 14:32:14 -0400
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Cc: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Subject: [PATCH] mac80211: use constant time comparison with keys
+Date: Tue, 17 Oct 2017 20:32:07 +0200
+Message-Id: <20171017183207.23124-1-Jason@zx2c4.com> (sfid-20171017_203220_488309_0C41D4D2)
+In-Reply-To: <CAHmME9qd_m-FDj1E+eiBYWKvnMBvr0tWVcJ4ph2tr=Y1d_tb1g@mail.gmail.com>
+References: <CAHmME9qd_m-FDj1E+eiBYWKvnMBvr0tWVcJ4ph2tr=Y1d_tb1g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Otherwise we risk leaking information via timing side channel.
 
-When removing an AP VLAN interface, mac80211 currently purges
-the entire TXQ for the AP interface. Fix this by using the FQ
-API introduced in the previous patch to filter frames.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: fdf7cb4185b6 ("mac80211: accept key reinstall without changing anything")
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
 ---
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       | 25 +++----------------------
- net/mac80211/tx.c          | 34 ++++++++++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+), 22 deletions(-)
+ net/mac80211/key.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9675814f64db..68f874e73561 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2009,6 +2009,8 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 			struct txq_info *txq, int tid);
- void ieee80211_txq_purge(struct ieee80211_local *local,
- 			 struct txq_info *txqi);
-+void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata);
- void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 			 u16 transaction, u16 auth_alg, u16 status,
- 			 const u8 *extra, size_t extra_len, const u8 *bssid,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 2619daa29961..13b16f90e1cf 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -793,9 +793,7 @@ static int ieee80211_open(struct net_device *dev)
- static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			      bool going_down)
- {
--	struct ieee80211_sub_if_data *txq_sdata = sdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct fq *fq = &local->fq;
- 	unsigned long flags;
- 	struct sk_buff *skb, *tmp;
- 	u32 hw_reconf_flags = 0;
-@@ -939,9 +937,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
--		txq_sdata = container_of(sdata->bss,
--					 struct ieee80211_sub_if_data, u.ap);
--
- 		mutex_lock(&local->mtx);
- 		list_del(&sdata->u.vlan.list);
- 		mutex_unlock(&local->mtx);
-@@ -998,8 +993,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		skb_queue_purge(&sdata->skb_queue);
- 	}
- 
--	sdata->bss = NULL;
--
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
- 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
-@@ -1012,22 +1005,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
--	if (txq_sdata->vif.txq) {
--		struct txq_info *txqi = to_txq_info(txq_sdata->vif.txq);
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		ieee80211_txq_remove_vlan(local, sdata);
- 
--		/*
--		 * FIXME FIXME
--		 *
--		 * We really shouldn't purge the *entire* txqi since that
--		 * contains frames for the other AP_VLANs (and possibly
--		 * the AP itself) as well, but there's no API in FQ now
--		 * to be able to filter.
--		 */
--
--		spin_lock_bh(&fq->lock);
--		ieee80211_txq_purge(local, txqi);
--		spin_unlock_bh(&fq->lock);
--	}
-+	sdata->bss = NULL;
- 
- 	if (local->open_count == 0)
- 		ieee80211_clear_tx_pending(local);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 94826680cf2b..7b8154474b9e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1396,6 +1396,40 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
- 		       fq_flow_get_default_func);
- }
- 
-+static bool fq_vlan_filter_func(struct fq *fq, struct fq_tin *tin,
-+				struct fq_flow *flow, struct sk_buff *skb,
-+				void *data)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	return info->control.vif == data;
-+}
-+
-+void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata)
-+{
-+	struct fq *fq = &local->fq;
-+	struct txq_info *txqi;
-+	struct fq_tin *tin;
-+	struct ieee80211_sub_if_data *ap;
-+
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP_VLAN))
-+		return;
-+
-+	ap = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap);
-+
-+	if (!ap->vif.txq)
-+		return;
-+
-+	txqi = to_txq_info(ap->vif.txq);
-+	tin = &txqi->tin;
-+
-+	spin_lock_bh(&fq->lock);
-+	fq_tin_filter(fq, tin, fq_vlan_filter_func, &sdata->vif,
-+		      fq_skb_free_func);
-+	spin_unlock_bh(&fq->lock);
-+}
-+
- void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 			struct sta_info *sta,
- 			struct txq_info *txqi, int tid)
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ae995c8480db..035d16fe926e 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -19,6 +19,7 @@
+ #include <linux/slab.h>
+ #include <linux/export.h>
+ #include <net/mac80211.h>
++#include <crypto/algapi.h>
+ #include <asm/unaligned.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+@@ -635,7 +636,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	 * new version of the key to avoid nonce reuse or replay issues.
+ 	 */
+ 	if (old_key && key->conf.keylen == old_key->conf.keylen &&
+-	    !memcmp(key->conf.key, old_key->conf.key, key->conf.keylen)) {
++	    !crypto_memneq(key->conf.key, old_key->conf.key, key->conf.keylen)) {
+ 		ieee80211_key_free_unused(key);
+ 		ret = 0;
+ 		goto out;
 -- 
 2.14.2
