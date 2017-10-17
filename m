@@ -1,142 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:53973 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933027AbdJQHeT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 03:34:19 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <1508224046.10607.67.camel@sipsolutions.net>
-References: <20171016160902.8970-1-toke@toke.dk> <20171016160902.8970-2-toke@toke.dk> <1508224046.10607.67.camel@sipsolutions.net>
-Date: Tue, 17 Oct 2017 09:34:14 +0200
-Message-ID: <871sm2p6rt.fsf@toke.dk> (sfid-20171017_093424_943920_568BDF51)
+Received: from snoopy.schmut.com ([185.37.248.246]:34888 "EHLO
+        snoopy.schmut.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759964AbdJQTmX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Oct 2017 15:42:23 -0400
+Subject: Re: iwlwifi crash with hostapd
+To: linux-wireless@vger.kernel.org
+References: <6e51916a-6178-5620-8f45-54705c1b4d98@schmut.com>
+ <20171012212454.GB4362@us.netrek.org>
+ <b985bbb0-ec49-0506-871e-b65837b05be2@schmut.com>
+ <20171016033727.GB13209@us.netrek.org>
+From: Mario Theodoridis <mario@schmut.com>
+Message-ID: <2f83cea3-1760-1557-c0ff-0d40ab20f9e8@schmut.com> (sfid-20171017_214227_149795_F906352A)
+Date: Tue, 17 Oct 2017 21:35:39 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171016033727.GB13209@us.netrek.org>
+Content-Type: multipart/mixed;
+ boundary="------------64FC0F624318833FBABC4441"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+This is a multi-part message in MIME format.
+--------------64FC0F624318833FBABC4441
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
->> Only ath9k currently sets the AIRTIME_ACCOUNTING flag.
->
-> I think you should actually make that a separate patch.
->
-> In the previous patch that's not possible or it breaks things, but
-> this patch just adds a new feature that drivers _may_ use, they don't
-> have to since it doesn't change the API, so you should split the
-> patches.
 
-Yeah, I did that initially. The reason I ended up squashing them is that
-this patch moved the per-station 'airtime' debugfs-entry that was
-previously created by ath9k into mac80211. I assumed it would create
-problems if both the driver and mac80211 tried to create the same file;
-not sure how to handle that if it's split into two patches?
 
-> [snip ath9k, I don't really know anything about it]
->
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -1202,6 +1202,7 @@ struct ieee80211_rx_status {
->>  	u32 device_timestamp;
->>  	u32 ampdu_reference;
->>  	u32 flag;
->> +	u16 rx_time;
->
-> I'd prefer this were called "airtime" or such,
+On 16.10.2017 05:37, James Cameron wrote:
+> On Sun, Oct 15, 2017 at 06:21:36PM +0200, Mario Theodoridis wrote:
+>> Thanks for the pointers, James.
+>>
+>> On 12.10.2017 23:24, James Cameron wrote:
+>>> There's a good chance this problem has been fixed already.  You
+>>> are using a v4.4 kernel with many patches applied by Ubuntu.  Here, we
+>>> are more concerned with the latest kernels, and v4.4 is quite old.
+>>>
+>>> Please test some of the later kernels, see
+>>> https://wiki.ubuntu.com/Kernel/MainlineBuilds
+>>>
+>>> In particular, test v4.13 or v4.14-rc4.
+>>
+>> I'm having a hard time with that, because the virtualbox-dkms build fails
+>> with the 4.13 kernel, and virtualbox unfortunately is essential.
+> 
+> Is virtualbox essential for reproducing the problem, or essential for
+> your general use?
 
-Right. I picked rx_time for symmetry with the tx side; should I rename
-that as well, then, or is asymmetry fine?
+It is essential for general use, like Internet connectivity.
 
-> and you clearly need to add documentation regarding this field. In
-> particular, you should point to the IEEE80211_HW_AIRTIME_ACCOUNTING hw
-> flag, and document what should be taken into account here (preamble
-> length, IFS, rts/cts/ack, etc.?) and additionally how this should be
-> handled wrt. A-MPDU (and A- MSDU where decapsulated by the device.)
+> If the former, then that's interesting.
+> 
+> If the latter, then you might instead test the v4.13 or v14-rc4
+> kernels for only the problem, and then revert to an older kernel after
+> testing.
+> 
+> Either way, to use virtualbox-dkms with a later kernel you may be able
+> to upgrade just the virtualbox packages from a later Ubuntu release.
+> 
+> See https://packages.ubuntu.com/virtualbox-dkms and
+> https://packages.ubuntu.com/virtualbox for the later versions available.
+> 
+> Purpose of the test can be to help isolate the cause, not only to
+> solve your problem.
 
-Ah yes, of course; will add some documentation.
+Thanks for the info.
 
-> For aggregation, either form, I expect you just want to see 0 for all
-> but the very first frame? but that may be very difficult for some
-> drivers to implement.
+> 
+> [...]
+> You might also try with later firmware package.
+> See https://packages.ubuntu.com/linux-firmware
+> 
+> You might also test with booting installation media in live-mode,
+> ignoring the internal disk.
 
-Well yeah, either report the airtime of the whole aggregate on the first
-frame and zero on the rest, or report the aggregate overhead on the
-first frame and the data+padding time on each frame. Depends on the
-information the driver has handy / can calculate, I guess.
+Ok, that was completely off the radar.
 
->> +++ b/net/mac80211/rx.c
->> @@ -1637,6 +1637,15 @@ ieee80211_rx_h_sta_process(struct
->> ieee80211_rx_data *rx)
->>  	if (ieee80211_vif_is_mesh(&rx->sdata->vif))
->>  		ieee80211_mps_rx_h_sta_process(sta, hdr);
->>  
->> +	/* airtime accounting */
->> +	if (ieee80211_hw_check(&sta->local->hw, AIRTIME_ACCOUNTING)
->> &&
->
-> Is there much point in this check? I think we can assume drivers are
-> well-behaved and just leave the field at 0 if they don't support it?
 
-I guess it could be omitted for the RX side, yeah. I added the flag
-because the tx_time field overlaps with other fields in the tx_info
-struct and so can be non-zero even if the driver doesn't add airtime
-information (but seems I botched the TX side check as you noted below).
+I ended up going the other way. I still had a 4.4.0-79-generic kernel 
+and booted that. It does not have this problem.
+After checking out
+git://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial
+i tried to find the culprit but was not able to trace the back trace to 
+a potential null pointer or some such. I got stuck at 
+iwl_mvm_send_cmd_pdu_status not finding a reference to 
+iwl_mvm_disable_txq from there.
 
->> +	    status->rx_time) {
->> +		spin_lock_bh(&sta->lock);
->> +		sta->airtime_stats.rx_airtime += status->rx_time;
->> +		sta->airtime_deficit -= status->rx_time;
->> +		spin_unlock_bh(&sta->lock);
->> +	}
->
-> I can't say I'm a big fan of the locking here, we have multi-queue RX
-> where we spread the load across multiple CPUs, and this will lead to
-> massive cache-line bouncing. Maybe we can make it per-CPU or
-> something?
+I did got the following diff though
 
-A per-CPU counter on RX and a separate task that sums those into the
-global counter, perhaps?
+git diff Ubuntu-4.4.0-79.100 Ubuntu-4.4.0-93.116 -- 
+drivers/net/wireless/iwlwifi/ drivers/net/wireless/mac80211_hwsim.c > 
+wifi.patch
 
-> This gets tricky though, so perhaps we can defer that to a separate
-> patch to make it multi-queue aware.
+I don't know whether this came from upstream or was ubuntu sourced.
 
-ACK. I also don't have any hardware to test this, so would probably be
-good to leave that as a separate entry once we're convinced that the
-rest is correct.
+This fixed the issue for now, but now i'm stuck on that kernel :(
 
-> Perhaps for such drivers it'd be better anyway to report the used RX
-> airtime per station *separately*, as part of some kind of statistics
-> API, rather than inline through RX - there's no need for the inline
-> reporting after all as long as the values are updated frequently
-> enough.
+While i'm perfectly comfortable with user land C, i have no kernel 
+experience (clue stick links definitely welcome).
 
-Ah yes, that would be an option as well.
 
->> +++ b/net/mac80211/status.c
->> @@ -823,6 +823,13 @@ static void __ieee80211_tx_status(struct
->> ieee80211_hw *hw,
->>  				ieee80211_lost_packet(sta, info);
->>  			}
->>  		}
->> +
->> +		if (info->status.tx_time) {
->> +			spin_lock_bh(&sta->lock);
->> +			sta->airtime_stats.tx_airtime += info->status.tx_time;
->> +			sta->airtime_deficit -= info->status.tx_time;
->> +			spin_unlock_bh(&sta->lock);
->> +		}
->>  	}
->
-> Those lines also seem pretty long, and the concerns from above apply.
->
-> Here you also don't have the hw_check,
 
-Yeah, oops. :)
+-- 
+Mit freundlichen Grüßen/Best regards
 
-[snip]
+Mario Theodoridis
 
-Will fix the rest of your comments and resend. Thanks!
+--------------64FC0F624318833FBABC4441
+Content-Type: text/x-diff;
+ name="wifi.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="wifi.patch"
 
--Toke
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index b3ad34e..1eb1a82 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -729,12 +729,15 @@ static inline bool iwl_enable_tx_ampdu(const struct iwl_cfg *cfg)
+ 
+ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+-				   enum ieee80211_ampdu_mlme_action action,
+-				   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-				   u8 buf_size, bool amsdu)
++				   struct ieee80211_ampdu_params *params)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	int ret = -EINVAL;
++	struct ieee80211_sta *sta = params->sta;
++	enum ieee80211_ampdu_mlme_action action = params->action;
++	u16 tid = params->tid;
++	u16 *ssn = &params->ssn;
++	u8 buf_size = params->buf_size;
+ 	struct iwl_station_priv *sta_priv = (void *) sta->drv_priv;
+ 
+ 	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index ce12717..1a8ea77 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -826,13 +826,16 @@ iwl_mvm_ampdu_check_trigger(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ static int iwl_mvm_mac_ampdu_action(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+-				    enum ieee80211_ampdu_mlme_action action,
+-				    struct ieee80211_sta *sta, u16 tid,
+-				    u16 *ssn, u8 buf_size, bool amsdu)
++				    struct ieee80211_ampdu_params *params)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	int ret;
+ 	bool tx_agg_ref = false;
++	struct ieee80211_sta *sta = params->sta;
++	enum ieee80211_ampdu_mlme_action action = params->action;
++	u16 tid = params->tid;
++	u16 *ssn = &params->ssn;
++	u8 buf_size = params->buf_size;
+ 
+ 	IWL_DEBUG_HT(mvm, "A-MPDU action on addr %pM tid %d: action %d\n",
+ 		     sta->addr, tid, action);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 0cd9512..019d716 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1817,10 +1817,12 @@ static int mac80211_hwsim_testmode_cmd(struct ieee80211_hw *hw,
+ 
+ static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+-				       enum ieee80211_ampdu_mlme_action action,
+-				       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-				       u8 buf_size, bool amsdu)
++				       struct ieee80211_ampdu_params *params)
+ {
++	struct ieee80211_sta *sta = params->sta;
++	enum ieee80211_ampdu_mlme_action action = params->action;
++	u16 tid = params->tid;
++
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_TX_START:
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+@@ -2537,7 +2539,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 
+ 	tasklet_hrtimer_init(&data->beacon_timer,
+ 			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC_RAW, HRTIMER_MODE_ABS);
++			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
+ 	list_add_tail(&data->list, &hwsim_radios);
+
+--------------64FC0F624318833FBABC4441--
