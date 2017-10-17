@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46916 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39258 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751149AbdJLEct (ORCPT
+        with ESMTP id S1758823AbdJQOXD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 00:32:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
-References: <20171010193027.GA23108@embeddedor.com>
-        <5f5f0f54-d901-90be-9025-0a1c4b909368@gmail.com>
-        <87o9peqdo2.fsf@kamboji.qca.qualcomm.com>
-        <eb89f2ad-f2d5-b97f-c224-daf3953d912c@gmail.com>
-Date: Thu, 12 Oct 2017 07:32:44 +0300
-In-Reply-To: <eb89f2ad-f2d5-b97f-c224-daf3953d912c@gmail.com> (Jes Sorensen's
-        message of "Wed, 11 Oct 2017 09:34:51 -0400")
-Message-ID: <87po9touj7.fsf@kamboji.qca.qualcomm.com> (sfid-20171012_063337_412032_88FB201E)
+        Tue, 17 Oct 2017 10:23:03 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: bcma: use bcma_debug and pr_cont in MIPS driver
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171016125432.11655-1-zajec5@gmail.com>
+References: <20171016125432.11655-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20171017142303.03B9C6079D@smtp.codeaurora.org> (sfid-20171017_162306_869795_F9C826A0)
+Date: Tue, 17 Oct 2017 14:23:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <jes.sorensen@gmail.com> writes:
+Rafał Miłecki wrote:
 
-> On 10/11/2017 04:41 AM, Kalle Valo wrote:
->> Jes Sorensen <jes.sorensen@gmail.com> writes:
->>
->>> On 10/10/2017 03:30 PM, Gustavo A. R. Silva wrote:
->>>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
->>>> where we are expecting to fall through.
->>>
->>> While this isn't harmful, to me this looks like pointless patch churn
->>> for zero gain and it's just ugly.
->>
->> In general I find it useful to mark fall through cases. And it's just a
->> comment with two words, so they cannot hurt your eyes that much.
->
-> I don't see them being harmful in the code, but I don't see them of
-> much use either. If it happened as part of natural code development,
-> fine. My objection is to people running around doing this
-> systematically causing patch churn for little to zero gain.
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Using bcma_debug gives a device-specific prefix for messages and pr_cont
+> is a common helper for continuing a line.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Acked-By: Hauke Mehrtens <hauke@hauke-m.de>
 
-We do receive quite a lot these kind of cleanup patches found with
-various analysers and tools. I guess one could classify those as churn
-but I think the net result is still very much on the positive side. And
-this patch in particular seems useful for me and I think we should take
-it.
+Patch applied to wireless-drivers-next.git, thanks.
+
+66cc04424960 bcma: use bcma_debug and pr_cont in MIPS driver
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10008245/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
