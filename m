@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:49276 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750943AbdJBIdi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:60736 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934855AbdJQJvg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 04:33:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAK8P3a3BiPh+d4vcb4pbbOsZLegp6YGk+BU3L=71sxatTuk-GQ@mail.gmail.com>
-References: <20170922212930.620249-1-arnd@arndb.de> <20170922212930.620249-5-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DD007F521@AcuExch.aculab.com>
- <CAK8P3a1zxjMsQTBPijCo8FJjEU5aRVTr7n_NZ1YM2UnDPKoRLw@mail.gmail.com>
- <CAK8P3a37Ts5q7BvA2JWse87huyAp+=e18CUXEt8731RrBnB+Ow@mail.gmail.com>
- <e7e6418e-4340-5057-aa17-800082aca5fb@virtuozzo.com> <CAK8P3a2C7DBTfQZvRi-QQfrfm1GXktFcXQRmXmzpF4SCa+BADA@mail.gmail.com>
- <2631e8a6-03f2-69ea-d889-afd9a345e7ef@virtuozzo.com> <CAK8P3a3BiPh+d4vcb4pbbOsZLegp6YGk+BU3L=71sxatTuk-GQ@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 2 Oct 2017 10:33:37 +0200
-Message-ID: <CAK8P3a0WtHjvo6tOp79U4gKjLSRmVCAmjYU_xTVJfBL1Qe-hdQ@mail.gmail.com> (sfid-20171002_103216_223898_367FBCAB)
-Subject: Re: [PATCH v4 4/9] em28xx: fix em28xx_dvb_init for KASAN
-To: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: David Laight <David.Laight@aculab.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexander Potapenko <glider@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Michal Marek <mmarek@suse.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "brcm80211-dev-list@cypress.com" <brcm80211-dev-list@cypress.com>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>,
-        Jakub Jelinek <jakub@gcc.gnu.org>,
-        =?UTF-8?Q?Martin_Li=C5=A1ka?= <marxin@gcc.gnu.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
+        Tue, 17 Oct 2017 05:51:36 -0400
+Message-ID: <1508233890.10607.70.camel@sipsolutions.net> (sfid-20171017_115140_216992_AD84F94E)
+Subject: Re: Commit 0711d638 breaks mwifiex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jesse Sung <jesse.sung@canonical.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ilan Peer <ilan.peer@intel.com>
+Cc: Anthony Wong <anthony.wong@canonical.com>,
+        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
+        linux-wireless@vger.kernel.org
+Date: Tue, 17 Oct 2017 11:51:30 +0200
+In-Reply-To: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com> (sfid-20171017_110449_063483_9C0F4028)
+References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
+         (sfid-20171017_110449_063483_9C0F4028)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 28, 2017 at 4:30 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Thu, Sep 28, 2017 at 6:09 AM, Andrey Ryabinin
-> <aryabinin@virtuozzo.com> wrote:
->> On 09/27/2017 04:26 PM, Arnd Bergmann wrote:
->>> On Tue, Sep 26, 2017 at 9:49 AM, Andrey Ryabinin
->>> <aryabinin@virtuozzo.com> wrote:
->
->>> --- a/include/linux/string.h
->>> +++ b/include/linux/string.h
->>> @@ -227,7 +227,7 @@ static inline const char *kbasename(const char *path)
->>>  #define __FORTIFY_INLINE extern __always_inline __attribute__((gnu_inline))
->>>  #define __RENAME(x) __asm__(#x)
->>>
->>> -void fortify_panic(const char *name) __noreturn __cold;
->>> +void fortify_panic(const char *name) __cold;
->>>  void __read_overflow(void) __compiletime_error("detected read beyond
->>> size of object passed as 1st parameter");
->>>  void __read_overflow2(void) __compiletime_error("detected read beyond
->>> size of object passed as 2nd parameter");
->>>  void __read_overflow3(void) __compiletime_error("detected read beyond
->>> size of object passed as 3rd parameter");
->>>
->>> I don't immediately see why the __noreturn changes the behavior here, any idea?
->>>
->>
->>
->> At first I thought that this somehow might be related to __asan_handle_no_return(). GCC calls it
->> before noreturn function. So I made patch to remove generation of these calls (we don't need them in the kernel anyway)
->> but it didn't help. It must be something else than.
->
-> I made a reduced test case yesterday (see http://paste.ubuntu.com/25628030/),
-> and it shows the same behavior with and without the sanitizer, it uses 128
-> bytes without the noreturn attribute and 480 bytes when its added, the sanitizer
-> adds a factor of 1.5x on top. It's possible that I did something wrong while
-> reducing, since the original driver file uses very little stack (a few hundred
-> bytes) without -fsanitize=kernel-address, but finding out what happens in
-> the reduced case may still help understand the other one.
+Hi,
 
-This is now GCC PR82365, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82365
+> While working on an issue that marvell module stops connecting to AP,
+> bisect reveals that the issue starts to happen from commit 0711d638,
+> which uses wdev->ssid_len instead of wdev->current_bss to determine
+> if driver's .disconnect() should be called.
+> 
+> It happens because mwifiex_cfg80211_connect() returns -EALREADY
+> when it finds wdev->current_bss is valid:
+> 
+> if (priv->wdev.current_bss) {
+>     [PRINT LOG]
+>     return -EALREADY;
+> }
+> 
+> This would make cfg80211_connect() set wdev->ssid_len to 0, and thus
+> mwifiex_cfg80211_disconnect() won't be called by
+> cfg80211_disconnect().
 
-I've come up with a workaround, but I'm not sure if that is any better than the
-alternatives, will send the patch as a follow-up in a bit.
+Hmm, none of this makes much sense to me right now.
 
-     Arnd
+Does mwifiex treat this -EALREADY as *keeping* an old connection, or
+tearing it down entirely?
+
+Because right now clearly cfg80211 assumes, on the one hand, that no
+connection is kept (resetting ssid_len), but on the other hand it got
+here with current_bss set - so perhaps we should reject that before in
+cfg80211, rather than in mwifiex?
+
+I think your fix is invalid because we then reset ssid_len and still
+keep an old connection (current_bss) which will lead to strange nl80211
+behaviour when getting interface data etc.
+
+johannes
