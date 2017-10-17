@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:32836 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbdJBJCz (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:44416 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759964AbdJQTmz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 05:02:55 -0400
-Received: by mail-lf0-f65.google.com with SMTP id j73so1877457lfg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Oct 2017 02:02:54 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: Re: [PATCH 00/11] SDIO support for ath10k
-To: silexcommon@gmail.com, ath10k@lists.infradead.org
-Cc: Alagu Sankar <alagusankar@silex-india.com>,
-        linux-wireless@vger.kernel.org
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-Message-ID: <b4bbf022-77d7-f907-f35b-7afacfc227e5@gmail.com> (sfid-20171002_110109_703044_3A8EE1C6)
-Date: Mon, 2 Oct 2017 11:02:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 17 Oct 2017 15:42:55 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wil6210: disallow changing RSN in beacon change
+Date: Tue, 17 Oct 2017 21:42:53 +0200
+Message-Id: <20171017194253.10212-1-johannes@sipsolutions.net> (sfid-20171017_214258_405163_EED7D448)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alagu,
+From: Johannes Berg <johannes.berg@intel.com>
 
-It is great to see that we are finally about have fully working
-mainline support for QCA9377 SDIO chipsets!
+This is a code path that will never really get hit anyway, since
+it's nonsense to change the beacon of an existing BSS to suddenly
+include or no longer include the RSN IE. Reject this instead of
+having the dead code, and get rid of accessing wdev->ssid/_len by
+way of that.
 
-Great job!
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-On 2017-09-30 19:37, silexcommon@gmail.com wrote:
-> From: Alagu Sankar <alagusankar@silex-india.com>
-> 
-> This patchset, generated against master-pending branch, enables a fully
-> functional SDIO interface driver for ath10k.  Patches have been verified on
-> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access Point
-> and P2P modes.
-> 
-> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
-> with the board data from respective SDIO card vendors. Receive performance
-> matches the QCA reference driver when used with SDIO3.0 enabled platforms.
-> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
-> 
-Can you share any scripts etc. (wrapping hostapd and wpa_supplicant stuff)
-or provide some more info about you test setup?
-
-I made a quick socat based test on an old laptop (I don't think it has SDIO
-3.0 support) and I did unfortunately not get the same figures as you did :(
-
-> This patchset differs from the previous high latency patches, specific to SDIO.
-> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instructs the
-> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Without
-> this flag, the management frames are not sent out by the firmware. Possibility
-> of management frames being sent via WMI and data frames through the reduced Tx
-> completion needs to be probed further.
-> 
-Ah, so that explains why I couldn't see any messages in the air.
-
-> Further improvements can be done on the transmit path by implementing packet
-> bundle. Scatter Gather is another area of improvement for both Transmit and
-> Receive, but may not work on all platforms
-> 
-> Known issues: Surprise removal of the card, when the device is in connected
-> state, delays sdio function remove due to delayed WMI command failures.
-> Existing ath10k framework can not differentiate between a kernel module
-> removal and the surprise removal of teh card.
-> 
-> Alagu Sankar (11):
->    ath10k_sdio: sdio htt data transfer fixes
->    ath10k_sdio: wb396 reference card fix
->    ath10k_sdio: DMA bounce buffers for read write
->    ath10k_sdio: reduce transmit msdu count
->    ath10k_sdio: use clean packet headers
->    ath10k_sdio: high latency fixes for beacon buffer
->    ath10k_sdio: fix rssi indication
->    ath10k_sdio: common read write
->    ath10k_sdio: virtual scatter gather for receive
->    ath10k_sdio: enable firmware crash dump
->    ath10k_sdio: hif start once addition
-> 
->   drivers/net/wireless/ath/ath10k/core.c    |  35 ++-
->   drivers/net/wireless/ath/ath10k/debug.c   |   3 +
->   drivers/net/wireless/ath/ath10k/htc.c     |   4 +-
->   drivers/net/wireless/ath/ath10k/htc.h     |   1 +
->   drivers/net/wireless/ath/ath10k/htt_rx.c  |  19 +-
->   drivers/net/wireless/ath/ath10k/htt_tx.c  |  24 +-
->   drivers/net/wireless/ath/ath10k/hw.c      |   2 +
->   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
->   drivers/net/wireless/ath/ath10k/mac.c     |  31 ++-
->   drivers/net/wireless/ath/ath10k/sdio.c    | 398 ++++++++++++++++++++++--------
->   drivers/net/wireless/ath/ath10k/sdio.h    |  10 +-
->   drivers/net/wireless/ath/ath10k/wmi-tlv.c |   2 +-
->   12 files changed, 403 insertions(+), 127 deletions(-)
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 85d5c04618eb..a81711451691 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1389,7 +1389,6 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 				      struct cfg80211_beacon_data *bcon)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-	int rc;
+ 	u32 privacy = 0;
+ 
+ 	wil_dbg_misc(wil, "change_beacon\n");
+@@ -1400,24 +1399,11 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 			     bcon->tail_len))
+ 		privacy = 1;
+ 
+-	/* in case privacy has changed, need to restart the AP */
+-	if (wil->privacy != privacy) {
+-		struct wireless_dev *wdev = ndev->ieee80211_ptr;
+-
+-		wil_dbg_misc(wil, "privacy changed %d=>%d. Restarting AP\n",
+-			     wil->privacy, privacy);
+-
+-		rc = _wil_cfg80211_start_ap(wiphy, ndev, wdev->ssid,
+-					    wdev->ssid_len, privacy,
+-					    wdev->beacon_interval,
+-					    wil->channel, bcon,
+-					    wil->hidden_ssid,
+-					    wil->pbss);
+-	} else {
+-		rc = _wil_cfg80211_set_ies(wiphy, bcon);
+-	}
++	/* privacy (really RSN) shouldn't be changing */
++	if (wil->privacy != privacy)
++		return -EINVAL;
+ 
+-	return rc;
++	return _wil_cfg80211_set_ies(wiphy, bcon);
+ }
+ 
+ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+-- 
+2.14.2
