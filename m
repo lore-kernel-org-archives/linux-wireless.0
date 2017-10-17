@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:54904 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbdJCVIC (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:46861 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936340AbdJQPZy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Oct 2017 17:08:02 -0400
-Date: Tue, 3 Oct 2017 23:07:58 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Daniel Drake <drake@endlessm.com>
-cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        x86@kernel.org, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, linux@endlessm.com
-Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
- allocation
-In-Reply-To: <alpine.DEB.2.20.1710021817500.9529@nanos>
-Message-ID: <alpine.DEB.2.20.1710032306170.2278@nanos> (sfid-20171003_230822_090753_9E88C708)
-References: <alpine.DEB.2.20.1709271555430.2027@nanos> <20171002085732.4039-1-drake@endlessm.com> <alpine.DEB.2.20.1710021540030.2185@nanos> <alpine.DEB.2.20.1710021817500.9529@nanos>
+        Tue, 17 Oct 2017 11:25:54 -0400
+Received: from mail-vk0-f51.google.com ([209.85.213.51])
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <jesse.sung@canonical.com>)
+        id 1e4Tkf-0003zl-9P
+        for linux-wireless@vger.kernel.org; Tue, 17 Oct 2017 15:25:53 +0000
+Received: by mail-vk0-f51.google.com with SMTP id j2so1347552vki.4
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2017 08:25:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1508253043.10607.89.camel@sipsolutions.net>
+References: <CAH10aOifYo=g8oLC3D=QcmVw28EqNotxuNRsprJGNP5ceEYLag@mail.gmail.com>
+ <1508233890.10607.70.camel@sipsolutions.net> <CAH10aOj8xTPDyEufGS47hytnT8RSL+qSbiRVmePrMpaaUu7gPQ@mail.gmail.com>
+ <1508237298.10607.76.camel@sipsolutions.net> <CAH10aOjmMdN2pGP8FDwZQ6BRcu2O5PiGjk+kKb6bAa7nS=ap8g@mail.gmail.com>
+ <1508246019.10607.77.camel@sipsolutions.net> <CAH10aOgfNZbhUYfRa7VRPwvzDNTYtmeDYnDEMtq+6HPqbq94hg@mail.gmail.com>
+ <CAH10aOizMKboDOW27gvz=YEcRT1_tMj+W6iwJ47n=T=-Q7U14A@mail.gmail.com> <1508253043.10607.89.camel@sipsolutions.net>
+From: Jesse Sung <jesse.sung@canonical.com>
+Date: Tue, 17 Oct 2017 23:25:51 +0800
+Message-ID: <CAH10aOi-0ABTmt4MKe-9MrB77gR4xTj9uNf=jcpFKvr86emcPg@mail.gmail.com> (sfid-20171017_172610_593908_0FB0B0DE)
+Subject: Re: Commit 0711d638 breaks mwifiex
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Jason Yen <jason.yen@canonical.com>, Terry.Wey@dell.com,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Oct 2017, Thomas Gleixner wrote:
-> On Mon, 2 Oct 2017, Thomas Gleixner wrote:
-> > On Mon, 2 Oct 2017, Daniel Drake wrote:
-> >   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
-> >      requires to make the affinity change from the interrupt context of the
-> >      current active vector in order not to lose interrupts or worst case
-> >      getting into a stale state.
-> > 
-> >      That works for single vectors, but trying to move all vectors in one
-> >      go is more or less impossible, as there is no reliable way to
-> >      determine that none of the other vectors is on flight.
-> > 
-> >      There might be some 'workarounds' for that, but I rather avoid that
-> >      unless we get an official documented one from Intel/AMD.
-> 
-> Thinking more about it. That might be actually a non issue for MSI, but we
-> have that modus operandi in the current code and we need to address that
-> first before even thinking about multi MSI support.
+On Tue, Oct 17, 2017 at 11:10 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>> > > https://p.sipsolutions.net/8f9d5917a5cbe4b3.txt
+>> > >
+>> > > Can you also give that a spin?
+>
+> Thanks for testing!
+>
+>> > Issued four reassociate, the network interface is still alive. Also
+>> > with this patch it stays with BSSID1 and I don't see any
+>> > "Association request to the driver failed" in the process.
+>>
+>> Correction: I can still see "Association request to the driver
+>> failed" and switching between BSSIDs with more reassociates but I
+>> think that shouldn't be an issue?
+>
+> Not sure what you mean by "with more reassociates"?
 
-But even if its possible, it's very debatable whether it's worth the effort
-when this driver just can use the legacy INTx.and be done with it.
+I mean do more "reassociate" in the wpa_cli. :)
 
 Thanks,
-
-	tglx
+Jesse
