@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-13.163.com ([220.181.12.13]:39054 "EHLO m12-13.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753408AbdJIBaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Oct 2017 21:30:14 -0400
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: gregkh@linuxfoundation.org, m@bues.ch, sudipm.mukherjee@gmail.com,
-        akpm@linux-foundation.org, johannes@sipsolutions.net,
-        dahinds@users.sourceforge.net
-Cc: linux-pcmcia@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: [BUG] ssb: Possible sleep-in-atomic bugs in ssb_pcmcia_read8
-Message-ID: <b3252056-573d-2c69-81d6-dde291246748@163.com> (sfid-20171009_033038_343245_8692BA01)
-Date: Mon, 9 Oct 2017 09:29:17 +0800
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:51851 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933303AbdJQArf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Oct 2017 20:47:35 -0400
+Received: by mail-pf0-f170.google.com with SMTP id n14so66573pfh.8
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 17:47:34 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Kees Cook <keescook@chromium.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 17/58] net/cw1200: Convert timers to use timer_setup()
+Date: Mon, 16 Oct 2017 17:29:01 -0700
+Message-Id: <1508200182-104605-18-git-send-email-keescook@chromium.org> (sfid-20171017_024936_419873_260430B7)
+In-Reply-To: <1508200182-104605-1-git-send-email-keescook@chromium.org>
+References: <1508200182-104605-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to pcmcia.c, the driver may sleep under a spinlock.
-The function call paths are:
-ssb_pcmcia_read8 (acquire the spinlock)
-   select_core_and_segment
-     ssb_pcmcia_switch_segment
-       ssb_pcmcia_cfg_write
-         pcmcia_write_config_byte
-           pcmcia_access_config (drivers/pcmcia/pcmcia_resource.c)
-             mutex_lock --> may sleep
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-ssb_pcmcia_read8 (acquire the spinlock)
-   select_core_and_segment
-     ssb_pcmcia_switch_segment
-       sssb_pcmcia_cfg_read
-         pcmcia_read_config_byte
-           pcmcia_access_config (drivers/pcmcia/pcmcia_resource.c)
-             mutex_lock --> may sleep
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/st/cw1200/pm.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-A possible fix is to use spinlock instead of mutex lock in 
-pcmcia_access_config in drivers/pcmcia/pcmcia_resource.c.
-
-These bugs are found by my static analysis tool and my code review.
-
-
-Thanks,
-Jia-Ju Bai
+diff --git a/drivers/net/wireless/st/cw1200/pm.c b/drivers/net/wireless/st/cw1200/pm.c
+index d2202ae92bdd..ded23df1ac1d 100644
+--- a/drivers/net/wireless/st/cw1200/pm.c
++++ b/drivers/net/wireless/st/cw1200/pm.c
+@@ -91,7 +91,7 @@ struct cw1200_suspend_state {
+ 	u8 prev_ps_mode;
+ };
+ 
+-static void cw1200_pm_stay_awake_tmo(unsigned long arg)
++static void cw1200_pm_stay_awake_tmo(struct timer_list *unused)
+ {
+ 	/* XXX what's the point of this ? */
+ }
+@@ -101,8 +101,7 @@ int cw1200_pm_init(struct cw1200_pm_state *pm,
+ {
+ 	spin_lock_init(&pm->lock);
+ 
+-	setup_timer(&pm->stay_awake, cw1200_pm_stay_awake_tmo,
+-		    (unsigned long)pm);
++	timer_setup(&pm->stay_awake, cw1200_pm_stay_awake_tmo, 0);
+ 
+ 	return 0;
+ }
+-- 
+2.7.4
